@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <Prebuild version="1.7" xmlns="http://dnpb.sourceforge.net/schemas/prebuild-1.7.xsd">
-  <Solution activeConfig="Debug" name="Aurora" path="./" version="0.5.0-$Rev$">
-    <Configuration name="Debug">
+  <Solution activeConfig="Debug" platform="x86" name="Aurora" path="./" version="0.5.0-$Rev$">
+    <Configuration name="Debug" platform="x86">
       <Options>
         <CompilerDefines>TRACE;DEBUG</CompilerDefines>
         <OptimizeCode>false</OptimizeCode>
@@ -16,7 +16,37 @@
         <NoStdLib>false</NoStdLib>
       </Options>
     </Configuration>
-    <Configuration name="Release">
+    <Configuration name="Debug" platform="x64">
+      <Options>
+        <CompilerDefines>TRACE;DEBUG</CompilerDefines>
+        <OptimizeCode>false</OptimizeCode>
+        <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
+        <AllowUnsafe>true</AllowUnsafe>
+        <WarningLevel>4</WarningLevel>
+        <WarningsAsErrors>false</WarningsAsErrors>
+        <SuppressWarnings/>
+        <OutputPath>bin</OutputPath>
+        <DebugInformation>true</DebugInformation>
+        <IncrementalBuild>true</IncrementalBuild>
+        <NoStdLib>false</NoStdLib>
+      </Options>
+    </Configuration>
+    <Configuration name="Release" platform="x86">
+      <Options>
+        <CompilerDefines>TRACE;DEBUG</CompilerDefines>
+        <OptimizeCode>true</OptimizeCode>
+        <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
+        <AllowUnsafe>true</AllowUnsafe>
+        <WarningLevel>4</WarningLevel>
+        <WarningsAsErrors>false</WarningsAsErrors>
+        <SuppressWarnings/>
+        <OutputPath>bin</OutputPath>
+        <DebugInformation>false</DebugInformation>
+        <IncrementalBuild>true</IncrementalBuild>
+        <NoStdLib>false</NoStdLib>
+      </Options>
+    </Configuration>
+    <Configuration name="Release" platform="x64">
       <Options>
         <CompilerDefines>TRACE;DEBUG</CompilerDefines>
         <OptimizeCode>true</OptimizeCode>
@@ -33,12 +63,22 @@
     </Configuration>
 
     <Project frameworkVersion="v3_5" name="OpenSim.Framework.Servers.HttpServer" path="OpenSim/Framework/Servers/HttpServer" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../../bin/</OutputPath>
         </Options>
@@ -72,12 +112,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="SmartThreadPool" path="ThirdParty/SmartThreadPool" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
@@ -95,12 +145,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="OpenSim.Framework" path="OpenSim/Framework" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
@@ -134,12 +194,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="Aurora.Framework" path="Aurora/Framework" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
@@ -171,12 +241,22 @@
     </Project>
     
     <Project frameworkVersion="v3_5" name="OpenSim.Framework.Serialization" path="OpenSim/Framework/Serialization" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x64">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x86">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -200,12 +280,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="OpenSim.Data" path="OpenSim/Data" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
@@ -230,12 +320,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="OpenSim.Region.Physics.Manager" path="OpenSim/Region/Physics/Manager" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../../bin/</OutputPath>
         </Options>
@@ -260,12 +360,22 @@
 
     <!-- Physics Plug-ins -->
     <Project frameworkVersion="v3_5" name="OpenSim.Region.Physics.BasicPhysicsPlugin" path="OpenSim/Region/Physics/BasicPhysicsPlugin" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../../bin/Physics/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../../bin/Physics/</OutputPath>
         </Options>
@@ -286,12 +396,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="OpenSim.Region.Physics.Meshing" path="OpenSim/Region/Physics/Meshing" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../../bin/Physics/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../../bin/Physics/</OutputPath>
         </Options>
@@ -318,12 +438,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="OpenSim.Region.Framework" path="OpenSim/Region/Framework" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -361,12 +491,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="OpenSim.Services" path="OpenSim/Services" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
@@ -404,12 +544,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="Aurora.DataManager" path="Aurora/DataManager" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
@@ -438,12 +588,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="Aurora.DataManager.MySQL" path="Aurora/DataManagerPlugins/MySQL" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -472,12 +632,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="Aurora.DataManager.MSSQL" path="Aurora/DataManagerPlugins/MSSQL" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -505,12 +675,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="Aurora.DataManager.SQLite" path="Aurora/DataManagerPlugins/SQLite" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -542,12 +722,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="Aurora.Services.DataService" path="Aurora/Services/DataService" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -582,12 +772,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="OpenSim.Server.Handlers" path="OpenSim/Server/Handlers" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -622,13 +822,25 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="OpenSim.Region.CoreModules" path="OpenSim/Region/CoreModules" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
           <AllowUnsafe>true</AllowUnsafe>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+          <AllowUnsafe>true</AllowUnsafe>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+          <AllowUnsafe>true</AllowUnsafe>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
           <AllowUnsafe>true</AllowUnsafe>
@@ -676,12 +888,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="OpenSim.Region.OptionalModules" path="OpenSim/Region/OptionalModules" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -720,12 +942,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="OpenSim.Region.RegionCombinerModule" path="OpenSim/Region/RegionCombinerModule" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -753,12 +985,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="OpenSim.Region.ClientStack.LindenUDP" path="OpenSim/Region/ClientStack/LindenUDP" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../../bin/</OutputPath>
         </Options>
@@ -789,12 +1031,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="OpenSim.Data.Null" path="OpenSim/Data/Null" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -818,12 +1070,22 @@
 
     <!-- Aurora app -->
     <Project frameworkVersion="v3_5" name="Aurora" path="OpenSim/Region/Application" type="Exe">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -842,12 +1104,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="Aurora.Server" path="Aurora/Server" type="Exe">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
@@ -874,12 +1146,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="Aurora.Simulation.Base" path="Aurora/Simulation/Base" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -908,12 +1190,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="OpenSim.CoreApplicationPlugins" path="OpenSim/CoreApplicationPlugins" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
@@ -948,12 +1240,22 @@
     
     <!-- Data Base Modules -->
     <Project frameworkVersion="v3_5" name="OpenSim.Data.MySQL" path="OpenSim/Data/MySQL" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -984,12 +1286,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="OpenSim.Data.MSSQL" path="OpenSim/Data/MSSQL" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -1017,12 +1329,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="OpenSim.Data.SQLite" path="OpenSim/Data/SQLite" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -1054,12 +1376,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="OpenSim.Region.ScriptEngine.YieldProlog" path="OpenSim/Region/ScriptEngine/YieldProlog/" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../../bin/</OutputPath>
         </Options>
@@ -1085,12 +1417,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="OpenSim.Region.UserStatistics" path="OpenSim/Region/UserStatistics" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -1129,12 +1471,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="Aurora.Modules" path="Aurora/Modules" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
@@ -1178,12 +1530,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="Aurora.Physics.AuroraBulletDotNet" path="Aurora\Physics\AuroraBulletDotNET" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../bin/Physics/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../bin/Physics/</OutputPath>
         </Options>
@@ -1210,12 +1572,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="Aurora.Physics.AuroraOpenDynamicsEngine" path="Aurora/Physics/AuroraOpenDynamicsEngine" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../bin/Physics/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../../bin/Physics/</OutputPath>
         </Options>
@@ -1241,12 +1613,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="Aurora.ScriptEngine.AuroraDotNetEngine" path="Aurora/AuroraDotNetEngine" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
@@ -1282,12 +1664,22 @@
     </Project>
 
     <Project frameworkVersion="v3_5" name="Aurora.BotManager" path="Aurora/BotManager" type="Library">
-      <Configuration name="Debug">
+      <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <Configuration name="Release">
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
