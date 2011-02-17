@@ -38,11 +38,13 @@ namespace OpenSim.Services.MessagingService
             m_registry = registry;
             m_asyncReceiverService = registry.RequestModuleInterface<IAsyncMessageRecievedService>();
 
+            //Read any messages received to see whether they are for the async service
             m_asyncReceiverService.OnMessageReceived += OnMessageReceived;
         }
 
         OSDMap OnMessageReceived(OSDMap message)
         {
+            //If it is an async message request, make sure that the request is valid and check it
             if (message["Method"] == "AsyncMessageRequest")
             {
                 OSDMap response = new OSDMap();
@@ -60,6 +62,11 @@ namespace OpenSim.Services.MessagingService
             return null;
         }
 
+        /// <summary>
+        /// Post a new message to the given region by region handle
+        /// </summary>
+        /// <param name="RegionHandle"></param>
+        /// <param name="request"></param>
         public void Post(ulong RegionHandle, OSDMap request)
         {
             if (!m_regionMessages.ContainsKey(RegionHandle))

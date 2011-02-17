@@ -33,7 +33,7 @@ namespace OpenSim.Services.MessagingService
             if (handlerConfig.GetString("AsyncMessageRequesterServiceHandler", "") != Name)
                 return;
 
-            m_hosts = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+            m_hosts = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
             m_registry = registry;
 
             //Start the request timer
