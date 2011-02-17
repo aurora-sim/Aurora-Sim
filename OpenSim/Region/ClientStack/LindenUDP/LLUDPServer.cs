@@ -964,10 +964,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (!IsRunning)
                 Thread.CurrentThread.Abort();
 
-            // Set this culture for the thread that outgoing packets are sent
-            // on to en-US to avoid number parsing issues
-            Culture.SetCurrentCulture();
-
             // Typecast the function to an Action<IClientAPI> once here to avoid allocating a new
             // Action generic every round
             Action<IClientAPI> clientPacketHandler = ClientOutgoingPacketHandler;

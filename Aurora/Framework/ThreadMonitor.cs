@@ -107,6 +107,9 @@ namespace Aurora.Framework
                 //The action to fire
                 FireEvent wrappedAction = delegate(Heartbeat en)
                 {
+                    // Set this culture for the thread 
+                    // to en-US to avoid number parsing issues
+                    OpenSim.Framework.Culture.SetCurrentCulture();
                     en();
                     RetVal = true;
                 };

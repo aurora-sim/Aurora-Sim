@@ -605,6 +605,9 @@ namespace OpenSim.Framework
         /// </summary>
         public void Prompt()
         {
+            // Set this culture for the thread 
+            // to en-US to avoid number parsing issues
+            OpenSim.Framework.Culture.SetCurrentCulture();
             string line = ReadLine(m_defaultPrompt + "# ", true, true);
 
             if (line != String.Empty && line.Replace(" ", "") != String.Empty) //If there is a space, its fine
