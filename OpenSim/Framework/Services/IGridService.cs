@@ -534,4 +534,34 @@ namespace OpenSim.Services.Interfaces
             }
         }
     }
+
+    /// <summary>
+    /// This is the main service that collects URLs for registering clients.
+    /// Call this if you want to get secure URLs for the given SessionID
+    /// </summary>
+    public interface IGridRegistrationService
+    {
+        Dictionary<string, string> GetUrlForRegisteringClient(UUID SessionID);
+
+        void RegisterModule(IGridRegistrationUrlModule module);
+    }
+
+    /// <summary>
+    /// This is the sub service of the IGridRegistrationService that is implemented by other modules
+    ///   so that they can be queried for URLs to return.
+    /// </summary>
+    public interface IGridRegistrationUrlModule
+    {
+        /// <summary>
+        /// Name of the Url
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
+        /// Get the Url for the given sessionID
+        /// </summary>
+        /// <param name="SessionID"></param>
+        /// <returns></returns>
+        string GetUrlForRegisteringClient(UUID SessionID);
+    }
 }

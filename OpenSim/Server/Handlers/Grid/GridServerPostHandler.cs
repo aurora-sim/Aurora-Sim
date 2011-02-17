@@ -54,12 +54,14 @@ namespace OpenSim.Server.Handlers.Grid
 
         private IGridService m_GridService;
         private IRegionConnector TelehubConnector;
+        private IRegistryCore m_registry;
         private Dictionary<UUID /*RegionID*/, UUID /*SessionID*/> SessionCache = new Dictionary<UUID, UUID>();
         
-        public GridServerPostHandler(IGridService service) :
+        public GridServerPostHandler(IRegistryCore registry, IGridService service) :
                 base("POST", "/grid")
         {
             m_GridService = service;
+            m_registry = registry;
             TelehubConnector = DataManager.RequestPlugin<IRegionConnector>();
         }
 
@@ -236,6 +238,16 @@ namespace OpenSim.Server.Handlers.Grid
             OSDMap resultMap = new OSDMap();
             resultMap["SecureSessionID"] = SecureSessionID;
             resultMap["Result"] = result;
+            if (result == "")
+            {
+                OSDMap urls = new OSDMap();
+                Dictionary<string, string> durls = m_registry.RequestModuleInterface<IGridRegistrationService>().GetUrlForRegisteringClient(SecureSessionID);
+                foreach (KeyValuePair<string, string> kvp in durls)
+                {
+                    urls[kvp.Key] = kvp.Value;
+                }
+                resultMap["URLs"] = urls;
+            }
 
             return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(resultMap));
         }

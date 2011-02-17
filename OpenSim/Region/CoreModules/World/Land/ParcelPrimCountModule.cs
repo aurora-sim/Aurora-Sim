@@ -566,7 +566,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             TaintPrimCount(m_Scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(newParcel.GlobalID));
         }
 
-        void OnGenericEvent(string FunctionName, object parameters)
+        object OnGenericEvent(string FunctionName, object parameters)
         {
             //The 'select' part of prim counts isn't for this type of selection
             //if (FunctionName == "ObjectSelected" || FunctionName == "ObjectDeselected")
@@ -591,6 +591,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 TaintPrimCount(oldlandObject);
                 TaintPrimCount(newlandObject);
             }
+            return null;
         }
     }
 

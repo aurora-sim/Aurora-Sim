@@ -289,12 +289,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        void AuroraEventManager_OnGenericEvent(string FunctionName, object parameters)
+        object AuroraEventManager_OnGenericEvent(string FunctionName, object parameters)
         {
             if (FunctionName == "DrawDistanceChanged" || FunctionName == "SignficantCameraMovement")
             {
                 SendTerrainUpdatesForClient((ScenePresence)parameters);
             }
+            return null;
         }
 
         void EventManager_OnSignificantClientMovement(IClientAPI remote_client)

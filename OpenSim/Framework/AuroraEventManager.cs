@@ -9,7 +9,7 @@ namespace Aurora.Framework
     /// </summary>
     /// <param name="FunctionName">Name of the event being fired</param>
     /// <param name="parameters">Parameters that the event has, can be null</param>
-    public delegate void OnGenericEventHandler(string FunctionName, object parameters);
+    public delegate object OnGenericEventHandler(string FunctionName, object parameters);
     /// <summary>
     /// A generic event manager that fires one event for many generic events
     /// </summary>
@@ -36,6 +36,8 @@ namespace Aurora.Framework
         ///      param is a SceneObjectGroup
         /// ObjectEnteringNewParcel - An object has entered a new parcel
         ///      param is a object[], with o[0] a SceneObjectGroup, o[1] the new parcel UUID, and o[2] the old parcel UUID
+        /// RegisteredRegion - New Region has been registered
+        ///      param is a GridRegion
         /// 
         /// </summary>
         public event OnGenericEventHandler OnGenericEvent;
@@ -44,13 +46,20 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="FunctionName">Name of event to trigger</param>
         /// <param name="Param">Any parameters to pass along with the event</param>
-        public void FireGenericEventHandler(string FunctionName, object Param)
+        public List<object> FireGenericEventHandler(string FunctionName, object Param)
         {
+            List<object> retVal = new List<object>();
             //If not null, fire for all
             if (OnGenericEvent != null)
             {
-                OnGenericEvent(FunctionName, Param);
+                foreach(OnGenericEventHandler handler in OnGenericEvent.GetInvocationList())
+                {
+                    object param = handler(FunctionName, Param);
+                    if (param != null)
+                        retVal.Add(param);
+                }
             }
+            return retVal;
         }
     }
 }

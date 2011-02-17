@@ -37,6 +37,7 @@ using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework;
 
 namespace OpenSim.Framework
 {
@@ -46,6 +47,7 @@ namespace OpenSim.Framework
         IConfigSource ConfigSource { get; set; }
         IRegistryCore ApplicationRegistry { get; }
         DateTime StartupTime { get; }
+        AuroraEventManager EventManager { get; }
         string Version { get; }
         void RunStartupCommands();
         void HandleShow(string mod, string[] cmd);

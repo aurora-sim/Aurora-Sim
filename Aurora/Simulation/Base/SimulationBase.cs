@@ -63,6 +63,12 @@ namespace Aurora.Simulation.Base
             get { return m_applicationRegistry; }
         }
 
+        protected AuroraEventManager m_eventManager = new AuroraEventManager();
+        public AuroraEventManager EventManager
+        {
+            get { return m_eventManager; }
+        }
+
         /// <summary>
         /// Time at which this server was started
         /// </summary>

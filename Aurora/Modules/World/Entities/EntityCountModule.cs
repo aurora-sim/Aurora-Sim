@@ -186,13 +186,14 @@ namespace Aurora.Modules
             }
         }
 
-        protected void OnGenericEvent(string FunctionName, object parameters)
+        protected object OnGenericEvent(string FunctionName, object parameters)
         {
             //If the object changes physical status, we need to make sure to update the active objects count
             if (FunctionName == "ObjectChangedPhysicalStatus")
             {
                 OnObjectBeingAddedToScene((SceneObjectGroup)parameters);
             }
+            return null;
         }
 
         #endregion
