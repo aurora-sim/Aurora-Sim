@@ -262,6 +262,12 @@ namespace OpenSim.Services.PresenceService
     public class AgentInfoService : IService, IAgentInfoService
     {
 
+          #region Declares
+
+         proteced IGenericsConnector m_genericsConnector;
+
+          #endregion
+
 #region IService Members
 
          public void Initialize(IConfigSource config, IRegistryCore registry)
@@ -269,14 +275,10 @@ namespace OpenSim.Services.PresenceService
          }
          public void Start(IConfigSource config, IRegistryCore registry)
          {
+              m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
          }
 
 #endregion
-
-         public bool AddPresence(string userID, UUID regionID)
-         {
-               return false;
-         }
 
          public UserInfo[] GetUserInfo(string userID)
          {
@@ -285,11 +287,38 @@ namespace OpenSim.Services.PresenceService
 
          public bool SetHomePosition(string userID, UUID homeID, Vector3 homePosition, Vector3 homeLookAt)
          {
-               return false;
+              UserInfo[] userInfo = GetUserInfo(userID);
+              if(userInfo != null)
+              {
+                    for(int i = 0; i < userInfo.Length; i++)
+                    {
+                          userInfo[i].HomeRegionID = regionID;
+                          userInfo[i].HomePosition = lastPosition;
+                          userInfo[i].HomeLookAt = lastLookAt;
+                          Save(userInfo[i]);
+                    }
+                    return true;
+              }
+              return false;
          }
 
          public void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
          {
+              UserInfo[] userInfo = GetUserInfo(userID);
+              if(userInfo != null)
+              {
+                    for(int i = 0; i < userInfo.Length; i++)
+                    {
+                          userInfo[i].CurrentRegionID = regionID;
+                          userInfo[i].CurrentPosition = lastPosition;
+                          userInfo[i].CurrentLookAt = lastLookAt;
+                          Save(userInfo[i]);
+                    }
+              }
          }
+
+        public void Save(UserInfo userInfo)
+        {
+        }
     }
 }
