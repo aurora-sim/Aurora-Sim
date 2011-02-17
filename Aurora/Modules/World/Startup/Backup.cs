@@ -357,7 +357,7 @@ namespace Aurora.Modules
                     EntityBase[] entities = m_scene.Entities.GetEntities();
                     foreach(EntityBase entity in entities)
                     {
-                        if(entity is SceneObjectGroup)
+                        if(entity is SceneObjectGroup && !((SceneObjectGroup)entity).IsAttachment)
                             groups.Add((SceneObjectGroup)entity);
                     }
                 }
