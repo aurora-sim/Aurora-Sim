@@ -72,46 +72,37 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 //Don't send it to the client at all, so return here
                 EnableChildAgents(AgentID, requestingRegion, DrawDistance, circuitData);
             }
-            if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
+            else if (message["Message"] == "DisableSimulator")
             {
                 //Let this pass through, after the next event queue pass we can remove it
                 //m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
                 if (!m_service.Disabled)
                 {
                     m_service.Disabled = true;
-                    OSDMap body = ((OSDMap)map["body"]);
+                    OSDMap body = ((OSDMap)message["Message"]);
                     //See whether this needs sent to the client or not
                     if (!body["KillClient"].AsBoolean())
                     {
                         //This is very risky... but otherwise the user doesn't get cleaned up...
                         m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
-                        return true;
                     }
                 }
-                else //Don't enqueue multiple times
-                    return true;
             }
-            else if (map.ContainsKey("message") && map["message"] == "ArrivedAtDestination")
+            else if (message["Message"] == "ArrivedAtDestination")
             {
                 //Recieved a callback
                 m_service.ClientCaps.CallbackHasCome = true;
                 m_service.Disabled = false;
-
-                //Don't send it to the client
-                return true;
             }
-            else if (map.ContainsKey("message") && map["message"] == "CancelTeleport")
+            else if (message["Message"] == "CancelTeleport")
             {
                 //The user has requested to cancel the teleport, stop them.
                 m_service.ClientCaps.RequestToCancelTeleport = true;
                 m_service.Disabled = false;
-
-                //Don't send it to the client
-                return true;
             }
-            else if (map.ContainsKey("message") && map["message"] == "SendChildAgentUpdate")
+            else if (message["Message"] == "SendChildAgentUpdate")
             {
-                OSDMap body = ((OSDMap)map["body"]);
+                OSDMap body = ((OSDMap)message["Message"]);
 
                 AgentPosition pos = new AgentPosition();
                 pos.Unpack((OSDMap)body["AgentPos"]);
@@ -119,12 +110,10 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
                 SendChildAgentUpdate(pos, region);
                 m_service.Disabled = false;
-                //Don't send to the client
-                return true;
             }
-            else if (map.ContainsKey("message") && map["message"] == "TeleportAgent")
+            else if (message["Message"] == "TeleportAgent")
             {
-                OSDMap body = ((OSDMap)map["body"]);
+                OSDMap body = ((OSDMap)message["Message"]);
 
                 GridRegion destination = new GridRegion();
                 destination.FromOSD((OSDMap)body["Region"]);
@@ -139,13 +128,12 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 AgentData.Unpack((OSDMap)body["AgentData"]);
                 m_service.Disabled = false;
 
-                //Don't send to the client
-                return TeleportAgent(destination, TeleportFlags, DrawDistance, Circuit, AgentData);
+                TeleportAgent(destination, TeleportFlags, DrawDistance, Circuit, AgentData);
             }
-            else if (map.ContainsKey("message") && map["message"] == "CrossAgent")
+            else if (message["Message"] == "CrossAgent")
             {
                 //This is a simulator message that tells us to cross the agent
-                OSDMap body = ((OSDMap)map["body"]);
+                OSDMap body = ((OSDMap)message["Message"]);
 
                 Vector3 pos = body["Pos"].AsVector3();
                 Vector3 Vel = body["Vel"].AsVector3();
@@ -157,59 +145,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 AgentData.Unpack((OSDMap)body["AgentData"]);
                 m_service.Disabled = false;
 
-                //Client doesn't get this
-                return CrossAgent(Region, pos, Vel, Circuit, AgentData);
-            }
-            else if (map.ContainsKey("message") && map["message"] == "EstablishAgentCommunication")
-            {
-                string SimSeedCap = ((OSDMap)map["body"])["seed-capability"].AsString();
-                ulong regionHandle = ((OSDMap)map["body"])["region-handle"].AsULong();
-
-                string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
-                IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(regionHandle, newSeedCap, SimSeedCap);
-                //ONLY UPDATE THE SIM SEED HERE
-                //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
-                // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
-                // AND FORCE UPDATING IT HERE WILL BREAK IT.
-                otherRegionService.AddSEEDCap("", SimSeedCap, otherRegionService.Password);
-
-                ((OSDMap)map["body"])["seed-capability"] = otherRegionService.CapsUrl;
-            }
-            else if (map.ContainsKey("message") && map["message"] == "CrossedRegion")
-            {
-                OSDMap infoMap = ((OSDMap)((OSDArray)((OSDMap)map["body"])["RegionData"])[0]);
-                string SimSeedCap = infoMap["SeedCapability"].AsString();
-                ulong regionHandle = infoMap["RegionHandle"].AsULong();
-
-                string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
-                IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(regionHandle, newSeedCap, SimSeedCap);
-                //ONLY UPDATE THE SIM SEED HERE
-                //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
-                // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
-                // AND FORCE UPDATING IT HERE WILL BREAK IT.
-                otherRegionService.AddSEEDCap("", SimSeedCap, otherRegionService.Password);
-                m_service.Disabled = false;
-
-                //Now tell the client about it correctly
-                ((OSDMap)((OSDArray)((OSDMap)map["body"])["RegionData"])[0])["SeedCapability"] = otherRegionService.CapsUrl;
-            }
-            else if (map.ContainsKey("message") && map["message"] == "TeleportFinish")
-            {
-                OSDMap infoMap = ((OSDMap)((OSDArray)((OSDMap)map["body"])["Info"])[0]);
-                string SimSeedCap = infoMap["SeedCapability"].AsString();
-                ulong regionHandle = infoMap["RegionHandle"].AsULong();
-
-                string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
-                IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(regionHandle, newSeedCap, SimSeedCap);
-                //ONLY UPDATE THE SIM SEED HERE
-                //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
-                // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
-                // AND FORCE UPDATING IT HERE WILL BREAK IT.
-                otherRegionService.AddSEEDCap("", SimSeedCap, otherRegionService.Password);
-                m_service.Disabled = false;
-
-                //Now tell the client about it correctly
-                ((OSDMap)((OSDArray)((OSDMap)map["body"])["Info"])[0])["SeedCapability"] = otherRegionService.CapsUrl;
+                CrossAgent(Region, pos, Vel, Circuit, AgentData);
             }
             return null;
         }
@@ -379,7 +315,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         {
             bool result = false;
 
-            ISimulationService SimulationService = m_service.Registry.RequestModuleInterface<ISimulationService>();
+            ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
             if (SimulationService != null)
             {
                 //Set the user in transit so that we block duplicate tps and reset any cancelations
@@ -387,7 +323,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     return false;
 
                 //Note: we have to pull the new grid region info as the one from the region cannot be trusted
-                IGridService GridService = m_service.Registry.RequestModuleInterface<IGridService>();
+                IGridService GridService = m_registry.RequestModuleInterface<IGridService>();
                 if (GridService != null)
                 {
                     destination = GridService.GetRegionByUUID(UUID.Zero, destination.RegionID);
@@ -401,12 +337,12 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
                 uint x, y;
                 Utils.LongToUInts(m_service.RegionHandle, out x, out y);
-                IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
+                IEventQueueService EQService = m_registry.RequestModuleInterface<IEventQueueService>();
 
                 IRegionClientCapsService otherRegion = m_service.ClientCaps.GetCapsService(destination.RegionHandle);
 
                 EQService.TeleportFinishEvent(destination.RegionHandle, destination.Access, destination.ExternalEndPoint, otherRegion.CapsUrl,
-                                           4, m_service.AgentID, TeleportFlags,
+                                           4, AgentID, TeleportFlags,
                                            destination.RegionSizeX, destination.RegionSizeY,
                                            m_service.RegionHandle);
 
@@ -414,7 +350,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 // trigers a whole shebang of things there, including MakeRoot. So let's wait for confirmation
                 // that the client contacted the destination before we send the attachments and close things here.
 
-                INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
+                INeighborService service = m_registry.RequestModuleInterface<INeighborService>();
                 if (service != null)
                 {
                     bool callWasCanceled = false;
@@ -531,11 +467,11 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         protected bool CrossAgent(GridRegion crossingRegion, Vector3 pos,
             Vector3 velocity, AgentCircuitData circuit, AgentData cAgent)
         {
-            ISimulationService SimulationService = m_service.Registry.RequestModuleInterface<ISimulationService>();
+            ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
             if (SimulationService != null)
             {
                 //Note: we have to pull the new grid region info as the one from the region cannot be trusted
-                IGridService GridService = m_service.Registry.RequestModuleInterface<IGridService>();
+                IGridService GridService = m_registry.RequestModuleInterface<IGridService>();
                 if (GridService != null)
                 {
                     //Set the user in transit so that we block duplicate tps and reset any cancelations
@@ -551,7 +487,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     }
                     else
                     {
-                        IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
+                        IEventQueueService EQService = m_registry.RequestModuleInterface<IEventQueueService>();
                         uint x, y;
                         Utils.LongToUInts(m_service.RegionHandle, out x, out y);
 
@@ -565,7 +501,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                         IRegionClientCapsService otherRegion = m_service.ClientCaps.GetCapsService(crossingRegion.RegionHandle);
                         //Tell the client about the transfer
                         EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity, crossingRegion.ExternalEndPoint, otherRegion.CapsUrl,
-                                           m_service.AgentID, circuit.SessionID,
+                                           AgentID, circuit.SessionID,
                                            crossingRegion.RegionSizeX, crossingRegion.RegionSizeY,
                                            m_service.RegionHandle);
 
@@ -575,7 +511,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                         else
                         {
                             // Next, let's close the child agent connections that are too far away.
-                            INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
+                            INeighborService service = m_registry.RequestModuleInterface<INeighborService>();
                             if (service != null)
                             {
                                 //Fix the root agent status
@@ -602,15 +538,13 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         protected void SendChildAgentUpdate(AgentPosition agentpos, UUID regionID)
         {
             //We need to send this update out to all the child agents this region has
-            INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
+            INeighborService service = m_registry.RequestModuleInterface<INeighborService>();
             if (service != null)
             {
-                ISimulationService SimulationService = m_service.Registry.RequestModuleInterface<ISimulationService>();
+                ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
                 if (SimulationService != null)
                 {
-                    uint x, y;
-                    Utils.LongToUInts(m_service.RegionHandle, out x, out y);
-                    GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
+                    GridRegion ourRegion = m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, regionID);
                     if (ourRegion == null)
                     {
                         m_log.Info("[EQMService]: Failed to inform neighbors about updating agent, could not find our region. ");
