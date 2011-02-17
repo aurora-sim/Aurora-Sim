@@ -55,14 +55,6 @@ namespace OpenSim.Services.Interfaces
     public interface IAgentInfoService
     {
         /// <summary>
-        /// Add the given user to the given region
-        /// </summary>
-        /// <param name="userID"></param>
-        /// <param name="regionID"></param>
-        /// <returns></returns>
-        bool AddPresence(string userID, UUID regionID);
-
-        /// <summary>
         /// Get the user infos for the given user (all regions)
         /// </summary>
         /// <param name="userID"></param>
