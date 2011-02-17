@@ -61,12 +61,6 @@ namespace OpenSim.Services.Interfaces
 
     public interface IPresenceService
     {
-        bool LoginAgent(string userID, UUID sessionID, UUID secureSessionID);
-        bool LogoutAgent(UUID sessionID);
-        bool LogoutRegionAgents(UUID regionID);
-
-        void ReportAgent(UUID sessionID, UUID regionID);
-
         PresenceInfo GetAgent(UUID sessionID);
         PresenceInfo[] GetAgents(string[] userIDs);
         string[] GetAgentsLocations(string[] userIDs);

@@ -963,8 +963,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                             landObj.Online = false;
                         else
                         {
-                            IPresenceService presenceS = m_scene.RequestModuleInterface<IPresenceService>();
-                            landObj.Online = presenceS.GetAgents(new string[1]{part.OwnerID.ToString()}).Length > 0;
+                            IAgentInfoService presenceS = m_scene.RequestModuleInterface<IAgentInfoService>();
+                            landObj.Online = presenceS.GetUserInfo(part.OwnerID.ToString()).IsOnline;
                         }
                         landObj.OwnerID = part.OwnerID;
                         }

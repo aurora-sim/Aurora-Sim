@@ -192,34 +192,6 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
-        public void ReportAgent(UUID sessionID, UUID regionID)
-        {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
-            //sendData["SCOPEID"] = scopeID.ToString();
-            sendData["VERSIONMIN"] = ProtocolVersions.ClientProtocolVersionMin.ToString();
-            sendData["VERSIONMAX"] = ProtocolVersions.ClientProtocolVersionMax.ToString();
-            sendData["METHOD"] = "report";
-
-            sendData["SessionID"] = sessionID.ToString();
-            sendData["RegionID"] = regionID.ToString();
-
-            string reqString = WebUtils.BuildQueryString(sendData);
-            try
-            {
-                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("PresenceServerURI");
-                foreach (string m_ServerURI in serverURIs)
-                {
-                    AsynchronousRestObjectRequester.MakeRequest("POST",
-                    m_ServerURI + "/presence",
-                    reqString);
-                }
-            }
-            catch (Exception e)
-            {
-                m_log.DebugFormat("[PRESENCE CONNECTOR]: Exception when contacting presence server: {0}", e.Message);
-            }
-        }
-
         public PresenceInfo GetAgent(UUID sessionID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();

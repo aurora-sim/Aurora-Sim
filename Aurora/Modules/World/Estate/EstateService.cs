@@ -623,16 +623,16 @@ namespace Aurora.Modules
                     }
                 }
                 //Make sure they exist in the grid right now
-                IPresenceService presence = scene.RequestModuleInterface<IPresenceService>();
+                OpenSim.Services.Interfaces.IAgentInfoService presence = scene.RequestModuleInterface<IAgentInfoService>();
                 if (presence == null)
                 {
                     reason = String.Format("Failed to verify user presence in the grid for {0} in region {1}. Presence service does not exist.", account.Name, scene.RegionInfo.RegionName);
                     return false;
                 }
 
-                OpenSim.Services.Interfaces.PresenceInfo pinfo = presence.GetAgent(agent.SessionID);
+                OpenSim.Services.Interfaces.UserInfo pinfo = presence.GetUserInfo(agent.AgentID.ToString());
 
-                if (pinfo == null)
+                if (pinfo == null || !pinfo.IsOnline)
                 {
                     reason = String.Format("Failed to verify user presence in the grid for {0}, access denied to region {1}.", account.Name, scene.RegionInfo.RegionName);
                     return false;

@@ -467,19 +467,6 @@ namespace OpenSim.Services.LLLoginService
                 m_log.DebugFormat("[LLOGIN SERVICE]: {0} active gestures", gestures.Count);
 
                 //
-                // Login the presence
-                //
-                if (m_PresenceService != null)
-                {
-                    success = m_PresenceService.LoginAgent(account.PrincipalID.ToString(), session, secureSession);
-                    if (!success)
-                    {
-                        m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: could not login presence");
-                        return LLFailedLoginResponse.GridProblem;
-                    }
-                }
-
-                //
                 // Clear out any existing CAPS the user may have
                 //
                 if (m_CapsService != null)
@@ -514,7 +501,6 @@ namespace OpenSim.Services.LLLoginService
                 GridRegion destination = FindDestination(account, scopeID, guinfo, session, startLocation, home, out where, out position, out lookAt);
                 if (destination == null)
                 {
-                    m_PresenceService.LogoutAgent(session);
                     m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: destination not found");
                     return LLFailedLoginResponse.GridProblem;
                 }
@@ -615,7 +601,6 @@ namespace OpenSim.Services.LLLoginService
 
                 if (aCircuit == null)
                 {
-                    m_PresenceService.LogoutAgent(session);
                     m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: {0}", reason);
                     return new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect, reason, false);
                 }
@@ -661,8 +646,6 @@ namespace OpenSim.Services.LLLoginService
             catch (Exception e)
             {
                 m_log.WarnFormat("[LLOGIN SERVICE]: Exception processing login for {0} {1}: {2}", firstName, lastName, e.ToString());
-                if (m_PresenceService != null)
-                    m_PresenceService.LogoutAgent(session);
                 return LLFailedLoginResponse.InternalError;
             }
         }

@@ -101,6 +101,12 @@ namespace OpenSim.Framework
             return buildEvent("ArrivedAtDestination", llsdBody, AgentID, requestingRegion);
         }
 
+        public static OSDMap LogoutRegionAgents(ulong requestingRegion)
+        {
+            OSDMap llsdBody = new OSDMap();
+            return buildEvent("LogoutRegionAgents", llsdBody, UUID.Zero, requestingRegion);
+        }
+
         public static OSDMap buildEvent(string eventName, OSD eventBody, UUID AgentID, ulong requestingRegion)
         {
             OSDMap llsdEvent = new OSDMap(2);

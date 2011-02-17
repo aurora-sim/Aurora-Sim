@@ -96,31 +96,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         #region IPresenceService
 
-        public bool LoginAgent(string userID, UUID sessionID, UUID secureSessionID)
-        {
-            m_log.ErrorFormat("[SIMIAN PRESENCE CONNECTOR]: Login requested, UserID={0}, SessionID={1}, SecureSessionID={2}",
-                userID, sessionID, secureSessionID);
-
-            NameValueCollection requestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "AddSession" },
-                { "UserID", userID.ToString() }
-            };
-            if (sessionID != UUID.Zero)
-            {
-                requestArgs["SessionID"] = sessionID.ToString();
-                requestArgs["SecureSessionID"] = secureSessionID.ToString();
-            }
-
-            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
-            bool success = response["Success"].AsBoolean();
-
-            if (!success)
-                m_log.Warn("[SIMIAN PRESENCE CONNECTOR]: Failed to login agent " + userID + ": " + response["Message"].AsString());
-
-            return success;
-        }
-
         public bool LogoutAgent(UUID sessionID)
         {
             m_log.InfoFormat("[SIMIAN PRESENCE CONNECTOR]: Logout requested for agent with sessionID " + sessionID);
@@ -157,11 +132,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 m_log.Warn("[SIMIAN PRESENCE CONNECTOR]: Failed to logout agents from region " + regionID + ": " + response["Message"].AsString());
 
             return success;
-        }
-
-        public void ReportAgent(UUID sessionID, UUID regionID)
-        {
-            // Not needed for SimianGrid
         }
 
         public PresenceInfo GetAgent(UUID sessionID)

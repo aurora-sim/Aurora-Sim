@@ -53,8 +53,22 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             ulong requestingRegion = message["RequestingRegion"].AsULong();
             IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
             IRegionClientCapsService regionCaps = clientCaps.GetCapsService(requestingRegion);
-            
-            if(message["Method"] == "EnableChildAgents")
+            if (message["Method"] == "LogoutRegionAgents")
+            {
+                IRegionCapsService fullregionCaps = m_registry.RequestModuleInterface<ICapsService>().GetCapsForRegion(requestingRegion);
+                if (fullregionCaps != null)
+                {
+                    //Close all regions and remove them from the region
+                    foreach (IRegionClientCapsService regionC in fullregionCaps.GetClients())
+                    {
+                        regionC.Close();
+                        fullregionCaps.RemoveClientFromRegion(regionC);
+                    }
+                    //Now kill the region in the caps Service
+                    m_registry.RequestModuleInterface<ICapsService>().RemoveCapsForRegion(requestingRegion);
+                }
+            }
+            else if(message["Method"] == "EnableChildAgents")
             {
                 //Some notes on this message:
                 // 1) This is a region > CapsService message ONLY, this should never be sent to the client!

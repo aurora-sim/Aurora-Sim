@@ -112,28 +112,6 @@ namespace OpenSim.Services.PresenceService
             m_GridService = registry.RequestModuleInterface<IGridService>();
         }
 
-        public bool LoginAgent(string userID, UUID sessionID,
-                UUID secureSessionID)
-        {
-            if (!m_allowDuplicatePresences)
-                m_Database.LogoutAgent(UUID.Parse(userID));
-
-            PresenceData data = new PresenceData();
-
-            data.UserID = userID;
-            data.RegionID = UUID.Zero;
-            data.SessionID = sessionID;
-            data.Data = new Dictionary<string, string>();
-            data.Data["SecureSessionID"] = secureSessionID.ToString();
-            data.Data["LastSeen"] = Util.UnixTimeSinceEpoch().ToString();
-            
-            m_Database.Store(data);
-
-            m_log.DebugFormat("[PRESENCE SERVICE]: LoginAgent {0} with session {1} and ssession {2}",
-                userID, sessionID, secureSessionID);
-            return true;
-        }
-
         public bool LogoutAgent(UUID sessionID)
         {
             m_log.DebugFormat("[PRESENCE SERVICE]: Session {0} logout", sessionID);
@@ -145,25 +123,6 @@ namespace OpenSim.Services.PresenceService
             m_Database.LogoutRegionAgents(regionID);
 
             return true;
-        }
-
-        public void ReportAgent(UUID sessionID, UUID regionID)
-        {
-            m_log.DebugFormat("[PRESENCE SERVICE]: ReportAgent with session {0} in region {1}", sessionID, regionID);
-            try
-            {
-                PresenceData pdata = m_Database.Get(sessionID);
-                if (pdata == null)
-                    return;
-                if (pdata.Data == null)
-                    return;
-
-                m_Database.ReportAgent(sessionID, regionID);
-            }
-            catch (Exception e)
-            {
-                m_log.DebugFormat("[PRESENCE SERVICE]: ReportAgent threw exception {0}", e.StackTrace);
-            }
         }
 
         public PresenceInfo GetAgent(UUID sessionID)

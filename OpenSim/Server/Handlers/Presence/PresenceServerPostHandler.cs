@@ -161,24 +161,6 @@ namespace OpenSim.Server.Handlers.Presence
 
             return FailureResult();
         }
-        
-        byte[] Report(Dictionary<string, object> request)
-        {
-            UUID session = UUID.Zero;
-            UUID region = UUID.Zero;
-
-            if (!request.ContainsKey("SessionID") || !request.ContainsKey("RegionID"))
-                return FailureResult();
-
-            if (!UUID.TryParse(request["SessionID"].ToString(), out session))
-                return FailureResult();
-
-            if (!UUID.TryParse(request["RegionID"].ToString(), out region))
-                return FailureResult();
-
-            m_PresenceService.ReportAgent(session, region);
-            return SuccessResult();
-        }
 
         byte[] GetAgent(Dictionary<string, object> request)
         {

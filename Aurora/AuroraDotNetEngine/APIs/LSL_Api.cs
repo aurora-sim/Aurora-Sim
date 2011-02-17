@@ -102,7 +102,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             public int time;
             public UserAccount account;
-            public PresenceInfo pinfo;
+            public UserInfo pinfo;
         }
         protected Dictionary<UUID, UserInfoCacheEntry> m_userInfoCache =
                 new Dictionary<UUID, UserInfoCacheEntry>();
@@ -4928,7 +4928,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             UUID uuid = (UUID)id;
-            PresenceInfo pinfo = null;
+            UserInfo pinfo = null;
             UserAccount account;
 
             UserInfoCacheEntry ce;
@@ -4938,55 +4938,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (account == null)
                 {
                     m_userInfoCache[uuid] = null; // Cache negative
-                    return UUID.Zero.ToString();                 
-                }
-
-
-                PresenceInfo[] pinfos = World.PresenceService.GetAgents(new string[] { uuid.ToString() });
-                if (pinfos != null && pinfos.Length > 0)
-                {
-                    foreach (PresenceInfo p in pinfos)
-                    {
-                        if (p.RegionID != UUID.Zero)
-                        {
-                            pinfo = p;
-                        }
-                    }
+                    return UUID.Zero.ToString();
                 }
 
                 ce = new UserInfoCacheEntry();
                 ce.time = Util.EnvironmentTickCount();
                 ce.account = account;
-                ce.pinfo = pinfo;
+                ce.pinfo = World.RequestModuleInterface<IAgentInfoService>().GetUserInfo(uuid.ToString());
             }
             else
-                {
+            {
                 if (ce == null)
-                    {
+                {
                     return (LSL_Key)UUID.Zero.ToString();
-                    }
-                    account = ce.account;
-                    pinfo = ce.pinfo;
                 }
+                account = ce.account;
+                pinfo = ce.pinfo;
+            }
 
             if (Util.EnvironmentTickCount() < ce.time || (Util.EnvironmentTickCount() - ce.time) >= 20000)
             {
-                PresenceInfo[] pinfos = World.PresenceService.GetAgents(new string[] { uuid.ToString() });
-                if (pinfos != null && pinfos.Length > 0)
-                {
-                    foreach (PresenceInfo p in pinfos)
-                    {
-                        if (p.RegionID != UUID.Zero)
-                        {
-                            pinfo = p;
-                        }
-                    }
-                }
-                else
-                    pinfo = null;
-
                 ce.time = Util.EnvironmentTickCount();
-                ce.pinfo = pinfo;
+                ce.pinfo = World.RequestModuleInterface<IAgentInfoService>().GetUserInfo(uuid.ToString());
             }
 
             string reply = String.Empty;
@@ -4994,7 +4967,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             switch (data)
             {
                 case 1: // DATA_ONLINE (0|1)
-                    if (pinfo != null && pinfo.RegionID != UUID.Zero)
+                    if (pinfo != null && pinfo.IsOnline)
                         reply = "1";
                     else
                         reply = "0";
