@@ -31,11 +31,14 @@ using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework;
+using OpenMetaverse;
 
 namespace OpenSim.Server.Handlers.UserAccounts
 {
-    public class UserAccountServiceConnector : IService
+    public class UserAccountServiceConnector : IService, IGridRegistrationUrlModule
     {
+        private IRegistryCore m_registry;
+        private uint m_port = 0;
         public string Name
         {
             get { return GetType().Name; }
@@ -50,8 +53,37 @@ namespace OpenSim.Server.Handlers.UserAccounts
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("UserAccountInHandler", "") != Name)
                 return;
-            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("UserAccountInHandlerPort"));
-            server.AddStreamHandler(new UserAccountServerPostHandler(registry.RequestModuleInterface<IUserAccountService>()));
+
+            m_registry = registry;
+            m_port = handlerConfig.GetUInt("UserAccountInHandlerPort");
+
+            if (handlerConfig.GetBoolean("UnsecureUrls", false))
+            {
+                string url = "/accounts";
+
+                IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+                server.AddStreamHandler(new UserAccountServerPostHandler(url, registry.RequestModuleInterface<IUserAccountService>()));
+            }
         }
+
+        #region IGridRegistrationUrlModule Members
+
+        public string UrlName
+        {
+            get { return "UserAccountServerURI"; }
+        }
+
+        public string GetUrlForRegisteringClient(UUID SessionID)
+        {
+            string url = "/accounts" + UUID.Random();
+
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+            server.AddStreamHandler(new UserAccountServerPostHandler(url, m_registry.RequestModuleInterface<IUserAccountService>()));
+            return url;
+        }
+
+        #endregion
     }
 }

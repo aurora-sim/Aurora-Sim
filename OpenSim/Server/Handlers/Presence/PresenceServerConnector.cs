@@ -31,11 +31,14 @@ using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework;
+using OpenMetaverse;
 
 namespace OpenSim.Server.Handlers.Presence
 {
-    public class PresenceServiceConnector : IService
+    public class PresenceServiceConnector : IService, IGridRegistrationUrlModule
     {
+        private IRegistryCore m_registry;
+        private uint m_port = 0;
         public string Name
         {
             get { return GetType().Name; }
@@ -50,9 +53,37 @@ namespace OpenSim.Server.Handlers.Presence
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("PresenceInHandler", "") != Name)
                 return;
-            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("PresenceInHandlerPort"));
 
-            server.AddStreamHandler(new PresenceServerPostHandler(registry.RequestModuleInterface<IPresenceService>()));
+            m_registry = registry;
+            m_port = handlerConfig.GetUInt("PresenceInHandlerPort");
+
+            if (handlerConfig.GetBoolean("UnsecureUrls", false))
+            {
+                string url = "/presence";
+
+                IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+                server.AddStreamHandler(new PresenceServerPostHandler(url, registry.RequestModuleInterface<IPresenceService>()));
+            }
         }
+
+        #region IGridRegistrationUrlModule Members
+
+        public string UrlName
+        {
+            get { return "PresenceServerURI"; }
+        }
+
+        public string GetUrlForRegisteringClient(UUID SessionID)
+        {
+            string url = "/presence" + UUID.Random();
+
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+            server.AddStreamHandler(new PresenceServerPostHandler(url, m_registry.RequestModuleInterface<IPresenceService>()));
+            return url;
+        }
+
+        #endregion
     }
 }

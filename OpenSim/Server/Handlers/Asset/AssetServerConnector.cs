@@ -31,12 +31,17 @@ using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework;
+using OpenMetaverse;
 
 namespace OpenSim.Server.Handlers.Asset
 {
-    public class AssetServiceConnector : IService
+    public class AssetServiceConnector : IService, IGridRegistrationUrlModule
     {
+        private IRegistryCore m_registry;
         private string m_ConfigName = "AssetService";
+        private bool m_allowDelete = false;
+        private uint m_port = 0;
+ 
         public string Name
         {
             get { return GetType().Name; }
@@ -52,15 +57,46 @@ namespace OpenSim.Server.Handlers.Asset
             if (handlerConfig.GetString("AssetInHandler", "") != Name)
                 return;
 
-            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AssetInHandlerPort"));
+            m_registry = registry;
+            m_port = handlerConfig.GetUInt("AssetInHandlerPort");
+
+            if (handlerConfig.GetBoolean("UnsecureUrls", false))
+            {
+                IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+                string url = "/assets";
+
+                IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService>();
+                server.AddStreamHandler(new AssetServerGetHandler(m_AssetService, url));
+                server.AddStreamHandler(new AssetServerPostHandler(m_AssetService, url));
+                server.AddStreamHandler(new AssetServerDeleteHandler(m_AssetService, m_allowDelete, url));
+            }
 
             IConfig serverConfig = config.Configs[m_ConfigName];
-            bool allowDelete = serverConfig != null ? serverConfig.GetBoolean("AllowRemoteDelete", false) : false;
+            m_allowDelete = serverConfig != null ? serverConfig.GetBoolean("AllowRemoteDelete", false) : false;
 
-            IAssetService m_AssetService = registry.RequestModuleInterface<IAssetService>();
-            server.AddStreamHandler(new AssetServerGetHandler(m_AssetService));
-            server.AddStreamHandler(new AssetServerPostHandler(m_AssetService));
-            server.AddStreamHandler(new AssetServerDeleteHandler(m_AssetService, allowDelete));
+            m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
+
+        #region IGridRegistrationUrlModule Members
+
+        public string UrlName
+        {
+            get { return "AssetServerURI"; }
+        }
+
+        public string GetUrlForRegisteringClient(UUID SessionID)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            string url = "/assets" + UUID.Random();
+
+            IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService>();
+            server.AddStreamHandler(new AssetServerGetHandler(m_AssetService, url));
+            server.AddStreamHandler(new AssetServerPostHandler(m_AssetService, url));
+            server.AddStreamHandler(new AssetServerDeleteHandler(m_AssetService, m_allowDelete, url));
+
+            return url;
+        }
+
+        #endregion
     }
 }

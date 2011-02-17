@@ -51,8 +51,8 @@ namespace OpenSim.Server.Handlers.Avatar
 
         private IAvatarService m_AvatarService;
 
-        public AvatarServerPostHandler(IAvatarService service) :
-                base("POST", "/avatar")
+        public AvatarServerPostHandler(string url, IAvatarService service) :
+            base("POST", url)
         {
             m_AvatarService = service;
         }

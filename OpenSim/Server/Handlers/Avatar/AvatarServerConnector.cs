@@ -31,11 +31,14 @@ using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework;
+using OpenMetaverse;
 
 namespace OpenSim.Server.Handlers.Avatar
 {
-    public class AvatarServiceConnector : IService
+    public class AvatarServiceConnector : IService, IGridRegistrationUrlModule
     {
+        private IRegistryCore m_registry;
+        private uint m_port = 0;
         public string Name
         {
             get { return GetType().Name; }
@@ -54,9 +57,37 @@ namespace OpenSim.Server.Handlers.Avatar
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AvatarInHandler", "") != Name)
                 return;
-            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AvatarInHandlerPort"));
+            
+            m_registry = registry;
+            m_port = handlerConfig.GetUInt("AvatarInHandlerPort");
 
-            server.AddStreamHandler(new AvatarServerPostHandler(registry.RequestModuleInterface<IAvatarService>()));
+            if (handlerConfig.GetBoolean("UnsecureUrls", false))
+            {
+                string url = "/avatar";
+
+                IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+                server.AddStreamHandler(new AvatarServerPostHandler(url, registry.RequestModuleInterface<IAvatarService>()));
+            }
         }
+
+        #region IGridRegistrationUrlModule Members
+
+        public string UrlName
+        {
+            get { return "AvatarServerURI"; }
+        }
+
+        public string GetUrlForRegisteringClient(UUID SessionID)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            string url = "/avatar" + UUID.Random();
+
+            server.AddStreamHandler(new AvatarServerPostHandler(url, m_registry.RequestModuleInterface<IAvatarService>()));
+
+            return url;
+        }
+
+        #endregion
     }
 }

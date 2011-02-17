@@ -40,12 +40,16 @@ using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.Freeswitch
 {
-    public class FreeswitchServerConnector : IService
+    public class FreeswitchServerConnector : IService, IGridRegistrationUrlModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IFreeswitchService m_FreeswitchService;
         protected readonly string m_freeSwitchAPIPrefix = "/fsapi";
+
+        private IRegistryCore m_registry;
+        private uint m_port = 0;
+
         public string Name
         {
             get { return GetType().Name; }
@@ -60,11 +64,19 @@ namespace OpenSim.Server.Handlers.Freeswitch
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("FreeswitchInHandler", "") != Name)
                 return;
-            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("FreeswitchInHandlerPort"));
-            m_FreeswitchService = registry.RequestModuleInterface<IFreeswitchService>();
 
-            server.AddHTTPHandler(String.Format("{0}/freeswitch-config", m_freeSwitchAPIPrefix), FreeSwitchConfigHTTPHandler);
-            server.AddHTTPHandler(String.Format("{0}/region-config", m_freeSwitchAPIPrefix), RegionConfigHTTPHandler);
+            m_registry = registry;
+            m_port = handlerConfig.GetUInt("FreeswitchInHandlerPort");
+
+            if (handlerConfig.GetBoolean("UnsecureUrls", false))
+            {
+                IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+                m_FreeswitchService = registry.RequestModuleInterface<IFreeswitchService>();
+
+                server.AddHTTPHandler(String.Format("{0}/{1}/freeswitch-config", m_freeSwitchAPIPrefix, UUID.Random()), FreeSwitchConfigHTTPHandler);
+                server.AddHTTPHandler(String.Format("{0}/{1}/region-config", m_freeSwitchAPIPrefix, UUID.Random()), RegionConfigHTTPHandler);
+            }
         }
 
         public Hashtable FreeSwitchConfigHTTPHandler(Hashtable request)
@@ -118,5 +130,27 @@ namespace OpenSim.Server.Handlers.Freeswitch
 
             return response;
         }
+
+        #region IGridRegistrationUrlModule Members
+
+        public string UrlName
+        {
+            get { return "FreeswitchServiceURL"; }
+        }
+
+        public string GetUrlForRegisteringClient(UUID SessionID)
+        {
+            string url = "/CAPS/EQMPOSTER" + UUID.Random();
+
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+            m_FreeswitchService = m_registry.RequestModuleInterface<IFreeswitchService>();
+
+            server.AddHTTPHandler(String.Format("{0}/{1}/freeswitch-config", m_freeSwitchAPIPrefix, UUID.Random()), FreeSwitchConfigHTTPHandler);
+            server.AddHTTPHandler(String.Format("{0}/{1}/region-config", m_freeSwitchAPIPrefix, UUID.Random()), RegionConfigHTTPHandler);
+            return url;
+        }
+
+        #endregion
     }
 }

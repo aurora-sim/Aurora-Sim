@@ -48,8 +48,8 @@ namespace OpenSim.Server.Handlers.Asset
 
         private IAssetService m_AssetService;
 
-        public AssetServerPostHandler(IAssetService service) :
-                base("POST", "/assets")
+        public AssetServerPostHandler(IAssetService service, string url) :
+            base("POST", url)
         {
             m_AssetService = service;
         }

@@ -555,7 +555,7 @@ namespace OpenSim.Services.Interfaces
         /// <summary>
         /// Name of the Url
         /// </summary>
-        string Name { get; }
+        string UrlName { get; }
 
         /// <summary>
         /// Get the Url for the given sessionID

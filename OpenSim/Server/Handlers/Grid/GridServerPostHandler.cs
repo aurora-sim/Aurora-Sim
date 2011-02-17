@@ -57,8 +57,8 @@ namespace OpenSim.Server.Handlers.Grid
         private IRegistryCore m_registry;
         private Dictionary<UUID /*RegionID*/, UUID /*SessionID*/> SessionCache = new Dictionary<UUID, UUID>();
         
-        public GridServerPostHandler(IRegistryCore registry, IGridService service) :
-                base("POST", "/grid")
+        public GridServerPostHandler(string url, IRegistryCore registry, IGridService service) :
+                base("POST", url)
         {
             m_GridService = service;
             m_registry = registry;

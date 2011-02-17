@@ -41,10 +41,11 @@ using OpenMetaverse;
 
 namespace OpenSim.Server.Handlers.Asset
 {
-    public class XInventoryInConnector : IService
+    public class XInventoryInConnector : IService, IGridRegistrationUrlModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
+        private IRegistryCore m_registry;
+        private uint m_port = 0;
+        
         public string Name
         {
             get { return GetType().Name; }
@@ -59,11 +60,39 @@ namespace OpenSim.Server.Handlers.Asset
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("InventoryInHandler", "") != Name)
                 return;
+            
+            m_registry = registry;
+            m_port = handlerConfig.GetUInt("InventoryInHandlerPort");
 
-            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("InventoryInHandlerPort"));
+            if (handlerConfig.GetBoolean("UnsecureUrls", false))
+            {
+                string url = "/xinventory";
 
-            server.AddStreamHandler(new XInventoryConnectorPostHandler(registry.RequestModuleInterface<IInventoryService>()));
+                IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+                server.AddStreamHandler(new XInventoryConnectorPostHandler(url, registry.RequestModuleInterface<IInventoryService>()));
+            }
         }
+
+        #region IGridRegistrationUrlModule Members
+
+        public string UrlName
+        {
+            get { return "InventoryServerURI"; }
+        }
+
+        public string GetUrlForRegisteringClient(UUID SessionID)
+        {
+            string url = "/xinventory" + UUID.Random();
+
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+            server.AddStreamHandler(new XInventoryConnectorPostHandler(url, m_registry.RequestModuleInterface<IInventoryService>()));
+
+            return url;
+        }
+
+        #endregion
     }
 
     public class XInventoryConnectorPostHandler : BaseStreamHandler
@@ -72,8 +101,8 @@ namespace OpenSim.Server.Handlers.Asset
 
         private IInventoryService m_InventoryService;
 
-        public XInventoryConnectorPostHandler(IInventoryService service) :
-                base("POST", "/xinventory")
+        public XInventoryConnectorPostHandler(string url, IInventoryService service) :
+                base("POST", url)
         {
             m_InventoryService = service;
         }

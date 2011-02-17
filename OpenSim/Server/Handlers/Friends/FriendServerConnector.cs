@@ -31,11 +31,14 @@ using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework;
+using OpenMetaverse;
 
 namespace OpenSim.Server.Handlers.Friends
 {
-    public class FriendsServiceConnector : IService
+    public class FriendsServiceConnector : IService, IGridRegistrationUrlModule
     {
+        private IRegistryCore m_registry;
+        private uint m_port = 0;
         public string Name
         {
             get { return GetType().Name; }
@@ -51,9 +54,36 @@ namespace OpenSim.Server.Handlers.Friends
             if (handlerConfig.GetString("FriendsInHandler", "") != Name)
                 return;
 
-            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("FriendsInHandlerPort"));
+            m_registry = registry;
+            m_port = handlerConfig.GetUInt("FriendsInHandlerPort");
 
-            server.AddStreamHandler(new FriendsServerPostHandler(registry.RequestModuleInterface<IFriendsService>()));
+            if (handlerConfig.GetBoolean("UnsecureUrls", false))
+            {
+                string url = "/friends";
+
+                IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+                
+                server.AddStreamHandler(new FriendsServerPostHandler(url, m_registry.RequestModuleInterface<IFriendsService>()));
+            }
         }
+
+        #region IGridRegistrationUrlModule Members
+
+        public string UrlName
+        {
+            get { return "FriendsServerURI"; }
+        }
+
+        public string GetUrlForRegisteringClient(UUID SessionID)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            string url = "/friends" + UUID.Random();
+
+            server.AddStreamHandler(new FriendsServerPostHandler(url, m_registry.RequestModuleInterface<IFriendsService>()));
+
+            return url;
+        }
+
+        #endregion
     }
 }

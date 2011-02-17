@@ -50,8 +50,8 @@ namespace OpenSim.Server.Handlers.Presence
 
         private IPresenceService m_PresenceService;
 
-        public PresenceServerPostHandler(IPresenceService service) :
-                base("POST", "/presence")
+        public PresenceServerPostHandler(string url, IPresenceService service) :
+                base("POST", url)
         {
             m_PresenceService = service;
         }

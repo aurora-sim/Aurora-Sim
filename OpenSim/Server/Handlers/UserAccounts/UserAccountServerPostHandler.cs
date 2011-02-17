@@ -50,8 +50,8 @@ namespace OpenSim.Server.Handlers.UserAccounts
 
         private IUserAccountService m_UserAccountService;
 
-        public UserAccountServerPostHandler(IUserAccountService service) :
-                base("POST", "/accounts")
+        public UserAccountServerPostHandler(string url, IUserAccountService service) :
+                base("POST", url)
         {
             m_UserAccountService = service;
         }

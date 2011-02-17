@@ -19,9 +19,11 @@ using Aurora.Services.DataService;
  
 namespace OpenSim.Server.Handlers.AuroraData
 {
-    public class AuroraDataServiceConnector : IService
+    public class AuroraDataServiceConnector : IService, IGridRegistrationUrlModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private IRegistryCore m_registry;
+        private uint m_port = 0;
+        
         public string Name
         {
             get { return GetType().Name; }
@@ -38,11 +40,38 @@ namespace OpenSim.Server.Handlers.AuroraData
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AuroraDataHandler", "") != Name)
                 return;
-            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AuroraDataHandlerPort"));
 
-            m_log.Debug("[AuroraDataConnectors]: Starting...");
+            m_registry = registry;
+            m_port = handlerConfig.GetUInt("AuroraDataHandlerPort");
 
-            server.AddStreamHandler(new AuroraDataServerPostHandler());
+            if (handlerConfig.GetBoolean("UnsecureUrls", false))
+            {
+                string url = "/auroradata";
+
+                IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+                server.AddStreamHandler(new AuroraDataServerPostHandler(url));
+            }
+        }
+
+        #endregion
+
+        #region IGridRegistrationUrlModule Members
+
+        public string UrlName
+        {
+            get { return "RemoteServerURI"; }
+        }
+
+        public string GetUrlForRegisteringClient(UUID SessionID)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            string url = "/auroradata" + UUID.Random();
+
+            IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService>();
+            server.AddStreamHandler(new AuroraDataServerPostHandler(url));
+
+            return url;
         }
 
         #endregion

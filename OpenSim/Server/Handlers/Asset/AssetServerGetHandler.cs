@@ -48,8 +48,8 @@ namespace OpenSim.Server.Handlers.Asset
 
         private IAssetService m_AssetService;
 
-        public AssetServerGetHandler(IAssetService service) :
-                base("GET", "/assets")
+        public AssetServerGetHandler(IAssetService service, string url) :
+                base("GET", url)
         {
             m_AssetService = service;
         }

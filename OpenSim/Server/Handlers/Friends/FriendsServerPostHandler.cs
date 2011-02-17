@@ -51,8 +51,8 @@ namespace OpenSim.Server.Handlers.Friends
 
         private IFriendsService m_FriendsService;
 
-        public FriendsServerPostHandler(IFriendsService service) :
-                base("POST", "/friends")
+        public FriendsServerPostHandler(string url, IFriendsService service) :
+                base("POST", url)
         {
             m_FriendsService = service;
         }

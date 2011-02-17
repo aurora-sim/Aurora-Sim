@@ -49,8 +49,8 @@ namespace OpenSim.Server.Handlers.Asset
         private IAssetService m_AssetService;
         protected bool m_allowDelete;
 
-        public AssetServerDeleteHandler(IAssetService service, bool allowDelete) :
-                base("DELETE", "/assets")
+        public AssetServerDeleteHandler(IAssetService service, bool allowDelete, string url) :
+            base("DELETE", url)
         {
             m_AssetService = service;
             m_allowDelete = allowDelete;

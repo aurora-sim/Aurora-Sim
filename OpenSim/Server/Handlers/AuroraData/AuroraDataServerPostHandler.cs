@@ -33,8 +33,8 @@ namespace OpenSim.Server.Handlers.AuroraData
         private DirectoryInfoHandler DirectoryHandler = new DirectoryInfoHandler();
         private GroupsServiceHandler GroupsHandler = new GroupsServiceHandler();
 
-        public AuroraDataServerPostHandler() :
-            base("POST", "/auroradata")
+        public AuroraDataServerPostHandler(string url) :
+            base("POST", url)
         {
         }
 

@@ -50,8 +50,8 @@ namespace OpenSim.Server.Handlers.GridUser
 
         private IGridUserService m_GridUserService;
 
-        public GridUserServerPostHandler(IGridUserService service) :
-                base("POST", "/griduser")
+        public GridUserServerPostHandler(string url, IGridUserService service) :
+                base("POST", url)
         {
             m_GridUserService = service;
         }

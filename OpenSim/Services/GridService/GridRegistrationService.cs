@@ -17,6 +17,7 @@ namespace OpenSim.Services.GridService
         protected List<IGridRegistrationUrlModule> m_modules = new List<IGridRegistrationUrlModule>();
 
         #endregion
+
         #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)

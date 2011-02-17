@@ -34,11 +34,14 @@ using Aurora.DataManager;
 using Aurora.Framework;
 using Aurora.Services.DataService;
 using OpenSim.Framework;
+using OpenMetaverse;
 
 namespace OpenSim.Server.Handlers.Grid
 {
     public class GridServiceConnector : IService
     {
+        private IRegistryCore m_registry;
+        private uint m_port = 0;
         public string Name
         {
             get { return GetType().Name; }
@@ -54,10 +57,39 @@ namespace OpenSim.Server.Handlers.Grid
             if (handlerConfig.GetString("GridInHandler", "") != Name)
                 return;
 
-            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("GridInHandlerPort"));
+            m_registry = registry;
+            m_port = handlerConfig.GetUInt("GridInHandlerPort");
 
-            GridServerPostHandler handler = new GridServerPostHandler(registry, registry.RequestModuleInterface<IGridService>());
-            server.AddStreamHandler(handler);
+            if (handlerConfig.GetBoolean("UnsecureUrls", false))
+            {
+                string url = "/grid";
+
+                IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+                GridServerPostHandler handler = new GridServerPostHandler(url, registry, registry.RequestModuleInterface<IGridService>());
+                server.AddStreamHandler(handler);
+            }
         }
+
+        #region IGridRegistrationUrlModule Members
+
+        public string UrlName
+        {
+            get { return "GridServerURI"; }
+        }
+
+        public string GetUrlForRegisteringClient(UUID SessionID)
+        {
+            string url = "/grid" + UUID.Random();
+
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+            GridServerPostHandler handler = new GridServerPostHandler(url, m_registry, m_registry.RequestModuleInterface<IGridService>());
+            server.AddStreamHandler(handler);
+
+            return url;
+        }
+
+        #endregion
     }
 }

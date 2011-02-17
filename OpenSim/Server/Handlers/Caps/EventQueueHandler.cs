@@ -18,9 +18,12 @@ using Aurora.Services.DataService;
 
 namespace OpenSim.Server.Handlers
 {
-    public class EventQueueHandler : IService
+    public class EventQueueHandler : IService, IGridRegistrationUrlModule
     {
         #region IService Members
+
+        private IRegistryCore m_registry;
+        private uint m_port = 0;
 
         public string Name
         {
@@ -36,10 +39,39 @@ namespace OpenSim.Server.Handlers
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("EventQueueInHandler", "") != Name)
                 return;
-            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("EventQueueInHandlerPort"));
 
-            server.AddStreamHandler(new EQMEventPoster(registry.RequestModuleInterface<IEventQueueService>(),
+            m_registry = registry;
+            m_port = handlerConfig.GetUInt("EventQueueInHandlerPort");
+
+            if (handlerConfig.GetBoolean("UnsecureUrls", false))
+            {
+                string url = "/CAPS/EQMPOSTER";
+
+                IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+                server.AddStreamHandler(new EQMEventPoster(url, registry.RequestModuleInterface<IEventQueueService>(),
                 registry.RequestModuleInterface<ICapsService>()));
+            }
+        }
+
+        #endregion
+
+        #region IGridRegistrationUrlModule Members
+
+        public string UrlName
+        {
+            get { return "EventQueueServiceURI"; }
+        }
+
+        public string GetUrlForRegisteringClient(UUID SessionID)
+        {
+            string url = "/CAPS/EQMPOSTER" + UUID.Random();
+
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+            server.AddStreamHandler(new EQMEventPoster(url, m_registry.RequestModuleInterface<IEventQueueService>(),
+            m_registry.RequestModuleInterface<ICapsService>()));
+            return url;
         }
 
         #endregion
@@ -52,8 +84,8 @@ namespace OpenSim.Server.Handlers
         private IEventQueueService m_eventQueueService;
         private ICapsService m_capsService;
 
-        public EQMEventPoster(IEventQueueService handler, ICapsService capsService) :
-            base("POST", "/CAPS/EQMPOSTER")
+        public EQMEventPoster(string url, IEventQueueService handler, ICapsService capsService) :
+            base("POST", url)
         {
             m_eventQueueService = handler;
             m_capsService = capsService;
