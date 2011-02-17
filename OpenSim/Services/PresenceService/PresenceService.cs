@@ -261,14 +261,13 @@ namespace OpenSim.Services.PresenceService
     }
     public class AgentInfoService : IService, IAgentInfoService
     {
-
           #region Declares
 
          proteced IGenericsConnector m_genericsConnector;
 
           #endregion
 
-#region IService Members
+         #region IService Members
 
          public void Initialize(IConfigSource config, IRegistryCore registry)
          {
@@ -278,25 +277,24 @@ namespace OpenSim.Services.PresenceService
               m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
          }
 
-#endregion
+         #endregion
 
-         public UserInfo[] GetUserInfo(string userID)
+         #region IAgentInfoService Members
+
+         public UserInfo GetUserInfo(string userID)
          {
-               return null;
+               return m_genericsConnector.GetGeneric<UserInfo>(UUID.Parse(userID), "UserInfo", userID, new UserInfo());
          }
 
          public bool SetHomePosition(string userID, UUID homeID, Vector3 homePosition, Vector3 homeLookAt)
          {
-              UserInfo[] userInfo = GetUserInfo(userID);
+              UserInfo userInfo = GetUserInfo(userID);
               if(userInfo != null)
               {
-                    for(int i = 0; i < userInfo.Length; i++)
-                    {
-                          userInfo[i].HomeRegionID = regionID;
-                          userInfo[i].HomePosition = lastPosition;
-                          userInfo[i].HomeLookAt = lastLookAt;
-                          Save(userInfo[i]);
-                    }
+                    userInfo.HomeRegionID = regionID;
+                    userInfo.HomePosition = lastPosition;
+                    userInfo.HomeLookAt = lastLookAt;
+                    Save(userInfo[i]);
                     return true;
               }
               return false;
@@ -304,21 +302,21 @@ namespace OpenSim.Services.PresenceService
 
          public void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
          {
-              UserInfo[] userInfo = GetUserInfo(userID);
+              UserInfo userInfo = GetUserInfo(userID);
               if(userInfo != null)
               {
-                    for(int i = 0; i < userInfo.Length; i++)
-                    {
-                          userInfo[i].CurrentRegionID = regionID;
-                          userInfo[i].CurrentPosition = lastPosition;
-                          userInfo[i].CurrentLookAt = lastLookAt;
-                          Save(userInfo[i]);
-                    }
+                    userInfo.CurrentRegionID = regionID;
+                    userInfo.CurrentPosition = lastPosition;
+                    userInfo.CurrentLookAt = lastLookAt;
+                    Save(userInfo);
               }
          }
 
         public void Save(UserInfo userInfo)
         {
+               m_genericsConnector.AddGeneric(UUID.Parse(userInfo.UserID), "UserInfo", UserID, userInfo.ToOSD());
         }
+
+         #endregion
     }
 }
