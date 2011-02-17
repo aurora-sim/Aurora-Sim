@@ -60,7 +60,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="userID"></param>
         /// <param name="regionID"></param>
         /// <returns></returns>
-        UserInfo[] GetUserInfo(string userID);
+        UserInfo GetUserInfo(string userID);
 
         /// <summary>
         /// Set the home position of the given user
