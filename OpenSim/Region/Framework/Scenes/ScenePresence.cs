@@ -1037,10 +1037,10 @@ namespace OpenSim.Region.Framework.Scenes
             bool m_flying = ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
             MakeRootAgent(m_flying);
 
-            //Tell the EQService that we successfully got here
-            IEventQueueService eventQueueService = Scene.RequestModuleInterface<IEventQueueService>();
-            if (eventQueueService != null)
-                eventQueueService.ArrivedAtDestination(UUID, Scene.RegionInfo.RegionHandle);
+            //Tell the grid that we successfully got here
+            ISyncMessagePosterService syncPoster = Scene.RequestModuleInterface<ISyncMessagePosterService>();
+            if (syncPoster != null)
+                syncPoster.Post(SyncMessageHelper.ArrivedAtDestination(UUID, Scene.RegionInfo.RegionHandle));
 
             IEntityTransferModule m_agentTransfer = m_scene.RequestModuleInterface<IEntityTransferModule>();
             if (m_agentTransfer != null)
@@ -2360,11 +2360,9 @@ namespace OpenSim.Region.Framework.Scenes
                 agentpos.UpAxis = CameraUpAxis;
                 agentpos.Velocity = Velocity;
 
-                IEventQueueService eventQueueService = m_scene.RequestModuleInterface<IEventQueueService>();
-                if (eventQueueService != null)
-                {
-                    eventQueueService.SendChildAgentUpdate(agentpos, m_scene.RegionInfo.RegionID, m_scene.RegionInfo.RegionHandle);
-                }
+                ISyncMessagePosterService syncPoster = Scene.RequestModuleInterface<ISyncMessagePosterService>();
+                if (syncPoster != null)
+                    syncPoster.Post(SyncMessageHelper.SendChildAgentUpdate(agentpos, m_scene.RegionInfo.RegionID, m_scene.RegionInfo.RegionHandle));
             }
 
             //Moving these into the terse update check, as they don't need to be checked/sent unless the client has moved.
