@@ -647,11 +647,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             agent.child = true;
             agent.Appearance = sp.Appearance;
 
-            IEventQueueService eq = sp.Scene.RequestModuleInterface<IEventQueueService>();
-            if (eq != null)
+            ISyncMessagePosterService syncPoster = sp.Scene.RequestModuleInterface<ISyncMessagePosterService>();
+            if (syncPoster != null)
             {
-                eq.EnableChildAgentsReply(agent.AgentID, sp.Scene.RegionInfo.RegionHandle,
-                    (int)sp.DrawDistance, agent);
+                syncPoster.Post(SyncMessageHelper.EnableChildAgents(agent.AgentID, (int)sp.DrawDistance, agent, sp.Scene.RegionInfo.RegionHandle));
             }
         }
 

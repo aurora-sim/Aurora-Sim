@@ -219,12 +219,6 @@ namespace OpenSim.Services.CapsService
         //
         //
 
-        public virtual void EnableChildAgentsReply(UUID avatarID, ulong RegionHandle, int DrawDistance, AgentCircuitData circuit)
-        {
-            OSD item = EventQueueHelper.EnableChildAgents(DrawDistance, circuit);
-            Enqueue(item, avatarID, RegionHandle);
-        }
-
         public virtual bool CrossAgent(GridRegion crossingRegion, Vector3 pos,
             Vector3 velocity, AgentCircuitData circuit, AgentData cAgent, ulong RegionHandle)
         {
@@ -393,28 +387,6 @@ namespace OpenSim.Services.CapsService
 
                         //Client doesn't get this
                         return CrossAgent(Region, pos, Vel, Circuit, AgentData);
-                    }
-                    else if (map.ContainsKey("message") && map["message"] == "EnableChildAgents")
-                    {
-                        //Some notes on this message:
-                        // 1) This is a region > CapsService message ONLY, this should never be sent to the client!
-                        // 2) This just enables child agents in the regions given, as the region cannot do it,
-                        //       as regions do not have the ability to know what Cap Urls other regions have.
-                        // 3) We could do more checking here, but we don't really 'have' to at this point.
-                        //       If the sim was able to get it past the password checks and everything,
-                        //       it should be able to add the neighbors here. We could do the neighbor finding here
-                        //       as well, but it's not necessary at this time.
-                        OSDMap body = ((OSDMap)map["body"]);
-
-                        //Parse the OSDMap
-                        int DrawDistance = body["DrawDistance"].AsInteger();
-
-                        AgentCircuitData circuitData = new AgentCircuitData();
-                        circuitData.UnpackAgentCircuitData((OSDMap)body["Circuit"]);
-                        
-                        //Now do the creation
-                        //Don't send it to the client at all, so return here
-                        return EnableChildAgents(DrawDistance, circuitData);
                     }
                     else if (map.ContainsKey("message") && map["message"] == "EstablishAgentCommunication")
                     {
@@ -706,39 +678,6 @@ namespace OpenSim.Services.CapsService
         #region Agent code (teleporting, crossing, disabling/enabling)
 
         #region EnableChildAgents
-
-        public bool EnableChildAgents(int DrawDistance, AgentCircuitData circuit)
-        {
-            int count = 0;
-            bool informed = true;
-            INeighborService neighborService = m_service.Registry.RequestModuleInterface<INeighborService>();
-            if (neighborService != null)
-            {
-                uint x, y;
-                Utils.LongToUInts(m_service.RegionHandle, out x, out y);
-                GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-                if (ourRegion == null)
-                {
-                    m_log.Info("[EQMService]: Failed to inform neighbors about new agent, could not find our region. ");
-                    return false;
-                }
-                List<GridRegion> neighbors = neighborService.GetNeighbors(ourRegion, DrawDistance);
-
-                foreach (GridRegion neighbor in neighbors)
-                {
-                    //m_log.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
-
-                    if (neighbor.RegionHandle != m_service.RegionHandle)
-                    {
-                        if (!InformClientOfNeighbor(circuit.Copy(), neighbor,
-                            (uint)TeleportFlags.Default, null))
-                            informed = false;
-                    }
-                    count++;
-                }
-            }
-            return informed;
-        }
 
         /// <summary>
         /// Async component for informing client of which neighbors exist

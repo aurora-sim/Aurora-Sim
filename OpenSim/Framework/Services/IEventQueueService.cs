@@ -88,19 +88,6 @@ namespace OpenSim.Services.Interfaces
         void ScriptRunningReply(UUID objectID, UUID itemID, bool running, bool mono,
             UUID avatarID, ulong RegionHandle);
 
-
-        /// <summary>
-        /// This is a region > CapsService message ONLY, this should never be sent to the client.
-        /// This enables child agents in the given neighbors
-        /// </summary>
-        /// <param name="avatarID"></param>
-        /// <param name="RegionHandle"></param>
-        /// <param name="DrawDistance"></param>
-        /// <param name="neighbors"></param>
-        /// <param name="circuit"></param>
-        void EnableChildAgentsReply(UUID avatarID, ulong RegionHandle,
-            int DrawDistance, AgentCircuitData circuit);
-
         /// <summary>
         /// Tell the EventQueueService to cross this agent
         /// </summary>
