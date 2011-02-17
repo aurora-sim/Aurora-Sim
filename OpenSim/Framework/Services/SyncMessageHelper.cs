@@ -65,7 +65,7 @@ namespace OpenSim.Framework
 
         public static OSD TeleportAgent(int DrawDistance, AgentCircuitData circuit,
             AgentData data, uint TeleportFlags,
-            GridRegion destination)
+            GridRegion destination, ulong requestingRegion)
         {
             OSDMap llsdBody = new OSDMap();
 
@@ -74,6 +74,7 @@ namespace OpenSim.Framework
             llsdBody.Add("TeleportFlags", TeleportFlags);
             llsdBody.Add("AgentData", data.Pack());
             llsdBody.Add("Region", destination.ToOSD());
+            llsdBody.Add("RequestingRegion", requestingRegion);
             return buildEvent("TeleportAgent", llsdBody);
         }
 

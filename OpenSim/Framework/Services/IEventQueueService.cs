@@ -87,55 +87,5 @@ namespace OpenSim.Services.Interfaces
         void QueryReply(PlacesReplyPacket placesReply, UUID avatarID, string[] RegionTypes, ulong RegionHandle);
         void ScriptRunningReply(UUID objectID, UUID itemID, bool running, bool mono,
             UUID avatarID, ulong RegionHandle);
-
-        /// <summary>
-        /// Tell the EventQueueService to cross this agent
-        /// </summary>
-        /// <param name="crossingRegion"></param>
-        /// <param name="pos"></param>
-        /// <param name="velocity"></param>
-        /// <param name="circuit"></param>
-        /// <param name="cAgent"></param>
-        /// <param name="RegionHandle"></param>
-        /// <returns></returns>
-        bool CrossAgent(GridRegion crossingRegion, Vector3 pos,
-            Vector3 velocity, AgentCircuitData circuit, AgentData cAgent, ulong RegionHandle);
-
-        /// <summary>
-        /// Tell the EventQueueService to teleport this agent
-        /// </summary>
-        /// <param name="AgentID">The agent that is doing the teleport</param>
-        /// <param name="DrawDistance">The agent's draw distance</param>
-        /// <param name="circuit">The circuit data of the agent</param>
-        /// <param name="data">The update that the other region will get about this agent</param>
-        /// <param name="TeleportFlags">The teleport flags</param>
-        /// <param name="destination">The destination</param>
-        /// <param name="RegionHandle">The current region's handle</param>
-        /// <returns></returns>
-        bool TeleportAgent(UUID AgentID, int DrawDistance, AgentCircuitData circuit,
-            AgentData data, uint TeleportFlags,
-            GridRegion destination, ulong RegionHandle);
-
-        /// <summary>
-        /// Send an update to all child agents
-        /// </summary>
-        /// <param name="agentpos"></param>
-        /// <param name="regionID"></param>
-        /// <param name="RegionHandle"></param>
-        void SendChildAgentUpdate(AgentPosition agentpos, UUID regionID, ulong RegionHandle);
-
-        /// <summary>
-        /// Cancel the teleport for the user
-        /// </summary>
-        /// <param name="AgentID"></param>
-        /// <param name="RegionHandle"></param>
-        void CancelTeleport(UUID AgentID, ulong RegionHandle);
-
-        /// <summary>
-        /// Handle a callback from the region the user teleported into
-        /// </summary>
-        /// <param name="AgentID"></param>
-        /// <param name="RegionHandle"></param>
-        void ArrivedAtDestination(UUID AgentID, ulong RegionHandle);
     }
 }
