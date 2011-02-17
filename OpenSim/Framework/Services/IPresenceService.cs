@@ -61,7 +61,6 @@ namespace OpenSim.Services.Interfaces
 
     public interface IPresenceService
     {
-        PresenceInfo GetAgent(UUID sessionID);
         PresenceInfo[] GetAgents(string[] userIDs);
         string[] GetAgentsLocations(string[] userIDs);
     }

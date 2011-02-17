@@ -354,13 +354,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
 
                 UserAccount account = m_Scenes[0].UserAccountService.GetUserAccount(client.Scene.RegionInfo.ScopeID, fromAgentID);
 
-                PresenceInfo presence = null;
-                PresenceInfo[] presences = PresenceService.GetAgents(new string[] { fid });
-                if (presences != null && presences.Length > 0)
-                    presence = presences[0];
-                if (presence != null)
-                    im.offline = 0;
-
+                im.offline = 1;
                 im.fromAgentID = fromAgentID.Guid;
                 im.fromAgentName = account.FirstName + " " + account.LastName;
                 im.offline = (byte)((presence == null) ? 1 : 0);
@@ -482,51 +476,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 // Try local
                 if (LocalStatusNotification(userID, friendID, online))
                     return;
-
-                // The friend is not here [as root]. Let's forward.
-                string[] AgentLocations = PresenceService.GetAgentsLocations(new string[] { friendID.ToString() });
-
-                if (AgentLocations != null && (AgentLocations.Length != 0 && AgentLocations[0] != "Failure")) //If this is true, this doesn't exist on the presence server and we use the legacy way
-                {
-                    //No agents, do nothing
-                    if (AgentLocations[0] == "NoAgents" || AgentLocations[0] == "")
-                        return;
-                    try
-                    {
-                        for (int i = 0; i < AgentLocations.Length; i++)
-                        {
-                            //New style update!
-                            //Create a fake GridRegion
-                            GridRegion region = new GridRegion() { ServerURI = AgentLocations[i] };
-                            //m_log.DebugFormat("[FRIENDS]: Remote Notify to region {0}", region.RegionName);
-                            if (m_FriendsSimConnector.StatusNotify(region, userID, friendID, online))
-                                return;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        //If something goes wrong, let it fall back
-                        m_log.Warn("[FRIENDS]: Error in status update: " + ex);
-                    }
-                }
-                PresenceInfo[] friendSessions = PresenceService.GetAgents(new string[] { friendID.ToString() });
-                if (friendSessions != null && friendSessions.Length > 0)
-                {
-                    PresenceInfo friendSession = null;
-                    foreach (PresenceInfo pinfo in friendSessions)
-                        if (pinfo.RegionID != UUID.Zero) // let's guard against sessions-gone-bad
-                        {
-                            friendSession = pinfo;
-                            break;
-                        }
-
-                    if (friendSession != null && GridService != null)
-                    {
-                        GridRegion region = GridService.GetRegionByUUID(m_Scenes[0].RegionInfo.ScopeID, friendSession.RegionID);
-                        //m_log.DebugFormat("[FRIENDS]: Remote Notify to region {0}", region.RegionName);
-                        m_FriendsSimConnector.StatusNotify(region, userID, friendID, online);
-                    }
-                }
 
                 // Friend is not online. Ignore.
             }
