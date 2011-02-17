@@ -626,6 +626,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             ScenePresence sp = GetScenePresence(agent.AgentID);
 
+            ICapsService capsService = RequestModuleInterface<ICapsService>();
             if (sp != null && !sp.IsChildAgent)
             {
                 // We have a zombie from a crashed session. 
@@ -633,12 +634,15 @@ namespace OpenSim.Region.Framework.Scenes
                 // Kill it.
                 m_log.InfoFormat("[Scene]: Zombie scene presence detected for {0} in {1}", agent.AgentID, RegionInfo.RegionName);
                 RemoveAgent(sp);
+                //Destroy the old caps
+                IClientCapsService clientCaps = capsService.GetClientCapsService(sp.UUID);
+                if (clientCaps != null)
+                    clientCaps.RemoveCAPS(this.RegionInfo.RegionHandle);
                 sp = null;
             }
 
             OSDMap responseMap = new OSDMap();
 
-            ICapsService capsService = RequestModuleInterface<ICapsService>();
             if (capsService != null)
             {
                 const string seedRequestPath = "0000/";
