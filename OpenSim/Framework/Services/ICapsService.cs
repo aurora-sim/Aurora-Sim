@@ -58,6 +58,12 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="RegionHandle"></param>
         IRegionCapsService GetCapsForRegion(ulong regionID);
+
+        /// <summary>
+        /// Get all agents caps services across the grid
+        /// </summary>
+        /// <returns></returns>
+        List<IClientCapsService> GetClientsCapsServices();
     }
 
     /// <summary>
@@ -85,10 +91,43 @@ namespace OpenSim.Services.Interfaces
         IHttpServer Server { get; }
         String HostUri { get; }
 
+        /// <summary>
+        /// Start the caps service for this user
+        /// </summary>
+        /// <param name="server"></param>
+        /// <param name="agentID"></param>
         void Initialise(ICapsService server, UUID agentID);
+        
+        /// <summary>
+        /// Close all Caps connections and destroy any remaining data
+        /// </summary>
         void Close();
-        IRegionClientCapsService GetCapsService(ulong regionID);
+
+        /// <summary>
+        /// Get a regions Caps Service by region handle
+        /// </summary>
+        /// <param name="regionID"></param>
+        /// <returns></returns>
+        IRegionClientCapsService GetCapsService(ulong regionHandle);
+        /// <summary>
+        /// Gets a list of all region caps services that the agent is currently in
+        /// </summary>
+        /// <returns></returns>
+        List<IRegionClientCapsService> GetCapsServices();
+
+        /// <summary>
+        /// Get or create a new region caps service for the given region
+        /// </summary>
+        /// <param name="regionID"></param>
+        /// <param name="CAPSBase"></param>
+        /// <param name="UrlToInform"></param>
+        /// <returns></returns>
         IRegionClientCapsService GetOrCreateCapsService(ulong regionID, string CAPSBase, string UrlToInform);
+
+        /// <summary>
+        /// Remove the caps for this user from the given region
+        /// </summary>
+        /// <param name="regionHandle"></param>
         void RemoveCAPS(ulong regionHandle);
     }
 

@@ -197,6 +197,11 @@ namespace OpenSim.Services.CapsService
             return m_ClientCapsServices[AgentID];
         }
 
+        public List<IClientCapsService> GetClientsCapsServices()
+        {
+            return new List<IClientCapsService>(m_ClientCapsServices.Values);
+        }
+
         #endregion
 
         #region Region Caps

@@ -3637,7 +3637,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         if (m_killRecord.Contains(update.Value.Entity.LocalId))
                         {
                                 m_log.ErrorFormat(
-                                    "[CLIENT]: Preventing update for prim with local id {0} after client for user {1} told it was deleted. JIRA this at http://jira.openmetaverse.org/secure/CreateIssue!default.jspa !",
+                                    "[CLIENT]: Preventing update for prim with local id {0} after client for user {1} told it was deleted. Mantis this at http://mantis.aurora-sim.org/bug_report_page.php !",
                                     update.Value.Entity.LocalId, Name);
                             continue;
                         }

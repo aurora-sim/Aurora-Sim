@@ -121,6 +121,11 @@ namespace OpenSim.Services.CapsService
             return null;
         }
 
+        public List<IRegionClientCapsService> GetCapsServices()
+        {
+            return new List<IRegionClientCapsService>(m_RegionCapsServices.Values);
+        }
+
         /// <summary>
         /// Find, or create if one does not exist, a Caps Service for the given region
         /// </summary>
