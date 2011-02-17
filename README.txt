@@ -8,9 +8,9 @@ The Aurora Development Team is proud to present the release of Aurora virtual wo
  whether it be viewer based developers or server based developers, 
  and a set of features around stability and simplified usability for users.
 
-We aren’t just releasing new features, but a new outlook on a virtual world development for the average human.
+We arenâ€™t just releasing new features, but a new outlook on a virtual world development for the average human.
  We encourage you to read our manifesto (http://aurora-sim.org/index.php?option=com_content&view=article&id=20&Itemid=60)
- and learn about our direction to make the people’s choice in virtual server!
+ and learn about our direction to make the peopleâ€™s choice in virtual server!
 
 --------------------------
 ---- Compiling Aurora ----
@@ -119,6 +119,27 @@ have been moved to the AuroraConfiguration and Configuration folders (respective
 
 -- End Standalone folder --
 
+-------------------------
+---- Standalone Configuration ----
+-------------------------
+
+- To run standalone, you will need to edit a couple of configuration files for it to run. These files would be:
+
+    Configuration/Standalone/StandaloneCommon.ini
+
+- In this file, you will need to modify the [CAPSService] section.
+In this section, you will need to put in your hostname (external IP or dns name) and port.
+Now you can skip down to the section on "Starting Aurora".
+
+- To run in grid enabled mode, you will need to edit:
+    Configuration/Grid/AuroraGridCommon.ini
+
+-In this file, you will need to edit the [Configuration] and set the URL of the grid you are connecting to as well as the [CAPSService] as outlined above for standalone.
+
+- If you are trying to connect to Robust, you will need to edit:
+    Configuration / RobustGrid / RobustGridCommon.ini
+
+- You'll set this file up in the same way that you would set GridCommon.ini in OpenSim.
 
 -------------------------
 ---- Starting Aurora ----

@@ -1049,7 +1049,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             LayerDataPacket layerpack;
             try
             {
-                layerpack = AuroraTerrainCompressor.CreateLandPacket(map, xs, ys, TerrainPatch.LayerType.Land, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+                byte type = (byte)TerrainPatch.LayerType.Land;
+                if(m_scene.RegionInfo.RegionSizeX > Constants.RegionSize || m_scene.RegionInfo.RegionSizeY > Constants.RegionSize)
+                {
+                    type++;
+                }
+                layerpack = AuroraTerrainCompressor.CreateLandPacket(map, xs, ys, type, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 layerpack.Header.Zerocoded = true;  
                 layerpack.Header.Reliable = true;
 
@@ -1100,7 +1105,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 int[] x = new int[] { px };
                 int[] y = new int[] { py };
 
-                LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLandPacket(map, x, y, TerrainPatch.LayerType.Land, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+                byte type = (byte)TerrainPatch.LayerType.Land;
+                if (m_scene.RegionInfo.RegionSizeX > Constants.RegionSize || m_scene.RegionInfo.RegionSizeY > Constants.RegionSize)
+                {
+                    type++;
+                }
+                LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLandPacket(map, x, y, type, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
 
                 OutPacket(layerpack, ThrottleOutPacketType.Unknown);
             }
@@ -1116,10 +1126,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <param name="px">Patch coordinates (x) 0..regionSize/16</param>
         /// <param name="py">Patch coordinates (y) 0..regionSize/16</param>
         /// <param name="map">heightmap</param>
-        public void SendLayerData(int[] x, int[] y, float[] map, TerrainPatch.LayerType type)
+        public void SendLayerData(int[] x, int[] y, float[] map, TerrainPatch.LayerType layertype)
         {
             LayerDataPacket layerpack;
             int MaxPatches = 10;
+            byte type = (byte)layertype;
+            if (m_scene.RegionInfo.RegionSizeX > Constants.RegionSize || m_scene.RegionInfo.RegionSizeY > Constants.RegionSize)
+            {
+                if (layertype == TerrainPatch.LayerType.Land || layertype == TerrainPatch.LayerType.Water)
+                    type++;
+                else
+                    type += 2;
+            }
             //Only send 10 at a time
             for (int i = 0; i < x.Length; i += MaxPatches)
             {
@@ -1214,8 +1232,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     patches[1].Data[y * 16 + x] = windSpeeds[y * 16 + x].Y;
                 }
             }
-
-            LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLayerDataPacket(patches, TerrainPatch.LayerType.Wind, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+            byte type = (byte)TerrainPatch.LayerType.Wind;
+            if (m_scene.RegionInfo.RegionSizeX > Constants.RegionSize || m_scene.RegionInfo.RegionSizeY > Constants.RegionSize)
+            {
+                type += 2;
+            }
+            LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLayerDataPacket(patches, type, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
             layerpack.Header.Zerocoded = true;
             OutPacket(layerpack, ThrottleOutPacketType.Wind);
         }
@@ -1239,7 +1261,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
             }
 
-            LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLayerDataPacket(patches, TerrainPatch.LayerType.Cloud, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+            byte type = (byte)TerrainPatch.LayerType.Cloud;
+            if (m_scene.RegionInfo.RegionSizeX > Constants.RegionSize || m_scene.RegionInfo.RegionSizeY > Constants.RegionSize)
+            {
+                type += 2;
+            }
+            LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLayerDataPacket(patches, type, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
             layerpack.Header.Zerocoded = true;
             OutPacket(layerpack, ThrottleOutPacketType.Cloud);
         }

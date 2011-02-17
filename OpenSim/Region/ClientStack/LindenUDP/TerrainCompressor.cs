@@ -60,34 +60,21 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             BuildQuantizeTable16();
         }
 
-        public static LayerDataPacket CreateLayerDataPacket(TerrainPatch[] patches, TerrainPatch.LayerType type, int RegionSizeX, int RegionSizeY)
+        public static LayerDataPacket CreateLayerDataPacket(TerrainPatch[] patches, byte type, int RegionSizeX, int RegionSizeY)
         {
             LayerDataPacket layer = new LayerDataPacket();
-            TerrainPatch.LayerType ltype = type;
-
-            if (RegionSizeX > Constants.RegionSize || RegionSizeY > Constants.RegionSize)
-                {
-                // extended regions layers types
-                
-                if (ltype == TerrainPatch.LayerType.Land || ltype == TerrainPatch.LayerType.Water)
-                    ltype++; // land becomes 77, Water 88
-                else
-                    ltype+=2; // wind becames 57, cloud 58
-                }
-
-            layer.LayerID.Type = (byte)ltype;
+            layer.LayerID.Type = type;
 
             TerrainPatch.GroupHeader header = new TerrainPatch.GroupHeader();
             header.Stride = STRIDE;
             header.PatchSize = Constants.TerrainPatchSize;
-            header.Type = ltype;
 
             // Should be enough to fit even the most poorly packed data
             byte[] data = new byte[patches.Length * Constants.TerrainPatchSize * Constants.TerrainPatchSize * 2];
             BitPack bitpack = new BitPack(data, 0);
             bitpack.PackBits(header.Stride, 16);
             bitpack.PackBits(header.PatchSize, 8);
-            bitpack.PackBits((int)header.Type, 8);
+            bitpack.PackBits(type, 8);
 
             for (int i = 0; i < patches.Length; i++)
                 CreatePatch(bitpack, patches[i].Data, patches[i].X, patches[i].Y,RegionSizeX, RegionSizeY);
@@ -110,33 +97,20 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// for this simulator. For example if 1 and 17 are specified, patches
         /// x=1,y=0 and x=1,y=1 are sent</param>
         /// <returns></returns>
-        public static LayerDataPacket CreateLandPacket(float[] heightmap, int[] x, int[] y, TerrainPatch.LayerType type, int RegionSizeX, int RegionSizeY)
+        public static LayerDataPacket CreateLandPacket(float[] heightmap, int[] x, int[] y, byte type, int RegionSizeX, int RegionSizeY)
         {
             LayerDataPacket layer = new LayerDataPacket();
-            TerrainPatch.LayerType ltype = type;
-
-            if (RegionSizeX > Constants.RegionSize || RegionSizeY > Constants.RegionSize)
-                {
-                // extended regions layers types
-
-                if (ltype == TerrainPatch.LayerType.Land || ltype == TerrainPatch.LayerType.Water)
-                    ltype++; // land becomes 77, Water 88
-                else
-                    ltype += 2; // wind becames 57, cloud 58
-                }
-
-            layer.LayerID.Type = (byte)ltype;
+            layer.LayerID.Type = type;
 
             TerrainPatch.GroupHeader header = new TerrainPatch.GroupHeader();
             header.Stride = STRIDE;
             header.PatchSize = Constants.TerrainPatchSize;
-            header.Type = ltype;
 
             byte[] data = new byte[1536];
             BitPack bitpack = new BitPack(data, 0);
             bitpack.PackBits(header.Stride, 16);
             bitpack.PackBits(header.PatchSize, 8);
-            bitpack.PackBits((int)header.Type, 8);
+            bitpack.PackBits(type, 8);
 
             for (int i = 0; i < x.Length; i++)
                 CreatePatchFromHeightmap(bitpack, heightmap, x[i], y[i], RegionSizeX, RegionSizeY);

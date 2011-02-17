@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <Prebuild version="1.7" xmlns="http://dnpb.sourceforge.net/schemas/prebuild-1.7.xsd">
-  <Solution activeConfig="Debug" platform="x86" name="Aurora" path="./" version="0.5.0-$Rev$">
+  <Solution activeConfig="Debug" name="Aurora" path="./" version="0.5.0-$Rev$">
     <Configuration name="Debug" platform="x86">
       <Options>
         <CompilerDefines>TRACE;DEBUG</CompilerDefines>
@@ -9,7 +9,20 @@
         <AllowUnsafe>true</AllowUnsafe>
         <WarningLevel>4</WarningLevel>
         <WarningsAsErrors>false</WarningsAsErrors>
-        <SuppressWarnings/>
+        <OutputPath>bin</OutputPath>
+        <DebugInformation>true</DebugInformation>
+        <IncrementalBuild>true</IncrementalBuild>
+        <NoStdLib>false</NoStdLib>
+      </Options>
+    </Configuration>
+    <Configuration name="Debug" platform="AnyCPU">
+      <Options>
+        <CompilerDefines>TRACE;DEBUG</CompilerDefines>
+        <OptimizeCode>false</OptimizeCode>
+        <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
+        <AllowUnsafe>true</AllowUnsafe>
+        <WarningLevel>4</WarningLevel>
+        <WarningsAsErrors>false</WarningsAsErrors>
         <OutputPath>bin</OutputPath>
         <DebugInformation>true</DebugInformation>
         <IncrementalBuild>true</IncrementalBuild>
@@ -24,7 +37,6 @@
         <AllowUnsafe>true</AllowUnsafe>
         <WarningLevel>4</WarningLevel>
         <WarningsAsErrors>false</WarningsAsErrors>
-        <SuppressWarnings/>
         <OutputPath>bin</OutputPath>
         <DebugInformation>true</DebugInformation>
         <IncrementalBuild>true</IncrementalBuild>
@@ -32,6 +44,21 @@
       </Options>
     </Configuration>
     <Configuration name="Release" platform="x86">
+      <Options>
+        <CompilerDefines>TRACE;DEBUG</CompilerDefines>
+        <OptimizeCode>true</OptimizeCode>
+        <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
+        <AllowUnsafe>true</AllowUnsafe>
+        <WarningLevel>4</WarningLevel>
+        <WarningsAsErrors>false</WarningsAsErrors>
+        <SuppressWarnings/>
+        <OutputPath>bin</OutputPath>
+        <DebugInformation>false</DebugInformation>
+        <IncrementalBuild>true</IncrementalBuild>
+        <NoStdLib>false</NoStdLib>
+      </Options>
+    </Configuration>
+    <Configuration name="Release" platform="AnyCPU">
       <Options>
         <CompilerDefines>TRACE;DEBUG</CompilerDefines>
         <OptimizeCode>true</OptimizeCode>
@@ -79,6 +106,16 @@
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
         <Options>
           <OutputPath>../../../../bin/</OutputPath>
         </Options>
@@ -132,6 +169,16 @@
           <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
 
       <ReferencePath>../../bin/</ReferencePath>
       <Reference name="System"/>
@@ -161,6 +208,16 @@
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
@@ -214,6 +271,16 @@
           <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
 
       <ReferencePath>../../bin/</ReferencePath>
       <Reference name="System"/>
@@ -261,6 +328,16 @@
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
 
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
@@ -296,6 +373,16 @@
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
@@ -340,6 +427,16 @@
           <OutputPath>../../../../bin/</OutputPath>
         </Options>
       </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
 
       <ReferencePath>../../../../bin/</ReferencePath>
       <Reference name="System"/>
@@ -380,6 +477,16 @@
           <OutputPath>../../../../bin/Physics/</OutputPath>
         </Options>
       </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
 
       <ReferencePath>../../../../bin/</ReferencePath>
       <Reference name="System"/>
@@ -412,6 +519,16 @@
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
         <Options>
           <OutputPath>../../../../bin/Physics/</OutputPath>
         </Options>
@@ -454,6 +571,16 @@
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -511,6 +638,16 @@
           <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
 
       <ReferencePath>../../bin/</ReferencePath>
       <Reference name="System"/>
@@ -564,6 +701,16 @@
           <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
 
       <ReferencePath>../../bin/</ReferencePath>
       <Reference name="System"/>
@@ -604,6 +751,16 @@
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -652,6 +809,16 @@
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
 
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
@@ -691,6 +858,16 @@
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -738,6 +915,16 @@
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -792,6 +979,16 @@
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
 
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
@@ -841,6 +1038,18 @@
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+          <AllowUnsafe>true</AllowUnsafe>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+          <AllowUnsafe>true</AllowUnsafe>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
           <AllowUnsafe>true</AllowUnsafe>
@@ -908,6 +1117,16 @@
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
 
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
@@ -962,6 +1181,16 @@
           <OutputPath>../../../../bin/</OutputPath>
         </Options>
       </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
 
       <ReferencePath>../../../../bin/</ReferencePath>
       <Reference name="System"/>
@@ -1008,6 +1237,16 @@
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
 
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
@@ -1047,6 +1286,16 @@
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
 
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
@@ -1077,6 +1326,16 @@
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
@@ -1123,6 +1382,16 @@
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
 
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
@@ -1163,6 +1432,16 @@
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
@@ -1217,6 +1496,16 @@
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
 
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
@@ -1259,6 +1548,16 @@
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -1306,6 +1605,16 @@
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
 
       <Reference name="System"/>
       <Reference name="System.Data"/>
@@ -1316,10 +1625,10 @@
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Region.Framework"/>
 
-      <Reference name="Community.CsharpSqlite"/>
-      <Reference name="Community.CsharpSqlite.Sqlite"/>
+      <Reference name="Community.CsharpSqlite" path="../../../bin/"/>
+      <Reference name="Community.CsharpSqlite.Sqlite" path="../../../bin/"/>
       <Reference name="log4net" path="../../../bin/"/>
-      <Reference name="Mono.Data.Sqlite"/>
+      <Reference name="Mono.Data.Sqlite" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
@@ -1349,6 +1658,16 @@
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
         <Options>
           <OutputPath>../../../../bin/</OutputPath>
         </Options>
@@ -1390,6 +1709,16 @@
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
         </Options>
@@ -1444,6 +1773,16 @@
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
@@ -1507,6 +1846,16 @@
           <OutputPath>../../../bin/Physics/</OutputPath>
         </Options>
       </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
 
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
@@ -1549,6 +1898,16 @@
           <OutputPath>../../../bin/Physics/</OutputPath>
         </Options>
       </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
 
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
@@ -1586,6 +1945,16 @@
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>
@@ -1637,6 +2006,16 @@
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
         <Options>
           <OutputPath>../../bin/</OutputPath>
         </Options>

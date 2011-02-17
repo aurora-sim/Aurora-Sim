@@ -38,7 +38,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
             double area = strength;
             double step = strength / 4.0;
 
-            double[,] manipulate = new double[map.Width,map.Height];
             int x, y;
             for (x = 0; x < map.Width; x++)
             {
@@ -61,17 +60,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
                         }
                     }
 
-                    manipulate[x, y] = average / avgsteps;
-                }
-            }
-            for (x = 0; x < map.Width; x++)
-            {
-                for (y = 0; y < map.Height; y++)
-                {
-                    if (!fillArea[x, y])
-                        continue;
-
-                    map[x, y] = manipulate[x, y];
+                    map[x, y] = average / avgsteps;
                 }
             }
         }
