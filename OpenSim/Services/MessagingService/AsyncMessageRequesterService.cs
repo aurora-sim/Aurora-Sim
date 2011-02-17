@@ -10,31 +10,38 @@ using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using Nini.Config;
 using OpenMetaverse.StructuredData;
+using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Services.MessagingService
 {
-    public class AsyncMessageRequesterService : IService
+    public class AsyncMessageRequesterService : INonSharedRegionModule
     {
+        #region Declares
+
         protected List<string> m_hosts = new List<string>();
-        protected IRegistryCore m_registry;
+        protected IScene m_scene;
 
-        public void Initialize(IConfigSource config, IRegistryCore registry)
+        #endregion
+
+        #region IRegionModuleBase Members
+
+        public void Initialise(IConfigSource source)
         {
         }
 
-        public string Name
+        public void AddRegion(Scene scene)
         {
-            get { return GetType().Name; }
         }
 
-        public void Start(IConfigSource config, IRegistryCore registry)
+        public void RegionLoaded(Scene scene)
         {
-            IConfig handlerConfig = config.Configs["Handlers"];
+            IConfig handlerConfig = scene.Config.Configs["Handlers"];
             if (handlerConfig.GetString("AsyncMessageRequesterServiceHandler", "") != Name)
                 return;
 
-            m_hosts = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
-            m_registry = registry;
+            m_hosts = scene.RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
+            m_scene = scene;
 
             //Start the request timer
             Timer timer = new Timer();
@@ -43,10 +50,32 @@ namespace OpenSim.Services.MessagingService
             timer.Start();
         }
 
+        public void RemoveRegion(Scene scene)
+        {
+        }
+
+        public void Close()
+        {
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
+        #endregion
+
+        #region Async Requester
+
         void requestAsyncMessages(object sender, ElapsedEventArgs e)
         {
             OSDMap message = CreateWebRequest();
-            IAsyncMessageRecievedService service = m_registry.RequestModuleInterface<IAsyncMessageRecievedService>();
+            IAsyncMessageRecievedService service = m_scene.RequestModuleInterface<IAsyncMessageRecievedService>();
             foreach (string host in m_hosts)
             {
                 OSDMap retval = WebUtils.PostToService(host, message);
@@ -61,12 +90,15 @@ namespace OpenSim.Services.MessagingService
             }
         }
 
+        #region Helpers
+
         private OSDMap CreateWebRequest()
         {
             OSDMap message = new OSDMap();
             message["Method"] = "AsyncMessageRequest";
             OSDMap request = new OSDMap();
             request["Method"] = "AsyncMessageRequest";
+            request["RegionHandle"] = m_scene.RegionInfo.RegionHandle;
             message["Message"] = request;
             return message;
         }
@@ -77,5 +109,9 @@ namespace OpenSim.Services.MessagingService
             message["Response"] = OSDParser.DeserializeJson(request["_RawResult"]);
             return message;
         }
+
+        #endregion
+
+        #endregion
     }
 }

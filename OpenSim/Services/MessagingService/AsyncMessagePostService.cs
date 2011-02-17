@@ -49,9 +49,9 @@ namespace OpenSim.Services.MessagingService
             {
                 OSDMap response = new OSDMap();
                 OSDArray array = new OSDArray();
-                if (m_regionMessages.ContainsKey(0))
+                if (m_regionMessages.ContainsKey(message["RegionHandle"].AsULong()))
                 {
-                    foreach (OSDMap asyncMess in m_regionMessages[0])
+                    foreach (OSDMap asyncMess in m_regionMessages[message["RegionHandle"].AsULong()])
                     {
                         array.Add(asyncMess);
                     }
