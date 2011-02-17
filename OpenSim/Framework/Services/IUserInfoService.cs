@@ -6,7 +6,7 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.Interfaces
 {
-    public class UserInfo
+    public class UserInfo : IDataTransferable
     {
         /// <summary>
         /// The user that this info is for
@@ -50,25 +50,68 @@ namespace OpenSim.Services.Interfaces
         /// Any other assorted into about this user
         /// </summary>
         public OSDMap Info = new OSDMap();
+
+        public OSDMap ToOSD()
+        {
+             OSDMap retVal = new OSDMap();
+             retVal["UserID"] = UserID;
+             retVal["SessionID"] = SessionID;
+             retVal["CurrentRegionID"] = CurrentRegionID;
+             retVal["CurrentPosition"] = CurrentPosition;
+             retVal["CurrentLookAt"] = CurrentLookAt;
+             retVal["HomeRegionID"] = HomeRegionID;
+             retVal["HomePosition"] = HomePosition;
+             retVal["HomeLookAt"] = HomeLookAt;
+             retVal["IsOnline"] = IsOnline;
+             retVal["LastLogin"] = LastLogin;
+             retVal["LastLogout"] = LastLogout;
+             retVal["Info"] = Info;
+             return retVal;
+        }
+
+        public void FromOSD(OSDMap retVal)
+        {
+             UserID = retVal["UserID"].AsString();
+             SessionID = retVal["SessionID"].AsUUID();
+             CurrentRegionID = retVal["CurrentRegionID"].AsUUID();
+             CurrentPosition = retVal["CurrentPosition"].AsVector3();
+             CurrentLookAt = retVal["CurrentLookAt"].AsVector3();
+             HomeRegionID = retVal["HomeRegionID"].AsUUID();
+             HomePosition = retVal["HomePosition"].AsVector3();
+             HomeLookAt = retVal["HomeLookAt"].AsVector3();
+             IsOnline = retVal["IsOnline"].AsBoolean();
+             LastLogin = retVal["LastLogin"].AsDate();
+             LastLogout = retVal["LastLogout"].AsDate();
+             Info = (OSDMap)retVal["Info"];
+        }
+
+        public override Dictionary<string, object> ToKeyValuePairs()
+        {
+            return Util.OSDToDictionary(ToOSD());
+        }
+
+        public override void FromKVP(Dictionary<string, object> KVP)
+        {
+            FromOSD(Util.DictionaryToOSD(KVP));
+        }
+
+        public override IDataTransferable Duplicate()
+        {
+            UserInfo m = new UserInfo();
+            m.FromOSD(ToOSD());
+            return m;
+        }
     }
 
     public interface IAgentInfoService
     {
-        /// <summary>
-        /// Add the given user to the given region
-        /// </summary>
-        /// <param name="userID"></param>
-        /// <param name="regionID"></param>
-        /// <returns></returns>
-        bool AddPresence(string userID, UUID regionID);
-
         /// <summary>
         /// Get the user infos for the given user (all regions)
         /// </summary>
         /// <param name="userID"></param>
         /// <param name="regionID"></param>
         /// <returns></returns>
-        UserInfo[] GetUserInfo(string userID);
+        UserInfo GetUserInfo(string userID);
 
         /// <summary>
         /// Set the home position of the given user

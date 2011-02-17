@@ -259,4 +259,64 @@ namespace OpenSim.Services.PresenceService
             return info.ToArray();
         }
     }
+    public class AgentInfoService : IService, IAgentInfoService
+    {
+          #region Declares
+
+         proteced IGenericsConnector m_genericsConnector;
+
+          #endregion
+
+         #region IService Members
+
+         public void Initialize(IConfigSource config, IRegistryCore registry)
+         {
+         }
+         public void Start(IConfigSource config, IRegistryCore registry)
+         {
+              m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+         }
+
+         #endregion
+
+         #region IAgentInfoService Members
+
+         public UserInfo GetUserInfo(string userID)
+         {
+               return m_genericsConnector.GetGeneric<UserInfo>(UUID.Parse(userID), "UserInfo", userID, new UserInfo());
+         }
+
+         public bool SetHomePosition(string userID, UUID homeID, Vector3 homePosition, Vector3 homeLookAt)
+         {
+              UserInfo userInfo = GetUserInfo(userID);
+              if(userInfo != null)
+              {
+                    userInfo.HomeRegionID = regionID;
+                    userInfo.HomePosition = lastPosition;
+                    userInfo.HomeLookAt = lastLookAt;
+                    Save(userInfo[i]);
+                    return true;
+              }
+              return false;
+         }
+
+         public void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
+         {
+              UserInfo userInfo = GetUserInfo(userID);
+              if(userInfo != null)
+              {
+                    userInfo.CurrentRegionID = regionID;
+                    userInfo.CurrentPosition = lastPosition;
+                    userInfo.CurrentLookAt = lastLookAt;
+                    Save(userInfo);
+              }
+         }
+
+        public void Save(UserInfo userInfo)
+        {
+               m_genericsConnector.AddGeneric(UUID.Parse(userInfo.UserID), "UserInfo", UserID, userInfo.ToOSD());
+        }
+
+         #endregion
+    }
 }

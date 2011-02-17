@@ -130,6 +130,7 @@ namespace OpenSim.Services.CapsService
                 IClientCapsService perClient = m_ClientCapsServices[AgentID];
                 perClient.Close();
                 m_ClientCapsServices.Remove(AgentID);
+                m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("UserLogout", AgentID);
             }
         }
 
@@ -164,6 +165,7 @@ namespace OpenSim.Services.CapsService
                     scene.EventManager.TriggerOnRegisterCaps(AgentID, clientService);
                 }
             }
+            m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("UserLogin", AgentID);
             m_log.Debug("[CapsService]: Adding Caps URL " + clientService.CapsUrl + " informing region " + UrlToInform + " for agent " + AgentID);
             return clientService.CapsUrl;
         }
