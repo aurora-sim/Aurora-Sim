@@ -138,6 +138,11 @@ namespace OpenSim.Server.Handlers.Freeswitch
             get { return "FreeswitchServiceURL"; }
         }
 
+        public uint Port
+        {
+            get { return m_port; }
+        }
+
         public string GetUrlForRegisteringClient(UUID SessionID)
         {
             string url = "/CAPS/EQMPOSTER" + UUID.Random();

@@ -63,6 +63,11 @@ namespace OpenSim.Server.Handlers
             get { return "EventQueueServiceURI"; }
         }
 
+        public uint Port
+        {
+            get { return m_port; }
+        }
+
         public string GetUrlForRegisteringClient(UUID SessionID)
         {
             string url = "/CAPS/EQMPOSTER" + UUID.Random();
@@ -70,7 +75,7 @@ namespace OpenSim.Server.Handlers
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
 
             server.AddStreamHandler(new EQMEventPoster(url, m_registry.RequestModuleInterface<IEventQueueService>(),
-            m_registry.RequestModuleInterface<ICapsService>()));
+                    m_registry.RequestModuleInterface<ICapsService>()));
             return url;
         }
 

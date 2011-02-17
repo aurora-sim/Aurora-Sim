@@ -558,6 +558,11 @@ namespace OpenSim.Services.Interfaces
         string UrlName { get; }
 
         /// <summary>
+        /// Port this module runs on
+        /// </summary>
+        uint Port { get; }
+
+        /// <summary>
         /// Get the Url for the given sessionID
         /// </summary>
         /// <param name="SessionID"></param>

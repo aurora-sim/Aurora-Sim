@@ -15,6 +15,7 @@ namespace OpenSim.Services.GridService
         #region Declares
 
         protected List<IGridRegistrationUrlModule> m_modules = new List<IGridRegistrationUrlModule>();
+        protected string m_hostName = "";
 
         #endregion
 
@@ -23,6 +24,7 @@ namespace OpenSim.Services.GridService
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             registry.RegisterModuleInterface<IGridRegistrationService>(this);
+            m_hostName = config.Configs["Configuration"].GetString("HostName", m_hostName);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -36,15 +38,18 @@ namespace OpenSim.Services.GridService
         public Dictionary<string, string> GetUrlForRegisteringClient(UUID SessionID)
         {
             Dictionary<string, string> retVal = new Dictionary<string, string>();
+            //Get the URLs from all the modules that have registered with us
             foreach (IGridRegistrationUrlModule module in m_modules)
             {
-                retVal[module.Name] = module.GetUrlForRegisteringClient(SessionID);
+                //Build the URL
+                retVal[module.UrlName] = m_hostName + ":" + module.Port + module.GetUrlForRegisteringClient(SessionID);
             }
             return retVal;
         }
 
         public void RegisterModule(IGridRegistrationUrlModule module)
         {
+            //Add the module to our list
             m_modules.Add(module);
         }
 

@@ -48,6 +48,7 @@ namespace OpenSim.Services.Connectors
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private List<string> m_ServerURIs = new List<string>();
+        private IRegistryCore m_registry;
 
         #region IGridService
 
@@ -58,7 +59,8 @@ namespace OpenSim.Services.Connectors
             map["SecureSessionID"] = SecureSessionID;
             map["Method"] = "Register";
 
-            foreach (string m_ServerURI in m_ServerURIs)
+            List<string> urls = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RegistrationURI");
+            foreach (string m_ServerURI in urls)
             {
                 OSDMap result = WebUtils.PostToService(m_ServerURI + "/grid", map);
                 if (result["Success"].AsBoolean())
@@ -72,6 +74,7 @@ namespace OpenSim.Services.Connectors
                             if (innerresult["Result"].AsString() == "")
                             {
                                 SessionID = innerresult["SecureSessionID"].AsUUID();
+                                m_registry.RequestModuleInterface<IConfigurationService>().AddNewUrls("default", (OSDMap)innerresult["URLs"]);
                                 return "";
                             }
                             else
@@ -841,6 +844,7 @@ namespace OpenSim.Services.Connectors
                 return;
 
             registry.RegisterModuleInterface<IGridService>(this);
+            m_registry = registry;
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)

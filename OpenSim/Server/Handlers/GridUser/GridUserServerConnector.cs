@@ -74,6 +74,11 @@ namespace OpenSim.Server.Handlers.GridUser
             get { return "GridUserServerURI"; }
         }
 
+        public uint Port
+        {
+            get { return m_port; }
+        }
+
         public string GetUrlForRegisteringClient(UUID SessionID)
         {
             string url = "/griduser" + UUID.Random();

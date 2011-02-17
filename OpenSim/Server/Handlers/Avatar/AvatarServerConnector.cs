@@ -78,6 +78,11 @@ namespace OpenSim.Server.Handlers.Avatar
             get { return "AvatarServerURI"; }
         }
 
+        public uint Port
+        {
+            get { return m_port; }
+        }
+
         public string GetUrlForRegisteringClient(UUID SessionID)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);

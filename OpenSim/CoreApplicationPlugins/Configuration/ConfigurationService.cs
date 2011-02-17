@@ -34,30 +34,13 @@ namespace OpenSim.Services.Connectors.ConfigurationService
             if (autoConfig == null)
                 return;
 
-            string resp = "";
-            string serverURL = autoConfig.GetString("ConfigurationURL", "");
-            while (resp == "" && serverURL != "")
-            {
-                if (serverURL != "")
-                {
-                    //Clean up the URL so that it isn't too hard for users
-                    serverURL = serverURL.EndsWith("/") ? serverURL.Remove(serverURL.Length - 1) : serverURL;
-                    serverURL += "/autoconfig";
-                    resp = SynchronousRestFormsRequester.MakeRequest("POST", serverURL, "");
-
-                    if (resp == "")
-                    {
-                        m_log.ErrorFormat("[Configuration]: Failed to find the configuration for {0}!"
-                            + " This may break this startup!", serverURL);
-                        MainConsole.Instance.CmdPrompt("Press enter when you are ready to continue.");
-                    }
-                }
-            }
-            if (resp == "")
+            string serverURL = autoConfig.GetString("RegistrationURI", "");
+            OSDMap request = new OSDMap();
+            if (serverURL == "")
             {
                 //Get the urls from the config
-                OSDMap request = new OSDMap();
                 GetConfigFor("GridServerURI", request);
+                request["RegistrationURI"] = request["GridServerURI"];
                 GetConfigFor("GridUserServerURI", request);
                 GetConfigFor("AssetServerURI", request);
                 GetConfigFor("InventoryServerURI", request);
@@ -71,7 +54,10 @@ namespace OpenSim.Services.Connectors.ConfigurationService
                 AddNewUrls("default", request);
             }
             else
-                AddNewUrls("default", (OSDMap)OSDParser.DeserializeJson(resp));
+            {
+                GetConfigFor("RegistrationURI", request);
+                AddNewUrls("default", request);
+            }
         }
 
         public void GetConfigFor(string name, OSDMap request)

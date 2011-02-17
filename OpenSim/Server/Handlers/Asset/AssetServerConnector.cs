@@ -84,6 +84,11 @@ namespace OpenSim.Server.Handlers.Asset
             get { return "AssetServerURI"; }
         }
 
+        public uint Port
+        {
+            get { return m_port; }
+        }
+
         public string GetUrlForRegisteringClient(UUID SessionID)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);

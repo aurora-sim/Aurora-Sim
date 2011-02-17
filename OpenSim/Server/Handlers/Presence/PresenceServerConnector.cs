@@ -74,6 +74,11 @@ namespace OpenSim.Server.Handlers.Presence
             get { return "PresenceServerURI"; }
         }
 
+        public uint Port
+        {
+            get { return m_port; }
+        }
+
         public string GetUrlForRegisteringClient(UUID SessionID)
         {
             string url = "/presence" + UUID.Random();
