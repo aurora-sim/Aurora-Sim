@@ -259,4 +259,37 @@ namespace OpenSim.Services.PresenceService
             return info.ToArray();
         }
     }
+    public class AgentInfoService : IService, IAgentInfoService
+    {
+
+#region IService Members
+
+         public void Initialize(IConfigSource config, IRegistryCore registry)
+         {
+         }
+         public void Start(IConfigSource config, IRegistryCore registry)
+         {
+         }
+
+#endregion
+
+         public bool AddPresence(string userID, UUID regionID)
+         {
+               return false;
+         }
+
+         public UserInfo[] GetUserInfo(string userID)
+         {
+               return null;
+         }
+
+         public bool SetHomePosition(string userID, UUID homeID, Vector3 homePosition, Vector3 homeLookAt)
+         {
+               return false;
+         }
+
+         public void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
+         {
+         }
+    }
 }
