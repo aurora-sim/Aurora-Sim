@@ -44,12 +44,12 @@ namespace Aurora.Modules
             m_scenes.Add(scene);
             //Register the interface
             scene.RegisterModuleInterface<IGridRegisterModule>(this);
-            //Now register our region with the grid
-            RegisterRegionWithGrid(scene);
         }
 
         public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
+            //Now register our region with the grid
+            RegisterRegionWithGrid(scene);
         }
 
         public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)

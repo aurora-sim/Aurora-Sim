@@ -11,7 +11,7 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.MessagingService
 {
-    public class MessagingServiceInHandler : IService, IAsyncMessageRecievedService
+    public class MessagingServiceInHandler : IService, IAsyncMessageRecievedService, IGridRegistrationUrlModule
     {
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -21,6 +21,8 @@ namespace OpenSim.Services.MessagingService
             registry.RegisterModuleInterface<IAsyncMessageRecievedService>(this);
         }
 
+        private IRegistryCore m_registry;
+        private uint m_port = 0;
         public string Name
         {
             get { return GetType().Name; }
@@ -31,9 +33,18 @@ namespace OpenSim.Services.MessagingService
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("MessagingServiceInHandler", "") != Name)
                 return;
-            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("ConfigurationInHandlerPort"));
 
-            server.AddStreamHandler(new MessagingServiceInPostHandler(registry, this));
+            m_registry = registry;
+            m_port = handlerConfig.GetUInt("MessagingServiceInHandlerPort");
+
+            if (handlerConfig.GetBoolean("UnsecureUrls", false))
+            {
+                string url = "/messagingservice";
+
+                IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+                server.AddStreamHandler(new MessagingServiceInPostHandler(url, registry, this));
+            }
         }
 
         #region IAsyncMessageRecievedService Members
@@ -56,5 +67,30 @@ namespace OpenSim.Services.MessagingService
             }
             return result;
         }
+
+        #region IGridRegistrationUrlModule Members
+
+        public string UrlName
+        {
+            get { return "MessagingServerURI"; }
+        }
+
+        public uint Port
+        {
+            get { return m_port; }
+        }
+
+        public string GetUrlForRegisteringClient(UUID SessionID)
+        {
+            string url = "/messagingservice" + UUID.Random();
+
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+            server.AddStreamHandler(new MessagingServiceInPostHandler(url, m_registry, this));
+
+            return url;
+        }
+
+        #endregion
     }
 }

@@ -49,8 +49,8 @@ namespace OpenSim.Services.MessagingService
         private IRegistryCore m_registry;
         private MessagingServiceInHandler m_handler;
 
-        public MessagingServiceInPostHandler(IRegistryCore registry, MessagingServiceInHandler handler) :
-                base("POST", "/messagingservice")
+        public MessagingServiceInPostHandler(string url, IRegistryCore registry, MessagingServiceInHandler handler) :
+                base("POST", url)
         {
             m_registry = registry;
             m_handler = handler;

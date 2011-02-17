@@ -23,7 +23,7 @@ namespace OpenSim.Services.MessagingService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_hosts = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+            m_hosts = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
         }
 
         #region ISyncMessagePosterService Members
