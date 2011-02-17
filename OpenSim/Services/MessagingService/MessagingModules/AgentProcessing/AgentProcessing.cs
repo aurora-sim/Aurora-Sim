@@ -132,7 +132,10 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 AgentData.Unpack((OSDMap)body["AgentData"]);
                 regionCaps.Disabled = false;
 
-                TeleportAgent(destination, TeleportFlags, DrawDistance, Circuit, AgentData, AgentID, requestingRegion);
+                OSDMap result = new OSDMap();
+                result["Success"] = TeleportAgent(destination, TeleportFlags, DrawDistance,
+                    Circuit, AgentData, AgentID, requestingRegion);
+                return result;
             }
             else if (message["Message"] == "CrossAgent")
             {
@@ -149,7 +152,10 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 AgentData.Unpack((OSDMap)body["AgentData"]);
                 regionCaps.Disabled = false;
 
-                CrossAgent(Region, pos, Vel, Circuit, AgentData, AgentID, requestingRegion);
+                OSDMap result = new OSDMap();
+                result["Success"] = CrossAgent(Region, pos, Vel, Circuit, AgentData,
+                    AgentID, requestingRegion);
+                return result;
             }
             return null;
         }
