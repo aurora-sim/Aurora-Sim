@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace OpenSim.Services.Interfaces
 {
