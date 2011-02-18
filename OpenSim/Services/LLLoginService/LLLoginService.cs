@@ -475,8 +475,8 @@ namespace OpenSim.Services.LLLoginService
                 // Change Online status and get the home region
                 //
                 GridRegion home = null;
-                m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true);
                 UserInfo guinfo = m_agentInfoService.GetUserInfo(account.PrincipalID.ToString());
+                m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true);
                 if (guinfo != null && (guinfo.HomeRegionID != UUID.Zero) && m_GridService != null)
                 {
                     home = m_GridService.GetRegionByUUID(scopeID, guinfo.HomeRegionID);

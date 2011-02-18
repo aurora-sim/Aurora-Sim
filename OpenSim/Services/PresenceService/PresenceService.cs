@@ -54,7 +54,9 @@ namespace OpenSim.Services.PresenceService
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            registry.RegisterModuleInterface<IAgentInfoService>(this);
         }
+
         public void Start(IConfigSource config, IRegistryCore registry)
         {
             m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
@@ -98,15 +100,17 @@ namespace OpenSim.Services.PresenceService
         public void SetLoggedIn(string userID, bool loggingIn)
         {
             UserInfo userInfo = GetUserInfo(userID);
-            if (userInfo != null)
+            if (userInfo == null)
             {
-                userInfo.IsOnline = loggingIn;
-                if (loggingIn)
-                    userInfo.LastLogin = DateTime.Now;
-                else
-                    userInfo.LastLogout = DateTime.Now;
-                Save(userInfo);
+                userInfo = new UserInfo();
+                userInfo.UserID = userID;
             }
+            userInfo.IsOnline = loggingIn;
+            if (loggingIn)
+                userInfo.LastLogin = DateTime.Now;
+            else
+                userInfo.LastLogout = DateTime.Now;
+            Save(userInfo);
         }
 
         public void Save(UserInfo userInfo)
