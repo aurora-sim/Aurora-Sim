@@ -892,11 +892,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 if (curContact.depth > maxDepthContact.PenetrationDepth)
                     {
-                    maxDepthContact = new ContactPoint(
-                        new Vector3((float)curContact.pos.X, (float)curContact.pos.Y, (float)curContact.pos.Z),
-                        new Vector3((float)curContact.normal.X, (float)curContact.normal.Y, (float)curContact.normal.Z),
-                        (float)curContact.depth
-                    );
+                    maxDepthContact.PenetrationDepth = curContact.depth;
+                    maxDepthContact.Position.X = curContact.pos.X;
+                    maxDepthContact.Position.Y = curContact.pos.Y;
+                    maxDepthContact.Position.Z = curContact.pos.Z;
+                    maxDepthContact.SurfaceNormal.X = curContact.normal.X;
+                    maxDepthContact.SurfaceNormal.Y = curContact.normal.Y;
+                    maxDepthContact.SurfaceNormal.Z = curContact.normal.Z;
+//                    maxDepthContact = new ContactPoint(
+//                        new Vector3((float)curContact.pos.X, (float)curContact.pos.Y, (float)curContact.pos.Z),
+//                        new Vector3((float)curContact.normal.X, (float)curContact.normal.Y, (float)curContact.normal.Z),
+//                        (float)curContact.depth
+//                    );
                     }
 
                 //m_log.Warn("[CCOUNT]: " + count);
@@ -3727,7 +3734,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 const float scale = 1.0f;
                 const float offset = 0.0f;
-                const float thickness = .5f;
+                float thickness = (float)hfmin - 1.0f ;
                 const int wrap = 0;
 
                 IntPtr HeightmapData = d.GeomHeightfieldDataCreate();
@@ -3737,7 +3744,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                                  heightmapHeightSamples, heightmapWidthSamples, scale,
                                                  offset, thickness, wrap);
 
-                d.GeomHeightfieldDataSetBounds(HeightmapData, (float)hfmin - 2, (float)hfmax + 2);
+//                d.GeomHeightfieldDataSetBounds(HeightmapData, (float)hfmin - 1.0f, (float)hfmax + 1.0f);
+                d.GeomHeightfieldDataSetBounds(HeightmapData, 0.0f, (float)hfmax + 1.0f);
                 GroundGeom = d.CreateHeightfield(space, HeightmapData, 1);
 
                 if (GroundGeom != IntPtr.Zero)
