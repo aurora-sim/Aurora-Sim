@@ -79,7 +79,7 @@ namespace OpenSim.Server.Handlers.UserAccounts
             get { return m_port; }
         }
 
-        public string GetUrlForRegisteringClient(UUID SessionID)
+        public string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)
         {
             string url = "/accounts" + UUID.Random();
 

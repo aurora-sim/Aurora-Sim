@@ -541,7 +541,7 @@ namespace OpenSim.Services.Interfaces
     /// </summary>
     public interface IGridRegistrationService
     {
-        Dictionary<string, string> GetUrlForRegisteringClient(UUID SessionID);
+        Dictionary<string, string> GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle);
 
         void RegisterModule(IGridRegistrationUrlModule module);
     }
@@ -567,6 +567,6 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="SessionID"></param>
         /// <returns></returns>
-        string GetUrlForRegisteringClient(UUID SessionID);
+        string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle);
     }
 }

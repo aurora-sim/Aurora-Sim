@@ -35,7 +35,7 @@ namespace OpenSim.Services.GridService
 
         #region IGridRegistrationService Members
 
-        public Dictionary<string, string> GetUrlForRegisteringClient(UUID SessionID)
+        public Dictionary<string, string> GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)
         {
             Dictionary<string, string> retVal = new Dictionary<string, string>();
             //Get the URLs from all the modules that have registered with us

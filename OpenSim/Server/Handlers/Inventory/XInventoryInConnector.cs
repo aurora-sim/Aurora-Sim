@@ -86,7 +86,7 @@ namespace OpenSim.Server.Handlers.Asset
             get { return m_port; }
         }
 
-        public string GetUrlForRegisteringClient(UUID SessionID)
+        public string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)
         {
             string url = "/xinventory" + UUID.Random();
 

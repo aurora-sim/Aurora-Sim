@@ -43,7 +43,7 @@ namespace OpenSim.Services.MessagingService
 
                 IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
 
-                server.AddStreamHandler(new MessagingServiceInPostHandler(url, registry, this));
+                server.AddStreamHandler(new MessagingServiceInPostHandler(url, registry, this, 0));
             }
         }
 
@@ -80,13 +80,13 @@ namespace OpenSim.Services.MessagingService
             get { return m_port; }
         }
 
-        public string GetUrlForRegisteringClient(UUID SessionID)
+        public string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)
         {
             string url = "/messagingservice" + UUID.Random();
 
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
 
-            server.AddStreamHandler(new MessagingServiceInPostHandler(url, m_registry, this));
+            server.AddStreamHandler(new MessagingServiceInPostHandler(url, m_registry, this, RegionHandle));
 
             return url;
         }

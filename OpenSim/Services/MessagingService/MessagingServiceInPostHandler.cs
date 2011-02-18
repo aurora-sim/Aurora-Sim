@@ -48,12 +48,14 @@ namespace OpenSim.Services.MessagingService
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IRegistryCore m_registry;
         private MessagingServiceInHandler m_handler;
+        private ulong m_ourRegionHandle;
 
-        public MessagingServiceInPostHandler(string url, IRegistryCore registry, MessagingServiceInHandler handler) :
+        public MessagingServiceInPostHandler(string url, IRegistryCore registry, MessagingServiceInHandler handler, ulong handle) :
                 base("POST", url)
         {
             m_registry = registry;
             m_handler = handler;
+            m_ourRegionHandle = handle;
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -85,6 +87,8 @@ namespace OpenSim.Services.MessagingService
         private byte[] NewMessage(OSDMap map)
         {
             OSDMap message = (OSDMap)OSDParser.DeserializeJson(map["Message"]);
+            if(m_ourRegionHandle != 0)
+                ((OSDMap)message)["RegionHandle"] = m_ourRegionHandle;
             OSDMap result = m_handler.FireMessageReceived(message);
             if (result != null)
                 return ReturnResult(result);

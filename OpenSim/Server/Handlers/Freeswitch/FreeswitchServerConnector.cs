@@ -143,7 +143,7 @@ namespace OpenSim.Server.Handlers.Freeswitch
             get { return m_port; }
         }
 
-        public string GetUrlForRegisteringClient(UUID SessionID)
+        public string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)
         {
             string url = "/CAPS/EQMPOSTER" + UUID.Random();
 

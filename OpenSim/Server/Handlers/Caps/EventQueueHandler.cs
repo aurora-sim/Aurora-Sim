@@ -50,7 +50,7 @@ namespace OpenSim.Server.Handlers
                 IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
 
                 server.AddStreamHandler(new EQMEventPoster(url, registry.RequestModuleInterface<IEventQueueService>(),
-                registry.RequestModuleInterface<ICapsService>()));
+                registry.RequestModuleInterface<ICapsService>(), 0));
             }
         }
 
@@ -68,14 +68,14 @@ namespace OpenSim.Server.Handlers
             get { return m_port; }
         }
 
-        public string GetUrlForRegisteringClient(UUID SessionID)
+        public string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)
         {
             string url = "/CAPS/EQMPOSTER" + UUID.Random();
 
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
 
             server.AddStreamHandler(new EQMEventPoster(url, m_registry.RequestModuleInterface<IEventQueueService>(),
-                    m_registry.RequestModuleInterface<ICapsService>()));
+                    m_registry.RequestModuleInterface<ICapsService>(), RegionHandle));
             return url;
         }
 
@@ -88,12 +88,14 @@ namespace OpenSim.Server.Handlers
 
         private IEventQueueService m_eventQueueService;
         private ICapsService m_capsService;
+        private ulong m_ourRegionHandle;
 
-        public EQMEventPoster(string url, IEventQueueService handler, ICapsService capsService) :
+        public EQMEventPoster(string url, IEventQueueService handler, ICapsService capsService, ulong handle) :
             base("POST", url)
         {
             m_eventQueueService = handler;
             m_capsService = capsService;
+            m_ourRegionHandle = handle;
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -118,8 +120,8 @@ namespace OpenSim.Server.Handlers
             try
             {
                 UUID agentID = request["AgentID"].AsUUID();
-                ulong regionHandle = request["RegionHandle"].AsULong();
                 UUID password = request["Password"].AsUUID();
+                ulong regionHandle = m_ourRegionHandle == 0 ? request["RegionHandle"].AsULong() : m_ourRegionHandle;
                 OSDArray events = new OSDArray();
                 if (request.ContainsKey("Events") && request["Events"].Type == OSDType.Array)
                     events = (OSDArray)request["Events"];
