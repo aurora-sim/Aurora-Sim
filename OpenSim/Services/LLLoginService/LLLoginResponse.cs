@@ -249,7 +249,7 @@ namespace OpenSim.Services.LLLoginService
             SetDefaultValues();
         }
 
-        public LLLoginResponse(UserAccount account, AgentCircuitData aCircuit, GridUserInfo pinfo,
+        public LLLoginResponse(UserAccount account, AgentCircuitData aCircuit, OpenSim.Services.Interfaces.UserInfo pinfo,
             GridRegion destination, List<InventoryFolderBase> invSkel, FriendInfo[] friendsList, ILibraryService libService,
             string where, string startlocation, Vector3 position, Vector3 lookAt, List<InventoryItemBase> gestures, string message,
             GridRegion home, IPEndPoint clientIP, string AdultMax, string AdultRating, string mapTileURL, string searchURL, string AllowFL, string TutorialURL,
@@ -346,7 +346,7 @@ namespace OpenSim.Services.LLLoginService
             ActiveGestures = list;
         }
 
-        private void FillOutHomeData(GridUserInfo pinfo, GridRegion home)
+        private void FillOutHomeData(OpenSim.Services.Interfaces.UserInfo pinfo, GridRegion home)
         {
             int x = 1000 * (int)Constants.RegionSize, y = 1000 * (int)Constants.RegionSize;
             if (home != null)

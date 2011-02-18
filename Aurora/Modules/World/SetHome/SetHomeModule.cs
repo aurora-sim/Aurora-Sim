@@ -157,8 +157,9 @@ namespace Aurora.Modules.World.Auction
                 if (scene.Permissions.CanSetHome(SP.UUID))
                 {
                     position.Z += SP.Appearance.AvatarHeight / 2;
-                    if (scene.GridUserService != null &&
-                        scene.GridUserService.SetHome(remoteClient.AgentId.ToString(), scene.RegionInfo.RegionID, position, lookAt) &&
+                    IAgentInfoService agentInfoService = scene.RequestModuleInterface<IAgentInfoService>();
+                    if (agentInfoService != null &&
+                        agentInfoService.SetHomePosition(remoteClient.AgentId.ToString(), scene.RegionInfo.RegionID, position, lookAt) &&
                         module != null) //Do this last so it doesn't screw up the rest
                     {
                         // FUBAR ALERT: this needs to be "Home position set." so the viewer saves a home-screenshot.

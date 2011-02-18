@@ -95,6 +95,20 @@ namespace OpenSim.Services.PresenceService
             }
         }
 
+        public void SetLoggedIn(string userID, bool loggingIn)
+        {
+            UserInfo userInfo = GetUserInfo(userID);
+            if (userInfo != null)
+            {
+                userInfo.IsOnline = loggingIn;
+                if (loggingIn)
+                    userInfo.LastLogin = DateTime.Now;
+                else
+                    userInfo.LastLogout = DateTime.Now;
+                Save(userInfo);
+            }
+        }
+
         public void Save(UserInfo userInfo)
         {
             m_genericsConnector.AddGeneric(UUID.Parse(userInfo.UserID), "UserInfo", userInfo.UserID, userInfo.ToOSD());

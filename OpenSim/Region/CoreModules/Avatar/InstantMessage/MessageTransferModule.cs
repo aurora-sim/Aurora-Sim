@@ -50,18 +50,6 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         protected List<Scene> m_Scenes = new List<Scene>();
         
         public event UndeliveredMessage OnUndeliveredMessage;
-
-        private IPresenceService m_PresenceService;
-        protected IPresenceService PresenceService
-        {
-            get
-            {
-                if (m_PresenceService == null)
-                    m_PresenceService = m_Scenes[0].RequestModuleInterface<IPresenceService>();
-                return m_PresenceService;
-            }
-        }
-
         public virtual void Initialise(IConfigSource config)
         {
             IConfig cnf = config.Configs["Messaging"];
@@ -507,7 +495,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
 
             //Ask for the user new style first
-            string[] AgentLocations = PresenceService.GetAgentsLocations(Queries.ToArray());
+            string[] AgentLocations = m_Scenes[0].RequestModuleInterface<IPresenceService>().GetAgentsLocations(Queries.ToArray());
             //If this is false, this doesn't exist on the presence server and we use the legacy way
             if (AgentLocations != null && (AgentLocations.Length != 0 && AgentLocations[0] != "Failure"))
             {
@@ -633,7 +621,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             //Now query the grid server for the agent
 
             //Ask for the user new style first
-            string[] AgentLocations = PresenceService.GetAgentsLocations(new string[] { toAgentID.ToString() });
+            string[] AgentLocations = m_Scenes[0].RequestModuleInterface<IPresenceService>().GetAgentsLocations(new string[] { toAgentID.ToString() });
             //If this is false, this doesn't exist on the presence server and we use the legacy way
             if (AgentLocations != null && (AgentLocations.Length != 0 && AgentLocations[0] != "Failure")) 
             {
@@ -655,7 +643,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             else
             {
                 //Query the legacy way
-                PresenceInfo[] presences = PresenceService.GetAgents(new string[] { toAgentID.ToString() });
+                PresenceInfo[] presences = m_Scenes[0].RequestModuleInterface<IPresenceService>().GetAgents(new string[] { toAgentID.ToString() });
                 if (presences != null && presences.Length > 0)
                 {
                     Services.Interfaces.GridRegion r = m_Scenes[0].GridService.GetRegionByUUID(m_Scenes[0].RegionInfo.ScopeID,

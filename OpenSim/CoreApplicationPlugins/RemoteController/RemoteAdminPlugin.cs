@@ -1107,7 +1107,8 @@ namespace OpenSim.CoreApplicationPlugins
                     if (null == home) {
                         m_log.WarnFormat("[RADMIN]: Unable to set home region for newly created user account {0} {1}", firstName, lastName);
                     } else {
-                        scene.GridUserService.SetHome(account.PrincipalID.ToString(), home.RegionID, new Vector3(128, 128, 0), new Vector3(0, 1, 0));
+                        IAgentInfoService agentInfoService = scene.RequestModuleInterface<IAgentInfoService>();
+                        agentInfoService.SetHomePosition(account.PrincipalID.ToString(), home.RegionID, new Vector3(128, 128, 0), new Vector3(0, 1, 0));
                         m_log.DebugFormat("[RADMIN]: Set home region {0} for updated user account {1} {2}", home.RegionID, firstName, lastName);
                     }
 
@@ -1203,9 +1204,9 @@ namespace OpenSim.CoreApplicationPlugins
                 }
                 else
                 {
-                    GridUserInfo userInfo = manager.CurrentOrFirstScene.GridUserService.GetGridUserInfo(account.PrincipalID.ToString());
+                    UserInfo userInfo = manager.CurrentOrFirstScene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(account.PrincipalID.ToString());
                     if (userInfo != null)
-                        responseData["lastlogin"] = userInfo.Login;
+                        responseData["lastlogin"] = userInfo.LastLogin;
                     else
                         responseData["lastlogin"] = 0;
 
@@ -1370,7 +1371,8 @@ namespace OpenSim.CoreApplicationPlugins
                         if (null == home) {
                             m_log.WarnFormat("[RADMIN]: Unable to set home region for updated user account {0} {1}", firstName, lastName);
                         } else {
-                            scene.GridUserService.SetHome(account.PrincipalID.ToString(), home.RegionID, new Vector3(128, 128, 0), new Vector3(0, 1, 0));
+                            IAgentInfoService agentInfoService = scene.RequestModuleInterface<IAgentInfoService>();
+                            agentInfoService.SetHomePosition(account.PrincipalID.ToString(), home.RegionID, new Vector3(128, 128, 0), new Vector3(0, 1, 0));
                             m_log.DebugFormat("[RADMIN]: Set home region {0} for updated user account {1} {2}", home.RegionID, firstName, lastName);
                         }
                     }
@@ -1908,7 +1910,8 @@ namespace OpenSim.CoreApplicationPlugins
                             if (null == home) {
                                 m_log.WarnFormat("[RADMIN]: Unable to set home region for newly created user account {0} {1}", names[0], names[1]);
                             } else {
-                                scene.GridUserService.SetHome(account.PrincipalID.ToString(), home.RegionID, new Vector3(128, 128, 0), new Vector3(0, 1, 0));
+                                IAgentInfoService agentInfoService = scene.RequestModuleInterface<IAgentInfoService>();
+                                agentInfoService.SetHomePosition(account.PrincipalID.ToString(), home.RegionID, new Vector3(128, 128, 0), new Vector3(0, 1, 0));
                                 m_log.DebugFormat("[RADMIN]: Set home region {0} for updated user account {1} {2}", home.RegionID, names[0], names[1]);
                             }
 
@@ -2850,7 +2853,6 @@ namespace OpenSim.CoreApplicationPlugins
             IUserAccountService userAccountService = scene.UserAccountService;
             IGridService gridService = scene.GridService;
             IAuthenticationService authenticationService = scene.AuthenticationService;
-            IGridUserService gridUserService = scene.GridUserService;
             IInventoryService inventoryService = scene.InventoryService;
 
             UserAccount account = userAccountService.GetUserAccount(scopeID, firstName, lastName);
@@ -2884,8 +2886,11 @@ namespace OpenSim.CoreApplicationPlugins
                         if (defaultRegions != null && defaultRegions.Count >= 1)
                             home = defaultRegions[0];
 
-                        if (gridUserService != null && home != null)
-                            gridUserService.SetHome(account.PrincipalID.ToString(), home.RegionID, new Vector3(128, 128, 0), new Vector3(0, 1, 0));
+                        IAgentInfoService agentInfoService = scene.RequestModuleInterface<IAgentInfoService>();
+                        if (agentInfoService != null && home != null)
+                        {
+                            agentInfoService.SetHomePosition(account.PrincipalID.ToString(), home.RegionID, new Vector3(128, 128, 0), new Vector3(0, 1, 0));
+                        }
                         else
                             m_log.WarnFormat("[RADMIN]: Unable to set home for account {0} {1}.",
                                firstName, lastName);

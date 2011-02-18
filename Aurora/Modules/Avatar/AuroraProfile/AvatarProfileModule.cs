@@ -594,12 +594,12 @@ namespace Aurora.Modules
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(target);
             if (UPI == null)
                 return;
-            OpenSim.Services.Interfaces.GridUserInfo TargetPI = GetRegionUserIsIn(remoteClient.AgentId).GridUserService.GetGridUserInfo(target.ToString());
+            UserInfo TargetPI = remoteClient.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(target.ToString());
             bool isFriend = IsFriendOfUser(remoteClient.AgentId, target);
             if (isFriend)
             {
                 uint agentOnline = 0;
-                if (TargetPI != null && TargetPI.Online)
+                if (TargetPI != null && TargetPI.IsOnline)
                 {
                     agentOnline = 16;
                 }
@@ -611,7 +611,7 @@ namespace Aurora.Modules
                 //See if all can see this person
                 //Not a friend, so send the first page only and if they are online
                 uint agentOnline = 0;
-                if (TargetPI != null && TargetPI.Online && UPI.Visible)
+                if (TargetPI != null && TargetPI.IsOnline && UPI.Visible)
                 {
                     agentOnline = 16;
                 }
@@ -718,14 +718,14 @@ namespace Aurora.Modules
                     int perms = module.GetFriendPerms(hunter, target);
                     if ((perms & (int)FriendRights.CanSeeOnMap) == (int)FriendRights.CanSeeOnMap)
                     {
-                        OpenSim.Services.Interfaces.GridUserInfo GUI = GetRegionUserIsIn(client.AgentId).GridUserService.GetGridUserInfo(target.ToString());
+                        UserInfo GUI = client.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(target.ToString());
                         if (GUI != null)
                         {
-                            OpenSim.Services.Interfaces.GridRegion region = GetRegionUserIsIn(client.AgentId).GridService.GetRegionByUUID(UUID.Zero, GUI.LastRegionID);
+                            OpenSim.Services.Interfaces.GridRegion region = GetRegionUserIsIn(client.AgentId).GridService.GetRegionByUUID(UUID.Zero, GUI.CurrentRegionID);
 
                             client.SendScriptTeleportRequest(client.Name, region.RegionName,
-                                                                               GUI.LastPosition,
-                                                                               GUI.LastLookAt);
+                                                                               GUI.CurrentPosition,
+                                                                               GUI.CurrentLookAt);
                         }
                     }
                 }

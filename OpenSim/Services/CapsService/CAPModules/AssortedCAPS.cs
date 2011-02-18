@@ -12,6 +12,7 @@ using OpenSim.Services.Interfaces;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework.Capabilities;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 using OpenMetaverse;
 using Aurora.DataManager;
@@ -25,16 +26,16 @@ namespace OpenSim.Services.CapsService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IRegionClientCapsService m_service;
-        private IPresenceService m_presenceService;
-        private IGridUserService m_gridUserService;
+        private IGridService m_gridService;
+        private IAgentInfoService m_agentInfoService;
 
         #region ICapsServiceConnector Members
 
         public void RegisterCaps(IRegionClientCapsService service)
         {
             m_service = service;
-            m_presenceService = service.Registry.RequestModuleInterface<IPresenceService>();
-            m_gridUserService = service.Registry.RequestModuleInterface<IGridUserService>();
+            m_gridService = service.Registry.RequestModuleInterface<IGridService>();
+            m_agentInfoService = service.Registry.RequestModuleInterface<IAgentInfoService>();
             
             GenericHTTPMethod method = delegate(Hashtable httpMethod)
             {
@@ -81,10 +82,12 @@ namespace OpenSim.Services.CapsService
                 (float)lookat["Z"].AsReal());
             int locationID = HomeLocation["LocationId"].AsInteger();
 
-            PresenceInfo presence = m_presenceService.GetAgents(new string[] { agentID.ToString() })[0];
-            bool r = m_gridUserService.SetHome(agentID.ToString(), presence.RegionID, position, lookAt);
+            int x,y;
+            Util.UlongToInts(m_service.RegionHandle, out x, out y);
+            GridRegion reg = m_gridService.GetRegionByPosition(UUID.Zero, x, y);
+            m_agentInfoService.SetHomePosition(agentID.ToString(), reg.RegionID, position, lookAt);
 
-            rm.Add("success", OSD.FromBoolean(r));
+            rm.Add("success", OSD.FromBoolean(true));
 
             //Send back data
             Hashtable responsedata = new Hashtable();

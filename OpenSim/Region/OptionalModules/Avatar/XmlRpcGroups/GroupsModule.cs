@@ -818,11 +818,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             {
                 for (int i = 0; i < data.Count; i++)
                 {
-                    GridUserInfo info = m_sceneList[0].GridUserService.GetGridUserInfo(data[i].AgentID.ToString());
-                    if (info != null && !info.Online)
-                        data[i].OnlineStatus = Util.ToDateTime(info.Logout).ToShortDateString().ToString();
+                    UserInfo info = m_sceneList[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(data[i].AgentID.ToString());
+                    if (info != null && !info.IsOnline)
+                        data[i].OnlineStatus = info.LastLogin.ToShortDateString().ToString();
                     else if (info == null)
                         data[i].OnlineStatus = "Unknown";
+                    else
+                        data[i].OnlineStatus = "Online";
                 }
             }
 

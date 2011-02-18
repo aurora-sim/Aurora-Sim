@@ -323,8 +323,8 @@ namespace Aurora.Modules
                         }
                     }
                     //Then we have to pull the GUI to see if the user is online or not
-                    OpenSim.Services.Interfaces.GridUserInfo Pinfo = m_Scenes[0].GridUserService.GetGridUserInfo(item.PrincipalID.ToString());
-                    if (Pinfo != null && Pinfo.Online) //If it is null, they are offline
+                    UserInfo Pinfo = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(item.PrincipalID.ToString());
+                    if (Pinfo != null && Pinfo.IsOnline) //If it is null, they are offline
                         data[i].online = true;
                     data[i].reputation = 0;
                     i++;
@@ -349,8 +349,8 @@ namespace Aurora.Modules
                         }
                     }
                     //Then we have to pull the GUI to see if the user is online or not
-                    OpenSim.Services.Interfaces.GridUserInfo Pinfo = m_Scenes[0].GridUserService.GetGridUserInfo(item.PrincipalID.ToString());
-                    if (Pinfo != null && Pinfo.Online)
+                    UserInfo Pinfo = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(item.PrincipalID.ToString());
+                    if (Pinfo != null && Pinfo.IsOnline)
                         data[i].online = true;
                     data[i].reputation = 0;
                     i++;

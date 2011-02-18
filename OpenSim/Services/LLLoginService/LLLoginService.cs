@@ -64,11 +64,10 @@ namespace OpenSim.Services.LLLoginService
         private static bool Initialized = false;
 
         protected IUserAccountService m_UserAccountService;
-        protected IGridUserService m_GridUserService;
+        protected IAgentInfoService m_agentInfoService;
         protected IAuthenticationService m_AuthenticationService;
         protected IInventoryService m_InventoryService;
         protected IGridService m_GridService;
-        protected IPresenceService m_PresenceService;
         protected ISimulationService m_SimulationService;
         protected ILibraryService m_LibraryService;
         protected IFriendsService m_FriendsService;
@@ -143,11 +142,10 @@ namespace OpenSim.Services.LLLoginService
         public void Start(IConfigSource config, IRegistryCore registry)
         {
             m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
-            m_GridUserService = registry.RequestModuleInterface<IGridUserService>();
+            m_agentInfoService = registry.RequestModuleInterface<IAgentInfoService>();
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
             m_InventoryService = registry.RequestModuleInterface<IInventoryService>();
             m_GridService = registry.RequestModuleInterface<IGridService>();
-            m_PresenceService = registry.RequestModuleInterface<IPresenceService>();
             m_AvatarService = registry.RequestModuleInterface<IAvatarService>();
             m_FriendsService = registry.RequestModuleInterface<IFriendsService>();
             m_SimulationService = registry.RequestModuleInterface<ISimulationService>();
@@ -396,7 +394,6 @@ namespace OpenSim.Services.LLLoginService
         public LoginResponse Login(string firstName, string lastName, string passwd, string startLocation, UUID scopeID,
             string clientVersion, string channel, string mac, string id0, IPEndPoint clientIP, Hashtable requestData, UUID secureSession)
         {
-            bool success = false;
             UUID session = UUID.Random();
 
             m_log.InfoFormat("[LLOGIN SERVICE]: Login request for {0} {1} from {2} with user agent {3} starting in {4}",
@@ -478,7 +475,8 @@ namespace OpenSim.Services.LLLoginService
                 // Change Online status and get the home region
                 //
                 GridRegion home = null;
-                GridUserInfo guinfo = m_GridUserService.LoggedIn(account.PrincipalID.ToString());
+                m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true);
+                UserInfo guinfo = m_agentInfoService.GetUserInfo(account.PrincipalID.ToString());
                 if (guinfo != null && (guinfo.HomeRegionID != UUID.Zero) && m_GridService != null)
                 {
                     home = m_GridService.GetRegionByUUID(scopeID, guinfo.HomeRegionID);
@@ -488,8 +486,8 @@ namespace OpenSim.Services.LLLoginService
                 {
                     GridUserInfoFound = false;
                     // something went wrong, make something up, so that we don't have to test this anywhere else
-                    guinfo = new GridUserInfo();
-                    guinfo.LastPosition = guinfo.HomePosition = new Vector3(128, 128, 30);
+                    guinfo = new UserInfo();
+                    guinfo.CurrentPosition = guinfo.HomePosition = new Vector3(128, 128, 30);
                 }
 
                 //
@@ -518,20 +516,20 @@ namespace OpenSim.Services.LLLoginService
                     {
                         GridRegion newHomeRegion = m_GridService.GetRegionByName(account.ScopeID, m_DefaultHomeRegion);
                         if (newHomeRegion == null)
-                            guinfo.HomeRegionID = guinfo.LastRegionID = DefaultRegion.RegionID;
+                            guinfo.HomeRegionID = guinfo.CurrentRegionID = DefaultRegion.RegionID;
                         else
-                            guinfo.HomeRegionID = guinfo.LastRegionID = newHomeRegion.RegionID;
+                            guinfo.HomeRegionID = guinfo.CurrentRegionID = newHomeRegion.RegionID;
                     }
                     else if (guinfo.HomeRegionID == UUID.Zero)
-                        guinfo.HomeRegionID = guinfo.LastRegionID = DefaultRegion.RegionID;
+                        guinfo.HomeRegionID = guinfo.CurrentRegionID = DefaultRegion.RegionID;
 
                     //Z = 0 so that it fixes it on the region server and puts it on the ground
-                    guinfo.LastPosition = guinfo.HomePosition = new Vector3(128, 128, 25);
+                    guinfo.CurrentPosition = guinfo.HomePosition = new Vector3(128, 128, 25);
 
-                    guinfo.HomeLookAt = guinfo.LastLookAt = new Vector3(0, 0, 0);
+                    guinfo.HomeLookAt = guinfo.CurrentLookAt = new Vector3(0, 0, 0);
 
-                    m_GridUserService.SetLastPosition(guinfo.UserID, UUID.Zero, guinfo.LastRegionID, guinfo.LastPosition, guinfo.LastLookAt);
-                    m_GridUserService.SetHome(guinfo.UserID, guinfo.HomeRegionID, guinfo.HomePosition, guinfo.HomeLookAt);
+                    m_agentInfoService.SetLastPosition(guinfo.UserID, guinfo.CurrentRegionID, guinfo.CurrentPosition, guinfo.CurrentLookAt);
+                    m_agentInfoService.SetHomePosition(guinfo.UserID, guinfo.HomeRegionID, guinfo.HomePosition, guinfo.HomeLookAt);
                 }
 
                 //
@@ -692,7 +690,7 @@ namespace OpenSim.Services.LLLoginService
             return capsSeedPath;
         }
 
-        protected GridRegion FindDestination(UserAccount account, UUID scopeID, GridUserInfo pinfo, UUID sessionID, string startLocation, GridRegion home, out string where, out Vector3 position, out Vector3 lookAt)
+        protected GridRegion FindDestination(UserAccount account, UUID scopeID, UserInfo pinfo, UUID sessionID, string startLocation, GridRegion home, out string where, out Vector3 position, out Vector3 lookAt)
         {
             m_log.DebugFormat("[LLOGIN SERVICE]: FindDestination for start location {0}", startLocation);
 
@@ -762,7 +760,7 @@ namespace OpenSim.Services.LLLoginService
 
                 GridRegion region = null;
 
-                if (pinfo.LastRegionID.Equals(UUID.Zero) || (region = m_GridService.GetRegionByUUID(scopeID, pinfo.LastRegionID)) == null)
+                if (pinfo.CurrentRegionID.Equals(UUID.Zero) || (region = m_GridService.GetRegionByUUID(scopeID, pinfo.CurrentRegionID)) == null)
                 {
                     List<GridRegion> defaults = m_GridService.GetDefaultRegions(scopeID);
                     if (defaults != null && defaults.Count > 0)
@@ -792,8 +790,8 @@ namespace OpenSim.Services.LLLoginService
                 }
                 else
                 {
-                    position = pinfo.LastPosition;
-                    lookAt = pinfo.LastLookAt;
+                    position = pinfo.CurrentPosition;
+                    lookAt = pinfo.CurrentLookAt;
                 }
 
                 return region;

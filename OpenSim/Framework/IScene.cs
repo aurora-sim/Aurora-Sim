@@ -68,9 +68,7 @@ namespace OpenSim.Framework
         IAuthenticationService AuthenticationService { get; }
         IAvatarService AvatarService { get; }
         IGridService GridService { get; }
-        IGridUserService GridUserService { get; }
         IInventoryService InventoryService { get; }
-        IPresenceService PresenceService { get; }
         ISimulationService SimulationService { get; }
         IUserAccountService UserAccountService { get; }
 

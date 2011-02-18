@@ -4834,10 +4834,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 throw new Exception(String.Format("The inventory object '{0}' could not be found", inventory));
             }
 
-            GridUserInfo info = m_host.ParentGroup.Scene.GridUserService.GetGridUserInfo(destId.ToString());
+            UserInfo info = m_host.ParentGroup.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(destId.ToString());
 
             // check if destination is an avatar
-            if ((info != null && info.Online) || World.GetScenePresence(destId) != null)
+            if ((info != null && info.IsOnline) || World.GetScenePresence(destId) != null)
             {
                 // destination is an avatar
                 InventoryItemBase agentItem = null;

@@ -243,27 +243,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public IGridUserService GridUserService
-        {
-            get
-            {
-                return RequestModuleInterface<IGridUserService>();
-            }
-        }
-
         public IInventoryService InventoryService
         {
             get
             {
                 return RequestModuleInterface<IInventoryService>();
-            }
-        }
-
-        public IPresenceService PresenceService
-        {
-            get
-            {
-                return RequestModuleInterface<IPresenceService>();
             }
         }
 

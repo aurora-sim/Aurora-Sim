@@ -471,7 +471,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             //m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Request to teleport {0} {1} home", client.FirstName, client.LastName);
 
             //OpenSim.Services.Interfaces.PresenceInfo pinfo = m_aScene.PresenceService.GetAgent(client.SessionId);
-            GridUserInfo uinfo = GetScene(client.Scene.RegionInfo.RegionID).GridUserService.GetGridUserInfo(client.AgentId.ToString());
+            UserInfo uinfo = client.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(client.AgentId.ToString());
 
             if (uinfo != null)
             {

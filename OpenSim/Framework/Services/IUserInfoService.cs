@@ -53,7 +53,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         public OSDMap Info = new OSDMap();
 
-        public OSDMap ToOSD()
+        public override OSDMap ToOSD()
         {
              OSDMap retVal = new OSDMap();
              retVal["UserID"] = UserID;
@@ -71,7 +71,7 @@ namespace OpenSim.Services.Interfaces
              return retVal;
         }
 
-        public void FromOSD(OSDMap retVal)
+        public override void FromOSD(OSDMap retVal)
         {
              UserID = retVal["UserID"].AsString();
              SessionID = retVal["SessionID"].AsUUID();
@@ -133,5 +133,12 @@ namespace OpenSim.Services.Interfaces
         /// <param name="lastPosition"></param>
         /// <param name="lastLookAt"></param>
         void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt);
+
+        /// <summary>
+        /// Log the agent in or out
+        /// </summary>
+        /// <param name="userID"></param>
+        /// <param name="loggingIn">Whether the user is logging in or out</param>
+        void SetLoggedIn(string userID, bool loggingIn);
     }
 }
