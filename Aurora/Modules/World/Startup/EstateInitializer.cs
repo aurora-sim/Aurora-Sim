@@ -23,6 +23,7 @@ namespace OpenSim.Region.CoreModules
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private string LastEstateName = "";
         private string LastEstateChoise = "no";
+        private string LastEstateOwner = "Test User";
 
         public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
@@ -68,16 +69,58 @@ namespace OpenSim.Region.CoreModules
 
         private EstateSettings CreateEstateInfo(Scene scene)
         {
-            EstateSettings ES = null;
+            EstateSettings ES = new EstateSettings();
             while (true)
             {
                 IEstateConnector EstateConnector = DataManager.RequestPlugin<IEstateConnector>();
-                string response = MainConsole.Instance.CmdPrompt("Do you wish to join an existing estate for " + scene.RegionInfo.RegionName + "? (Options are {yes, no})", LastEstateChoise, new List<string>() { "yes", "no", "find" });
+
+                string[] name = MainConsole.Instance.CmdPrompt("Estate owner name", LastEstateOwner).Split(' ');
+                if (name.Length != 2)
+                {
+                    m_log.Warn("Please enter a valid name.");
+                    continue;
+                }
+                UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, name[0], name[1]);
+
+                if (account == null)
+                {
+                    string createNewUser = MainConsole.Instance.CmdPrompt("Could not find user " + name + ". Would you like to create this user?", "yes");
+
+                    if (createNewUser == "yes")
+                    {
+                        // Create a new account
+                        string password = MainConsole.Instance.PasswdPrompt(name + "'s password");
+                        string email = MainConsole.Instance.CmdPrompt(name + "'s email", "");
+
+                        scene.UserAccountService.CreateUser(name[0], name[1], Util.Md5Hash(password), email);
+                        account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, name[0], name[1]);
+
+                        if (account == null)
+                        {
+                            m_log.ErrorFormat("[EstateService]: Unable to store account. If this simulator is connected to a grid, you must create the estate owner account first.");
+                            continue;
+                        }
+                    }
+                    else
+                        continue;
+                }
+
+                LastEstateOwner = account.Name;
+
+                List<EstateSettings> ownerEstates = EstateConnector.GetEstates(account.PrincipalID);
+                m_log.WarnFormat("Found user. {0} has {1} estates currently. {2}", account.Name, ownerEstates.Count,
+                    ownerEstates.Count > 0 ? "These estates are the following:" : "");
+                for (int i = 0; i < ownerEstates.Count; i++)
+                {
+                    m_log.Warn(ownerEstates[i].EstateName);
+                }
+                string response = MainConsole.Instance.CmdPrompt("Do you wish to join one of these existing estates? (Options are {yes, no})", LastEstateChoise, new List<string>() { "yes", "no" });
+
                 LastEstateChoise = response;
+
                 if (response == "no")
                 {
                     // Create a new estate
-                    ES = new EstateSettings();
                     ES.EstateName = MainConsole.Instance.CmdPrompt("New estate name", scene.RegionInfo.EstateSettings.EstateName);
 
                     //Set to auto connect to this region next
@@ -86,6 +129,7 @@ namespace OpenSim.Region.CoreModules
 
                     string Password = Util.Md5Hash(Util.Md5Hash(MainConsole.Instance.CmdPrompt("New estate password (to keep others from joining your estate, blank to have no pass)", ES.EstatePass)));
                     ES.EstatePass = Password;
+                    ES.EstateOwner = account.PrincipalID;
 
                     ES = EstateConnector.CreateEstate(ES, scene.RegionInfo.RegionID);
                     if (ES == null)
@@ -152,6 +196,7 @@ namespace OpenSim.Region.CoreModules
                             m_log.Warn("The connection to the server was broken, please try again soon.");
                             continue;
                         }
+                        m_log.Warn("Successfully joined the estate!");
                         break;
                     }
 
@@ -164,86 +209,6 @@ namespace OpenSim.Region.CoreModules
 
         public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            //Now make sure we have an owner and that the owner's account exists on the grid
-            UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, scene.RegionInfo.EstateSettings.EstateOwner);
-            while (scene.RegionInfo.EstateSettings.EstateOwner == UUID.Zero && MainConsole.Instance != null)
-            {
-                MainConsole.Instance.Output("The current estate " + scene.RegionInfo.EstateSettings.EstateName + " has no owner set.");
-                List<char> excluded = new List<char>(new char[1] { ' ' });
-                string first = MainConsole.Instance.CmdPrompt("Estate owner first name", "Test", excluded);
-                string last = MainConsole.Instance.CmdPrompt("Estate owner last name", "User", excluded);
-
-                account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, first, last);
-
-                if (account == null)
-                {
-                    string name = first + " " + last;
-                    string createNewUser = MainConsole.Instance.CmdPrompt("Could not find user " + name + ". Would you like to create this user?", "yes");
-
-                    if (createNewUser == "yes")
-                    {
-                        // Create a new account
-                        string password = MainConsole.Instance.PasswdPrompt(name + "'s password");
-                        string email = MainConsole.Instance.CmdPrompt(name + "'s email", "");
-
-                        scene.UserAccountService.CreateUser(first, last, Util.Md5Hash(password), email);
-                        account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, first, last);
-
-                        if (account != null)
-                        {
-                            scene.RegionInfo.EstateSettings.EstateOwner = account.PrincipalID;
-                            scene.RegionInfo.EstateSettings.Save();
-                        }
-                        else
-                            m_log.ErrorFormat("[SCENE]: Unable to store account. If this simulator is connected to a grid, you must create the estate owner account first.");
-                    }
-                }
-                else
-                {
-                    scene.RegionInfo.EstateSettings.EstateOwner = account.PrincipalID;
-                    scene.RegionInfo.EstateSettings.Save();
-                }
-            }
-            while (account == null)
-            {
-                MainConsole.Instance.Output("The current estate " + scene.RegionInfo.EstateSettings.EstateName + " has no owner that exists in this grid set.");
-                List<char> excluded = new List<char>(new char[1] { ' ' });
-                string first = MainConsole.Instance.CmdPrompt("Estate owner first name", "Test", excluded);
-                string last = MainConsole.Instance.CmdPrompt("Estate owner last name", "User", excluded);
-                account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, first, last);
-                if (account == null)
-                {
-                    string name = first + " " + last;
-                    string createNewUser = MainConsole.Instance.CmdPrompt("Could not find user " + name + ". Would you like to create this user?", "yes");
-
-                    if (createNewUser == "yes")
-                    {
-                        // Create a new account
-                        string password = MainConsole.Instance.PasswdPrompt(name + "'s password");
-                        string email = MainConsole.Instance.CmdPrompt(name + "'s email", "");
-
-                        scene.UserAccountService.CreateUser(first, last, Util.Md5Hash(password), email);
-                        account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, first, last);
-
-                        if (account != null)
-                        {
-                            scene.RegionInfo.EstateSettings.EstateOwner = account.PrincipalID;
-                            scene.RegionInfo.EstateSettings.Save();
-                        }
-                        else
-                        {
-                            account = null;
-                            m_log.ErrorFormat("[SCENE]: Unable to store account. If this simulator is connected to a grid, you must create the estate owner account first.");
-                        }
-                    }
-                }
-                else
-                {
-                    //Set the new user
-                    scene.RegionInfo.EstateSettings.EstateOwner = account.PrincipalID;
-                    scene.RegionInfo.EstateSettings.Save();
-                }
-            }
         }
 
         public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
