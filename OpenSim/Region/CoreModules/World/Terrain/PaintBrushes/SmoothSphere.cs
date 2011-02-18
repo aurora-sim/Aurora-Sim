@@ -46,27 +46,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
             double step = BrushSize / 4;
             duration *= 0.03; //MCP Should be read from ini file
 
-            int xFrom = (int)(rx - BrushSize + 0.5);
-            int xTo = (int)(rx + BrushSize + 0.5) + 1;
-            int yFrom = (int)(ry - BrushSize + 0.5);
-            int yTo = (int)(ry + BrushSize + 0.5) + 1;
-
-            if (xFrom < 0)
-                xFrom = 0;
-
-            if (yFrom < 0)
-                yFrom = 0;
-
-            if (xTo > map.Width)
-                xTo = map.Width;
-
-            if (yTo > map.Height)
-                yTo = map.Height;
-
-            // compute delta and blend in
-            for (x = xFrom ; x < xTo; x++)
+            for (x = 0; x < map.Width; x++)
             {
-                for (y = yFrom; y < yTo; y++)
+                for (y = 0; y < map.Height; y++)
                 {
                     if (!mask[x, y])
                         continue;
