@@ -42,7 +42,7 @@ namespace OpenSim.Services.GridService
             foreach (IGridRegistrationUrlModule module in m_modules)
             {
                 //Build the URL
-                retVal[module.UrlName] = m_hostName + ":" + module.Port + module.GetUrlForRegisteringClient(SessionID);
+                retVal[module.UrlName] = m_hostName + ":" + module.Port + module.GetUrlForRegisteringClient(SessionID, RegionHandle);
             }
             return retVal;
         }

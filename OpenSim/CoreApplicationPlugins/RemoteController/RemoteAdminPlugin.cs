@@ -686,7 +686,7 @@ namespace OpenSim.CoreApplicationPlugins
                         }
 
                         // Create a new estate with the name provided
-                        region.EstateSettings = estateService.LoadEstateSettings(region.RegionID);
+                        //region.EstateSettings = estateService.LoadEstateSettings(region.RegionID);
 
                         region.EstateSettings.EstateName = (string)requestData["estate_name"];
                         region.EstateSettings.EstateOwner = userID;

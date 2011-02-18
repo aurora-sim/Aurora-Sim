@@ -771,9 +771,6 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             fullSimParcel.SetLandBitmap(fullSimParcel.GetSquareLandBitmap(0, 0, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY));
             
-            IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
-            if (connector != null)
-                fullSimParcel.LandData.OwnerID = connector.LoadEstateSettings(m_scene.RegionInfo.RegionID).EstateOwner;
             if (fullSimParcel.LandData.OwnerID == UUID.Zero)
                 fullSimParcel.LandData.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
 

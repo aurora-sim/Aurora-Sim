@@ -726,6 +726,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void StartModules(Scene scene)
         {
+            scene.AddModuleInterfaces(m_OpenSimBase.ApplicationRegistry.GetInterfaces());
             foreach (ISharedRegionStartupModule module in m_startupPlugins)
             {
                 module.Initialise(scene, m_config, m_OpenSimBase);

@@ -94,6 +94,8 @@ namespace OpenSim.Server.Handlers.AuroraData
                         return EstateHandler.DeleteEstate(request);
                     case "getestates":
                         return EstateHandler.GetEstates(request);
+                    case "getestatesowner":
+                        return EstateHandler.GetEstatesOwner(request);
                     #endregion
                     #region Mutes
                     case "getmutelist":
@@ -1296,6 +1298,27 @@ namespace OpenSim.Server.Handlers.AuroraData
             return encoding.GetBytes(xmlString);
         }
 
+        public byte[] GetEstatesOwner(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            UUID search = UUID.Parse(request["SEARCH"].ToString());
+            List<EstateSettings> EstateIDs = EstateConnector.GetEstates(search);
+            Dictionary<string, object> estateresult = new Dictionary<string, object>();
+            int i = 0;
+            foreach (EstateSettings estateID in EstateIDs)
+            {
+                estateresult.Add(ConvertDecString(i), estateID.ToKeyValuePairs(false));
+                i++;
+            }
+            result["result"] = estateresult;
+
+            string xmlString = WebUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
         public byte[] LinkRegionEstate(Dictionary<string, object> request)
         {
             int EstateID = int.Parse(request["ESTATEID"].ToString());
@@ -1354,7 +1377,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             {
                 string regionID = request["REGIONID"].ToString();
                 if(regionID != null)
-                    ES = EstateConnector.LoadEstateSettings(UUID.Parse(regionID));
+                    EstateConnector.LoadEstateSettings(UUID.Parse(regionID), out ES);
             }
 
             //This NEEDS to be false here, otherwise passwords will be sent unsecurely!

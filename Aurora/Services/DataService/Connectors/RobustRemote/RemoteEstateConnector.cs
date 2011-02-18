@@ -45,16 +45,15 @@ namespace Aurora.Services.DataService
         {
         }
 
-        public EstateSettings LoadEstateSettings(UUID regionID)
+        public bool LoadEstateSettings(UUID regionID, out EstateSettings settings)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
-
-            EstateSettings ES = new EstateSettings();
-            ES.OnSave += SaveEstateSettings;
+            settings = null;
 
             //This DOES have a reason, the RemoteEstateService will not send back
             //  the EstatePass anywhere (for security reasons),
             //  so we need to save it so that we can restore it later.
+            EstateSettings ES = new EstateSettings();
             string Password = ES.EstatePass;
 
             sendData["REGIONID"] = regionID.ToString();
@@ -75,16 +74,16 @@ namespace Aurora.Services.DataService
 
                         if (replyData != null)
                         {
-                            ES = new EstateSettings(replyData);
-                            ES.OnSave += SaveEstateSettings;
-                            ES.EstatePass = Password; //Restore it here, see above for explaination
-                            return ES;
+                            settings = new EstateSettings(replyData);
+                            settings.OnSave += SaveEstateSettings;
+                            settings.EstatePass = Password; //Restore it here, see above for explaination
+                            return true;
                         }
 
                         else
                             m_log.DebugFormat("[AuroraRemoteEstateConnector]: LoadEstateSettings {0} received null response",
                                 regionID);
-                        return new EstateSettings();
+                        return false;
                     }
                 }
             }
@@ -93,7 +92,7 @@ namespace Aurora.Services.DataService
                 m_log.WarnFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
             }
 
-            return null;
+            return false;
         }
 
         public EstateSettings LoadEstateSettings(int estateID)
@@ -244,6 +243,56 @@ namespace Aurora.Services.DataService
                         else
                             m_log.DebugFormat("[AuroraRemoteEstateConnector]: GetEstates {0} received null response",
                                 search);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
+            }
+
+            return null;
+        }
+
+        public List<EstateSettings> GetEstates(UUID owner)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["SEARCH"] = owner;
+            sendData["METHOD"] = "getestatesowner";
+            List<EstateSettings> Estates = new List<EstateSettings>();
+            string reqString = WebUtils.BuildQueryString(sendData);
+
+            try
+            {
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if (replyData != null)
+                        {
+                            if (!replyData.ContainsKey("result"))
+                                return Estates;
+                            foreach (object obj in replyData.Values)
+                            {
+                                if (obj is Dictionary<string, object>)
+                                {
+                                    Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
+                                    EstateSettings es = new EstateSettings(dictionary);
+                                    Estates.Add(es);
+                                }
+                            }
+                            return Estates;
+                        }
+
+                        else
+                            m_log.DebugFormat("[AuroraRemoteEstateConnector]: GetEstates {0} received null response",
+                                owner);
                     }
                 }
             }

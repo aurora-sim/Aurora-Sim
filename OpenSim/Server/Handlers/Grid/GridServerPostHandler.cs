@@ -241,7 +241,7 @@ namespace OpenSim.Server.Handlers.Grid
             if (result == "")
             {
                 OSDMap urls = new OSDMap();
-                Dictionary<string, string> durls = m_registry.RequestModuleInterface<IGridRegistrationService>().GetUrlForRegisteringClient(SecureSessionID);
+                Dictionary<string, string> durls = m_registry.RequestModuleInterface<IGridRegistrationService>().GetUrlForRegisteringClient(SecureSessionID, rinfo.RegionHandle);
                 foreach (KeyValuePair<string, string> kvp in durls)
                 {
                     urls[kvp.Key] = kvp.Value;

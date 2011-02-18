@@ -62,16 +62,16 @@ namespace Aurora.Services.DataService
         {
         }
 
-		public EstateSettings LoadEstateSettings(UUID regionID)
+        public bool LoadEstateSettings(UUID regionID, out EstateSettings settings)
 		{
+            settings = null;
             List<string> estateID = GD.Query(new string[] { "ID", "`Key`" }, new object[] { regionID, "EstateID" }, "estates", "Value");
-            if (estateID.Count == 0)
-				return new EstateSettings();
-            else
-                return LoadEstateSettings(Convert.ToInt32(estateID[0]));
+            if (estateID.Count != 0)
+                settings = LoadEstateSettings(Convert.ToInt32(estateID[0]));
+			return true;
 		}
 
-		public OpenSim.Framework.EstateSettings LoadEstateSettings(int estateID)
+		public EstateSettings LoadEstateSettings(int estateID)
 		{
             EstateSettings settings = new EstateSettings();
             List<string> query = null;
@@ -83,7 +83,7 @@ namespace Aurora.Services.DataService
             {
             }
             if (query == null || query.Count == 0)
-                return settings; //Couldn't find it, return default then.
+                return null; //Couldn't find it, return default then.
 
             OSDMap estateInfo = (OSDMap)OSDParser.DeserializeLLSDXml(query[0]);
 
@@ -292,21 +292,35 @@ namespace Aurora.Services.DataService
             SaveUUIDList(es.EstateID, "EstateGroups", es.EstateGroups);
         }
 
-		public List<int> GetEstates(string search)
-		{
-			List<int> result = new List<int>();
-			List<string> RetVal = GD.Query("", "", "estates", "Value", " where `Key` = 'EstateSettings' and Value LIKE '%" + search + "%'");
+        public List<int> GetEstates(string search)
+        {
+            List<int> result = new List<int>();
+            List<string> RetVal = GD.Query("", "", "estates", "Value", " where `Key` = 'EstateSettings' and Value LIKE '%<key>EstateName</key><string>" + search + "</string>%'");
             if (RetVal.Count == 0)
                 return null;
             foreach (string val in RetVal)
             {
                 OSDMap estateInfo = (OSDMap)OSDParser.DeserializeLLSDXml(val);
                 result.Add(estateInfo["EstateID"].AsInteger());
-			}
-			return result;
-		}
+            }
+            return result;
+        }
 
-		public bool LinkRegion(OpenMetaverse.UUID regionID, int estateID, string password)
+        public List<EstateSettings> GetEstates(UUID OwnerID)
+        {
+            List<EstateSettings> result = new List<EstateSettings>();
+            List<string> RetVal = GD.Query("", "", "estates", "Value", " where `Key` = 'EstateSettings' and Value LIKE '%<key>EstateOwner</key><uuid>" + OwnerID + "</uuid>%'");
+            if (RetVal.Count == 0)
+                return null;
+            foreach (string val in RetVal)
+            {
+                OSDMap estateInfo = (OSDMap)OSDParser.DeserializeLLSDXml(val);
+                result.Add(LoadEstateSettings(estateInfo["EstateID"].AsInteger()));
+            }
+            return result;
+        }
+
+		public bool LinkRegion(UUID regionID, int estateID, string password)
 		{
 			List<string> query = null;
             try

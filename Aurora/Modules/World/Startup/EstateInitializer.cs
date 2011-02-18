@@ -29,22 +29,27 @@ namespace OpenSim.Region.CoreModules
             IEstateConnector EstateConnector = DataManager.RequestPlugin<IEstateConnector>();
             if (EstateConnector != null)
             {
-                EstateSettings ES = EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID);
-                if (ES != null && ES.EstateID == 0) // No record at all, new estate required
+                EstateSettings ES;
+                if (EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID, out ES) && ES == null)
                 {
+                    //It found the estate service, but found no estates for this region, make a new one
                     m_log.Warn("Your region " + scene.RegionInfo.RegionName + " is not part of an estate.");
                     ES = CreateEstateInfo(scene);
                 }
-                else if (ES == null) //Cannot connect to the estate service
+                else if (ES != null)
                 {
-                    m_log.Warn("The connection to the estate service was broken, please try again soon.");
+                    //It found the estate service and it found an estate for this region
+                }
+                else
+                {
+                    //It could not find the estate service, wait until it can find it
+                    m_log.Warn("We could not find the estate service for this sim. Please make sure that your URLs are correct in grid mode.");
                     while (true)
                     {
                         MainConsole.Instance.CmdPrompt("Press enter to try again.");
-                        ES = EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID);
-                        if (ES != null && ES.EstateID == 0)
+                        if (EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID, out ES) && ES == null)
                             ES = CreateEstateInfo(scene);
-                        else if (ES == null)
+                        else if (ES != null)
                             continue;
                         break;
                     }
@@ -67,7 +72,7 @@ namespace OpenSim.Region.CoreModules
             while (true)
             {
                 IEstateConnector EstateConnector = DataManager.RequestPlugin<IEstateConnector>();
-                string response = MainConsole.Instance.CmdPrompt("Do you wish to join an existing estate for " + scene.RegionInfo.RegionName + "? (Options are {yes, no, find})", LastEstateChoise, new List<string>() { "yes", "no", "find" });
+                string response = MainConsole.Instance.CmdPrompt("Do you wish to join an existing estate for " + scene.RegionInfo.RegionName + "? (Options are {yes, no})", LastEstateChoise, new List<string>() { "yes", "no", "find" });
                 LastEstateChoise = response;
                 if (response == "no")
                 {
@@ -127,34 +132,31 @@ namespace OpenSim.Region.CoreModules
                     //We save the Password because we have to reset it after we tell the EstateService about it, as it clears it for security reasons
                     if (EstateConnector.LinkRegion(scene.RegionInfo.RegionID, estateID, Password))
                     {
-                        ES = EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID); //We could do by EstateID now, but we need to completely make sure that it fully is set up
-                        if (ES == null)
+                        if (EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID, out ES)) //We could do by EstateID now, but we need to completely make sure that it fully is set up
+                        {
+                            if (ES == null)
+                            {
+                                m_log.Warn("The connection to the server was broken, please try again soon.");
+                                continue;
+                            }
+                            //Reset the pass and save it to the database
+                            IGenericsConnector g = DataManager.RequestPlugin<IGenericsConnector>();
+                            EstatePassword s = new EstatePassword() { Password = Password };
+                            if (g != null) //Save the pass to the database
+                            {
+                                g.AddGeneric(scene.RegionInfo.RegionID, "EstatePassword", ES.EstateID.ToString(), s.ToOSD());
+                            }
+                        }
+                        else
                         {
                             m_log.Warn("The connection to the server was broken, please try again soon.");
                             continue;
-                        }
-                        //Reset the pass and save it to the database
-                        IGenericsConnector g = DataManager.RequestPlugin<IGenericsConnector>();
-                        EstatePassword s = new EstatePassword() { Password = Password };
-                        if (g != null) //Save the pass to the database
-                        {
-                            g.AddGeneric(scene.RegionInfo.RegionID, "EstatePassword", ES.EstateID.ToString(), s.ToOSD());
                         }
                         break;
                     }
 
                     m_log.Warn("Joining the estate failed. Please try again.");
                     continue;
-                }
-                else if (response == "find")
-                {
-                    ES = EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID);
-                    if (ES == null)
-                    {
-                        m_log.Warn("The connection to the estate service was broken, please try again soon.");
-                        continue;
-                    }
-                    break;
                 }
             }
             return ES;
