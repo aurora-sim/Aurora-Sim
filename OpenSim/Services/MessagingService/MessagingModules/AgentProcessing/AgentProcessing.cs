@@ -42,6 +42,10 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             registry.RequestModuleInterface<ISimulationBase>().EventManager.OnGenericEvent += OnGenericEvent;
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         protected object OnGenericEvent(string FunctionName, object parameters)
         {
             if (FunctionName == "RegionRegistered")

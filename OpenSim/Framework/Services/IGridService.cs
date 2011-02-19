@@ -579,8 +579,18 @@ namespace OpenSim.Services.Interfaces
     /// </summary>
     public interface IGridRegistrationService
     {
+        /// <summary>
+        /// Gets a list of secure URLs for the given RegionHandle and SessionID
+        /// </summary>
+        /// <param name="SessionID"></param>
+        /// <param name="RegionHandle"></param>
+        /// <returns></returns>
         OSDMap GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle);
 
+        /// <summary>
+        /// Registers a module that will be requested when GetUrlForRegisteringClient is called
+        /// </summary>
+        /// <param name="module"></param>
         void RegisterModule(IGridRegistrationUrlModule module);
     }
 
@@ -606,5 +616,13 @@ namespace OpenSim.Services.Interfaces
         /// <param name="SessionID"></param>
         /// <returns></returns>
         string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle);
+
+        /// <summary>
+        /// Adds an existing URL to the module for the given SessionID and RegionHandle
+        /// </summary>
+        /// <param name="uUID"></param>
+        /// <param name="p"></param>
+        /// <param name="oSD"></param>
+        void AddExistingUrlForClient(UUID SessionID, ulong RegionHandle, string url);
     }
 }

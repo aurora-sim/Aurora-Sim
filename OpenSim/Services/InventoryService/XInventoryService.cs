@@ -110,6 +110,10 @@ namespace OpenSim.Services.InventoryService
             m_AssetService = registry.RequestModuleInterface<IAssetService>();
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         public virtual bool CreateUserInventory(UUID principalID)
         {
             // This is braindeaad. We can't ever communicate that we fixed

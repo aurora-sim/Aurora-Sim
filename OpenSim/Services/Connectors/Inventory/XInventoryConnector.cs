@@ -593,6 +593,10 @@ namespace OpenSim.Services.Connectors
             m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("InventoryServerURI");
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #endregion
     }
 }

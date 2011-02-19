@@ -297,6 +297,10 @@ namespace OpenSim.Services.Connectors
         {
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #endregion
     }
 }

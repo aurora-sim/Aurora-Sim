@@ -171,6 +171,10 @@ namespace OpenSim.Services.LLLoginService
             m_log.DebugFormat("[LLOGIN SERVICE]: Starting...");
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         public void ReadEventValues(IConfig config)
         {
             SetEventCategories((Int32)DirectoryManager.EventCategories.Discussion, "Discussion");

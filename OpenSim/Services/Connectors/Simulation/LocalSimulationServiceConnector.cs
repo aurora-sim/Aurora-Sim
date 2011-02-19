@@ -31,6 +31,10 @@ namespace OpenSim.Services.Connectors.Simulation
         {
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         public string Name
         {
             get { return GetType().Name; }

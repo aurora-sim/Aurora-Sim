@@ -163,6 +163,10 @@ namespace OpenSim.Services.ConfigurationService
         {
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #endregion
     }
 }

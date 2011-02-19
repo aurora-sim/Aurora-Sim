@@ -65,6 +65,11 @@ namespace OpenSim.Server.Handlers.Friends
                 
                 server.AddStreamHandler(new FriendsServerPostHandler(url, m_registry.RequestModuleInterface<IFriendsService>()));
             }
+            m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
+        }
+
+        public void FinishedStartup()
+        {
         }
 
         #region IGridRegistrationUrlModule Members
@@ -77,6 +82,13 @@ namespace OpenSim.Server.Handlers.Friends
         public uint Port
         {
             get { return m_port; }
+        }
+
+        public void AddExistingUrlForClient(UUID SessionID, ulong RegionHandle, string url)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+            server.AddStreamHandler(new FriendsServerPostHandler(url, m_registry.RequestModuleInterface<IFriendsService>()));
         }
 
         public string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)

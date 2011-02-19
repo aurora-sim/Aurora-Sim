@@ -114,6 +114,10 @@ namespace OpenSim.Services.AvatarService
         {
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         public AvatarAppearance GetAppearance(UUID principalID)
         {
             AvatarData avatar = GetAvatar(principalID);

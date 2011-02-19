@@ -79,6 +79,10 @@ namespace OpenSim.Services.Connectors.SimianGrid
             CheckForScenes(registry);
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         protected void CheckForScenes(IRegistryCore registry)
         {
             //This is a dirty nasty hack of a way to pull the Scene out of an IRegistryCore interface

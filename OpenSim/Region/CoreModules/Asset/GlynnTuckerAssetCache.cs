@@ -92,6 +92,10 @@ namespace OpenSim.Region.CoreModules.Asset
         {
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #endregion
 
         #region IImprovedAssetCache

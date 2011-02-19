@@ -64,6 +64,10 @@ namespace OpenSim.Services.PresenceService
             m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #endregion
 
         #region IAgentInfoService Members

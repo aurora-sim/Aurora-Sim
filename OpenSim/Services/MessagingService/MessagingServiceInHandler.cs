@@ -45,6 +45,11 @@ namespace OpenSim.Services.MessagingService
 
                 server.AddStreamHandler(new MessagingServiceInPostHandler(url, registry, this, 0));
             }
+            m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
+        }
+
+        public void FinishedStartup()
+        {
         }
 
         #region IAsyncMessageRecievedService Members
@@ -78,6 +83,13 @@ namespace OpenSim.Services.MessagingService
         public uint Port
         {
             get { return m_port; }
+        }
+
+        public void AddExistingUrlForClient(UUID SessionID, ulong RegionHandle, string url)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+            server.AddStreamHandler(new MessagingServiceInPostHandler(url, m_registry, this, RegionHandle));
         }
 
         public string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)

@@ -354,6 +354,10 @@ namespace OpenSim.Services.Connectors
             m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AvatarServerURI");
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #endregion
     }
 }

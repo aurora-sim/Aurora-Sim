@@ -109,6 +109,10 @@ namespace OpenSim.Services.AuthenticationService
         {
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         public string Authenticate(UUID principalID, string password, int lifetime)
         {
             //Return automatically if we do not auth users

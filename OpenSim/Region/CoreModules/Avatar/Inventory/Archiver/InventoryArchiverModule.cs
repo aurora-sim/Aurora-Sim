@@ -457,7 +457,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            throw new NotImplementedException();
+        }
+
+        public void FinishedStartup()
+        {
         }
 
         #endregion

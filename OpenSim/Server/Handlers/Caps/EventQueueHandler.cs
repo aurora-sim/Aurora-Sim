@@ -52,6 +52,11 @@ namespace OpenSim.Server.Handlers
                 server.AddStreamHandler(new EQMEventPoster(url, registry.RequestModuleInterface<IEventQueueService>(),
                 registry.RequestModuleInterface<ICapsService>(), 0));
             }
+            m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
+        }
+
+        public void FinishedStartup()
+        {
         }
 
         #endregion
@@ -66,6 +71,14 @@ namespace OpenSim.Server.Handlers
         public uint Port
         {
             get { return m_port; }
+        }
+
+        public void AddExistingUrlForClient(UUID SessionID, ulong RegionHandle, string url)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+            server.AddStreamHandler(new EQMEventPoster(url, m_registry.RequestModuleInterface<IEventQueueService>(),
+                    m_registry.RequestModuleInterface<ICapsService>(), RegionHandle));
         }
 
         public string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)

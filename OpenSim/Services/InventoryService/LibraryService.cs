@@ -115,6 +115,10 @@ namespace OpenSim.Services.InventoryService
             LoadLibraries(registry);
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         public void AddToDefaultInventory(InventoryFolderImpl folder)
         {
             foreach (InventoryFolderImpl f in folder.RequestListOfFolderImpls())

@@ -51,6 +51,16 @@ namespace OpenSim.CoreApplicationPlugins
                 {
                 }
             }
+            foreach (IService connector in serviceConnectors)
+            {
+                try
+                {
+                    connector.FinishedStartup();
+                }
+                catch
+                {
+                }
+            }
         }
 
         public void PostStart()

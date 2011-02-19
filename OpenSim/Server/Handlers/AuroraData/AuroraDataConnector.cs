@@ -52,6 +52,11 @@ namespace OpenSim.Server.Handlers.AuroraData
 
                 server.AddStreamHandler(new AuroraDataServerPostHandler(url));
             }
+            m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
+        }
+
+        public void FinishedStartup()
+        {
         }
 
         #endregion
@@ -66,6 +71,14 @@ namespace OpenSim.Server.Handlers.AuroraData
         public uint Port
         {
             get { return m_port; }
+        }
+
+        public void AddExistingUrlForClient(UUID SessionID, ulong RegionHandle, string url)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            
+            IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService>();
+            server.AddStreamHandler(new AuroraDataServerPostHandler(url));
         }
 
         public string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)

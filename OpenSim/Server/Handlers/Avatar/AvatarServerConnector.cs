@@ -69,6 +69,11 @@ namespace OpenSim.Server.Handlers.Avatar
 
                 server.AddStreamHandler(new AvatarServerPostHandler(url, registry.RequestModuleInterface<IAvatarService>()));
             }
+            m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
+        }
+
+        public void FinishedStartup()
+        {
         }
 
         #region IGridRegistrationUrlModule Members
@@ -81,6 +86,13 @@ namespace OpenSim.Server.Handlers.Avatar
         public uint Port
         {
             get { return m_port; }
+        }
+
+        public void AddExistingUrlForClient(UUID SessionID, ulong RegionHandle, string url)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            
+            server.AddStreamHandler(new AvatarServerPostHandler(url, m_registry.RequestModuleInterface<IAvatarService>()));
         }
 
         public string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)

@@ -38,6 +38,14 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
         }
 
+        public void FinishedStartup()
+        {
+        }
+
+        public void FinishedStartup()
+        {
+        }
+
         #endregion
 
         #region Commands

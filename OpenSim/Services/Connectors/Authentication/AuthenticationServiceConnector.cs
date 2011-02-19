@@ -158,6 +158,10 @@ namespace OpenSim.Services.Connectors
             m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AuthenticationServerURI");
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #endregion
     }
 }

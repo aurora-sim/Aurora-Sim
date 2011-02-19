@@ -101,6 +101,10 @@ namespace OpenSim.Services.FreeswitchService
         {
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         public Hashtable HandleDialplanRequest(Hashtable request)
         {
             m_log.DebugFormat("[FreeSwitchVoice] HandleDialplanRequest called with {0}", request.ToString());

@@ -89,6 +89,10 @@ namespace OpenSim.Services.CapsService
             MainConsole.Instance.Commands.AddCommand("CapsService", false, "show presences", "show presences", "Shows all presences in the grid, experimental!", ShowUsers);
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #endregion
 
         #region Console Commands

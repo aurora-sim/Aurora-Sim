@@ -71,6 +71,10 @@ namespace OpenSim.Server.Handlers.Grid
             }
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #region IGridRegistrationUrlModule Members
 
         public string UrlName

@@ -42,6 +42,10 @@ namespace OpenSim.Services.MessagingService
             m_asyncReceiverService = registry.RequestModuleInterface<IAsyncMessageRecievedService>();
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         /// <summary>
         /// Post a new message to the given region by region handle
         /// </summary>

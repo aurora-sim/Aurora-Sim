@@ -47,6 +47,10 @@ namespace OpenSim.Services.MessagingService
             m_asyncReceiverService.OnMessageReceived += OnMessageReceived;
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         protected OSDMap OnMessageReceived(OSDMap message)
         {
             //If it is an async message request, make sure that the request is valid and check it

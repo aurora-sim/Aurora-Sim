@@ -92,6 +92,10 @@ namespace OpenSim.Services.Connectors
             m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("FreeswitchServiceURL");
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #endregion
     }
 }

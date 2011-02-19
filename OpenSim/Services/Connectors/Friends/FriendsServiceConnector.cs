@@ -226,6 +226,10 @@ namespace OpenSim.Services.Connectors
             m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("FriendsServerURI");
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #endregion
     }
 }

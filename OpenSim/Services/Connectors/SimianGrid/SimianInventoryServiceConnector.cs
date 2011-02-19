@@ -87,6 +87,9 @@ namespace OpenSim.Services.Connectors.SimianGrid
         {
         }
 
+        public void FinishedStartup()
+        {
+        }
 
         #endregion
 

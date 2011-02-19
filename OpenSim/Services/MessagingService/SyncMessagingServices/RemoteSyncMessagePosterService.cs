@@ -35,6 +35,10 @@ namespace OpenSim.Services.MessagingService
             m_hosts = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #region ISyncMessagePosterService Members
 
         public void Post(OSDMap request)

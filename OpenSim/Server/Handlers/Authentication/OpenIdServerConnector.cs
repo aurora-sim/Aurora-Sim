@@ -71,5 +71,9 @@ namespace OpenSim.Server.Handlers.Authentication
 
             m_log.Info("[OPENID]: OpenId service enabled");
         }
+
+        public void FinishedStartup()
+        {
+        }
     }
 }

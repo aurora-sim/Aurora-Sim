@@ -68,6 +68,10 @@ namespace OpenSim.Server.Handlers.Login
             InitializeHandlers(server);
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         private void ReadLocalServiceFromConfig(IConfigSource config)
         {
             m_Config = config;

@@ -801,6 +801,10 @@ namespace OpenSim.Services.Connectors
             m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #endregion
     }
 }

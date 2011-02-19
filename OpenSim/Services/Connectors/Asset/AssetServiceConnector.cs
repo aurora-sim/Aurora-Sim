@@ -362,6 +362,10 @@ namespace OpenSim.Services.Connectors
             SetCache(registry.RequestModuleInterface<IImprovedAssetCache>());
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #endregion
     }
 }

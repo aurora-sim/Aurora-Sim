@@ -61,5 +61,9 @@ namespace OpenSim.Server.Handlers.Grid
                                                                handlers.RestGetGridInfoMethod));
             server.AddXmlRPCHandler("get_grid_info", handlers.XmlRpcGridInfoMethod);
         }
+
+        public void FinishedStartup()
+        {
+        }
     }
 }

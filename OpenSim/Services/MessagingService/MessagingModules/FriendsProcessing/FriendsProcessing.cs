@@ -37,6 +37,10 @@ namespace OpenSim.Services.MessagingService
             registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         protected object OnGenericEvent(string FunctionName, object parameters)
         {
             if (FunctionName == "UserStatusChange")

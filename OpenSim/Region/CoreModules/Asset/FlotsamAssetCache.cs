@@ -214,6 +214,10 @@ namespace Flotsam.RegionModules.AssetCache
             }
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #endregion
 
         #region IImprovedAssetCache

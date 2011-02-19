@@ -72,6 +72,11 @@ namespace OpenSim.Server.Handlers.Asset
 
                 server.AddStreamHandler(new XInventoryConnectorPostHandler(url, registry.RequestModuleInterface<IInventoryService>()));
             }
+            m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
+        }
+
+        public void FinishedStartup()
+        {
         }
 
         #region IGridRegistrationUrlModule Members
@@ -84,6 +89,13 @@ namespace OpenSim.Server.Handlers.Asset
         public uint Port
         {
             get { return m_port; }
+        }
+
+        public void AddExistingUrlForClient(UUID SessionID, ulong RegionHandle, string url)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+
+            server.AddStreamHandler(new XInventoryConnectorPostHandler(url, m_registry.RequestModuleInterface<IInventoryService>()));
         }
 
         public string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)

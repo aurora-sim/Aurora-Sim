@@ -77,6 +77,10 @@ namespace OpenSim.Server.Handlers.Asset
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #region IGridRegistrationUrlModule Members
 
         public string UrlName
@@ -87,6 +91,16 @@ namespace OpenSim.Server.Handlers.Asset
         public uint Port
         {
             get { return m_port; }
+        }
+
+        public void AddExistingUrlForClient(UUID SessionID, ulong RegionHandle, string url)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            
+            IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService>();
+            server.AddStreamHandler(new AssetServerGetHandler(m_AssetService, url));
+            server.AddStreamHandler(new AssetServerPostHandler(m_AssetService, url));
+            server.AddStreamHandler(new AssetServerDeleteHandler(m_AssetService, m_allowDelete, url));
         }
 
         public string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)

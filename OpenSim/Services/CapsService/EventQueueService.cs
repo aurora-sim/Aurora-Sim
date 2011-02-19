@@ -54,6 +54,10 @@ namespace OpenSim.Services.CapsService
             m_service = registry.RequestModuleInterface<ICapsService>();
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #endregion
 
         #region IEventQueueService Members

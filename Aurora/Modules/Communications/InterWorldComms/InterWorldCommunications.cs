@@ -230,6 +230,10 @@ namespace Aurora.Modules
             }
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #endregion
     }
 

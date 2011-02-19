@@ -376,6 +376,10 @@ namespace OpenSim.Services.Connectors.Simulation
         {
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #endregion
     }
 }

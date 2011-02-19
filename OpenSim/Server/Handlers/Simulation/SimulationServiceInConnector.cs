@@ -73,5 +73,9 @@ namespace OpenSim.Server.Handlers.Simulation
             server.AddHTTPHandler(path, new AgentHandler(m_LocalSimulationService.GetInnerService(), secure).Handler);
             server.AddHTTPHandler("/object/", new ObjectHandler(m_LocalSimulationService.GetInnerService()).Handler);
         }
+
+        public void FinishedStartup()
+        {
+        }
     }
 }

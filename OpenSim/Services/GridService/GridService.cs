@@ -121,6 +121,10 @@ namespace OpenSim.Services.GridService
             m_registryCore = registry;
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #region IGridService
 
         public string RegisterRegion(GridRegion regionInfos, UUID oldSessionID, out UUID SessionID)

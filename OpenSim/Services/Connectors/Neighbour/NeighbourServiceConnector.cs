@@ -470,6 +470,10 @@ namespace OpenSim.Services.Connectors
                 m_LocalService.Start(config, registry);
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #endregion
     }
 }
