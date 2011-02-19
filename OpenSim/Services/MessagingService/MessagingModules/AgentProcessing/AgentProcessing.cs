@@ -87,7 +87,10 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             else if (message["Method"] == "ArrivedAtDestination")
             {
                 //Recieved a callback
-                clientCaps.CallbackHasCome = true;
+                if(clientCaps.InTeleport) //Only set this if we are in a teleport, 
+                                          //  otherwise (such as on login), this won't check after the first tp!
+                    clientCaps.CallbackHasCome = true;
+
                 regionCaps.Disabled = false;
 
                 //The agent is getting here for the first time (eg. login)

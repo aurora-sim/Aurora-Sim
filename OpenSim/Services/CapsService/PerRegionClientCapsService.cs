@@ -102,25 +102,6 @@ namespace OpenSim.Services.CapsService
             set { m_UrlToInform = value; }
         }
 
-        protected OSDMap m_InfoToSendToUrl = new OSDMap();
-        /// <summary>
-        /// This OSDMap is sent to the url set in UrlToInform below when telling it about the new Cap request
-        /// </summary>
-        public OSDMap InfoToSendToUrl
-        {
-            get { return m_InfoToSendToUrl; }
-            set { m_InfoToSendToUrl = value; }
-        }
-        protected OSDMap m_RequestMap = new OSDMap();
-        /// <summary>
-        /// This OSDMap is recieved from the caller of the Caps SEED request
-        /// </summary>
-        public OSDMap RequestMap
-        {
-            get { return m_RequestMap; }
-            set { m_RequestMap = value; }
-        }
-
         /// <summary>
         /// This is the /CAPS/UUID 0000/ string
         /// </summary>
@@ -261,17 +242,11 @@ namespace OpenSim.Services.CapsService
             try
             {
                 m_log.Debug("[CapsHandlers]: Handling Seed Cap request at " + CapsUrl + ", informing URL " + UrlToInform);
-                if (request != "")
-                {
-                    OSD osdRequest = OSDParser.DeserializeLLSDXml(request);
-                    if (osdRequest is OSDMap)
-                        RequestMap = (OSDMap)osdRequest;
-                }
                 if (UrlToInform != "")
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             UrlToInform,
-                            OSDParser.SerializeLLSDXmlString(InfoToSendToUrl));
+                            OSDParser.SerializeLLSDXmlString(new OSDMap()));
                     if (reply != "")
                     {
                         OSDMap hash = (OSDMap)OSDParser.DeserializeLLSDXml(Utils.StringToBytes(reply));

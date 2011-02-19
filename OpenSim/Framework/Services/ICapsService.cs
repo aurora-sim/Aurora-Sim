@@ -30,7 +30,19 @@ namespace OpenSim.Services.Interfaces
         /// <returns>Returns the CAPS URL that was created by the CAPS Service</returns>
         string CreateCAPS(UUID AgentID, string UrlToInform, string CAPSBase, ulong regionHandle, bool IsRootAgent, AgentCircuitData circuitData);
 
+        /// <summary>
+        /// Get a client's caps service (contains all child and root agents) if it exists, otherwise
+        ///   create a new caps service for the client
+        /// </summary>
+        /// <param name="AgentID"></param>
+        /// <returns></returns>
         IClientCapsService GetOrCreateClientCapsService(UUID AgentID);
+
+        /// <summary>
+        /// Get a client's caps service (contains all child and root agents)
+        /// </summary>
+        /// <param name="AgentID"></param>
+        /// <returns></returns>
         IClientCapsService GetClientCapsService(UUID AgentID);
 
         /// <summary>
@@ -38,8 +50,14 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         string HostUri { get; }
 
+        /// <summary>
+        /// The registry where all the interfaces are pulled from
+        /// </summary>
         IRegistryCore Registry { get; }
 
+        /// <summary>
+        /// The HTTP server that all CAP handlers will be added to
+        /// </summary>
         IHttpServer Server { get; }
 
         /// <summary>
@@ -72,8 +90,20 @@ namespace OpenSim.Services.Interfaces
     /// </summary>
     public interface ICapsServiceConnector
     {
+        /// <summary>
+        /// Add any CAP handlers to the service that the module implements
+        /// </summary>
+        /// <param name="service"></param>
         void RegisterCaps(IRegionClientCapsService service);
+
+        /// <summary>
+        /// Remove all CAP handlers as the module is being closed
+        /// </summary>
         void DeregisterCaps();
+
+        /// <summary>
+        /// The agent is entering the region
+        /// </summary>
         void EnteringRegion();
     }
 
@@ -84,12 +114,40 @@ namespace OpenSim.Services.Interfaces
     /// </summary>
     public interface IClientCapsService
     {
+        /// <summary>
+        /// The ID of the agent we are serving
+        /// </summary>
         UUID AgentID { get; }
+
+        /// <summary>
+        /// Whether the user is currently teleporting/crossings
+        /// </summary>
         bool InTeleport { get; set; }
+
+        /// <summary>
+        /// Whether a request to cancel a given teleport has come for this agent
+        /// </summary>
         bool RequestToCancelTeleport { get; set; }
+
+        /// <summary>
+        /// Whether a callback (used for teleporting) has come for this agent
+        /// <note>Tells the AgentProcessor that the teleport has been successful</note>
+        /// </summary>
         bool CallbackHasCome { get; set; }
+
+        /// <summary>
+        /// The registry where all the interfaces are pulled from
+        /// </summary>
         IRegistryCore Registry { get; }
+
+        /// <summary>
+        /// The HTTP Server that handlers will be added to
+        /// </summary>
         IHttpServer Server { get; }
+
+        /// <summary>
+        /// The hostname of the CapsService (http://IP:Port)
+        /// </summary>
         String HostUri { get; }
 
         /// <summary>
@@ -146,18 +204,59 @@ namespace OpenSim.Services.Interfaces
     /// </summary>
     public interface IRegionClientCapsService
     {
-        int RegionX { get; }
-        int RegionY { get; }
+        /// <summary>
+        /// The region Handle of this region
+        /// </summary>
         ulong RegionHandle { get; }
+
+        /// <summary>
+        /// The Region X Location (in meters)
+        /// </summary>
+        int RegionX { get; }
+
+        /// <summary>
+        /// The Region Y Location (in meters)
+        /// </summary>
+        int RegionY { get; }
+
+        /// <summary>
+        /// The last circuit data we were updated with
+        /// </summary>
         AgentCircuitData CircuitData { get; }
+
+        /// <summary>
+        /// The ID of the Agent we are serving
+        /// </summary>
         UUID AgentID { get; }
-        OSDMap InfoToSendToUrl { get; set; }
-        OSDMap RequestMap { get; set; }
+
+        /// <summary>
+        /// The URL to inform that a client has called our CAPS SEED URL
+        /// </summary>
         string UrlToInform { get; }
+
+        /// <summary>
+        /// The host URI of this CAPS Servie (http://IP:port)
+        /// </summary>
         String HostUri { get; }
+
+        /// <summary>
+        /// The URL (http:// included) to the SEED CAP handler
+        /// </summary>
         String CapsUrl { get; }
+
+        /// <summary>
+        /// Have we been disabled? (Should be deleted soon)
+        /// </summary>
         bool Disabled { get; set; }
+
+        /// <summary>
+        /// The registry that holds the interfaces
+        /// </summary>
         IRegistryCore Registry { get; }
+
+        /// <summary>
+        /// Our parent client that we are attached to
+        /// </summary>
         IClientCapsService ClientCaps { get; }
 
         /// <summary>
