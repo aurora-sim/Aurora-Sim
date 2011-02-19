@@ -41,14 +41,12 @@ namespace OpenSim.Services.MessagingService
 
         public void Post(OSDMap request)
         {
-            OSDMap message = CreateWebRequest(request);
-            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(message);
+            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(request);
         }
 
         public OSDMap Get(OSDMap request)
         {
-            OSDMap message = CreateWebRequest(request);
-            return m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(message);
+            return m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(request);
         }
 
         private OSDMap CreateWebRequest(OSDMap request)

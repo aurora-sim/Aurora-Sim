@@ -1038,15 +1038,15 @@ namespace OpenSim.Region.Framework.Scenes
             MakeRootAgent(m_flying);
 
             //Tell the grid that we successfully got here
+
+            AgentCircuitData agent = ControllingClient.RequestClientInfo();
+            agent.startpos = AbsolutePosition;
+            agent.child = true;
+            agent.Appearance = Appearance;
+
             ISyncMessagePosterService syncPoster = Scene.RequestModuleInterface<ISyncMessagePosterService>();
             if (syncPoster != null)
-                syncPoster.Post(SyncMessageHelper.ArrivedAtDestination(UUID, Scene.RegionInfo.RegionHandle));
-
-            IEntityTransferModule m_agentTransfer = m_scene.RequestModuleInterface<IEntityTransferModule>();
-            if (m_agentTransfer != null)
-                m_agentTransfer.EnableChildAgents(this);
-            else
-                m_log.DebugFormat("[SCENE PRESENCE]: Unable to create child agents in neighbours, because AgentTransferModule is not active");
+                syncPoster.Post(SyncMessageHelper.ArrivedAtDestination(UUID, (int)DrawDistance, agent, Scene.RegionInfo.RegionHandle));
 
             IFriendsModule friendsModule = m_scene.RequestModuleInterface<IFriendsModule>();
             if (friendsModule != null)

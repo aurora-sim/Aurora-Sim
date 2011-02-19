@@ -90,28 +90,39 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 circuitData.UnpackAgentCircuitData((OSDMap)body["Circuit"]);
 
                 //Now do the creation
-                //Don't send it to the client at all, so return here
                 EnableChildAgents(AgentID, requestingRegion, DrawDistance, circuitData);
             }
-            else if (message["Message"] == "DisableSimulator")
+            else if (message["Method"] == "DisableSimulator")
             {
                 //KILL IT!
                 regionCaps.Close();
                 clientCaps.RemoveCAPS(requestingRegion);
             }
-            else if (message["Message"] == "ArrivedAtDestination")
+            else if (message["Method"] == "ArrivedAtDestination")
             {
                 //Recieved a callback
                 clientCaps.CallbackHasCome = true;
                 regionCaps.Disabled = false;
+
+                //The agent is getting here for the first time (eg. login)
+                OSDMap body = ((OSDMap)message["Message"]);
+
+                //Parse the OSDMap
+                int DrawDistance = body["DrawDistance"].AsInteger();
+
+                AgentCircuitData circuitData = new AgentCircuitData();
+                circuitData.UnpackAgentCircuitData((OSDMap)body["Circuit"]);
+
+                //Now do the creation
+                EnableChildAgents(AgentID, requestingRegion, DrawDistance, circuitData);
             }
-            else if (message["Message"] == "CancelTeleport")
+            else if (message["Method"] == "CancelTeleport")
             {
                 //The user has requested to cancel the teleport, stop them.
                 clientCaps.RequestToCancelTeleport = true;
                 regionCaps.Disabled = false;
             }
-            else if (message["Message"] == "SendChildAgentUpdate")
+            else if (message["Method"] == "SendChildAgentUpdate")
             {
                 OSDMap body = ((OSDMap)message["Message"]);
 
@@ -122,7 +133,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 SendChildAgentUpdate(pos, region);
                 regionCaps.Disabled = false;
             }
-            else if (message["Message"] == "TeleportAgent")
+            else if (message["Method"] == "TeleportAgent")
             {
                 OSDMap body = ((OSDMap)message["Message"]);
 
@@ -144,7 +155,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     Circuit, AgentData, AgentID, requestingRegion);
                 return result;
             }
-            else if (message["Message"] == "CrossAgent")
+            else if (message["Method"] == "CrossAgent")
             {
                 //This is a simulator message that tells us to cross the agent
                 OSDMap body = ((OSDMap)message["Message"]);

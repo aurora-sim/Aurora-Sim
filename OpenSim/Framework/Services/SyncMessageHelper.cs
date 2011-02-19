@@ -48,6 +48,18 @@ namespace OpenSim.Framework
             return buildEvent("EnableChildAgents", llsdBody, AgentID, RequestingRegion);
         }
 
+        public static OSDMap ArrivedAtDestination(UUID AgentID, int DrawDistance, AgentCircuitData circuit, ulong requestingRegion)
+        {
+            OSDMap llsdBody = new OSDMap();
+
+            llsdBody.Add("AgentID", AgentID);
+
+            llsdBody.Add("DrawDistance", DrawDistance);
+            llsdBody.Add("Circuit", circuit.PackAgentCircuitData());
+
+            return buildEvent("ArrivedAtDestination", llsdBody, AgentID, requestingRegion);
+        }
+
         public static OSDMap CrossAgent(GridRegion crossingRegion, Vector3 pos,
             Vector3 velocity, AgentCircuitData circuit, AgentData cAgent, ulong RequestingRegion)
         {
@@ -91,14 +103,6 @@ namespace OpenSim.Framework
             llsdBody.Add("AgentID", AgentID);
             llsdBody.Add("RequestingRegion", requestingRegion);
             return buildEvent("CancelTeleport", llsdBody, AgentID, requestingRegion);
-        }
-
-        public static OSDMap ArrivedAtDestination(UUID AgentID, ulong requestingRegion)
-        {
-            OSDMap llsdBody = new OSDMap();
-
-            llsdBody.Add("AgentID", AgentID);
-            return buildEvent("ArrivedAtDestination", llsdBody, AgentID, requestingRegion);
         }
 
         public static OSDMap LogoutRegionAgents(ulong requestingRegion)
