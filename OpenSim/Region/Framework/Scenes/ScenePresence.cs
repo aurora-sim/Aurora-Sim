@@ -1047,10 +1047,6 @@ namespace OpenSim.Region.Framework.Scenes
             ISyncMessagePosterService syncPoster = Scene.RequestModuleInterface<ISyncMessagePosterService>();
             if (syncPoster != null)
                 syncPoster.Post(SyncMessageHelper.ArrivedAtDestination(UUID, (int)DrawDistance, agent, Scene.RegionInfo.RegionHandle));
-
-            IFriendsModule friendsModule = m_scene.RequestModuleInterface<IFriendsModule>();
-            if (friendsModule != null)
-                friendsModule.SendFriendsOnlineIfNeeded(ControllingClient);
         }
 
         /// <summary>

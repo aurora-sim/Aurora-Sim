@@ -121,6 +121,22 @@ namespace OpenSim.Services.CapsService
             return null;
         }
 
+        /// <summary>
+        /// Attempt to find the CapsService for the root user/region
+        /// </summary>
+        /// <param name="regionID"></param>
+        /// <param name="agentID"></param>
+        /// <returns></returns>
+        public IRegionClientCapsService GetRootCapsService()
+        {
+            foreach (IRegionClientCapsService clientCaps in m_RegionCapsServices.Values)
+            {
+                if (clientCaps.RootAgent)
+                    return clientCaps;
+            }
+            return null;
+        }
+
         public List<IRegionClientCapsService> GetCapsServices()
         {
             return new List<IRegionClientCapsService>(m_RegionCapsServices.Values);
