@@ -104,22 +104,60 @@ namespace OpenSim.Services.Interfaces
         /// <returns></returns>
         List<GridRegion> GetRegionRange(UUID scopeID, int xmin, int xmax, int ymin, int ymax);
 
+        /// <summary>
+        /// Get any default regions that have been set for users that are logging in that don't have a region to log into
+        /// </summary>
+        /// <param name="scopeID"></param>
+        /// <returns></returns>
         List<GridRegion> GetDefaultRegions(UUID scopeID);
-        List<GridRegion> GetFallbackRegions(UUID scopeID, int x, int y);
-		List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y);
-        List<GridRegion> GetHyperlinks(UUID scopeID);
 
+        /// <summary>
+        /// If all the default regions are down, find any fallback regions that have been set near x,y
+        /// </summary>
+        /// <param name="scopeID"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        List<GridRegion> GetFallbackRegions(UUID scopeID, int x, int y);
+
+        /// <summary>
+        /// If there still are no regions after fallbacks have been checked, find any region near x,y
+        /// </summary>
+        /// <param name="scopeID"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+		List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y);
+
+        /// <summary>
+        /// Get the current flags of the given region
+        /// </summary>
+        /// <param name="scopeID"></param>
+        /// <param name="regionID"></param>
+        /// <returns></returns>
         int GetRegionFlags(UUID scopeID, UUID regionID);
 
+        /// <summary>
+        /// Update the map of the given region if the sessionID is correct
+        /// </summary>
+        /// <param name="region"></param>
+        /// <param name="sessionID"></param>
+        /// <returns></returns>
         string UpdateMap(GridRegion region, UUID sessionID);
 
+        /// <summary>
+        /// Get all map items of the given type for the given region
+        /// </summary>
+        /// <param name="regionHandle"></param>
+        /// <param name="gridItemType"></param>
+        /// <returns></returns>
         multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType);
 
-        void RemoveAgent(UUID regionID, UUID agentID);
-
-        void AddAgent(UUID regionID, UUID agentID, Vector3 Position);
-
-        void SetRegionUnsafe(UUID ID);
+        /// <summary>
+        /// The region (RegionID) has been determined to be unsafe, don't let agents log into it if no other region is found
+        /// </summary>
+        /// <param name="RegionID"></param>
+        void SetRegionUnsafe(UUID RegionID);
     }
 
     public class GridRegion

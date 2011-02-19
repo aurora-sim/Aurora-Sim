@@ -179,8 +179,6 @@ namespace Aurora.Modules
             threadpool = new AuroraThreadPool(info);
             blockthreadpool = new AuroraThreadPool(info);
 
-            new MapActivityDetector(scene);
-
             scene.EventManager.OnStartupComplete += StartupComplete;
         }
 

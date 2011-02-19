@@ -638,6 +638,9 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                         agentInfoService.SetLastPosition(regionCaps.AgentID.ToString(), ourRegion.RegionID,
                             agentpos.Position, lookAt);
                     }
+
+                    //Also update the service itself
+                    regionCaps.LastPosition = agentpos.Position;
                     
                     //Tell all neighbor regions about the new position as well
                     List<GridRegion> ourNeighbors = service.GetNeighbors(ourRegion);

@@ -34,9 +34,23 @@ namespace OpenSim.Services.Interfaces
 {
     public class FriendInfo
     {
+        /// <summary>
+        /// The user who is a friend of "Friend"
+        /// </summary>
         public UUID PrincipalID;
+        /// <summary>
+        /// The friend of PrincipalID
+        /// </summary>
         public string Friend;
+
+        /// <summary>
+        /// The flags that PrincipalID has given to Friend
+        /// </summary>
         public int MyFlags;
+
+        /// <summary>
+        /// The flags Friend has given to PrincipalID
+        /// </summary>
         public int TheirFlags;
 
         public FriendInfo()
@@ -73,8 +87,28 @@ namespace OpenSim.Services.Interfaces
 
     public interface IFriendsService
     {
+        /// <summary>
+        /// Get all friends of the given user
+        /// </summary>
+        /// <param name="PrincipalID"></param>
+        /// <returns></returns>
         FriendInfo[] GetFriends(UUID PrincipalID);
+
+        /// <summary>
+        /// Store the changes of the friend of PrincipalID
+        /// </summary>
+        /// <param name="PrincipalID"></param>
+        /// <param name="Friend"></param>
+        /// <param name="flags"></param>
+        /// <returns></returns>
         bool StoreFriend(UUID PrincipalID, string Friend, int flags);
+
+        /// <summary>
+        /// Delete the friendship between the two users
+        /// </summary>
+        /// <param name="PrincipalID"></param>
+        /// <param name="Friend"></param>
+        /// <returns></returns>
         bool Delete(UUID PrincipalID, string Friend);
     }
 }

@@ -80,7 +80,7 @@ namespace Aurora.Services.DataService
             object[] values = new object[8];
             values[0] = info.UserID;
             values[1] = info.CurrentRegionID;
-            values[2] = info.SessionID;
+            values[2] = UUID.Zero;
             values[3] =  DateTime.Now.ToBinary(); //Convert to binary so that it can be converted easily
             values[4] = info.IsOnline ? 1 : 0;
             values[5] = info.LastLogin.ToBinary();
@@ -99,7 +99,7 @@ namespace Aurora.Services.DataService
                 users[i / 8] = new UserInfo();
                 users[i / 8].UserID = query[i];
                 users[i / 8].CurrentRegionID = UUID.Parse(query[i+1]);
-                users[i / 8].SessionID = UUID.Parse(query[i+2]);
+                //users[i / 8].SessionID = UUID.Parse(query[i+2]);
                 //Check LastSeen
                 if (m_checkLastSeen && (new DateTime(long.Parse(query[i + 3])).AddHours(1) < DateTime.Now))
                 {

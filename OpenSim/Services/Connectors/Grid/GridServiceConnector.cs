@@ -773,57 +773,6 @@ namespace OpenSim.Services.Connectors
             return null;
         }
 
-        public void RemoveAgent(UUID regionID, UUID agentID)
-        {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
-
-            sendData["REGIONID"] = regionID;
-            sendData["AGENTID"] = agentID;
-            sendData["METHOD"] = "removeagent";
-
-            string reqString = WebUtils.BuildQueryString(sendData);
-            try
-            {
-                foreach (string m_ServerURI in m_ServerURIs)
-                {
-                    AsynchronousRestObjectRequester.MakeRequest("POST",
-                            m_ServerURI + "/grid",
-                            reqString);
-                }
-            }
-            catch (Exception e)
-            {
-                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting server: {0}", e.Message);
-            }
-        }
-
-        public void AddAgent(UUID regionID, UUID agentID, Vector3 Position)
-        {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
-
-            sendData["REGIONID"] = regionID;
-            sendData["AGENTID"] = agentID;
-            sendData["X"] = Position.X;
-            sendData["Y"] = Position.Y;
-            sendData["Z"] = Position.Z;
-            sendData["METHOD"] = "addagent";
-
-            string reqString = WebUtils.BuildQueryString(sendData);
-            try
-            {
-                foreach (string m_ServerURI in m_ServerURIs)
-                {
-                    AsynchronousRestObjectRequester.MakeRequest("POST",
-                        m_ServerURI + "/grid",
-                        reqString);
-                }
-            }
-            catch (Exception e)
-            {
-                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting server: {0}", e.Message);
-            }
-        }
-
         public virtual void SetRegionUnsafe(UUID regionID)
         {
         }

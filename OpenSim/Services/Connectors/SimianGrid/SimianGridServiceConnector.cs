@@ -330,12 +330,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 return new List<GridRegion>(0);
         }
 
-        public List<GridRegion> GetHyperlinks(UUID scopeID)
-        {
-            // Hypergrid/linked regions are not supported
-            return new List<GridRegion>();
-        }
-
 		public List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y)
         {
             return new List<GridRegion>(0);
@@ -513,14 +507,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
         public multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType)
         {
             return new multipleMapItemReply();
-        }
-
-        public void RemoveAgent(UUID regionID, UUID agentID)
-        {
-        }
-
-        public void AddAgent(UUID regionID, UUID agentID, Vector3 Position)
-        {
         }
 
         public void SetRegionUnsafe(UUID r)

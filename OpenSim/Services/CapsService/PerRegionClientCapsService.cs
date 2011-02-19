@@ -92,6 +92,13 @@ namespace OpenSim.Services.CapsService
             }
         }
 
+        private Vector3 m_lastPosition;
+        public Vector3 LastPosition
+        {
+            get { return m_lastPosition; }
+            set { m_lastPosition = value; }
+        }
+
         private string m_UrlToInform = "";
         /// <summary>
         /// An optional Url that will be called to retrieve more Caps for the client.

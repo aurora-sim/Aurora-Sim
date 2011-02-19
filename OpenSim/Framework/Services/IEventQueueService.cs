@@ -62,8 +62,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="avatarID"></param>
         /// <param name="RegionHandle"></param>
-        /// <param name="forwardToClient">If the client is root, we need to be more careful</param>
-        void DisableSimulator(UUID avatarID, ulong RegionHandle, bool forwardToClient);
+        void DisableSimulator(UUID avatarID, ulong RegionHandle);
         void EnableSimulator(ulong handle, byte[] IPAddress, int Port, UUID avatarID, int RegionSizeX, int RegionSizeY, ulong RegionHandle);
         void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, byte[] IPAddress, int Port, string CapsUrl, int RegionSizeX, int RegionSizeY, ulong RegionHandle);
         void TeleportFinishEvent(ulong regionHandle, byte simAccess, 

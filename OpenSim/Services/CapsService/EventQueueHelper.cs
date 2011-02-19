@@ -91,10 +91,9 @@ namespace OpenSim.Services.CapsService
             return buildEvent("EnableSimulator", llsdBody);
         }
 
-        public static OSD DisableSimulator(ulong handle, bool forwardToClient)
+        public static OSD DisableSimulator(ulong handle)
         {
             OSDMap llsdBody = new OSDMap(1);
-            llsdBody["KillClient"] = forwardToClient;
             return buildEvent("DisableSimulator", llsdBody);
         }
         

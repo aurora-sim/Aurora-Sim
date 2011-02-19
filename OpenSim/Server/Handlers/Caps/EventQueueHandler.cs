@@ -120,7 +120,6 @@ namespace OpenSim.Server.Handlers
             try
             {
                 UUID agentID = request["AgentID"].AsUUID();
-                UUID password = request["Password"].AsUUID();
                 ulong regionHandle = m_ourRegionHandle == 0 ? request["RegionHandle"].AsULong() : m_ourRegionHandle;
                 OSDArray events = new OSDArray();
                 if (request.ContainsKey("Events") && request["Events"].Type == OSDType.Array)

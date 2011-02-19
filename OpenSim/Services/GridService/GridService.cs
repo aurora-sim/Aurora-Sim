@@ -54,6 +54,7 @@ namespace OpenSim.Services.GridService
         protected IConfigSource m_config;
         protected IRegionData m_Database = null;
         protected ISimulationBase m_simulationBase;
+        protected IRegistryCore m_registryCore;
 
         protected IAuthenticationService m_AuthenticationService = null;
         protected bool m_AllowDuplicateNames = false;
@@ -117,6 +118,7 @@ namespace OpenSim.Services.GridService
         {
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
             m_simulationBase = registry.RequestModuleInterface<ISimulationBase>();
+            m_registryCore = registry;
         }
 
         #region IGridService
@@ -503,22 +505,6 @@ namespace OpenSim.Services.GridService
             m_log.DebugFormat("[GRID SERVICE]: Fallback returned {0} regions", ret.Count);
             return ret;
         }
-
-        public List<GridRegion> GetHyperlinks(UUID scopeID)
-        {
-            List<GridRegion> ret = new List<GridRegion>();
-
-            List<GridRegion> regions = m_Database.GetHyperlinks(scopeID);
-
-            foreach (GridRegion r in regions)
-            {
-                if ((r.Flags & (int)RegionFlags.RegionOnline) != 0)
-                    ret.Add(r);
-            }
-
-            m_log.DebugFormat("[GRID SERVICE]: Hyperlinks returned {0} regions", ret.Count);
-            return ret;
-        }
         
         public int GetRegionFlags(UUID scopeID, UUID regionID)
         {
@@ -626,36 +612,24 @@ namespace OpenSim.Services.GridService
             }
         }
 
-        public void AddAgent(UUID regionID, UUID agentID, Vector3 Position)
+        public multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType)
         {
-            SimMap map = GetSimMap(regionID);
-
-            Position.X = NormalizePosition(Position.X);
-            Position.Y = NormalizePosition(Position.Y);
-            Position.Z = NormalizePosition(Position.Z);
-
-            if (!map.AgentPosition.ContainsKey(agentID))
-                map.NumberOfAgents += 1;
-
-            map.AgentPosition[agentID] = Position;
-            SetSimMap(regionID, map);
+            multipleMapItemReply allItems = new multipleMapItemReply();
+            if (gridItemType == GridItemType.AgentLocations) //Grid server only cares about agent locations
+            {
+                int X, Y;
+                Util.UlongToInts(regionHandle, out X, out Y);
+                //Get the items and send them back
+                allItems.items[regionHandle] = GetItems(X, Y, regionHandle);
+            }
+            return allItems;
         }
 
-        private Dictionary<UUID, SimMap> SimMapCache = new Dictionary<UUID, SimMap>();
-
-        private void SetSimMap(UUID RegionID, SimMap map)
-        {
-            SimMapCache[RegionID] = map;
-        }
-
-        private SimMap GetSimMap(UUID regionID)
-        {
-            SimMap map;
-            if (!SimMapCache.TryGetValue(regionID, out map))
-                map = new SimMap();
-            return map;
-        }
-
+        /// <summary>
+        /// Normalize the current float to the nearest block of 5 meters
+        /// </summary>
+        /// <param name="number"></param>
+        /// <returns></returns>
         private float NormalizePosition(float number)
         {
             try
@@ -693,60 +667,51 @@ namespace OpenSim.Services.GridService
                     EndNumber = 5;
                 return float.Parse(FirstNumber + EndNumber.ToString());
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 m_log.Error("[GridService]: Error in NormalizePosition " + ex);
             }
             return 0;
         }
 
-        public void RemoveAgent(UUID regionID, UUID agentID)
-        {
-            SimMap map = GetSimMap(regionID);
-
-            //Remove the agent's location from memory
-            if (map.AgentPosition.Remove(agentID))
-                map.NumberOfAgents -= 1;
-
-            SetSimMap(regionID, map);
-        }
-
-        public multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType)
-        {
-            multipleMapItemReply allItems = new multipleMapItemReply();
-            if (gridItemType == GridItemType.AgentLocations)
-            {
-                uint X;
-                uint Y;
-                Utils.LongToUInts(regionHandle, out X, out Y);
-                allItems.items[regionHandle] = GetItems((int)X, (int)Y);
-                for (uint x = X; x < 8; x++)
-                {
-                    for (uint y = Y; y < 8; y++)
-                    {
-                        allItems.items[Utils.UIntsToLong(x, y)] = GetItems((int)x, (int)y);
-                    }
-                }
-            }
-            return allItems;
-        }
-
-        private List<mapItemReply> GetItems(int X, int Y)
+        /// <summary>
+        /// Get all agent locations for the given region
+        /// </summary>
+        /// <param name="X"></param>
+        /// <param name="Y"></param>
+        /// <param name="regionHandle"></param>
+        /// <returns></returns>
+        private List<mapItemReply> GetItems(int X, int Y, ulong regionHandle)
         {
             GridRegion region = GetRegionByPosition(UUID.Zero, X, Y);
+            //if the region is down or doesn't exist, don't check it
             if (region == null || region.Access == (byte)SimAccess.Down || region.Access == (byte)SimAccess.NonExistent)
                 return new List<mapItemReply>();
-            SimMap map = GetSimMap(region.RegionID);
+
+            ICapsService capsService = m_registryCore.RequestModuleInterface<ICapsService>();
+            if(capsService == null)
+                return new List<mapItemReply>();
+
+            IRegionCapsService regionCaps = capsService.GetCapsForRegion(regionHandle);
+            if (regionCaps == null)
+                return new List<mapItemReply>();
 
             List<mapItemReply> mapItems = new List<mapItemReply>();
             Dictionary<Vector3, int> Positions = new Dictionary<Vector3, int>();
-            foreach (Vector3 position in map.AgentPosition.Values)
+            //Get a list of all the clients in the region and add them
+            foreach (IRegionClientCapsService clientCaps in regionCaps.GetClients())
             {
+                //Normalize the positions to 5 meter blocks so that agents stack instead of cover up each other
+                Vector3 position = new Vector3(NormalizePosition(clientCaps.LastPosition.X),
+                    NormalizePosition(clientCaps.LastPosition.Y), 0);
                 int Number = 0;
+                //Find the number of agents currently at this position
                 if (!Positions.TryGetValue(position, out Number))
                     Number = 0;
+                Number++;
                 Positions[position] = Number;
             }
+            //Build the mapItemReply blocks
             foreach (KeyValuePair<Vector3, int> position in Positions)
             {
                 mapItemReply mapitem = new mapItemReply();
@@ -759,6 +724,7 @@ namespace OpenSim.Services.GridService
                 mapItems.Add(mapitem);
             }
 
+            //If there are no agents, we send one blank one to the client
             if (mapItems.Count == 0)
             {
                 mapItemReply mapitem = new mapItemReply();
@@ -771,14 +737,6 @@ namespace OpenSim.Services.GridService
                 mapItems.Add(mapitem);
             }
             return mapItems;
-        }
-
-        public class SimMap
-        {
-            public uint NumberOfAgents;
-
-            //These things should not be sent to the region
-            public Dictionary<UUID, Vector3> AgentPosition = new Dictionary<UUID, Vector3>();
         }
     }
 }

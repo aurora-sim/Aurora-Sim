@@ -132,17 +132,8 @@ namespace OpenSim.Server.Handlers.Grid
                     case "get_safe_regions":
                         return GetSafeRegions(request);
 
-                    case "get_hyperlinks":
-                        return GetHyperlinks(request);
-
                     case "get_region_flags":
                         return GetRegionFlags(request);
-
-                    case "addagent":
-                        return AddAgent(request);
-
-                    case "removeagent":
-                        return RemoveAgent(request);
 
                     case "getmapitems":
                         return GetMapItems(request);
@@ -592,37 +583,6 @@ namespace OpenSim.Server.Handlers.Grid
             return encoding.GetBytes(xmlString);
         }
 
-		byte[] GetHyperlinks(Dictionary<string, object> request)
-        {
-            //m_log.DebugFormat("[GRID HANDLER]: GetHyperlinks");
-            UUID scopeID = UUID.Zero;
-            if (request.ContainsKey("SCOPEID"))
-                UUID.TryParse(request["SCOPEID"].ToString(), out scopeID);
-            else
-                m_log.WarnFormat("[GRID HANDLER]: no scopeID in request to get linked regions");
-
-            List<GridRegion> rinfos = m_GridService.GetHyperlinks(scopeID);
-            rinfos = CleanRegions(rinfos);
-            
-            Dictionary<string, object> result = new Dictionary<string, object>();
-            if ((rinfos == null) || ((rinfos != null) && (rinfos.Count == 0)))
-                result["result"] = "null";
-            else
-            {
-                int i = 0;
-                foreach (GridRegion rinfo in rinfos)
-                {
-                    Dictionary<string, object> rinfoDict = rinfo.ToKeyValuePairs();
-                    result["region" + i] = rinfoDict;
-                    i++;
-                }
-            }
-            string xmlString = WebUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding();
-            return encoding.GetBytes(xmlString);
-        }
-
         private byte[] GetRegionFlags(Dictionary<string, object> request)
         {
             UUID scopeID = UUID.Zero;
@@ -647,34 +607,6 @@ namespace OpenSim.Server.Handlers.Grid
             //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
-        }
-
-        private byte[] AddAgent(Dictionary<string, object> request)
-        {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
-            UUID regionID = UUID.Parse(request["REGIONID"].ToString());
-            UUID agentID = UUID.Parse(request["AGENTID"].ToString());
-            float X = float.Parse(request["X"].ToString());
-            float Y = float.Parse(request["Y"].ToString());
-            float Z = float.Parse(request["Z"].ToString());
-            Vector3 Position = new Vector3(X, Y, Z);
-
-            m_GridService.AddAgent(regionID, agentID, Position);
-
-            return SuccessResult();
-        }
-
-        private byte[] RemoveAgent(Dictionary<string, object> request)
-        {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
-            UUID regionID = UUID.Parse(request["REGIONID"].ToString());
-            UUID agentID = UUID.Parse(request["AGENTID"].ToString());
-
-            m_GridService.RemoveAgent(regionID, agentID);
-
-            return SuccessResult();
         }
 
         private byte[] GetMapItems(Dictionary<string, object> request)

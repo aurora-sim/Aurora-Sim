@@ -102,9 +102,9 @@ namespace OpenSim.Services.CapsService
 
         #region EventQueue Message Enqueue
 
-        public virtual void DisableSimulator(UUID avatarID, ulong RegionHandle, bool forwardToClient)
+        public virtual void DisableSimulator(UUID avatarID, ulong RegionHandle)
         {
-            OSD item = EventQueueHelper.DisableSimulator(RegionHandle, forwardToClient);
+            OSD item = EventQueueHelper.DisableSimulator(RegionHandle);
             Enqueue(item, avatarID, RegionHandle);
         }
 

@@ -225,6 +225,11 @@ namespace OpenSim.Services.Interfaces
         AgentCircuitData CircuitData { get; }
 
         /// <summary>
+        /// The last position that we have for this agent
+        /// </summary>
+        Vector3 LastPosition { get; set; }
+
+        /// <summary>
         /// The ID of the Agent we are serving
         /// </summary>
         UUID AgentID { get; }

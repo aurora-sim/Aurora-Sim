@@ -15,8 +15,6 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         public string UserID;
 
-        public UUID SessionID;
-
         /// <summary>
         /// The region the user is currently active in
         /// NOTE: In a grid situation, the agent can be active in more than one region
@@ -57,7 +55,6 @@ namespace OpenSim.Services.Interfaces
         {
              OSDMap retVal = new OSDMap();
              retVal["UserID"] = UserID;
-             retVal["SessionID"] = SessionID;
              retVal["CurrentRegionID"] = CurrentRegionID;
              retVal["CurrentPosition"] = CurrentPosition;
              retVal["CurrentLookAt"] = CurrentLookAt;
@@ -74,7 +71,6 @@ namespace OpenSim.Services.Interfaces
         public override void FromOSD(OSDMap retVal)
         {
              UserID = retVal["UserID"].AsString();
-             SessionID = retVal["SessionID"].AsUUID();
              CurrentRegionID = retVal["CurrentRegionID"].AsUUID();
              CurrentPosition = retVal["CurrentPosition"].AsVector3();
              CurrentLookAt = retVal["CurrentLookAt"].AsVector3();
