@@ -38,6 +38,7 @@ namespace OpenSim.Services.MessagingService
                 return;
 
             m_registry = registry;
+            registry.RegisterModuleInterface<IAsyncMessagePostService>(this);
             m_asyncReceiverService = registry.RequestModuleInterface<IAsyncMessageRecievedService>();
         }
 

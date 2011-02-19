@@ -15,7 +15,7 @@ namespace OpenSim.Services.MessagingService
     public class LocalSyncMessagePosterService : ISyncMessagePosterService, IService
     {
         protected List<string> m_hosts = new List<string>();
-        protected IAsyncMessageRecievedService m_asyncService;
+        protected IRegistryCore m_registry;
 
         public string Name
         {
@@ -29,11 +29,11 @@ namespace OpenSim.Services.MessagingService
                 return;
 
             registry.RegisterModuleInterface<ISyncMessagePosterService>(this);
+            m_registry = registry;
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_asyncService = registry.RequestModuleInterface<IAsyncMessageRecievedService>();
             m_hosts = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
         }
 
@@ -42,13 +42,13 @@ namespace OpenSim.Services.MessagingService
         public void Post(OSDMap request)
         {
             OSDMap message = CreateWebRequest(request);
-            m_asyncService.FireMessageReceived(message);
+            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(message);
         }
 
         public OSDMap Get(OSDMap request)
         {
             OSDMap message = CreateWebRequest(request);
-            return m_asyncService.FireMessageReceived(message);
+            return m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(message);
         }
 
         private OSDMap CreateWebRequest(OSDMap request)

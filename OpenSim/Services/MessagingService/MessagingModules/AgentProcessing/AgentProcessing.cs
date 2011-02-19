@@ -52,7 +52,10 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             UUID AgentID = message["AgentID"].AsUUID();
             ulong requestingRegion = message["RequestingRegion"].AsULong();
             IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
-            IRegionClientCapsService regionCaps = clientCaps.GetCapsService(requestingRegion);
+
+            IRegionClientCapsService regionCaps = null;
+            if(clientCaps != null)
+                regionCaps = clientCaps.GetCapsService(requestingRegion);
             if (message["Method"] == "LogoutRegionAgents")
             {
                 IRegionCapsService fullregionCaps = m_registry.RequestModuleInterface<ICapsService>().GetCapsForRegion(requestingRegion);
