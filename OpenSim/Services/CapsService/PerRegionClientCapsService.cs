@@ -56,6 +56,11 @@ namespace OpenSim.Services.CapsService
         private List<ICapsServiceConnector> m_connectors = new List<ICapsServiceConnector>();
         private UUID m_Password = UUID.Zero;
         private bool m_disabled = true;
+        private AgentCircuitData m_circuitData;
+        public AgentCircuitData CircuitData
+        {
+            get { return m_circuitData; }
+        }
         public bool Disabled
         {
             get { return m_disabled; }
@@ -70,6 +75,26 @@ namespace OpenSim.Services.CapsService
         public ulong RegionHandle
         {
             get { return m_RegionHandle; }
+        }
+
+        public int RegionX
+        {
+            get
+            {
+                int x, y;
+                Util.UlongToInts(m_RegionHandle, out x, out y);
+                return x;
+            }
+        }
+
+        public int RegionY
+        {
+            get
+            {
+                int x, y;
+                Util.UlongToInts(m_RegionHandle, out x, out y);
+                return y;
+            }
         }
 
         private string m_UrlToInform = "";
@@ -155,10 +180,11 @@ namespace OpenSim.Services.CapsService
 
         #region Initialize
 
-        public void Initialise(IClientCapsService clientCapsService, ulong regionHandle, string capsBase, string urlToInform)
+        public void Initialise(IClientCapsService clientCapsService, ulong regionHandle, string capsBase, string urlToInform, AgentCircuitData circuitData)
         {
             m_clientCapsService = clientCapsService;
             m_RegionHandle = regionHandle;
+            m_circuitData = circuitData;
             AddSEEDCap(capsBase, urlToInform, UUID.Random());
 
             AddCAPS();

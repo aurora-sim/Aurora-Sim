@@ -87,12 +87,11 @@ namespace OpenSim.Framework
             return buildEvent("TeleportAgent", llsdBody, circuit.AgentID, requestingRegion);
         }
 
-        public static OSDMap SendChildAgentUpdate(AgentPosition agentpos, UUID regionID, ulong requestingRegion)
+        public static OSDMap SendChildAgentUpdate(AgentPosition agentpos, ulong requestingRegion)
         {
             OSDMap llsdBody = new OSDMap();
 
             llsdBody.Add("AgentPos", agentpos.Pack());
-            llsdBody.Add("Region", regionID);
             return buildEvent("SendChildAgentUpdate", llsdBody, agentpos.AgentID, requestingRegion);
         }
 

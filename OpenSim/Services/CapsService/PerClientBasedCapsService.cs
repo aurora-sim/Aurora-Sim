@@ -91,12 +91,12 @@ namespace OpenSim.Services.CapsService
         /// Add a new Caps Service for the given region if one does not already exist
         /// </summary>
         /// <param name="regionHandle"></param>
-        protected void AddCapsServiceForRegion(ulong regionHandle, string CAPSBase, string UrlToInform)
+        protected void AddCapsServiceForRegion(ulong regionHandle, string CAPSBase, string UrlToInform, AgentCircuitData circuitData)
         {
             if (!m_RegionCapsServices.ContainsKey(regionHandle))
             {
                 PerRegionClientCapsService regionClient = new PerRegionClientCapsService();
-                regionClient.Initialise(this, regionHandle, CAPSBase, UrlToInform);
+                regionClient.Initialise(this, regionHandle, CAPSBase, UrlToInform, circuitData);
                 m_RegionCapsServices.Add(regionHandle, regionClient);
 
                 //Now add this client to the region caps
@@ -131,7 +131,7 @@ namespace OpenSim.Services.CapsService
         /// </summary>
         /// <param name="regionID"></param>
         /// <returns></returns>
-        public IRegionClientCapsService GetOrCreateCapsService(ulong regionID, string CAPSBase, string UrlToInform)
+        public IRegionClientCapsService GetOrCreateCapsService(ulong regionID, string CAPSBase, string UrlToInform, AgentCircuitData circuitData)
         {
             //If one already exists, don't add a new one
             if (m_RegionCapsServices.ContainsKey(regionID))
@@ -140,7 +140,7 @@ namespace OpenSim.Services.CapsService
                 return m_RegionCapsServices[regionID];
             }
             //Create a new one, and then call Get to find it
-            AddCapsServiceForRegion(regionID, CAPSBase, UrlToInform);
+            AddCapsServiceForRegion(regionID, CAPSBase, UrlToInform, circuitData);
             return GetCapsService(regionID);
         }
 

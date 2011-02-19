@@ -2362,7 +2362,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 ISyncMessagePosterService syncPoster = Scene.RequestModuleInterface<ISyncMessagePosterService>();
                 if (syncPoster != null)
-                    syncPoster.Post(SyncMessageHelper.SendChildAgentUpdate(agentpos, m_scene.RegionInfo.RegionID, m_scene.RegionInfo.RegionHandle));
+                    syncPoster.Post(SyncMessageHelper.SendChildAgentUpdate(agentpos, m_scene.RegionInfo.RegionHandle));
             }
 
             //Moving these into the terse update check, as they don't need to be checked/sent unless the client has moved.

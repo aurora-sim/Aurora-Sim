@@ -63,12 +63,10 @@ namespace OpenSim.Services.CapsService
         public string MapLayerRequest(string request, string path, string param,
                                       OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID agentID)
         {
-            uint x, y;
-            Utils.LongToUInts(m_service.RegionHandle, out x, out y);
-            int bottom = (int)(y / Constants.RegionSize) - 100;
-            int top = (int)(y / Constants.RegionSize) + 100;
-            int left = (int)(x / Constants.RegionSize) - 100;
-            int right = (int)(x / Constants.RegionSize) + 100;
+            int bottom = (m_service.RegionY / Constants.RegionSize) - 100;
+            int top = (int)(m_service.RegionY / Constants.RegionSize) + 100;
+            int left = (int)(m_service.RegionX / Constants.RegionSize) - 100;
+            int right = (int)(m_service.RegionX / Constants.RegionSize) + 100;
 
             OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 

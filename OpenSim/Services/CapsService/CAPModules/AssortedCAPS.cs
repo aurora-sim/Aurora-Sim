@@ -82,9 +82,7 @@ namespace OpenSim.Services.CapsService
                 (float)lookat["Z"].AsReal());
             int locationID = HomeLocation["LocationId"].AsInteger();
 
-            int x,y;
-            Util.UlongToInts(m_service.RegionHandle, out x, out y);
-            GridRegion reg = m_gridService.GetRegionByPosition(UUID.Zero, x, y);
+            GridRegion reg = m_gridService.GetRegionByPosition(UUID.Zero, m_service.RegionX, m_service.RegionY);
             m_agentInfoService.SetHomePosition(agentID.ToString(), reg.RegionID, position, lookAt);
 
             rm.Add("success", OSD.FromBoolean(true));

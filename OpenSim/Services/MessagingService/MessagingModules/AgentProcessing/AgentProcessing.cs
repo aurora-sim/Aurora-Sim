@@ -38,6 +38,17 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             m_registry = registry;
             //Also look for incoming messages to display
             registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
+
+            registry.RequestModuleInterface<ISimulationBase>().EventManager.OnGenericEvent += OnGenericEvent;
+        }
+
+        protected object OnGenericEvent(string FunctionName, object parameters)
+        {
+            if (FunctionName == "RegionRegistered")
+            {
+                EnableChildAgentsForRegion((GridRegion)parameters);
+            }
+            return null;
         }
 
         #endregion
@@ -73,14 +84,6 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             }
             else if(message["Method"] == "EnableChildAgents")
             {
-                //Some notes on this message:
-                // 1) This is a region > CapsService message ONLY, this should never be sent to the client!
-                // 2) This just enables child agents in the regions given, as the region cannot do it,
-                //       as regions do not have the ability to know what Cap Urls other regions have.
-                // 3) We could do more checking here, but we don't really 'have' to at this point.
-                //       If the sim was able to get it past the password checks and everything,
-                //       it should be able to add the neighbors here. We could do the neighbor finding here
-                //       as well, but it's not necessary at this time.
                 OSDMap body = ((OSDMap)message["Message"]);
 
                 //Parse the OSDMap
@@ -89,7 +92,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 AgentCircuitData circuitData = new AgentCircuitData();
                 circuitData.UnpackAgentCircuitData((OSDMap)body["Circuit"]);
 
-                //Now do the creation
+                //Create agents in all neighbors that we know of
                 EnableChildAgents(AgentID, requestingRegion, DrawDistance, circuitData);
             }
             else if (message["Method"] == "DisableSimulator")
@@ -128,9 +131,8 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
                 AgentPosition pos = new AgentPosition();
                 pos.Unpack((OSDMap)body["AgentPos"]);
-                UUID region = body["Region"].AsUUID();
 
-                SendChildAgentUpdate(pos, region);
+                SendChildAgentUpdate(pos, regionCaps);
                 regionCaps.Disabled = false;
             }
             else if (message["Method"] == "TeleportAgent")
@@ -179,6 +181,41 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         }
 
         #region EnableChildAgents
+
+        public bool EnableChildAgentsForRegion(GridRegion requestingRegion)
+        {
+            int count = 0;
+            bool informed = true;
+            INeighborService neighborService = m_registry.RequestModuleInterface<INeighborService>();
+            if (neighborService != null)
+            {
+                List<GridRegion> neighbors = neighborService.GetNeighbors(requestingRegion, 256);
+
+                foreach (GridRegion neighbor in neighbors)
+                {
+                    //m_log.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
+
+                    if (neighbor.RegionHandle != requestingRegion.RegionHandle)
+                    {
+                        IRegionCapsService regionCaps = m_registry.RequestModuleInterface<ICapsService>().GetCapsForRegion(neighbor.RegionHandle);
+                        List<UUID> usersInformed = new List<UUID>();
+                        foreach (IRegionClientCapsService regionClientCaps in regionCaps.GetClients())
+                        {
+                            if (usersInformed.Contains(regionClientCaps.AgentID))
+                                continue;
+
+                            if (!InformClientOfNeighbor(regionClientCaps.AgentID, requestingRegion.RegionHandle,
+                                regionClientCaps.CircuitData.Copy(), neighbor, (uint)TeleportFlags.Default, null))
+                                informed = false;
+                            else
+                                usersInformed.Add(regionClientCaps.AgentID);
+                        }
+                    }
+                    count++;
+                }
+            }
+            return informed;
+        }
 
         public bool EnableChildAgents(UUID AgentID, ulong requestingRegion, int DrawDistance, AgentCircuitData circuit)
         {
@@ -250,7 +287,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
                 IRegionClientCapsService oldRegionService = clientCaps.GetCapsService(neighbor.RegionHandle);
                 bool newAgent = oldRegionService == null;
-                IRegionClientCapsService otherRegionService = clientCaps.GetOrCreateCapsService(neighbor.RegionHandle, newSeedCap, SimSeedCap);
+                IRegionClientCapsService otherRegionService = clientCaps.GetOrCreateCapsService(neighbor.RegionHandle, newSeedCap, SimSeedCap, circuitData);
 
                 //ONLY UPDATE THE SIM SEED HERE
                 //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
@@ -576,7 +613,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
         #region Agent Update
 
-        protected void SendChildAgentUpdate(AgentPosition agentpos, UUID regionID)
+        protected void SendChildAgentUpdate(AgentPosition agentpos, IRegionClientCapsService regionCaps)
         {
             //We need to send this update out to all the child agents this region has
             INeighborService service = m_registry.RequestModuleInterface<INeighborService>();
@@ -585,15 +622,31 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
                 if (SimulationService != null)
                 {
-                    GridRegion ourRegion = m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, regionID);
+                    GridRegion ourRegion = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, regionCaps.RegionX, regionCaps.RegionY);
                     if (ourRegion == null)
                     {
                         m_log.Info("[EQMService]: Failed to inform neighbors about updating agent, could not find our region. ");
                         return;
                     }
+                    //Set the last location in the database
+                    IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+                    if (agentInfoService != null)
+                    {
+                        //Find the lookAt vector
+                        Vector3 lookAt = new Vector3(agentpos.AtAxis.X, agentpos.AtAxis.Y, 0);
+
+                        if (lookAt != Vector3.Zero)
+                            lookAt = Util.GetNormalizedVector(lookAt);
+                        //Update the database
+                        agentInfoService.SetLastPosition(regionCaps.AgentID.ToString(), ourRegion.RegionID,
+                            agentpos.Position, lookAt);
+                    }
+                    
+                    //Tell all neighbor regions about the new position as well
                     List<GridRegion> ourNeighbors = service.GetNeighbors(ourRegion);
                     foreach (GridRegion region in ourNeighbors)
                     {
+                        //Update all the neighbors that we have
                         if (!SimulationService.UpdateAgent(region, agentpos))
                         {
                             m_log.Info("[EQMService]: Failed to inform " + region.RegionName + " about updating agent. ");

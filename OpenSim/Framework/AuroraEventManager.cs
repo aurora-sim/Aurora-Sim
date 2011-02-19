@@ -36,7 +36,7 @@ namespace Aurora.Framework
         ///      param is a SceneObjectGroup
         /// ObjectEnteringNewParcel - An object has entered a new parcel
         ///      param is a object[], with o[0] a SceneObjectGroup, o[1] the new parcel UUID, and o[2] the old parcel UUID
-        /// RegisteredRegion - New Region has been registered
+        /// RegionRegistered - New Region has been registered
         ///      param is a GridRegion
         /// 
         /// </summary>

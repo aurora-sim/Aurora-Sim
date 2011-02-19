@@ -631,7 +631,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 const string seedRequestPath = "0000/";
                 string CapsSeed = "/CAPS/" + agent.CapsPath + seedRequestPath;
-                string capsUrl = capsService.CreateCAPS(agent.AgentID, "", CapsSeed, RegionInfo.RegionHandle, !agent.child);
+                string capsUrl = capsService.CreateCAPS(agent.AgentID, "", CapsSeed, RegionInfo.RegionHandle, !agent.child, agent);
                 IRegionClientCapsService regionCaps = capsService.GetClientCapsService(agent.AgentID).GetCapsService(RegionInfo.RegionHandle);
 
                 if (agent.OtherInformation.ContainsKey("CapsPassword"))

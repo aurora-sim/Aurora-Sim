@@ -53,6 +53,7 @@ namespace OpenSim.Services.GridService
         private static GridService m_RootInstance = null;
         protected IConfigSource m_config;
         protected IRegionData m_Database = null;
+        protected ISimulationBase m_simulationBase;
 
         protected IAuthenticationService m_AuthenticationService = null;
         protected bool m_AllowDuplicateNames = false;
@@ -115,6 +116,7 @@ namespace OpenSim.Services.GridService
         public void Start(IConfigSource config, IRegistryCore registry)
         {
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
+            m_simulationBase = registry.RequestModuleInterface<ISimulationBase>();
         }
 
         #region IGridService
@@ -281,6 +283,9 @@ namespace OpenSim.Services.GridService
 
                 if (m_Database.Store(regionInfos))
                 {
+                    //Fire the event so that other modules notice
+                    m_simulationBase.EventManager.FireGenericEventHandler("RegionRegistered", regionInfos);
+
                     m_log.DebugFormat("[GRID SERVICE]: Region {0} ({1}) registered successfully at {2}-{3}",
                          regionInfos.RegionName, regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY);
                     return String.Empty;

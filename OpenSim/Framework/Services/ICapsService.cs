@@ -26,8 +26,9 @@ namespace OpenSim.Services.Interfaces
         /// <param name="CAPS">The CAPS request, looks like '/CAPS/(UUID)0000/</param>
         /// <param name="regionHandle">The region handle of the region the user is being added to</param>
         /// <param name="IsRootAgent">Whether this new Caps agent is a root agent in the sim</param>
+        /// <param name="circuitData">The circuit data of the agent that is being created</param>/param>
         /// <returns>Returns the CAPS URL that was created by the CAPS Service</returns>
-        string CreateCAPS(UUID AgentID, string UrlToInform, string CAPSBase, ulong regionHandle, bool IsRootAgent);
+        string CreateCAPS(UUID AgentID, string UrlToInform, string CAPSBase, ulong regionHandle, bool IsRootAgent, AgentCircuitData circuitData);
 
         IClientCapsService GetOrCreateClientCapsService(UUID AgentID);
         IClientCapsService GetClientCapsService(UUID AgentID);
@@ -122,7 +123,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="CAPSBase"></param>
         /// <param name="UrlToInform"></param>
         /// <returns></returns>
-        IRegionClientCapsService GetOrCreateCapsService(ulong regionID, string CAPSBase, string UrlToInform);
+        IRegionClientCapsService GetOrCreateCapsService(ulong regionID, string CAPSBase, string UrlToInform, AgentCircuitData circuitData);
 
         /// <summary>
         /// Remove the caps for this user from the given region
@@ -137,7 +138,10 @@ namespace OpenSim.Services.Interfaces
     /// </summary>
     public interface IRegionClientCapsService
     {
+        int RegionX { get; }
+        int RegionY { get; }
         ulong RegionHandle { get; }
+        AgentCircuitData CircuitData { get; }
         UUID AgentID { get; }
         OSDMap InfoToSendToUrl { get; set; }
         OSDMap RequestMap { get; set; }

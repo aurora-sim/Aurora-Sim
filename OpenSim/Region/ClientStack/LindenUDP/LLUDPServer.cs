@@ -918,7 +918,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (!m_scene.TryGetScenePresence(agentID, out SP))
             {
                 // Create the LLUDPClient
-                LLUDPClient udpClient = new LLUDPClient(this, m_throttleRates, m_throttle, circuitCode, agentID, remoteEndPoint, m_defaultRTO, m_maxRTO);
+                LLUDPClient udpClient =  new LLUDPClient(this, m_throttleRates, m_throttle, circuitCode, agentID, remoteEndPoint, m_defaultRTO, m_maxRTO);
                 // Create the LLClientView
                 LLClientView client = new LLClientView(remoteEndPoint, m_scene, this, udpClient, sessionInfo, agentID, sessionID, circuitCode);
                 client.OnLogout += LogoutHandler;

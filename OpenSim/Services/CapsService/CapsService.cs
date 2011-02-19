@@ -142,11 +142,11 @@ namespace OpenSim.Services.CapsService
         /// <param name="regionHandle"></param>
         /// <param name="IsRootAgent">Will this child be a root agent</param>
         /// <returns></returns>
-        public string CreateCAPS(UUID AgentID, string UrlToInform, string CAPSBase, ulong regionHandle, bool IsRootAgent)
+        public string CreateCAPS(UUID AgentID, string UrlToInform, string CAPSBase, ulong regionHandle, bool IsRootAgent, AgentCircuitData circuitData)
         {
             //Now make sure we didn't use an old one or something
             IClientCapsService service = GetOrCreateClientCapsService(AgentID);
-            IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionHandle, CAPSBase, UrlToInform);
+            IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionHandle, CAPSBase, UrlToInform, circuitData);
             
             //Fix the root agent status
             clientService.RootAgent = IsRootAgent;
