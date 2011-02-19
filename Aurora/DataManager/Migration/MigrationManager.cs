@@ -98,7 +98,7 @@ namespace Aurora.DataManager.Migration
 
         private Migrator GetHighestVersionMigratorThatCanProvideDefaultSetup()
         {
-            return (from m in migrators where m.CanProvideDefaults orderby m.Version descending select m).First();
+            return (from m in migrators orderby m.Version descending select m).First();
         }
 
         public void ExecuteOperation()

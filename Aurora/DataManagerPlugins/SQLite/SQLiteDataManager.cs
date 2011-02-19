@@ -26,7 +26,7 @@ namespace Aurora.DataManager.SQLite
             get { return "SQLiteConnector"; }
         }
 
-        public override void ConnectToDatabase(string connectionString)
+        public override void ConnectToDatabase(string connectionString, string migratorName)
         {
             m_Connection = new SqliteConnection(connectionString);
             m_Connection.Open();

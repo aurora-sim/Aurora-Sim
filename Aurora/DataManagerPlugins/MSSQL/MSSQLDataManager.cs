@@ -63,7 +63,7 @@ namespace Aurora.DataManager.MSSQL
             }
         }
 
-        public override void ConnectToDatabase(string connectionstring)
+        public override void ConnectToDatabase(string connectionstring, string migratorName)
         {
             connectionString = connectionstring;
             SqlConnection dbcon = GetLockedConnection();

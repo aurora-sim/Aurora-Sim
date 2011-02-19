@@ -62,7 +62,7 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
-        public override void ConnectToDatabase(string connectionstring)
+        public override void ConnectToDatabase(string connectionstring, string migratorName)
         {
             connectionString = connectionstring;
             MySqlConnection dbcon = GetLockedConnection();

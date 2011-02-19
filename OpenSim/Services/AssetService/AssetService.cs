@@ -114,6 +114,10 @@ namespace OpenSim.Services.AssetService
         {
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         public AssetBase Get(string id)
         {
             UUID assetID;

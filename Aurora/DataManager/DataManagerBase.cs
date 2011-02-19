@@ -9,13 +9,14 @@ namespace Aurora.DataManager
 {
     public abstract class DataManagerBase : IDataConnector
     {
-        private const string VERSION_TABLE_NAME = "aurora_version";
+        private const string VERSION_TABLE_NAME = "aurora_migrator_version";
+        private const string COLUMN_NAME = "name";
         private const string COLUMN_VERSION = "version";
 
         #region IGenericData Members
 
         public abstract string Identifier { get; }
-        public abstract void ConnectToDatabase(string connectionString);
+        public abstract void ConnectToDatabase(string connectionString, string migratorName);
         public abstract List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
         public abstract List<string> Query(string whereClause, string table, string wantedValue);
         public abstract List<string> QueryFullData(string whereClause, string table, string wantedValue);
@@ -43,7 +44,8 @@ namespace Aurora.DataManager
         {
             if (!TableExists(VERSION_TABLE_NAME))
             {
-                CreateTable(VERSION_TABLE_NAME, new[] {new ColumnDefinition {Name = COLUMN_VERSION, Type = ColumnTypes.String}});
+                CreateTable(VERSION_TABLE_NAME, new[] {new ColumnDefinition {Name = COLUMN_VERSION, Type = ColumnTypes.String},
+                new ColumnDefinition {Name = COLUMN_NAME, Type = ColumnTypes.String}});
             }
 
             List<string> results = Query(string.Empty, string.Empty, VERSION_TABLE_NAME, COLUMN_VERSION);

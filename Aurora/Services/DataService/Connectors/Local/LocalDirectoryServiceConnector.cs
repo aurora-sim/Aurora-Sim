@@ -29,7 +29,7 @@ namespace Aurora.Services.DataService
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
                 minTimeBeforeNextParcelUpdate = source.Configs[Name].GetInt("MinUpdateTimeForParcels", minTimeBeforeNextParcelUpdate);
             }
-            GD.ConnectToDatabase(defaultConnectionString);
+            GD.ConnectToDatabase(defaultConnectionString, "Directory");
 
             DataManager.DataManager.RegisterPlugin(Name+"Local", this);
 
@@ -50,7 +50,7 @@ namespace Aurora.Services.DataService
                     if (source.Configs[Name] != null)
                         defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-                    GD.ConnectToDatabase(defaultConnectionString);
+                    GD.ConnectToDatabase(defaultConnectionString, "Directory");
 
                     DataManager.DataManager.RegisterPlugin(Name, this);
                 }

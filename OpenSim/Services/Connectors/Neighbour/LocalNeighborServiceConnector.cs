@@ -78,6 +78,10 @@ namespace OpenSim.Services.Connectors
             m_simService = registry.RequestModuleInterface<ISimulationService>();
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         #endregion
 
         #region Region add/remove

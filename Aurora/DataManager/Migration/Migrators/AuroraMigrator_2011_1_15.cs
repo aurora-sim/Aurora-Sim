@@ -10,7 +10,6 @@ namespace Aurora.DataManager.Migration.Migrators
         public AuroraMigrator_2011_1_15()
         {
             Version = new Version(2011, 1, 15);
-            CanProvideDefaults = true;
 
             schema = new AuroraMigrator_2010_12_30().schema;
             renameSchema = new Dictionary<string, string>();
@@ -57,11 +56,6 @@ namespace Aurora.DataManager.Migration.Migrators
         protected override void DoPrepareRestorePoint(IDataConnector genericData)
         {
             CopyAllTablesToTempVersions(genericData);
-        }
-
-        public override void DoRestore(IDataConnector genericData)
-        {
-            RestoreTempTablesToReal(genericData);
         }
     }
 }

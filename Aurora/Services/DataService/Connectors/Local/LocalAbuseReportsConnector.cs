@@ -25,7 +25,7 @@ namespace Aurora.Services.DataService
                 if (source.Configs[Name] != null)
                     defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-                GD.ConnectToDatabase(defaultConnectionString);
+                GD.ConnectToDatabase(defaultConnectionString, "AbuseReports");
 
                 //List<string> Results = GD.Query("Method", "abusereports", "passwords", "Password");
                 //if (Results.Count == 0)

@@ -12,12 +12,13 @@ namespace Aurora.DataManager.Migration
 
         public Version Version { get; protected set; }
 
-        public bool CanProvideDefaults { get; protected set; }
+        public String MigrationName { get; protected set; }
 
         #region IRestorePoint Members
 
         public virtual void DoRestore(IDataConnector genericData)
         {
+            RestoreTempTablesToReal(genericData);
         }
 
         #endregion

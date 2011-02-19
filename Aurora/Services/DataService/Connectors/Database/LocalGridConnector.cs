@@ -31,7 +31,7 @@ namespace Aurora.Services.DataService
                 if (source.Configs[Name] != null)
                     connectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-                GD.ConnectToDatabase(connectionString);
+                GD.ConnectToDatabase(connectionString, "GridRegions");
 
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }

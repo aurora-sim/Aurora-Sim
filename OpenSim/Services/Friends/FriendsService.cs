@@ -104,6 +104,10 @@ namespace OpenSim.Services.Friends
         {
         }
 
+        public void FinishedStartup()
+        {
+        }
+
         public FriendInfo[] GetFriends(UUID PrincipalID)
         {
             FriendsData[] data = m_Database.GetFriends(PrincipalID);

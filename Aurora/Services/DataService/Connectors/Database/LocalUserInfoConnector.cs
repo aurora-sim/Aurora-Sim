@@ -49,7 +49,7 @@ namespace Aurora.Services.DataService
                            source.Configs[Name].GetBoolean("CheckLastSeen",
                                                      m_checkLastSeen);
                 }
-                GD.ConnectToDatabase(connectionString);
+                GD.ConnectToDatabase(connectionString, "UserInfo");
 
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
