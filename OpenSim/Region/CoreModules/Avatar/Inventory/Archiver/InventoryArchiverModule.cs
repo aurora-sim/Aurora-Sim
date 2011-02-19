@@ -38,22 +38,18 @@ using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 {
     /// <summary>
     /// This module loads and saves OpenSimulator inventory archives
     /// </summary>
-    public class InventoryArchiverModule : ISharedRegionModule, IInventoryArchiverModule
+    public class InventoryArchiverModule : IService, IInventoryArchiverModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
         public string Name { get { return "Inventory Archiver Module"; } }
         
-        /// <value>
-        /// Enable or disable checking whether the iar user is actually logged in 
-        /// </value>
-        public bool DisablePresenceChecks { get { return true; } set { ; } }
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
         public event InventoryArchiveSaved OnInventoryArchiveSaved;
         
@@ -71,81 +67,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// All scenes that this module knows about
         /// </value>
         private Dictionary<UUID, Scene> m_scenes = new Dictionary<UUID, Scene>();
-        private Scene m_aScene;
-
-        public void Initialise(IConfigSource source)
-        {
-            
-        }
-
-        public void AddRegion(Scene scene)
-        {
-            if (m_scenes.Count == 0)
-            {
-                scene.RegisterModuleInterface<IInventoryArchiverModule>(this);
-                OnInventoryArchiveSaved += SaveInvConsoleCommandCompleted;
-                
-                MainConsole.Instance.Commands.AddCommand(
-                    this.Name, true, "load iar",
-                    "load iar <first> <last> <inventory path> <password> [<IAR path>]",
-                    //"load iar [--merge] <first> <last> <inventory path> <password> [<IAR path>]",
-                    "Load user inventory archive (IAR).",
-                    //"--merge is an option which merges the loaded IAR with existing inventory folders where possible, rather than always creating new ones"
-                    //+ "<first> is user's first name." + Environment.NewLine
-                    "<first> is user's first name." + Environment.NewLine
-                    + "<last> is user's last name." + Environment.NewLine
-                    + "<inventory path> is the path inside the user's inventory where the IAR should be loaded." + Environment.NewLine
-                    + "<password> is the user's password." + Environment.NewLine
-                    + "<IAR path> is the filesystem path or URI from which to load the IAR."
-                    + string.Format("  If this is not given then the filename {0} in the current directory is used", DEFAULT_INV_BACKUP_FILENAME),
-                    HandleLoadInvConsoleCommand);
-
-                MainConsole.Instance.Commands.AddCommand(
-                    this.Name, true, "save iar",
-                    "save iar <first> <last> <inventory path> <password> [<IAR path>]",
-                    "Save user inventory archive (IAR).", 
-                    "<first> is the user's first name." + Environment.NewLine
-                    + "<last> is the user's last name." + Environment.NewLine
-                    + "<inventory path> is the path inside the user's inventory for the folder/item to be saved." + Environment.NewLine
-                    + "<IAR path> is the filesystem path at which to save the IAR."
-                    + string.Format("  If this is not given then the filename {0} in the current directory is used", DEFAULT_INV_BACKUP_FILENAME),
-                    HandleSaveInvConsoleCommand);
-
-                MainConsole.Instance.Commands.AddCommand(
-                    this.Name, true, "save iar withoutassets",
-                    "save iar withoutassets <first> <last> <inventory path> <password> [<IAR path>]",
-                    "Save user inventory archive (IAR) withOUT assets. This version will NOT load on another grid/standalone other than the current grid/standalone!",
-                    "<first> is the user's first name." + Environment.NewLine
-                    + "<last> is the user's last name." + Environment.NewLine
-                    + "<inventory path> is the path inside the user's inventory for the folder/item to be saved." + Environment.NewLine
-                    + "<IAR path> is the filesystem path at which to save the IAR."
-                    + string.Format("  If this is not given then the filename {0} in the current directory is used", DEFAULT_INV_BACKUP_FILENAME),
-                    HandleSaveInvWOAssetsConsoleCommand);
-
-                m_aScene = scene;
-            }
-                        
-            m_scenes[scene.RegionInfo.RegionID] = scene;
-        }
-
-        public void RemoveRegion(Scene scene)
-        {
-
-        }
-
-        public void RegionLoaded(Scene scene)
-        {
-
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
-        public void PostInitialise() {}
-
-        public void Close() {}
+        private IRegistryCore m_registry;
         
         /// <summary>
         /// Trigger the inventory archive saved event.
@@ -169,44 +91,32 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             Guid id, string firstName, string lastName, string invPath, string pass, Stream saveStream, 
             Dictionary<string, object> options)
         {
-            if (m_scenes.Count > 0)
+            UserAccount userInfo = GetUserInfo(firstName, lastName, pass);
+
+            if (userInfo != null)
             {
-                UserAccount userInfo = GetUserInfo(firstName, lastName, pass);
-
-                if (userInfo != null)
+                try
                 {
-                    if (CheckPresence(userInfo.PrincipalID))
+                    bool UseAssets = true;
+                    if (options.ContainsKey("assets"))
                     {
-                        try
-                        {
-                            bool UseAssets = true;
-                            if (options.ContainsKey("assets"))
-                            {
-                                object Assets = null;
-                                options.TryGetValue("assets", out Assets);
-                                bool.TryParse(Assets.ToString(), out UseAssets);
-                            }
-                            new InventoryArchiveWriteRequest(id, this, m_aScene, userInfo, invPath, saveStream, UseAssets, null, new List<AssetBase>()).Execute();
-                        }
-                        catch (EntryPointNotFoundException e)
-                        {
-                            m_log.ErrorFormat(
-                                "[ARCHIVER]: Mismatch between Mono and zlib1g library version when trying to create compression stream."
-                                    + "If you've manually installed Mono, have you appropriately updated zlib1g as well?");
-                            m_log.Error(e);
-
-                            return false;
-                        }
-                    
-                        return true;
+                        object Assets = null;
+                        options.TryGetValue("assets", out Assets);
+                        bool.TryParse(Assets.ToString(), out UseAssets);
                     }
-                    else
-                    {
-                        m_log.ErrorFormat(
-                            "[INVENTORY ARCHIVER]: User {0} {1} {2} not logged in to this region simulator",
-                            userInfo.FirstName, userInfo.LastName, userInfo.PrincipalID);
-                    }
+                    new InventoryArchiveWriteRequest(id, this, m_registry, userInfo, invPath, saveStream, UseAssets, null, new List<AssetBase>()).Execute();
                 }
+                catch (EntryPointNotFoundException e)
+                {
+                    m_log.ErrorFormat(
+                        "[ARCHIVER]: Mismatch between Mono and zlib1g library version when trying to create compression stream."
+                            + "If you've manually installed Mono, have you appropriately updated zlib1g as well?");
+                    m_log.Error(e);
+
+                    return false;
+                }
+
+                return true;
             }
 
             return false;
@@ -216,44 +126,32 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             Guid id, string firstName, string lastName, string invPath, string pass, string savePath, 
             Dictionary<string, object> options)
         {
-            if (m_scenes.Count > 0)
-            {
-                UserAccount userInfo = GetUserInfo(firstName, lastName, pass);
-                
-                if (userInfo != null)
-                {
-                    if (CheckPresence(userInfo.PrincipalID))
-                    {
-                        try
-                        {
-                            bool UseAssets = true;
-                            if (options.ContainsKey("assets"))
-                            {
-                                object Assets = null;
-                                options.TryGetValue("assets", out Assets);
-                                bool.TryParse(Assets.ToString(), out UseAssets);
-                            }
-                            new InventoryArchiveWriteRequest(id, this, m_aScene, userInfo, invPath, savePath, UseAssets).Execute();
-                        }
-                        catch (EntryPointNotFoundException e)
-                        {
-                            m_log.ErrorFormat(
-                                "[ARCHIVER]: Mismatch between Mono and zlib1g library version when trying to create compression stream."
-                                    + "If you've manually installed Mono, have you appropriately updated zlib1g as well?");
-                            m_log.Error(e);
+            UserAccount userInfo = GetUserInfo(firstName, lastName, pass);
 
-                            return false;
-                        }
-                    
-                        return true;
-                    }
-                    else
+            if (userInfo != null)
+            {
+                try
+                {
+                    bool UseAssets = true;
+                    if (options.ContainsKey("assets"))
                     {
-                        m_log.ErrorFormat(
-                            "[INVENTORY ARCHIVER]: User {0} {1} {2} not logged in to this region simulator",
-                            userInfo.FirstName, userInfo.LastName, userInfo.PrincipalID);
+                        object Assets = null;
+                        options.TryGetValue("assets", out Assets);
+                        bool.TryParse(Assets.ToString(), out UseAssets);
                     }
+                    new InventoryArchiveWriteRequest(id, this, m_registry, userInfo, invPath, savePath, UseAssets).Execute();
                 }
+                catch (EntryPointNotFoundException e)
+                {
+                    m_log.ErrorFormat(
+                        "[ARCHIVER]: Mismatch between Mono and zlib1g library version when trying to create compression stream."
+                            + "If you've manually installed Mono, have you appropriately updated zlib1g as well?");
+                    m_log.Error(e);
+
+                    return false;
+                }
+
+                return true;
             }
             
             return false;
@@ -268,42 +166,30 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             string firstName, string lastName, string invPath, string pass, Stream loadStream, 
             Dictionary<string, object> options)
         {
-            if (m_scenes.Count > 0)
+            UserAccount userInfo = GetUserInfo(firstName, lastName, pass);
+
+            if (userInfo != null)
             {
-                UserAccount userInfo = GetUserInfo(firstName, lastName, pass);
-                        
-                if (userInfo != null)
+                InventoryArchiveReadRequest request;
+                bool merge = (options.ContainsKey("merge") ? (bool)options["merge"] : false);
+
+                try
                 {
-                    if (CheckPresence(userInfo.PrincipalID))
-                    {
-                        InventoryArchiveReadRequest request;
-                        bool merge = (options.ContainsKey("merge") ? (bool)options["merge"] : false);
-                        
-                        try
-                        {
-                            request = new InventoryArchiveReadRequest(m_aScene, userInfo, invPath, loadStream, merge);
-                        }
-                        catch (EntryPointNotFoundException e)
-                        {
-                            m_log.ErrorFormat(
-                                "[ARCHIVER]: Mismatch between Mono and zlib1g library version when trying to create compression stream."
-                                    + "If you've manually installed Mono, have you appropriately updated zlib1g as well?");
-                            m_log.Error(e);
-
-                            return false;
-                        }
-
-                        request.Execute(false);
-
-                        return true;
-                    }
-                    else
-                    {
-                        m_log.ErrorFormat(
-                            "[INVENTORY ARCHIVER]: User {0} {1} {2} not logged in to this region simulator",
-                            userInfo.FirstName, userInfo.LastName, userInfo.PrincipalID);
-                    }
+                    request = new InventoryArchiveReadRequest(m_registry, userInfo, invPath, loadStream, merge);
                 }
+                catch (EntryPointNotFoundException e)
+                {
+                    m_log.ErrorFormat(
+                        "[ARCHIVER]: Mismatch between Mono and zlib1g library version when trying to create compression stream."
+                            + "If you've manually installed Mono, have you appropriately updated zlib1g as well?");
+                    m_log.Error(e);
+
+                    return false;
+                }
+
+                request.Execute(false);
+
+                return true;
             }
 
             return false;
@@ -313,42 +199,30 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
              string firstName, string lastName, string invPath, string pass, string loadPath, 
              Dictionary<string, object> options)
         {
-            if (m_scenes.Count > 0)
+            UserAccount userInfo = GetUserInfo(firstName, lastName, pass);
+
+            if (userInfo != null)
             {
-                UserAccount userInfo = GetUserInfo(firstName, lastName, pass);
-                
-                if (userInfo != null)
+                InventoryArchiveReadRequest request;
+                bool merge = (options.ContainsKey("merge") ? (bool)options["merge"] : false);
+
+                try
                 {
-                    if (CheckPresence(userInfo.PrincipalID))
-                    {
-                        InventoryArchiveReadRequest request;
-                        bool merge = (options.ContainsKey("merge") ? (bool)options["merge"] : false);
-                        
-                        try
-                        {
-                            request = new InventoryArchiveReadRequest(m_aScene, userInfo, invPath, loadPath, merge);
-                        }
-                        catch (EntryPointNotFoundException e)
-                        {
-                            m_log.ErrorFormat(
-                                "[ARCHIVER]: Mismatch between Mono and zlib1g library version when trying to create compression stream."
-                                    + "If you've manually installed Mono, have you appropriately updated zlib1g as well?");
-                            m_log.Error(e);
-
-                            return false;
-                        }
-                        
-                        request.Execute(false);
-
-                        return true;
-                    }
-                    else
-                    {
-                        m_log.ErrorFormat(
-                            "[INVENTORY ARCHIVER]: User {0} {1} {2} not logged in to this region simulator",
-                            userInfo.FirstName, userInfo.LastName, userInfo.PrincipalID);
-                    }
+                    request = new InventoryArchiveReadRequest(m_registry, userInfo, invPath, loadPath, merge);
                 }
+                catch (EntryPointNotFoundException e)
+                {
+                    m_log.ErrorFormat(
+                        "[ARCHIVER]: Mismatch between Mono and zlib1g library version when trying to create compression stream."
+                            + "If you've manually installed Mono, have you appropriately updated zlib1g as well?");
+                    m_log.Error(e);
+
+                    return false;
+                }
+
+                request.Execute(false);
+
+                return true;
             }
 
             return false;
@@ -500,7 +374,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         protected UserAccount GetUserInfo(string firstName, string lastName, string pass)
         {
             UserAccount account 
-                = m_aScene.UserAccountService.GetUserAccount(m_aScene.RegionInfo.ScopeID, firstName, lastName);
+                = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, firstName, lastName);
             
             if (null == account)
             {
@@ -513,7 +387,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             try
             {
                 string encpass = Util.Md5Hash(pass);
-                if (m_aScene.AuthenticationService.Authenticate(account.PrincipalID, encpass, 1) != string.Empty)
+                if (m_registry.RequestModuleInterface<IAuthenticationService>().Authenticate(account.PrincipalID, encpass, 1) != string.Empty)
                 {
                     return account;
                 }
@@ -532,27 +406,60 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             }
         }
 
-        /// <summary>
-        /// Check if the given user is present in any of the scenes.
-        /// </summary>
-        /// <param name="userId">The user to check</param>
-        /// <returns>true if the user is in any of the scenes, false otherwise</returns>
-        protected bool CheckPresence(UUID userId)
-        {
-            if (DisablePresenceChecks)
-                return true;
-            
-            foreach (Scene scene in m_scenes.Values)
-            {
-                ScenePresence p;
-                if ((p = scene.GetScenePresence(userId)) != null)
-                {
-                    p.ControllingClient.SendAgentAlertMessage("Inventory operation has been started", false);
-                    return true;
-                }
-            }
+        #region IService Members
 
-            return false;
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            m_registry = registry;
+            m_registry.RegisterModuleInterface<IInventoryArchiverModule>(this);
+            if (m_scenes.Count == 0)
+            {
+                OnInventoryArchiveSaved += SaveInvConsoleCommandCompleted;
+
+                MainConsole.Instance.Commands.AddCommand(
+                    this.Name, true, "load iar",
+                    "load iar <first> <last> <inventory path> <password> [<IAR path>]",
+                    //"load iar [--merge] <first> <last> <inventory path> <password> [<IAR path>]",
+                    "Load user inventory archive (IAR).",
+                    //"--merge is an option which merges the loaded IAR with existing inventory folders where possible, rather than always creating new ones"
+                    //+ "<first> is user's first name." + Environment.NewLine
+                    "<first> is user's first name." + Environment.NewLine
+                    + "<last> is user's last name." + Environment.NewLine
+                    + "<inventory path> is the path inside the user's inventory where the IAR should be loaded." + Environment.NewLine
+                    + "<password> is the user's password." + Environment.NewLine
+                    + "<IAR path> is the filesystem path or URI from which to load the IAR."
+                    + string.Format("  If this is not given then the filename {0} in the current directory is used", DEFAULT_INV_BACKUP_FILENAME),
+                    HandleLoadInvConsoleCommand);
+
+                MainConsole.Instance.Commands.AddCommand(
+                    this.Name, true, "save iar",
+                    "save iar <first> <last> <inventory path> <password> [<IAR path>]",
+                    "Save user inventory archive (IAR).",
+                    "<first> is the user's first name." + Environment.NewLine
+                    + "<last> is the user's last name." + Environment.NewLine
+                    + "<inventory path> is the path inside the user's inventory for the folder/item to be saved." + Environment.NewLine
+                    + "<IAR path> is the filesystem path at which to save the IAR."
+                    + string.Format("  If this is not given then the filename {0} in the current directory is used", DEFAULT_INV_BACKUP_FILENAME),
+                    HandleSaveInvConsoleCommand);
+
+                MainConsole.Instance.Commands.AddCommand(
+                    this.Name, true, "save iar withoutassets",
+                    "save iar withoutassets <first> <last> <inventory path> <password> [<IAR path>]",
+                    "Save user inventory archive (IAR) withOUT assets. This version will NOT load on another grid/standalone other than the current grid/standalone!",
+                    "<first> is the user's first name." + Environment.NewLine
+                    + "<last> is the user's last name." + Environment.NewLine
+                    + "<inventory path> is the path inside the user's inventory for the folder/item to be saved." + Environment.NewLine
+                    + "<IAR path> is the filesystem path at which to save the IAR."
+                    + string.Format("  If this is not given then the filename {0} in the current directory is used", DEFAULT_INV_BACKUP_FILENAME),
+                    HandleSaveInvWOAssetsConsoleCommand);
+            }
         }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }
