@@ -75,6 +75,15 @@ namespace OpenSim.Services.CapsService
             m_RegionHandle = regionHandle;
         }
 
+        public void Close()
+        {
+            foreach (IRegionClientCapsService regionC in m_clientsInThisRegion.Values)
+            {
+                regionC.Close();
+            }
+            m_clientsInThisRegion.Clear();
+        }
+
         #endregion
 
         #region Add/Get/Remove clients

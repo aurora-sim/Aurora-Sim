@@ -159,17 +159,67 @@ namespace OpenSim.Services.Interfaces
         bool Disabled { get; set; }
         IRegistryCore Registry { get; }
         IClientCapsService ClientCaps { get; }
-        UUID Password { get; }
+
+        /// <summary>
+        /// Whether the agent is a root agent
+        /// </summary>
         bool RootAgent { get; set; }
 
+        /// <summary>
+        /// Sets up the region for the given client
+        /// </summary>
+        /// <param name="clientCapsService"></param>
+        /// <param name="regionHandle"></param>
+        /// <param name="capsBase"></param>
+        /// <param name="urlToInform"></param>
+        /// <param name="circuitData"></param>
         void Initialise(IClientCapsService clientCapsService, ulong regionHandle, string capsBase, string urlToInform, AgentCircuitData circuitData);
+        
+        /// <summary>
+        /// Closes the region caps, removes all caps handlers and removes itself
+        /// </summary>
         void Close();
-        void AddSEEDCap(string CapsUrl, string UrlToInform, UUID Password);
+
+        /// <summary>
+        /// Add a new SEED CAP for the region at the given CapsUrl unless one already exists
+        ///   Will start infomring UrlToInform if no other is set
+        /// </summary>
+        /// <param name="CapsUrl"></param>
+        /// <param name="UrlToInform"></param>
+        void AddSEEDCap(string CapsUrl, string UrlToInform);
+
+        /// <summary>
+        /// Add the given CAPS method to the list that will be given to the client
+        /// </summary>
+        /// <param name="method">Name of the Method</param>
+        /// <param name="appendedPath">The path (no http://) to the Caps Method</param>
+        /// <returns></returns>
         string CreateCAPS(string method, string appendedPath);
+        
+        /// <summary>
+        /// Get all CapsService modules
+        /// </summary>
+        /// <returns></returns>
         List<ICapsServiceConnector> GetServiceConnectors();
+
+        /// <summary>
+        /// Add a new handler for a CAPS message
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="handler"></param>
         void AddStreamHandler(string method, IRequestHandler handler);
+
+        /// <summary>
+        /// Remove an old handler for a CAPS message
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="httpMethod"></param>
+        /// <param name="path"></param>
         void RemoveStreamHandler(string method, string httpMethod, string path);
 
+        /// <summary>
+        /// A new request was made to add an agent to this region, tell the modules about it
+        /// </summary>
         void InformModulesOfRequest();
     }
 
@@ -178,6 +228,9 @@ namespace OpenSim.Services.Interfaces
     /// </summary>
     public interface IRegionCapsService
     {
+        /// <summary>
+        /// The RegionHandle of the region we represent
+        /// </summary>
         ulong RegionHandle { get; }
 
         /// <summary>
@@ -185,6 +238,12 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="regionHandle"></param>
         void Initialise(ulong regionHandle);
+
+        /// <summary>
+        /// Close the service and all underlieing services
+        /// </summary>
+        /// <param name="regionHandle"></param>
+        void Close();
 
         /// <summary>
         /// Add this client to the region

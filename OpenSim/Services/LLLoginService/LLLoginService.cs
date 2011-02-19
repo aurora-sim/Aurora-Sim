@@ -1009,7 +1009,6 @@ namespace OpenSim.Services.LLLoginService
                 string ServerCapsSeedPath = m_CapsService.CreateCAPS(aCircuit.AgentID, "", CapsUtil.GetCapsSeedPath(ServerCapsBase), region.RegionHandle, true, aCircuit);
 
                 regionClientCaps = m_CapsService.GetClientCapsService(aCircuit.AgentID).GetCapsService(region.RegionHandle);
-                aCircuit.OtherInformation["CapsPassword"] = regionClientCaps.Password;
             }
 
             // As we are creating the agent, we must also initialize the CapsService for the agent
@@ -1025,7 +1024,7 @@ namespace OpenSim.Services.LLLoginService
             {
                 OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
                 string SimcapsSeedPath = responseMap["CapsUrl"].AsString();
-                regionClientCaps.AddSEEDCap("", SimcapsSeedPath, UUID.Zero);
+                regionClientCaps.AddSEEDCap("", SimcapsSeedPath);
                 m_log.Info("[NewAgentConnection]: Adding Caps Url for grid" +
                      " @" + regionClientCaps.CapsUrl + " calling URL " + SimcapsSeedPath +
                      " for agent " + aCircuit.AgentID);

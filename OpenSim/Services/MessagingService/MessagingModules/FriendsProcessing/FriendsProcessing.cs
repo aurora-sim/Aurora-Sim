@@ -48,16 +48,20 @@ namespace OpenSim.Services.MessagingService
                 ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
                 if (asyncPoster != null && friendsService != null && capsService != null)
                 {
+                    //Get all friends
                     UserInfo info = (UserInfo)parameters;
                     FriendInfo[] friends = friendsService.GetFriends(UUID.Parse(info.UserID));
                     foreach(FriendInfo friend in friends)
                     {
+                        //Now find their caps service so that we can find where they are root (and if they are logged in)
                         IClientCapsService clientCaps = capsService.GetClientCapsService(UUID.Parse(info.UserID));
                         if(clientCaps != null)
                         {
+                            //Find the root agent
                             IRegionClientCapsService regionClientCaps = clientCaps.GetRootCapsService();
                             if(regionClientCaps != null)
                             {
+                                //Post!
                                 asyncPoster.Post(regionClientCaps.RegionHandle, SyncMessageHelper.AgentStatusChange(UUID.Parse(info.UserID), friend.PrincipalID, info.IsOnline));
                             }
                         }
@@ -69,19 +73,22 @@ namespace OpenSim.Services.MessagingService
 
         protected OSDMap OnMessageReceived(OSDMap message)
         {
+            //We need to check and see if this is an AgentStatusChange
             if (message.ContainsKey("Method") && message["Method"] == "AgentStatusChange")
             {
-                //We got a message, now display it
+                //We got a message, now pass it on to the clients that need it
                 UUID UserID = message["UserID"].AsUUID();
                 UUID FriendToInformID = message["FriendToInformID"].AsUUID();
                 bool NewStatus = message["NewStatus"].AsBoolean();
 
+                //Do this since IFriendsModule is a scene module, not a ISimulationBase module (not interchangable)
                 SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
                 if (manager != null && manager.Scenes.Count > 0)
                 {
                     IFriendsModule friendsModule = manager.Scenes[0].RequestModuleInterface<IFriendsModule>();
                     if (friendsModule != null)
                     {
+                        //Send the message
                         friendsModule.SendFriendsStatusMessage(FriendToInformID, UserID, NewStatus);
                     }
                 }

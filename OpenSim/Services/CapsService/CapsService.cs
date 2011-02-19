@@ -152,7 +152,7 @@ namespace OpenSim.Services.CapsService
             clientService.RootAgent = IsRootAgent;
 
             //Add the seed handlers, use "" for both so that we don't overwrite anything, as it is added above in the GetOrCreate
-            clientService.AddSEEDCap("", "", clientService.Password);
+            clientService.AddSEEDCap("", "");
 
             //Trigger events, if they exist
             SceneManager regionManager = Registry.RequestModuleInterface<SceneManager>();

@@ -73,6 +73,30 @@ namespace OpenSim.Services.PresenceService
             return m_genericsConnector.GetGeneric<UserInfo>(UUID.Parse(userID), "UserInfo", userID, new UserInfo());
         }
 
+        public UserInfo[] GetUserInfos(string[] userIDs)
+        {
+            UserInfo[] infos = new UserInfo[userIDs.Length];
+            for (int i = 0; i < userIDs.Length; i++)
+            {
+                infos[i] = GetUserInfo(userIDs[i]);
+            }
+            return infos;
+        }
+
+        public string[] GetAgentsLocations(string[] userIDs)
+        {
+            string[] infos = new string[userIDs.Length];
+            for (int i = 0; i < userIDs.Length; i++)
+            {
+                UserInfo user = GetUserInfo(userIDs[i]);
+                if (user != null && user.IsOnline)
+                    infos[i] = m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, user.CurrentRegionID).ServerURI;
+                else
+                    infos[i] = "NotOnline";
+            }
+            return infos;
+        }
+
         public bool SetHomePosition(string userID, UUID homeID, Vector3 homePosition, Vector3 homeLookAt)
         {
             UserInfo userInfo = GetUserInfo(userID);
@@ -121,30 +145,6 @@ namespace OpenSim.Services.PresenceService
         public void Save(UserInfo userInfo)
         {
             m_genericsConnector.AddGeneric(UUID.Parse(userInfo.UserID), "UserInfo", userInfo.UserID, userInfo.ToOSD());
-        }
-
-        public UserInfo[] GetUserInfos(string[] userIDs)
-        {
-            UserInfo[] infos = new UserInfo[userIDs.Length];
-            for (int i = 0; i < userIDs.Length; i++)
-            {
-                infos[i] = GetUserInfo(userIDs[i]);
-            }
-            return infos;
-        }
-
-        public string[] GetAgentsLocations(string[] userIDs)
-        {
-            string[] infos = new string[userIDs.Length];
-            for (int i = 0; i < userIDs.Length; i++)
-            {
-                UserInfo user = GetUserInfo(userIDs[i]);
-                if (user != null && user.IsOnline)
-                    infos[i] = m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, user.CurrentRegionID).ServerURI;
-                else
-                    infos[i] = "NotOnline";
-            }
-            return infos;
         }
 
         #endregion

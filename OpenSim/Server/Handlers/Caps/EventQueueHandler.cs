@@ -140,23 +140,14 @@ namespace OpenSim.Server.Handlers
                     IRegionClientCapsService regionClient = clientCaps.GetCapsService(regionHandle);
                     if (regionClient != null)
                     {
-                        if (regionClient.Password != password)
+                        bool enqueueResult = false;
+                        foreach (OSD ev in OSDEvents)
                         {
-                            m_log.Error("[EventQueueHandler]: Failed to authenticate EventQueueMessage for user " +
-                                agentID + " calling with password " + password + " in region " + regionHandle);
-                            response["success"] = false;
+                            enqueueResult = m_eventQueueService.Enqueue(ev, agentID, regionHandle);
+                            if (!enqueueResult) //Break if one fails
+                                break;
                         }
-                        else
-                        {
-                            bool enqueueResult = false;
-                            foreach (OSD ev in OSDEvents)
-                            {
-                                enqueueResult = m_eventQueueService.Enqueue(ev, agentID, regionHandle);
-                                if (!enqueueResult) //Break if one fails
-                                    break;
-                            }
-                            response["success"] = enqueueResult;
-                        }
+                        response["success"] = enqueueResult;
                     }
                 }
             }

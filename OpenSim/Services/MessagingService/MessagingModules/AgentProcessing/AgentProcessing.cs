@@ -73,11 +73,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 if (fullregionCaps != null)
                 {
                     //Close all regions and remove them from the region
-                    foreach (IRegionClientCapsService regionC in fullregionCaps.GetClients())
-                    {
-                        regionC.Close();
-                        fullregionCaps.RemoveClientFromRegion(regionC);
-                    }
+                    fullregionCaps.Close();
                     //Now kill the region in the caps Service
                     m_registry.RequestModuleInterface<ICapsService>().RemoveCapsForRegion(requestingRegion);
                 }
@@ -315,8 +311,6 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 }
                 //Fix the AgentCircuitData with the new CapsUrl
                 circuitData.CapsPath = CapsBase;
-                //Add the password too
-                circuitData.OtherInformation["CapsPassword"] = otherRegionService.Password;
 
                 //Offset the child avs position
                 uint x, y;
@@ -336,7 +330,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
                     // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
                     // AND FORCE UPDATING IT HERE WILL BREAK IT.
-                    otherRegionService.AddSEEDCap("", SimSeedCap, otherRegionService.Password);
+                    otherRegionService.AddSEEDCap("", SimSeedCap);
                     if (newAgent)
                     {
                         //We 'could' call Enqueue directly... but its better to just let it go and do it this way

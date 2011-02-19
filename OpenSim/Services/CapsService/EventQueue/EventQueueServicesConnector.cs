@@ -57,7 +57,7 @@ namespace OpenSim.Services.CapsService
         private IRegistryCore m_registry;
 
         /// <summary>
-        /// This holds events that havn't been sent yet as the client hasn't called the CapsHandler and sent the EventQueue password.
+        /// This holds events that havn't been sent yet as something has gone wrong
         /// Note: these already have been converted to LLSDXML, so do not duplicate this!
         /// </summary>
         private Dictionary<UUID, EventQueueClient> m_eventsNotSentPasswordDoesNotExist = new Dictionary<UUID, EventQueueClient>();
@@ -84,33 +84,6 @@ namespace OpenSim.Services.CapsService
         public override void Start(IConfigSource config, IRegistryCore registry)
         {
             m_service = registry.RequestModuleInterface<ICapsService>();
-        }
-
-        #endregion
-
-        #region Find EQM Password
-
-        /// <summary>
-        /// Find the password of the user that we may have recieved in the CAPS seed request.
-        /// </summary>
-        /// <param name="agentID"></param>
-        private bool FindAndPopulateEQMPassword(UUID agentID, ulong RegionHandle, out UUID Password)
-        {
-            if (m_service != null)
-            {
-                IClientCapsService clientCaps = m_service.GetClientCapsService(agentID);
-                if (clientCaps != null)
-                {
-                    IRegionClientCapsService regionClientCaps = clientCaps.GetCapsService(RegionHandle);
-                    if (regionClientCaps != null)
-                    {
-                        Password = regionClientCaps.Password;
-                        return true;
-                    }
-                }
-            }
-            Password = UUID.Zero;
-            return false;
         }
 
         #endregion
@@ -162,22 +135,9 @@ namespace OpenSim.Services.CapsService
                         m_eventsNotSentPasswordDoesNotExist.Add(avatarID, new EventQueueClient());
                 }
 
-                UUID Password;
-                if (!FindAndPopulateEQMPassword(avatarID, regionHandle, out Password))
-                {
-                    lock (m_eventsNotSentPasswordDoesNotExist)
-                    {
-                        m_eventsNotSentPasswordDoesNotExist[avatarID].AddNewEvent(regionHandle, OSDParser.SerializeLLSDXmlString(ev));
-                    }
-                    m_log.Info("[EventQueueServiceConnector]: Could not find password for agent " + avatarID +
-                                ", all Caps will fail if this is not resolved!");
-                    return false;
-                }
-
                 OSDMap request = new OSDMap();
                 request.Add("AgentID", avatarID);
                 request.Add("RegionHandle", regionHandle);
-                request.Add("Password", Password);
                 OSDArray events = new OSDArray();
                 //Note: we HAVE to convert it to xml, otherwise things like byte[] arrays will not be passed through correctly!
                 events.Add(OSDParser.SerializeLLSDXmlString(ev)); //Add this event

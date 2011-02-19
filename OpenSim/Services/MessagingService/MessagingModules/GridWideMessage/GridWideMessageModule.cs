@@ -100,6 +100,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 string user = message["User"].AsString();
                 string value = message["Value"].AsString();
 
+                //Get the Scene registry since IDialogModule is a region module, and isn't in the ISimulationBase registry
                 SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
                 if (manager != null && manager.Scenes.Count > 0)
                 {
