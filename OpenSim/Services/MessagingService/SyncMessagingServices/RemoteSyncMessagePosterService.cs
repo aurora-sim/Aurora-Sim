@@ -12,12 +12,21 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.MessagingService
 {
-    public class SyncMessagePosterService : ISyncMessagePosterService, IService
+    public class RemoteSyncMessagePosterService : ISyncMessagePosterService, IService
     {
         protected List<string> m_hosts = new List<string>();
 
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
-        {   
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("SyncMessagePosterServiceHandler", "") != Name)
+                return;
+
             registry.RegisterModuleInterface<ISyncMessagePosterService>(this);
         }
 

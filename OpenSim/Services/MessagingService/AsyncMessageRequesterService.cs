@@ -15,6 +15,10 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Services.MessagingService
 {
+    /// <summary>
+    /// This module is run on Aurora.exe when it is being run in grid mode as it requests the
+    /// AsyncMessagePostService for any async messages that might have been queued to be sent to us
+    /// </summary>
     public class AsyncMessageRequesterService : INonSharedRegionModule
     {
         #region Declares
