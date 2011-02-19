@@ -17,7 +17,7 @@ namespace OpenSim.Services.GridService
         #region Declares
 
         protected Dictionary<string, IGridRegistrationUrlModule> m_modules = new Dictionary<string, IGridRegistrationUrlModule>();
-        protected string m_hostName = "";
+        protected LoadBalancerUrls m_loadBalancer = new LoadBalancerUrls();
         protected IGenericsConnector m_genericsConnector;
 
         #endregion
@@ -27,7 +27,7 @@ namespace OpenSim.Services.GridService
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             registry.RegisterModuleInterface<IGridRegistrationService>(this);
-            m_hostName = config.Configs["Configuration"].GetString("HostName", m_hostName);
+            m_loadBalancer.SetUrls(config.Configs["Configuration"].GetString("HostNames", "http://locahost").Split(','));
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -71,7 +71,7 @@ namespace OpenSim.Services.GridService
             foreach (KeyValuePair<string, OSD> module in databaseSave)
             {
                 //Build the URL
-                retVal[module.Key] = m_hostName + ":" + m_modules[module.Key].Port + module.Value.AsString();
+                retVal[module.Key] = m_loadBalancer.GetHost() + ":" + m_modules[module.Key].Port + module.Value.AsString();
             }
 
             //Save into the database so that we can rebuild later if the server goes offline
@@ -121,6 +121,36 @@ namespace OpenSim.Services.GridService
                 GridRegistrationURLs url = new GridRegistrationURLs();
                 url.FromOSD(ToOSD());
                 return url;
+            }
+        }
+
+        public class LoadBalancerUrls
+        {
+            protected List<string> m_urls = new List<string>();
+            protected int lastSetHost = 0;
+
+            public void AddUrls(string[] urls)
+            {
+                m_urls.AddRange(urls);
+            }
+
+            public void SetUrls(string[] urls)
+            {
+                m_urls = new List<string>(urls);
+            }
+
+            public string GetHost()
+            {
+                if (lastSetHost < m_urls.Count)
+                {
+                    string url = m_urls[lastSetHost];
+                    lastSetHost++;
+                    if (lastSetHost == m_urls.Count)
+                        lastSetHost = 0;
+                    return url;
+                }
+                else
+                    return m_urls[0];
             }
         }
 

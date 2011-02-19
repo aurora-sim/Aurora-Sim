@@ -251,6 +251,11 @@ namespace OpenSim.Services.CapsService
                 m_RegionCapsServices.Remove(RegionHandle);
         }
 
+        public List<IRegionCapsService> GetRegionsCapsServices()
+        {
+            return new List<IRegionCapsService>(m_RegionCapsServices.Values);
+        }
+
         #endregion
 
         #endregion

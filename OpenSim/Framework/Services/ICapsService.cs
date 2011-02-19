@@ -83,6 +83,12 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <returns></returns>
         List<IClientCapsService> GetClientsCapsServices();
+
+        /// <summary>
+        /// Gets all region caps services across the grid
+        /// </summary>
+        /// <returns></returns>
+        List<IRegionCapsService> GetRegionsCapsServices();
     }
 
     /// <summary>
