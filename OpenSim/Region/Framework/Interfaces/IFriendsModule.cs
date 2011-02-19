@@ -33,9 +33,20 @@ namespace OpenSim.Region.Framework.Interfaces
 {
     public interface IFriendsModule
     {
+        /// <summary>
+        /// Get the permissions that PrincipalID has for FriendID
+        /// </summary>
+        /// <param name="PrincipalID"></param>
+        /// <param name="FriendID"></param>
+        /// <returns></returns>
         int GetFriendPerms(UUID PrincipalID, UUID FriendID);
-        void SendFriendsOnlineIfNeeded(IClientAPI client);
 
-        void SendFriendsStatusMessage(UUID FriendID, UUID UserID, bool NewStatus);
+        /// <summary>
+        /// Send a 'user is on/offline' message to the given FriendToInformID about UserID
+        /// </summary>
+        /// <param name="FriendID"></param>
+        /// <param name="UserID"></param>
+        /// <param name="NewStatus">On/Offline</param>
+        void SendFriendsStatusMessage(UUID FriendToInformID, UUID UserID, bool NewStatus);
     }
 }

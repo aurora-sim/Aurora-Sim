@@ -73,7 +73,7 @@ namespace OpenSim.Services.MessagingService
             {
                 //We got a message, now display it
                 UUID UserID = message["UserID"].AsUUID();
-                UUID FriendID = message["FriendID"].AsUUID();
+                UUID FriendToInformID = message["FriendToInformID"].AsUUID();
                 bool NewStatus = message["NewStatus"].AsBoolean();
 
                 SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
@@ -82,7 +82,7 @@ namespace OpenSim.Services.MessagingService
                     IFriendsModule friendsModule = manager.Scenes[0].RequestModuleInterface<IFriendsModule>();
                     if (friendsModule != null)
                     {
-                        friendsModule.SendFriendsStatusMessage(FriendID, UserID, NewStatus);
+                        friendsModule.SendFriendsStatusMessage(FriendToInformID, UserID, NewStatus);
                     }
                 }
             }

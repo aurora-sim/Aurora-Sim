@@ -50,13 +50,13 @@ namespace OpenSim.Framework
             return buildEvent("ArrivedAtDestination", llsdBody, AgentID, requestingRegion);
         }
 
-        public static OSDMap AgentStatusChange(UUID AgentID, UUID FriendID, bool newStatus)
+        public static OSDMap AgentStatusChange(UUID AgentID, UUID FriendToInformID, bool newStatus)
         {
             OSDMap llsdBody = new OSDMap();
 
             llsdBody.Add("AgentID", AgentID);
 
-            llsdBody.Add("FriendID", FriendID);
+            llsdBody.Add("FriendToInformID", FriendToInformID);
             llsdBody.Add("NewStatus", newStatus);
 
             return buildEvent("AgentStatusChange", llsdBody, AgentID, 0);

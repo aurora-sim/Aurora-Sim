@@ -166,6 +166,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             client.OnDenyFriendRequest += OnDenyFriendRequest;
             client.OnTerminateFriendship += OnTerminateFriendship;
             client.OnGrantUserRights += OnGrantUserRights;
+
+            Util.FireAndForget(delegate(object o)
+            {
+                SendFriendsOnlineIfNeeded(client);
+            });
         }
 
         public int GetFriendPerms(UUID principalID, UUID friendID)
@@ -248,10 +253,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             return null;
         }
 
-        public void SendFriendsStatusMessage(UUID FriendID, UUID userID, bool online)
+        public void SendFriendsStatusMessage(UUID FriendToInformID, UUID userID, bool online)
         {
             // Try local
-            if (LocalStatusNotification(userID, FriendID, online))
+            if (LocalStatusNotification(userID, FriendToInformID, online))
                 return;
 
             // Friend is not online. Ignore.
