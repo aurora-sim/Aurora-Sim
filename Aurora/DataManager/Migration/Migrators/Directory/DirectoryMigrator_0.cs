@@ -5,23 +5,16 @@ using Aurora.Framework;
 
 namespace Aurora.DataManager.Migration.Migrators
 {
-    public class AuroraMigrator_2011_1_28 : Migrator
+    public class DirectoryMigrator_0 : Migrator
     {
-        public AuroraMigrator_2011_1_28()
+        public DirectoryMigrator_0()
         {
-            Version = new Version(2011, 1, 28);
+            Version = new Version(0, 0, 0);
+            MigrationName = "Directory";
 
-            schema = new AuroraMigrator_2011_1_20().schema;
+            schema = new List<Rec<string, ColumnDefinition[]>>();
             renameSchema = new Dictionary<string, string>();
 
-            //
-            // Change summery:
-            //
-            //   Add a new column to searchparcel
-            //
-            //Remove the old name
-            this.RemoveSchema("searchparcel");
-            //Add the new column
             AddSchema("searchparcel", ColDefs(ColDef("RegionID", ColumnTypes.String50),
                 ColDef("ParcelID", ColumnTypes.String50, true),
                 ColDef("LocalID", ColumnTypes.String50),
@@ -44,6 +37,29 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("ShowInSearch", ColumnTypes.String50),
                 ColDef("SnapshotID", ColumnTypes.String50),
                 ColDef("Bitmap", ColumnTypes.String1024)));
+
+            AddSchema("events", ColDefs(
+                ColDef("EOwnerID", ColumnTypes.String50),
+                ColDef("EName", ColumnTypes.String50),
+                ColDef("EID", ColumnTypes.String50, true),
+                ColDef("ECreatorID", ColumnTypes.String50),
+                ColDef("ECategory", ColumnTypes.String50),
+                ColDef("EDesc", ColumnTypes.String50),
+                ColDef("EDate", ColumnTypes.String50),
+                ColDef("ECoverCharge", ColumnTypes.String50),
+                ColDef("ECoverAmount", ColumnTypes.String50),
+                ColDef("ESimName", ColumnTypes.String50),
+                ColDef("EGlobalPos", ColumnTypes.String50),
+                ColDef("EFlags", ColumnTypes.String50),
+                ColDef("EMature", ColumnTypes.String50),
+                ColDef("EDuration", ColumnTypes.String50)
+                ));
+
+            AddSchema("profileclassifieds", ColDefs(ColDef("Name", ColumnTypes.String50),
+                 ColDef("Category", ColumnTypes.String50),
+                 ColDef("SimName", ColumnTypes.String50),
+                 ColDef("ClassifiedUUID", ColumnTypes.String50, true),
+                 ColDef("Classified", ColumnTypes.String8196)));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

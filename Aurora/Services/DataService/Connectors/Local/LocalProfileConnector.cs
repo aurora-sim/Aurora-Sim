@@ -26,7 +26,7 @@ namespace Aurora.Services.DataService
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-            GD.ConnectToDatabase(defaultConnectionString, "Profile");
+            GD.ConnectToDatabase(defaultConnectionString, "Agent");
 
             DataManager.DataManager.RegisterPlugin(Name+"Local", this);
 
@@ -46,7 +46,7 @@ namespace Aurora.Services.DataService
                     if (source.Configs[Name] != null)
                         defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-                    GD.ConnectToDatabase(defaultConnectionString, "Profile");
+                    GD.ConnectToDatabase(defaultConnectionString, "Agent");
 
                     DataManager.DataManager.RegisterPlugin(Name, this);
                 }

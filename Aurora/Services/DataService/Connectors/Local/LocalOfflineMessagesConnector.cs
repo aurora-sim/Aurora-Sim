@@ -25,7 +25,7 @@ namespace Aurora.Services.DataService
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-            GD.ConnectToDatabase(defaultConnectionString, "OfflineMessage");
+            GD.ConnectToDatabase(defaultConnectionString, "Generics");
 
             DataManager.DataManager.RegisterPlugin(Name+"Local", this);
 
@@ -45,7 +45,7 @@ namespace Aurora.Services.DataService
                     if (source.Configs[Name] != null)
                         defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-                    GD.ConnectToDatabase(defaultConnectionString, "OfflineMessage");
+                    GD.ConnectToDatabase(defaultConnectionString, "Generics");
 
                     DataManager.DataManager.RegisterPlugin(Name, this);
                 }
