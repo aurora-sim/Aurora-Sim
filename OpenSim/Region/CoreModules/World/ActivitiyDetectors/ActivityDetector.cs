@@ -42,8 +42,7 @@ namespace OpenSim.Region.CoreModules
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IGridUserService m_GridUserService;
-        private IPresenceService m_PresenceService;
+        private Scene m_scene;
 
         public void Initialise(Nini.Config.IConfigSource source)
         {
@@ -59,15 +58,16 @@ namespace OpenSim.Region.CoreModules
 
         public void AddRegion(Scene scene)
         {
-            scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
-            scene.EventManager.OnNewClient += OnNewClient;
-            scene.EventManager.OnClosingClient += OnClosingClient;
-            scene.EventManager.OnAvatarEnteringNewParcel += OnEnteringNewParcel;
+            m_scene = scene;
+            m_scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
+            m_scene.EventManager.OnNewClient += OnNewClient;
+            m_scene.EventManager.OnClosingClient += OnClosingClient;
+            m_scene.EventManager.OnAvatarEnteringNewParcel += OnEnteringNewParcel;
         }
 
         public void RemoveRegion(Scene scene)
         {
-            m_PresenceService.LogoutRegionAgents(scene.RegionInfo.RegionID);
+            m_scene.RequestModuleInterface<IPresenceService>().LogoutRegionAgents(scene.RegionInfo.RegionID);
             scene.EventManager.OnMakeRootAgent -= OnMakeRootAgent;
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
@@ -76,9 +76,7 @@ namespace OpenSim.Region.CoreModules
 
         public void RegionLoaded(Scene scene)
         {
-            m_GridUserService = scene.GridUserService;
-            m_PresenceService = scene.PresenceService;
-            m_PresenceService.LogoutRegionAgents(scene.RegionInfo.RegionID);
+            m_scene.RequestModuleInterface<IPresenceService>().LogoutRegionAgents(scene.RegionInfo.RegionID);
         }
 
         public string Name
@@ -94,8 +92,8 @@ namespace OpenSim.Region.CoreModules
         public void OnMakeRootAgent(ScenePresence sp)
         {
             //m_log.DebugFormat("[ACTIVITY DETECTOR]: Detected root presence {0} in {1}", sp.UUID, sp.Scene.RegionInfo.RegionName);
-            m_PresenceService.ReportAgent(sp.ControllingClient.SessionId, sp.Scene.RegionInfo.RegionID);
-            m_GridUserService.SetLastPosition(sp.UUID.ToString(), UUID.Zero, sp.Scene.RegionInfo.RegionID, sp.AbsolutePosition, sp.Lookat);
+            m_scene.RequestModuleInterface<IPresenceService>().ReportAgent(sp.ControllingClient.SessionId, sp.Scene.RegionInfo.RegionID);
+            m_scene.RequestModuleInterface<IGridUserService>().SetLastPosition(sp.UUID.ToString(), UUID.Zero, sp.Scene.RegionInfo.RegionID, sp.AbsolutePosition, sp.Lookat);
         }
 
         public void OnNewClient(IClientAPI client)
@@ -125,8 +123,8 @@ namespace OpenSim.Region.CoreModules
                     lookat = ((ScenePresence)sp).Lookat;
                 }
                 m_log.InfoFormat("[ActivityDetector]: Detected client logout {0} in {1}", client.AgentId, client.Scene.RegionInfo.RegionName);
-                m_PresenceService.LogoutAgent(client.SessionId);
-                m_GridUserService.LoggedOut(client.AgentId.ToString(), client.SessionId, client.Scene.RegionInfo.RegionID, position, lookat);
+                m_scene.RequestModuleInterface<IPresenceService>().LogoutAgent(client.SessionId);
+                m_scene.RequestModuleInterface<IGridUserService>().LoggedOut(client.AgentId.ToString(), client.SessionId, client.Scene.RegionInfo.RegionID, position, lookat);
             }
         }
 
@@ -135,7 +133,7 @@ namespace OpenSim.Region.CoreModules
             // Asynchronously update the position stored in the session table for this agent
             Util.FireAndForget(delegate(object o)
             {
-                m_GridUserService.SetLastPosition(sp.UUID.ToString(), sp.ControllingClient.SessionId, sp.Scene.RegionInfo.RegionID, sp.AbsolutePosition, sp.Lookat);
+                m_scene.RequestModuleInterface<IGridUserService>().SetLastPosition(sp.UUID.ToString(), sp.ControllingClient.SessionId, sp.Scene.RegionInfo.RegionID, sp.AbsolutePosition, sp.Lookat);
             });
         }
     }

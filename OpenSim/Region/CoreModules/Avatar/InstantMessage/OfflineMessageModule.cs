@@ -46,7 +46,6 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         private bool enabled = true;
         private List<Scene> m_SceneList = new List<Scene>();
         private string m_RestURL = String.Empty;
-        IMessageTransferModule m_TransferModule = null;
         private bool m_ForwardOfflineGroupMessages = true;
 
         public void Initialise(IConfigSource config)
@@ -94,20 +93,17 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             if (!enabled)
                 return;
 
-            if (m_TransferModule == null)
+            if (scene.RequestModuleInterface<IMessageTransferModule>() == null)
             {
-                m_TransferModule = scene.RequestModuleInterface<IMessageTransferModule>();
-                if (m_TransferModule == null)
-                {
-                    scene.EventManager.OnNewClient -= OnNewClient;
+                scene.EventManager.OnNewClient -= OnNewClient;
 
-                    enabled = false;
-                    m_SceneList.Clear();
+                enabled = false;
+                m_SceneList.Clear();
 
-                    m_log.Error("[OFFLINE MESSAGING] No message transfer module is enabled. Diabling offline messages");
-                }
-                m_TransferModule.OnUndeliveredMessage += UndeliveredMessage;
+                m_log.Error("[OFFLINE MESSAGING] No message transfer module is enabled. Diabling offline messages");
             }
+            else
+                scene.RequestModuleInterface<IMessageTransferModule>().OnUndeliveredMessage += UndeliveredMessage;
         }
 
         public void RemoveRegion(Scene scene)

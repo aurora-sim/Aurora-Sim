@@ -51,14 +51,11 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         
         public event UndeliveredMessage OnUndeliveredMessage;
 
-        private IPresenceService m_PresenceService;
         protected IPresenceService PresenceService
         {
             get
             {
-                if (m_PresenceService == null)
-                    m_PresenceService = m_Scenes[0].RequestModuleInterface<IPresenceService>();
-                return m_PresenceService;
+                return m_Scenes[0].RequestModuleInterface<IPresenceService>(); ;
             }
         }
 
