@@ -139,8 +139,29 @@ namespace OpenSim.Services.Interfaces
 
     public interface IUserAccountService
     {
+        /// <summary>
+        /// Get a user given by UUID
+        /// </summary>
+        /// <param name="scopeID"></param>
+        /// <param name="userID"></param>
+        /// <returns></returns>
         UserAccount GetUserAccount(UUID scopeID, UUID userID);
+
+        /// <summary>
+        /// Get a user given by a first and last name
+        /// </summary>
+        /// <param name="scopeID"></param>
+        /// <param name="FirstName"></param>
+        /// <param name="LastName"></param>
+        /// <returns></returns>
         UserAccount GetUserAccount(UUID scopeID, string FirstName, string LastName);
+
+        /// <summary>
+        /// Get a user given by an email address
+        /// </summary>
+        /// <param name="scopeID"></param>
+        /// <param name="Email"></param>
+        /// <returns></returns>
         UserAccount GetUserAccount(UUID scopeID, string Email);
 
         /// <summary>

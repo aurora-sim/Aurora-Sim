@@ -35,12 +35,14 @@ namespace OpenSim.Services.Interfaces
 
     public interface IAuthorizationService
     {
-        //////////////////////////////////////////////////////
-        // Authorized
-        //
-        // This method returns a simple true false indicating 
-        // whether or not a user has access to the region
-        //
+        /// <summary>
+        /// Gets whether the given agent is able to enter the given region as a root or child agent
+        /// </summary>
+        /// <param name="region">The region the agent is attempting to enter</param>
+        /// <param name="agent">The CircuitData of the agent that is attempting to enter</param>
+        /// <param name="isRootAgent">Whether the agent is a root agent or not</param>
+        /// <param name="reason">If it fails, the reason they cannot enter</param>
+        /// <returns></returns>
         bool IsAuthorizedForRegion(GridRegion region, AgentCircuitData agent, bool isRootAgent,
             out string reason);
     }
