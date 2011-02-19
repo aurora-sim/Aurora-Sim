@@ -493,6 +493,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         #region Client Methods
 
+        public void Stop()
+        {
+            DisableSimulatorPacket disable = (DisableSimulatorPacket)PacketPool.Instance.GetPacket(PacketType.DisableSimulator);
+            OutPacket(disable, ThrottleOutPacketType.Unknown);
+        }
+
         /// <summary>
         /// Shut down the client view
         /// </summary>
@@ -503,8 +509,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //    Name, m_scene.RegionInfo.RegionName);
 
             // Send the STOP packet
-            //DisableSimulatorPacket disable = (DisableSimulatorPacket)PacketPool.Instance.GetPacket(PacketType.DisableSimulator);
-            //OutPacket(disable, ThrottleOutPacketType.Unknown);
+            DisableSimulatorPacket disable = (DisableSimulatorPacket)PacketPool.Instance.GetPacket(PacketType.DisableSimulator);
+            OutPacket(disable, ThrottleOutPacketType.Unknown);
 
             IsActive = false;
 

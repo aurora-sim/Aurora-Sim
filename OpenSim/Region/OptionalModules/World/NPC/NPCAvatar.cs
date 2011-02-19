@@ -842,6 +842,10 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
+        public void Stop()
+        {
+        }
+
         private uint m_circuitCode;
         private IPEndPoint m_remoteEndPoint;
 

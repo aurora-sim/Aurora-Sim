@@ -92,19 +92,9 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             }
             else if (message["Message"] == "DisableSimulator")
             {
-                //Let this pass through, after the next event queue pass we can remove it
-                //m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
-                if (!regionCaps.Disabled)
-                {
-                    regionCaps.Disabled = true;
-                    OSDMap body = ((OSDMap)message["Message"]);
-                    //See whether this needs sent to the client or not
-                    if (!body["KillClient"].AsBoolean())
-                    {
-                        //This is very risky... but otherwise the user doesn't get cleaned up...
-                        clientCaps.RemoveCAPS(requestingRegion);
-                    }
-                }
+                //KILL IT!
+                regionCaps.Close();
+                clientCaps.RemoveCAPS(requestingRegion);
             }
             else if (message["Message"] == "ArrivedAtDestination")
             {

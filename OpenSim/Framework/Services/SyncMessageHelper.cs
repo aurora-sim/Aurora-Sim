@@ -107,6 +107,12 @@ namespace OpenSim.Framework
             return buildEvent("LogoutRegionAgents", llsdBody, UUID.Zero, requestingRegion);
         }
 
+        public static OSDMap DisableSimulator(UUID AgentID, ulong requestingRegion)
+        {
+            OSDMap llsdBody = new OSDMap();
+            return buildEvent("DisableSimulator", llsdBody, AgentID, requestingRegion);
+        }
+
         public static OSDMap buildEvent(string eventName, OSD eventBody, UUID AgentID, ulong requestingRegion)
         {
             OSDMap llsdEvent = new OSDMap(2);

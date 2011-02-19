@@ -785,17 +785,18 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 bool RetVal = RemoveAgent(presence);
 
-                IEventQueueService eq = RequestModuleInterface<IEventQueueService>();
-                if (eq != null)
+                ISyncMessagePosterService syncPoster = RequestModuleInterface<ISyncMessagePosterService>();
+                if (syncPoster != null)
                 {
                     //Make sure that the disable simulator packet doesn't kill root agents right now... it kills the client
 
                     // Don't do this to root agents on logout, it's not nice for the viewer
                     // Tell a single agent to disconnect from the region.
 
-                    eq.DisableSimulator(agentID, RegionInfo.RegionHandle, presence.IsChildAgent);
-                    //Don't do this yet... kills the client too soon sometimes... This should be used in the future when we can kill agents safely
-                    //eq.DisableSimulator(agentID, RegionInfo.RegionHandle, true);
+                    syncPoster.Post(SyncMessageHelper.DisableSimulator(presence.UUID, RegionInfo.RegionHandle));
+
+                    //Kill the client's connection to this sim...
+                    presence.ControllingClient.Stop();
                 }
 
                 return RetVal;

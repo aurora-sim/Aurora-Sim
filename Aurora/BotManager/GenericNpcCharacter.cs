@@ -1078,6 +1078,10 @@ namespace Aurora.BotManager
         {
         }
 
+        public virtual void Stop()
+        {
+        }
+
         public bool IsLoggingOut
         {
             get

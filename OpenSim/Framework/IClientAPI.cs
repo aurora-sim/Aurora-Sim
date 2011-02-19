@@ -1090,6 +1090,7 @@ namespace OpenSim.Framework
 
         void ProcessInPacket(Packet NewPack);
         void Close();
+        void Stop();
         void Kick(string message);
 
         //     void ActivateGesture(UUID assetId, UUID gestureId);
