@@ -40,7 +40,7 @@ namespace Aurora.DataManager
         public abstract void DropTable(string tableName);
         public abstract void ForceRenameTable(string oldTableName, string newTableName);
 
-        public Version GetAuroraVersion()
+        public Version GetAuroraVersion(string migratorName)
         {
             if (!TableExists(VERSION_TABLE_NAME))
             {
@@ -48,7 +48,7 @@ namespace Aurora.DataManager
                 new ColumnDefinition {Name = COLUMN_NAME, Type = ColumnTypes.String}});
             }
 
-            List<string> results = Query(string.Empty, string.Empty, VERSION_TABLE_NAME, COLUMN_VERSION);
+            List<string> results = Query(COLUMN_NAME, migratorName, VERSION_TABLE_NAME, COLUMN_VERSION);
             if (results.Count > 0)
             {
                 Version highestVersion = null;

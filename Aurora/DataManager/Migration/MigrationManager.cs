@@ -14,24 +14,20 @@ namespace Aurora.DataManager.Migration
         private MigrationOperationDescription operationDescription;
         private IRestorePoint restorePoint;
         private bool rollback;
+        private string migratorName;
 
-        public MigrationManager(IDataConnector genericData)
+        public MigrationManager(IDataConnector genericData, string migratorName)
         {
             this.genericData = genericData;
-            migrators.Add(new AuroraMigrator_2010_03_13());
-            migrators.Add(new AuroraMigrator_2010_11_4());
-            migrators.Add(new AuroraMigrator_2010_12_30());
-            migrators.Add(new AuroraMigrator_2011_1_15());
-            migrators.Add(new AuroraMigrator_2011_1_16());
-            migrators.Add(new AuroraMigrator_2011_1_20());
-            migrators.Add(new AuroraMigrator_2011_1_28());
-            migrators.Add(new AuroraMigrator_2011_2_1());
-        }
-
-        public MigrationManager(IDataConnector genericData, List<Migrator> migrators)
-        {
-            this.genericData = genericData;
-            this.migrators = migrators;
+            this.migratorName = migratorName;
+            List<Migrator> allMigrators = Aurora.Framework.AuroraModuleLoader.PickupModules<Migrator>();
+            foreach (Migrator m in allMigrators)
+            {
+                if (m.MigrationName == migratorName)
+                {
+                    migrators.Add(m);
+                }
+            }
         }
 
         public Version LatestVersion
@@ -47,7 +43,7 @@ namespace Aurora.DataManager.Migration
         public void DetermineOperation()
         {
             executed = false;
-            Version currentVersion = genericData.GetAuroraVersion();
+            Version currentVersion = genericData.GetAuroraVersion(migratorName);
 
             //if there is no aurora version, this is likely an entirely new installation
             if (currentVersion == null)

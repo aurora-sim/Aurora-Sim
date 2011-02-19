@@ -68,7 +68,7 @@ namespace Aurora.DataManager.MySQL
             MySqlConnection dbcon = GetLockedConnection();
             CloseDatabase(dbcon);
 
-            var migrationManager = new MigrationManager(this);
+            var migrationManager = new MigrationManager(this, migratorName);
             migrationManager.DetermineOperation();
             migrationManager.ExecuteOperation();
         }

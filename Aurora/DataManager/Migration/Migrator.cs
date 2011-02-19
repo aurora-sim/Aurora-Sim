@@ -25,7 +25,7 @@ namespace Aurora.DataManager.Migration
 
         public bool Validate(IDataConnector genericData)
         {
-            if (genericData.GetAuroraVersion() != Version)
+            if (genericData.GetAuroraVersion(MigrationName) != Version)
             {
                 return false;
             }

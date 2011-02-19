@@ -37,7 +37,7 @@ namespace Aurora.Framework
         /// Get the latest version of the database
         /// </summary>
         /// <returns></returns>
-        Version GetAuroraVersion();
+        Version GetAuroraVersion(string migratorName);
 
         /// <summary>
         /// Set the version of the database
