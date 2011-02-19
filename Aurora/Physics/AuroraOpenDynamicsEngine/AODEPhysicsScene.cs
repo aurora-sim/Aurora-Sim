@@ -535,23 +535,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             contacts = new d.ContactGeom[contactsPerCollision];
 
-            // area in 8m multiples and in parts so it fits in integer and scales so 256m get similar sizes as previus
-            GridSpaceScaleBits = (int)WorldExtents.X / 8;
-            GridSpaceScaleBits *= (int)WorldExtents.Y / 8;
-
-            // // constant is 1/log(2), plus 0.5 for rounding
-            GridSpaceScaleBits = (int)(Math.Log((double)GridSpaceScaleBits) * 1.4426950f - 0.5f);
-            GridSpaceScaleBits /= 2; // side take half as many bits
-
-            if (GridSpaceScaleBits < 4) // no less than 16m side
-                GridSpaceScaleBits = 4;
-            else if (GridSpaceScaleBits > 8)
-                GridSpaceScaleBits = 8;   // no more than 256m side
-
-            int nspacesPerSideX = (int)(WorldExtents.X) >> GridSpaceScaleBits;
-            int nspacesPerSideY = (int)(WorldExtents.Y) >> GridSpaceScaleBits;
-
-            staticPrimspace = new IntPtr[nspacesPerSideX, nspacesPerSideY];
 
             // Centeral contact friction and bounce
             // ckrinke 11/10/08 Enabling soft_erp but not soft_cfm until I figure out why
@@ -715,7 +698,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_materialContacts[(int)Material.Rubber, 1].surface.soft_cfm = 0.010f;
             m_materialContacts[(int)Material.Rubber, 1].surface.soft_erp = 0.010f;
 
-            d.HashSpaceSetLevels(space, HashspaceLow, HashspaceHigh);
+            
 
             // Set the gravity,, don't disable things automatically (we set it explicitly on some things)
 
@@ -736,13 +719,42 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
 
 
-            for (int i = 0; i < staticPrimspace.GetLength(0); i++)
-            {
-                for (int j = 0; j < staticPrimspace.GetLength(1); j++)
+            d.HashSpaceSetLevels(space, HashspaceLow, HashspaceHigh);
+
+            //  spaces grid for static objects
+
+            // get area in 8m multiples and in parts so it fits in integer and scales so 256m get similar sizes as previus
+            GridSpaceScaleBits = (int)WorldExtents.X / 8;
+            GridSpaceScaleBits *= (int)WorldExtents.Y / 8;
+
+            // // constant is 1/log(2), plus 0.5 for rounding
+            GridSpaceScaleBits = (int)(Math.Log((double)GridSpaceScaleBits) * 1.4426950f - 0.5f);
+            GridSpaceScaleBits /= 2; // side take half as many bits
+
+            if (GridSpaceScaleBits < 4) // no less than 16m side
+                GridSpaceScaleBits = 4;
+            else if (GridSpaceScaleBits > 8)
+                GridSpaceScaleBits = 8;   // no more than 256m side
+
+            int nspacesPerSideX = (int)(WorldExtents.X) >> GridSpaceScaleBits;
+            int nspacesPerSideY = (int)(WorldExtents.Y) >> GridSpaceScaleBits;
+
+            staticPrimspace = new IntPtr[nspacesPerSideX, nspacesPerSideY];
+
+            IntPtr aSpace;
+
+            for (int i = 0; i < nspacesPerSideX; i++)
                 {
-                    staticPrimspace[i, j] = IntPtr.Zero;
+                for (int j = 0; j < nspacesPerSideY; j++)
+                    {
+                    aSpace = d.HashSpaceCreate(IntPtr.Zero);
+                    staticPrimspace[i, j] = aSpace;
+                    d.GeomSetCategoryBits(aSpace, (int)CollisionCategories.Space);
+                    waitForSpaceUnlock(aSpace);
+                    d.SpaceSetSublevel(aSpace, 1);
+                    d.SpaceAdd(space, aSpace);
+                    }
                 }
-            }
         }
 
         internal void waitForSpaceUnlock(IntPtr space)
@@ -2309,7 +2321,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                     }
                 }
-
+/* don't delete spaces
                 //If there are no more geometries in the sub-space, we don't need it in the main space anymore
                 if (d.SpaceGetNumGeoms(currentspace) == 0)
                 {
@@ -2332,6 +2344,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                     }
                 }
+ */
             }
             else
             {
@@ -2374,15 +2387,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // The routines in the Position and Size sections do the 'inserting' into the space,
             // so all we have to do is make sure that the space that we're putting the prim into
             // is in the 'main' space.
-            int[] iprimspaceArrItem = calculateSpaceArrayItemFromPos(pos);
+//            int[] iprimspaceArrItem = calculateSpaceArrayItemFromPos(pos);
             IntPtr newspace = calculateSpaceForGeom(pos);
 
+/*  spaces aren't deleted so already created
             if (newspace == IntPtr.Zero)
             {
                 newspace = createprimspace(iprimspaceArrItem[0], iprimspaceArrItem[1]);
                 d.HashSpaceSetLevels(newspace, HashspaceLow, HashspaceHigh);
             }
-
+*/
             return newspace;
         }
 
@@ -2392,6 +2406,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name="iprimspaceArrItemX"></param>
         /// <param name="iprimspaceArrItemY"></param>
         /// <returns>A pointer to the created space</returns>
+/* not in use ( and is wrong)
         public IntPtr createprimspace(int iprimspaceArrItemX, int iprimspaceArrItemY)
         {
             // creating a new space for prim and inserting it into main space.
@@ -2402,7 +2417,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.SpaceAdd(space, staticPrimspace[iprimspaceArrItemX, iprimspaceArrItemY]);
             return staticPrimspace[iprimspaceArrItemX, iprimspaceArrItemY];
         }
-
+*/
         /// <summary>
         /// Calculates the space the prim should be in by its position
         /// </summary>

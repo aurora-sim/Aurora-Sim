@@ -1315,11 +1315,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         public void changeadd()
             {
-            int[] iprimspaceArrItem = _parent_scene.calculateSpaceArrayItemFromPos(_position);
+//            int[] iprimspaceArrItem = _parent_scene.calculateSpaceArrayItemFromPos(_position);
             IntPtr targetspace = _parent_scene.calculateSpaceForGeom(_position);
 
-            if (targetspace == IntPtr.Zero)
-                targetspace = _parent_scene.createprimspace(iprimspaceArrItem[0], iprimspaceArrItem[1]);
+//            if (targetspace == IntPtr.Zero)
+//                targetspace = _parent_scene.createprimspace(iprimspaceArrItem[0], iprimspaceArrItem[1]);
 
             m_targetSpace = targetspace;
 
