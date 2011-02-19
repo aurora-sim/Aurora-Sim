@@ -697,8 +697,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_materialContacts[(int)Material.Rubber, 1].surface.bounce = mAvatarObjectContactBounce;
             m_materialContacts[(int)Material.Rubber, 1].surface.soft_cfm = 0.010f;
             m_materialContacts[(int)Material.Rubber, 1].surface.soft_erp = 0.010f;
-
-            
+           
 
             // Set the gravity,, don't disable things automatically (we set it explicitly on some things)
 
@@ -717,27 +716,28 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.WorldSetQuickStepNumIterations(world, m_physicsiterations);
             //d.WorldSetContactMaxCorrectingVel(world, 1000.0f);
 
-
-
             d.HashSpaceSetLevels(space, HashspaceLow, HashspaceHigh);
 
             //  spaces grid for static objects
 
-            // get area in 8m multiples and in parts so it fits in integer and scales so 256m get similar sizes as previus
-            GridSpaceScaleBits = (int)WorldExtents.X / 8;
-            GridSpaceScaleBits *= (int)WorldExtents.Y / 8;
-
-            // // constant is 1/log(2), plus 0.5 for rounding
-            GridSpaceScaleBits = (int)(Math.Log((double)GridSpaceScaleBits) * 1.4426950f - 0.5f);
-            GridSpaceScaleBits /= 2; // side take half as many bits
+            if(WorldExtents.X < WorldExtents.Y)
+            // // constant is 1/log(2),  -3 for division by 8 plus 0.5 for rounding
+                GridSpaceScaleBits = (int)(Math.Log((double)WorldExtents.X) * 1.4426950f - 2.5f);
+            else
+                GridSpaceScaleBits = (int)(Math.Log((double)WorldExtents.Y) * 1.4426950f - 2.5f);
 
             if (GridSpaceScaleBits < 4) // no less than 16m side
                 GridSpaceScaleBits = 4;
-            else if (GridSpaceScaleBits > 8)
-                GridSpaceScaleBits = 8;   // no more than 256m side
+            else if (GridSpaceScaleBits > 10)
+                GridSpaceScaleBits = 10;   // no more than 1Km side
 
             int nspacesPerSideX = (int)(WorldExtents.X) >> GridSpaceScaleBits;
             int nspacesPerSideY = (int)(WorldExtents.Y) >> GridSpaceScaleBits;
+
+            if ((int)(WorldExtents.X) > nspacesPerSideX << GridSpaceScaleBits)
+                nspacesPerSideX++;
+            if ((int)(WorldExtents.Y) > nspacesPerSideY << GridSpaceScaleBits)
+                nspacesPerSideY++;
 
             staticPrimspace = new IntPtr[nspacesPerSideX, nspacesPerSideY];
 
@@ -3650,8 +3650,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void SetTerrain(float[] heightMap, double[,] normalHeightMap, Vector3 pOffset)
             {
-            //            double[] _heightmap = new double[(((int)Math.Sqrt(heightMap.Length) + 2) * ((int)Math.Sqrt(heightMap.Length) + 2))];
-            //            double[] _heightmap = new double[((m_region.RegionSizeX + 2) * (m_region.RegionSizeY + 2))];
             float[] _heightmap = new float[((m_region.RegionSizeX + 2) * (m_region.RegionSizeY + 2))];
 
             int heightmapWidth = m_region.RegionSizeX + 1;
@@ -3660,61 +3658,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             int heightmapWidthSamples = m_region.RegionSizeX + 2;
             int heightmapHeightSamples = m_region.RegionSizeY + 2;
 
-#pragma warning disable 0162
-            /*
-            if (Constants.RegionSize == 256 &&
-                m_region.RegionSizeX == Constants.RegionSize && m_region.RegionSizeY == Constants.RegionSize)
-            {
-                // -- creating a buffer zone of one extra sample all around - danzor
-                heightmapWidthSamples = 2 * Constants.RegionSize + 2;
-                heightmapHeightSamples = 2 * Constants.RegionSize + 2;
-                heightmapWidth++;
-                heightmapHeight++;
-            }
- */
-#pragma warning restore 0162
-
-            /* no resolution duplication for now 
-            int regionsize = (int)Constants.RegionSize;
-
-            double hfmin = 2000;
-            double hfmax = -2000;
-            if (regionsize == 256 && 
-                m_region.RegionSizeX == Constants.RegionSize && m_region.RegionSizeY == Constants.RegionSize)
-            {
-                //Double resolution
-                _heightmap = new double[((((int)Constants.RegionSize * 2) + 2) * (((int)Constants.RegionSize * 2) + 2))];
-                heightMap = ResizeTerrain512Interpolation(heightMap);
-                regionsize *= 2;
-
-                for (int x = 0; x < heightmapWidthSamples; x++)
-                {
-                    for (int y = 0; y < heightmapHeightSamples; y++)
-                    {
-                        int xx = Util.Clip(x - 1, 0, (regionsize - 1) - 1);
-                        int yy = Util.Clip(y - 1, 0, (regionsize - 1) - 1);
-
-
-                        float val = heightMap[yy * regionsize + xx];
-                        _heightmap[x * heightmapWidthSamples + y] = val;
-
-                        hfmin = (val < hfmin) ? val : hfmin;
-                        hfmax = (val > hfmax) ? val : hfmax;
-                    }
-                }
-            }
-            else
-            {
- */
-            //                int rSize = sqrtOfHeightMap > Constants.RegionSize ? sqrtOfHeightMap : Constants.RegionSize;
-            //                heightmapWidth = rSize + 2;
-            //                heightmapHeight = rSize + 2;
-            //                heightmapWidthSamples = rSize + 2;
-            //                heightmapHeightSamples = rSize + 2;
-            //                _heightmap = new double[heightmapWidthSamples * heightmapHeightSamples];
-
-            //                double hfmin = 2000;
-            //                double hfmax = -2000;
 
             float hfmin = 2000;
             float hfmax = -2000;
