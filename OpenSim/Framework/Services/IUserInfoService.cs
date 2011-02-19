@@ -108,12 +108,28 @@ namespace OpenSim.Services.Interfaces
     public interface IAgentInfoService
     {
         /// <summary>
-        /// Get the user infos for the given user (all regions)
+        /// Get the user infos for the given user
         /// </summary>
         /// <param name="userID"></param>
         /// <param name="regionID"></param>
         /// <returns></returns>
         UserInfo GetUserInfo(string userID);
+
+        /// <summary>
+        /// Get the user infos for the given users
+        /// </summary>
+        /// <param name="userID"></param>
+        /// <param name="regionID"></param>
+        /// <returns></returns>
+        UserInfo[] GetUserInfos(string[] userIDs);
+
+        /// <summary>
+        /// Get the HTTP URLs for all root agents of the given users
+        /// </summary>
+        /// <param name="userID"></param>
+        /// <param name="regionID"></param>
+        /// <returns></returns>
+        string[] GetAgentsLocations(string[] userIDs);
 
         /// <summary>
         /// Set the home position of the given user

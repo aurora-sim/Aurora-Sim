@@ -47,6 +47,7 @@ namespace OpenSim.Services.PresenceService
         #region Declares
 
         protected IGenericsConnector m_genericsConnector;
+        protected IRegistryCore m_registry;
 
         #endregion
 
@@ -55,6 +56,7 @@ namespace OpenSim.Services.PresenceService
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             registry.RegisterModuleInterface<IAgentInfoService>(this);
+            m_registry = registry;
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -116,6 +118,30 @@ namespace OpenSim.Services.PresenceService
         public void Save(UserInfo userInfo)
         {
             m_genericsConnector.AddGeneric(UUID.Parse(userInfo.UserID), "UserInfo", userInfo.UserID, userInfo.ToOSD());
+        }
+
+        public UserInfo[] GetUserInfos(string[] userIDs)
+        {
+            UserInfo[] infos = new UserInfo[userIDs.Length];
+            for (int i = 0; i < userIDs.Length; i++)
+            {
+                infos[i] = GetUserInfo(userIDs[i]);
+            }
+            return infos;
+        }
+
+        public string[] GetAgentsLocations(string[] userIDs)
+        {
+            string[] infos = new string[userIDs.Length];
+            for (int i = 0; i < userIDs.Length; i++)
+            {
+                UserInfo user = GetUserInfo(userIDs[i]);
+                if (user != null && user.IsOnline)
+                    infos[i] = m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, user.CurrentRegionID).ServerURI;
+                else
+                    infos[i] = "NotOnline";
+            }
+            return infos;
         }
 
         #endregion

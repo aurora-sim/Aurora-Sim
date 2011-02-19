@@ -495,39 +495,26 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
 
             //Ask for the user new style first
-            string[] AgentLocations = m_Scenes[0].RequestModuleInterface<IPresenceService>().GetAgentsLocations(Queries.ToArray());
+            string[] AgentLocations = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetAgentsLocations(Queries.ToArray());
             //If this is false, this doesn't exist on the presence server and we use the legacy way
-            if (AgentLocations != null && (AgentLocations.Length != 0 && AgentLocations[0] != "Failure"))
+            if (AgentLocations.Length != 0)
             {
-                //No agents, so this user is offline
-                if (AgentLocations[0] == "NoAgents")
+                for (int i = 0; i < users.Count; i++)
                 {
-                    foreach (UUID agentID in users)
+                    //No agents, so this user is offline
+                    if (AgentLocations[i] == "NotOnline")
                     {
-                        lock (IMUsersCache)
-                        {
-                            //Remove them so we keep testing against the db
-                            IMUsersCache.Remove(agentID);
-                        }
+                        IMUsersCache.Remove(users[i]);
+                        m_log.Debug("[GRID INSTANT MESSAGE]: Unable to deliver an instant message to " + users[i]);
+                        continue;
                     }
-                    m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
-                    return;
-                }
-                else //Found the agents, use their location
-                {
-                    for (int i = 0; i < users.Count; i++)
-                    {
+                    else
                         HTTPPaths.Add(users[i], AgentLocations[i]);
-                    }
                 }
             }
             else
             {
-                //Query the legacy way
-                foreach (UUID agentID in users)
-                {
-                    SendGridInstantMessageViaXMLRPCAsync(im, delegate(bool r) { }, null);
-                }
+                m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
                 return;
             }
 
@@ -621,12 +608,12 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             //Now query the grid server for the agent
 
             //Ask for the user new style first
-            string[] AgentLocations = m_Scenes[0].RequestModuleInterface<IPresenceService>().GetAgentsLocations(new string[] { toAgentID.ToString() });
+            string[] AgentLocations = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetAgentsLocations(new string[] { toAgentID.ToString() });
             //If this is false, this doesn't exist on the presence server and we use the legacy way
-            if (AgentLocations != null && (AgentLocations.Length != 0 && AgentLocations[0] != "Failure")) 
+            if (AgentLocations.Length > 0) 
             {
                 //No agents, so this user is offline
-                if (AgentLocations[0] == "NoAgents")
+                if (AgentLocations[0] == "NotOnline")
                 {
                     lock (IMUsersCache)
                     {
@@ -639,44 +626,6 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 }
                 else //Found the agent, use this location
                     HTTPPath = AgentLocations[0];
-            }
-            else
-            {
-                //Query the legacy way
-                PresenceInfo[] presences = m_Scenes[0].RequestModuleInterface<IPresenceService>().GetAgents(new string[] { toAgentID.ToString() });
-                if (presences != null && presences.Length > 0)
-                {
-                    Services.Interfaces.GridRegion r = m_Scenes[0].GridService.GetRegionByUUID(m_Scenes[0].RegionInfo.ScopeID,
-                        presences[0].RegionID);
-                    if (r != null)
-                    {
-                        HTTPPath = r.ServerURI;
-                    }
-                    else
-                    {
-                        //Can't find their region, so stop here
-                        lock (IMUsersCache)
-                        {
-                            //Remove them so we keep testing against the db
-                            IMUsersCache.Remove(toAgentID);
-                        }
-                        m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
-                        result(false);
-                        return;
-                    }
-                }
-                else
-                {
-                    //The user is offline
-                    lock (IMUsersCache)
-                    {
-                        //Remove them so we keep testing against the db
-                        IMUsersCache.Remove(toAgentID);
-                    }
-                    m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
-                    HandleUndeliveredMessage(im, result);
-                    return;
-                }
             }
 
             //We found the agent's location, now ask them about the user
