@@ -10,6 +10,7 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 {
@@ -99,11 +100,15 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 string user = message["User"].AsString();
                 string value = message["Value"].AsString();
 
-                IDialogModule dialogModule = m_registry.RequestModuleInterface<IDialogModule>();
-                if (dialogModule != null)
+                SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
+                if (manager != null && manager.Scenes.Count > 0)
                 {
-                    //Send the message to the user now
-                    dialogModule.SendAlertToUser(UUID.Parse(user), value);
+                    IDialogModule dialogModule = manager.Scenes[0].RequestModuleInterface<IDialogModule>();
+                    if (dialogModule != null)
+                    {
+                        //Send the message to the user now
+                        dialogModule.SendAlertToUser(UUID.Parse(user), value);
+                    }
                 }
             }
             return null;

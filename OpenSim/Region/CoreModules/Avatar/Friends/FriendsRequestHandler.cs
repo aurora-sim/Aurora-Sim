@@ -149,7 +149,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             if (request.ContainsKey("FromName"))
                 fromName = request["FromName"].ToString();
 
-            if (m_FriendsModule.LocalFriendshipApproved(fromID, fromName, toID))
+            if (m_FriendsModule.LocalFriendshipApproved(fromID, fromName, null, toID))
                 return SuccessResult();
 
             return FailureResult();

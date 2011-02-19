@@ -35,5 +35,7 @@ namespace OpenSim.Region.Framework.Interfaces
     {
         int GetFriendPerms(UUID PrincipalID, UUID FriendID);
         void SendFriendsOnlineIfNeeded(IClientAPI client);
+
+        void SendFriendsStatusMessage(UUID FriendID, UUID UserID, bool NewStatus);
     }
 }

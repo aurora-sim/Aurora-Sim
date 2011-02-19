@@ -50,6 +50,18 @@ namespace OpenSim.Framework
             return buildEvent("ArrivedAtDestination", llsdBody, AgentID, requestingRegion);
         }
 
+        public static OSDMap AgentStatusChange(UUID AgentID, UUID FriendID, bool newStatus)
+        {
+            OSDMap llsdBody = new OSDMap();
+
+            llsdBody.Add("AgentID", AgentID);
+
+            llsdBody.Add("FriendID", FriendID);
+            llsdBody.Add("NewStatus", newStatus);
+
+            return buildEvent("AgentStatusChange", llsdBody, AgentID, 0);
+        }
+
         public static OSDMap CrossAgent(GridRegion crossingRegion, Vector3 pos,
             Vector3 velocity, AgentCircuitData circuit, AgentData cAgent, ulong RequestingRegion)
         {

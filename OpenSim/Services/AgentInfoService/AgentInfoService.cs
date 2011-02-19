@@ -113,6 +113,9 @@ namespace OpenSim.Services.PresenceService
             else
                 userInfo.LastLogout = DateTime.Now;
             Save(userInfo);
+
+            //Trigger an event so listeners know
+            m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("UserStatusChange", userInfo);
         }
 
         public void Save(UserInfo userInfo)

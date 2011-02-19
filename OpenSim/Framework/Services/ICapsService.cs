@@ -110,6 +110,14 @@ namespace OpenSim.Services.Interfaces
         /// <param name="regionID"></param>
         /// <returns></returns>
         IRegionClientCapsService GetCapsService(ulong regionHandle);
+
+        /// <summary>
+        /// Get the root agent's caps service
+        /// </summary>
+        /// <param name="regionID"></param>
+        /// <returns></returns>
+        IRegionClientCapsService GetRootCapsService();
+
         /// <summary>
         /// Gets a list of all region caps services that the agent is currently in
         /// </summary>

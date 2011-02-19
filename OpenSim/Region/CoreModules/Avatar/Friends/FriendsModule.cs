@@ -507,7 +507,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             }
                 
             // Try Local
-            if (LocalFriendshipApproved(agentID, client, friendID))
+            if (LocalFriendshipApproved(agentID, client.Name, client, friendID))
                 return;
 
             // The friend is not here
@@ -630,16 +630,17 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             return false;
         }
 
-        public bool LocalFriendshipApproved(UUID userID, IClientAPI us, UUID friendID)
+        public bool LocalFriendshipApproved(UUID userID, string name, IClientAPI us, UUID friendID)
         {
             IClientAPI friendClient = LocateClientObject(friendID);
             if (friendClient != null)
             {
                 //They are online, send the online message
-                us.SendAgentOnline(new UUID[] { friendID });
+                if(us != null)
+                    us.SendAgentOnline(new UUID[] { friendID });
 
                 // the prospective friend in this sim as root agent
-                GridInstantMessage im = new GridInstantMessage(Scene, userID, us.Name, friendID,
+                GridInstantMessage im = new GridInstantMessage(Scene, userID, name, friendID,
                     (byte)OpenMetaverse.InstantMessageDialog.FriendshipAccepted, userID.ToString(), false, Vector3.Zero);
                 friendClient.SendInstantMessage(im);
 

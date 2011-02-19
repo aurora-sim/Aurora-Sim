@@ -38,7 +38,6 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using PresenceInfo = OpenSim.Services.Interfaces.PresenceInfo;
 
 namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 {
