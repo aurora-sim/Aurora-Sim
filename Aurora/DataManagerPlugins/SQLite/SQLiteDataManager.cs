@@ -31,7 +31,7 @@ namespace Aurora.DataManager.SQLite
             m_Connection = new SqliteConnection(connectionString);
             m_Connection.Open();
 
-            var migrationManager = new MigrationManager(DataSessionProviderConnector.DataSessionProvider, this);
+            var migrationManager = new MigrationManager(this);
             migrationManager.DetermineOperation();
             migrationManager.ExecuteOperation();
         }

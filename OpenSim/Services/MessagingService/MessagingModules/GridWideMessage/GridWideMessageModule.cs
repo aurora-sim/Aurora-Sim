@@ -42,10 +42,6 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         {
         }
 
-        public void FinishedStartup()
-        {
-        }
-
         #endregion
 
         #region Commands

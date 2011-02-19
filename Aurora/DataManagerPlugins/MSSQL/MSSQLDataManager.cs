@@ -70,7 +70,7 @@ namespace Aurora.DataManager.MSSQL
             dbcon.Close();
             dbcon.Dispose();
 
-            var migrationManager = new MigrationManager(DataSessionProviderConnector.DataSessionProvider, this);
+            var migrationManager = new MigrationManager(this);
             migrationManager.DetermineOperation();
             migrationManager.ExecuteOperation();
         }

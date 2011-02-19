@@ -47,27 +47,27 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("ItemName", ColumnTypes.String50)));
         }
 
-        protected override void DoCreateDefaults(DataSessionProvider sessionProvider, IDataConnector genericData)
+        protected override void DoCreateDefaults(IDataConnector genericData)
         {
             EnsureAllTablesInSchemaExist(genericData);
         }
 
-        protected override bool DoValidate(DataSessionProvider sessionProvider, IDataConnector genericData)
+        protected override bool DoValidate(IDataConnector genericData)
         {
             return TestThatAllTablesValidate(genericData);
         }
 
-        protected override void DoMigrate(DataSessionProvider sessionProvider, IDataConnector genericData)
+        protected override void DoMigrate(IDataConnector genericData)
         {
-            DoCreateDefaults(sessionProvider, genericData);
+            DoCreateDefaults(genericData);
         }
 
-        protected override void DoPrepareRestorePoint(DataSessionProvider sessionProvider, IDataConnector genericData)
+        protected override void DoPrepareRestorePoint(IDataConnector genericData)
         {
             CopyAllTablesToTempVersions(genericData);
         }
 
-        public override void DoRestore(DataSessionProvider sessionProvider, IDataConnector genericData)
+        public override void DoRestore(IDataConnector genericData)
         {
             RestoreTempTablesToReal(genericData);
         }

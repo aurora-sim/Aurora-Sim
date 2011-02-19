@@ -10,15 +10,13 @@ namespace Aurora.DataManager.Migration
     {
         private readonly IDataConnector genericData;
         private readonly List<Migrator> migrators = new List<Migrator>();
-        private readonly DataSessionProvider sessionProvider;
         private bool executed;
         private MigrationOperationDescription operationDescription;
         private IRestorePoint restorePoint;
         private bool rollback;
 
-        public MigrationManager(DataSessionProvider sessionProvider, IDataConnector genericData)
+        public MigrationManager(IDataConnector genericData)
         {
-            this.sessionProvider = sessionProvider;
             this.genericData = genericData;
             migrators.Add(new AuroraMigrator_2010_03_13());
             migrators.Add(new AuroraMigrator_2010_11_4());
@@ -30,9 +28,8 @@ namespace Aurora.DataManager.Migration
             migrators.Add(new AuroraMigrator_2011_2_1());
         }
 
-        public MigrationManager(DataSessionProvider sessionProvider, IDataConnector genericData, List<Migrator> migrators)
+        public MigrationManager(IDataConnector genericData, List<Migrator> migrators)
         {
-            this.sessionProvider = sessionProvider;
             this.genericData = genericData;
             this.migrators = migrators;
         }
@@ -115,7 +112,7 @@ namespace Aurora.DataManager.Migration
                 {
                     try
                     {
-                        currentMigrator.CreateDefaults(sessionProvider, genericData);
+                        currentMigrator.CreateDefaults(genericData);
                     }
                     catch
                     {
@@ -124,7 +121,7 @@ namespace Aurora.DataManager.Migration
                 }
 
                 //lets first validate where we think we are
-                bool validated = currentMigrator.Validate(sessionProvider, genericData);
+                bool validated = currentMigrator.Validate(genericData);
 
                 if (!validated)
                 {
@@ -139,7 +136,7 @@ namespace Aurora.DataManager.Migration
                 if (executingMigrator != null)
                 {
                     //prepare restore point if something goes wrong
-                    restorePoint = currentMigrator.PrepareRestorePoint(sessionProvider, genericData);
+                    restorePoint = currentMigrator.PrepareRestorePoint(genericData);
                     restoreTaken = true;
                 }
 
@@ -148,14 +145,14 @@ namespace Aurora.DataManager.Migration
                 {
                     try
                     {
-                        executingMigrator.Migrate(sessionProvider, genericData);
+                        executingMigrator.Migrate(genericData);
                     }
                     catch (Exception)
                     {
                         
                     }
                     executed = true;
-                    validated = executingMigrator.Validate(sessionProvider, genericData);
+                    validated = executingMigrator.Validate(genericData);
 
                     //if it doesn't validate, rollback
                     if (!validated)
@@ -183,14 +180,14 @@ namespace Aurora.DataManager.Migration
         {
             if (operationDescription != null && executed == true && rollback == false && restorePoint != null)
             {
-                restorePoint.DoRestore(sessionProvider, genericData);
+                restorePoint.DoRestore(genericData);
                 rollback = true;
             }
         }
 
         public bool ValidateVersion(Version version)
         {
-            return GetMigratorByVersion(version).Validate(sessionProvider, genericData);
+            return GetMigratorByVersion(version).Validate(genericData);
         }
 
         private Migrator GetMigratorByVersion(Version version)

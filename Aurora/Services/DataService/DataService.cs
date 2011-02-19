@@ -46,28 +46,24 @@ namespace Aurora.Services.DataService
             IGenericData DataConnector = null;
             if (StorageProvider == "MySQL" || StorageProvider == "OpenSim.Data.MySQL.dll") //Allow for fallback when AuroraData isn't set
             {
-                DataManager.DataSessionProviderConnector.DataSessionProvider = new DataSessionProvider(DataManagerTechnology.MySql, ConnectionString);
                 MySQLDataLoader GenericData = new MySQLDataLoader();
 
                 DataConnector = GenericData;
             }
             else if (StorageProvider == "MSSQL2008")
             {
-                DataManager.DataSessionProviderConnector.DataSessionProvider = new DataSessionProvider(DataManagerTechnology.MSSQL2008, ConnectionString);
                 MSSQLDataLoader GenericData = new MSSQLDataLoader();
 
                 DataConnector = GenericData;
             }
             else if (StorageProvider == "MSSQL7")
             {
-                DataManager.DataSessionProviderConnector.DataSessionProvider = new DataSessionProvider(DataManagerTechnology.MSSQL7, ConnectionString);
                 MSSQLDataLoader GenericData = new MSSQLDataLoader();
 
                 DataConnector = GenericData;
             }
             else if (StorageProvider == "SQLite" || StorageProvider == "OpenSim.Data.SQLite.dll") //Allow for fallback when AuroraData isn't set
             {
-                DataManager.DataSessionProviderConnector.DataSessionProvider = new DataSessionProvider(DataManagerTechnology.SQLite, ConnectionString);
                 SQLiteLoader GenericData = new SQLiteLoader();
 
                 DataConnector = GenericData;

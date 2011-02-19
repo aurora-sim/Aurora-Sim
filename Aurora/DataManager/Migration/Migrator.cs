@@ -16,54 +16,54 @@ namespace Aurora.DataManager.Migration
 
         #region IRestorePoint Members
 
-        public virtual void DoRestore(DataSessionProvider sessionProvider, IDataConnector genericData)
+        public virtual void DoRestore(IDataConnector genericData)
         {
         }
 
         #endregion
 
-        public bool Validate(DataSessionProvider sessionProvider, IDataConnector genericData)
+        public bool Validate(IDataConnector genericData)
         {
             if (genericData.GetAuroraVersion() != Version)
             {
                 return false;
             }
-            return DoValidate(sessionProvider, genericData);
+            return DoValidate(genericData);
         }
 
-        protected virtual bool DoValidate(DataSessionProvider sessionProvider, IDataConnector genericData)
+        protected virtual bool DoValidate(IDataConnector genericData)
         {
             return true;
         }
 
-        public IRestorePoint PrepareRestorePoint(DataSessionProvider sessionProvider, IDataConnector genericData)
+        public IRestorePoint PrepareRestorePoint(IDataConnector genericData)
         {
-            DoPrepareRestorePoint(sessionProvider, genericData);
+            DoPrepareRestorePoint(genericData);
             return this;
         }
 
-        protected virtual void DoPrepareRestorePoint(DataSessionProvider sessionProvider, IDataConnector genericData)
+        protected virtual void DoPrepareRestorePoint(IDataConnector genericData)
         {
 
         }
 
-        public void Migrate(DataSessionProvider sessionProvider, IDataConnector genericData)
+        public void Migrate(IDataConnector genericData)
         {
-            DoMigrate(sessionProvider, genericData);
+            DoMigrate(genericData);
             genericData.WriteAuroraVersion(Version);
         }
 
-        protected virtual void DoMigrate(DataSessionProvider sessionProvider, IDataConnector genericData)
+        protected virtual void DoMigrate(IDataConnector genericData)
         {
         }
 
-        public void CreateDefaults(DataSessionProvider sessionProvider, IDataConnector genericData)
+        public void CreateDefaults(IDataConnector genericData)
         {
-            DoCreateDefaults(sessionProvider, genericData);
+            DoCreateDefaults(genericData);
             genericData.WriteAuroraVersion(Version);
         }
 
-        protected virtual void DoCreateDefaults(DataSessionProvider sessionProvider, IDataConnector genericData)
+        protected virtual void DoCreateDefaults(IDataConnector genericData)
         {
         }
 
