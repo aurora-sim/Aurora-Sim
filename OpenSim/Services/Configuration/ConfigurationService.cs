@@ -12,7 +12,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using log4net;
 
-namespace OpenSim.Services.Connectors.ConfigurationService
+namespace OpenSim.Services.ConfigurationService
 {
     public class ConfigurationService : IConfigurationService, IService
     {
@@ -161,7 +161,6 @@ namespace OpenSim.Services.Connectors.ConfigurationService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            throw new NotImplementedException();
         }
 
         #endregion

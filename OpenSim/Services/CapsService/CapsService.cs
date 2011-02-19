@@ -65,7 +65,6 @@ namespace OpenSim.Services.CapsService
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            m_log.Debug("[AuroraCAPSService]: Starting...");
             IConfig m_CAPSServerConfig = config.Configs["CAPSService"];
             if (m_CAPSServerConfig != null)
             {
@@ -87,7 +86,7 @@ namespace OpenSim.Services.CapsService
             ISimulationBase simBase = registry.RequestModuleInterface<ISimulationBase>();
             m_server = simBase.GetHttpServer(m_port);
 
-            MainConsole.Instance.Commands.AddCommand("capsService", false, "show presences", "show presences", "Shows all presences in the grid, experimental!", ShowUsers);
+            MainConsole.Instance.Commands.AddCommand("CapsService", false, "show presences", "show presences", "Shows all presences in the grid, experimental!", ShowUsers);
         }
 
         #endregion

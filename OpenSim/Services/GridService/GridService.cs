@@ -59,8 +59,17 @@ namespace OpenSim.Services.GridService
         protected bool m_UseSessionID = true;
         protected int m_maxRegionSize = 0;
 
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("GridHandler", "") != Name)
+                return;
+
             m_Database = Aurora.DataManager.DataManager.RequestPlugin<IRegionData>();
             
             if (m_Database == null)

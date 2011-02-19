@@ -51,8 +51,17 @@ namespace OpenSim.Services.InventoryService
         protected ILibraryService m_LibraryService;
 		protected bool m_AllowDelete = true;
 
+        public virtual string Name
+        {
+            get { return GetType().Name; }
+        }
+
         public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("InventoryHandler", "") != Name)
+                return;
+
             string dllName = String.Empty;
             string connString = String.Empty;
             //string realm = "Inventory"; // OSG version doesn't use this

@@ -53,8 +53,17 @@ namespace OpenSim.Services.AuthenticationService
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
+        public virtual string Name
+        {
+            get { return GetType().Name; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AuthenticationHandler", "") != Name)
+                return;
+
             string dllName = String.Empty;
             string connString = String.Empty;
             string realm = "auth";

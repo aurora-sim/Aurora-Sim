@@ -58,8 +58,17 @@ namespace OpenSim.Services.FreeswitchService
 
         protected bool m_Enabled = false;
 
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("FreeSwitchHandler", "") != Name)
+                return;
+
             //
             // Try reading the [FreeswitchService] section first, if it exists
             //

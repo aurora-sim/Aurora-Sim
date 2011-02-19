@@ -51,8 +51,17 @@ namespace OpenSim.Services.UserAccountService
         protected IInventoryService m_InventoryService;
         protected IUserAccountData m_Database = null;
 
+        public virtual string Name
+        {
+            get { return GetType().Name; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("UserAccountHandler", "") != Name)
+                return;
+
             m_Database = Aurora.DataManager.DataManager.RequestPlugin<IUserAccountData>();
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");

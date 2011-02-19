@@ -23,12 +23,17 @@ namespace OpenSim.Services.Connectors.Simulation
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlers = config.Configs["Handlers"];
-            if (handlers.GetString("SimulationHandler", "") == "LocalSimulationServiceConnector")
+            if (handlers.GetString("SimulationHandler", "") == Name)
                 registry.RegisterModuleInterface<ISimulationService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public string Name
+        {
+            get { return GetType().Name; }
         }
 
         #endregion

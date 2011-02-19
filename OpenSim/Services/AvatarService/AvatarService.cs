@@ -52,8 +52,17 @@ namespace OpenSim.Services.AvatarService
         protected IRegistryCore m_registry = null;
         protected bool m_enableCacheBakedTextures = true;
 
+        public virtual string Name
+        {
+            get { return GetType().Name; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AvatarHandler", "") != Name)
+                return;
+
             m_registry = registry;
 
             string dllName = String.Empty;

@@ -43,8 +43,17 @@ namespace OpenSim.Services.Friends
     {
         protected IFriendsData m_Database = null;
 
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("FriendsHandler", "") != Name)
+                return;
+
             string dllName = String.Empty;
             string connString = String.Empty;
 

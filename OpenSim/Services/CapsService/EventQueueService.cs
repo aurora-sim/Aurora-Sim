@@ -42,7 +42,10 @@ namespace OpenSim.Services.CapsService
 
         public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            //Register by default as we MUST have this
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("EventQueueHandler", "") != Name)
+                return;
+
             registry.RegisterModuleInterface<IEventQueueService>(this);
         }
 

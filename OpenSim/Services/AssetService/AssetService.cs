@@ -47,8 +47,17 @@ namespace OpenSim.Services.AssetService
                 MethodBase.GetCurrentMethod().DeclaringType);
         protected IAssetDataPlugin m_Database = null;
 
+        public virtual string Name
+        {
+            get { return GetType().Name; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AssetHandler", "") != Name)
+                return;
+
             string dllName = String.Empty;
             string connString = String.Empty;
 
