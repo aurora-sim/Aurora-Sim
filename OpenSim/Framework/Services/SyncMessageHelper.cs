@@ -94,6 +94,15 @@ namespace OpenSim.Framework
             return buildEvent("CancelTeleport", llsdBody, AgentID, requestingRegion);
         }
 
+        public static OSDMap AgentLoggedOut(UUID AgentID, ulong requestingRegion)
+        {
+            OSDMap llsdBody = new OSDMap();
+
+            llsdBody.Add("AgentID", AgentID);
+            llsdBody.Add("RequestingRegion", requestingRegion);
+            return buildEvent("AgentLoggedOut", llsdBody, AgentID, requestingRegion);
+        }
+
         public static OSDMap LogoutRegionAgents(ulong requestingRegion)
         {
             OSDMap llsdBody = new OSDMap();

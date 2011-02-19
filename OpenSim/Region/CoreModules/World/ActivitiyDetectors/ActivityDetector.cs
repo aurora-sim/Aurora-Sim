@@ -99,9 +99,15 @@ namespace OpenSim.Region.CoreModules
 
         public void OnConnectionClose(IClientAPI client)
         {
-            if (client.IsLoggingOut)
+            IScenePresence sp = null;
+            client.Scene.TryGetScenePresence(client.AgentId, out sp);
+            if (client.IsLoggingOut && sp != null & !sp.IsChildAgent)
             {
                 m_log.InfoFormat("[ActivityDetector]: Detected client logout {0} in {1}", client.AgentId, client.Scene.RegionInfo.RegionName);
+            
+                //Inform the grid service about it
+
+                client.Scene.RequestModuleInterface<ISyncMessagePosterService>().Get(SyncMessageHelper.AgentLoggedOut(client.AgentId, client.Scene.RegionInfo.RegionHandle));
             }
         }
     }

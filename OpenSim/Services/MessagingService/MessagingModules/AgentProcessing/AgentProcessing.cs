@@ -112,6 +112,19 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 clientCaps.RequestToCancelTeleport = true;
                 regionCaps.Disabled = false;
             }
+            else if (message["Method"] == "AgentLoggedOut")
+            {
+                //ONLY if the agent is root do we even consider it
+                if (regionCaps.RootAgent)
+                {
+                    //Close all caps
+                    clientCaps.Close();
+
+                    IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+                    if (agentInfoService != null)
+                        agentInfoService.SetLoggedIn(regionCaps.AgentID.ToString(), false);
+                }
+            }
             else if (message["Method"] == "SendChildAgentUpdate")
             {
                 OSDMap body = ((OSDMap)message["Message"]);
