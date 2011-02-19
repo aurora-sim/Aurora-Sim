@@ -38,16 +38,6 @@ namespace OpenSim.Framework
 {
     public class SyncMessageHelper
     {
-        public static OSDMap EnableChildAgents(UUID AgentID, int DrawDistance, AgentCircuitData circuit, ulong RequestingRegion)
-        {
-            OSDMap llsdBody = new OSDMap();
-
-            llsdBody.Add("DrawDistance", DrawDistance);
-            llsdBody.Add("Circuit", circuit.PackAgentCircuitData());
-
-            return buildEvent("EnableChildAgents", llsdBody, AgentID, RequestingRegion);
-        }
-
         public static OSDMap ArrivedAtDestination(UUID AgentID, int DrawDistance, AgentCircuitData circuit, ulong requestingRegion)
         {
             OSDMap llsdBody = new OSDMap();

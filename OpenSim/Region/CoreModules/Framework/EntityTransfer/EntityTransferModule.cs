@@ -645,28 +645,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         #endregion
 
-        #region Enable Child Agents
-
-        /// <summary>
-        /// This informs all neighboring regions about agent "avatar".
-        /// Calls an asynchronous method to do so..  so it doesn't lag the sim.
-        /// </summary>
-        public virtual void EnableChildAgents(ScenePresence sp)
-        {
-            AgentCircuitData agent = sp.ControllingClient.RequestClientInfo();
-            agent.startpos = sp.AbsolutePosition;
-            agent.child = true;
-            agent.Appearance = sp.Appearance;
-
-            ISyncMessagePosterService syncPoster = sp.Scene.RequestModuleInterface<ISyncMessagePosterService>();
-            if (syncPoster != null)
-            {
-                syncPoster.Post(SyncMessageHelper.EnableChildAgents(agent.AgentID, (int)sp.DrawDistance, agent, sp.Scene.RegionInfo.RegionHandle));
-            }
-        }
-
-        #endregion
-
         #region Object Transfers
 
         /// <summary>

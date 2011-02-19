@@ -231,19 +231,6 @@ namespace OpenSim.Services.Connectors
         {
             // Let the grid service module know, so this can be cached
             scene.EventManager.TriggerOnRegionUp(otherRegion);
-
-            //Add this new region to all the clients so that they can see it as well
-            scene.ForEachScenePresence(delegate(ScenePresence agent)
-            {
-                // If agent is a root agent.
-                if (!agent.IsChildAgent)
-                {
-                    //Now add the agent to the reigon that is coming up
-                    IEntityTransferModule transferModule = scene.RequestModuleInterface<IEntityTransferModule>();
-                    if (transferModule != null)
-                        transferModule.EnableChildAgents(agent);
-                }
-            });
         }
 
         /// <summary>

@@ -154,7 +154,7 @@ namespace OpenSim.Services.Interfaces
         UUID Password { get; }
         bool RootAgent { get; set; }
 
-        void Initialise(IClientCapsService clientCapsService, ulong regionHandle, string capsBase, string urlToInform);
+        void Initialise(IClientCapsService clientCapsService, ulong regionHandle, string capsBase, string urlToInform, AgentCircuitData circuitData);
         void Close();
         void AddSEEDCap(string CapsUrl, string UrlToInform, UUID Password);
         string CreateCAPS(string method, string appendedPath);

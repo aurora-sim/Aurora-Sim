@@ -82,19 +82,6 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     m_registry.RequestModuleInterface<ICapsService>().RemoveCapsForRegion(requestingRegion);
                 }
             }
-            else if(message["Method"] == "EnableChildAgents")
-            {
-                OSDMap body = ((OSDMap)message["Message"]);
-
-                //Parse the OSDMap
-                int DrawDistance = body["DrawDistance"].AsInteger();
-
-                AgentCircuitData circuitData = new AgentCircuitData();
-                circuitData.UnpackAgentCircuitData((OSDMap)body["Circuit"]);
-
-                //Create agents in all neighbors that we know of
-                EnableChildAgents(AgentID, requestingRegion, DrawDistance, circuitData);
-            }
             else if (message["Method"] == "DisableSimulator")
             {
                 //KILL IT!
