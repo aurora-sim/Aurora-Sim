@@ -97,7 +97,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private CollisionLocker ode;
 
         public float ODE_STEPSIZE = 0.020f;
-        private float metersInSpace = 29.9f;
         private float m_timeDilation = 1.0f;
 
         public float gravityx = 0f;
@@ -106,11 +105,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private float contactsurfacelayer = 0.001f;
 
-        private int worldHashspaceLow = -4;
-        private int worldHashspaceHigh = 128;
-
-        private int smallHashspaceLow = -4;
-        private int smallHashspaceHigh = 66;
+        private int HashspaceLow = -3;  // current ODE limits
+        private int HashspaceHigh = 10;
+        private int GridSpaceScaleBits = 5; // used to do shifts to find space from position. Value decided from region size in init
+        private int nspacesPerSideX = 8;
+        private int nspacesPerSideY = 8;
 
         private int framecount = 0;
 
@@ -463,12 +462,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_PointOfGravity.Y = physicsconfig.GetFloat("point_gravityy", 0);
                     m_PointOfGravity.Z = physicsconfig.GetFloat("point_gravityz", 0);
 
-                    worldHashspaceLow = physicsconfig.GetInt("world_hashspace_size_low", -4);
-                    worldHashspaceHigh = physicsconfig.GetInt("world_hashspace_size_high", 128);
-
-                    metersInSpace = physicsconfig.GetFloat("meters_in_small_space", 29.9f);
-                    smallHashspaceLow = physicsconfig.GetInt("small_hashspace_size_low", -4);
-                    smallHashspaceHigh = physicsconfig.GetInt("small_hashspace_size_high", 66);
 
                     contactsurfacelayer = physicsconfig.GetFloat("world_contact_surface_layer", 0.001f);
 
@@ -542,7 +535,23 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             contacts = new d.ContactGeom[contactsPerCollision];
 
-            staticPrimspace = new IntPtr[(int)(300 / metersInSpace), (int)(300 / metersInSpace)];
+            // area in 8m multiples and in parts so it fits in integer and scales so 256m get similar sizes as previus
+            GridSpaceScaleBits = (int)WorldExtents.X / 8;
+            GridSpaceScaleBits *= (int)WorldExtents.Y / 8;
+
+            // // constant is 1/log(2), plus 0.5 for rounding
+            GridSpaceScaleBits = (int)(Math.Log((double)GridSpaceScaleBits) * 1.4426950f - 0.5f);
+            GridSpaceScaleBits /= 2; // side take half as many bits
+
+            if (GridSpaceScaleBits < 4) // no less than 16m side
+                GridSpaceScaleBits = 4;
+            else if (GridSpaceScaleBits > 8)
+                GridSpaceScaleBits = 8;   // no more than 256m side
+
+            int nspacesPerSideX = (int)(WorldExtents.X) >> GridSpaceScaleBits;
+            int nspacesPerSideY = (int)(WorldExtents.Y) >> GridSpaceScaleBits;
+
+            staticPrimspace = new IntPtr[nspacesPerSideX, nspacesPerSideY];
 
             // Centeral contact friction and bounce
             // ckrinke 11/10/08 Enabling soft_erp but not soft_cfm until I figure out why
@@ -706,7 +715,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_materialContacts[(int)Material.Rubber, 1].surface.soft_cfm = 0.010f;
             m_materialContacts[(int)Material.Rubber, 1].surface.soft_erp = 0.010f;
 
-            d.HashSpaceSetLevels(space, worldHashspaceLow, worldHashspaceHigh);
+            d.HashSpaceSetLevels(space, HashspaceLow, HashspaceHigh);
 
             // Set the gravity,, don't disable things automatically (we set it explicitly on some things)
 
@@ -2371,7 +2380,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (newspace == IntPtr.Zero)
             {
                 newspace = createprimspace(iprimspaceArrItem[0], iprimspaceArrItem[1]);
-                d.HashSpaceSetLevels(newspace, smallHashspaceLow, smallHashspaceHigh);
+                d.HashSpaceSetLevels(newspace, HashspaceLow, HashspaceHigh);
             }
 
             return newspace;
@@ -2415,16 +2424,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             int[] returnint = new int[2];
 
-            returnint[0] = (int)(pos.X / metersInSpace);
+            returnint[0] = (int)(pos.X) >> GridSpaceScaleBits;
 
-            if (returnint[0] > ((int)(259f / metersInSpace)))
-                returnint[0] = ((int)(259f / metersInSpace));
+            if (returnint[0] >= nspacesPerSideX)
+                returnint[0] = nspacesPerSideX -1;
             if (returnint[0] < 0)
                 returnint[0] = 0;
 
-            returnint[1] = (int)(pos.Y / metersInSpace);
-            if (returnint[1] > ((int)(259f / metersInSpace)))
-                returnint[1] = ((int)(259f / metersInSpace));
+            returnint[1] = (int)(pos.Y) >> GridSpaceScaleBits;
+            if (returnint[1] >= nspacesPerSideY)
+                returnint[1] = nspacesPerSideY-1;
             if (returnint[1] < 0)
                 returnint[1] = 0;
 
