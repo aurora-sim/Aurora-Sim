@@ -3614,7 +3614,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }*/
 
         public void SetTerrain(float[] heightMap, Vector3 pOffset)
-            {
+        {
             //            double[] _heightmap = new double[(((int)Math.Sqrt(heightMap.Length) + 2) * ((int)Math.Sqrt(heightMap.Length) + 2))];
             //            double[] _heightmap = new double[((m_region.RegionSizeX + 2) * (m_region.RegionSizeY + 2))];
             float[] _heightmap = new float[((m_region.RegionSizeX + 2) * (m_region.RegionSizeY + 2))];
@@ -3686,9 +3686,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
 
             for (int x = 0; x < heightmapWidthSamples; x++)
-                {
+            {
                 for (int y = 0; y < heightmapHeightSamples; y++)
-                    {
+                {
                     //Some notes on this part
                     //xx and yy are used for the original heightmap, as we are offsetting the new one by 1
                     // so we subtract one so that we can put the heightmap in correctly
@@ -3701,25 +3701,26 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     hfmin = (val < hfmin) ? val : hfmin;
                     hfmax = (val > hfmax) ? val : hfmax;
-                    }
                 }
+            }
             //            }
 
             lock (OdeLock)
-                {
+            {
                 IntPtr GroundGeom = IntPtr.Zero;
                 if (RegionTerrain.TryGetValue(pOffset, out GroundGeom))
-                    {
+                {
                     if (GroundGeom != IntPtr.Zero)
-                        {
+                    {
                         d.SpaceRemove(space, GroundGeom);
                         d.GeomDestroy(GroundGeom);
-                        }
+                    }
                     RegionTerrain.Remove(pOffset);
+                    TerrainHeightFieldHeights[GroundGeom] = null;
                     TerrainHeightFieldHeights.Remove(GroundGeom);
                     actor_name_map.Remove(GroundGeom);
                     geom_name_map.Remove(GroundGeom);
-                    }
+                }
 
                 const float scale = 1.0f;
                 const float offset = 0.0f;
@@ -3737,10 +3738,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 GroundGeom = d.CreateHeightfield(space, HeightmapData, 1);
 
                 if (GroundGeom != IntPtr.Zero)
-                    {
+                {
                     d.GeomSetCategoryBits(GroundGeom, (int)(CollisionCategories.Land));
                     d.GeomSetCollideBits(GroundGeom, (int)(CollisionCategories.Space));
-                    }
+                }
 
                 geom_name_map[GroundGeom] = "Terrain";
 
@@ -3768,11 +3769,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 d.GeomSetPosition(GroundGeom, (pOffset.X + (m_region.RegionSizeX * 0.5f)), (pOffset.Y + (m_region.RegionSizeY * 0.5f)), 0);
                 RegionTerrain.Remove(pOffset);
                 RegionTerrain.Add(pOffset, GroundGeom, GroundGeom);
-//                TerrainHeightFieldHeights.Add(GroundGeom, _heightmap);
-               
                 TerrainHeightFieldHeights.Add(GroundGeom, heightMap);
-                }
             }
+        }
 
         public override void DeleteTerrain()
         {
