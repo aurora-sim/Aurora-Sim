@@ -106,7 +106,8 @@ namespace OpenSim.Services.CapsService
                         uint x, y;
                         Utils.LongToUInts(regionCaps.RegionHandle, out x, out y);
                         GridRegion region = gridService.GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-                        m_log.InfoFormat("Region - {0}, User {1}, {2}, {3}", region.RegionName, clientCaps.AgentID, clientCaps.RootAgent ? "Root Agent" : "Child Agent", clientCaps.Disabled ? "Disabled" : "Not Disabled");
+                        UserAccount account = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, clientCaps.AgentID);
+                        m_log.InfoFormat("Region - {0}, User {1}, {2}, {3}", region.RegionName,account.Name, clientCaps.RootAgent ? "Root Agent" : "Child Agent", clientCaps.Disabled ? "Disabled" : "Not Disabled");
                     }
                 }
             }
