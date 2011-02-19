@@ -325,12 +325,9 @@ namespace OpenSim.Services.CapsService
             item["parent_id"] = invItem.Folder;
             try
             {
-
                 // TODO reevaluate after upgrade to libomv >= r2566. Probably should use UtilsConversions.
-                item["type"] = TaskInventoryItem.Types[invItem.AssetType];
-                item["inv_type"] = TaskInventoryItem.InvTypes[invItem.InvType];
-                //llsdItem.type = Utils.InventoryTypeToString((InventoryType)invItem.AssetType);
-                //llsdItem.inv_type = Utils.InventoryTypeToString((InventoryType)invItem.InvType);
+                item["type"] = Utils.AssetTypeToString((AssetType)invItem.AssetType);
+                item["inv_type"] = Utils.InventoryTypeToString((InventoryType)invItem.InvType);
             }
             catch (Exception e)
             {

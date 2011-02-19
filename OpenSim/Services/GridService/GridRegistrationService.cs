@@ -7,6 +7,7 @@ using Aurora.Simulation.Base;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.GridService
 {
@@ -35,9 +36,9 @@ namespace OpenSim.Services.GridService
 
         #region IGridRegistrationService Members
 
-        public Dictionary<string, string> GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)
+        public OSDMap GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)
         {
-            Dictionary<string, string> retVal = new Dictionary<string, string>();
+            OSDMap retVal = new OSDMap();
             //Get the URLs from all the modules that have registered with us
             foreach (IGridRegistrationUrlModule module in m_modules)
             {

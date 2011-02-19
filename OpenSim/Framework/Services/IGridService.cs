@@ -579,7 +579,7 @@ namespace OpenSim.Services.Interfaces
     /// </summary>
     public interface IGridRegistrationService
     {
-        Dictionary<string, string> GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle);
+        OSDMap GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle);
 
         void RegisterModule(IGridRegistrationUrlModule module);
     }
