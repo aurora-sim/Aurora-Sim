@@ -56,7 +56,7 @@ namespace Aurora.Modules
         private bool m_enabled = true;
         private bool m_useMuteListModule = true;
         private int m_saydistance = 30;
-        private int m_shoutdistance = 100;
+        private int m_shoutdistance = 256;
         private int m_whisperdistance = 10;
         private float m_maxChatDistance = 100;
 

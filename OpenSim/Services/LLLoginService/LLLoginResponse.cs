@@ -474,7 +474,12 @@ namespace OpenSim.Services.LLLoginService
                 responseData["start_location"] = startLocation;
                 responseData["home"] = home;
                 responseData["look_at"] = lookAt;
-                responseData["message"] = welcomeMessage;
+                //Let's add a customizable welcome message (by Enrico Nirvana)
+                WebClient client = new WebClient();//master login
+                string custommessage = client.DownloadString("http://world.4d-web.eu/welcome.txt");//downloading messages
+                responseData["message"] = custommessage;//master login modification
+                //Let's use the default welcome message
+                //responseData["message"] = welcomeMessage;
                 responseData["region_x"] = (Int32)(RegionX);
                 responseData["region_y"] = (Int32)(RegionY);
                 responseData["region_size_x"] = (Int32)(RegionSizeX);

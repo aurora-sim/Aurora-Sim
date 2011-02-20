@@ -318,7 +318,11 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             // External IP
             //
             string externalName;
-
+            //Let's know our external IP (by Enrico Nirvana)
+            WebClient client = new WebClient();
+            string myIP = client.DownloadString("http://www.whatismyip.com/automation/n09230945.asp");
+            MainConsole.Instance.CmdPrompt("Your External ip is:" + myIP);
+            //ended here (by Enrico Nirvana)
             if (config.Contains("ExternalHostName"))
             {
                 externalName = config.GetString("ExternalHostName", "SYSTEMIP");
