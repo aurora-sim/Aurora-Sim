@@ -20,9 +20,8 @@ namespace Aurora.Services.DataService
         private string StorageProvider = "";
         private string ConnectionString = "";
 
-        public void Initialise(ISimulationBase simBase)
+        public void Initialise(IConfigSource source, IRegistryCore simBase)
         {
-            IConfigSource source = simBase.ConfigSource;
             //
             // Try reading the [DatabaseService] section, if it exists
             //
@@ -72,7 +71,7 @@ namespace Aurora.Services.DataService
             List<IAuroraDataPlugin> Plugins = AuroraModuleLoader.PickupModules<IAuroraDataPlugin>();
             foreach (IAuroraDataPlugin plugin in Plugins)
             {
-                plugin.Initialize(DataConnector.Copy(), simBase, ConnectionString);
+                plugin.Initialize(DataConnector.Copy(), source, simBase, ConnectionString);
             }
         }
     }

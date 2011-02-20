@@ -56,18 +56,20 @@ namespace OpenSim.Server.Handlers.Grid
         private IRegionConnector TelehubConnector;
         private IRegistryCore m_registry;
         private Dictionary<UUID /*RegionID*/, UUID /*SessionID*/> SessionCache = new Dictionary<UUID, UUID>();
+        private bool m_secure = true;
         
-        public GridServerPostHandler(string url, IRegistryCore registry, IGridService service) :
+        public GridServerPostHandler(string url, IRegistryCore registry, IGridService service, bool secure) :
                 base("POST", url)
         {
+            m_secure = secure;
             m_GridService = service;
             m_registry = registry;
-            TelehubConnector = DataManager.RequestPlugin<IRegionConnector>();
         }
 
         public override byte[] Handle(string path, Stream requestData,
                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
+            TelehubConnector = DataManager.RequestPlugin<IRegionConnector>();
             StreamReader sr = new StreamReader(requestData);
             string body = sr.ReadToEnd();
             sr.Close();
@@ -90,6 +92,8 @@ namespace OpenSim.Server.Handlers.Grid
                         {
                             if (map["Method"] == "Register")
                                 return NewRegister(map);
+                            else if (!m_secure)
+                                return null;
                             if (map["Method"] == "UpdateMap")
                                 return UpdateMap(map);
                         }
@@ -97,6 +101,8 @@ namespace OpenSim.Server.Handlers.Grid
                     else
                         return FailureResult();
                 }
+                if (!m_secure)
+                    return null;
 
                 string method = request["METHOD"].ToString();
 

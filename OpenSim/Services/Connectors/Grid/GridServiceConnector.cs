@@ -47,7 +47,6 @@ namespace OpenSim.Services.Connectors
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private List<string> m_ServerURIs = new List<string>();
         private IRegistryCore m_registry;
 
         #region IGridService
@@ -58,9 +57,9 @@ namespace OpenSim.Services.Connectors
             map["Region"] = regionInfo.ToOSD();
             map["SecureSessionID"] = SecureSessionID;
             map["Method"] = "Register";
-
-            List<string> urls = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RegistrationURI");
-            foreach (string m_ServerURI in urls)
+            
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RegistrationURI");
+            foreach (string m_ServerURI in serverURIs)
             {
                 OSDMap result = WebUtils.PostToService(m_ServerURI + "/grid", map);
                 if (result["Success"].AsBoolean())
@@ -110,7 +109,8 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[GRID CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/grid",
@@ -158,7 +158,8 @@ namespace OpenSim.Services.Connectors
             map["SecureSessionID"] = SecureSessionID;
             map["Method"] = "UpdateMap";
 
-            foreach (string m_ServerURI in m_ServerURIs)
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
+            foreach (string m_ServerURI in serverURIs)
             {
                 OSDMap result = WebUtils.PostToService(m_ServerURI + "/grid", map);
                 if (result["Success"].AsBoolean())
@@ -187,7 +188,8 @@ namespace OpenSim.Services.Connectors
 
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/grid",
@@ -224,7 +226,8 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/grid",
@@ -273,7 +276,8 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/grid",
@@ -320,7 +324,8 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/grid",
@@ -366,7 +371,8 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/grid",
@@ -421,7 +427,8 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/grid",
@@ -474,7 +481,8 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/grid",
@@ -529,7 +537,8 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/grid",
@@ -584,7 +593,8 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/grid",
@@ -637,7 +647,8 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/grid",
@@ -690,7 +701,8 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/grid",
@@ -738,7 +750,8 @@ namespace OpenSim.Services.Connectors
 
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/grid",
@@ -798,7 +811,6 @@ namespace OpenSim.Services.Connectors
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
         }
 
         public void FinishedStartup()

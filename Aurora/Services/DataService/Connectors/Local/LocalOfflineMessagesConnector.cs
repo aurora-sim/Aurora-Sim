@@ -16,10 +16,8 @@ namespace Aurora.Services.DataService
 	{
         private IGenericData GD = null;
 
-        public void Initialize(IGenericData GenericData, ISimulationBase simBase, string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
-            IConfigSource source = simBase.ConfigSource;
-
             GD = GenericData;
 
             if (source.Configs[Name] != null)
@@ -32,23 +30,6 @@ namespace Aurora.Services.DataService
             if (source.Configs["AuroraConnectors"].GetString("OfflineMessagesConnector", "LocalConnector") == "LocalConnector")
             {
                 DataManager.DataManager.RegisterPlugin(Name, this);
-            }
-            else
-            {
-                //Check to make sure that something else exists
-                List<string> m_ServerURI = simBase.ApplicationRegistry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                if (m_ServerURI.Count == 0) //Blank, not set up
-                {
-                    OpenSim.Framework.Console.MainConsole.Instance.Output("[AuroraDataService]: Falling back on local connector for " + "OfflineMessagesConnector", "None");
-                    GD = GenericData;
-
-                    if (source.Configs[Name] != null)
-                        defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
-
-                    GD.ConnectToDatabase(defaultConnectionString, "Generics");
-
-                    DataManager.DataManager.RegisterPlugin(Name, this);
-                }
             }
         }
 

@@ -40,6 +40,7 @@ using OpenSim.Framework.Console;
 using Aurora.Modules.RegionLoader;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Services.Interfaces;
 using Nini.Config;
 
 namespace OpenSim.CoreApplicationPlugins
@@ -47,6 +48,8 @@ namespace OpenSim.CoreApplicationPlugins
     public class LoadRegionsPlugin : IApplicationPlugin
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        protected ISimulationBase m_openSim;
 
         #region IApplicationPlugin Members
 
@@ -56,7 +59,6 @@ namespace OpenSim.CoreApplicationPlugins
             get { return m_name; }
         }
 
-        protected ISimulationBase m_openSim;
 
         public void Initialize(ISimulationBase openSim)
         {

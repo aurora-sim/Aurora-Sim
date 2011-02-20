@@ -46,7 +46,7 @@ namespace OpenSim.Services.Connectors
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private List<string> m_ServerURIs = new List<string>();
+        private IRegistryCore m_registry;
 
         #region IFriendsService
 
@@ -61,7 +61,8 @@ namespace OpenSim.Services.Connectors
 
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("FriendsServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/friends",
@@ -125,7 +126,8 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("FriendsServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/friends",
@@ -169,7 +171,8 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("FriendsServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/friends",
@@ -197,9 +200,6 @@ namespace OpenSim.Services.Connectors
                 m_log.DebugFormat("[FRIENDS CONNECTOR]: Exception when contacting friends server: {0}", e.Message);
                 return false;
             }
-
-            
-
             return false;
         }
 
@@ -223,7 +223,6 @@ namespace OpenSim.Services.Connectors
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("FriendsServerURI");
         }
 
         public void FinishedStartup()

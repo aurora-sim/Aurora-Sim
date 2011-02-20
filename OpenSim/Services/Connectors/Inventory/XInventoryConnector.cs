@@ -46,7 +46,7 @@ namespace OpenSim.Services.Connectors
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private List<string> m_ServerURIs = new List<string>();
+        private IRegistryCore m_registry;
 
         public virtual bool CreateUserInventory(UUID principalID)
         {
@@ -502,7 +502,8 @@ namespace OpenSim.Services.Connectors
         {
             sendData["METHOD"] = method;
 
-            foreach (string m_ServerURI in m_ServerURIs)
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("InventoryServerURI");
+            foreach (string m_ServerURI in serverURIs)
             {
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                     m_ServerURI + "/xinventory",
@@ -586,11 +587,11 @@ namespace OpenSim.Services.Connectors
                 return;
 
             registry.RegisterModuleInterface<IInventoryService>(this);
+            m_registry = registry;
         }
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("InventoryServerURI");
         }
 
         public void FinishedStartup()

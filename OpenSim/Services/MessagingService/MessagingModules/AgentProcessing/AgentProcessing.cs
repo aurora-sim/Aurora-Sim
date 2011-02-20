@@ -201,6 +201,8 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     if (neighbor.RegionHandle != requestingRegion.RegionHandle)
                     {
                         IRegionCapsService regionCaps = m_registry.RequestModuleInterface<ICapsService>().GetCapsForRegion(neighbor.RegionHandle);
+                        if (regionCaps == null)
+                            continue;
                         List<UUID> usersInformed = new List<UUID>();
                         foreach (IRegionClientCapsService regionClientCaps in regionCaps.GetClients())
                         {

@@ -61,11 +61,11 @@ namespace OpenSim.Services.PresenceService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
         }
 
         public void FinishedStartup()
         {
+            m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
         }
 
         #endregion

@@ -26,11 +26,11 @@ namespace Aurora.Services.DataService
 
         private List<string> m_ServerURIs = new List<string>();
 
-        public void Initialize(IGenericData unneeded, ISimulationBase simBase, string DefaultConnectionString)
+        public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase, string DefaultConnectionString)
         {
-            if (simBase.ConfigSource.Configs["AuroraConnectors"].GetString("MuteListConnector", "LocalConnector") == "SimianConnector")
+            if (source.Configs["AuroraConnectors"].GetString("MuteListConnector", "LocalConnector") == "SimianConnector")
             {
-                m_ServerURIs = simBase.ApplicationRegistry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                m_ServerURIs = simBase.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }

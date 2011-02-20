@@ -14,7 +14,7 @@ namespace OpenSim.Services.MessagingService
 {
     public class RemoteSyncMessagePosterService : ISyncMessagePosterService, IService
     {
-        protected List<string> m_hosts = new List<string>();
+        protected IRegistryCore m_registry;
 
         public string Name
         {
@@ -28,11 +28,11 @@ namespace OpenSim.Services.MessagingService
                 return;
 
             registry.RegisterModuleInterface<ISyncMessagePosterService>(this);
+            m_registry = registry;
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_hosts = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
         }
 
         public void FinishedStartup()
@@ -45,7 +45,8 @@ namespace OpenSim.Services.MessagingService
         {
             OSDMap message = CreateWebRequest(request);
             string postInfo = OSDParser.SerializeJsonString(message);
-            foreach (string host in m_hosts)
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
+            foreach (string host in serverURIs)
             {
                 //Send it async
                 AsynchronousRestObjectRequester.MakeRequest("POST", host, postInfo);
@@ -56,7 +57,8 @@ namespace OpenSim.Services.MessagingService
         {
             OSDMap retval = null;
             OSDMap message = CreateWebRequest(request);
-            foreach (string host in m_hosts)
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
+            foreach (string host in serverURIs)
             {
                 retval = WebUtils.PostToService(host, message);
             }

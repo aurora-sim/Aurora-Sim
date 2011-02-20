@@ -46,7 +46,7 @@ namespace OpenSim.Services.Connectors
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private List<string> m_ServerURIs = new List<string>();
+        private IRegistryCore m_registry;
 
         public Hashtable HandleDirectoryRequest(Hashtable requestBody)
         {
@@ -62,7 +62,8 @@ namespace OpenSim.Services.Connectors
 
         public string GetJsonConfig()
         {
-            foreach (string m_ServerURI in m_ServerURIs)
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("FreeswitchServiceURL");
+            foreach (string m_ServerURI in serverURIs)
             {
                 m_log.DebugFormat("[FREESWITCH CONNECTOR]: Requesting config from {0}", m_ServerURI);
                 return SynchronousRestFormsRequester.MakeRequest("GET",
@@ -89,7 +90,7 @@ namespace OpenSim.Services.Connectors
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("FreeswitchServiceURL");
+            m_registry = registry;
         }
 
         public void FinishedStartup()

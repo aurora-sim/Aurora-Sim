@@ -30,9 +30,8 @@ namespace Aurora.Services.DataService
         protected bool m_allowDuplicatePresences = true;
         protected bool m_checkLastSeen = true;
 
-        public void Initialize(IGenericData GenericData, ISimulationBase simBase, string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
-            IConfigSource source = simBase.ConfigSource;
             if(source.Configs["AuroraConnectors"].GetString("UserInfoConnector", "LocalConnector") == "LocalConnector")
             {
                 GD = GenericData;

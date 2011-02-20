@@ -14,8 +14,13 @@ using log4net;
 
 namespace OpenSim.Services.ConfigurationService
 {
-    public class ConfigurationService : IConfigurationService, IService
+    /// <summary>
+    /// This is an application plugin so that it loads asap as it is used by many things (IService modules especially)
+    /// </summary>
+    public class ConfigurationService : IConfigurationService, IApplicationPlugin
     {
+        #region Declares
+
         protected static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
@@ -23,6 +28,55 @@ namespace OpenSim.Services.ConfigurationService
         protected OSDMap m_autoConfig = new OSDMap();
         protected Dictionary<string, OSDMap> m_allConfigs = new Dictionary<string, OSDMap>();
         protected Dictionary<string, OSDMap> m_knownUsers = new Dictionary<string, OSDMap>();
+
+        #endregion
+
+        #region IApplicationPlugin Members
+
+        public void Initialize(ISimulationBase openSim)
+        {
+            m_config = openSim.ConfigSource;
+
+            IConfig handlerConfig = m_config.Configs["Handlers"];
+            if (handlerConfig.GetString("ConfigurationHandler", "") != Name)
+                return;
+
+            //Register us
+            openSim.ApplicationRegistry.RegisterModuleInterface<IConfigurationService>(this);
+
+            FindConfiguration(m_config.Configs["Configuration"]);
+        }
+
+        public void PostInitialise()
+        {
+        }
+
+        public void Start()
+        {
+        }
+
+        public void PostStart()
+        {
+        }
+
+        public void Close()
+        {
+        }
+
+        public void ReloadConfiguration(IConfigSource m_config)
+        {
+            IConfig handlerConfig = m_config.Configs["Handlers"];
+            if (handlerConfig.GetString("ConfigurationHandler", "") != Name)
+                return;
+
+            FindConfiguration(m_config.Configs["Configuration"]);
+        }
+
+        public void Dispose()
+        {
+        }
+
+        #endregion
 
         public virtual string Name
         {
@@ -142,31 +196,5 @@ namespace OpenSim.Services.ConfigurationService
 
             return keys;
         }
-
-        #region IService Members
-
-        public void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-            m_config = config;
-
-            IConfig handlerConfig = m_config.Configs["Handlers"];
-            if (handlerConfig.GetString("ConfigurationHandler", "") != Name)
-                return;
-
-            //Register us
-            registry.RegisterModuleInterface<IConfigurationService>(this);
-
-            FindConfiguration(m_config.Configs["Configuration"]);
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void FinishedStartup()
-        {
-        }
-
-        #endregion
     }
 }

@@ -62,10 +62,6 @@ namespace OpenSim.Services.UserAccountService
             if (handlerConfig.GetString("UserAccountHandler", "") != Name)
                 return;
 
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IUserAccountData>();
-            if (m_Database == null)
-                throw new Exception("Could not find a storage interface in the given module");
-
             if (MainConsole.Instance != null)
             {
                 MainConsole.Instance.Commands.AddCommand("UserService", false,
@@ -88,6 +84,9 @@ namespace OpenSim.Services.UserAccountService
 
         public void FinishedStartup()
         {
+            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IUserAccountData>();
+            if (m_Database == null)
+                throw new Exception("Could not find a storage interface in the given module");
         }
 
         #region IUserAccountService

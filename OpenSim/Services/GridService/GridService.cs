@@ -72,11 +72,6 @@ namespace OpenSim.Services.GridService
             if (handlerConfig.GetString("GridHandler", "") != Name)
                 return;
 
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IRegionData>();
-            
-            if (m_Database == null)
-                throw new Exception("Could not find a storage interface in the given module");
-
             //m_log.DebugFormat("[GRID SERVICE]: Starting...");
 
             m_config = config;
@@ -123,6 +118,10 @@ namespace OpenSim.Services.GridService
 
         public void FinishedStartup()
         {
+            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IRegionData>();
+
+            if (m_Database == null)
+                throw new Exception("Could not find a storage interface in the given module");
         }
 
         #region IGridService
@@ -299,7 +298,7 @@ namespace OpenSim.Services.GridService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[GRID SERVICE]: Database exception: {0}", e.ToString());
+                m_log.WarnFormat("[GRID SERVICE]: Database exception: {0}", e.ToString());
             }
 
             return "Failed to save region into the database.";

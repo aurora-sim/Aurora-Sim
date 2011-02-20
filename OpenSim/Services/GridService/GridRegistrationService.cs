@@ -27,16 +27,16 @@ namespace OpenSim.Services.GridService
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             registry.RegisterModuleInterface<IGridRegistrationService>(this);
-            m_loadBalancer.SetUrls(config.Configs["Configuration"].GetString("HostNames", "http://locahost").Split(','));
+            m_loadBalancer.SetUrls(config.Configs["Configuration"].GetString("HostNames", "http://localhost").Split(','));
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
         }
 
         public void FinishedStartup()
         {
+            m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
             LoadFromDatabase();
         }
 

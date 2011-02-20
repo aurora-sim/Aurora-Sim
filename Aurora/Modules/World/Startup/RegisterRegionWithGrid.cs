@@ -44,12 +44,12 @@ namespace Aurora.Modules
             m_scenes.Add(scene);
             //Register the interface
             scene.RegisterModuleInterface<IGridRegisterModule>(this);
+            //Now register our region with the grid
+            RegisterRegionWithGrid(scene);
         }
 
         public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            //Now register our region with the grid
-            RegisterRegionWithGrid(scene);
         }
 
         public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
@@ -238,6 +238,15 @@ namespace Aurora.Modules
                 if (error == "Wrong Session ID")
                 {
                     m_log.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - Wrong Session ID for this region!");
+                    string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to proceed, or type cancel to exit");
+                    if (input == "cancel")
+                    {
+                        Environment.Exit(0);
+                    }
+                }
+                else
+                {
+                    m_log.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - " + error + "!");
                     string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to proceed, or type cancel to exit");
                     if (input == "cancel")
                     {

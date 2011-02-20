@@ -23,16 +23,14 @@ namespace Aurora.Services.DataService
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private List<string> m_ServerURIs = new List<string>();
+        private IRegistryCore m_registry;
 
-        public void Initialize(IGenericData GenericData, ISimulationBase simBase, string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
-            IConfigSource source = simBase.ConfigSource;
             if (source.Configs["AuroraConnectors"].GetString("DirectoryServiceConnector", "LocalConnector") == "RemoteConnector")
             {
-                m_ServerURIs = simBase.ApplicationRegistry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                if (m_ServerURIs.Count != 0)
-                    DataManager.DataManager.RegisterPlugin(Name, this);
+                m_registry = simBase;
+                DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }
 
@@ -63,6 +61,7 @@ namespace Aurora.Services.DataService
 
             try
             {
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     AsynchronousRestObjectRequester.MakeRequest("POST",
@@ -87,6 +86,7 @@ namespace Aurora.Services.DataService
 
             try
             {
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -141,6 +141,7 @@ namespace Aurora.Services.DataService
             List<LandData> Land = new List<LandData>();
             try
             {
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -186,6 +187,7 @@ namespace Aurora.Services.DataService
             List<DirPlacesReplyData> Land = new List<DirPlacesReplyData>();
             try
             {
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -231,6 +233,7 @@ namespace Aurora.Services.DataService
             List<DirLandReplyData> Land = new List<DirLandReplyData>();
             try
             {
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -274,6 +277,7 @@ namespace Aurora.Services.DataService
             List<DirEventsReplyData> Events = new List<DirEventsReplyData>();
             try
             {
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -316,6 +320,7 @@ namespace Aurora.Services.DataService
             List<DirEventsReplyData> Events = new List<DirEventsReplyData>();
             try
             {
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -360,6 +365,7 @@ namespace Aurora.Services.DataService
             List<DirClassifiedReplyData> Classifieds = new List<DirClassifiedReplyData>();
             try
             {
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -400,6 +406,7 @@ namespace Aurora.Services.DataService
             string reqString = WebUtils.BuildQueryString(sendData);
             try
             {
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -440,6 +447,7 @@ namespace Aurora.Services.DataService
             List<Classified> Classifieds = new List<Classified>();
             try
             {
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",

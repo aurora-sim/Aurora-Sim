@@ -183,6 +183,6 @@ namespace Aurora.Framework
         /// <param name="GenericData">The Database Plugin</param>
         /// <param name="source">Config if more parameters are needed</param>
         /// <param name="DefaultConnectionString">The connection string to use</param>
-        void Initialize(IGenericData GenericData, ISimulationBase simBase, string DefaultConnectionString);
+        void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string DefaultConnectionString);
     }
 }

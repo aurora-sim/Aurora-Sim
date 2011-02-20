@@ -48,7 +48,7 @@ namespace OpenSim.Services.Connectors
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private List<string> m_ServerURIs = new List<string>();
+        private IRegistryCore m_registry;
 
         #region IAvatarService
 
@@ -81,7 +81,8 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AvatarServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/avatar",
@@ -133,7 +134,8 @@ namespace OpenSim.Services.Connectors
             //m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AvatarServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/avatar",
@@ -178,7 +180,8 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AvatarServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/avatar",
@@ -225,7 +228,8 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AvatarServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/avatar",
@@ -272,7 +276,8 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AvatarServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/avatar",
@@ -318,7 +323,8 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AvatarServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     AsynchronousRestObjectRequester.MakeRequest("POST",
                             m_ServerURI + "/avatar",
@@ -347,11 +353,11 @@ namespace OpenSim.Services.Connectors
                 return;
 
             registry.RegisterModuleInterface<IAvatarService>(this);
+            m_registry = registry;
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AvatarServerURI");
         }
 
         public void FinishedStartup()

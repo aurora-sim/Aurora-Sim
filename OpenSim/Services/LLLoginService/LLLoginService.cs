@@ -109,7 +109,7 @@ namespace OpenSim.Services.LLLoginService
             m_config = config;
             m_LoginServerConfig = config.Configs["LoginService"];
             if (m_LoginServerConfig == null)
-                throw new Exception(String.Format("No section LoginService in config file"));
+                return;
 
             m_UseTOS = m_LoginServerConfig.GetBoolean("UseTermsOfServiceOnFirstLogin", false);
             m_DefaultHomeRegion = m_LoginServerConfig.GetString("DefaultHomeRegion", "");

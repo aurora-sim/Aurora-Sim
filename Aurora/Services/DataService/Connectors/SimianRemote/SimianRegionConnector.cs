@@ -24,12 +24,11 @@ namespace Aurora.Services.DataService
                 MethodBase.GetCurrentMethod().DeclaringType);
         private List<string> m_ServerURIs = new List<string>();
 
-        public void Initialize(IGenericData unneeded, ISimulationBase simBase, string defaultConnectionString)
+        public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
-            IConfigSource source = simBase.ConfigSource;
             if (source.Configs["AuroraConnectors"].GetString("RegionConnector", "LocalConnector") == "SimianConnector")
             {
-                m_ServerURIs = simBase.ApplicationRegistry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                m_ServerURIs = simBase.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 
                 //If blank, no connector
                 if (m_ServerURIs.Count != 0)

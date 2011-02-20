@@ -23,7 +23,6 @@ namespace OpenSim.Services.MessagingService
     {
         #region Declares
 
-        protected List<string> m_hosts = new List<string>();
         protected IScene m_scene;
 
         #endregion
@@ -44,7 +43,6 @@ namespace OpenSim.Services.MessagingService
             if (handlerConfig.GetString("AsyncMessageRequesterServiceHandler", "") != Name)
                 return;
 
-            m_hosts = scene.RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
             m_scene = scene;
 
             //Start the request timer
@@ -80,7 +78,8 @@ namespace OpenSim.Services.MessagingService
         {
             OSDMap message = CreateWebRequest();
             IAsyncMessageRecievedService service = m_scene.RequestModuleInterface<IAsyncMessageRecievedService>();
-            foreach (string host in m_hosts)
+            List<string> serverURIs = m_scene.RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
+            foreach (string host in serverURIs)
             {
                 OSDMap retval = WebUtils.PostToService(host, message);
                 //Clean it up

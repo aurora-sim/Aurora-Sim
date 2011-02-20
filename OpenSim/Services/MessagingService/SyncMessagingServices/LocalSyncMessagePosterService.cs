@@ -14,7 +14,6 @@ namespace OpenSim.Services.MessagingService
 {
     public class LocalSyncMessagePosterService : ISyncMessagePosterService, IService
     {
-        protected List<string> m_hosts = new List<string>();
         protected IRegistryCore m_registry;
 
         public string Name
@@ -34,7 +33,6 @@ namespace OpenSim.Services.MessagingService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_hosts = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
         }
 
         public void FinishedStartup()

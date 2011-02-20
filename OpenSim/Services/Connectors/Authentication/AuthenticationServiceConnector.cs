@@ -45,7 +45,7 @@ namespace OpenSim.Services.Connectors
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private List<string> m_ServerURIs = new List<string>();
+        private IRegistryCore m_registry;
 
         public bool CheckExists(UUID principalID)
         {
@@ -61,7 +61,8 @@ namespace OpenSim.Services.Connectors
 
             sendData["METHOD"] = "authenticate";
 
-            foreach (string m_ServerURI in m_ServerURIs)
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AuthenticationServerURI");
+            foreach (string m_ServerURI in serverURIs)
             {
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                     m_ServerURI + "/auth/plain",
@@ -87,7 +88,8 @@ namespace OpenSim.Services.Connectors
 
             sendData["METHOD"] = "verify";
 
-            foreach (string m_ServerURI in m_ServerURIs)
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AuthenticationServerURI");
+            foreach (string m_ServerURI in serverURIs)
             {
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                     m_ServerURI + "/auth/plain",
@@ -110,7 +112,8 @@ namespace OpenSim.Services.Connectors
 
             sendData["METHOD"] = "release";
 
-            foreach (string m_ServerURI in m_ServerURIs)
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AuthenticationServerURI");
+            foreach (string m_ServerURI in serverURIs)
             {
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                     m_ServerURI + "/auth/plain",
@@ -151,11 +154,11 @@ namespace OpenSim.Services.Connectors
                 return;
 
             registry.RegisterModuleInterface<IAuthenticationService>(this);
+            m_registry = registry;
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AuthenticationServerURI");
         }
 
         public void FinishedStartup()

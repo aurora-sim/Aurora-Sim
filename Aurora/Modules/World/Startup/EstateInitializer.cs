@@ -207,19 +207,19 @@ namespace OpenSim.Region.CoreModules
             return ES;
         }
 
-        public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
-        {
-        }
-
         public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
         }
 
-        public void StartupComplete()
+        public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
         }
 
         public void PostFinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        {
+        }
+
+        public void StartupComplete()
         {
         }
 

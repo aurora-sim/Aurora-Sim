@@ -86,7 +86,7 @@ namespace OpenSim.Services.MessagingService
 
         private byte[] NewMessage(OSDMap map)
         {
-            OSDMap message = (OSDMap)OSDParser.DeserializeJson(map["Message"]);
+            OSDMap message = (OSDMap)map["Message"];
             if(m_ourRegionHandle != 0)
                 ((OSDMap)message)["RegionHandle"] = m_ourRegionHandle;
             OSDMap result = m_handler.FireMessageReceived(message);
