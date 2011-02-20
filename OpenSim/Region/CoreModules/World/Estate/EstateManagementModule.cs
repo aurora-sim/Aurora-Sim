@@ -34,6 +34,7 @@ using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -152,25 +153,23 @@ namespace OpenSim.Region.CoreModules.World.Estate
             sendRegionInfoPacketToAll();
         }
 
-        public void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        public OSDMap OnRegisterCaps(UUID agentID, IHttpServer server)
         {
-            UUID capuuid = UUID.Random();
+            OSDMap retVal = new OSDMap();
+            retVal["DispatchRegionInfo"] = CapsUtil.CreateCAPS("DispatchRegionInfo", "");
 
-            caps.AddStreamHandler("DispatchRegionInfo",
-                                new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["DispatchRegionInfo"],
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
-                                                          return DispatchRegionInfo(m_dhttpMethod, capuuid, agentID);
+                                                          return DispatchRegionInfo(m_dhttpMethod, retVal["DispatchRegionInfo"], agentID);
                                                       }));
-            capuuid = UUID.Random();
-
-            caps.AddStreamHandler("EstateChangeInfo",
-                                new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
+            retVal["EstateChangeInfo"] = CapsUtil.CreateCAPS("EstateChangeInfo", "");
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["EstateChangeInfo"],
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
-                                                          return EstateChangeInfo(m_dhttpMethod, capuuid, agentID);
+                                                          return EstateChangeInfo(m_dhttpMethod, retVal["EstateChangeInfo"], agentID);
                                                       }));
-            
+            return retVal;
         }
 
         private Hashtable EstateChangeInfo(Hashtable m_dhttpMethod, UUID capuuid, UUID agentID)

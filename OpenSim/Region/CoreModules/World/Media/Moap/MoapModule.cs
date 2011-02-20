@@ -124,34 +124,34 @@ namespace OpenSim.Region.CoreModules.Media.Moap
             m_scene.EventManager.OnDeregisterCaps -= OnDeregisterCaps;
         }
 
-        public void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        public OSDMap OnRegisterCaps(UUID agentID, IHttpServer server)
         {
 //            m_log.DebugFormat(
 //                "[MOAP]: Registering ObjectMedia and ObjectMediaNavigate capabilities for agent {0}", agentID);
-            
-            string omCapUrl = "/CAPS/" + UUID.Random();
+
+            OSDMap retVal = new OSDMap();
+            retVal["ObjectMedia"] = CapsUtil.CreateCAPS("ObjectMedia", "");
             
             lock (m_omCapUsers)
             {
-                m_omCapUsers[omCapUrl] = agentID;
-                m_omCapUrls[agentID] = omCapUrl;
+                m_omCapUsers[retVal["ObjectMedia"]] = agentID;
+                m_omCapUrls[agentID] = retVal["ObjectMedia"];
                 
                 // Even though we're registering for POST we're going to get GETS and UPDATES too
-                caps.AddStreamHandler(
-                    "ObjectMedia", new RestStreamHandler("POST", omCapUrl, HandleObjectMediaMessage));
+                server.AddStreamHandler(new RestStreamHandler("POST", retVal["ObjectMedia"], HandleObjectMediaMessage));
             }
-            
-            string omuCapUrl = "/CAPS/" + UUID.Random();
+
+            retVal["ObjectMediaNavigate"] = CapsUtil.CreateCAPS("ObjectMediaNavigate", "");
             
             lock (m_omuCapUsers)
             {
-                m_omuCapUsers[omuCapUrl] = agentID;
-                m_omuCapUrls[agentID] = omuCapUrl;
+                m_omuCapUsers[retVal["ObjectMediaNavigate"]] = agentID;
+                m_omuCapUrls[agentID] = retVal["ObjectMediaNavigate"];
                 
                 // Even though we're registering for POST we're going to get GETS and UPDATES too
-                caps.AddStreamHandler(
-                    "ObjectMediaNavigate", new RestStreamHandler("POST", omuCapUrl, HandleObjectMediaNavigateMessage));
+                server.AddStreamHandler(new RestStreamHandler("POST", retVal["ObjectMediaNavigate"], HandleObjectMediaNavigateMessage));
             }
+            return retVal;
         }
 
         public void OnDeregisterCaps(UUID agentID, IRegionClientCapsService caps)

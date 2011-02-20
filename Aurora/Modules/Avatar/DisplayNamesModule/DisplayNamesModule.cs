@@ -7,6 +7,7 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
+using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
@@ -78,25 +79,24 @@ namespace Aurora.Modules
         /// </summary>
         /// <param name="agentID"></param>
         /// <param name="caps"></param>
-        public void RegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        public OSDMap RegisterCaps(UUID agentID, IHttpServer server)
         {
-            UUID capuuid = UUID.Random();
+            OSDMap retVal = new OSDMap();
+            retVal["SetDisplayName"] = CapsUtil.CreateCAPS("SetDisplayName", "");
 
-            caps.AddStreamHandler("SetDisplayName",
-                                new RestHTTPHandler("POST", "/CAPS" + capuuid + "/",
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["SetDisplayName"],
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
                                                           return ProcessSetDisplayName(m_dhttpMethod, agentID);
                                                       }));
 
-            capuuid = UUID.Random();
-
-            caps.AddStreamHandler("GetDisplayNames",
-                                new RestHTTPHandler("POST", "/CAPS" + capuuid + "/",
+            retVal["GetDisplayNames"] = CapsUtil.CreateCAPS("GetDisplayNames", "");
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["GetDisplayNames"],
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
                                                           return ProcessGetDisplayName(m_dhttpMethod, agentID);
                                                       }));
+            return retVal;
         }
 
         /// <summary>

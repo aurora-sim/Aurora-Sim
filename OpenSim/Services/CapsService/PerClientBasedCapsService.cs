@@ -97,7 +97,7 @@ namespace OpenSim.Services.CapsService
             {
                 PerRegionClientCapsService regionClient = new PerRegionClientCapsService();
                 regionClient.Initialise(this, regionHandle, CAPSBase, UrlToInform, circuitData);
-                m_RegionCapsServices.Add(regionHandle, regionClient);
+                m_RegionCapsServices[regionHandle] = regionClient;
 
                 //Now add this client to the region caps
                 //Create if needed
@@ -172,6 +172,8 @@ namespace OpenSim.Services.CapsService
 
             //Remove the agent from the region caps
             IRegionCapsService regionCaps = m_CapsService.GetCapsForRegion(regionHandle);
+            if (regionCaps == null)
+                return;
             regionCaps.RemoveClientFromRegion(m_RegionCapsServices[regionHandle]);
 
             //Remove all the CAPS handlers

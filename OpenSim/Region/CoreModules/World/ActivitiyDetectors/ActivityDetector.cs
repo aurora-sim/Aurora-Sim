@@ -72,6 +72,11 @@ namespace OpenSim.Region.CoreModules
 
         public void RegionLoaded(Scene scene)
         {
+            scene.EventManager.OnStartupFullyComplete += EventManager_OnStartupFullyComplete;
+        }
+
+        void EventManager_OnStartupFullyComplete(IScene scene, List<string> data)
+        {
             ISyncMessagePosterService syncMessage = scene.RequestModuleInterface<ISyncMessagePosterService>();
             if (syncMessage != null)
                 syncMessage.Post(SyncMessageHelper.LogoutRegionAgents(scene.RegionInfo.RegionHandle));

@@ -36,6 +36,7 @@ using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
 using log4net;
 using OpenSim.Framework;
+using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework;
 using OpenSim.Region.Framework.Interfaces;
@@ -1947,36 +1948,34 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="agentID"></param>
         /// <param name="caps"></param>
-        private void EventManagerOnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        private OSDMap EventManagerOnRegisterCaps(UUID agentID, IHttpServer server)
         {
-            string capsBase = "/CAPS/" + UUID.Random() + "/";
+            OSDMap retVal = new OSDMap();
+            retVal["UpdateScriptTaskInventory"] = CapsUtil.CreateCAPS("UpdateScriptTaskInventory", "");
+            retVal["UpdateScriptTask"] = retVal["UpdateScriptTaskInventory"];
+
             //Region Server bound
-            IRequestHandler handler = new RestStreamHandler("POST", capsBase,
+            IRequestHandler handler = new RestStreamHandler("POST", retVal["UpdateScriptTask"],
                 delegate(string request, string path, string param,
                                           OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                 {
                     return ScriptTaskInventory(agentID, request, path, param,
                         httpRequest, httpResponse);
                 });
-            caps.AddStreamHandler("UpdateScriptTaskInventory",
-                handler);
-            caps.AddStreamHandler("UpdateScriptTask",
-                handler);
+            server.AddStreamHandler(handler);
 
-            capsBase = "/CAPS/" + UUID.Random() + "/";
+            retVal["UpdateScriptAgentInventory"] = CapsUtil.CreateCAPS("UpdateScriptAgentInventory", "");
+            retVal["UpdateNotecardAgentInventory"] = retVal["UpdateScriptAgentInventory"];
+            retVal["UpdateScriptAgent"] = retVal["UpdateScriptAgent"];
             //Unless the script engine goes, region server bound
-            handler = new RestStreamHandler("POST", capsBase, delegate(string request, string path, string param,
+            handler = new RestStreamHandler("POST", retVal["UpdateNotecardAgentInventory"], delegate(string request, string path, string param,
                                           OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
                 return NoteCardAgentInventory(agentID, request, path, param,
                     httpRequest, httpResponse);
             });
-            caps.AddStreamHandler("UpdateNotecardAgentInventory",
-                handler);
-            caps.AddStreamHandler("UpdateScriptAgentInventory",
-                handler);
-            caps.AddStreamHandler("UpdateScriptAgent",
-                handler);
+            server.AddStreamHandler(handler);
+            return retVal;
         }
 
         /// <summary>

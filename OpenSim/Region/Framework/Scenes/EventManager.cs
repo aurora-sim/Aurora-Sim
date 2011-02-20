@@ -35,6 +35,8 @@ using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using OpenMetaverse.StructuredData;
+using OpenSim.Framework.Servers.HttpServer;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -218,7 +220,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// has been instantiated and before it is return to the
         /// client and provides region modules to add their caps.
         /// </summary>
-        public delegate void RegisterCapsEvent(UUID agentID, IRegionClientCapsService caps);
+        public delegate OSDMap RegisterCapsEvent(UUID agentID, IHttpServer httpServer);
         public event RegisterCapsEvent OnRegisterCaps;
 
         /// <summary>
@@ -1056,8 +1058,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerOnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        public OSDMap TriggerOnRegisterCaps(UUID agentID)
         {
+            OSDMap retVal = new OSDMap();
             RegisterCapsEvent handlerRegisterCaps = OnRegisterCaps;
             if (handlerRegisterCaps != null)
             {
@@ -1065,7 +1068,14 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     try
                     {
-                        d(agentID, caps);
+                        OSDMap r = d(agentID, MainServer.Instance);
+                        if (r != null)
+                        {
+                            foreach (KeyValuePair<string, OSD> kvp in r)
+                            {
+                                retVal[kvp.Key] = kvp.Value;
+                            }
+                        }
                     }
                     catch (Exception e)
                     {
@@ -1075,6 +1085,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
+            return retVal;
         }
 
         public void TriggerOnDeregisterCaps(UUID agentID, IRegionClientCapsService caps)

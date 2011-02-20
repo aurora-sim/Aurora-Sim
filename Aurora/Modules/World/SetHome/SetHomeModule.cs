@@ -7,6 +7,7 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
+using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
@@ -74,26 +75,28 @@ namespace Aurora.Modules.World.Auction
             client.OnSetStartLocationRequest -= SetHomeRezPoint;
         }
 
-        public void RegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        public OSDMap RegisterCaps(UUID agentID, IHttpServer server)
         {
-            UUID capuuid = UUID.Random();
+            OSDMap retVal = new OSDMap();
+            retVal["ServerReleaseNotes"] = CapsUtil.CreateCAPS("ServerReleaseNotes", "");
 
-            caps.AddStreamHandler("ServerReleaseNotes",
-                                new RestHTTPHandler("POST", "/CAPS/ServerReleaseNotes/" + capuuid + "/",
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ServerReleaseNotes"],
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
-                                                          return ProcessServerReleaseNotes(m_dhttpMethod, agentID, capuuid);
+                                                          return ProcessServerReleaseNotes(m_dhttpMethod, agentID);
                                                       }));
 
-            caps.AddStreamHandler("CopyInventoryFromNotecard",
-                                new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
+            retVal["CopyInventoryFromNotecard"] = CapsUtil.CreateCAPS("CopyInventoryFromNotecard", "");
+
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["CopyInventoryFromNotecard"],
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
-                                                          return CopyInventoryFromNotecard(m_dhttpMethod, capuuid, agentID);
+                                                          return CopyInventoryFromNotecard(m_dhttpMethod, agentID);
                                                       }));
+            return retVal;
         }
 
-        private Hashtable ProcessServerReleaseNotes(Hashtable m_dhttpMethod, UUID agentID, UUID capuuid)
+        private Hashtable ProcessServerReleaseNotes(Hashtable m_dhttpMethod, UUID agentID)
         {
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200; //501; //410; //404;
@@ -107,7 +110,7 @@ namespace Aurora.Modules.World.Auction
             return responsedata;
         }
 
-        private Hashtable CopyInventoryFromNotecard(Hashtable mDhttpMethod, UUID capuuid, UUID agentID)
+        private Hashtable CopyInventoryFromNotecard(Hashtable mDhttpMethod, UUID agentID)
         {
             OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
             UUID FolderID = rm["folder-id"].AsUUID();

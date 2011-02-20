@@ -72,7 +72,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
 
         public void RemoveRegion(Scene scene)
         {
-            
             m_scene.EventManager.OnRegisterCaps -= RegisterCaps;
             m_scene = null;
         }
@@ -96,19 +95,17 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
         public string Name { get { return "NewFileAgentInventoryVariablePriceModule"; } }
 
 
-        public void RegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        public OSDMap RegisterCaps(UUID agentID, IHttpServer server)
         {
-            UUID capID = UUID.Random();
-
-            //m_log.Info("[GETMESH]: /CAPS/" + capID);
-            caps.AddStreamHandler("NewFileAgentInventoryVariablePrice",
-
-                    new RestStreamHandler("POST", "/CAPS/" + capID.ToString(), delegate(string request, string path, string param,
+            OSDMap retVal = new OSDMap();
+            retVal["NewFileAgentInventoryVariablePrice"] = CapsUtil.CreateCAPS("NewFileAgentInventoryVariablePrice", "");
+            server.AddStreamHandler(new RestStreamHandler("POST", retVal["NewFileAgentInventoryVariablePrice"],
+                delegate(string request, string path, string param,
                                              OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                        {
                                                            return NewAgentInventoryRequest(request, agentID);
                                                        }));
-         
+            return retVal;
         }
 
         #endregion

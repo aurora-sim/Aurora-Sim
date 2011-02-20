@@ -34,6 +34,7 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
+using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
@@ -81,26 +82,26 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
         {
         }
 
-        public void RegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        public OSDMap RegisterCaps(UUID agentID, IHttpServer server)
         {
-            UUID capuuid = UUID.Random();
-            
-            caps.AddStreamHandler("ObjectAdd",
-                                 new RestHTTPHandler("POST", "/CAPS/OA/" + capuuid + "/",
+            OSDMap retVal = new OSDMap();
+            retVal["ObjectAdd"] = CapsUtil.CreateCAPS("ObjectAdd", "");
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ObjectAdd"],
                                                        delegate(Hashtable m_dhttpMethod)
                                                        {
-                                                           return ProcessAdd(m_dhttpMethod, agentID, caps);
+                                                           return ProcessAdd(m_dhttpMethod, agentID);
                                                        }));
 
-            caps.AddStreamHandler("ServerReleaseNotes",
-                                new RestHTTPHandler("POST", "/CAPS/ServerReleaseNotes/" + capuuid + "/",
+            retVal["ServerReleaseNotes"] = CapsUtil.CreateCAPS("ServerReleaseNotes", "");
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ServerReleaseNotes"],
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
-                                                          return ProcessServerReleaseNotes(m_dhttpMethod, agentID, capuuid);
+                                                          return ProcessServerReleaseNotes(m_dhttpMethod, agentID);
                                                       }));
+            return retVal;
         }
 
-        private Hashtable ProcessServerReleaseNotes(Hashtable m_dhttpMethod, UUID agentID, UUID capuuid)
+        private Hashtable ProcessServerReleaseNotes(Hashtable m_dhttpMethod, UUID agentID)
         {
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200; //501; //410; //404;
@@ -114,7 +115,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             return responsedata;
         }
 
-        public Hashtable ProcessAdd(Hashtable request, UUID AgentId, IRegionClientCapsService cap)
+        public Hashtable ProcessAdd(Hashtable request, UUID AgentId)
         {
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 400; //501; //410; //404;

@@ -5,6 +5,7 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
+using OpenSim.Framework.Capabilities;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Framework.Servers;
@@ -626,20 +627,21 @@ namespace Aurora.Modules
 
         #region CAPS
 
-        public void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        public OSDMap OnRegisterCaps(UUID agentID, IHttpServer server)
         {
-            UUID capuuid = UUID.Random();
+            OSDMap retVal = new OSDMap();
+            retVal["DispatchOpenRegionSettings"] = CapsUtil.CreateCAPS("DispatchOpenRegionSettings", "");
             
             //Sets the OpenRegionSettings
-            caps.AddStreamHandler("DispatchOpenRegionSettings",
-                                new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["DispatchOpenRegionSettings"],
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
-                                                          return DispatchOpenRegionSettings(m_dhttpMethod, capuuid, agentID);
+                                                          return DispatchOpenRegionSettings(m_dhttpMethod, agentID);
                                                       }));
+            return retVal;
         }
 
-        private Hashtable DispatchOpenRegionSettings(Hashtable m_dhttpMethod, UUID capuuid, UUID agentID)
+        private Hashtable DispatchOpenRegionSettings(Hashtable m_dhttpMethod, UUID agentID)
         {
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200; //501; //410; //404;

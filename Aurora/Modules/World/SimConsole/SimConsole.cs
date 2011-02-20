@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using OpenSim.Framework;
+using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Console;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
@@ -104,19 +105,20 @@ namespace Aurora.Modules.World.SimConsole
 
         #region CAPS
 
-        public void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        public OSDMap OnRegisterCaps(UUID agentID, IHttpServer server)
         {
-            UUID capuuid = UUID.Random();
+            OSDMap retVal = new OSDMap();
+            retVal["SimConsole"] = CapsUtil.CreateCAPS("SimConsole", "");
 
-            caps.AddStreamHandler("SimConsole",
-                                new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["SimConsole"],
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
-                                                          return SimConsoleResponder(m_dhttpMethod, capuuid, agentID);
+                                                          return SimConsoleResponder(m_dhttpMethod, agentID);
                                                       }));
+            return retVal;
         }
 
-        private Hashtable SimConsoleResponder(Hashtable m_dhttpMethod, UUID capuuid, UUID agentID)
+        private Hashtable SimConsoleResponder(Hashtable m_dhttpMethod, UUID agentID)
         {
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200; //501; //410; //404;

@@ -68,7 +68,8 @@ namespace OpenSim.Services.CapsService
             IConfig m_CAPSServerConfig = config.Configs["CAPSService"];
             if (m_CAPSServerConfig != null)
             {
-                m_hostName = m_CAPSServerConfig.GetString("HostName", String.Empty);
+                IConfig networkConfig = config.Configs["Network"];
+                m_hostName = networkConfig.GetString("HostName", String.Empty);
                 if (m_hostName != "")
                 {
                     //Sanitize the results, remove / and :
@@ -76,9 +77,9 @@ namespace OpenSim.Services.CapsService
 
                     m_port = m_CAPSServerConfig.GetUInt("Port", m_port);
                 }
+                m_registry = registry;
+                registry.RegisterModuleInterface<ICapsService>(this);
             }
-            m_registry = registry;
-            registry.RegisterModuleInterface<ICapsService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -159,16 +160,6 @@ namespace OpenSim.Services.CapsService
             //Add the seed handlers, use "" for both so that we don't overwrite anything, as it is added above in the GetOrCreate
             clientService.AddSEEDCap("", "");
 
-            //Trigger events, if they exist
-            SceneManager regionManager = Registry.RequestModuleInterface<SceneManager>();
-            if (regionManager != null)
-            {
-                Scene scene;
-                if (regionManager.TryGetScene(regionHandle, out scene))
-                {
-                    scene.EventManager.TriggerOnRegisterCaps(AgentID, clientService);
-                }
-            }
             m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("UserLogin", AgentID);
             m_log.Debug("[CapsService]: Adding Caps URL " + clientService.CapsUrl + " informing region " + UrlToInform + " for agent " + AgentID);
             return clientService.CapsUrl;

@@ -38,6 +38,7 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
+using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
@@ -290,18 +291,20 @@ namespace OpenSim.Region.UserStatistics
             get { return true; }
         }
 
-        public void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        public OSDMap OnRegisterCaps(UUID agentID, IHttpServer server)
         {
-            m_log.DebugFormat("[VC]: OnRegisterCaps: agentID {0} caps {1}", agentID, caps);
-            string capsPath = "/CAPS/VS/" + UUID.Random();
-            caps.AddStreamHandler("ViewerStats",
-                                 new RestStreamHandler("POST", capsPath,
+            m_log.DebugFormat("[VC]: OnRegisterCaps: agentID {0}", agentID);
+            OSDMap retVal = new OSDMap();
+            retVal["ViewerStats"] = CapsUtil.CreateCAPS("ViewerStats", "");
+
+            server.AddStreamHandler(new RestStreamHandler("POST", retVal["ViewerStats"],
                                                        delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                        {
                                                            return ViewerStatsReport(request, path, param,
-                                                                                  agentID, caps);
+                                                                                  agentID);
                                                        }));
+            return retVal;
         }
 
         public void OnDeRegisterCaps(UUID agentID, IRegionClientCapsService caps)
@@ -432,7 +435,7 @@ namespace OpenSim.Region.UserStatistics
         /// <param name="caps"></param>
         /// <returns></returns>
         public string ViewerStatsReport(string request, string path, string param,
-                                      UUID agentID, IRegionClientCapsService caps)
+                                      UUID agentID)
         {
             //m_log.Debug(request);
 

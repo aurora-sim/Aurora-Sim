@@ -35,6 +35,7 @@ using OpenMetaverse.StructuredData;
 using log4net;
 using Nini.Config;
 using OpenSim.Framework;
+using OpenSim.Framework.Capabilities;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Framework.Servers;
@@ -152,29 +153,28 @@ namespace Aurora.Modules
 
         #endregion
 
-        public void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        public OSDMap OnRegisterCaps(UUID agentID, IHttpServer server)
         {
-            UUID capuuid = UUID.Random();
-
+            OSDMap retVal = new OSDMap();
+            retVal["DispatchWindLightSettings"] = CapsUtil.CreateCAPS("DispatchWindLightSettings", "");
             //Sets the windlight settings
-            caps.AddStreamHandler("DispatchWindLightSettings",
-                                new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["DispatchWindLightSettings"],
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
-                                                          return DispatchWindLightSettings(m_dhttpMethod, capuuid, agentID);
+                                                          return DispatchWindLightSettings(m_dhttpMethod, agentID);
                                                       }));
 
-            capuuid = UUID.Random();
+            retVal["RetrieveWindLightSettings"] = CapsUtil.CreateCAPS("RetrieveWindLightSettings", "");
             //Retrieves the windlight settings for a specifc parcel or region
-            caps.AddStreamHandler("RetrieveWindLightSettings",
-                                new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["RetrieveWindLightSettings"],
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
-                                                          return RetrieveWindLightSettings(m_dhttpMethod, capuuid, agentID);
+                                                          return RetrieveWindLightSettings(m_dhttpMethod, agentID);
                                                       }));
+            return retVal;
         }
 
-        private Hashtable RetrieveWindLightSettings(Hashtable m_dhttpMethod, UUID capuuid, UUID agentID)
+        private Hashtable RetrieveWindLightSettings(Hashtable m_dhttpMethod, UUID agentID)
         {
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200; //501; //410; //404;
@@ -260,7 +260,7 @@ namespace Aurora.Modules
             return responsedata;
         }
 
-        private Hashtable DispatchWindLightSettings(Hashtable m_dhttpMethod, UUID capuuid, UUID agentID)
+        private Hashtable DispatchWindLightSettings(Hashtable m_dhttpMethod, UUID agentID)
         {
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200; //501; //410; //404;

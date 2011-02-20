@@ -85,6 +85,8 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             else if (message["Method"] == "DisableSimulator")
             {
                 //KILL IT!
+                if (regionCaps == null)
+                    return null;
                 regionCaps.Close();
                 clientCaps.RemoveCAPS(requestingRegion);
             }
@@ -118,14 +120,17 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             else if (message["Method"] == "AgentLoggedOut")
             {
                 //ONLY if the agent is root do we even consider it
-                if (regionCaps.RootAgent)
+                if (regionCaps != null)
                 {
-                    //Close all caps
-                    clientCaps.Close();
+                    if (regionCaps.RootAgent)
+                    {
+                        //Close all caps
+                        clientCaps.Close();
 
-                    IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
-                    if (agentInfoService != null)
-                        agentInfoService.SetLoggedIn(regionCaps.AgentID.ToString(), false);
+                        IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+                        if (agentInfoService != null)
+                            agentInfoService.SetLoggedIn(regionCaps.AgentID.ToString(), false);
+                    }
                 }
             }
             else if (message["Method"] == "SendChildAgentUpdate")

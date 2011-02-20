@@ -229,9 +229,9 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
                 m_FreeswitchService = scene.RequestModuleInterface<IFreeswitchService>();
                 // we need to capture scene in an anonymous method
                 // here as we need it later in the callbacks
-                scene.EventManager.OnRegisterCaps += delegate(UUID agentID, IRegionClientCapsService caps)
+                scene.EventManager.OnRegisterCaps += delegate(UUID agentID, IHttpServer server)
                 {
-                    OnRegisterCaps(scene, agentID, caps);
+                    return OnRegisterCaps(scene, agentID, server);
                 };
             }
         }
@@ -304,34 +304,35 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
         // delegate containing the scene of the respective region (see
         // Initialise()).
         // </summary>
-        public void OnRegisterCaps(Scene scene, UUID agentID, IRegionClientCapsService caps)
+        public OSDMap OnRegisterCaps(Scene scene, UUID agentID, IHttpServer server)
         {
-            m_log.DebugFormat("[FreeSwitchVoice] OnRegisterCaps: agentID {0} caps {1}", agentID, caps);
+            m_log.DebugFormat("[FreeSwitchVoice] OnRegisterCaps: agentID {0}", agentID);
 
-            string capsBase = "/CAPS/" + UUID.Random();
-            caps.AddStreamHandler("ProvisionVoiceAccountRequest",
-                                 new RestStreamHandler("POST", capsBase + m_provisionVoiceAccountRequestPath,
+            OSDMap retVal = new OSDMap();
+            retVal["ProvisionVoiceAccountRequest"] = CapsUtil.CreateCAPS("ProvisionVoiceAccountRequest", "");
+
+            server.AddStreamHandler(new RestStreamHandler("POST", retVal["ProvisionVoiceAccountRequest"],
                                                        delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                        {
                                                            return ProvisionVoiceAccountRequest(scene, request, path, param,
-                                                                                               agentID, caps);
+                                                                                               agentID);
                                                        }));
-            caps.AddStreamHandler("ParcelVoiceInfoRequest",
-                                 new RestStreamHandler("POST", capsBase + m_parcelVoiceInfoRequestPath,
+            retVal["ParcelVoiceInfoRequest"] = CapsUtil.CreateCAPS("ParcelVoiceInfoRequest", "");
+            server.AddStreamHandler(new RestStreamHandler("POST", retVal["ParcelVoiceInfoRequest"],
                                                        delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                        {
                                                            return ParcelVoiceInfoRequest(scene, request, path, param,
-                                                                                         agentID, caps);
+                                                                                         agentID);
                                                        }));
-            caps.AddStreamHandler("ChatSessionRequest",
-                                 new RestStreamHandler("POST", capsBase + m_chatSessionRequestPath,
+            retVal["ChatSessionRequest"] = CapsUtil.CreateCAPS("ChatSessionRequest", "");
+            server.AddStreamHandler(new RestStreamHandler("POST", retVal["ChatSessionRequest"],
                                                        delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                        {
                                                            return ChatSessionRequest(scene, request, path, param,
-                                                                                     agentID, caps);
+                                                                                     agentID);
                                                        }));
         }
 
@@ -346,7 +347,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
         /// <param name="caps"></param>
         /// <returns></returns>
         public string ProvisionVoiceAccountRequest(Scene scene, string request, string path, string param,
-                                                   UUID agentID, IRegionClientCapsService caps)
+                                                   UUID agentID)
         {
             ScenePresence avatar = scene.GetScenePresence(agentID);
             if (avatar == null)
@@ -417,7 +418,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
         /// <param name="caps"></param>
         /// <returns></returns>
         public string ParcelVoiceInfoRequest(Scene scene, string request, string path, string param,
-                                             UUID agentID, IRegionClientCapsService caps)
+                                             UUID agentID)
         {
             ScenePresence avatar = scene.GetScenePresence(agentID);
             string avatarName = avatar.Name;
@@ -497,7 +498,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
         /// <param name="caps"></param>
         /// <returns></returns>
         public string ChatSessionRequest(Scene scene, string request, string path, string param,
-                                         UUID agentID, IRegionClientCapsService caps)
+                                         UUID agentID)
         {
             ScenePresence avatar = scene.GetScenePresence(agentID);
             string avatarName = avatar.Name;

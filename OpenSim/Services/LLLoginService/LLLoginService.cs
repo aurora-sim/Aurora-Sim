@@ -491,6 +491,7 @@ namespace OpenSim.Services.LLLoginService
                     GridUserInfoFound = false;
                     // something went wrong, make something up, so that we don't have to test this anywhere else
                     guinfo = new UserInfo();
+                    guinfo.UserID = account.PrincipalID.ToString();
                     guinfo.CurrentPosition = guinfo.HomePosition = new Vector3(128, 128, 30);
                 }
 
@@ -894,7 +895,7 @@ namespace OpenSim.Services.LLLoginService
 
             bool success = false;
 
-            #region Launch Agent Directly (No HG)
+            #region Launch Agent
 
             circuitCode = (uint)Util.RandomClass.Next(); ;
             aCircuit = MakeAgent(destination, account, appearance, session, secureSession, circuitCode, position, clientIP.Address.ToString());

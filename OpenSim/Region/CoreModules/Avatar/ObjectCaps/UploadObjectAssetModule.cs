@@ -73,7 +73,6 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
         public void RemoveRegion(Scene scene)
         {
-
             m_scene.EventManager.OnRegisterCaps -= RegisterCaps;
             m_scene = null;
         }
@@ -96,16 +95,14 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
         public string Name { get { return "UploadObjectAssetModuleModule"; } }
 
 
-        public void RegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        public OSDMap RegisterCaps(UUID agentID, IHttpServer server)
         {
-            UUID capID = UUID.Random();
-
-            //m_log.Info("[UploadObjectAssetModule]: /CAPS/" + capID);
-            caps.AddStreamHandler("UploadObjectAsset",
-                                 new RestHTTPHandler("POST", "/CAPS/OA/" + capID + "/",
+            OSDMap retVal = new OSDMap();
+            retVal["UploadObjectAsset"] = CapsUtil.CreateCAPS("UploadObjectAsset", "");
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["UploadObjectAsset"],
                                                        delegate(Hashtable m_dhttpMethod)
                                                        {
-                                                           return ProcessAdd(m_dhttpMethod, agentID, caps);
+                                                           return ProcessAdd(m_dhttpMethod, agentID);
                                                        }));
             /*
                    caps.RegisterHandler("NewFileAgentInventoryVariablePrice",
@@ -117,7 +114,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                                                                   return NewAgentInventoryRequest(req,agentID);
                                                               }));
              */
-
+            return retVal;
         }
 
         #endregion
@@ -130,7 +127,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
         /// <param name="AgentId"></param>
         /// <param name="cap"></param>
         /// <returns></returns>
-        public Hashtable ProcessAdd(Hashtable request, UUID AgentId, IRegionClientCapsService cap)
+        public Hashtable ProcessAdd(Hashtable request, UUID AgentId)
         {
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 400; //501; //410; //404;

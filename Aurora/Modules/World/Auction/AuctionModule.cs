@@ -7,6 +7,7 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
+using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
@@ -81,19 +82,20 @@ namespace Aurora.Modules
             }
         }
 
-        public void RegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        public OSDMap RegisterCaps(UUID agentID, IHttpServer server)
         {
-            UUID capuuid = UUID.Random();
+            OSDMap retVal = new OSDMap();
+            retVal["ViewerStartAuction"] = CapsUtil.CreateCAPS("ViewerStartAuction", "");
 
-            caps.AddStreamHandler("ViewerStartAuction",
-                                new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ViewerStartAuction"],
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
-                                                          return ViewerStartAuction(m_dhttpMethod, capuuid);
+                                                          return ViewerStartAuction(m_dhttpMethod);
                                                       }));
+            return retVal;
         }
 
-        private Hashtable ViewerStartAuction(Hashtable mDhttpMethod, UUID capuuid)
+        private Hashtable ViewerStartAuction(Hashtable mDhttpMethod)
         {
             //OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
             

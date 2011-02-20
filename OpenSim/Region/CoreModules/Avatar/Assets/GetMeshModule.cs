@@ -36,6 +36,7 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
+using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
@@ -95,23 +96,21 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
         public string Name { get { return "GetMeshModule"; } }
 
 
-        public void RegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        public OSDMap RegisterCaps(UUID agentID, IHttpServer server)
         {
-            UUID capID = UUID.Random();
-
-            //m_log.Info("[GETMESH]: /CAPS/" + capID);
-            caps.AddStreamHandler("GetMesh",
-                                 new RestHTTPHandler("GET", "/CAPS/" + capID,
+            OSDMap retVal = new OSDMap();
+            retVal["GetMesh"] = CapsUtil.CreateCAPS("GetMesh", "");
+            server.AddStreamHandler(new RestHTTPHandler("GET", retVal["GetMesh"],
                                                        delegate(Hashtable m_dhttpMethod)
                                                        {
-                                                           return ProcessGetMesh(m_dhttpMethod, agentID, caps);
+                                                           return ProcessGetMesh(m_dhttpMethod, agentID);
                                                        }));
-         
+            return retVal;
         }
 
         #endregion
 
-        public Hashtable ProcessGetMesh(Hashtable request, UUID AgentId, IRegionClientCapsService cap)
+        public Hashtable ProcessGetMesh(Hashtable request, UUID AgentId)
         {
             
             Hashtable responsedata = new Hashtable();

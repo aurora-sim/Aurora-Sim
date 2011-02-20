@@ -27,44 +27,6 @@ namespace OpenSim.Region.CoreModules
 
         public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            IEstateConnector EstateConnector = DataManager.RequestPlugin<IEstateConnector>();
-            if (EstateConnector != null)
-            {
-                EstateSettings ES;
-                if (EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID, out ES) && ES == null)
-                {
-                    //It found the estate service, but found no estates for this region, make a new one
-                    m_log.Warn("Your region " + scene.RegionInfo.RegionName + " is not part of an estate.");
-                    ES = CreateEstateInfo(scene);
-                }
-                else if (ES != null)
-                {
-                    //It found the estate service and it found an estate for this region
-                }
-                else
-                {
-                    //It could not find the estate service, wait until it can find it
-                    m_log.Warn("We could not find the estate service for this sim. Please make sure that your URLs are correct in grid mode.");
-                    while (true)
-                    {
-                        MainConsole.Instance.CmdPrompt("Press enter to try again.");
-                        if (EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID, out ES) && ES == null)
-                            ES = CreateEstateInfo(scene);
-                        else if (ES != null)
-                            continue;
-                        break;
-                    }
-                }
-                //Get the password from the database now that we have either created a new estate and saved it, joined a new estate, or just reloaded
-                IGenericsConnector g = DataManager.RequestPlugin<IGenericsConnector>();
-                EstatePassword s = null;
-                if (g != null)
-                    s = g.GetGeneric<EstatePassword>(scene.RegionInfo.RegionID, "EstatePassword", ES.EstateID.ToString(), new EstatePassword());
-                if (s != null)
-                    ES.EstatePass = s.Password;
-
-                scene.RegionInfo.EstateSettings = ES;
-            }
         }
 
         private EstateSettings CreateEstateInfo(Scene scene)
@@ -213,6 +175,44 @@ namespace OpenSim.Region.CoreModules
 
         public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
+            IEstateConnector EstateConnector = DataManager.RequestPlugin<IEstateConnector>();
+            if (EstateConnector != null)
+            {
+                EstateSettings ES;
+                if (EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID, out ES) && ES == null)
+                {
+                    //It found the estate service, but found no estates for this region, make a new one
+                    m_log.Warn("Your region " + scene.RegionInfo.RegionName + " is not part of an estate.");
+                    ES = CreateEstateInfo(scene);
+                }
+                else if (ES != null)
+                {
+                    //It found the estate service and it found an estate for this region
+                }
+                else
+                {
+                    //It could not find the estate service, wait until it can find it
+                    m_log.Warn("We could not find the estate service for this sim. Please make sure that your URLs are correct in grid mode.");
+                    while (true)
+                    {
+                        MainConsole.Instance.CmdPrompt("Press enter to try again.");
+                        if (EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID, out ES) && ES == null)
+                            ES = CreateEstateInfo(scene);
+                        else if (ES != null)
+                            continue;
+                        break;
+                    }
+                }
+                //Get the password from the database now that we have either created a new estate and saved it, joined a new estate, or just reloaded
+                IGenericsConnector g = DataManager.RequestPlugin<IGenericsConnector>();
+                EstatePassword s = null;
+                if (g != null)
+                    s = g.GetGeneric<EstatePassword>(scene.RegionInfo.RegionID, "EstatePassword", ES.EstateID.ToString(), new EstatePassword());
+                if (s != null)
+                    ES.EstatePass = s.Password;
+
+                scene.RegionInfo.EstateSettings = ES;
+            }
         }
 
         public void PostFinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)

@@ -99,16 +99,6 @@ namespace OpenSim.Services.CapsService
             set { m_lastPosition = value; }
         }
 
-        private string m_UrlToInform = "";
-        /// <summary>
-        /// An optional Url that will be called to retrieve more Caps for the client.
-        /// </summary>
-        public string UrlToInform
-        {
-            get { return m_UrlToInform; }
-            set { m_UrlToInform = value; }
-        }
-
         /// <summary>
         /// This is the /CAPS/UUID 0000/ string
         /// </summary>
@@ -163,12 +153,12 @@ namespace OpenSim.Services.CapsService
 
         #region Initialize
 
-        public void Initialise(IClientCapsService clientCapsService, ulong regionHandle, string capsBase, string urlToInform, AgentCircuitData circuitData)
+        public void Initialise(IClientCapsService clientCapsService, ulong regionHandle, string capsBase, AgentCircuitData circuitData)
         {
             m_clientCapsService = clientCapsService;
             m_RegionHandle = regionHandle;
             m_circuitData = circuitData;
-            AddSEEDCap(capsBase, urlToInform);
+            AddSEEDCap(capsBase);
 
             AddCAPS();
         }
@@ -179,8 +169,6 @@ namespace OpenSim.Services.CapsService
 
         //X cap name to path
         protected OSDMap registeredCAPS = new OSDMap();
-        //Paths to X cap
-        protected OSDMap registeredCAPSPath = new OSDMap();
 
         public string CreateCAPS(string method, string appendedPath)
         {
@@ -194,16 +182,11 @@ namespace OpenSim.Services.CapsService
                 return;
             string CAPSPath = HostUri + caps;
             registeredCAPS[method] = CAPSPath;
-            registeredCAPSPath[CAPSPath] = method;
         }
 
         protected void RemoveCaps(string method)
         {
-            OSD CapsPath = "";
-            if (!registeredCAPS.TryGetValue(method, out CapsPath))
-                return;
             registeredCAPS.Remove(method);
-            registeredCAPSPath.Remove(CapsPath.AsString());
         }
 
         #endregion
@@ -226,12 +209,10 @@ namespace OpenSim.Services.CapsService
 
         #region SEED cap handling
 
-        public void AddSEEDCap(string CapsUrl, string UrlToInform)
+        public void AddSEEDCap(string CapsUrl)
         {
             if (CapsUrl != "")
                 m_capsUrlBase = CapsUrl;
-            if (UrlToInform != "" && UrlToInform != this.CapsUrl)
-                m_UrlToInform = UrlToInform;
             Disabled = false;
             //Add our SEED cap
             AddStreamHandler("SEED", new RestStreamHandler("POST", m_capsUrlBase, CapsRequest));
@@ -246,33 +227,7 @@ namespace OpenSim.Services.CapsService
         public virtual string CapsRequest(string request, string path, string param,
                                   OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            try
-            {
-                m_log.Debug("[CapsHandlers]: Handling Seed Cap request at " + CapsUrl + ", informing URL " + UrlToInform);
-                if (UrlToInform != "")
-                {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            UrlToInform,
-                            OSDParser.SerializeLLSDXmlString(new OSDMap()));
-                    if (reply != "")
-                    {
-                        OSDMap hash = (OSDMap)OSDParser.DeserializeLLSDXml(Utils.StringToBytes(reply));
-                        foreach (string key in hash.Keys)
-                        {
-                            if (key == null || hash[key] == null)
-                                continue;
-                            if (!registeredCAPS.ContainsKey(key))
-                                registeredCAPS[key] = hash[key].AsString();
-                        }
-                    }
-                    else
-                        m_log.Error("[PerRegionCapsService]: Failed to get info for SEED caps from " + UrlToInform);
-                }
-            }
-            catch(Exception ex)
-            {
-                m_log.Error("[PerRegionCapsService]: Exception getting info for SEED caps from " + UrlToInform + ", " + ex.ToString());
-            }
+            m_log.Debug("[CapsHandlers]: Handling Seed Cap request at " + CapsUrl);
             return OSDParser.SerializeLLSDXmlString(registeredCAPS);
         }
 

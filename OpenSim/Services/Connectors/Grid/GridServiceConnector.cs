@@ -61,7 +61,7 @@ namespace OpenSim.Services.Connectors
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RegistrationURI");
             foreach (string m_ServerURI in serverURIs)
             {
-                OSDMap result = WebUtils.PostToService(m_ServerURI, map);
+                OSDMap result = WebUtils.PostToService(m_ServerURI + "/grid", map);
                 if (result["Success"].AsBoolean())
                 {
                     try

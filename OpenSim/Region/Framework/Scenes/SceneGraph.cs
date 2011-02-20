@@ -1174,7 +1174,8 @@ namespace OpenSim.Region.Framework.Scenes
             EntityBase group;
             if (TryGetEntity(ObjectID, out group))
             {
-                ((SceneObjectGroup)group).ServiceObjectPropertiesFamilyRequest(remoteClient, AgentID, RequestFlags);
+                if(group is SceneObjectGroup)
+                    ((SceneObjectGroup)group).ServiceObjectPropertiesFamilyRequest(remoteClient, AgentID, RequestFlags);
             }
         }
 

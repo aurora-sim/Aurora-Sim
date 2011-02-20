@@ -75,5 +75,11 @@ namespace OpenSim.Framework.Capabilities
             //capsPath = capsPath.Remove(capsPath.Length - 4, 4);
             return capsPath;
         }
+
+        public static string CreateCAPS(string method, string appendedPath)
+        {
+            string caps = "/CAPS/" + method + "/" + UUID.Random() + appendedPath + "/";
+            return caps;
+        }
     }
 }

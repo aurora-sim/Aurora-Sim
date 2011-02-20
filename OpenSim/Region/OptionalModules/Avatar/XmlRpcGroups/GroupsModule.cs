@@ -191,24 +191,25 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         }
 
-        void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        protected OSDMap OnRegisterCaps(UUID agentID, IHttpServer server)
         {
-            string capsBase = "/CAPS/" + UUID.Random();
-            caps.AddStreamHandler("GroupProposalBallot",
-                                new RestStreamHandler("POST", capsBase + "/",
+            OSDMap retVal = new OSDMap();
+            retVal["GroupProposalBallot"] = CapsUtil.CreateCAPS("GroupProposalBallot", "");
+
+            server.AddStreamHandler(new RestStreamHandler("POST", retVal["GroupProposalBallot"],
                                                       delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                       {
                                                           return GroupProposalBallot(request, agentID);
                                                       }));
-            capsBase = "/CAPS/" + UUID.Random();
-            caps.AddStreamHandler("StartGroupProposal",
-                                new RestStreamHandler("POST", capsBase + "/",
+            retVal["StartGroupProposal"] = CapsUtil.CreateCAPS("StartGroupProposal", "");
+            server.AddStreamHandler(new RestStreamHandler("POST", retVal["StartGroupProposal"],
                                                       delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                       {
                                                           return StartGroupProposal(request, agentID);
                                                       }));
+            return retVal;
         }
 
         public void RemoveRegion(Scene scene)

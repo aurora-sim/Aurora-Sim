@@ -32,6 +32,7 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Messages;
 using OpenSim.Framework;
+using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -767,16 +768,17 @@ namespace Aurora.Modules
         /// </summary>
         /// <param name="agentID"></param>
         /// <param name="caps"></param>
-        public void RegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        public OSDMap RegisterCaps(UUID agentID, IHttpServer server)
         {
-            string capsBase = "/CAPS/" + UUID.Random() + "/";
+            OSDMap retVal = new OSDMap();
+            retVal["ChatSessionRequest"] = CapsUtil.CreateCAPS("ChatSessionRequest", "");
 
-            caps.AddStreamHandler("ChatSessionRequest",
-                                new RestHTTPHandler("POST", capsBase,
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ChatSessionRequest"],
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
                                                           return ProcessChatSessionRequest(m_dhttpMethod, agentID);
                                                       }));
+            return retVal;
         }
 
         private Hashtable ProcessChatSessionRequest(Hashtable mDhttpMethod, UUID Agent)

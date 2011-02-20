@@ -610,7 +610,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             ScenePresence sp = GetScenePresence(agent.AgentID);
 
-            ICapsService capsService = RequestModuleInterface<ICapsService>();
             if (sp != null && !sp.IsChildAgent)
             {
                 // We have a zombie from a crashed session. 
@@ -618,28 +617,14 @@ namespace OpenSim.Region.Framework.Scenes
                 // Kill it.
                 m_log.InfoFormat("[Scene]: Zombie scene presence detected for {0} in {1}", agent.AgentID, RegionInfo.RegionName);
                 RemoveAgent(sp);
-                //Destroy the old caps
-                IClientCapsService clientCaps = capsService.GetClientCapsService(sp.UUID);
-                if (clientCaps != null)
-                    clientCaps.RemoveCAPS(this.RegionInfo.RegionHandle);
                 sp = null;
             }
 
             OSDMap responseMap = new OSDMap();
 
-            if (capsService != null)
-            {
-                const string seedRequestPath = "0000/";
-                string CapsSeed = "/CAPS/" + agent.CapsPath + seedRequestPath;
-                string capsUrl = capsService.CreateCAPS(agent.AgentID, "", CapsSeed, RegionInfo.RegionHandle, !agent.child, agent);
-                IRegionClientCapsService regionCaps = capsService.GetClientCapsService(agent.AgentID).GetCapsService(RegionInfo.RegionHandle);
+            OSDMap urls = this.EventManager.TriggerOnRegisterCaps(agent.AgentID);
 
-                regionCaps.AddSEEDCap("", "");
-
-                m_log.Debug("[NewAgentConnection]: Adding Caps Url for region " + RegionInfo.RegionName +
-                     " @" + capsUrl + " for agent " + agent.AgentID);
-                responseMap["CapsUrl"] = capsUrl;
-            }
+            responseMap["CapsUrls"] = urls;
 
             // In all cases, add or update the circuit data with the new agent circuit data and teleport flags
             agent.teleportFlags = teleportFlags;

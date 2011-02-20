@@ -36,6 +36,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse.Messages.Linden;
 using OpenSim.Framework;
+using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Console;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
@@ -1729,27 +1730,28 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         #region CAPS handler
 
-        private void EventManagerOnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        private OSDMap EventManagerOnRegisterCaps(UUID agentID, IHttpServer server)
         {
-            string capsBase = "/CAPS/" + UUID.Random();
-            caps.AddStreamHandler("RemoteParcelRequest",
-                                 new RestStreamHandler("POST", capsBase + remoteParcelRequestPath,
+            OSDMap retVal = new OSDMap();
+            retVal["RemoteParcelRequest"] = CapsUtil.CreateCAPS("RemoteParcelRequest", remoteParcelRequestPath);
+
+            server.AddStreamHandler(new RestStreamHandler("POST", retVal["RemoteParcelRequest"],
                                                        delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                        {
-                                                           return RemoteParcelRequest(request, path, param, agentID, caps);
+                                                           return RemoteParcelRequest(request, path, param, agentID);
                                                        }));
-            UUID parcelCapID = UUID.Random();
-            caps.AddStreamHandler("ParcelPropertiesUpdate",
-                                 new RestStreamHandler("POST", "/CAPS/" + parcelCapID,
+            retVal["ParcelPropertiesUpdate"] = CapsUtil.CreateCAPS("ParcelPropertiesUpdate", "");
+            server.AddStreamHandler(new RestStreamHandler("POST", retVal["ParcelPropertiesUpdate"],
                                                        delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                        {
-                                                           return ProcessPropertiesUpdate(request, path, param, agentID, caps);
+                                                           return ProcessPropertiesUpdate(request, path, param, agentID);
                                                        }));
+            return retVal;
         }
 
-        private string ProcessPropertiesUpdate(string request, string path, string param, UUID agentID, IRegionClientCapsService caps)
+        private string ProcessPropertiesUpdate(string request, string path, string param, UUID agentID)
         {
             IClientAPI client;
             if (!m_scene.TryGetClient(agentID, out client))
@@ -1816,7 +1818,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         //     <uuid>xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</uuid>
         //   </map>
         // </llsd>
-        private string RemoteParcelRequest(string request, string path, string param, UUID agentID, IRegionClientCapsService caps)
+        private string RemoteParcelRequest(string request, string path, string param, UUID agentID)
         {
             UUID parcelID = UUID.Zero;
             try
