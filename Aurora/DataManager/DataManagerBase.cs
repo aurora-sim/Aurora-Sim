@@ -70,16 +70,16 @@ namespace Aurora.DataManager
             return null;
         }
 
-        public void WriteAuroraVersion(Version version)
+        public void WriteAuroraVersion(Version version, string MigrationName)
         {
             if (!TableExists(VERSION_TABLE_NAME))
             {
                 CreateTable(VERSION_TABLE_NAME, new[] {new ColumnDefinition {Name = COLUMN_VERSION, Type = ColumnTypes.String100}});
             }
             //Remove previous versions
-            Delete(VERSION_TABLE_NAME, new string[0] { }, new object[0] { });
+            Delete(VERSION_TABLE_NAME, new string[1] { COLUMN_NAME }, new object[1] { MigrationName });
             //Add the new version
-            Insert(VERSION_TABLE_NAME, new[] {version.ToString()});
+            Insert(VERSION_TABLE_NAME, new[] { version.ToString(), MigrationName });
         }
 
         public void CopyTableToTable(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)

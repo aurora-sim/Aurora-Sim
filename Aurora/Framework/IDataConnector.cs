@@ -43,7 +43,7 @@ namespace Aurora.Framework
         /// Set the version of the database
         /// </summary>
         /// <param name="version"></param>
-        void WriteAuroraVersion(Version version);
+        void WriteAuroraVersion(Version version, string MigrationName);
 
         /// <summary>
         /// Copy tables

@@ -5,7 +5,11 @@ using Aurora.Framework;
 
 namespace Aurora.DataManager.Migration
 {
-    public class Migrator : IRestorePoint
+    public interface IMigrator
+    {
+        string MigrationName { get; }
+    }
+    public class Migrator : IMigrator, IRestorePoint
     {
         public List<Rec<string, ColumnDefinition[]>> schema;
         public Dictionary<string, string> renameSchema;
@@ -51,7 +55,7 @@ namespace Aurora.DataManager.Migration
         public void Migrate(IDataConnector genericData)
         {
             DoMigrate(genericData);
-            genericData.WriteAuroraVersion(Version);
+            genericData.WriteAuroraVersion(Version, MigrationName);
         }
 
         protected virtual void DoMigrate(IDataConnector genericData)
@@ -61,7 +65,7 @@ namespace Aurora.DataManager.Migration
         public void CreateDefaults(IDataConnector genericData)
         {
             DoCreateDefaults(genericData);
-            genericData.WriteAuroraVersion(Version);
+            genericData.WriteAuroraVersion(Version, MigrationName);
         }
 
         protected virtual void DoCreateDefaults(IDataConnector genericData)

@@ -20,12 +20,14 @@ namespace Aurora.DataManager.Migration
         {
             this.genericData = genericData;
             this.migratorName = migratorName;
-            List<Migrator> allMigrators = Aurora.Framework.AuroraModuleLoader.PickupModules<Migrator>();
-            foreach (Migrator m in allMigrators)
+            List<IMigrator> allMigrators = Aurora.Framework.AuroraModuleLoader.PickupModules<IMigrator>();
+            foreach (IMigrator m in allMigrators)
             {
+                if (m.MigrationName == null)
+                    continue;
                 if (m.MigrationName == migratorName)
                 {
-                    migrators.Add(m);
+                    migrators.Add((Migrator)m);
                 }
             }
         }
