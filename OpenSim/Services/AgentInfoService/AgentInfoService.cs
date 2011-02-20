@@ -55,6 +55,10 @@ namespace OpenSim.Services.PresenceService
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AgentInfoHandler", "") != Name)
+                return;
+
             registry.RegisterModuleInterface<IAgentInfoService>(this);
             m_registry = registry;
         }
@@ -66,6 +70,11 @@ namespace OpenSim.Services.PresenceService
         public void FinishedStartup()
         {
             m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+        }
+
+        public string Name
+        {
+            get { return GetType().Name; }
         }
 
         #endregion
