@@ -2596,7 +2596,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             item.prim = prim;
             item.what = what;
             item.arg = arg;
-            ChangesQueue.Enqueue(item);
+            lock (ChangesQueue)
+                {
+                ChangesQueue.Enqueue(item);
+                }
             }
 
         private AODEchangeitem GetNextChange()
