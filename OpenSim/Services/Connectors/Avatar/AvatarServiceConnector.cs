@@ -85,7 +85,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/avatar",
+                            m_ServerURI,
                             reqString);
                     if (reply == null || (reply != null && reply == string.Empty))
                     {
@@ -138,7 +138,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/avatar",
+                            m_ServerURI,
                             reqString);
                     if (reply != string.Empty)
                     {
@@ -184,7 +184,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/avatar",
+                            m_ServerURI,
                             reqString);
                     if (reply != string.Empty)
                     {
@@ -232,7 +232,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/avatar",
+                            m_ServerURI,
                             reqString);
                     if (reply != string.Empty)
                     {
@@ -280,7 +280,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/avatar",
+                            m_ServerURI,
                             reqString);
                     if (reply != string.Empty)
                     {
@@ -327,7 +327,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     AsynchronousRestObjectRequester.MakeRequest("POST",
-                            m_ServerURI + "/avatar",
+                            m_ServerURI,
                             reqString);
                 }
             }

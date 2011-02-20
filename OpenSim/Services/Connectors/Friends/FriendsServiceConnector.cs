@@ -65,7 +65,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/friends",
+                        m_ServerURI,
                         reqString);
                     if (reply != string.Empty)
                     {
@@ -130,7 +130,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/friends",
+                            m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
                 }
             }
@@ -175,7 +175,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/friends",
+                            m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
                     if (reply != string.Empty)
                     {
@@ -219,6 +219,7 @@ namespace OpenSim.Services.Connectors
                 return;
 
             registry.RegisterModuleInterface<IFriendsService>(this);
+            m_registry = registry;
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)

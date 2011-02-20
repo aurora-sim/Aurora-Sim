@@ -61,7 +61,7 @@ namespace OpenSim.Services.Connectors
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RegistrationURI");
             foreach (string m_ServerURI in serverURIs)
             {
-                OSDMap result = WebUtils.PostToService(m_ServerURI + "/grid", map);
+                OSDMap result = WebUtils.PostToService(m_ServerURI, map);
                 if (result["Success"].AsBoolean())
                 {
                     try
@@ -113,7 +113,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/grid",
+                            m_ServerURI,
                             reqString);
                     if (reply != string.Empty)
                     {
@@ -161,7 +161,7 @@ namespace OpenSim.Services.Connectors
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
             foreach (string m_ServerURI in serverURIs)
             {
-                OSDMap result = WebUtils.PostToService(m_ServerURI + "/grid", map);
+                OSDMap result = WebUtils.PostToService(m_ServerURI, map);
                 if (result["Success"].AsBoolean())
                 {
                     try
@@ -192,7 +192,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/grid",
+                            m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
 
                     if (reply != string.Empty)
@@ -230,7 +230,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/grid",
+                            m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
                 }
             }
@@ -280,7 +280,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/grid",
+                            m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
                 }
             }
@@ -328,7 +328,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/grid",
+                            m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
                 }
             }
@@ -375,7 +375,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/grid",
+                            m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
                 }
             }
@@ -431,7 +431,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/grid",
+                            m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
 
                     //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
@@ -485,7 +485,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/grid",
+                            m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
 
                     //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
@@ -541,7 +541,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/grid",
+                            m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
 
                     //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
@@ -597,7 +597,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/grid",
+                            m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
 
                     //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
@@ -651,7 +651,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/grid",
+                            m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
 
                     //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
@@ -705,7 +705,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/grid",
+                            m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
                 }
             }
@@ -754,7 +754,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/grid",
+                            m_ServerURI,
                             reqString);
                     if (reply != string.Empty)
                     {

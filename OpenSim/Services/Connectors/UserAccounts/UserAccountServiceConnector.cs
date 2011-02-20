@@ -124,7 +124,7 @@ namespace OpenSim.Services.Connectors
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/accounts",
+                        m_ServerURI,
                         reqString);
                     if (reply == null || (reply != null && reply == string.Empty))
                     {

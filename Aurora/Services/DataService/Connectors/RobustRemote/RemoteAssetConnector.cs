@@ -61,7 +61,7 @@ namespace Aurora.Services.DataService
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     AsynchronousRestObjectRequester.MakeRequest("POST",
-                           m_ServerURI + "/auroradata",
+                           m_ServerURI,
                            reqString);
                 }
             }
@@ -88,7 +88,7 @@ namespace Aurora.Services.DataService
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI + "/auroradata",
+                           m_ServerURI,
                            reqString);
 
                     if (reply != string.Empty)

@@ -66,7 +66,7 @@ namespace OpenSim.Services.Connectors
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             foreach (string m_ServerURI in serverURIs)
             {
-                string uri = m_ServerURI + "/assets/" + id + "/exists";
+                string uri = m_ServerURI + "/" + id + "/exists";
 
                 bool exists = SynchronousRestObjectRequester.
                         MakeRequest<int, bool>("GET", uri, 0);
@@ -83,7 +83,7 @@ namespace OpenSim.Services.Connectors
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             foreach (string m_ServerURI in serverURIs)
             {
-                string uri = m_ServerURI + "/assets/" + id;
+                string uri = m_ServerURI + "/" + id;
 
                 if (m_Cache != null)
                     asset = m_Cache.Get(id);
@@ -123,7 +123,7 @@ namespace OpenSim.Services.Connectors
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             foreach (string m_ServerURI in serverURIs)
             {
-                string uri = m_ServerURI + "/assets/" + id + "/metadata";
+                string uri = m_ServerURI + "/" + id + "/metadata";
 
                 AssetMetadata asset = SynchronousRestObjectRequester.
                         MakeRequest<int, AssetMetadata>("GET", uri, 0);
@@ -175,7 +175,7 @@ namespace OpenSim.Services.Connectors
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             foreach (string m_ServerURI in serverURIs)
             {
-                string uri = m_ServerURI + "/assets/" + id;
+                string uri = m_ServerURI + "/" + id;
 
                 AssetBase asset = null;
                 if (m_Cache != null)
@@ -222,7 +222,7 @@ namespace OpenSim.Services.Connectors
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             foreach (string m_ServerURI in serverURIs)
             {
-                string uri = m_ServerURI + "/assets/";
+                string uri = m_ServerURI + "/";
 
                 try
                 {
@@ -269,7 +269,7 @@ namespace OpenSim.Services.Connectors
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             foreach (string m_ServerURI in serverURIs)
             {
-                string uri = m_ServerURI + "/assets/" + id;
+                string uri = m_ServerURI + "/" + id;
 
                 if (SynchronousRestObjectRequester.
                         MakeRequest<AssetBase, bool>("POST", uri, asset))
@@ -288,7 +288,7 @@ namespace OpenSim.Services.Connectors
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             foreach (string m_ServerURI in serverURIs)
             {
-                string uri = m_ServerURI + "/assets/" + id;
+                string uri = m_ServerURI + "/" + id;
 
                 if (!SynchronousRestObjectRequester.
                         MakeRequest<int, bool>("DELETE", uri, 0))
