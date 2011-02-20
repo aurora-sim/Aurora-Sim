@@ -13,7 +13,6 @@ namespace Aurora.DataManager.Migration.Migrators
             MigrationName = "Asset";
 
             schema = new List<Rec<string, ColumnDefinition[]>>();
-            renameSchema = new Dictionary<string, string>();
 
             AddSchema("lslgenericdata", ColDefs(ColDef("Token", ColumnTypes.String50, true),
                 ColDef("KeySetting", ColumnTypes.String50, true),

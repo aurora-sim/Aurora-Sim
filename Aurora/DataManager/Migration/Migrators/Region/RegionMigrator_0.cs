@@ -13,7 +13,6 @@ namespace Aurora.DataManager.Migration.Migrators
             MigrationName = "Region";
 
             schema = new List<Rec<string, ColumnDefinition[]>>();
-            renameSchema = new Dictionary<string, string>();
 
             AddSchema("telehubs", ColDefs(
                 ColDef("RegionID", ColumnTypes.String50, true),

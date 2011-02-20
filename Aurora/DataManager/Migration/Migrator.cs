@@ -12,7 +12,7 @@ namespace Aurora.DataManager.Migration
     public class Migrator : IMigrator, IRestorePoint
     {
         public List<Rec<string, ColumnDefinition[]>> schema;
-        public Dictionary<string, string> renameSchema;
+        private Dictionary<string, string> renameSchema = new Dictionary<string, string>();
 
         public Version Version { get; protected set; }
 
@@ -90,6 +90,11 @@ namespace Aurora.DataManager.Migration
         protected void AddSchema(string table, ColumnDefinition[] definitions)
         {
             schema.Add(new Rec<string, ColumnDefinition[]>(table, definitions));
+        }
+
+        protected void RenameSchema(string oldTable, string newTable)
+        {
+            renameSchema.Add(oldTable, newTable);
         }
 
         protected void RemoveSchema(string table)

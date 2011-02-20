@@ -13,7 +13,6 @@ namespace Aurora.DataManager.Migration.Migrators
             MigrationName = "UserInfo";
 
             schema = new List<Rec<string, ColumnDefinition[]>>();
-            renameSchema = new Dictionary<string, string>();
 
             //
             // Change summery:

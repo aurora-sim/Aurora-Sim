@@ -13,7 +13,6 @@ namespace Aurora.DataManager.Migration.Migrators
             MigrationName = "ScriptData";
 
             schema = new List<Rec<string, ColumnDefinition[]>>();
-            renameSchema = new Dictionary<string, string>();
 
             AddSchema("auroradotnetstatesaves", ColDefs(
                 ColDef("State", ColumnTypes.String50),

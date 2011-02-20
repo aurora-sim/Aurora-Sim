@@ -13,7 +13,6 @@ namespace Aurora.DataManager.Migration.Migrators
             MigrationName = "Parcel";
 
             schema = new List<Rec<string, ColumnDefinition[]>>();
-            renameSchema = new Dictionary<string, string>();
 
             AddSchema("parcelaccess", ColDefs(
                 ColDef("ParcelID", ColumnTypes.String50, true),

@@ -13,7 +13,6 @@ namespace Aurora.DataManager.Migration.Migrators
             MigrationName = "AbuseReports";
 
             schema = new List<Rec<string, ColumnDefinition[]>>();
-            renameSchema = new Dictionary<string, string>();
 
             AddSchema("abusereports", ColDefs(
                 ColDef("Category", ColumnTypes.String100),

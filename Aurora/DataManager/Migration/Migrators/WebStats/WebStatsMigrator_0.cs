@@ -13,7 +13,6 @@ namespace Aurora.DataManager.Migration.Migrators
             MigrationName = "WebStats";
 
             schema = new List<Rec<string, ColumnDefinition[]>>();
-            renameSchema = new Dictionary<string, string>();
 
             AddSchema("stats_session_data", ColDefs(ColDef("session_id", ColumnTypes.String50, true),
                  ColDef("agent_id", ColumnTypes.String50),

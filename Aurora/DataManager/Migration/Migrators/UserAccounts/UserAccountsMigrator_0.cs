@@ -13,7 +13,6 @@ namespace Aurora.DataManager.Migration.Migrators
             MigrationName = "UserAccounts";
 
             schema = new List<Rec<string, ColumnDefinition[]>>();
-            renameSchema = new Dictionary<string, string>();
 
             //
             // Change summery:
@@ -22,8 +21,8 @@ namespace Aurora.DataManager.Migration.Migrators
             //     Note: we do multiple renames here as it doesn't 
             //     always like just switching to lowercase (as in SQLite)
             //
-            renameSchema.Add("UserAccounts", "useraccountslower");
-            renameSchema.Add("useraccountslower", "useraccounts");
+            this.RenameSchema("UserAccounts", "useraccountslower");
+            this.RenameSchema("useraccountslower", "useraccounts");
 
             //Remove the old name
             this.RemoveSchema("UserAccounts");
