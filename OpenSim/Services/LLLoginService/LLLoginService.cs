@@ -78,6 +78,8 @@ namespace OpenSim.Services.LLLoginService
 
         protected string m_DefaultRegionName;
         protected string m_WelcomeMessage;
+        protected string m_WelcomeMessageURL;
+        protected string m_CustomizedMessageURL;
         protected bool m_RequireInventory;
         protected int m_MinLoginLevel;
         protected string m_GatekeeperURL;
@@ -122,9 +124,12 @@ namespace OpenSim.Services.LLLoginService
             ReadEventValues(m_LoginServerConfig);
             ReadClassifiedValues(m_LoginServerConfig);
             allowExportPermission = m_LoginServerConfig.GetBoolean("AllowUseageOfExportPermissions", true);
-
+            
             m_DefaultRegionName = m_LoginServerConfig.GetString("DefaultRegion", String.Empty);
-            m_WelcomeMessage = m_LoginServerConfig.GetString("WelcomeMessage", "Welcome to OpenSim!");
+            m_WelcomeMessage = m_LoginServerConfig.GetString("WelcomeMessage", "");
+            m_WelcomeMessageURL = m_LoginServerConfig.GetString("CustomizedMessageURL", "http://127.0.0.1");
+            WebClient client = new WebClient();
+            m_CustomizedMessageURL = client.DownloadString(m_WelcomeMessageURL);
             m_RequireInventory = m_LoginServerConfig.GetBoolean("RequireInventory", true);
             m_AllowRemoteSetLoginLevel = m_LoginServerConfig.GetBoolean("AllowRemoteSetLoginLevel", false);
             m_MinLoginLevel = m_LoginServerConfig.GetInt("MinLoginLevel", 0);
@@ -661,13 +666,25 @@ namespace OpenSim.Services.LLLoginService
                         MaxMaturity = "A";
                 }
 
-
+                if (m_WelcomeMessage == string.Empty)
+                {
                 LLLoginResponse response = new LLLoginResponse(account, aCircuit, guinfo, destination, inventorySkel, friendsList, m_LibraryService,
-                    where, startLocation, position, lookAt, gestures, m_WelcomeMessage, home, clientIP, MaxMaturity, MaturityRating, m_MapTileURL, m_SearchURL,
+                    where, startLocation, position, lookAt, gestures, m_CustomizedMessageURL, home, clientIP, MaxMaturity, MaturityRating, m_MapTileURL, m_SearchURL,
                     m_AllowFirstLife ? "Y" : "N", m_TutorialURL, eventCategories, classifiedCategories, FillOutSeedCap(aCircuit, destination, clientIP, account.PrincipalID), allowExportPermission, m_config);
 
                 m_log.InfoFormat("[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " + destination.RegionName + ", tried to login to " + startLocation + " at " + position.ToString() + ".");
                 return response;
+                }
+                else
+                {
+                    LLLoginResponse response = new LLLoginResponse(account, aCircuit, guinfo, destination, inventorySkel, friendsList, m_LibraryService,
+                        where, startLocation, position, lookAt, gestures, m_WelcomeMessage, home, clientIP, MaxMaturity, MaturityRating, m_MapTileURL, m_SearchURL,
+                        m_AllowFirstLife ? "Y" : "N", m_TutorialURL, eventCategories, classifiedCategories, FillOutSeedCap(aCircuit, destination, clientIP, account.PrincipalID), allowExportPermission, m_config);
+
+                    m_log.InfoFormat("[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " + destination.RegionName + ", tried to login to " + startLocation + " at " + position.ToString() + ".");
+                    return response;
+                }
+                
             }
             catch (Exception e)
             {
@@ -676,6 +693,7 @@ namespace OpenSim.Services.LLLoginService
                     m_PresenceService.LogoutAgent(session);
                 return LLFailedLoginResponse.InternalError;
             }
+            
         }
 
         protected string FillOutSeedCap(AgentCircuitData aCircuit, GridRegion destination, IPEndPoint ipepClient, UUID AgentID)

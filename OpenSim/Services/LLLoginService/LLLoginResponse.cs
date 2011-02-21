@@ -200,7 +200,6 @@ namespace OpenSim.Services.LLLoginService
         // Error Flags
         private string errorReason;
         private string errorMessage;
-
         private string welcomeMessage;
         private string startLocation;
         private string allowFirstLife;
@@ -393,7 +392,6 @@ namespace OpenSim.Services.LLLoginService
             ErrorMessage = "You have entered an invalid name/password combination.  Check Caps/lock.";
             ErrorReason = "key";
             welcomeMessage = "Welcome to Aurora!";
-
             SessionID = UUID.Random();
             SecureSessionID = UUID.Random();
             AgentID = UUID.Random();
@@ -474,12 +472,22 @@ namespace OpenSim.Services.LLLoginService
                 responseData["start_location"] = startLocation;
                 responseData["home"] = home;
                 responseData["look_at"] = lookAt;
+
                 //Let's add a customizable welcome message (by Enrico Nirvana)
+                //{
+                responseData["message"] = welcomeMessage;
+                if (welcomeMessage == string.Empty)
+                {
+                IConfig WelcomeMEssageURL = m_source.Configs["CustomizedMessageURL"];
                 WebClient client = new WebClient();//master login
-                string custommessage = client.DownloadString("http://world.4d-web.eu/welcome.txt");//downloading messages
-                responseData["message"] = custommessage;//master login modification
+                string CustomizedMessageURL = client.DownloadString("WelcomeMEssageURL");//downloading messages
+                responseData["message"] = CustomizedMessageURL;//master login modification
+                }
                 //Let's use the default welcome message
-                //responseData["message"] = welcomeMessage;
+                //if (welcomeMessage != string.Empty)
+                //   responseData["message"] = welcomeMessage;
+                //}
+                // end of customizable welcome message (by Enrico Nirvana)
                 responseData["region_x"] = (Int32)(RegionX);
                 responseData["region_y"] = (Int32)(RegionY);
                 responseData["region_size_x"] = (Int32)(RegionSizeX);
@@ -629,7 +637,9 @@ namespace OpenSim.Services.LLLoginService
                 map["seed_capability"] = OSD.FromString(seedCapability);
                 map["home"] = OSD.FromString(home);
                 map["look_at"] = OSD.FromString(lookAt);
+                if (welcomeMessage != null)
                 map["message"] = OSD.FromString(welcomeMessage);
+                else
                 map["region_x"] = OSD.FromInteger(RegionX);
                 map["region_y"] = OSD.FromInteger(RegionY);
 
