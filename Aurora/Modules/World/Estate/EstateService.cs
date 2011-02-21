@@ -520,11 +520,11 @@ namespace Aurora.Modules
                 }
             }
 
-            //Can only enter prelude regions once!
-            int flags = scene.GridService.GetRegionFlags(scene.RegionInfo.ScopeID, scene.RegionInfo.RegionID);
             //We assume that our own region isn't null....
             if (agentInfo != null)
             {
+                //Can only enter prelude regions once!
+                int flags = scene.GridService.GetRegionFlags(scene.RegionInfo.ScopeID, scene.RegionInfo.RegionID);
                 if (((flags & (int)Aurora.Framework.RegionFlags.Prelude) == (int)Aurora.Framework.RegionFlags.Prelude) && agentInfo != null)
                 {
                     if (agentInfo.OtherAgentInformation.ContainsKey("Prelude" + scene.RegionInfo.RegionID))

@@ -1025,7 +1025,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// Check to make sure the user can be teleporting out of the region to a remote region.l
+        /// Check to make sure the user can be teleporting out of the region to a remote region.
         /// If this is false, the user is denied the ability to leave the region at all.
         /// </summary>
         /// <param name="userID">The user that is attempting to leave the region</param>

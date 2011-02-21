@@ -170,12 +170,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             try
             {
-                long XShift = (finalDestination.RegionLocX - sp.Scene.RegionInfo.RegionLocX);
-                long YShift = (finalDestination.RegionLocY - sp.Scene.RegionInfo.RegionLocY);
-                if (finalDestination.RegionHandle == sp.Scene.RegionInfo.RegionHandle || //Take region size into account as well
-                    (XShift < sp.Scene.RegionInfo.RegionSizeX && YShift < sp.Scene.RegionInfo.RegionSizeY &&
-                    XShift > 0 && YShift > 0 && //Can't have negatively sized regions
-                    sp.Scene.RegionInfo.RegionSizeX != int.MaxValue && sp.Scene.RegionInfo.RegionSizeY != int.MaxValue))
+                if (finalDestination.RegionHandle == sp.Scene.RegionInfo.RegionHandle)
                 {
                     //First check whether the user is allowed to move at all
                     if (!sp.Scene.Permissions.AllowedOutgoingLocalTeleport(sp.UUID, out reason))
@@ -192,20 +187,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     m_log.DebugFormat(
                         "[ENTITY TRANSFER MODULE]: RequestTeleportToLocation {0} within {1}",
                         position, sp.Scene.RegionInfo.RegionName);
-
-                    //We have to add the shift as it is brought into this as well in regions that have larger RegionSizes
-                    position.X += XShift;
-                    position.Y += YShift;
-
-                    //Keep users from being underground
-                    ITerrainChannel channel = sp.Scene.RequestModuleInterface<ITerrainChannel>();
-                    float groundHeight = channel.GetNormalizedGroundHeight(position.X, position.Y);
-                    if (position.Z < groundHeight)
-                    {
-                        position.Z = groundHeight;
-                    }
-
-                    sp.ControllingClient.SendTeleportStart(teleportFlags);
 
                     sp.ControllingClient.SendLocalTeleport(position, lookAt, teleportFlags);
                     sp.Teleport(position);
@@ -302,7 +283,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     {
                         // Fix the agent status
                         sp.IsChildAgent = false;
-                        sp.ControllingClient.SendTeleportFailed("Destination refused");
+                        sp.ControllingClient.SendTeleportFailed(map["Reason"].AsString());
                         return;
                     }
                 }
@@ -585,7 +566,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                             agent.Velocity, agentCircuit, cAgent, agent.Scene.RegionInfo.RegionHandle));
                         if (!map.ContainsKey("Success") || !map["Success"].AsBoolean())
                         {
-                            agent.ControllingClient.SendTeleportFailed("Could not cross");
+                            agent.ControllingClient.SendTeleportFailed(map["Reason"].AsString());
                             return agent;
                         }
                     }

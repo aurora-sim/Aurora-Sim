@@ -161,8 +161,10 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 regionCaps.Disabled = false;
 
                 OSDMap result = new OSDMap();
+                string reason = "";
                 result["Success"] = TeleportAgent(destination, TeleportFlags, DrawDistance,
-                    Circuit, AgentData, AgentID, requestingRegion);
+                    Circuit, AgentData, AgentID, requestingRegion, out reason);
+                result["Reason"] = reason;
                 return result;
             }
             else if (message["Method"] == "CrossAgent")
@@ -181,8 +183,10 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 regionCaps.Disabled = false;
 
                 OSDMap result = new OSDMap();
+                string reason = "";
                 result["Success"] = CrossAgent(Region, pos, Vel, Circuit, AgentData,
-                    AgentID, requestingRegion);
+                    AgentID, requestingRegion, out reason);
+                result["Reason"] = reason;
                 return result;
             }
             return null;
@@ -360,7 +364,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         #region Teleporting
 
         protected bool TeleportAgent(GridRegion destination, uint TeleportFlags, int DrawDistance,
-            AgentCircuitData circuit, AgentData agentData, UUID AgentID, ulong requestingRegion)
+            AgentCircuitData circuit, AgentData agentData, UUID AgentID, ulong requestingRegion, out string reason)
         {
             bool result = false;
             bool callWasCanceled = false;
@@ -370,7 +374,10 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             {
                 //Set the user in transit so that we block duplicate tps and reset any cancelations
                 if (!SetUserInTransit(AgentID))
+                {
+                    reason = "Already in a teleport";
                     return false;
+                }
 
                 //Note: we have to pull the new grid region info as the one from the region cannot be trusted
                 IGridService GridService = m_registry.RequestModuleInterface<IGridService>();
@@ -380,10 +387,16 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     //Inform the client of the neighbor if needed
                     if (!InformClientOfNeighbor(AgentID, requestingRegion, circuit, destination, TeleportFlags,
                         agentData))
+                    {
+                        reason = "Could not inform region about agent";
                         return false;
+                    }
                 }
                 else
+                {
+                    reason = "Could not find the grid service";
                     return false;
+                }
 
                 uint x, y;
                 Utils.LongToUInts(requestingRegion, out x, out y);
@@ -425,6 +438,11 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                             (int)y, destination.RegionLocY))
                             SimulationService.CloseAgent(destination, AgentID);
                     }
+                    clientCaps.RemoveCAPS(destination.RegionHandle);
+                    if (!callWasCanceled)
+                        reason = "The teleport timed out";
+                    else
+                        reason = "Cancelled";
                 }
                 else
                 {
@@ -434,11 +452,14 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
                     // Next, let's close the child agent connections that are too far away.
                     CloseNeighborAgents(destination, AgentID, requestingRegion);
+                    reason = "";
                 }
 
                 //All done
                 ResetFromTransit(AgentID);
             }
+            else
+                reason = "No SimulationService found!";
 
             return result;
         }
@@ -525,7 +546,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         #region Crossing
 
         protected bool CrossAgent(GridRegion crossingRegion, Vector3 pos,
-            Vector3 velocity, AgentCircuitData circuit, AgentData cAgent, UUID AgentID, ulong requestingRegion)
+            Vector3 velocity, AgentCircuitData circuit, AgentData cAgent, UUID AgentID, ulong requestingRegion, out string reason)
         {
             IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
             IRegionClientCapsService requestingRegionCaps = clientCaps.GetCapsService(requestingRegion);
@@ -538,7 +559,10 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 {
                     //Set the user in transit so that we block duplicate tps and reset any cancelations
                     if (!SetUserInTransit(AgentID))
+                    {
+                        reason = "Already in a teleport";
                         return false;
+                    }
 
                     bool result = false;
 
@@ -546,6 +570,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     if (!SimulationService.UpdateAgent(crossingRegion, cAgent))
                     {
                         m_log.Warn("[EventQueue]: Failed to cross agent " + AgentID + " because region did not accept it. Resetting.");
+                        reason = "Failed to update an agent";
                     }
                     else
                     {
@@ -569,7 +594,10 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
                         result = WaitForCallback(AgentID);
                         if (!result)
+                        {
                             m_log.Warn("[EntityTransferModule]: Callback never came in crossing agent " + circuit.AgentID + ". Resetting.");
+                            reason = "Crossing timed out";
+                        }
                         else
                         {
                             // Next, let's close the child agent connections that are too far away.
@@ -582,6 +610,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
                                 CloseNeighborAgents(crossingRegion, AgentID, requestingRegion);
                             }
+                            reason = "";
                         }
                     }
 
@@ -589,7 +618,11 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     ResetFromTransit(AgentID);
                     return result;
                 }
+                else
+                    reason = "Could not find the GridService";
             }
+            else
+                reason = "Could not find the SimulationService";
             return false;
         }
 
