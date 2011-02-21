@@ -307,7 +307,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     Thread.Sleep(1000);
                     // Fix this so that when we close, we don't have the wrong type
                     sp.IsChildAgent = false;
-                    //Wait a bit for the agent to leave this region, then close them
+                    //Wait a bit for the agent to leave this region, then close just this agent, the grid deals with others
                     sp.Scene.IncomingCloseAgent(sp.UUID);
                 }
                 else

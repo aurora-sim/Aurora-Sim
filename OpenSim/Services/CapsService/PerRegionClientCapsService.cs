@@ -236,7 +236,7 @@ namespace OpenSim.Services.CapsService
         public virtual string CapsRequest(string request, string path, string param,
                                   OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            m_log.Debug("[CapsHandlers]: Handling Seed Cap request at " + CapsUrl);
+            m_log.Info("[CapsHandlers]: Handling Seed Cap request at " + CapsUrl);
             return OSDParser.SerializeLLSDXmlString(registeredCAPS);
         }
 

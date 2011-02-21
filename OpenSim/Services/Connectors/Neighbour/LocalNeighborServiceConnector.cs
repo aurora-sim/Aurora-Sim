@@ -416,20 +416,6 @@ namespace OpenSim.Services.Connectors
             });
         }
 
-        public void CloseAllNeighborAgents(UUID AgentID, UUID currentRegionID)
-        {
-            if (!m_KnownNeighbors.ContainsKey(currentRegionID))
-                return;
-            List<GridRegion> NeighborsOfCurrentRegion = m_KnownNeighbors[currentRegionID];
-            m_log.DebugFormat(
-                "[NeighborService]: Closing all child agents for " + AgentID + ". Checking {0} regions.",
-                NeighborsOfCurrentRegion.Count);
-            Util.FireAndForget(delegate(object o)
-            {
-                SendCloseChildAgent(AgentID, currentRegionID, NeighborsOfCurrentRegion);
-            });
-        }
-
         /// <summary>
         /// Check if the new position is outside of the range for the old position
         /// </summary>

@@ -401,11 +401,6 @@ namespace OpenSim.Services.Connectors
             string reply = SynchronousRestFormsRequester.MakeRequest("POST", uri, queryString);
         }
 
-        public virtual void CloseAllNeighborAgents(UUID AgentID, UUID currentRegionID)
-        {
-            m_LocalService.CloseAllNeighborAgents(AgentID, currentRegionID);
-        }
-
         public virtual void CloseNeighborAgents(int newRegionX, int newRegionY, UUID AgentID, ulong currentRegionID)
         {
             m_LocalService.CloseNeighborAgents(newRegionX, newRegionY, AgentID, currentRegionID);

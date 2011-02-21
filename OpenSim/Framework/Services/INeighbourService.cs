@@ -107,13 +107,6 @@ namespace OpenSim.Services.Interfaces
         List<GridRegion> GetNeighbors(GridRegion region, int userDrawDistance);
 
         /// <summary>
-        /// Close all the child agents of the given AgentID in the neighbors
-        /// </summary>
-        /// <param name="AgentID"></param>
-        /// <param name="currentRegionID"></param>
-        void CloseAllNeighborAgents(UUID AgentID, UUID currentRegionID);
-
-        /// <summary>
         /// Close neighbor agents if they are too far away
         /// </summary>
         /// <param name="newRegionX"></param>

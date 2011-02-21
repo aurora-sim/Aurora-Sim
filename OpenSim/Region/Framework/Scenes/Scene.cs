@@ -759,12 +759,6 @@ namespace OpenSim.Region.Framework.Scenes
             ScenePresence presence = m_sceneGraph.GetScenePresence(agentID);
             if (presence != null)
             {
-                if (!presence.IsChildAgent)
-                {
-                    INeighborService service = RequestModuleInterface<INeighborService>();
-                    if (service != null)
-                        service.CloseAllNeighborAgents(presence.UUID, RegionInfo.RegionID);
-                }
                 bool RetVal = RemoveAgent(presence);
 
                 ISyncMessagePosterService syncPoster = RequestModuleInterface<ISyncMessagePosterService>();
@@ -783,8 +777,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                 return RetVal;
             }
-
-            // Agent not here
             return false;
         }
 
