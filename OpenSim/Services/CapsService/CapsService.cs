@@ -63,29 +63,32 @@ namespace OpenSim.Services.CapsService
 
         #region IService members
 
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            IConfig m_CAPSServerConfig = config.Configs["CAPSService"];
-            if (m_CAPSServerConfig != null)
-            {
-                IConfig networkConfig = config.Configs["Network"];
-                m_hostName = networkConfig.GetString("HostName", String.Empty);
-                if (m_hostName != "")
-                {
-                    //Sanitize the results, remove / and :
-                    m_hostName = m_hostName.EndsWith("/") ? m_hostName.Remove(m_hostName.Length - 1) : m_hostName;
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("CapsHandler", "") != Name)
+                return;
 
-                    m_port = m_CAPSServerConfig.GetUInt("Port", m_port);
-                }
-                m_registry = registry;
-                registry.RegisterModuleInterface<ICapsService>(this);
-            }
+            IConfig networkConfig = config.Configs["Network"];
+            m_hostName = networkConfig.GetString("HostName", String.Empty);
+            if (m_hostName != "")
+                //Sanitize the results, remove / and :
+                m_hostName = m_hostName.EndsWith("/") ? m_hostName.Remove(m_hostName.Length - 1) : m_hostName;
+            else
+                m_hostName = "http://127.0.0.1";
+            m_registry = registry;
+            registry.RegisterModuleInterface<ICapsService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
             ISimulationBase simBase = registry.RequestModuleInterface<ISimulationBase>();
-            m_server = simBase.GetHttpServer(m_port);
+            m_server = simBase.GetHttpServer(0);
 
             MainConsole.Instance.Commands.AddCommand("CapsService", false, "show presences", "show presences", "Shows all presences in the grid, experimental!", ShowUsers);
         }
