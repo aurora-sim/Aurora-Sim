@@ -1618,18 +1618,82 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (TerrainHeightFieldHeights.ContainsKey(heightFieldGeom))
                         {
 
+
                         //int index;
                         x = x - offsetX;
                         y = y - offsetY;
 
+                        // warning this code assumes terrain grid as 1m size
+
                         if (x < 0)
-                            x = 0.5f;
-                        else if (x > WorldExtents.X)
-                            x = WorldExtents.X - 0.5f;
+                            x = 0;
                         if (y < 0)
-                            y = 0.5f;
-                        else if (y > WorldExtents.Y)
-                            y = WorldExtents.Y - 0.5f;                       
+                            y = 0;
+                        
+                        int ix;
+                        int iy;
+                        float dx;
+                        float dy;
+
+                        if(x < WorldExtents.X -1)
+                            {
+                            ix = (int) x;
+                            dx = x - (float)ix;
+                            }
+                        else
+                            {
+                            ix = (int)WorldExtents.X -1;
+                            dx=0;
+                            }
+                        if(y < WorldExtents.Y -1)
+                            {
+                            iy = (int) y;
+                            dy = y - (float)iy;
+                            }
+                        else
+                            {
+                            iy = (int)WorldExtents.Y -1;
+                            dy=0;
+                            }
+
+                        float h0;
+                        float h1;
+                        float h2;
+
+                        iy *= m_region.RegionSizeX;
+
+                        if((dx +dy) <= 1.0f)
+                            {
+                            h0 = TerrainHeightFieldHeights[heightFieldGeom][iy + ix];
+
+                            if(dx >0)
+                                h1 = (TerrainHeightFieldHeights[heightFieldGeom][iy + ix + 1] - h0) * dx; 
+                            else
+                                h1 = 0;
+
+                            if(dy >0)
+                                h2 = (TerrainHeightFieldHeights[heightFieldGeom][iy +  m_region.RegionSizeX + ix] - h0) * dy;
+                            else
+                                h2=0;
+
+                            return h0 + h1 + h2;
+                            }
+                        else
+                            {
+                            h0 = TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix +1];
+
+                            if(dx >0)
+                                h1 = (TerrainHeightFieldHeights[heightFieldGeom][iy + ix + 1] - h0) * (1 - dy); 
+                            else
+                                h1 = 0;
+
+                            if(dy >0)
+                                h2 = (TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix] - h0) * (1 - dx);
+                            else
+                                h2=0;
+
+                            return h0 + h1 + h2;
+                            }
 
                         //index = (int)((int)x * (int)Constants.RegionSize) - ((int)Constants.RegionSize - (int)y);
 
@@ -1638,7 +1702,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         //if (index < NormalTerrainHeightFieldHeights[heightFieldGeom].Length)
                         //{
                             //m_log.DebugFormat("x{0} y{1} = {2}", x, y, (float)TerrainHeightFieldHeights[heightFieldGeom][index]);
-                        return (float)TerrainHeightFieldHeights[heightFieldGeom][((int)y * m_region.RegionSizeX) + (int)x];
+//                        return (float)TerrainHeightFieldHeights[heightFieldGeom][((int)y * m_region.RegionSizeX) + (int)x];
                         //}
 
                         //else
