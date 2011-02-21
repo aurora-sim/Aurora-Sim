@@ -3752,6 +3752,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                     RegionTerrain.Remove(pOffset);
                     TerrainHeightFieldHeights.Remove(GroundGeom);
+                    TerrainHeightFieldlimits.Remove(GroundGeom);
+
                     actor_name_map.Remove(GroundGeom);
                     geom_name_map.Remove(GroundGeom);
                     }
