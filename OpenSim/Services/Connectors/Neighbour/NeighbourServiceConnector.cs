@@ -102,14 +102,17 @@ namespace OpenSim.Services.Connectors
         public List<GridRegion> InformNeighborsRegionIsUp(RegionInfo incomingRegion, List<GridRegion> alreadyInformedRegions)
         {
             List<GridRegion> informedRegions = alreadyInformedRegions;
-            foreach (GridRegion neighbor in Neighbors[incomingRegion.RegionID])
+            lock (Neighbors)
             {
-                //If we have already informed the region, don't tell it again
-                if (informedRegions.Contains(neighbor))
-                    continue;
+                foreach (GridRegion neighbor in Neighbors[incomingRegion.RegionID])
+                {
+                    //If we have already informed the region, don't tell it again
+                    if (informedRegions.Contains(neighbor))
+                        continue;
 
-                //Call the region then and add the regions it informed
-                informedRegions.AddRange(DoHelloNeighbourCall(neighbor, incomingRegion));
+                    //Call the region then and add the regions it informed
+                    informedRegions.AddRange(DoHelloNeighbourCall(neighbor, incomingRegion));
+                }
             }
             return informedRegions;
         }
@@ -184,13 +187,16 @@ namespace OpenSim.Services.Connectors
         public List<GridRegion> InformNeighborsRegionIsDown(RegionInfo closingRegion, List<GridRegion> alreadyInformedRegions, List<GridRegion> neighbors)
         {
             List<GridRegion> informedRegions = new List<GridRegion>();
-            foreach (GridRegion neighbor in neighbors)
+            lock (neighbors)
             {
-                //If we have already informed the region, don't tell it again
-                if (alreadyInformedRegions.Contains(neighbor))
-                    continue;
-                //Call the region then and add the regions it informed
-                informedRegions.AddRange(DoGoodbyeNeighbourCall(neighbor, closingRegion));
+                foreach (GridRegion neighbor in neighbors)
+                {
+                    //If we have already informed the region, don't tell it again
+                    if (alreadyInformedRegions.Contains(neighbor))
+                        continue;
+                    //Call the region then and add the regions it informed
+                    informedRegions.AddRange(DoGoodbyeNeighbourCall(neighbor, closingRegion));
+                }
             }
             return informedRegions;
         }
@@ -366,13 +372,16 @@ namespace OpenSim.Services.Connectors
 
         protected void InformNeighborsOfChatMessage(OSChatMessage message, ChatSourceType type, RegionInfo region, List<GridRegion> alreadyInformedRegions, List<GridRegion> neighbors)
         {
-            foreach (GridRegion neighbor in neighbors)
+            lock (neighbors)
             {
-                //If we have already informed the region, don't tell it again
-                if (alreadyInformedRegions.Contains(neighbor))
-                    continue;
-                //Call the region then and add the regions it informed
-                InformNeighborOfChatMessage(message, type, neighbor, region);
+                foreach (GridRegion neighbor in neighbors)
+                {
+                    //If we have already informed the region, don't tell it again
+                    if (alreadyInformedRegions.Contains(neighbor))
+                        continue;
+                    //Call the region then and add the regions it informed
+                    InformNeighborOfChatMessage(message, type, neighbor, region);
+                }
             }
         }
 
@@ -421,12 +430,15 @@ namespace OpenSim.Services.Connectors
             if (m_KnownNeighborsPass.ContainsKey(uUID))
             {
                 List<NeighborPassword> passes = m_KnownNeighborsPass[uUID];
-                foreach (NeighborPassword p in passes)
+                lock (passes)
                 {
-                    if (thisRegion.RegionID == p.RegionID)
+                    foreach (NeighborPassword p in passes)
                     {
-                        thisRegion.Password = p.Password;
-                        break;
+                        if (thisRegion.RegionID == p.RegionID)
+                        {
+                            thisRegion.Password = p.Password;
+                            break;
+                        }
                     }
                 }
             }
