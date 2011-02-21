@@ -329,7 +329,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 lineout[lineSize + n] = total * oosob;
             }
         }
-
+/*
         private static void DCTLine16(float[] linein, float[] lineout, int line)
         {
             float total = 0.0f;
@@ -356,33 +356,95 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 lineout[lineSize + u] = total;
             }
         }
+*/
 
-        private static void DCTColumn16(float[] linein, int[] lineout, int column)
-        {
+        private static void DCTLine16(float[] linein, float[] lineout, int line)
+            {
+            // outputs transpose data (lines exchanged with coluns )
+            // so to save a bit of cpu when doing coluns
             float total = 0.0f;
-//            const float oosob = 2.0f / Constants.TerrainPatchSize;
+            int lineSize = line * Constants.TerrainPatchSize;
 
             for (int n = 0; n < Constants.TerrainPatchSize; n++)
-            {
-                total += linein[Constants.TerrainPatchSize * n + column];
+                {
+                total += linein[lineSize + n];
+                }
+
+            lineout[line] = OO_SQRT2 * total;
+
+            int uptr = 0;
+            for (int u = 1; u < Constants.TerrainPatchSize; u++)
+                {
+                total = 0.0f;
+                uptr += Constants.TerrainPatchSize;
+
+                for (int n = 0; n < Constants.TerrainPatchSize; n++)
+                    {
+                    total += linein[lineSize + n] * CosineTable16[uptr + n];
+                    }
+
+                lineout[line + uptr] = total;
+                }
             }
 
-//            lineout[CopyMatrix16[column]] = (int)(OO_SQRT2 * total * oosob * QuantizeTable16[column]);
+
+        /*
+                private static void DCTColumn16(float[] linein, int[] lineout, int column)
+                {
+                    float total = 0.0f;
+        //            const float oosob = 2.0f / Constants.TerrainPatchSize;
+
+                    for (int n = 0; n < Constants.TerrainPatchSize; n++)
+                    {
+                        total += linein[Constants.TerrainPatchSize * n + column];
+                    }
+
+        //            lineout[CopyMatrix16[column]] = (int)(OO_SQRT2 * total * oosob * QuantizeTable16[column]);
+                    lineout[CopyMatrix16[column]] = (int)(OO_SQRT2 * total * QuantizeTable16[column]);
+
+                    for (int uptr = Constants.TerrainPatchSize; uptr < Constants.TerrainPatchSize * Constants.TerrainPatchSize; uptr += Constants.TerrainPatchSize)
+                    {
+                        total = 0.0f;
+
+                        for (int n = 0; n < Constants.TerrainPatchSize; n++)
+                        {
+                            total += linein[Constants.TerrainPatchSize * n + column] * CosineTable16[uptr + n];
+                        }
+
+        //                lineout[CopyMatrix16[Constants.TerrainPatchSize * u + column]] = (int)(total * oosob * QuantizeTable16[Constants.TerrainPatchSize * u + column]);
+                        lineout[CopyMatrix16[uptr + column]] = (int)(total * QuantizeTable16[uptr + column]);
+                        }
+                }
+        */
+        private static void DCTColumn16(float[] linein, int[] lineout, int column)
+            {
+            // input columns are in fact stored in lines now
+
+            float total = 0.0f;
+//            const float oosob = 2.0f / Constants.TerrainPatchSize;
+            int inlinesptr = Constants.TerrainPatchSize * column;
+
+            for (int n = 0; n < Constants.TerrainPatchSize; n++)
+                {
+                total += linein[inlinesptr + n];
+                }
+
+            //            lineout[CopyMatrix16[column]] = (int)(OO_SQRT2 * total * oosob * QuantizeTable16[column]);
             lineout[CopyMatrix16[column]] = (int)(OO_SQRT2 * total * QuantizeTable16[column]);
 
             for (int uptr = Constants.TerrainPatchSize; uptr < Constants.TerrainPatchSize * Constants.TerrainPatchSize; uptr += Constants.TerrainPatchSize)
-            {
+                {
                 total = 0.0f;
 
                 for (int n = 0; n < Constants.TerrainPatchSize; n++)
-                {
-                    total += linein[Constants.TerrainPatchSize * n + column] * CosineTable16[uptr + n];
-                }
+                    {
+                    total += linein[inlinesptr + n] * CosineTable16[uptr + n];
+                    }
 
 //                lineout[CopyMatrix16[Constants.TerrainPatchSize * u + column]] = (int)(total * oosob * QuantizeTable16[Constants.TerrainPatchSize * u + column]);
                 lineout[CopyMatrix16[uptr + column]] = (int)(total * QuantizeTable16[uptr + column]);
                 }
-        }
+            }
 
         public static void DecodePatch(int[] patches, BitPack bitpack, TerrainPatch.Header header, int size)
         {

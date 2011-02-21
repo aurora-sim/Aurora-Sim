@@ -345,7 +345,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_colliderObjectfilter = 0;
                     }
 
-                if (m_colliderGroundfilter == 0)
+                if (m_colliderObjectfilter == 0)
                     m_iscollidingObj = false;
                 else
                     m_iscollidingObj = true;

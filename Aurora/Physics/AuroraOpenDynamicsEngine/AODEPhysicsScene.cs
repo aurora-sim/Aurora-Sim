@@ -97,7 +97,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private CollisionLocker ode;
 
         public float ODE_STEPSIZE = 0.020f;
-        private float metersInSpace = 29.9f;
         private float m_timeDilation = 1.0f;
 
         public float gravityx = 0f;
@@ -106,11 +105,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private float contactsurfacelayer = 0.001f;
 
-        private int worldHashspaceLow = -4;
-        private int worldHashspaceHigh = 128;
-
-        private int smallHashspaceLow = -4;
-        private int smallHashspaceHigh = 66;
+        private int HashspaceLow = -3;  // current ODE limits
+        private int HashspaceHigh = 10;
+        private int GridSpaceScaleBits = 5; // used to do shifts to find space from position. Value decided from region size in init
+        private int nspacesPerSideX = 8;
+        private int nspacesPerSideY = 8;
 
         private int framecount = 0;
 
@@ -463,12 +462,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_PointOfGravity.Y = physicsconfig.GetFloat("point_gravityy", 0);
                     m_PointOfGravity.Z = physicsconfig.GetFloat("point_gravityz", 0);
 
-                    worldHashspaceLow = physicsconfig.GetInt("world_hashspace_size_low", -4);
-                    worldHashspaceHigh = physicsconfig.GetInt("world_hashspace_size_high", 128);
-
-                    metersInSpace = physicsconfig.GetFloat("meters_in_small_space", 29.9f);
-                    smallHashspaceLow = physicsconfig.GetInt("small_hashspace_size_low", -4);
-                    smallHashspaceHigh = physicsconfig.GetInt("small_hashspace_size_high", 66);
 
                     contactsurfacelayer = physicsconfig.GetFloat("world_contact_surface_layer", 0.001f);
 
@@ -542,7 +535,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             contacts = new d.ContactGeom[contactsPerCollision];
 
-            staticPrimspace = new IntPtr[(int)(300 / metersInSpace), (int)(300 / metersInSpace)];
 
             // Centeral contact friction and bounce
             // ckrinke 11/10/08 Enabling soft_erp but not soft_cfm until I figure out why
@@ -705,8 +697,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_materialContacts[(int)Material.Rubber, 1].surface.bounce = mAvatarObjectContactBounce;
             m_materialContacts[(int)Material.Rubber, 1].surface.soft_cfm = 0.010f;
             m_materialContacts[(int)Material.Rubber, 1].surface.soft_erp = 0.010f;
-
-            d.HashSpaceSetLevels(space, worldHashspaceLow, worldHashspaceHigh);
+           
 
             // Set the gravity,, don't disable things automatically (we set it explicitly on some things)
 
@@ -725,15 +716,45 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.WorldSetQuickStepNumIterations(world, m_physicsiterations);
             //d.WorldSetContactMaxCorrectingVel(world, 1000.0f);
 
+            d.HashSpaceSetLevels(space, HashspaceLow, HashspaceHigh);
 
+            //  spaces grid for static objects
 
-            for (int i = 0; i < staticPrimspace.GetLength(0); i++)
-            {
-                for (int j = 0; j < staticPrimspace.GetLength(1); j++)
+            if(WorldExtents.X < WorldExtents.Y)
+            // // constant is 1/log(2),  -3 for division by 8 plus 0.5 for rounding
+                GridSpaceScaleBits = (int)(Math.Log((double)WorldExtents.X) * 1.4426950f - 2.5f);
+            else
+                GridSpaceScaleBits = (int)(Math.Log((double)WorldExtents.Y) * 1.4426950f - 2.5f);
+
+            if (GridSpaceScaleBits < 4) // no less than 16m side
+                GridSpaceScaleBits = 4;
+            else if (GridSpaceScaleBits > 10)
+                GridSpaceScaleBits = 10;   // no more than 1Km side
+
+            int nspacesPerSideX = (int)(WorldExtents.X) >> GridSpaceScaleBits;
+            int nspacesPerSideY = (int)(WorldExtents.Y) >> GridSpaceScaleBits;
+
+            if ((int)(WorldExtents.X) > nspacesPerSideX << GridSpaceScaleBits)
+                nspacesPerSideX++;
+            if ((int)(WorldExtents.Y) > nspacesPerSideY << GridSpaceScaleBits)
+                nspacesPerSideY++;
+
+            staticPrimspace = new IntPtr[nspacesPerSideX, nspacesPerSideY];
+
+            IntPtr aSpace;
+
+            for (int i = 0; i < nspacesPerSideX; i++)
                 {
-                    staticPrimspace[i, j] = IntPtr.Zero;
+                for (int j = 0; j < nspacesPerSideY; j++)
+                    {
+                    aSpace = d.HashSpaceCreate(IntPtr.Zero);
+                    staticPrimspace[i, j] = aSpace;
+                    d.GeomSetCategoryBits(aSpace, (int)CollisionCategories.Space);
+                    waitForSpaceUnlock(aSpace);
+                    d.SpaceSetSublevel(aSpace, 1);
+                    d.SpaceAdd(space, aSpace);
+                    }
                 }
-            }
         }
 
         internal void waitForSpaceUnlock(IntPtr space)
@@ -832,7 +853,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                     }*/
 
-                    count = d.Collide(g1, g2, contacts.Length, contacts, d.ContactGeom.SizeOf);
+                    count = d.Collide(g1, g2, (contacts.Length & 0xffff) , contacts, d.ContactGeom.SizeOf);
                 }
             }
             catch (SEHException)
@@ -845,6 +866,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_log.WarnFormat("[PHYSICS]: Unable to collide test an object: {0}", e.ToString());
                 return;
             }
+
+            if (count == 0)
+                return;
+
             m_StatFindContactsTime = Util.EnvironmentTickCountSubtract(FindContactsTime);
 
             PhysicsActor p1;
@@ -883,17 +908,24 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             #region Contact Loop
 
             for (int i = 0; i < count; i++)
-            {
+                {
                 d.ContactGeom curContact = contacts[i];
 
                 if (curContact.depth > maxDepthContact.PenetrationDepth)
-                {
-                    maxDepthContact = new ContactPoint(
-                        new Vector3((float)curContact.pos.X, (float)curContact.pos.Y, (float)curContact.pos.Z),
-                        new Vector3((float)curContact.normal.X, (float)curContact.normal.Y, (float)curContact.normal.Z),
-                        (float)curContact.depth
-                    );
-                }
+                    {
+                    maxDepthContact.PenetrationDepth = curContact.depth;
+                    maxDepthContact.Position.X = curContact.pos.X;
+                    maxDepthContact.Position.Y = curContact.pos.Y;
+                    maxDepthContact.Position.Z = curContact.pos.Z;
+                    maxDepthContact.SurfaceNormal.X = curContact.normal.X;
+                    maxDepthContact.SurfaceNormal.Y = curContact.normal.Y;
+                    maxDepthContact.SurfaceNormal.Z = curContact.normal.Z;
+//                    maxDepthContact = new ContactPoint(
+//                        new Vector3((float)curContact.pos.X, (float)curContact.pos.Y, (float)curContact.pos.Z),
+//                        new Vector3((float)curContact.normal.X, (float)curContact.normal.Y, (float)curContact.normal.Z),
+//                        (float)curContact.depth
+//                    );
+                    }
 
                 //m_log.Warn("[CCOUNT]: " + count);
                 IntPtr joint;
@@ -906,7 +938,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 #region disabled code1
 
                 if (curContact.depth >= 0.08f)
-                {
+                    {
                     //This is disabled at the moment only because it needs more tweaking
                     //It will eventually be uncommented
                     /*
@@ -1008,49 +1040,49 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         */
                 #endregion
                     if (curContact.depth >= 1.0f)
-                    {
+                        {
                         //m_log.Info("[P]: " + contact.depth.ToString());
                         if ((p2.PhysicsActorType == (int)ActorTypes.Agent &&
                              p1.PhysicsActorType == (int)ActorTypes.Ground) ||
                             (p1.PhysicsActorType == (int)ActorTypes.Agent &&
                              p2.PhysicsActorType == (int)ActorTypes.Ground))
-                        {
-                            if (p2.PhysicsActorType == (int)ActorTypes.Agent)
                             {
-                                if (p2 is AuroraODECharacter)
+                            if (p2.PhysicsActorType == (int)ActorTypes.Agent)
                                 {
+                                if (p2 is AuroraODECharacter)
+                                    {
                                     AuroraODECharacter character = (AuroraODECharacter)p2;
 
                                     //p2.CollidingObj = true;
                                     curContact.depth = 0.00000003f;
                                     p2.Velocity = p2.Velocity + new Vector3(0f, 0f, 0.5f);
                                     curContact.pos =
-                                        new d.Vector3(curContact.pos.X + (p1.Size.X / 2),
-                                                      curContact.pos.Y + (p1.Size.Y / 2),
-                                                      curContact.pos.Z + (p1.Size.Z / 2));
+                                                    new d.Vector3(curContact.pos.X + (p2.Size.X / 2),
+                                                                  curContact.pos.Y + (p2.Size.Y / 2),
+                                                                  curContact.pos.Z + (p2.Size.Z / 2));
                                     character.SetPidStatus(true);
+                                    }
                                 }
-                            }
 
                             if (p1.PhysicsActorType == (int)ActorTypes.Agent)
-                            {
-                                if (p1 is AuroraODECharacter)
                                 {
+                                if (p1 is AuroraODECharacter)
+                                    {
                                     AuroraODECharacter character = (AuroraODECharacter)p1;
 
                                     //p2.CollidingObj = true;
                                     curContact.depth = 0.00000003f;
                                     p1.Velocity = p1.Velocity + new Vector3(0f, 0f, 0.5f);
                                     curContact.pos =
-                                        new d.Vector3(curContact.pos.X + (p1.Size.X / 2),
-                                                      curContact.pos.Y + (p1.Size.Y / 2),
-                                                      curContact.pos.Z + (p1.Size.Z / 2));
+                                                    new d.Vector3(curContact.pos.X + (p1.Size.X / 2),
+                                                                  curContact.pos.Y + (p1.Size.Y / 2),
+                                                                  curContact.pos.Z + (p1.Size.Z / 2));
                                     character.SetPidStatus(true);
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
                 #endregion
 
@@ -1076,121 +1108,121 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 joint = IntPtr.Zero;
 
                 if (!skipThisContact)
-                {
+                    {
                     // If we're colliding against terrain
                     if (p1.PhysicsActorType == (int)ActorTypes.Ground)
-                    {
-                        // If we're moving
-                        if ((p2.PhysicsActorType == (int)ActorTypes.Agent) &&
-                            (Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f))
                         {
-                            // Use the movement terrain contact
-                            AvatarMovementTerrainContact.geom = curContact;
-                            if (m_filterCollisions)
-                                _perloopContact.Add(curContact);
-                            if (m_global_contactcount < maxContactsbeforedeath)
+                        if (p2.PhysicsActorType == (int)ActorTypes.Agent)
                             {
-                                joint = d.JointCreateContact(world, contactgroup, ref AvatarMovementTerrainContact);
-                                m_global_contactcount++;
-                            }
-                        }
-                        else
-                        {
-                            if (p2.PhysicsActorType == (int)ActorTypes.Agent)
-                            {
+                            if (Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f)
+                                {
+                                // Use the movement terrain contact
+                                AvatarMovementTerrainContact.geom = curContact;
+                                if (m_filterCollisions)
+                                    _perloopContact.Add(curContact);
+                                if (m_global_contactcount < maxContactsbeforedeath)
+                                    {
+                                    joint = d.JointCreateContact(world, contactgroup, ref AvatarMovementTerrainContact);
+                                    m_global_contactcount++;
+                                    }
+                                }
+                            else
+                                {
                                 // Use the non moving terrain contact
                                 TerrainContact.geom = curContact;
                                 if (m_filterCollisions)
                                     _perloopContact.Add(curContact);
                                 if (m_global_contactcount < maxContactsbeforedeath)
-                                {
+                                    {
                                     joint = d.JointCreateContact(world, contactgroup, ref TerrainContact);
                                     m_global_contactcount++;
+                                    }
                                 }
                             }
-                            else if (p2.PhysicsActorType == (int)ActorTypes.Prim)
+
+                        else if (p2.PhysicsActorType == (int)ActorTypes.Prim)
                             {
-                                // prim terrain contact
-                                // int pj294950 = 0;
-                                int movintYN = 0;
-                                int material = (int)Material.Wood;
+                            // prim terrain contact
+                            // int pj294950 = 0;
+                            int movintYN = 0;
+                            int material = (int)Material.Wood;
 
-                                // prim terrain contact
-                                if (Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f)
-                                    movintYN = 1;
+                            // prim terrain contact
+                            if (Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f)
+                                movintYN = 1;
 
-                                if (p2 is AuroraODEPrim)
-                                    material = ((AuroraODEPrim)p2).m_material;
+                            if (p2 is AuroraODEPrim)
+                                material = ((AuroraODEPrim)p2).m_material;
 
-                                //m_log.DebugFormat("Material: {0}", material);
-                                m_materialContacts[material, movintYN].geom = curContact;
-                                if (m_filterCollisions)
-                                    _perloopContact.Add(curContact);
+                            //m_log.DebugFormat("Material: {0}", material);
+                            m_materialContacts[material, movintYN].geom = curContact;
+                            if (m_filterCollisions)
+                                _perloopContact.Add(curContact);
 
-                                if (m_global_contactcount < maxContactsbeforedeath)
+                            if (m_global_contactcount < maxContactsbeforedeath)
                                 {
-                                    joint = d.JointCreateContact(world, contactgroup, ref m_materialContacts[material, movintYN]);
-                                    m_global_contactcount++;
+                                joint = d.JointCreateContact(world, contactgroup, ref m_materialContacts[material, movintYN]);
+                                m_global_contactcount++;
                                 }
                             }
-                            else
+                        else
                             {
-                                int movintYN = 0;
-                                // unknown terrain contact
-                                if (Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f)
-                                    movintYN = 1;
+                            int movintYN = 0;
+                            // unknown terrain contact
+                            if (Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f)
+                                movintYN = 1;
 
-                                int material = (int)Material.Wood;
+                            int material = (int)Material.Wood;
 
-                                if (p2 is AuroraODEPrim)
-                                    material = ((AuroraODEPrim)p2).m_material;
+                            if (p2 is AuroraODEPrim)
+                                material = ((AuroraODEPrim)p2).m_material;
 
-                                m_materialContacts[material, movintYN].geom = curContact;
-                                if (m_filterCollisions)
-                                    _perloopContact.Add(curContact);
+                            m_materialContacts[material, movintYN].geom = curContact;
+                            if (m_filterCollisions)
+                                _perloopContact.Add(curContact);
 
-                                if (m_global_contactcount < maxContactsbeforedeath)
+                            if (m_global_contactcount < maxContactsbeforedeath)
                                 {
-                                    joint = d.JointCreateContact(world, contactgroup, ref m_materialContacts[material, movintYN]);
-                                    m_global_contactcount++;
+                                joint = d.JointCreateContact(world, contactgroup, ref m_materialContacts[material, movintYN]);
+                                m_global_contactcount++;
                                 }
                             }
                         }
-                    }
+
                     else
-                    {
+                        {
                         // we're colliding with prim or avatar
                         // check if we're moving
                         if ((p2.PhysicsActorType == (int)ActorTypes.Agent))
-                        {
-                            if ((Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f))
                             {
+                            if ((Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f))
+                                {
                                 // Use the Movement prim contact
                                 AvatarMovementprimContact.geom = curContact;
                                 if (m_filterCollisions)
                                     _perloopContact.Add(curContact);
                                 if (m_global_contactcount < maxContactsbeforedeath)
-                                {
+                                    {
                                     joint = d.JointCreateContact(world, contactgroup, ref AvatarMovementprimContact);
                                     m_global_contactcount++;
+                                    }
                                 }
-                            }
                             else
-                            {
+                                {
                                 // Use the non movement contact
                                 contact.geom = curContact;
                                 if (m_filterCollisions)
                                     _perloopContact.Add(curContact);
 
                                 if (m_global_contactcount < maxContactsbeforedeath)
-                                {
+                                    {
                                     joint = d.JointCreateContact(world, contactgroup, ref contact);
                                     m_global_contactcount++;
+                                    }
                                 }
                             }
-                        }
                         else if (p2.PhysicsActorType == (int)ActorTypes.Prim)
-                        {
+                            {
                             //p1.PhysicsActorType
                             int material = (int)Material.Wood;
 
@@ -1203,22 +1235,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 _perloopContact.Add(curContact);
 
                             if (m_global_contactcount < maxContactsbeforedeath)
-                            {
+                                {
                                 joint = d.JointCreateContact(world, contactgroup, ref m_materialContacts[material, 0]);
                                 m_global_contactcount++;
+                                }
                             }
                         }
-                    }
 
                     if (m_global_contactcount < maxContactsbeforedeath && joint != IntPtr.Zero) // stack collide!
-                    {
+                        {
                         d.JointAttach(joint, b1, b2);
                         m_global_contactcount++;
+                        }
                     }
-                }
                 //m_log.Debug(count.ToString());
                 //m_log.Debug("near: A collision was detected between {1} and {2}", 0, name1, name2);
-            }
+                }
 
             #endregion
 
@@ -1231,7 +1263,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 bool p2col = false;
                 bool p2colgnd = false;
                 bool p2colobj = false;
-                
+
                 // We only need to test p2 for 'jump crouch purposes'
                 if (p2 is AuroraODECharacter && p1.PhysicsActorType == (int)ActorTypes.Prim)
                 {
@@ -2289,7 +2321,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                     }
                 }
-
+/* don't delete spaces
                 //If there are no more geometries in the sub-space, we don't need it in the main space anymore
                 if (d.SpaceGetNumGeoms(currentspace) == 0)
                 {
@@ -2312,6 +2344,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                     }
                 }
+ */
             }
             else
             {
@@ -2354,15 +2387,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // The routines in the Position and Size sections do the 'inserting' into the space,
             // so all we have to do is make sure that the space that we're putting the prim into
             // is in the 'main' space.
-            int[] iprimspaceArrItem = calculateSpaceArrayItemFromPos(pos);
+//            int[] iprimspaceArrItem = calculateSpaceArrayItemFromPos(pos);
             IntPtr newspace = calculateSpaceForGeom(pos);
 
+/*  spaces aren't deleted so already created
             if (newspace == IntPtr.Zero)
             {
                 newspace = createprimspace(iprimspaceArrItem[0], iprimspaceArrItem[1]);
-                d.HashSpaceSetLevels(newspace, smallHashspaceLow, smallHashspaceHigh);
+                d.HashSpaceSetLevels(newspace, HashspaceLow, HashspaceHigh);
             }
-
+*/
             return newspace;
         }
 
@@ -2372,6 +2406,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name="iprimspaceArrItemX"></param>
         /// <param name="iprimspaceArrItemY"></param>
         /// <returns>A pointer to the created space</returns>
+/* not in use ( and is wrong)
         public IntPtr createprimspace(int iprimspaceArrItemX, int iprimspaceArrItemY)
         {
             // creating a new space for prim and inserting it into main space.
@@ -2382,7 +2417,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.SpaceAdd(space, staticPrimspace[iprimspaceArrItemX, iprimspaceArrItemY]);
             return staticPrimspace[iprimspaceArrItemX, iprimspaceArrItemY];
         }
-
+*/
         /// <summary>
         /// Calculates the space the prim should be in by its position
         /// </summary>
@@ -2404,16 +2439,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             int[] returnint = new int[2];
 
-            returnint[0] = (int)(pos.X / metersInSpace);
+            returnint[0] = (int)(pos.X) >> GridSpaceScaleBits;
 
-            if (returnint[0] > ((int)(259f / metersInSpace)))
-                returnint[0] = ((int)(259f / metersInSpace));
+            if (returnint[0] >= nspacesPerSideX)
+                returnint[0] = nspacesPerSideX -1;
             if (returnint[0] < 0)
                 returnint[0] = 0;
 
-            returnint[1] = (int)(pos.Y / metersInSpace);
-            if (returnint[1] > ((int)(259f / metersInSpace)))
-                returnint[1] = ((int)(259f / metersInSpace));
+            returnint[1] = (int)(pos.Y) >> GridSpaceScaleBits;
+            if (returnint[1] >= nspacesPerSideY)
+                returnint[1] = nspacesPerSideY-1;
             if (returnint[1] < 0)
                 returnint[1] = 0;
 
@@ -2561,7 +2596,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             item.prim = prim;
             item.what = what;
             item.arg = arg;
-            ChangesQueue.Enqueue(item);
+            lock (ChangesQueue)
+                {
+                ChangesQueue.Enqueue(item);
+                }
             }
 
         private AODEchangeitem GetNextChange()
@@ -3203,6 +3241,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         #region ODE Specific Terrain Fixes
+
+/* needs fixing if really needed
+
         public float[] ResizeTerrain512NearestNeighbor(float[] heightMap)
         {
             float[] returnarr = new float[262144];
@@ -3466,7 +3507,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             return returnarr;
         }
-
+*/
         #endregion
 
         public override void SetTerrain(float[] heightMap)
@@ -3484,206 +3525,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        /*public void SetTerrain(float[] heightMap, Vector3 pOffset)
-        {
-            // this._heightmap[i] = (double)heightMap[i];
-            // dbm (danx0r) -- creating a buffer zone of one extra sample all around
-            //_origheightmap = heightMap;
-
-            float[] _heightmap;
-
-            // zero out a heightmap array float array (single dimension [flattened]))
-            //if ((int)Constants.RegionSize == 256)
-            //    _heightmap = new float[514 * 514];
-            //else
-
-            _heightmap = new float[(((int)Constants.RegionSize + 2) * ((int)Constants.RegionSize + 2))];
-
-            uint heightmapWidth = Constants.RegionSize + 1;
-            uint heightmapHeight = Constants.RegionSize + 1;
-
-            uint heightmapWidthSamples;
-
-            uint heightmapHeightSamples;
-
-            //if (((int)Constants.RegionSize) == 256)
-            //{
-            //    heightmapWidthSamples = 2 * (uint)Constants.RegionSize + 2;
-            //    heightmapHeightSamples = 2 * (uint)Constants.RegionSize + 2;
-            //    heightmapWidth++;
-            //    heightmapHeight++;
-            //}
-            //else
-            //{
-
-                heightmapWidthSamples = (uint)Constants.RegionSize + 1;
-                heightmapHeightSamples = (uint)Constants.RegionSize + 1;
-            //}
-
-            const float scale = 1.0f;
-            const float offset = 0.0f;
-            const float thickness = 1.0f;
-            const int wrap = 0;
-
-            int regionsize = (int) Constants.RegionSize + 2;
-            //Double resolution
-            //if (((int)Constants.RegionSize) == 256)
-            //    heightMap = ResizeTerrain512Interpolation(heightMap);
-
-
-           // if (((int)Constants.RegionSize) == 256 && (int)Constants.RegionSize == 256)
-           //     regionsize = 512;
-
-            float hfmin = 2000;
-            float hfmax = -2000;
-            
-                for (int x = 0; x < heightmapWidthSamples; x++)
-                {
-                    for (int y = 0; y < heightmapHeightSamples; y++)
-                    {
-                        int xx = Util.Clip(x - 1, 0, regionsize - 1);
-                        int yy = Util.Clip(y - 1, 0, regionsize - 1);
-                        
-                        
-                        float val= heightMap[yy * (int)Constants.RegionSize + xx];
-                         _heightmap[x * ((int)Constants.RegionSize + 2) + y] = val;
-                        
-                        hfmin = (val < hfmin) ? val : hfmin;
-                        hfmax = (val > hfmax) ? val : hfmax;
-                    }
-                }
-                
-            
-            
-
-            lock (OdeLock)
-            {
-                IntPtr GroundGeom = IntPtr.Zero;
-                if (RegionTerrain.TryGetValue(pOffset, out GroundGeom))
-                {
-                    RegionTerrain.Remove(pOffset);
-                    if (GroundGeom != IntPtr.Zero)
-                    {
-                        if (TerrainHeightFieldHeights.ContainsKey(GroundGeom))
-                        {
-                            TerrainHeightFieldHeights.Remove(GroundGeom);
-                        }
-                        d.SpaceRemove(space, GroundGeom);
-                        d.GeomDestroy(GroundGeom);
-                    }
-
-                }
-                IntPtr HeightmapData = d.GeomHeightfieldDataCreate();
-                d.GeomHeightfieldDataBuildSingle(HeightmapData, _heightmap, 0, heightmapWidth + 1, heightmapHeight + 1,
-                                                 (int)heightmapWidthSamples + 1, (int)heightmapHeightSamples + 1, scale,
-                                                 offset, thickness, wrap);
-                d.GeomHeightfieldDataSetBounds(HeightmapData, hfmin - 1, hfmax + 1);
-                GroundGeom = d.CreateHeightfield(space, HeightmapData, 1);
-                if (GroundGeom != IntPtr.Zero)
-                {
-                    d.GeomSetCategoryBits(GroundGeom, (int)(CollisionCategories.Land));
-                    d.GeomSetCollideBits(GroundGeom, (int)(CollisionCategories.Space));
-
-                }
-                geom_name_map[GroundGeom] = "Terrain";
-
-                d.Matrix3 R = new d.Matrix3();
-
-                Quaternion q1 = Quaternion.CreateFromAxisAngle(new Vector3(1, 0, 0), 1.5707f);
-                Quaternion q2 = Quaternion.CreateFromAxisAngle(new Vector3(0, 1, 0), 1.5707f);
-                //Axiom.Math.Quaternion q3 = Axiom.Math.Quaternion.FromAngleAxis(3.14f, new Axiom.Math.Vector3(0, 0, 1));
-
-                q1 = q1 * q2;
-                //q1 = q1 * q3;
-                Vector3 v3;
-                float angle;
-                q1.GetAxisAngle(out v3, out angle);
-
-                d.RFromAxisAndAngle(out R, v3.X, v3.Y, v3.Z, angle);
-                d.GeomSetRotation(GroundGeom, ref R);
-                d.GeomSetPosition(GroundGeom, (pOffset.X + ((int)Constants.RegionSize * 0.5f)) - 1, (pOffset.Y + ((int)Constants.RegionSize * 0.5f)) - 1, 0);
-                IntPtr testGround = IntPtr.Zero;
-                if (RegionTerrain.TryGetValue(pOffset, out testGround))
-                {
-                    RegionTerrain.Remove(pOffset);
-                }
-                RegionTerrain.Add(pOffset, GroundGeom, GroundGeom);
-                TerrainHeightFieldHeights.Add(GroundGeom, _heightmap);
-
-            }
-        }*/
-
         public void SetTerrain(float[] heightMap, Vector3 pOffset)
         {
-            //            double[] _heightmap = new double[(((int)Math.Sqrt(heightMap.Length) + 2) * ((int)Math.Sqrt(heightMap.Length) + 2))];
-            //            double[] _heightmap = new double[((m_region.RegionSizeX + 2) * (m_region.RegionSizeY + 2))];
-            float[] _heightmap = new float[((m_region.RegionSizeX + 2) * (m_region.RegionSizeY + 2))];
+            float[] _heightmap = new float[((m_region.RegionSizeX + 3) * (m_region.RegionSizeY + 3))];
 
-            int heightmapWidth = m_region.RegionSizeX + 1;
-            int heightmapHeight = m_region.RegionSizeY + 1;
+            int heightmapWidth = m_region.RegionSizeX + 2;
+            int heightmapHeight = m_region.RegionSizeY + 2;
 
-            int heightmapWidthSamples = m_region.RegionSizeX + 2;
-            int heightmapHeightSamples = m_region.RegionSizeY + 2;
-
-#pragma warning disable 0162
-            /*
-            if (Constants.RegionSize == 256 &&
-                m_region.RegionSizeX == Constants.RegionSize && m_region.RegionSizeY == Constants.RegionSize)
-            {
-                // -- creating a buffer zone of one extra sample all around - danzor
-                heightmapWidthSamples = 2 * Constants.RegionSize + 2;
-                heightmapHeightSamples = 2 * Constants.RegionSize + 2;
-                heightmapWidth++;
-                heightmapHeight++;
-            }
- */
-#pragma warning restore 0162
-
-            /* no resolution duplication for now 
-            int regionsize = (int)Constants.RegionSize;
-
-            double hfmin = 2000;
-            double hfmax = -2000;
-            if (regionsize == 256 && 
-                m_region.RegionSizeX == Constants.RegionSize && m_region.RegionSizeY == Constants.RegionSize)
-            {
-                //Double resolution
-                _heightmap = new double[((((int)Constants.RegionSize * 2) + 2) * (((int)Constants.RegionSize * 2) + 2))];
-                heightMap = ResizeTerrain512Interpolation(heightMap);
-                regionsize *= 2;
-
-                for (int x = 0; x < heightmapWidthSamples; x++)
-                {
-                    for (int y = 0; y < heightmapHeightSamples; y++)
-                    {
-                        int xx = Util.Clip(x - 1, 0, (regionsize - 1) - 1);
-                        int yy = Util.Clip(y - 1, 0, (regionsize - 1) - 1);
-
-
-                        float val = heightMap[yy * regionsize + xx];
-                        _heightmap[x * heightmapWidthSamples + y] = val;
-
-                        hfmin = (val < hfmin) ? val : hfmin;
-                        hfmax = (val > hfmax) ? val : hfmax;
-                    }
-                }
-            }
-            else
-            {
- */
-            //                int rSize = sqrtOfHeightMap > Constants.RegionSize ? sqrtOfHeightMap : Constants.RegionSize;
-            //                heightmapWidth = rSize + 2;
-            //                heightmapHeight = rSize + 2;
-            //                heightmapWidthSamples = rSize + 2;
-            //                heightmapHeightSamples = rSize + 2;
-            //                _heightmap = new double[heightmapWidthSamples * heightmapHeightSamples];
-
-            //                double hfmin = 2000;
-            //                double hfmax = -2000;
+            int heightmapWidthSamples = m_region.RegionSizeX + 3; // + one to complete the 256m + 2 margins each side
+            int heightmapHeightSamples = m_region.RegionSizeY + 3;
 
             float hfmin = 2000;
             float hfmax = -2000;
-
 
             for (int x = 0; x < heightmapWidthSamples; x++)
             {
@@ -3724,7 +3577,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 const float scale = 1.0f;
                 const float offset = 0.0f;
-                const float thickness = .5f;
+                float thickness = (float)hfmin;
                 const int wrap = 0;
 
                 IntPtr HeightmapData = d.GeomHeightfieldDataCreate();
@@ -3734,7 +3587,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                                  heightmapHeightSamples, heightmapWidthSamples, scale,
                                                  offset, thickness, wrap);
 
-                d.GeomHeightfieldDataSetBounds(HeightmapData, (float)hfmin - 2, (float)hfmax + 2);
+//                d.GeomHeightfieldDataSetBounds(HeightmapData, (float)hfmin - 1.0f, (float)hfmax + 1.0f);
+                d.GeomHeightfieldDataSetBounds(HeightmapData, 0.0f, (float)hfmax + 1.0f);
                 GroundGeom = d.CreateHeightfield(space, HeightmapData, 1);
 
                 if (GroundGeom != IntPtr.Zero)

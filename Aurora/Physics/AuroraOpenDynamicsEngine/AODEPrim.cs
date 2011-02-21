@@ -489,6 +489,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_interpenetrationcount = 0;
             m_collisionscore = 0;
 
+            if (m_targetSpace != _parent_scene.space)
+                {
+                _parent_scene.waitForSpaceUnlock(m_targetSpace);
+                if (d.SpaceQuery(m_targetSpace, prim_geom))
+                    d.SpaceRemove(m_targetSpace, prim_geom);
+
+                m_targetSpace = _parent_scene.space;
+                d.SpaceAdd(m_targetSpace, prim_geom);
+                }
+
             lock (childrenPrim)
                 {
                 foreach (AuroraODEPrim prm in childrenPrim)
@@ -511,6 +521,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     prm.m_interpenetrationcount = 0;
                     prm.m_collisionscore = 0;
                     _parent_scene.addActivePrim(prm);
+
+                    if (prm.m_targetSpace != _parent_scene.space)
+                        {
+                        _parent_scene.waitForSpaceUnlock(m_targetSpace);
+                        if (d.SpaceQuery(prm.m_targetSpace, prm.prim_geom))
+                            d.SpaceRemove(prm.m_targetSpace, prm.prim_geom);
+
+                        prm.m_targetSpace = _parent_scene.space;
+                        d.SpaceAdd(m_targetSpace, prm.prim_geom);
+                        }
                     }
                 }
             // The body doesn't already have a finite rotation mode set here
@@ -1295,11 +1315,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         public void changeadd()
             {
-            int[] iprimspaceArrItem = _parent_scene.calculateSpaceArrayItemFromPos(_position);
+//            int[] iprimspaceArrItem = _parent_scene.calculateSpaceArrayItemFromPos(_position);
             IntPtr targetspace = _parent_scene.calculateSpaceForGeom(_position);
 
-            if (targetspace == IntPtr.Zero)
-                targetspace = _parent_scene.createprimspace(iprimspaceArrItem[0], iprimspaceArrItem[1]);
+//            if (targetspace == IntPtr.Zero)
+//                targetspace = _parent_scene.createprimspace(iprimspaceArrItem[0], iprimspaceArrItem[1]);
 
             m_targetSpace = targetspace;
 
@@ -1783,6 +1803,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void changePhysicsStatus(bool newphys)
             {
+            m_isphysical = newphys;
             if (!childPrim)
                 {
                 if (newphys == true)
@@ -1812,14 +1833,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             DestroyBody();
                         }
                     }
-
                 }
-
-
-
+            
             changeSelectedStatus(m_isSelected);
             resetCollisionAccounting();
-            m_isphysical = newphys;
             }
 
        
@@ -1845,7 +1862,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void changeprimsizeshape()
             {
-            string oldname = _parent_scene.geom_name_map[prim_geom];
+
+            _parent_scene.geom_name_map.Remove(prim_geom);
+            _parent_scene.actor_name_map.Remove(prim_geom);
+
             bool chp = childPrim;
             // Cleanup of old prim geometry and Bodies
             if (IsPhysical && Body != IntPtr.Zero)
@@ -1890,7 +1910,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (IsPhysical)
                     meshlod = _parent_scene.MeshSculptphysicalLOD;
 
-                IMesh mesh = _parent_scene.mesher.CreateMesh(oldname, _pbs, _size, meshlod, IsPhysical);
+                IMesh mesh = _parent_scene.mesher.CreateMesh(m_primName, _pbs, _size, meshlod, IsPhysical);
                 // createmesh returns null when it doesn't mesh.
                 CreateGeom(m_targetSpace, mesh);
                 }
@@ -1919,7 +1939,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         myrot.W = _orientation.W;
                         d.GeomSetQuaternion(prim_geom, ref myrot);
                         }
-                    _parent_scene.geom_name_map[prim_geom] = oldname;
+
+                    _parent_scene.geom_name_map[prim_geom] = this.m_primName;
+                    _parent_scene.actor_name_map[prim_geom] = (PhysicsActor)this;
                     }
                 }
 
