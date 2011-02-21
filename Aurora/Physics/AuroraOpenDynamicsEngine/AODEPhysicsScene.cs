@@ -487,7 +487,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     avMovementDivisorWalk = (physicsconfig.GetFloat("av_movement_divisor_walk", 1.3f) * 2);
                     avMovementDivisorRun = (physicsconfig.GetFloat("av_movement_divisor_run", 0.8f) * 2);
                     avCapRadius = physicsconfig.GetFloat("av_capsule_radius", 0.37f);
-                    avCapsuleTilted = physicsconfig.GetBoolean("av_capsule_tilted", false);
+                    avCapsuleTilted = physicsconfig.GetBoolean("av_capsule_tilted", true);
 
                     contactsPerCollision = physicsconfig.GetInt("contacts_per_collision", 80);
 
@@ -937,7 +937,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 #region InterPenetration Handling - Unintended physics explosions
                 #region disabled code1
 
-                if (curContact.depth >= 0.08f)
+//                if (curContact.depth >= 0.08f)
                     {
                     //This is disabled at the moment only because it needs more tweaking
                     //It will eventually be uncommented
@@ -1039,7 +1039,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                         */
                 #endregion
-                    if (curContact.depth >= 1.0f)
+//                    if (curContact.depth >= 1.0f)
                         {
                         //m_log.Info("[P]: " + contact.depth.ToString());
                         if ((p2.PhysicsActorType == (int)ActorTypes.Agent &&
@@ -1054,13 +1054,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                     AuroraODECharacter character = (AuroraODECharacter)p2;
 
                                     //p2.CollidingObj = true;
+                                    if (p2.Position.Z < curContact.pos.Z) // don't colide from underside
+                                        {
+                                        p2.CollidingGround = false;
+                                        p2.CollidingGround = false;
+                                        continue;
+                                        }
+/*
                                     curContact.depth = 0.00000003f;
-                                    p2.Velocity = p2.Velocity + new Vector3(0f, 0f, 0.5f);
+ 
+                                    p2.Velocity = p2.Velocity + new Vector3(0f, 0f, 1.5f);
                                     curContact.pos =
-                                                    new d.Vector3(curContact.pos.X + (p2.Size.X / 2),
+                                                  new d.Vector3(curContact.pos.X + (p2.Size.X / 2),
                                                                   curContact.pos.Y + (p2.Size.Y / 2),
                                                                   curContact.pos.Z + (p2.Size.Z / 2));
                                     character.SetPidStatus(true);
+*/
                                     }
                                 }
 
@@ -1071,6 +1080,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                     AuroraODECharacter character = (AuroraODECharacter)p1;
 
                                     //p2.CollidingObj = true;
+                                    if (p1.Position.Z < curContact.pos.Z)
+                                        {
+                                        p1.CollidingGround = false;
+                                        p1.CollidingGround = false;
+                                        continue;
+                                        }
+/*
                                     curContact.depth = 0.00000003f;
                                     p1.Velocity = p1.Velocity + new Vector3(0f, 0f, 0.5f);
                                     curContact.pos =
@@ -1078,6 +1094,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                                                   curContact.pos.Y + (p1.Size.Y / 2),
                                                                   curContact.pos.Z + (p1.Size.Z / 2));
                                     character.SetPidStatus(true);
+ */
                                     }
                                 }
                             }
@@ -1599,17 +1616,20 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (heightFieldGeom != IntPtr.Zero)
                 {
                     if (TerrainHeightFieldHeights.ContainsKey(heightFieldGeom))
-                    {
+                        {
 
                         //int index;
-
-
-                        if ((int)x > WorldExtents.X || (int)y > WorldExtents.Y ||
-                            (int)x < 0.001f || (int)y < 0.001f)
-                            return 0;
-
                         x = x - offsetX;
                         y = y - offsetY;
+
+                        if (x < 0)
+                            x = 0.5f;
+                        else if (x > WorldExtents.X)
+                            x = WorldExtents.X - 0.5f;
+                        if (y < 0)
+                            y = 0.5f;
+                        else if (y > WorldExtents.Y)
+                            y = WorldExtents.Y - 0.5f;                       
 
                         //index = (int)((int)x * (int)Constants.RegionSize) - ((int)Constants.RegionSize - (int)y);
 
@@ -3586,7 +3606,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                                  offset, thickness, wrap);
 
 //                d.GeomHeightfieldDataSetBounds(HeightmapData, (float)hfmin - 1.0f, (float)hfmax + 1.0f);
-                d.GeomHeightfieldDataSetBounds(HeightmapData, 0.0f, (float)hfmax + 1.0f);
+                d.GeomHeightfieldDataSetBounds(HeightmapData, hfmin, (float)hfmax + 1.0f);
                 GroundGeom = d.CreateHeightfield(space, HeightmapData, 1);
 
                 if (GroundGeom != IntPtr.Zero)
