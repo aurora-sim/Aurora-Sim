@@ -922,6 +922,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Check for underground
 
+//            _parent_scene.CheckTerrainColisionAABB(Shell);
+
+
             //            if (!flying || (flying && _target_velocity.X == 0 || _target_velocity.Y == 0))
             //            if (!m_iscollidingGround)
             //Don't duplicate the ground check for flying from above, it will already have given us a good shove
@@ -932,7 +935,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if ((tempPos.Z - AvatarHalfsize) < groundHeight)
                         {
                         if (!flying)
+                            {
+                            if (_target_velocity.Z < 0)
+                                _target_velocity.Z = 0;
                             vec.Z = -vel.Z * PID_D + ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P * 20.0f);
+                            }
                         else
                             vec.Z = ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P);
                         }
@@ -940,6 +947,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         {
                         m_iscolliding = true;
                         m_iscollidingGround = true;
+                        flying = false; // gound the avatar
                         }
                     else
                         m_iscollidingGround = false;
