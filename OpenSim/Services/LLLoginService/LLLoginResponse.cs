@@ -473,8 +473,7 @@ namespace OpenSim.Services.LLLoginService
                 responseData["home"] = home;
                 responseData["look_at"] = lookAt;
 
-                //Let's add a customizable welcome message (by Enrico Nirvana)
-                //{
+                //Let's add a customizable welcome message 
                 responseData["message"] = welcomeMessage;
                 if (welcomeMessage == string.Empty)
                 {
@@ -483,11 +482,9 @@ namespace OpenSim.Services.LLLoginService
                 string CustomizedMessageURL = client.DownloadString("WelcomeMEssageURL");//downloading messages
                 responseData["message"] = CustomizedMessageURL;//master login modification
                 }
-                //Let's use the default welcome message
-                //if (welcomeMessage != string.Empty)
-                //   responseData["message"] = welcomeMessage;
-                //}
-                // end of customizable welcome message (by Enrico Nirvana)
+                             
+                // end of customizable welcome message 
+
                 responseData["region_x"] = (Int32)(RegionX);
                 responseData["region_y"] = (Int32)(RegionY);
                 responseData["region_size_x"] = (Int32)(RegionSizeX);
