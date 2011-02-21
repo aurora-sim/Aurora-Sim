@@ -295,11 +295,19 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 IClientCapsService clientCaps = capsService.GetClientCapsService(AgentID);
 
                 IRegionClientCapsService oldRegionService = clientCaps.GetCapsService(neighbor.RegionHandle);
+                
+                //If its disabled, it should be removed, so kill it!
+                if (oldRegionService != null && oldRegionService.Disabled)
+                {
+                    clientCaps.RemoveCAPS(neighbor.RegionHandle);
+                    oldRegionService = null;
+                }
+
                 bool newAgent = oldRegionService == null;
                 IRegionClientCapsService otherRegionService = clientCaps.GetOrCreateCapsService(neighbor.RegionHandle, 
                     CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath()), circuitData);
 
-                if (!newAgent && !oldRegionService.Disabled)
+                if (!newAgent)
                 {
                     //Note: if the agent is already there, send an agent update then
                     bool result = true;

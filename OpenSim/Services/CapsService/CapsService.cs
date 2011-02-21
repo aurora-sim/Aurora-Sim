@@ -91,7 +91,7 @@ namespace OpenSim.Services.CapsService
             m_server = simBase.GetHttpServer(0);
             m_port = m_server.Port;
 
-            MainConsole.Instance.Commands.AddCommand("CapsService", false, "show presences", "show presences", "Shows all presences in the grid, experimental!", ShowUsers);
+            MainConsole.Instance.Commands.AddCommand("CapsService", false, "show presences", "show presences", "Shows all presences in the grid", ShowUsers);
         }
 
         public void FinishedStartup()
@@ -104,7 +104,8 @@ namespace OpenSim.Services.CapsService
 
         protected void ShowUsers(string module, string[] cmd)
         {
-            bool showChildAgents = cmd.Length == 3 ? cmd[2] == "all" : false;
+            //Check for all or full to show child agents
+            bool showChildAgents = cmd.Length == 3 ? cmd[2] == "all" ? true : cmd[2] == "full" ? true : false : false;
             foreach (IRegionCapsService regionCaps in m_RegionCapsServices.Values)
             {
                 foreach (IRegionClientCapsService clientCaps in regionCaps.GetClients())
