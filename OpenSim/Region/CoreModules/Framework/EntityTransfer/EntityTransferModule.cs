@@ -280,7 +280,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     OSDMap map = syncPoster.Get(SyncMessageHelper.TeleportAgent((int)sp.DrawDistance,
                         agentCircuit, agent, teleportFlags, finalDestination, sp.Scene.RegionInfo.RegionHandle), 
                         sp.Scene.RegionInfo.RegionHandle);
-                    if (!map.ContainsKey("Success") || !map["Success"].AsBoolean())
+                    bool result =  map["Success"].AsBoolean();
+                    if (!result)
                     {
                         // Fix the agent status
                         sp.IsChildAgent = false;

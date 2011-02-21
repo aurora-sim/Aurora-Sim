@@ -171,6 +171,11 @@ namespace OpenSim.Services.ConfigurationService
                 List<string> urls = new List<string>();
                 return FindValueOfFromOSDMap(key, m_knownUsers[userID]);
             }
+            else if (m_allConfigs.ContainsKey(userID))
+            {
+                List<string> urls = new List<string>();
+                return FindValueOfFromOSDMap(key, m_allConfigs[userID]);
+            }
             return FindValueOf(key);
         }
 
