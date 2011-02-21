@@ -402,9 +402,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     reason = "Could not find the grid service";
                     return false;
                 }
-
-                uint x, y;
-                Utils.LongToUInts(requestingRegion, out x, out y);
+                
                 IEventQueueService EQService = m_registry.RequestModuleInterface<IEventQueueService>();
 
                 IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
@@ -439,8 +437,8 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     if (service != null)
                     {
                         //Close the agent at the place we just created if it isn't a neighbor
-                        if (service.IsOutsideView((int)x, destination.RegionLocX,
-                            (int)y, destination.RegionLocY))
+                        if (service.IsOutsideView(regionCaps.RegionX, destination.RegionLocX,
+                            regionCaps.RegionY, destination.RegionLocY))
                             SimulationService.CloseAgent(destination, AgentID);
                     }
                     clientCaps.RemoveCAPS(destination.RegionHandle);
@@ -455,8 +453,10 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     otherRegion.RootAgent = true;
                     regionCaps.RootAgent = false;
 
+                    GridRegion oldRegion = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, regionCaps.RegionX, regionCaps.RegionY);
+
                     // Next, let's close the child agent connections that are too far away.
-                    CloseNeighborAgents(destination, AgentID);
+                    CloseNeighborAgents(oldRegion, destination, AgentID);
                     reason = "";
                 }
 
@@ -469,18 +469,21 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             return result;
         }
 
-        private void CloseNeighborAgents(GridRegion destination, UUID AgentID)
+        private void CloseNeighborAgents(GridRegion oldRegion, GridRegion destination, UUID AgentID)
         {
             Util.FireAndForget(delegate(object o)
             {
                 INeighborService service = m_registry.RequestModuleInterface<INeighborService>();
                 if (service != null)
                 {
-                    List<GridRegion> NeighborsOfCurrentRegion = service.GetNeighbors(destination);
+                    List<GridRegion> NeighborsOfCurrentRegion = service.GetNeighbors(oldRegion);
+                    if(!NeighborsOfCurrentRegion.Contains(oldRegion))
+                        NeighborsOfCurrentRegion.Add(oldRegion);
                     List<GridRegion> byebyeRegions = new List<GridRegion>();
+
                     m_log.InfoFormat(
                         "[NeighborService]: Closing child agents. Checking {0} regions around {1}",
-                        NeighborsOfCurrentRegion.Count, destination.RegionName);
+                        NeighborsOfCurrentRegion.Count, oldRegion.RegionName);
 
                     foreach (GridRegion region in NeighborsOfCurrentRegion)
                     {
@@ -610,14 +613,12 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     else
                     {
                         IEventQueueService EQService = m_registry.RequestModuleInterface<IEventQueueService>();
-                        uint x, y;
-                        Utils.LongToUInts(requestingRegion, out x, out y);
-
+                        
                         //Add this for the viewer, but not for the sim, seems to make the viewer happier
-                        int XOffset = crossingRegion.RegionLocX - (int)x;
+                        int XOffset = crossingRegion.RegionLocX - requestingRegionCaps.RegionX;
                         pos.X += XOffset;
 
-                        int YOffset = crossingRegion.RegionLocY - (int)y;
+                        int YOffset = crossingRegion.RegionLocY - requestingRegionCaps.RegionY;
                         pos.Y += YOffset;
 
                         IRegionClientCapsService otherRegion = clientCaps.GetCapsService(crossingRegion.RegionHandle);
@@ -643,7 +644,8 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                                 otherRegion.RootAgent = true;
                                 requestingRegionCaps.RootAgent = false;
 
-                                CloseNeighborAgents(crossingRegion, AgentID);
+                                GridRegion oldRegion = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, requestingRegionCaps.RegionX, requestingRegionCaps.RegionY);
+                                CloseNeighborAgents(oldRegion, crossingRegion, AgentID);
                             }
                             reason = "";
                         }
