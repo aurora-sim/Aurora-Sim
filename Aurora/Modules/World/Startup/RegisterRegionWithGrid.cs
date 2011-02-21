@@ -44,12 +44,12 @@ namespace Aurora.Modules
             m_scenes.Add(scene);
             //Register the interface
             scene.RegisterModuleInterface<IGridRegisterModule>(this);
+            //Now register our region with the grid
+            RegisterRegionWithGrid(scene);
         }
 
         public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            //Now register our region with the grid
-            RegisterRegionWithGrid(scene);
         }
 
         public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
@@ -139,6 +139,8 @@ namespace Aurora.Modules
                 //Set it from the regionInfo if it knows anything
                 s.SessionID = scene.RegionInfo.GridSecureSessionID;
             }
+
+            scene.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("PreRegisterRegion", region);
 
             //Tell the grid service about us
             string error = GridService.RegisterRegion(region, s.SessionID, out s.SessionID);

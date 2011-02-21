@@ -992,13 +992,6 @@ namespace OpenSim.Services.LLLoginService
             aCircuit.IPAddress = ipaddress;
 
             return aCircuit;
-
-            //m_UserAgentService.LoginAgentToGrid(aCircuit, GatekeeperServiceConnector, region, out reason);
-            //if (simConnector.CreateAgent(region, aCircuit, 0, out reason))
-            //    return aCircuit;
-
-            //return null;
-
         }
 
         protected bool LaunchAgentDirectly(ISimulationService simConnector, GridRegion region, AgentCircuitData aCircuit, out string reason)

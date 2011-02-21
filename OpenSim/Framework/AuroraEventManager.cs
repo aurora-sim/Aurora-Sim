@@ -40,6 +40,8 @@ namespace Aurora.Framework
         ///      param is a GridRegion
         /// UserStatusChange - User's status (logged in/out) has changed
         ///      param is a UserInfo
+        /// PreRegisterRegion - A region is about to be registered
+        ///      param is a GridRegion
         /// 
         /// </summary>
         public event OnGenericEventHandler OnGenericEvent;

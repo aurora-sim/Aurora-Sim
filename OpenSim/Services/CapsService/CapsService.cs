@@ -89,6 +89,7 @@ namespace OpenSim.Services.CapsService
         {
             ISimulationBase simBase = registry.RequestModuleInterface<ISimulationBase>();
             m_server = simBase.GetHttpServer(0);
+            m_port = m_server.Port;
 
             MainConsole.Instance.Commands.AddCommand("CapsService", false, "show presences", "show presences", "Shows all presences in the grid, experimental!", ShowUsers);
         }

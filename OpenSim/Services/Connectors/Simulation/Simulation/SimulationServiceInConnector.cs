@@ -36,42 +36,45 @@ using OpenMetaverse;
 
 namespace OpenSim.Server.Handlers.Simulation
 {
-    public class SimulationServiceInConnector : ISharedRegionModule
+    public class SimulationServiceInConnector : IService
     {
         private ISimulationService m_LocalSimulationService;
+        private IRegistryCore m_registry;
+        private IConfigSource m_config;
 
         public string Name
         {
             get { return GetType().Name; }
         }
 
-        #region ISharedRegionModule Members
+        #region IService Members
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            m_config = config;
+            m_registry = registry;
+            registry.RequestModuleInterface<ISimulationBase>().EventManager.OnGenericEvent += new Aurora.Framework.OnGenericEventHandler(EventManager_OnGenericEvent);
         }
 
-        public void PostInitialise()
+        object EventManager_OnGenericEvent(string FunctionName, object parameters)
         {
-        }
-
-        public void AddRegion(OpenSim.Region.Framework.Scenes.Scene scene)
-        {
-            IConfig handlerConfig = scene.Config.Configs["Handlers"];
+            if (FunctionName != "PreRegisterRegion")
+                return null;
+            IConfig handlerConfig = m_config.Configs["Handlers"];
             if (handlerConfig.GetString("SimulationInHandler", "") != Name)
-                return;
+                return null;
 
             if (m_LocalSimulationService != null)
-                return;
+                return null;
 
             bool secure = handlerConfig.GetBoolean("SecureSimulation", true);
-            IHttpServer server = scene.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("SimulationInHandlerPort"));
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("SimulationInHandlerPort"));
 
-            m_LocalSimulationService = scene.RequestModuleInterface<ISimulationService>();
+            m_LocalSimulationService = m_registry.RequestModuleInterface<ISimulationService>();
 
             string path = "/" + UUID.Random().ToString() + "/agent/";
 
-            IGridRegisterModule registerModule = scene.RequestModuleInterface<IGridRegisterModule>();
+            IGridRegisterModule registerModule = m_registry.RequestModuleInterface<IGridRegisterModule>();
             if (registerModule != null && secure)
                 registerModule.AddGenericInfo("SimulationAgent", path);
             else
@@ -82,23 +85,15 @@ namespace OpenSim.Server.Handlers.Simulation
 
             server.AddHTTPHandler(path, new AgentHandler(m_LocalSimulationService.GetInnerService(), secure).Handler);
             server.AddHTTPHandler("/object/", new ObjectHandler(m_LocalSimulationService.GetInnerService()).Handler);
+            return null;
         }
 
-        public void RegionLoaded(OpenSim.Region.Framework.Scenes.Scene scene)
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void RemoveRegion(OpenSim.Region.Framework.Scenes.Scene scene)
+        public void FinishedStartup()
         {
-        }
-
-        public void Close()
-        {
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
         }
 
         #endregion

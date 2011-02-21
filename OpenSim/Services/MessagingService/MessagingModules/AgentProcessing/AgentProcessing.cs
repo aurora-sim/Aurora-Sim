@@ -363,7 +363,8 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             AgentCircuitData circuit, AgentData agentData, UUID AgentID, ulong requestingRegion)
         {
             bool result = false;
-
+            bool callWasCanceled = false;
+                    
             ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
             if (SimulationService != null)
             {
@@ -402,48 +403,37 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 // trigers a whole shebang of things there, including MakeRoot. So let's wait for confirmation
                 // that the client contacted the destination before we send the attachments and close things here.
 
-                INeighborService service = m_registry.RequestModuleInterface<INeighborService>();
-                if (service != null)
+                result = WaitForCallback(AgentID, out callWasCanceled);
+                if (!result)
                 {
-                    bool callWasCanceled = false;
-                    result = WaitForCallback(AgentID, out callWasCanceled);
-                    if (!result)
+                    //It says it failed, lets call the sim and check
+                    IAgentData data = null;
+                    result = SimulationService.RetrieveAgent(destination, AgentID, out data);
+                }
+                if (!result)
+                {
+                    if (!callWasCanceled)
                     {
-                        //It says it failed, lets call the sim and check
-                        IAgentData data = null;
-                        if (!SimulationService.RetrieveAgent(destination, AgentID, out data))
-                        {
-                            if (!callWasCanceled)
-                            {
-                                m_log.Warn("[EntityTransferModule]: Callback never came for teleporting agent " +
-                                    AgentID + ". Resetting.");
-                            }
-                            //Close the agent at the place we just created if it isn't a neighbor
-                            if (service.IsOutsideView((int)x, destination.RegionLocX,
-                                (int)y, destination.RegionLocY))
-                                SimulationService.CloseAgent(destination, AgentID);
-                        }
-                        else
-                        {
-                            //Fix the root agent status
-                            otherRegion.RootAgent = true;
-                            regionCaps.RootAgent = false;
-
-                            //Ok... the agent exists... so lets assume that it worked?
-                            service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, AgentID, requestingRegion);
-                            //Make sure to set the result correctly as well
-                            result = true;
-                        }
+                        m_log.Warn("[EntityTransferModule]: Callback never came for teleporting agent " +
+                            AgentID + ". Resetting.");
                     }
-                    else
+                    INeighborService service = m_registry.RequestModuleInterface<INeighborService>();
+                    if (service != null)
                     {
-                        //Fix the root agent status
-                        otherRegion.RootAgent = true;
-                        regionCaps.RootAgent = false;
-
-                        // Next, let's close the child agent connections that are too far away.
-                        service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, AgentID, requestingRegion);
+                        //Close the agent at the place we just created if it isn't a neighbor
+                        if (service.IsOutsideView((int)x, destination.RegionLocX,
+                            (int)y, destination.RegionLocY))
+                            SimulationService.CloseAgent(destination, AgentID);
                     }
+                }
+                else
+                {
+                    //Fix the root agent status
+                    otherRegion.RootAgent = true;
+                    regionCaps.RootAgent = false;
+
+                    // Next, let's close the child agent connections that are too far away.
+                    CloseNeighborAgents(destination, AgentID, requestingRegion);
                 }
 
                 //All done
@@ -451,6 +441,16 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             }
 
             return result;
+        }
+
+        private void CloseNeighborAgents(GridRegion destination, UUID AgentID, ulong requestingRegion)
+        {
+            Util.FireAndForget(delegate(object o)
+            {
+                INeighborService service = m_registry.RequestModuleInterface<INeighborService>();
+                if (service != null)
+                    service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, AgentID, requestingRegion);
+            });
         }
 
         protected void ResetFromTransit(UUID AgentID)
@@ -580,7 +580,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                                 otherRegion.RootAgent = true;
                                 requestingRegionCaps.RootAgent = false;
 
-                                service.CloseNeighborAgents(crossingRegion.RegionLocX, crossingRegion.RegionLocY, AgentID, requestingRegion);
+                                CloseNeighborAgents(crossingRegion, AgentID, requestingRegion);
                             }
                         }
                     }
@@ -598,6 +598,14 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         #region Agent Update
 
         protected void SendChildAgentUpdate(AgentPosition agentpos, IRegionClientCapsService regionCaps)
+        {
+            Util.FireAndForget(delegate(object o)
+            {
+                SendChildAgentUpdateAsync(agentpos, regionCaps);
+            });
+        }
+
+        protected void SendChildAgentUpdateAsync(AgentPosition agentpos, IRegionClientCapsService regionCaps)
         {
             //We need to send this update out to all the child agents this region has
             INeighborService service = m_registry.RequestModuleInterface<INeighborService>();
