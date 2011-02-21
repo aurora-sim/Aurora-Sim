@@ -101,7 +101,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private bool StartingUnderWater = true;
                     
         private float m_tainted_CAPSULE_LENGTH; // set when the capsule length changes. 
-        private float m_tiltMagnitudeWhenProjectedOnXYPlane = 0.1131371f; // used to introduce a fixed tilt because a straight-up capsule falls through terrain, probably a bug in terrain collider
+        private float m_tiltMagnitudeWhenProjectedOnXYPlane = 0.113f; // used to introduce a fixed tilt because a straight-up capsule falls through terrain, probably a bug in terrain collider
+        private float AvatarHalfsize;
 
 
         private float m_buoyancy = 0f;
@@ -177,6 +178,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             //                   0.5f);
 
             CAPSULE_LENGTH = (size.Z * 1.1f) - CAPSULE_RADIUS * 2.0f;
+            AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS - 0.3f;
             //m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
             m_tainted_CAPSULE_LENGTH = CAPSULE_LENGTH;
 
@@ -442,6 +444,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_pidControllerActive = true;
 
                     m_tainted_CAPSULE_LENGTH = (SetSize.Z * 1.1f) - CAPSULE_RADIUS * 2.0f;
+                    AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS -0.3f;
                     //m_log.Info("[RESIZE]: " + m_tainted_CAPSULE_LENGTH.ToString());
 
                     Velocity = Vector3.Zero;
@@ -600,7 +603,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name="npositionZ"></param>
         private void AvatarGeomAndBodyCreation(float npositionX, float npositionY, float npositionZ, float tensor)
         {
-            int dAMotorEuler = 1;
             _parent_scene.waitForSpaceUnlock(_parent_scene.space);
             if (CAPSULE_LENGTH <= 0)
             {
@@ -635,9 +637,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             PID_D /= 50 * 80; // original mass of 80, 50 ODE fps ??
             PID_D *= m_mass / _parent_scene.ODE_STEPSIZE;
             PID_P /= 50 * 80;
-            PID_P *= m_mass / _parent_scene.ODE_STEPSIZE;
-
-            
+            PID_P *= m_mass / _parent_scene.ODE_STEPSIZE;          
             
             Body = d.BodyCreate(_parent_scene.world);
             
@@ -650,12 +650,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _position.Y = npositionY;
             _position.Z = npositionZ;
 
-
             m_taintPosition.X = _position.X;
             m_taintPosition.Y = _position.Y;
             m_taintPosition.Z = _position.Z;
 
             d.BodySetMass(Body, ref ShellMass);
+/*
             d.Matrix3 m_caprot;
             // 90 Stand up on the cap of the capped cyllinder
             if (_parent_scene.IsAvCapsuleTilted)
@@ -667,34 +667,37 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_taintRotation = new Quaternion(0,0,1,(float)(Math.PI / 2));
                 d.RFromAxisAndAngle(out m_caprot, m_taintRotation.X, m_taintRotation.Y, m_taintRotation.Z, m_taintRotation.W);
             }
-
+*/
             d.GeomSetBody(Shell, Body);
-            d.GeomSetRotation(Shell, ref m_caprot);          
+//            d.GeomSetRotation(Shell, ref m_caprot);          
 
 
             // The purpose of the AMotor here is to keep the avatar's physical
             // surrogate from rotating while moving
+/*
             Amotor = d.JointCreateAMotor(_parent_scene.world, IntPtr.Zero);
             d.JointAttach(Amotor, Body, IntPtr.Zero);
-            d.JointSetAMotorMode(Amotor, dAMotorEuler);
+            d.JointSetAMotorMode(Amotor, 0);
             d.JointSetAMotorNumAxes(Amotor, 3);
-            d.JointSetAMotorAxis(Amotor, 0, 0, 1, 0, 0);
-            d.JointSetAMotorAxis(Amotor, 1, 0, 0, 1, 0);
-            d.JointSetAMotorAxis(Amotor, 2, 0, 0, 0, 1);
-            d.JointSetAMotorAngle(Amotor, 0, 0);
-            d.JointSetAMotorAngle(Amotor, 1, 0);
-            d.JointSetAMotorAngle(Amotor, 2, 0);
+            d.JointSetAMotorAxis(Amotor, 0, 1, 1, 0, 0);
+            d.JointSetAMotorAxis(Amotor, 1, 1, 0, 1, 0);
+            d.JointSetAMotorAxis(Amotor, 2, 1, 0, 0, 1);
 
             // These lowstops and high stops are effectively (no wiggle room)
-            if (_parent_scene.IsAvCapsuleTilted)
-            {
-                d.JointSetAMotorParam(Amotor, (int)dParam.LowStop, -0.000000000001f);
-                d.JointSetAMotorParam(Amotor, (int)dParam.LoStop3, -0.000000000001f);
-                d.JointSetAMotorParam(Amotor, (int)dParam.LoStop2, -0.000000000001f);
-                d.JointSetAMotorParam(Amotor, (int)dParam.HiStop, 0.000000000001f);
-                d.JointSetAMotorParam(Amotor, (int)dParam.HiStop3, 0.000000000001f);
-                d.JointSetAMotorParam(Amotor, (int)dParam.HiStop2, 0.000000000001f);
+            if (!_parent_scene.IsAvCapsuleTilted)
+                {
+                d.JointSetAMotorAngle(Amotor, 0, 0);
+                d.JointSetAMotorAngle(Amotor, 1, 0);
+                d.JointSetAMotorAngle(Amotor, 2, 0);
+
+                d.JointSetAMotorParam(Amotor, (int)dParam.LowStop, -0.0001f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.LoStop3, -0.0001f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.LoStop2, -0.0001f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.HiStop, 0.0001f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.HiStop3, 0.0001f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.HiStop2, 0.0001f);
             }
+
             else
             {
                 #region Documentation of capsule motor LowStop and HighStop parameters
@@ -704,19 +707,33 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // (with -0..0 motor stops) falls into the terrain for reasons yet
                 // to be comprehended in their entirety.
                 #endregion
-                AlignAvatarTiltWithCurrentDirectionOfMovement(Vector3.Zero);
-                d.JointSetAMotorParam(Amotor, (int)dParam.LowStop, 0.08f);
-                d.JointSetAMotorParam(Amotor, (int)dParam.LoStop3, -0f);
-                d.JointSetAMotorParam(Amotor, (int)dParam.LoStop2, 0.08f);
-                d.JointSetAMotorParam(Amotor, (int)dParam.HiStop,  0.08f); // must be same as lowstop, else a different, spurious tilt is introduced
-                d.JointSetAMotorParam(Amotor, (int)dParam.HiStop3, 0f); // same as lowstop
-                d.JointSetAMotorParam(Amotor, (int)dParam.HiStop2, 0.08f); // same as lowstop
+//                AlignAvatarTiltWithCurrentDirectionOfMovement(Vector3.Zero);
+                d.JointSetAMotorAngle(Amotor, 0, 0.08f);
+                d.JointSetAMotorAngle(Amotor, 1, 0.08f);
+                d.JointSetAMotorAngle(Amotor, 2, 0);
+
+                d.JointSetAMotorParam(Amotor, (int)dParam.LowStop, 0.08f - 0.0001f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.HiStop,  0.08f + 0.0001f); // must be same as lowstop, else a different, spurious tilt is introduced
+
+                d.JointSetAMotorParam(Amotor, (int)dParam.LoStop2, 0.08f - 0.0001f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.HiStop2, 0.08f + 0.0001f); // same as lowstop
+                d.JointSetAMotorParam(Amotor, (int)dParam.LoStop3, -0.0001f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.HiStop3, 0.0001f); // same as lowstop
             }
+
 
             // Fudge factor is 1f by default, we're setting it to 0.  We don't want it to Fudge or the
             // capped cyllinder will fall over
-            d.JointSetAMotorParam(Amotor, (int)dParam.FudgeFactor, 0f);
-            d.JointSetAMotorParam(Amotor, (int)dParam.FMax, tensor);
+
+            d.JointSetAMotorParam(Amotor, (int)dParam.FudgeFactor, 0.1f);
+            d.JointSetAMotorParam(Amotor, 256 + (int)dParam.FudgeFactor, 0.1f);
+            d.JointSetAMotorParam(Amotor, 512 + (int)dParam.FudgeFactor, 0.1f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.Bounce, 0.2f);
+            d.JointSetAMotorParam(Amotor, 256 + (int)dParam.Bounce, 0.2f);
+            d.JointSetAMotorParam(Amotor, 512 + (int)dParam.Bounce, 0.2f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.FMax, tensor * 100);
+            d.JointSetAMotorParam(Amotor, (int)dParam.FMax2, tensor * 100);
+            d.JointSetAMotorParam(Amotor, (int)dParam.FMax3, tensor * 100);
 
             //d.Matrix3 bodyrotation = d.BodyGetRotation(Body);
             //d.QfromR(
@@ -724,6 +741,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             //
             //m_log.Info("[PHYSICSAV]: Rotation: " + bodyrotation.M00 + " : " + bodyrotation.M01 + " : " + bodyrotation.M02 + " : " + bodyrotation.M10 + " : " + bodyrotation.M11 + " : " + bodyrotation.M12 + " : " + bodyrotation.M20 + " : " + bodyrotation.M21 + " : " + bodyrotation.M22);
             //standupStraight();
+ */
         }
 
         #endregion
@@ -732,7 +750,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private void AlignAvatarTiltWithCurrentDirectionOfMovement(Vector3 movementVector)
             {
-            movementVector.Z = 0f;
+            if (!_parent_scene.IsAvCapsuleTilted)
+                return;
+
+            movementVector.Z = 0f;           
 
             if (movementVector == Vector3.Zero)
                 {
@@ -743,7 +764,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // therefore we snap movement vector to just 1 of 4 predefined directions (ne, nw, se, sw),
             // meaning only 4 possible capsule tilt orientations
 
-            float sqr2 = 1.4142135623730950488016887242097f; // square root of 2  lasy to cut extra digits
+            float sqr2 = 1.41421356f; // square root of 2  lasy to cut extra digits
 
             if (movementVector.X > 0)
                 {
@@ -786,12 +807,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             float yTiltComponent = -movementVector.Y * m_tiltMagnitudeWhenProjectedOnXYPlane;
             //m_log.Debug(movementVector.X + " " + movementVector.Y);
             //m_log.Debug("[PHYSICS] changing avatar tilt");
-            d.JointSetAMotorParam(Amotor, (int)dParam.LowStop, xTiltComponent);
-            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop, xTiltComponent); // must be same as lowstop, else a different, spurious tilt is introduced
-            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop2, yTiltComponent);
-            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop2, yTiltComponent); // same as lowstop
-            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop3, 0f);
-            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop3, 0f); // same as lowstop
+            d.JointSetAMotorAngle(Amotor, 0, xTiltComponent);
+            d.JointSetAMotorAngle(Amotor, 1, yTiltComponent);
+            d.JointSetAMotorAngle(Amotor, 2, 0);
+            d.JointSetAMotorParam(Amotor, (int)dParam.LowStop, xTiltComponent - 0.001f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop, xTiltComponent + 0.001f); // must be same as lowstop, else a different, spurious tilt is introduced
+            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop2, yTiltComponent - 0.001f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop2, yTiltComponent + 0.001f); // same as lowstop
+            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop3, - 0.001f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop3, 0.001f); // same as lowstop
             }
         
         /// <summary>
@@ -808,6 +832,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (Body == IntPtr.Zero)
                 return;
+
+            // replace amotor
+            d.Quaternion dtmp;
+            dtmp.W =1;
+            dtmp.X=0;
+            dtmp.Y=0;
+            dtmp.Z=0;
+            d.BodySetQuaternion(Body, ref dtmp);
+            d.BodySetAngularVel(Body, 0, 0, 0);
 
             if (m_pidControllerActive == false)
                 {
@@ -1100,17 +1133,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Check for underground
 
-            if (!flying || (flying && _target_velocity.X == 0 || _target_velocity.Y == 0))
+//            if (!flying || (flying && _target_velocity.X == 0 || _target_velocity.Y == 0))
+            if (!m_iscollidingGround)
                 //Don't duplicate the ground check for flying from above, it will already have given us a good shove
                 {
-                if (m_WaitGroundCheck >= 10 && vel.Z != 0)
+//                if (m_WaitGroundCheck >= 10 && vel.Z != 0)
                     {
+                    
                     float groundHeight = _parent_scene.GetTerrainHeightAtXY(tempPos.X, tempPos.Y);
-                    if (tempPos.Z - (CAPSULE_LENGTH / 2) < groundHeight)
-                        vec.Z += ((groundHeight - (tempPos.Z - (CAPSULE_LENGTH / 2))) * 33);
-                    m_WaitGroundCheck = -1;
+                    if ((tempPos.Z - AvatarHalfsize) < groundHeight)
+                        vec.Z = -vel.Z * PID_D + ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P * 2.0f);
+//                    m_WaitGroundCheck = -1;
                     }
-                m_WaitGroundCheck++;
+//                m_WaitGroundCheck++;
                 }
 
             #endregion
@@ -1157,8 +1192,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         _target_velocity = Vector3.Zero;
 
                     //Check if the capsule is tilted before changing it
-                    if (!_zeroFlag && !_parent_scene.IsAvCapsuleTilted)
-                        AlignAvatarTiltWithCurrentDirectionOfMovement(vec);
+//                    if (!_zeroFlag && !_parent_scene.IsAvCapsuleTilted)
+//                        AlignAvatarTiltWithCurrentDirectionOfMovement(vec);
                 }
                 else
                 {
@@ -1222,10 +1257,32 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
 
             //  kluge to keep things in bounds.  ODE lets dead avatars drift away (they should be removed!)
-            if (vec.X < 0.0f) vec.X = 0.0f;
-            if (vec.Y < 0.0f) vec.Y = 0.0f;
-            if (vec.X > (int)_parent_scene.WorldExtents.X - 0.05f) vec.X = (int)_parent_scene.WorldExtents.X - 0.05f;
-            if (vec.Y > (int)_parent_scene.WorldExtents.Y - 0.05f) vec.Y = (int)_parent_scene.WorldExtents.Y - 0.05f;
+            int needfix = 0;
+
+            if (vec.X < 0.0f)
+                {
+                needfix = 1;
+                vec.X = 0.2f;
+                }
+            else if (vec.X > (int)_parent_scene.WorldExtents.X - 0.05f)
+                {
+                needfix = 1;
+                vec.X = (int)_parent_scene.WorldExtents.X - 0.2f;
+                }
+
+            if (vec.Y < 0.0f)
+                {
+                needfix = 1;
+                vec.Y = 0.2f;
+                }
+            else if (vec.Y > (int)_parent_scene.WorldExtents.Y - 0.05f)
+                {
+                needfix = 1;
+                vec.Y = (int)_parent_scene.WorldExtents.Y - 0.2f;
+                }
+
+            if (needfix == 1)
+                d.BodySetPosition(Body, vec.X, vec.Y, vec.Z);
 
             _position.X = (float)vec.X;
             _position.Y = (float)vec.Y;
@@ -1267,11 +1324,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     vec.Y = _velocity.Y;
                     vec.Z = _velocity.Z;
                 }
+
                 if (vec.X == 0 && vec.Y == 0 && vec.Z == 0)
                 {
                     m_log.Warn("[AODECharacter]: We have a malformed Velocity, ignoring...");
                 }
                 else
+
                     _velocity = new Vector3((float)(vec.X), (float)(vec.Y), (float)(vec.Z));
 
                 const float VELOCITY_TOLERANCE = 0.001f;
