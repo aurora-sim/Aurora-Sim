@@ -22,13 +22,12 @@ namespace OpenSim.Services.Interfaces
         /// Create the CAPS handler for the given user at the region given by the regionHandle
         /// </summary>
         /// <param name="AgentID">The agents UUID</param>
-        /// <param name="SimCAPS">The CAPS request on the region the user is being added to</param>
-        /// <param name="CAPS">The CAPS request, looks like '/CAPS/(UUID)0000/</param>
+        /// <param name="CAPSBase">The CAPS request, looks like '/CAPS/(UUID)0000/</param>
         /// <param name="regionHandle">The region handle of the region the user is being added to</param>
         /// <param name="IsRootAgent">Whether this new Caps agent is a root agent in the sim</param>
         /// <param name="circuitData">The circuit data of the agent that is being created</param>/param>
         /// <returns>Returns the CAPS URL that was created by the CAPS Service</returns>
-        string CreateCAPS(UUID AgentID, string UrlToInform, string CAPSBase, ulong regionHandle, bool IsRootAgent, AgentCircuitData circuitData);
+        string CreateCAPS(UUID AgentID, string CAPSBase, ulong regionHandle, bool IsRootAgent, AgentCircuitData circuitData);
 
         /// <summary>
         /// Get a client's caps service (contains all child and root agents) if it exists, otherwise
@@ -195,7 +194,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="CAPSBase"></param>
         /// <param name="UrlToInform"></param>
         /// <returns></returns>
-        IRegionClientCapsService GetOrCreateCapsService(ulong regionID, string CAPSBase, string UrlToInform, AgentCircuitData circuitData);
+        IRegionClientCapsService GetOrCreateCapsService(ulong regionID, string CAPSBase, AgentCircuitData circuitData);
 
         /// <summary>
         /// Remove the caps for this user from the given region
@@ -241,11 +240,6 @@ namespace OpenSim.Services.Interfaces
         UUID AgentID { get; }
 
         /// <summary>
-        /// The URL to inform that a client has called our CAPS SEED URL
-        /// </summary>
-        string UrlToInform { get; }
-
-        /// <summary>
         /// The host URI of this CAPS Servie (http://IP:port)
         /// </summary>
         String HostUri { get; }
@@ -283,7 +277,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="capsBase"></param>
         /// <param name="urlToInform"></param>
         /// <param name="circuitData"></param>
-        void Initialise(IClientCapsService clientCapsService, ulong regionHandle, string capsBase, string urlToInform, AgentCircuitData circuitData);
+        void Initialise(IClientCapsService clientCapsService, ulong regionHandle, string capsBase, AgentCircuitData circuitData);
         
         /// <summary>
         /// Closes the region caps, removes all caps handlers and removes itself
@@ -292,11 +286,14 @@ namespace OpenSim.Services.Interfaces
 
         /// <summary>
         /// Add a new SEED CAP for the region at the given CapsUrl unless one already exists
-        ///   Will start infomring UrlToInform if no other is set
         /// </summary>
         /// <param name="CapsUrl"></param>
         /// <param name="UrlToInform"></param>
-        void AddSEEDCap(string CapsUrl, string UrlToInform);
+        void AddSEEDCap(string CapsUrl);
+
+        void AddCAPS(string method, string caps);
+
+        void AddCAPS(OSDMap caps);
 
         /// <summary>
         /// Add the given CAPS method to the list that will be given to the client

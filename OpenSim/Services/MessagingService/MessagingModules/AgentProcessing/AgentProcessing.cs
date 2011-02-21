@@ -288,8 +288,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             {
                 //Make sure that we have a URL for the Caps on the grid server and one for the sim
                 string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
-                //Leave this blank so that we can check below so that we use the same Url if the client has already been to that region
-                string SimSeedCap = "";
+                OSDMap SimSeedCaps = new OSDMap();
 
                 ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
 
@@ -297,34 +296,15 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
                 IRegionClientCapsService oldRegionService = clientCaps.GetCapsService(neighbor.RegionHandle);
                 bool newAgent = oldRegionService == null;
-                IRegionClientCapsService otherRegionService = clientCaps.GetOrCreateCapsService(neighbor.RegionHandle, newSeedCap, SimSeedCap, circuitData);
+                IRegionClientCapsService otherRegionService = clientCaps.GetOrCreateCapsService(neighbor.RegionHandle, newSeedCap, circuitData);
 
-                //ONLY UPDATE THE SIM SEED HERE
-                //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
-                // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
-                // AND FORCE UPDATING IT HERE WILL BREAK IT.
-                string CapsBase = CapsUtil.GetRandomCapsObjectPath();
-                if (newAgent)
-                {
-                    //Update 21-1-11 (Revolution) This is still very much needed for standalone mode
-                    //The idea behind this is that this is the FIRST setup in standalone mode, so setting it to
-                    //   this sets up the first initial URL, as if it was set as "", it would set it up wrong 
-                    //   initially and all will go wrong from there
-                    //Build the full URL
-                    SimSeedCap
-                        = neighbor.ServerURI
-                      + CapsUtil.GetCapsSeedPath(CapsBase);
-                    //Add the new Seed for this region
-                }
-                else if (!oldRegionService.Disabled)
+                if (!newAgent && !oldRegionService.Disabled)
                 {
                     //Note: if the agent is already there, send an agent update then
                     if (agentData != null)
                         return SimulationService.UpdateAgent(neighbor, agentData);
                     return true;
                 }
-                //Fix the AgentCircuitData with the new CapsUrl
-                circuitData.CapsPath = CapsBase;
 
                 //Offset the child avs position
                 uint x, y;
@@ -338,13 +318,9 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     if (reason != "")
                     {
                         OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
-                        SimSeedCap = responseMap["CapsUrl"].AsString();
+                        SimSeedCaps = (OSDMap)responseMap["CapsUrls"];
+                        otherRegionService.AddCAPS(SimSeedCaps);
                     }
-                    //ONLY UPDATE THE SIM SEED HERE
-                    //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
-                    // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
-                    // AND FORCE UPDATING IT HERE WILL BREAK IT.
-                    otherRegionService.AddSEEDCap("", SimSeedCap);
                     if (newAgent)
                     {
                         //We 'could' call Enqueue directly... but its better to just let it go and do it this way
@@ -361,7 +337,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                         Thread.Sleep(300);
                         EQService.EstablishAgentCommunication(AgentID, neighbor.RegionHandle,
                             neighbor.ExternalEndPoint.Address.GetAddressBytes(),
-                            neighbor.ExternalEndPoint.Port, otherRegionService.UrlToInform, neighbor.RegionSizeX,
+                            neighbor.ExternalEndPoint.Port, otherRegionService.CapsUrl, neighbor.RegionSizeX,
                             neighbor.RegionSizeY,
                             requestingRegion);
 

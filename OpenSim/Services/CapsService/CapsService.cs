@@ -148,20 +148,17 @@ namespace OpenSim.Services.CapsService
         /// <param name="regionHandle"></param>
         /// <param name="IsRootAgent">Will this child be a root agent</param>
         /// <returns></returns>
-        public string CreateCAPS(UUID AgentID, string UrlToInform, string CAPSBase, ulong regionHandle, bool IsRootAgent, AgentCircuitData circuitData)
+        public string CreateCAPS(UUID AgentID, string CAPSBase, ulong regionHandle, bool IsRootAgent, AgentCircuitData circuitData)
         {
             //Now make sure we didn't use an old one or something
             IClientCapsService service = GetOrCreateClientCapsService(AgentID);
-            IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionHandle, CAPSBase, UrlToInform, circuitData);
+            IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionHandle, CAPSBase, circuitData);
             
             //Fix the root agent status
             clientService.RootAgent = IsRootAgent;
 
-            //Add the seed handlers, use "" for both so that we don't overwrite anything, as it is added above in the GetOrCreate
-            clientService.AddSEEDCap("", "");
-
             m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("UserLogin", AgentID);
-            m_log.Debug("[CapsService]: Adding Caps URL " + clientService.CapsUrl + " informing region " + UrlToInform + " for agent " + AgentID);
+            m_log.Debug("[CapsService]: Adding Caps URL " + clientService.CapsUrl + " for agent " + AgentID);
             return clientService.CapsUrl;
         }
 

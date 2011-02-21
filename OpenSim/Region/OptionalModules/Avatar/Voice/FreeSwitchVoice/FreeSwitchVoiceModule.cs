@@ -58,11 +58,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        // Capability string prefixes
-        private static readonly string m_parcelVoiceInfoRequestPath = "0007/";
-        private static readonly string m_provisionVoiceAccountRequestPath = "0008/";
-        private static readonly string m_chatSessionRequestPath = "0009/";
-
         // Control info
         private static bool m_Enabled = false;
 
@@ -334,6 +329,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
                                                            return ChatSessionRequest(scene, request, path, param,
                                                                                      agentID);
                                                        }));
+            return retVal;
         }
 
         /// <summary>

@@ -176,12 +176,21 @@ namespace OpenSim.Services.CapsService
             return caps;
         }
 
-        protected void AddCAPS(string method, string caps)
+        public void AddCAPS(string method, string caps)
         {
             if (method == null || caps == null)
                 return;
             string CAPSPath = HostUri + caps;
             registeredCAPS[method] = CAPSPath;
+        }
+
+        public void AddCAPS(OSDMap caps)
+        {
+            foreach (KeyValuePair<string, OSD> kvp in caps)
+            {
+                string CAPSPath = HostUri + kvp.Value;
+                registeredCAPS[kvp.Key] = CAPSPath;
+            }
         }
 
         protected void RemoveCaps(string method)

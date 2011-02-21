@@ -683,9 +683,9 @@ namespace OpenSim.Services.LLLoginService
             {
                 //Remove any previous users
                 string CapsBase = CapsUtil.GetRandomCapsObjectPath();
-                capsSeedPath = m_CapsService.CreateCAPS(AgentID, SimcapsSeedPath, CapsUtil.GetCapsSeedPath(CapsBase), destination.RegionHandle, true, aCircuit);
+                capsSeedPath = m_CapsService.CreateCAPS(AgentID, CapsUtil.GetCapsSeedPath(CapsBase), destination.RegionHandle, true, aCircuit);
                 m_log.Debug("[NewAgentConnection]: Adding Caps Url for grid" +
-                     " @" + capsSeedPath + " calling URL " + SimcapsSeedPath + " for agent " + aCircuit.AgentID);
+                     " @" + capsSeedPath + " for agent " + aCircuit.AgentID);
             }
             else
             {
@@ -1011,7 +1011,7 @@ namespace OpenSim.Services.LLLoginService
             {
                 //Remove any previous users
                 string ServerCapsBase = CapsUtil.GetRandomCapsObjectPath();
-                string ServerCapsSeedPath = m_CapsService.CreateCAPS(aCircuit.AgentID, "", CapsUtil.GetCapsSeedPath(ServerCapsBase), region.RegionHandle, true, aCircuit);
+                string ServerCapsSeedPath = m_CapsService.CreateCAPS(aCircuit.AgentID, CapsUtil.GetCapsSeedPath(ServerCapsBase), region.RegionHandle, true, aCircuit);
 
                 regionClientCaps = m_CapsService.GetClientCapsService(aCircuit.AgentID).GetCapsService(region.RegionHandle);
             }
@@ -1028,13 +1028,9 @@ namespace OpenSim.Services.LLLoginService
             if (m_CapsService != null && reason != "")
             {
                 OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
-                string SimcapsSeedPath = responseMap["CapsUrl"].AsString();
-                regionClientCaps.AddSEEDCap("", SimcapsSeedPath);
-                m_log.Info("[NewAgentConnection]: Adding Caps Url for grid" +
-                     " @" + regionClientCaps.CapsUrl + " calling URL " + SimcapsSeedPath +
-                     " for agent " + aCircuit.AgentID);
+                OSDMap SimSeedCaps = (OSDMap)responseMap["CapsUrls"];
+                regionClientCaps.AddCAPS(SimSeedCaps);
             }
-
             return success;
         }
 
