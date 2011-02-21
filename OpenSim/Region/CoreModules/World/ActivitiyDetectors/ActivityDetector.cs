@@ -65,7 +65,7 @@ namespace OpenSim.Region.CoreModules
         {
             ISyncMessagePosterService syncMessage = scene.RequestModuleInterface<ISyncMessagePosterService>();
             if (syncMessage != null)
-                syncMessage.Post(SyncMessageHelper.LogoutRegionAgents(scene.RegionInfo.RegionHandle));
+                syncMessage.Post(SyncMessageHelper.LogoutRegionAgents(scene.RegionInfo.RegionHandle), scene.RegionInfo.RegionHandle);
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
@@ -79,7 +79,7 @@ namespace OpenSim.Region.CoreModules
         {
             ISyncMessagePosterService syncMessage = scene.RequestModuleInterface<ISyncMessagePosterService>();
             if (syncMessage != null)
-                syncMessage.Post(SyncMessageHelper.LogoutRegionAgents(scene.RegionInfo.RegionHandle));
+                syncMessage.Post(SyncMessageHelper.LogoutRegionAgents(scene.RegionInfo.RegionHandle), scene.RegionInfo.RegionHandle);
         }
 
         public string Name
@@ -112,7 +112,7 @@ namespace OpenSim.Region.CoreModules
             
                 //Inform the grid service about it
 
-                client.Scene.RequestModuleInterface<ISyncMessagePosterService>().Get(SyncMessageHelper.AgentLoggedOut(client.AgentId, client.Scene.RegionInfo.RegionHandle));
+                client.Scene.RequestModuleInterface<ISyncMessagePosterService>().Get(SyncMessageHelper.AgentLoggedOut(client.AgentId, client.Scene.RegionInfo.RegionHandle), client.Scene.RegionInfo.RegionHandle);
             }
         }
     }

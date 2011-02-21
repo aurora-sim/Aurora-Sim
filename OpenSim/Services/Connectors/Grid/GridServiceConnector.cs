@@ -73,7 +73,7 @@ namespace OpenSim.Services.Connectors
                             if (innerresult["Result"].AsString() == "")
                             {
                                 SessionID = innerresult["SecureSessionID"].AsUUID();
-                                m_registry.RequestModuleInterface<IConfigurationService>().AddNewUrls("default", (OSDMap)innerresult["URLs"]);
+                                m_registry.RequestModuleInterface<IConfigurationService>().AddNewUrls(regionInfo.RegionHandle.ToString(), (OSDMap)innerresult["URLs"]);
                                 return "";
                             }
                             else

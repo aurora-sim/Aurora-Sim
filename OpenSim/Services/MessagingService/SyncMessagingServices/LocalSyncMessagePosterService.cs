@@ -41,12 +41,12 @@ namespace OpenSim.Services.MessagingService
 
         #region ISyncMessagePosterService Members
 
-        public void Post(OSDMap request)
+        public void Post(OSDMap request, ulong RegionHandle)
         {
             m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(request);
         }
 
-        public OSDMap Get(OSDMap request)
+        public OSDMap Get(OSDMap request, ulong RegionHandle)
         {
             return m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(request);
         }

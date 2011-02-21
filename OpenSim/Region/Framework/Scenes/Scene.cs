@@ -769,7 +769,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // Don't do this to root agents on logout, it's not nice for the viewer
                     // Tell a single agent to disconnect from the region.
 
-                    syncPoster.Post(SyncMessageHelper.DisableSimulator(presence.UUID, RegionInfo.RegionHandle));
+                    syncPoster.Post(SyncMessageHelper.DisableSimulator(presence.UUID, RegionInfo.RegionHandle), RegionInfo.RegionHandle);
 
                     //Kill the client's connection to this sim...
                     presence.ControllingClient.Stop();

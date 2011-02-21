@@ -278,7 +278,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication/TeleportFinish
                     //  messages if they need to be called and deals with the callback
                     OSDMap map = syncPoster.Get(SyncMessageHelper.TeleportAgent((int)sp.DrawDistance,
-                        agentCircuit, agent, teleportFlags, finalDestination, sp.Scene.RegionInfo.RegionHandle));
+                        agentCircuit, agent, teleportFlags, finalDestination, sp.Scene.RegionInfo.RegionHandle), 
+                        sp.Scene.RegionInfo.RegionHandle);
                     if (!map.ContainsKey("Success") || !map["Success"].AsBoolean())
                     {
                         // Fix the agent status
@@ -548,7 +549,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     if (syncPoster != null)
                     {
                         OSDMap map = syncPoster.Get(SyncMessageHelper.CrossAgent(crossingRegion, pos,
-                            agent.Velocity, agentCircuit, cAgent, agent.Scene.RegionInfo.RegionHandle));
+                            agent.Velocity, agentCircuit, cAgent, agent.Scene.RegionInfo.RegionHandle),
+                            agent.Scene.RegionInfo.RegionHandle);
                         if (!map.ContainsKey("Success") || !map["Success"].AsBoolean())
                         {
                             agent.ControllingClient.SendTeleportFailed(map["Reason"].AsString());
@@ -886,7 +888,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             ISyncMessagePosterService syncPoster = m_scenes[0].RequestModuleInterface<ISyncMessagePosterService>();
             if (syncPoster != null)
             {
-                syncPoster.Post(SyncMessageHelper.CancelTeleport(AgentID, RegionHandle));
+                syncPoster.Post(SyncMessageHelper.CancelTeleport(AgentID, RegionHandle), RegionHandle);
             }
         }
 

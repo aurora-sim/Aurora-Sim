@@ -17,7 +17,7 @@ namespace OpenSim.Services.Interfaces
         /// This is asyncronous.
         /// </summary>
         /// <param name="request"></param>
-        void Post(OSDMap request);
+        void Post(OSDMap request, ulong RegionHandle);
 
         /// <summary>
         /// Post a request to all hosts that we have
@@ -26,7 +26,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        OSDMap Get(OSDMap request);
+        OSDMap Get(OSDMap request, ulong RegionHandle);
     }
 
     public delegate OSDMap MessageReceived(OSDMap message);

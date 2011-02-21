@@ -41,11 +41,11 @@ namespace OpenSim.Services.MessagingService
 
         #region ISyncMessagePosterService Members
 
-        public void Post(OSDMap request)
+        public void Post(OSDMap request, ulong RegionHandle)
         {
             OSDMap message = CreateWebRequest(request);
             string postInfo = OSDParser.SerializeJsonString(message);
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(RegionHandle.ToString(), "MessagingServerURI");
             foreach (string host in serverURIs)
             {
                 //Send it async
@@ -53,11 +53,11 @@ namespace OpenSim.Services.MessagingService
             }
         }
 
-        public OSDMap Get(OSDMap request)
+        public OSDMap Get(OSDMap request, ulong RegionHandle)
         {
             OSDMap retval = null;
             OSDMap message = CreateWebRequest(request);
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(RegionHandle.ToString(), "MessagingServerURI");
             foreach (string host in serverURIs)
             {
                 retval = WebUtils.PostToService(host, message);
