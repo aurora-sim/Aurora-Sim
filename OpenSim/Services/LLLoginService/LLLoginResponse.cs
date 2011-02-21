@@ -200,7 +200,6 @@ namespace OpenSim.Services.LLLoginService
         // Error Flags
         private string errorReason;
         private string errorMessage;
-
         private string welcomeMessage;
         private string startLocation;
         private string allowFirstLife;
@@ -393,7 +392,6 @@ namespace OpenSim.Services.LLLoginService
             ErrorMessage = "You have entered an invalid name/password combination.  Check Caps/lock.";
             ErrorReason = "key";
             welcomeMessage = "Welcome to Aurora!";
-
             SessionID = UUID.Random();
             SecureSessionID = UUID.Random();
             AgentID = UUID.Random();

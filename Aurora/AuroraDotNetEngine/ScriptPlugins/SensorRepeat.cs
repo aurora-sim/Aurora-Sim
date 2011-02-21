@@ -45,7 +45,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         public void Initialize(ScriptEngine engine)
         {
             m_ScriptEngine = engine;
-            maximumRange = engine.Config.GetDouble("SensorMaxRange", 256.0d);
+            maximumRange = engine.Config.GetDouble("SensorMaxRange", 512.0d);
             usemaximumRange = engine.Config.GetBoolean("UseSensorMaxRange", true);
             maximumToReturn = engine.Config.GetInt("SensorMaxResults", 32);
             usemaximumToReturn = engine.Config.GetBoolean("UseSensorMaxResults", true);

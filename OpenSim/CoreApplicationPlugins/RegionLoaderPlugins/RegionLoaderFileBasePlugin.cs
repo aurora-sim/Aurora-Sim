@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -318,16 +318,18 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             // External IP
             //
             string externalName;
-
             if (config.Contains("ExternalHostName"))
             {
-                externalName = config.GetString("ExternalHostName", "SYSTEMIP");
+                //Let's know our external IP (by Enrico Nirvana)
+                externalName = config.GetString("ExternalHostName", Aurora.Framework.Utilities.GetExternalIp());
             }
             else
             {
                 NeedsUpdate = true;
-                externalName = MainConsole.Instance.CmdPrompt("External host name for region " + name, "SYSTEMIP");
+                //Let's know our external IP (by Enrico Nirvana)
+                externalName = MainConsole.Instance.CmdPrompt("External host name for region " + name, Aurora.Framework.Utilities.GetExternalIp());
                 config.Set("ExternalHostName", externalName);
+                //ended here (by Enrico Nirvana)
             }
 
             if (externalName == "SYSTEMIP")
