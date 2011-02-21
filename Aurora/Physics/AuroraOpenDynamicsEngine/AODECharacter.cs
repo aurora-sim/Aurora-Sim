@@ -119,7 +119,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                                         | CollisionCategories.Space
                                                         | CollisionCategories.Body
                                                         | CollisionCategories.Character
-                                                        | CollisionCategories.Land);
+//                                                        | CollisionCategories.Land
+                                                        );
         public IntPtr Body = IntPtr.Zero;
         private AuroraODEPhysicsScene _parent_scene;
         public IntPtr Shell = IntPtr.Zero;
@@ -133,7 +134,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         // unique UUID of this character object
         public UUID m_uuid;
         public bool bad = false;
-        private int m_WaitGroundCheck = 0;
+//        private int m_WaitGroundCheck = 0;
 
         private float PID_P;
         private float PID_D;
@@ -178,7 +179,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             //                   0.5f);
 
             CAPSULE_LENGTH = (size.Z * 1.1f) - CAPSULE_RADIUS * 2.0f;
-            AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS - 0.3f;
+
+            if ((m_collisionFlags & CollisionCategories.Land) == 0)
+                AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS;
+            else
+                AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS - 0.3f;
+
             //m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
             m_tainted_CAPSULE_LENGTH = CAPSULE_LENGTH;
 
@@ -282,6 +288,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_colliderfilter = 0;
                 }
 
+            m_wascolliding = m_iscolliding;
+
             if (m_colliderfilter == 0)
                 m_iscolliding = false;
             else
@@ -289,7 +297,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             //                if (m_iscolliding)
             //                    m_log.Warn("col");
-            m_wascolliding = m_iscolliding;
             }
         }
 
@@ -315,12 +322,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_colliderGroundfilter = 0;
                     }
 
+                m_wascollidingGround = m_iscollidingGround;
+
                 if (m_colliderGroundfilter == 0)
                     m_iscollidingGround = false;
                 else
                     m_iscollidingGround = true;
 
-                m_wascollidingGround = m_iscollidingGround;
+                
                 }
         }
 
@@ -444,7 +453,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_pidControllerActive = true;
 
                     m_tainted_CAPSULE_LENGTH = (SetSize.Z * 1.1f) - CAPSULE_RADIUS * 2.0f;
-                    AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS -0.3f;
+                    if ((m_collisionFlags & CollisionCategories.Land) == 0)
+                        AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS;
+                    else
+                        AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS - 0.3f;
                     //m_log.Info("[RESIZE]: " + m_tainted_CAPSULE_LENGTH.ToString());
 
                     Velocity = Vector3.Zero;
@@ -908,6 +920,35 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             Vector3 vec = Vector3.Zero;
             d.Vector3 vel = d.BodyGetLinearVel(Body);
 
+            #region Check for underground
+
+            //            if (!flying || (flying && _target_velocity.X == 0 || _target_velocity.Y == 0))
+            //            if (!m_iscollidingGround)
+            //Don't duplicate the ground check for flying from above, it will already have given us a good shove
+                {
+                //                if (m_WaitGroundCheck >= 10 && vel.Z != 0)
+                    {
+                    float groundHeight = _parent_scene.GetTerrainHeightAtXY(tempPos.X, tempPos.Y);
+                    if ((tempPos.Z - AvatarHalfsize) < groundHeight)
+                        {
+                        if (!flying)
+                            vec.Z = -vel.Z * PID_D + ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P * 20.0f);
+                        else
+                            vec.Z = ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P);
+                        }
+                    if (tempPos.Z - AvatarHalfsize - groundHeight < 0.1)
+                        {
+                        m_iscolliding = true;
+                        m_iscollidingGround = true;
+                        }
+                    else
+                        m_iscollidingGround = false;
+
+
+                    //                    m_WaitGroundCheck = -1;
+                    }
+                //                m_WaitGroundCheck++;
+                }
 
 /*
             if (!m_alwaysRun)
@@ -1131,22 +1172,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #endregion
 
-            #region Check for underground
-
-//            if (!flying || (flying && _target_velocity.X == 0 || _target_velocity.Y == 0))
-            if (!m_iscollidingGround)
-                //Don't duplicate the ground check for flying from above, it will already have given us a good shove
-                {
-//                if (m_WaitGroundCheck >= 10 && vel.Z != 0)
-                    {
-                    
-                    float groundHeight = _parent_scene.GetTerrainHeightAtXY(tempPos.X, tempPos.Y);
-                    if ((tempPos.Z - AvatarHalfsize) < groundHeight)
-                        vec.Z = -vel.Z * PID_D + ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P * 2.0f);
-//                    m_WaitGroundCheck = -1;
-                    }
-//                m_WaitGroundCheck++;
-                }
 
             #endregion
 
@@ -1156,25 +1181,36 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     d.Vector3 veloc = d.BodyGetLinearVel(Body);
                     //Stop us from fidgiting if we have a small velocity
-                    if (_zeroFlag && ((Math.Abs(vec.X) < 0.09 && Math.Abs(vec.Y) < 0.09 && Math.Abs(vec.Z) < 0.03) && !flying && vec.Z != 0))
-                    {
-                        //m_log.Warn("Nulling Velo: " + vec.ToString());
-                        vec = new Vector3(0, 0, 0);
-                        d.BodySetLinearVel(Body, 0, 0, 0);
-                    }
+                    /*
+                                        if (_zeroFlag && ((Math.Abs(vec.X) < 0.09 && Math.Abs(vec.Y) < 0.09 && Math.Abs(vec.Z) < 0.03) && !flying && vec.Z != 0))
+                                        {
+                                            //m_log.Warn("Nulling Velo: " + vec.ToString());
+                                            vec = new Vector3(0, 0, 0);
+                                            d.BodySetLinearVel(Body, 0, 0, 0);
+                                        }
 
-                    //Reduce insanely small values to 0 if the velocity isn't going up
-                    if (Math.Abs(vec.Z) < 0.01 && veloc.Z < 0.6 && _zeroFlag)
-                    {
-                        if (veloc.Z != 0)
-                        {
-                            if (-veloc.Z > 0)
-                                vec.Z = 0;
-                            else
-                                vec.Z = -veloc.Z * 5;
-                            d.BodySetLinearVel(Body, veloc.X, veloc.Y, vec.Z);
-                        }
-                    }
+                                        //Reduce insanely small values to 0 if the velocity isn't going up
+                                        if (Math.Abs(vec.Z) < 0.01 && veloc.Z < 0.6 && _zeroFlag)
+                                        {
+                                            if (veloc.Z != 0)
+                                            {
+                                                if (-veloc.Z > 0)
+                                                    vec.Z = 0;
+                                                else
+                                                    vec.Z = -veloc.Z * 5;
+                                                d.BodySetLinearVel(Body, veloc.X, veloc.Y, vec.Z);
+                                            }
+                                        }
+
+                    */
+                    // round small values to zero. those possible are just errors
+                    if (Math.Abs(vec.X) < 0.001)
+                        vec.X = 0;
+                    if (Math.Abs(vec.Y) < 0.001)
+                        vec.Y = 0;
+                    if (Math.Abs(vec.Z) < 0.001)
+                        vec.Z = 0;
+
 
                     doForce(vec);
 
@@ -1235,6 +1271,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
 
+        
         /// <summary>
         /// Updates the reported position and velocity.  This essentially sends the data up to ScenePresence.
         /// </summary>
@@ -1257,31 +1294,31 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
 
             //  kluge to keep things in bounds.  ODE lets dead avatars drift away (they should be removed!)
-            int needfix = 0;
+            bool needfixbody = false;
 
             if (vec.X < 0.0f)
                 {
-                needfix = 1;
-                vec.X = 0.2f;
+                needfixbody = true;
+                vec.X = CAPSULE_RADIUS;
                 }
-            else if (vec.X > (int)_parent_scene.WorldExtents.X - 0.05f)
+            else if (vec.X > (int)_parent_scene.WorldExtents.X - CAPSULE_RADIUS)
                 {
-                needfix = 1;
-                vec.X = (int)_parent_scene.WorldExtents.X - 0.2f;
+                needfixbody = true;
+                vec.X = (int)_parent_scene.WorldExtents.X - CAPSULE_RADIUS;
                 }
 
             if (vec.Y < 0.0f)
                 {
-                needfix = 1;
-                vec.Y = 0.2f;
+                needfixbody = true;
+                vec.Y = CAPSULE_RADIUS;
                 }
-            else if (vec.Y > (int)_parent_scene.WorldExtents.Y - 0.05f)
+            else if (vec.Y > (int)_parent_scene.WorldExtents.Y - CAPSULE_RADIUS)
                 {
-                needfix = 1;
-                vec.Y = (int)_parent_scene.WorldExtents.Y - 0.2f;
+                needfixbody = true;
+                vec.Y = (int)_parent_scene.WorldExtents.Y - CAPSULE_RADIUS;
                 }
 
-            if (needfix == 1)
+            if (needfixbody)
                 d.BodySetPosition(Body, vec.X, vec.Y, vec.Z);
 
             _position.X = (float)vec.X;
@@ -1325,13 +1362,37 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     vec.Z = _velocity.Z;
                 }
 
-                if (vec.X == 0 && vec.Y == 0 && vec.Z == 0)
-                {
-                    m_log.Warn("[AODECharacter]: We have a malformed Velocity, ignoring...");
-                }
-                else
 
-                    _velocity = new Vector3((float)(vec.X), (float)(vec.Y), (float)(vec.Z));
+
+                /*
+                                if (vec.X == 0 && vec.Y == 0 && vec.Z == 0)
+                                {
+                                    m_log.Warn("[AODECharacter]: We have a malformed Velocity, ignoring...");
+                                }
+                                else
+                */
+                needfixbody = false;
+
+                if (Math.Abs(vec.X) < 0.001 && vec.X != 0)
+                    {
+                    needfixbody = true;
+                    vec.X = 0;
+                    }
+                if (Math.Abs(vec.Y) < 0.001 && vec.Y != 0)
+                    {
+                    needfixbody = true;
+                    vec.Y = 0;
+                    }
+                if (Math.Abs(vec.Z) < 0.001 && vec.Z != 0)
+                    {
+                    needfixbody = true;
+                    vec.Z = 0;
+                    }
+
+                if (needfixbody)
+                    d.BodySetLinearVel(Body, vec.X, vec.Y, vec.Z);
+
+                _velocity = new Vector3((float)(vec.X), (float)(vec.Y), (float)(vec.Z));
 
                 const float VELOCITY_TOLERANCE = 0.001f;
                 const float POSITION_TOLERANCE = 0.05f;
