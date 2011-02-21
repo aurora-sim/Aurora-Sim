@@ -1055,7 +1055,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                                     //p2.CollidingObj = true;
                                     if (p2.Position.Z < curContact.pos.Z) // don't colide from underside
+                                        {
+                                        p2.CollidingGround = false;
+                                        p2.CollidingGround = false;
                                         continue;
+                                        }
 /*
                                     curContact.depth = 0.00000003f;
  
@@ -1076,8 +1080,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                     AuroraODECharacter character = (AuroraODECharacter)p1;
 
                                     //p2.CollidingObj = true;
-                                    if (p2.Position.Z < curContact.pos.Z)
+                                    if (p1.Position.Z < curContact.pos.Z)
+                                        {
+                                        p1.CollidingGround = false;
+                                        p1.CollidingGround = false;
                                         continue;
+                                        }
 /*
                                     curContact.depth = 0.00000003f;
                                     p1.Velocity = p1.Velocity + new Vector3(0f, 0f, 0.5f);
