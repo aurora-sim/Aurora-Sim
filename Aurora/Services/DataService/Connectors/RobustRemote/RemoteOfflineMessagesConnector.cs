@@ -56,7 +56,7 @@ namespace Aurora.Services.DataService
             List<GridInstantMessage> Messages = new List<GridInstantMessage>();
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI", PrincipalID.ToString());
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(), "RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -98,7 +98,7 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI", message.toAgentID.ToString());
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(message.toAgentID.ToString(), "RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     AsynchronousRestObjectRequester.MakeRequest("POST",

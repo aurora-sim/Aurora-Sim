@@ -552,7 +552,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         OSDMap map = syncPoster.Get(SyncMessageHelper.CrossAgent(crossingRegion, pos,
                             agent.Velocity, agentCircuit, cAgent, agent.Scene.RegionInfo.RegionHandle),
                             agent.Scene.RegionInfo.RegionHandle);
-                        if (!map.ContainsKey("Success") || !map["Success"].AsBoolean())
+                        bool result =  map["Success"].AsBoolean();
+                        if (!result)
                         {
                             agent.ControllingClient.SendTeleportFailed(map["Reason"].AsString());
                             return agent;

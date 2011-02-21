@@ -77,9 +77,7 @@ namespace OpenSim.Services.MessagingService
 
         private OSDMap CreateWebResponse(OSDMap request)
         {
-            OSDMap message = new OSDMap();
-            message["Response"] = OSDParser.DeserializeJson(request["_RawResult"]);
-            return message;
+            return (OSDMap)OSDParser.DeserializeJson(request["_RawResult"]);
         }
 
         #endregion

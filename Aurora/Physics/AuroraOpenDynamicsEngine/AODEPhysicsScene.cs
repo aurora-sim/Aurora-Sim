@@ -3693,22 +3693,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 */
         #endregion
 
-        public override void SetTerrain(float[] heightMap, double[,] normalHeightMap)
+        public override void SetTerrain(float[] heightMap)
         {
             if (m_worldOffset != Vector3.Zero && m_parentScene != null)
             {
                 if (m_parentScene is AuroraODEPhysicsScene)
                 {
-                    ((AuroraODEPhysicsScene)m_parentScene).SetTerrain(heightMap, normalHeightMap, m_worldOffset);
+                    ((AuroraODEPhysicsScene)m_parentScene).SetTerrain(heightMap, m_worldOffset);
                 }
             }
             else
             {
-                SetTerrain(heightMap, normalHeightMap, m_worldOffset);
+                SetTerrain(heightMap, m_worldOffset);
             }
         }
 
-        public void SetTerrain(float[] heightMap, double[,] normalHeightMap, Vector3 pOffset)
+        public void SetTerrain(float[] heightMap, Vector3 pOffset)
             {
             float[] _heightmap = new float[((m_region.RegionSizeX + 3) * (m_region.RegionSizeY + 3))];
 

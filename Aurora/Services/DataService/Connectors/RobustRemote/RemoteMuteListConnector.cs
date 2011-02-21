@@ -56,7 +56,7 @@ namespace Aurora.Services.DataService
             List<MuteList> Mutes = new List<MuteList>();
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI", PrincipalID.ToString());
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(), "RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -99,7 +99,7 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI", PrincipalID.ToString());
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(), "RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     AsynchronousRestObjectRequester.MakeRequest("POST",
@@ -125,7 +125,7 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI", PrincipalID.ToString());
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(), "RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     AsynchronousRestObjectRequester.MakeRequest("POST",
@@ -151,7 +151,7 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI", PrincipalID.ToString());
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(), "RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
