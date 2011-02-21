@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -321,7 +321,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             //Let's know our external IP (by Enrico Nirvana)
             WebClient client = new WebClient();
             string myIP = client.DownloadString("http://www.whatismyip.com/automation/n09230945.asp");
-            MainConsole.Instance.CmdPrompt("Your External ip is:" + myIP);
+            MainConsole.Instance.Output("Your External ip is:" + myIP);
             //ended here (by Enrico Nirvana)
             if (config.Contains("ExternalHostName"))
             {
