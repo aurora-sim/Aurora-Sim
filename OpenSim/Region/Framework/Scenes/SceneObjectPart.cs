@@ -5398,7 +5398,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             ParentGroup.HasGroupChanged = true;
-            ScheduleUpdate(PrimUpdateFlags.FindBest);
+            ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }
 
         public void aggregateScriptEvents()
