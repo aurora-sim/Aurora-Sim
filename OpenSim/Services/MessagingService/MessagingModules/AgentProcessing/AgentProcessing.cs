@@ -369,7 +369,8 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         #region Teleporting
 
         protected bool TeleportAgent(GridRegion destination, uint TeleportFlags, int DrawDistance,
-            AgentCircuitData circuit, AgentData agentData, UUID AgentID, ulong requestingRegion, out string reason)
+            AgentCircuitData circuit, AgentData agentData, UUID AgentID, ulong requestingRegion, 
+            out string reason)
         {
             bool result = false;
             bool callWasCanceled = false;
@@ -455,7 +456,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     regionCaps.RootAgent = false;
 
                     // Next, let's close the child agent connections that are too far away.
-                    CloseNeighborAgents(destination, AgentID, requestingRegion);
+                    CloseNeighborAgents(destination, AgentID);
                     reason = "";
                 }
 
@@ -468,14 +469,44 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             return result;
         }
 
-        private void CloseNeighborAgents(GridRegion destination, UUID AgentID, ulong requestingRegion)
+        private void CloseNeighborAgents(GridRegion destination, UUID AgentID)
         {
             Util.FireAndForget(delegate(object o)
             {
                 INeighborService service = m_registry.RequestModuleInterface<INeighborService>();
                 if (service != null)
-                    service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, AgentID, requestingRegion);
+                {
+                    List<GridRegion> NeighborsOfCurrentRegion = service.GetNeighbors(destination);
+                    List<GridRegion> byebyeRegions = new List<GridRegion>();
+                    m_log.InfoFormat(
+                        "[NeighborService]: Closing child agents. Checking {0} regions around {1}",
+                        NeighborsOfCurrentRegion.Count, destination.RegionName);
+
+                    foreach (GridRegion region in NeighborsOfCurrentRegion)
+                    {
+                        if (service.IsOutsideView(region.RegionLocX, destination.RegionLocX, region.RegionLocY, destination.RegionLocY))
+                        {
+                            byebyeRegions.Add(region);
+                        }
+                    }
+
+                    if (byebyeRegions.Count > 0)
+                    {
+                        m_log.Info("[NeighborService]: Closing " + byebyeRegions.Count + " child agents");
+                        SendCloseChildAgent(AgentID, byebyeRegions);
+                    }
+                }
             });
+        }
+
+        protected void SendCloseChildAgent(UUID agentID, List<GridRegion> regionsToClose)
+        {
+            //Close all agents that we've been given regions for
+            foreach (GridRegion region in regionsToClose)
+            {
+                m_log.Debug("[NeighborService]: Closing child agent in " + region.RegionName);
+                m_registry.RequestModuleInterface<ISimulationService>().CloseAgent(region, agentID);
+            }
         }
 
         protected void ResetFromTransit(UUID AgentID)
@@ -612,7 +643,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                                 otherRegion.RootAgent = true;
                                 requestingRegionCaps.RootAgent = false;
 
-                                CloseNeighborAgents(crossingRegion, AgentID, requestingRegion);
+                                CloseNeighborAgents(crossingRegion, AgentID);
                             }
                             reason = "";
                         }

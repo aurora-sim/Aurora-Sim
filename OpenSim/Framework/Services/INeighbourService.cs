@@ -107,15 +107,6 @@ namespace OpenSim.Services.Interfaces
         List<GridRegion> GetNeighbors(GridRegion region, int userDrawDistance);
 
         /// <summary>
-        /// Close neighbor agents if they are too far away
-        /// </summary>
-        /// <param name="newRegionX"></param>
-        /// <param name="newRegionY"></param>
-        /// <param name="AgentID"></param>
-        /// <param name="currentRegionHandle"></param>
-        void CloseNeighborAgents(int newRegionX, int newRegionY, UUID AgentID, ulong currentRegionHandle);
-
-        /// <summary>
         /// Check if the new position is outside of the range for the old position
         /// </summary>
         /// <param name="x">old X pos (in meters)</param>

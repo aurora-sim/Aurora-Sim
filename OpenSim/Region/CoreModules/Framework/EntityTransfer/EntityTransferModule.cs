@@ -254,7 +254,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             //Make sure that all attachments are ready for the teleport
             IAttachmentsModule attModule = sp.Scene.RequestModuleInterface<IAttachmentsModule>();
-            if(attModule != null)
+            if (attModule != null)
                 attModule.ValidateAttachments(sp.UUID);
 
             AgentCircuitData agentCircuit = sp.ControllingClient.RequestClientInfo();
@@ -296,23 +296,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             // Well, this is it. The agent is over there.
             KillEntity(sp.Scene, sp);
 
-            INeighborService service = sp.Scene.RequestModuleInterface<INeighborService>();
-            if (service != null)
-            {
-                //Check that the region the client is in right now isn't a part of the
-                //  regions that should be closed as well
-                if (service.IsOutsideView(sp.Scene.RegionInfo.RegionLocX, finalDestination.RegionLocX,
-                    sp.Scene.RegionInfo.RegionLocY, finalDestination.RegionLocY))
-                {
-                    Thread.Sleep(1000);
-                    // Fix this so that when we close, we don't have the wrong type
-                    sp.IsChildAgent = false;
-                    //Wait a bit for the agent to leave this region, then close just this agent, the grid deals with others
-                    sp.Scene.IncomingCloseAgent(sp.UUID);
-                }
-                else
-                    sp.MakeChildAgent();
-            }
+            //Make it a child agent for now... the grid will kill us later if we need to close
+            sp.MakeChildAgent();
         }
 
         protected void KillEntity(Scene scene, ISceneEntity entity)

@@ -434,41 +434,6 @@ namespace OpenSim.Services.Connectors
             return ((Math.Abs(oldRegionX - newRegionX) > RegionViewSize) || (Math.Abs(oldRegionY - newRegionY) > RegionViewSize));
         }
 
-        public void CloseNeighborAgents(int newRegionX, int newRegionY, UUID AgentID, ulong currentRegionHandle)
-        {
-            int x, y;
-            Util.UlongToInts(currentRegionHandle, out x, out y);
-            GridRegion neighbor = m_gridService.GetRegionByPosition(UUID.Zero, x,y);
-            List<GridRegion> NeighborsOfCurrentRegion = GetNeighbors(neighbor);
-            List<GridRegion> byebyeRegions = new List<GridRegion>();
-            m_log.InfoFormat(
-                "[NeighborService]: Closing child agents. Checking {0} regions around {1}",
-                NeighborsOfCurrentRegion.Count, neighbor.RegionName);
-
-            foreach (GridRegion region in NeighborsOfCurrentRegion)
-            {
-                if (IsOutsideView(region.RegionLocX, newRegionX, region.RegionLocY, newRegionY))
-                {
-                    byebyeRegions.Add(region);
-                }
-            }
-
-            if (byebyeRegions.Count > 0)
-            {
-                m_log.Debug("[NeighborService]: Closing " + byebyeRegions.Count + " child agents");
-                SendCloseChildAgent(AgentID, neighbor.RegionID, byebyeRegions);
-            }
-        }
-
-        protected void SendCloseChildAgent(UUID agentID, UUID regionID, List<GridRegion> regionsToClose)
-        {
-            //Close all agents that we've been given regions for
-            foreach (GridRegion region in regionsToClose)
-            {
-                m_simService.CloseAgent(region, agentID);
-            }
-        }
-
         public bool SendChatMessageToNeighbors(OSChatMessage message, ChatSourceType type, RegionInfo region)
         {
             bool RetVal = false;
