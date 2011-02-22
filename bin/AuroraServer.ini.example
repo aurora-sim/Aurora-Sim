@@ -1,34 +1,12 @@
 [Network]
     http_listener_port = 8003
 
-[CAPSService]
-    ;; Subsection Security
-    ;; The CAPS service deals with setting up inventory and other parts of the client that need security, we don't want anyone to be able to access things that they do not have clearance to access
-
-    ;; For more info, see AuroraDocs/CAPSService.txt
-    ;; 127.0.0.1 should be your IP address or DNS
-    HostName = http://127.0.0.1
-    
-    ;;The port for this service to run on
-    Port = 8007
-
 [LibraryService]
     ;;  Set this if you want to change the name of the Aurora Library
     LibraryName = Aurora Library
     LibraryOwnerName = "Library Owner"
     
-[PresenceService]
-    ;; Should multiple logins of users be enabled?
-    AllowDuplicatePresences = true
-    ;; Should we check the last time that the user was reported when getting presence data and log out non responsive ones?
-    CheckLastSeen = true
-    
-[AuthenticationService]
-    ;; Should we check user passwords? If this is set to false, there will be NO password checking.
-    AuthenticateUsers = true
-    
 [GridService]
-    ; Realm = "regions"
 
     ;; Next, we can specify properties of regions, including default and fallback regions
     ;; The syntax is: Region_<RegionName> = "<flags>"
@@ -67,6 +45,13 @@
     ;; The maximum distance the user is allowed to see based on their draw distance (only works if UseVariableRegionSightDistance is enabled)
     ;; Default: 512 (meters)
     MaxDistanceVariableRegionSightDistance = 512
+    
+[AuthenticationService]
+    ;; Should we check user passwords? If this is set to false, there will be NO password checking.
+    AuthenticateUsers = true
+
+[AssetService]
+    AllowRemoteDelete = true
     
 [Includes]
     ;; Main configuration
