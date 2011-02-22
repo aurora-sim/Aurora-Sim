@@ -1966,7 +1966,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             retVal["UpdateScriptAgentInventory"] = CapsUtil.CreateCAPS("UpdateScriptAgentInventory", "");
             retVal["UpdateNotecardAgentInventory"] = retVal["UpdateScriptAgentInventory"];
-            retVal["UpdateScriptAgent"] = retVal["UpdateScriptAgent"];
+            retVal["UpdateScriptAgent"] = retVal["UpdateNotecardAgentInventory"];
             //Unless the script engine goes, region server bound
             handler = new RestStreamHandler("POST", retVal["UpdateNotecardAgentInventory"], delegate(string request, string path, string param,
                                           OSHttpRequest httpRequest, OSHttpResponse httpResponse)

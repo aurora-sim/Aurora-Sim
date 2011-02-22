@@ -74,6 +74,7 @@ namespace OpenSim.Framework.Servers.HttpServer
         protected bool m_ssl;
         protected bool m_firstcaps = true;
         protected string m_SSLCommonName = "";
+        protected string m_hostName;
 
         protected IPAddress m_listenIPAddress = IPAddress.Any;
 
@@ -105,6 +106,11 @@ namespace OpenSim.Framework.Servers.HttpServer
             set { m_listenIPAddress = value; }
         }
 
+        public string HostName
+        {
+            get { return m_hostName; }
+        }
+
         public BaseHttpServer(uint port)
         {
             m_port = port;
@@ -116,13 +122,14 @@ namespace OpenSim.Framework.Servers.HttpServer
             m_ssl = ssl;
         }
 
-        public BaseHttpServer(uint port, bool ssl, uint sslport, string CN)
+        public BaseHttpServer(uint port, bool ssl, uint sslport, string CN, string hostName)
             : this(port, ssl)
         {
             if (m_ssl)
             {
                 m_sslport = sslport;
             }
+            m_hostName = hostName;
         }
 
         /// <summary>

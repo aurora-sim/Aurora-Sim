@@ -188,8 +188,8 @@ namespace OpenSim.Services.CapsService
         {
             foreach (KeyValuePair<string, OSD> kvp in caps)
             {
-                string CAPSPath = HostUri + kvp.Value;
-                registeredCAPS[kvp.Key] = CAPSPath;
+                if(!registeredCAPS.ContainsKey(kvp.Key))
+                    registeredCAPS[kvp.Key] = kvp.Value;
             }
         }
 

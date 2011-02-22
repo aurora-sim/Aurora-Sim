@@ -291,7 +291,9 @@ namespace Aurora.Simulation.Base
             if (m_Servers.ContainsKey(port))
                 return m_Servers[port];
 
-            m_Servers[port] = new BaseHttpServer(port, UsesSSL, sslPort, sslCN);
+            string hostName =
+                m_config.Configs["Network"].GetString("HostName", "http://127.0.0.1");
+            m_Servers[port] = new BaseHttpServer(port, UsesSSL, sslPort, sslCN, hostName);
 
             m_log.InfoFormat("[Server]: Starting new Http server on port {0}", port);
             m_Servers[port].Start();

@@ -1073,7 +1073,7 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             foreach (KeyValuePair<string, OSD> kvp in r)
                             {
-                                retVal[kvp.Key] = kvp.Value;
+                                retVal[kvp.Key] = MainServer.Instance.HostName + ":" + MainServer.Instance.Port + kvp.Value;
                             }
                         }
                     }
