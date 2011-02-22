@@ -69,11 +69,18 @@ namespace OpenSim.Region.CoreModules
                 LastEstateOwner = account.Name;
 
                 List<EstateSettings> ownerEstates = EstateConnector.GetEstates(account.PrincipalID);
-                m_log.WarnFormat("Found user. {0} has {1} estates currently. {2}", account.Name, ownerEstates.Count,
-                    ownerEstates.Count > 0 ? "These estates are the following:" : "");
-                for (int i = 0; i < ownerEstates.Count; i++)
+                if (ownerEstates != null)
                 {
-                    m_log.Warn(ownerEstates[i].EstateName);
+                    m_log.WarnFormat("Found user. {0} has {1} estates currently. {2}", account.Name, ownerEstates.Count,
+                        "These estates are the following:");
+                    for (int i = 0; i < ownerEstates.Count; i++)
+                    {
+                        m_log.Warn(ownerEstates[i].EstateName);
+                    }
+                }
+                else
+                {
+                    m_log.WarnFormat("Found user. {0} has no estates currently.", account.Name);
                 }
                 string response = MainConsole.Instance.CmdPrompt("Do you wish to join one of these existing estates? (Options are {yes, no})", LastEstateChoise, new List<string>() { "yes", "no" });
 
