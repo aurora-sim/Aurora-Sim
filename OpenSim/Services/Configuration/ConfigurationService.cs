@@ -189,6 +189,41 @@ namespace OpenSim.Services.ConfigurationService
             return FindValueOf(key);
         }
 
+        public virtual List<string> FindValueOf(string userID, string regionID, string key)
+        {
+            if (m_knownUsers.ContainsKey(userID))
+            {
+                List<string> urls = new List<string>();
+                return FindValueOfFromOSDMap(key, m_knownUsers[userID]);
+            }
+            else if (m_allConfigs.ContainsKey(userID))
+            {
+                List<string> urls = new List<string>();
+                return FindValueOfFromOSDMap(key, m_allConfigs[userID]);
+            }
+            else
+            {
+                if (m_knownUsers.ContainsKey(regionID))
+                {
+                    List<string> urls = new List<string>();
+                    return FindValueOfFromOSDMap(key, m_knownUsers[regionID]);
+                }
+                else if (m_allConfigs.ContainsKey(regionID))
+                {
+                    List<string> urls = new List<string>();
+                    return FindValueOfFromOSDMap(key, m_allConfigs[regionID]);
+                }
+                foreach (string name in m_allConfigs.Keys)
+                {
+                    if (m_allConfigs[name].ContainsKey(key))
+                    {
+                        return FindValueOfFromOSDMap(key, m_allConfigs[name]);
+                    }
+                }
+            }
+            return FindValueOf(key);
+        }
+
         public virtual List<string> FindValueOfFromOSDMap(string key, OSDMap urls)
         {
             List<string> keys = new List<string>();

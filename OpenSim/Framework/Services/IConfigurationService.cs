@@ -55,5 +55,16 @@ namespace OpenSim.Services.Interfaces
         /// <param name="key">A generic key to check for URLs</param>
         /// <returns>A list of URLs that are registered for this key</returns>
         List<string> FindValueOf(string userID, string key);
+
+        /// <summary>
+        /// Find the 'key' from the auto config service.
+        /// First it will check for the key in the response it got from the ConfigurationInHandler, 
+        ///   then check from the IConfig found in 'Configuration'.
+        /// </summary>
+        /// <param name="userID">The user who is requesting this info</param>
+        /// <param name="userID">The another way to check who is requesting this info</param>
+        /// <param name="key">A generic key to check for URLs</param>
+        /// <returns>A list of URLs that are registered for this key</returns>
+        List<string> FindValueOf(string userID, string user2, string key);
     }
 }

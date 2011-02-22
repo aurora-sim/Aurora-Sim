@@ -56,12 +56,6 @@ namespace OpenSim.Services.CapsService
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IRegistryCore m_registry;
 
-        /// <summary>
-        /// This holds events that havn't been sent yet as something has gone wrong
-        /// Note: these already have been converted to LLSDXML, so do not duplicate this!
-        /// </summary>
-        private Dictionary<UUID, EventQueueClient> m_eventsNotSentPasswordDoesNotExist = new Dictionary<UUID, EventQueueClient>();
-        
         #endregion
 
         #region IService Members
@@ -105,21 +99,6 @@ namespace OpenSim.Services.CapsService
             return true;
         }
 
-        /// <summary>
-        /// Remove all events that have not been sent yet
-        /// </summary>
-        /// <param name="avatarID"></param>
-        /// <param name="RegionHandle"></param>
-        public void ClearEventQueue(UUID avatarID, ulong RegionHandle)
-        {
-            lock (m_eventsNotSentPasswordDoesNotExist)
-            {
-                if (!m_eventsNotSentPasswordDoesNotExist.ContainsKey(avatarID))
-                    m_eventsNotSentPasswordDoesNotExist.Add(avatarID, new EventQueueClient());
-                m_eventsNotSentPasswordDoesNotExist[avatarID].ClearEvents(RegionHandle);
-            }
-        }
-
         private bool AddToQueue(OSD ev, UUID avatarID, ulong regionHandle, bool async)
         {
             //m_log.DebugFormat("[EVENTQUEUE]: Enqueuing event for {0} in region {1}", avatarID, m_scene.RegionInfo.RegionName);
@@ -128,13 +107,6 @@ namespace OpenSim.Services.CapsService
                 return false;
             try
             {
-                lock (m_eventsNotSentPasswordDoesNotExist)
-                {
-                    //Make sure these exist
-                    if (!m_eventsNotSentPasswordDoesNotExist.ContainsKey(avatarID))
-                        m_eventsNotSentPasswordDoesNotExist.Add(avatarID, new EventQueueClient());
-                }
-
                 OSDMap request = new OSDMap();
                 request.Add("AgentID", avatarID);
                 request.Add("RegionHandle", regionHandle);
@@ -142,37 +114,9 @@ namespace OpenSim.Services.CapsService
                 //Note: we HAVE to convert it to xml, otherwise things like byte[] arrays will not be passed through correctly!
                 events.Add(OSDParser.SerializeLLSDXmlString(ev)); //Add this event
 
-                //Clear the queue above if the password was just found now
-                //Fire all of them sync for now... if this becomes a large problem, we can deal with it later
-                lock (m_eventsNotSentPasswordDoesNotExist)
-                {
-                    foreach (OSD EQMessage in m_eventsNotSentPasswordDoesNotExist[avatarID].GetEvents(regionHandle))
-                    {
-                        try
-                        {
-                            if (EQMessage == null)
-                                continue;
-                            //We do NOT enqueue disable simulator as it will kill things badly, and they get in here
-                            //  because we can't
-                            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(EQMessage.AsString());
-                            if (!map.ContainsKey("message") || (map.ContainsKey("message") && map["message"] != "DisableSimulator"))
-                                events.Add(EQMessage);
-                            else
-                                m_log.Warn("[EventQueueServicesConnector]: Found DisableSimulator in the not sent queue, not sending");
-                        }
-                        catch (Exception e)
-                        {
-                            m_log.Error("[EVENTQUEUE] Caught event not found exception: " + e.ToString());
-                            return false;
-                        }
-                    }
-                    //Clear it for now... we'll readd if it fails
-                    m_eventsNotSentPasswordDoesNotExist[avatarID].ClearEvents(regionHandle);
-                }
-
                 request.Add("Events", events);
 
-                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(avatarID.ToString(), "EventQueueServiceURI");
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(avatarID.ToString(), regionHandle.ToString(), "EventQueueServiceURI");
                 foreach (string serverURI in serverURIs)
                 {
                     if (async)
@@ -213,13 +157,7 @@ namespace OpenSim.Services.CapsService
                     bool success = result["success"].AsBoolean();
                     if (!success)
                     {
-                        //We need to save the EQMs so that we can try again later
-                        foreach (OSD o in events)
-                        {
-                            if (o != null)
-                                lock (m_eventsNotSentPasswordDoesNotExist)
-                                    m_eventsNotSentPasswordDoesNotExist[avatarID].AddNewEvent(RegionHandle, o);
-                        }
+                        m_log.Warn("[EventQueueServicesConnector]: Failed to post EQMessage for user " + avatarID);
                     }
                     else
                         return success;
@@ -241,68 +179,5 @@ namespace OpenSim.Services.CapsService
         }
 
         #endregion
-
-        #region Overrides
-
-        public override void DisableSimulator(UUID avatarID, ulong RegionHandle)
-        {
-            OSD item = EventQueueHelper.DisableSimulator(RegionHandle);
-            TryEnqueue(item, avatarID, RegionHandle);
-
-            //WRONG, COMMENTS LEFT FOR FUTURE PEOPLE TO UNDERSTAND WHY IT IS WRONG
-            //ALSO, do the base.Enqueue so the region Caps get the kill request as well
-            //END WRONG COMMENTS
-
-            //This is wrong because the client doesn't call the EventQueueHandler on the sim, 
-            //  and we can be sure this is a sim, not the grid, as its the connector that posts 
-            //  to the grid service. Instead, we must do the killing manually so
-            //  that this region gets cleaned up.
-            //base.Enqueue(item, avatarID, RegionHandle);
-            IClientCapsService clientCaps = m_service.GetClientCapsService(avatarID);
-            if(clientCaps != null)
-                clientCaps.RemoveCAPS(RegionHandle); // DIE!!!
-
-            //Remove all things in the queue as well as we can't have them staying around
-            ClearEventQueue(avatarID, RegionHandle);
-        }
-
-        #endregion
-
-        private class EventQueueClient
-        {
-            private Dictionary<ulong, List<OSD>> eventQueue = new Dictionary<ulong,List<OSD>>();
-
-            public void AddNewEvent(ulong regionHandle, OSD ev)
-            {
-                lock (eventQueue)
-                {
-                    if (!eventQueue.ContainsKey(regionHandle))
-                        eventQueue.Add(regionHandle, new List<OSD>());
-                    eventQueue[regionHandle].Add(ev);
-                }
-            }
-
-            public void ClearEvents(ulong RegionHandle)
-            {
-                lock (eventQueue)
-                {
-                    eventQueue.Remove(RegionHandle);
-                }
-            }
-
-            public List<OSD> GetEvents(ulong regionHandle)
-            {
-                OSD[] retVal = new OSD[0];
-                lock (eventQueue)
-                {
-                    if (eventQueue.ContainsKey(regionHandle))
-                    {
-                        retVal = new OSD[eventQueue[regionHandle].Count];
-                        eventQueue[regionHandle].CopyTo(retVal);
-                    }
-                }
-                return new List<OSD>(retVal);
-            }
-        }
     }
 }
