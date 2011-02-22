@@ -124,7 +124,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public IntPtr Body = IntPtr.Zero;
         private AuroraODEPhysicsScene _parent_scene;
         public IntPtr Shell = IntPtr.Zero;
-        public IntPtr Amotor = IntPtr.Zero;
+//        public IntPtr Amotor = IntPtr.Zero;
         public d.Mass ShellMass;
         public bool collidelock = false;
 
@@ -759,7 +759,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         #endregion
 
         #region Move
-
+/* suspended
         private void AlignAvatarTiltWithCurrentDirectionOfMovement(Vector3 movementVector)
             {
             if (!_parent_scene.IsAvCapsuleTilted)
@@ -829,7 +829,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.JointSetAMotorParam(Amotor, (int)dParam.LoStop3, - 0.001f);
             d.JointSetAMotorParam(Amotor, (int)dParam.HiStop3, 0.001f); // same as lowstop
             }
-        
+*/
+      
         /// <summary>
         /// Called from Simulate
         /// This is the avatar's movement control + PID Controller
@@ -890,13 +891,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // _parent_scene.RemoveCharacter(this);
 
                 // destroy avatar capsule and related ODE data
+/*
                 if (Amotor != IntPtr.Zero)
                     {
                     // Kill the Amotor
                     d.JointDestroy(Amotor);
                     Amotor = IntPtr.Zero;
                     }
-
+*/
                 //kill the Geometry
                 _parent_scene.waitForSpaceUnlock(_parent_scene.space);
 
@@ -928,7 +930,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             //            if (!flying || (flying && _target_velocity.X == 0 || _target_velocity.Y == 0))
             //            if (!m_iscollidingGround)
             //Don't duplicate the ground check for flying from above, it will already have given us a good shove
-                {
+
+             {
                 //                if (m_WaitGroundCheck >= 10 && vel.Z != 0)
                     {
                     float groundHeight = _parent_scene.GetTerrainHeightAtXY(tempPos.X, tempPos.Y);
@@ -1253,12 +1256,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 defects.Add(this);
                 // _parent_scene.RemoveCharacter(this);
                 // destroy avatar capsule and related ODE data
+/*
                 if (Amotor != IntPtr.Zero)
                 {
                     // Kill the Amotor
                     d.JointDestroy(Amotor);
                     Amotor = IntPtr.Zero;
                 }
+ */
                 //kill the Geometry
                 _parent_scene.waitForSpaceUnlock(_parent_scene.space);
 
@@ -1641,12 +1646,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (m_tainted_isPhysical)
                 {
                     // Create avatar capsule and related ODE data
-                    if (!(Shell == IntPtr.Zero && Body == IntPtr.Zero && Amotor == IntPtr.Zero))
+                    if (!(Shell == IntPtr.Zero && Body == IntPtr.Zero)) // && Amotor == IntPtr.Zero))
                     {
                         m_log.Warn("[PHYSICS]: re-creating the following avatar ODE data, even though it already exists - "
                             + (Shell!=IntPtr.Zero ? "Shell ":"")
                             + (Body!=IntPtr.Zero ? "Body ":"")
-                            + (Amotor!=IntPtr.Zero ? "Amotor ":""));
+                            );
+                            // + (Amotor!=IntPtr.Zero ? "Amotor ":""));
                     }
                     AvatarGeomAndBodyCreation(_position.X, _position.Y, _position.Z, _parent_scene.avStandupTensor);
                     
@@ -1658,12 +1664,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     _parent_scene.RemoveCharacter(this);
                     // destroy avatar capsule and related ODE data
+/*
                     if (Amotor != IntPtr.Zero)
                     {
                         // Kill the Amotor
                         d.JointDestroy(Amotor);
                         Amotor = IntPtr.Zero;
                     }
+ */
                     //kill the Geometry
                     _parent_scene.waitForSpaceUnlock(_parent_scene.space);
 
@@ -1689,12 +1697,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (m_tainted_CAPSULE_LENGTH != CAPSULE_LENGTH)
             {
-                if (Shell != IntPtr.Zero && Body != IntPtr.Zero && Amotor != IntPtr.Zero)
+                if (Shell != IntPtr.Zero && Body != IntPtr.Zero) // && Amotor != IntPtr.Zero)
                 {
 
                     m_pidControllerActive = true;
                     // no lock needed on _parent_scene.OdeLock because we are called from within the thread lock in OdePlugin's simulate()
-                    d.JointDestroy(Amotor);
+ //                   d.JointDestroy(Amotor);
                     float prevCapsule = CAPSULE_LENGTH;
                     CAPSULE_LENGTH = m_tainted_CAPSULE_LENGTH;
                     //m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
@@ -1712,7 +1720,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_log.Warn("[PHYSICS]: trying to change capsule size, but the following ODE data is missing - " 
                         + (Shell==IntPtr.Zero ? "Shell ":"")
                         + (Body==IntPtr.Zero ? "Body ":"")
-                        + (Amotor==IntPtr.Zero ? "Amotor ":""));
+                        );
+                        //+ (Amotor==IntPtr.Zero ? "Amotor ":""));
                 }
             }
 
