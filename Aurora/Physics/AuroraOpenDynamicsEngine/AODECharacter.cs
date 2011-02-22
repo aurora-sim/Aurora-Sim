@@ -941,7 +941,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             {
                             if (_target_velocity.Z < 0)
                                 _target_velocity.Z = 0;
-                            vec.Z = -vel.Z * PID_D + ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P * 20.0f);
+                            vec.Z = -vel.Z * PID_D *2f + ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P * 100.0f);
                             }
                         else
                             vec.Z = ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P);
