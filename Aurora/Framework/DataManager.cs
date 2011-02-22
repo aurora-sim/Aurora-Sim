@@ -4,13 +4,9 @@ using System.IO;
 using System.Text;
 using FluentNHibernate.Cfg;
 using FluentNHibernate.Cfg.Db;
-using NHibernate;
-using NHibernate.Cfg;
-using NHibernate.Tool.hbm2ddl;
 using Nini.Config;
 using Aurora.Framework;
 using OpenMetaverse;
-using Settings = NHibernate.Cfg.Settings;
 
 namespace Aurora.DataManager
 {
