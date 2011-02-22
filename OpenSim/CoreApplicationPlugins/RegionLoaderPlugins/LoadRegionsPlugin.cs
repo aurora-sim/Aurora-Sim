@@ -36,7 +36,6 @@ using OpenSim.Region.CoreModules.Avatar.InstantMessage;
 using OpenSim.Region.CoreModules.Scripting.DynamicTexture;
 using OpenSim.Region.CoreModules.Scripting.LoadImageURL;
 using OpenSim.Region.CoreModules.Scripting.XMLRPC;
-using OpenSim.Framework.Console;
 using Aurora.Modules.RegionLoader;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Scenes;

@@ -127,7 +127,7 @@ namespace Aurora.Services.DataService
             catch(Exception ex)
             {
                 AllLandObjects = new List<LandData>();
-                OpenSim.Framework.Console.MainConsole.Instance.Output("[ParcelService]: Failed to load parcels, " + ex.ToString());
+                MainConsole.Instance.Output("[ParcelService]: Failed to load parcels, " + ex.ToString());
             }
             for (int i = 0; i < AllLandObjects.Count; i++)
             {

@@ -101,7 +101,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private bool StartingUnderWater = true;
                     
         private float m_tainted_CAPSULE_LENGTH; // set when the capsule length changes. 
-        private float m_tiltMagnitudeWhenProjectedOnXYPlane = 0.113f; // used to introduce a fixed tilt because a straight-up capsule falls through terrain, probably a bug in terrain collider
         private float AvatarHalfsize;
 
 

@@ -29,7 +29,6 @@ using System.Collections.Generic;
 using System.Net;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework.Console;
 using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Framework

@@ -37,7 +37,6 @@ using log4net.Repository;
 using log4net.Config;
 using Nini.Config;
 using OpenSim.Framework;
-using OpenSim.Framework.Console;
 
 namespace Aurora.Simulation.Base
 {

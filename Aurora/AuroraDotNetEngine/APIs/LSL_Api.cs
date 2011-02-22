@@ -4852,7 +4852,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 byte[] objBytes = agentItem.ID.GetBytes();
                 Array.Copy(objBytes, 0, bucket, 1, 16);
 
-                OpenSim.Framework.Console.MainConsole.Instance.Output("Giving inventory to " + destId + " from " + m_host.Name, "None");
+                MainConsole.Instance.Output("Giving inventory to " + destId + " from " + m_host.Name, "None");
                 GridInstantMessage msg = new GridInstantMessage(World,
                         m_host.UUID, m_host.Name+", an object owned by "+
                         resolveName(m_host.OwnerID)+",", destId,

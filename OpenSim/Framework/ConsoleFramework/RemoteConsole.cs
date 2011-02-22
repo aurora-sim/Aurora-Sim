@@ -37,7 +37,6 @@ using OpenMetaverse;
 using Nini.Config;
 using OpenSim.Framework.Servers.HttpServer;
 using log4net;
-using OpenSim.Framework.Console;
 
 namespace OpenSim.Framework
 {

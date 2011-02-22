@@ -34,7 +34,6 @@ using Nini.Config;
 using System.Reflection;
 using OpenSim.Data;
 using OpenSim.Framework;
-using OpenSim.Framework.Console;
 using Aurora.Framework;
 using Aurora.Simulation.Base;
 

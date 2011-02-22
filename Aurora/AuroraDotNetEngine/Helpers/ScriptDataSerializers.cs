@@ -15,7 +15,6 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework.Console;
 using Aurora.Framework;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;

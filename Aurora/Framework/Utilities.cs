@@ -13,6 +13,7 @@ using System.Xml;
 using OpenMetaverse.StructuredData;
 using Nwc.XmlRpc;
 using System.Windows.Forms;
+using OpenSim.Framework;
 
 namespace Aurora.Framework
 {
@@ -486,7 +487,7 @@ namespace Aurora.Framework
             WebClient webClient = new WebClient();
             try
             {
-                OpenSim.Framework.Console.MainConsole.Instance.Output("Downloading new file from " + downloadLink + " now into file " + filename + ".", "WARN");
+                MainConsole.Instance.Output("Downloading new file from " + downloadLink + " now into file " + filename + ".", "WARN");
                 webClient.DownloadFile(downloadLink, filename);
             }
             catch (Exception)

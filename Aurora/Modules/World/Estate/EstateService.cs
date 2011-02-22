@@ -6,7 +6,6 @@ using System.Net;
 using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Framework;
-using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;

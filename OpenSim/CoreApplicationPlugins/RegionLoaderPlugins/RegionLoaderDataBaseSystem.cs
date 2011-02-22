@@ -36,7 +36,6 @@ using Aurora.Modules.RegionLoader;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework.Console;
 using OpenSim.Framework;
 using Aurora.DataManager;
 using Aurora.Framework;

@@ -380,7 +380,7 @@ namespace OpenSim.Framework
                 }
                 catch(Exception ex)
                 {
-                    Console.MainConsole.Instance.Output("Issue executing command: " + ex.ToString());
+                    MainConsole.Instance.Output("Issue executing command: " + ex.ToString());
                 }
                 return result;
             }

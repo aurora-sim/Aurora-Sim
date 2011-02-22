@@ -38,7 +38,6 @@ using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Physics.Manager;
 using Nini.Config;
-using OpenSim.Framework.Console;
 using OpenSim;
 using Aurora.Simulation.Base;
 using Aurora.Framework;

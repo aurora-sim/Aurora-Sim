@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading;
 using OpenSim.Framework;
 using OpenSim.Framework.Capabilities;
-using OpenSim.Framework.Console;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using Nini.Config;

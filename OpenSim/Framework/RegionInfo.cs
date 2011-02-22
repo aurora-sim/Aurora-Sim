@@ -36,7 +36,6 @@ using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework.Console;
 
 namespace OpenSim.Framework
 {

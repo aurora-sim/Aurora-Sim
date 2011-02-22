@@ -34,7 +34,6 @@ using log4net;
 using Nini.Config;
 using OpenSim.Framework;
 using Aurora.Modules.RegionLoader;
-using OpenSim.Framework.Console;
 using OpenMetaverse;
 using OpenSim.Region.Framework.Scenes;
 

@@ -10,7 +10,6 @@ using Nini.Config;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework;
-using OpenSim.Framework.Console;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework.Capabilities;
 using OpenSim.Region.Framework.Scenes;

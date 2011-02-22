@@ -6,7 +6,6 @@ using Aurora.DataManager;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using OpenSim.Framework.Console;
 using Nini.Config;
 using log4net;
 using OpenSim.Services.Interfaces;

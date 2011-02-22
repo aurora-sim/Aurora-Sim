@@ -7,7 +7,6 @@ using Aurora.Framework;
 using Aurora.DataManager;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Framework.Console;
 using Nini.Config;
 using log4net;
 using OpenSim.Services.Interfaces;

@@ -107,7 +107,7 @@ namespace Aurora.DataManager
         {
             if (!TableExists(tableName))
             {
-                OpenSim.Framework.Console.MainConsole.Instance.Output("[DataMigrator]: Issue finding table " + tableName + " when verifing tables exist!", "Warn");
+                MainConsole.Instance.Output("[DataMigrator]: Issue finding table " + tableName + " when verifing tables exist!", "Warn");
                 return false;
             }
 
@@ -131,7 +131,7 @@ namespace Aurora.DataManager
                         if (GetColumnTypeStringSymbol(thisDef.Type) == GetColumnTypeStringSymbol(columnDefinition.Type))
                             continue; //They are the same type, let them go on through
                     }
-                    OpenSim.Framework.Console.MainConsole.Instance.Output("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name + " when verifing tables exist!", "Warn");
+                    MainConsole.Instance.Output("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name + " when verifing tables exist!", "Warn");
                     return false;
                 }
             }

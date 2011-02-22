@@ -35,7 +35,6 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Framework.Capabilities;
-using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
@@ -811,7 +810,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                         FileStream input = new FileStream(filename, FileMode.CreateNew);
                         input.Write(terrainData, 0, terrainData.Length);
                         input.Close();
-                        OpenSim.Framework.Console.MainConsole.Instance.RunCommand("load oar " + filename);
+                        MainConsole.Instance.RunCommand("load oar " + filename);
                         remoteClient.SendAlertMessage("Your oar file was loaded. It may take a few moments to appear.");
                     }
                     else

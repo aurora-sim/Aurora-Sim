@@ -41,7 +41,6 @@ using OpenSim.Region.Framework.Scenes;
 using Aurora.DataManager;
 using Aurora.Framework;
 using Aurora.Modules.AbuseReportsGUI;
-using OpenSim.Framework.Console;
 using System.Windows.Forms;
 using OpenSim.Services.Interfaces;
 

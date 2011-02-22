@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Text;
 using OpenSim.Framework;
 using OpenSim.Framework.Serialization.External;
-using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;

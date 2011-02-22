@@ -32,7 +32,6 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using OpenSim.Framework.Console;
 
 using System.Threading;
 using System.Timers;

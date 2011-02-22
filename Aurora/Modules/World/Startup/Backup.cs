@@ -16,7 +16,6 @@ using OpenMetaverse;
 using Aurora.DataManager;
 using Aurora.Framework;
 using OpenSim.Framework;
-using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 

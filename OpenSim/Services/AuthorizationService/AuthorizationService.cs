@@ -30,7 +30,6 @@ using System.Reflection;
 using Nini.Config;
 using log4net;
 using OpenSim.Framework;
-using OpenSim.Framework.Console;
 using OpenSim.Services.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;

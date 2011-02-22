@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using Aurora.Framework;
 using OpenSim.Framework;
-using OpenSim.Framework.Console;
 using Nini.Config;
 using System.Data;
 

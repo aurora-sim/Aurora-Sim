@@ -38,7 +38,6 @@ using System.Xml;
 using log4net;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Scenes;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
