@@ -34,7 +34,7 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenMetaverse;
 
-namespace OpenSim.Server.Handlers.Simulation
+namespace OpenSim.Services
 {
     public class SimulationServiceInConnector : IService
     {

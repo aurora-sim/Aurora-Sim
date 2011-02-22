@@ -43,8 +43,7 @@ using OpenMetaverse.StructuredData;
 using Nini.Config;
 using log4net;
 
-
-namespace OpenSim.Server.Handlers.Simulation
+namespace OpenSim.Services
 {
     public class AgentHandler
     {
