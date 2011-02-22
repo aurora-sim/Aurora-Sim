@@ -11,6 +11,7 @@ using OpenSim.Services.Interfaces;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.MessagingService
 {
@@ -50,23 +51,38 @@ namespace OpenSim.Services.MessagingService
                 IAsyncMessagePostService asyncPoster = m_registry.RequestModuleInterface<IAsyncMessagePostService>();
                 IFriendsService friendsService = m_registry.RequestModuleInterface<IFriendsService>();
                 ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
-                if (asyncPoster != null && friendsService != null && capsService != null)
+                IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
+                if (asyncPoster != null && friendsService != null && capsService != null && gridService != null)
                 {
                     //Get all friends
                     UserInfo info = (UserInfo)parameters;
                     FriendInfo[] friends = friendsService.GetFriends(UUID.Parse(info.UserID));
-                    foreach(FriendInfo friend in friends)
+                    List<UUID> OnlineFriends = new List<UUID>();
+                    foreach (FriendInfo friend in friends)
                     {
                         //Now find their caps service so that we can find where they are root (and if they are logged in)
-                        IClientCapsService clientCaps = capsService.GetClientCapsService(UUID.Parse(info.UserID));
-                        if(clientCaps != null)
+                        IClientCapsService clientCaps = capsService.GetClientCapsService(friend.PrincipalID);
+                        if (clientCaps != null)
                         {
+                            OnlineFriends.Add(friend.PrincipalID);
                             //Find the root agent
                             IRegionClientCapsService regionClientCaps = clientCaps.GetRootCapsService();
-                            if(regionClientCaps != null)
+                            if (regionClientCaps != null)
                             {
                                 //Post!
                                 asyncPoster.Post(regionClientCaps.RegionHandle, SyncMessageHelper.AgentStatusChange(UUID.Parse(info.UserID), friend.PrincipalID, info.IsOnline));
+                            }
+                        }
+                    }
+                    //If they are online, send all friends online statuses to them
+                    if (info.IsOnline)
+                    {
+                        GridRegion ourRegion = gridService.GetRegionByUUID(UUID.Zero, info.CurrentRegionID);
+                        if (ourRegion != null)
+                        {
+                            foreach (UUID onlineFriend in OnlineFriends)
+                            {
+                                asyncPoster.Post(ourRegion.RegionHandle, SyncMessageHelper.AgentStatusChange(onlineFriend, UUID.Parse(info.UserID), info.IsOnline));
                             }
                         }
                     }

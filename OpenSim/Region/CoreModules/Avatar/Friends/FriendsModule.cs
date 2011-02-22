@@ -74,6 +74,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
 
         protected Dictionary<UUID, UserFriendData> m_Friends =
                 new Dictionary<UUID, UserFriendData>();
+
+        protected Dictionary<UUID, List<UUID>> m_friendsToInformOfStatusChanges = new Dictionary<UUID, List<UUID>>();
         
         protected IFriendsService FriendsService
         {
@@ -217,6 +219,19 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 // Finally
                 LocalFriendshipOffered(agentID, im);
             }
+
+            lock (m_friendsToInformOfStatusChanges)
+            {
+                if (m_friendsToInformOfStatusChanges.ContainsKey(agentID))
+                {
+                    List<UUID> onlineFriends = new List<UUID>(m_friendsToInformOfStatusChanges[agentID]);
+                    foreach (UUID friend in onlineFriends)
+                    {
+                        SendFriendsStatusMessage(agentID, friend, true);
+                    }
+                    m_friendsToInformOfStatusChanges.Remove(agentID);
+                }
+            }
         }
 
         /// <summary>
@@ -256,8 +271,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         public void SendFriendsStatusMessage(UUID FriendToInformID, UUID userID, bool online)
         {
             // Try local
-            if (LocalStatusNotification(userID, FriendToInformID, online))
-                return;
+            LocalStatusNotification(userID, FriendToInformID, online);
 
             // Friend is not online. Ignore.
         }
@@ -577,6 +591,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                     friendClient.SendAgentOffline(new UUID[] { userID });
                 // we're done
                 return true;
+            }
+
+            lock (m_friendsToInformOfStatusChanges)
+            {
+                if (!m_friendsToInformOfStatusChanges.ContainsKey(friendID))
+                    m_friendsToInformOfStatusChanges.Add(friendID, new List<UUID>());
+                m_friendsToInformOfStatusChanges[friendID].Add(userID);
             }
 
             return false;

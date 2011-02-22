@@ -487,7 +487,6 @@ namespace OpenSim.Services.LLLoginService
                 //
                 GridRegion home = null;
                 UserInfo guinfo = m_agentInfoService.GetUserInfo(account.PrincipalID.ToString());
-                m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true);
                 if (guinfo != null && (guinfo.HomeRegionID != UUID.Zero) && m_GridService != null)
                 {
                     home = m_GridService.GetRegionByUUID(scopeID, guinfo.HomeRegionID);
@@ -623,6 +622,10 @@ namespace OpenSim.Services.LLLoginService
                     m_log.DebugFormat("[LLOGIN SERVICE]: Retrieved {0} friends", friendsList.Length);
                 }
 
+                //Set them as logged in now, they are ready
+                m_agentInfoService.SetLastPosition(account.PrincipalID.ToString(), destination.RegionID, position, lookAt);
+                m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true);
+                
                 //
                 // Finally, fill out the response and return it
                 //
