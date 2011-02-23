@@ -88,6 +88,8 @@ namespace OpenSim.Services
                         return EstateHandler.SaveEstateSettings(request);
                     case "linkregionestate":
                         return EstateHandler.LinkRegionEstate(request);
+                    case "delinkregionestate":
+                        return EstateHandler.DelinkRegionEstate(request);
                     case "createestate":
                         return EstateHandler.CreateEstate(request);
                     case "deleteestate":
@@ -1325,6 +1327,16 @@ namespace OpenSim.Services
             string Password = request["PASSWORD"].ToString();
             UUID RegionID = new UUID(request["REGIONID"].ToString());
             if (EstateConnector.LinkRegion(RegionID, EstateID, Password))
+                return SuccessResult();
+            else
+                return FailureResult();
+        }
+
+        public byte[] DelinkRegionEstate(Dictionary<string, object> request)
+        {
+            string Password = request["PASSWORD"].ToString();
+            UUID RegionID = new UUID(request["REGIONID"].ToString());
+            if (EstateConnector.DelinkRegion(RegionID, Password))
                 return SuccessResult();
             else
                 return FailureResult();

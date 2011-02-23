@@ -351,6 +351,48 @@ namespace Aurora.Services.DataService
             return false;
         }
 
+        public bool DelinkRegion(UUID regionID, string password)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+            sendData["REGIONID"] = regionID;
+            sendData["PASSWORD"] = password;
+            sendData["METHOD"] = "delinkregionestate";
+
+            string reqString = WebUtils.BuildQueryString(sendData);
+
+            try
+            {
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI,
+                           reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if (replyData != null)
+                        {
+                            if (!replyData.ContainsKey("Result") || (replyData["Result"].ToString().ToLower() == "failure"))
+                                return false;
+
+                            return true;
+                        }
+                        else
+                            m_log.DebugFormat("[AuroraRemoteEstateConnector]: LinkRegion {0} received null response",
+                                regionID);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
+            }
+
+            return false;
+        }
+
         public List<UUID> GetRegions(int estateID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();

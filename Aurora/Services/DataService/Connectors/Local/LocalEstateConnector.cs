@@ -302,9 +302,9 @@ namespace Aurora.Services.DataService
             return result;
         }
 
-		public bool LinkRegion(UUID regionID, int estateID, string password)
-		{
-			List<string> query = null;
+        public bool LinkRegion(UUID regionID, int estateID, string password)
+        {
+            List<string> query = null;
             try
             {
                 query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { estateID, "EstateSettings" }, "estates", "Value");
@@ -320,15 +320,52 @@ namespace Aurora.Services.DataService
             if (estateInfo["EstatePass"].AsString() != password)
                 return false;
 
-			GD.Replace("estates", new string[]{"ID", "Key", "Value"},
+            GD.Replace("estates", new string[] { "ID", "Key", "Value" },
                 new object[] {
 				regionID,
                 "EstateID",
 				estateID
 			});
 
-			return true;
-		}
+            return true;
+        }
+
+        public bool DelinkRegion(UUID regionID, string password)
+        {
+            List<string> query = null;
+            try
+            {
+                //First make sure they are in the estate
+                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { regionID, "EstateID" }, "estates", "Value");
+            }
+            catch
+            {
+            }
+            if (query == null || query.Count == 0)
+                return false; //Couldn't find it, return default then.
+
+            try
+            {
+                //Now pull the estate settings to check the password
+                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { query[0], "EstateSettings" }, "estates", "Value");
+            }
+            catch
+            {
+            }
+
+            OSDMap estateInfo = (OSDMap)OSDParser.DeserializeLLSDXml(query[0]);
+
+            if (estateInfo["EstatePass"].AsString() != password)
+                return false; //fakers!
+
+            GD.Delete("estates", new string[] { "ID", "Key" },
+                new object[] {
+				regionID,
+                "EstateID"
+			});
+
+            return true;
+        }
 
 		public List<OpenMetaverse.UUID> GetRegions(int estateID)
 		{

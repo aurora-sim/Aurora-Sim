@@ -50,7 +50,16 @@ namespace Aurora.Framework
         /// <param name="estateID"></param>
         /// <param name="password"></param>
         /// <returns></returns>
-		bool LinkRegion(UUID regionID, int estateID, string password);
+        bool LinkRegion(UUID regionID, int estateID, string password);
+
+        /// <summary>
+        /// Remove an existing region from the estate, authenticates with the password
+        /// </summary>
+        /// <param name="regionID"></param>
+        /// <param name="estateID"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        bool DelinkRegion(UUID regionID, string password);
 
         /// <summary>
         /// Deletes the given estate by its estate ID, must be authenticated with the password
