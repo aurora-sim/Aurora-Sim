@@ -657,6 +657,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // disconnect from world gravity so we can apply buoyancy
             d.BodySetGravityMode(Body, false);
+            d.BodySetAutoDisableFlag(Body, false);
 
             _position.X = npositionX;
             _position.Y = npositionY;
@@ -855,15 +856,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.BodySetQuaternion(Body, ref dtmp);
             d.BodySetAngularVel(Body, 0, 0, 0);
 
-            if (m_pidControllerActive == false)
-                {
-                _zeroPosition = d.BodyGetPosition(Body);
-                }
+
             //PidStatus = true;
 
             // rex, added height check
 
             d.Vector3 tempPos = d.BodyGetPosition(Body);
+
+            if (m_pidControllerActive == false)
+                {
+                _zeroPosition = d.BodyGetPosition(Body);
+                }
 
             if (_parent_scene.m_useFlightCeilingHeight && tempPos.Z > _parent_scene.m_flightCeilingHeight)
                 {
