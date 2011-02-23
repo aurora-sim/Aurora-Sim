@@ -271,7 +271,25 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         public void SendFriendsStatusMessage(UUID FriendToInformID, UUID userID, bool online)
         {
             // Try local
-            LocalStatusNotification(userID, FriendToInformID, online);
+            IClientAPI friendClient = LocateClientObject(FriendToInformID);
+            if (friendClient != null)
+            {
+                //m_log.DebugFormat("[FRIENDS]: Local Status Notify {0} that user {1} is {2}", friendID, userID, online);
+                // the  friend in this sim as root agent
+                if (online)
+                    friendClient.SendAgentOnline(new UUID[] { userID });
+                else
+                    friendClient.SendAgentOffline(new UUID[] { userID });
+                // we're done
+                return;
+            }
+
+            lock (m_friendsToInformOfStatusChanges)
+            {
+                if (!m_friendsToInformOfStatusChanges.ContainsKey(FriendToInformID))
+                    m_friendsToInformOfStatusChanges.Add(FriendToInformID, new List<UUID>());
+                m_friendsToInformOfStatusChanges[FriendToInformID].Add(userID);
+            }
 
             // Friend is not online. Ignore.
         }
@@ -576,31 +594,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
 
             return false;
 
-        }
-
-        public bool LocalStatusNotification(UUID userID, UUID friendID, bool online)
-        {
-            IClientAPI friendClient = LocateClientObject(friendID);
-            if (friendClient != null)
-            {
-                //m_log.DebugFormat("[FRIENDS]: Local Status Notify {0} that user {1} is {2}", friendID, userID, online);
-                // the  friend in this sim as root agent
-                if (online)
-                    friendClient.SendAgentOnline(new UUID[] { userID });
-                else
-                    friendClient.SendAgentOffline(new UUID[] { userID });
-                // we're done
-                return true;
-            }
-
-            lock (m_friendsToInformOfStatusChanges)
-            {
-                if (!m_friendsToInformOfStatusChanges.ContainsKey(friendID))
-                    m_friendsToInformOfStatusChanges.Add(friendID, new List<UUID>());
-                m_friendsToInformOfStatusChanges[friendID].Add(userID);
-            }
-
-            return false;
         }
 
         #endregion

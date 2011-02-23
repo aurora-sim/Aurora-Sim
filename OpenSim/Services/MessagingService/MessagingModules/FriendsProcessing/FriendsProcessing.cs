@@ -58,19 +58,21 @@ namespace OpenSim.Services.MessagingService
                     UserInfo info = (UserInfo)parameters;
                     FriendInfo[] friends = friendsService.GetFriends(UUID.Parse(info.UserID));
                     List<UUID> OnlineFriends = new List<UUID>();
+                    UUID us = UUID.Parse(info.UserID);
                     foreach (FriendInfo friend in friends)
                     {
+                        UUID FriendToInform = UUID.Parse(friend.Friend);
                         //Now find their caps service so that we can find where they are root (and if they are logged in)
-                        IClientCapsService clientCaps = capsService.GetClientCapsService(UUID.Parse(friend.Friend));
+                        IClientCapsService clientCaps = capsService.GetClientCapsService(FriendToInform);
                         if (clientCaps != null)
                         {
-                            OnlineFriends.Add(UUID.Parse(friend.Friend));
+                            OnlineFriends.Add(FriendToInform);
                             //Find the root agent
                             IRegionClientCapsService regionClientCaps = clientCaps.GetRootCapsService();
                             if (regionClientCaps != null)
                             {
                                 //Post!
-                                asyncPoster.Post(regionClientCaps.RegionHandle, SyncMessageHelper.AgentStatusChange(UUID.Parse(info.UserID), UUID.Parse(friend.Friend), info.IsOnline));
+                                asyncPoster.Post(regionClientCaps.RegionHandle, SyncMessageHelper.AgentStatusChange(us, FriendToInform, info.IsOnline));
                             }
                         }
                     }
@@ -82,7 +84,7 @@ namespace OpenSim.Services.MessagingService
                         {
                             foreach (UUID onlineFriend in OnlineFriends)
                             {
-                                asyncPoster.Post(ourRegion.RegionHandle, SyncMessageHelper.AgentStatusChange(onlineFriend, UUID.Parse(info.UserID), info.IsOnline));
+                                asyncPoster.Post(ourRegion.RegionHandle, SyncMessageHelper.AgentStatusChange(onlineFriend, us, info.IsOnline));
                             }
                         }
                     }
@@ -98,7 +100,7 @@ namespace OpenSim.Services.MessagingService
             {
                 OSDMap innerMessage = (OSDMap)message["Message"];
                 //We got a message, now pass it on to the clients that need it
-                UUID UserID = innerMessage["AgentID"].AsUUID();
+                UUID AgentID = innerMessage["AgentID"].AsUUID();
                 UUID FriendToInformID = innerMessage["FriendToInformID"].AsUUID();
                 bool NewStatus = innerMessage["NewStatus"].AsBoolean();
 
@@ -110,7 +112,7 @@ namespace OpenSim.Services.MessagingService
                     if (friendsModule != null)
                     {
                         //Send the message
-                        friendsModule.SendFriendsStatusMessage(FriendToInformID, UserID, NewStatus);
+                        friendsModule.SendFriendsStatusMessage(FriendToInformID, AgentID, NewStatus);
                     }
                 }
             }

@@ -44,7 +44,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <summary>
         /// Send a 'user is on/offline' message to the given FriendToInformID about UserID
         /// </summary>
-        /// <param name="FriendID"></param>
+        /// <param name="FriendToInformID"></param>
         /// <param name="UserID"></param>
         /// <param name="NewStatus">On/Offline</param>
         void SendFriendsStatusMessage(UUID FriendToInformID, UUID UserID, bool NewStatus);
