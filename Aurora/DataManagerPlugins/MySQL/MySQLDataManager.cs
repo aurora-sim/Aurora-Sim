@@ -814,6 +814,8 @@ namespace Aurora.DataManager.MySQL
                     return "longblob";
                 case ColumnTypes.Date:
                     return "DATE";
+                case ColumnTypes.DateTime:
+                    return "DATETIME";
                 default:
                     throw new DataManagerException("Unknown column type.");
             }
@@ -957,6 +959,8 @@ namespace Aurora.DataManager.MySQL
                     return ColumnTypes.String1024;
                 case "date":
                     return ColumnTypes.Date;
+                case "datetime":
+                    return ColumnTypes.DateTime;
                 case "varchar(8196)":
                     return ColumnTypes.String8196;
                 case "text":

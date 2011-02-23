@@ -71,14 +71,17 @@ namespace Aurora.Services.DataService
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
-                        if (replyData != null)
+                        if (replyData != null && (!replyData.ContainsKey("Result") || replyData["Result"].ToString() != "Failure"))
                         {
                             settings = new EstateSettings(replyData);
                             settings.OnSave += SaveEstateSettings;
                             settings.EstatePass = Password; //Restore it here, see above for explaination
                             return true;
                         }
-
+                        else if (replyData.ContainsKey("Result") && replyData["Result"].ToString() == "Failure")
+                        {
+                            return true;
+                        }
                         else
                             m_log.DebugFormat("[AuroraRemoteEstateConnector]: LoadEstateSettings {0} received null response",
                                 regionID);

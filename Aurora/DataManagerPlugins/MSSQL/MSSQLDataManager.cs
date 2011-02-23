@@ -729,6 +729,8 @@ namespace Aurora.DataManager.MSSQL
                     return "image";
                 case ColumnTypes.Date:
                     return "DATE";
+                case ColumnTypes.DateTime:
+                    return "DATETIME";
                 case ColumnTypes.Text:
                     return "TEXT";
                 default:
@@ -848,6 +850,8 @@ namespace Aurora.DataManager.MSSQL
                     return ColumnTypes.String8196;
                 case "date":
                     return ColumnTypes.Date;
+                case "datetime":
+                    return ColumnTypes.DateTime;
                 case "text":
                     return ColumnTypes.Text;
                 case "image":

@@ -18,7 +18,6 @@ namespace Aurora.Services.DataService
     {
         private IGenericData GD = null;
         private string m_realm = "friends";
-        private int m_LastExpire = 0;
 
         public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {

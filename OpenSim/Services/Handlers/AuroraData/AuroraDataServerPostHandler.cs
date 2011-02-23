@@ -1391,6 +1391,8 @@ namespace OpenSim.Services
                 if(regionID != null)
                     EstateConnector.LoadEstateSettings(UUID.Parse(regionID), out ES);
             }
+            if (ES == null)
+                return FailureResult();
 
             //This NEEDS to be false here, otherwise passwords will be sent unsecurely!
             Dictionary<string, object> result = ES.ToKeyValuePairs(false);

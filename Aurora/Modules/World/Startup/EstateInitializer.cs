@@ -69,6 +69,7 @@ namespace OpenSim.Region.CoreModules
 
                 LastEstateOwner = account.Name;
 
+                string response = "no";
                 List<EstateSettings> ownerEstates = EstateConnector.GetEstates(account.PrincipalID);
                 if (ownerEstates != null)
                 {
@@ -78,15 +79,13 @@ namespace OpenSim.Region.CoreModules
                     {
                         m_log.Warn(ownerEstates[i].EstateName);
                     }
+                    response = MainConsole.Instance.CmdPrompt("Do you wish to join one of these existing estates? (Options are {yes, no})", LastEstateChoise, new List<string>() { "yes", "no" });
                 }
                 else
                 {
-                    m_log.WarnFormat("Found user. {0} has no estates currently.", account.Name);
+                    m_log.WarnFormat("Found user. {0} has no estates currently. Creating a new estate.", account.Name);
                 }
-                string response = MainConsole.Instance.CmdPrompt("Do you wish to join one of these existing estates? (Options are {yes, no})", LastEstateChoise, new List<string>() { "yes", "no" });
-
                 LastEstateChoise = response;
-
                 if (response == "no")
                 {
                     // Create a new estate
