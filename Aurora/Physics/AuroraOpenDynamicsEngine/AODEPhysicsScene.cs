@@ -1122,7 +1122,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (curContact.depth < 0f)
                     skipThisContact = true;
 
-                if (checkDupe(curContact, p2.PhysicsActorType))
+                if (!skipThisContact && checkDupe(curContact, p2.PhysicsActorType))
                     skipThisContact = true;
 
                 const int maxContactsbeforedeath = 4000;
