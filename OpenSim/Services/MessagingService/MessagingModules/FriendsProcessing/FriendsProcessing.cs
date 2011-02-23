@@ -61,16 +61,16 @@ namespace OpenSim.Services.MessagingService
                     foreach (FriendInfo friend in friends)
                     {
                         //Now find their caps service so that we can find where they are root (and if they are logged in)
-                        IClientCapsService clientCaps = capsService.GetClientCapsService(friend.PrincipalID);
+                        IClientCapsService clientCaps = capsService.GetClientCapsService(UUID.Parse(friend.Friend));
                         if (clientCaps != null)
                         {
-                            OnlineFriends.Add(friend.PrincipalID);
+                            OnlineFriends.Add(UUID.Parse(friend.Friend));
                             //Find the root agent
                             IRegionClientCapsService regionClientCaps = clientCaps.GetRootCapsService();
                             if (regionClientCaps != null)
                             {
                                 //Post!
-                                asyncPoster.Post(regionClientCaps.RegionHandle, SyncMessageHelper.AgentStatusChange(UUID.Parse(info.UserID), friend.PrincipalID, info.IsOnline));
+                                asyncPoster.Post(regionClientCaps.RegionHandle, SyncMessageHelper.AgentStatusChange(UUID.Parse(info.UserID), UUID.Parse(friend.Friend), info.IsOnline));
                             }
                         }
                     }
@@ -96,10 +96,11 @@ namespace OpenSim.Services.MessagingService
             //We need to check and see if this is an AgentStatusChange
             if (message.ContainsKey("Method") && message["Method"] == "AgentStatusChange")
             {
+                OSDMap innerMessage = (OSDMap)message["Message"];
                 //We got a message, now pass it on to the clients that need it
-                UUID UserID = message["UserID"].AsUUID();
-                UUID FriendToInformID = message["FriendToInformID"].AsUUID();
-                bool NewStatus = message["NewStatus"].AsBoolean();
+                UUID UserID = innerMessage["AgentID"].AsUUID();
+                UUID FriendToInformID = innerMessage["FriendToInformID"].AsUUID();
+                bool NewStatus = innerMessage["NewStatus"].AsBoolean();
 
                 //Do this since IFriendsModule is a scene module, not a ISimulationBase module (not interchangable)
                 SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
