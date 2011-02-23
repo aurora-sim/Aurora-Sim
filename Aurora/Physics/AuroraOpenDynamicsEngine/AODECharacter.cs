@@ -101,6 +101,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private bool StartingUnderWater = true;
                     
         private float m_tainted_CAPSULE_LENGTH; // set when the capsule length changes. 
+//        private float m_tiltMagnitudeWhenProjectedOnXYPlane = 0.113f; // used to introduce a fixed tilt because a straight-up capsule falls through terrain, probably a bug in terrain collider
         private float AvatarHalfsize;
 
 
@@ -612,7 +613,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name="npositionX"></param>
         /// <param name="npositionY"></param>
         /// <param name="npositionZ"></param>
-        private void AvatarGeomAndBodyCreation(float npositionX, float npositionY, float npositionZ, float tensor)
+        private void AvatarGeomAndBodyCreation(float npositionX, float npositionY, float npositionZ)//, float tensor)
         {
             _parent_scene.waitForSpaceUnlock(_parent_scene.space);
             if (CAPSULE_LENGTH <= 0)
@@ -633,7 +634,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.GeomSetCategoryBits(Shell, (int)m_collisionCategories);
             d.GeomSetCollideBits(Shell, (int)m_collisionFlags);
 
-            d.MassSetCapsule(out ShellMass, 150f, 2, CAPSULE_RADIUS, CAPSULE_LENGTH); // density 200
+            d.MassSetCapsule(out ShellMass, 150f, 3, CAPSULE_RADIUS, CAPSULE_LENGTH); // density 200
 
             m_mass=ShellMass.mass;
 
@@ -656,6 +657,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // disconnect from world gravity so we can apply buoyancy
             d.BodySetGravityMode(Body, false);
+            d.BodySetAutoDisableFlag(Body, false);
 
             _position.X = npositionX;
             _position.Y = npositionY;
@@ -854,15 +856,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.BodySetQuaternion(Body, ref dtmp);
             d.BodySetAngularVel(Body, 0, 0, 0);
 
-            if (m_pidControllerActive == false)
-                {
-                _zeroPosition = d.BodyGetPosition(Body);
-                }
+
             //PidStatus = true;
 
             // rex, added height check
 
             d.Vector3 tempPos = d.BodyGetPosition(Body);
+
+            if (m_pidControllerActive == false)
+                {
+                _zeroPosition = d.BodyGetPosition(Body);
+                }
 
             if (_parent_scene.m_useFlightCeilingHeight && tempPos.Z > _parent_scene.m_flightCeilingHeight)
                 {
@@ -933,7 +937,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
              {
                 //                if (m_WaitGroundCheck >= 10 && vel.Z != 0)
                     {
-                    float groundHeight = _parent_scene.GetTerrainHeightAtXY(tempPos.X, tempPos.Y);
+                    float groundHeight = _parent_scene.GetTerrainHeightAtXY(
+                            tempPos.X + (tempPos.X == 0 ? tempPos.X : timeStep * 0.75f * vel.X),
+                            tempPos.Y + (tempPos.Y == 0 ? tempPos.Y : timeStep * 0.75f * vel.Y));
+
                     if ((tempPos.Z - AvatarHalfsize) < groundHeight)
                         {
                         if (!flying)
@@ -994,8 +1001,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // Avatar to Avatar collisions
                     // Prim to avatar collisions
                     // if target vel is zero why was it here ?
-                    //vec.X = -vel.X * PID_D + (_zeroPosition.X - tempPos.X) * PID_P * 2f;
-                    //vec.Y = -vel.Y * PID_D + (_zeroPosition.Y - tempPos.Y) * PID_P * 2f;
+                    vec.X = -vel.X * PID_D + (_zeroPosition.X - tempPos.X) * PID_P * 2f;
+                    vec.Y = -vel.Y * PID_D + (_zeroPosition.Y - tempPos.Y) * PID_P * 2f;
                     }
                 }
             else
@@ -1653,7 +1660,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             );
                             // + (Amotor!=IntPtr.Zero ? "Amotor ":""));
                     }
-                    AvatarGeomAndBodyCreation(_position.X, _position.Y, _position.Z, _parent_scene.avStandupTensor);
+                    AvatarGeomAndBodyCreation(_position.X, _position.Y, _position.Z);//, _parent_scene.avStandupTensor);
                     
                     _parent_scene.geom_name_map[Shell] = m_name;
                     _parent_scene.actor_name_map[Shell] = (PhysicsActor)this;
@@ -1708,7 +1715,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.BodyDestroy(Body);
                     d.GeomDestroy(Shell);
                     AvatarGeomAndBodyCreation(_position.X, _position.Y,
-                                      _position.Z + (CAPSULE_LENGTH - prevCapsule), _parent_scene.avStandupTensor);
+                                      _position.Z + (CAPSULE_LENGTH - prevCapsule));//, _parent_scene.avStandupTensor);
                     Velocity = Vector3.Zero;
 
                     _parent_scene.geom_name_map[Shell] = m_name;

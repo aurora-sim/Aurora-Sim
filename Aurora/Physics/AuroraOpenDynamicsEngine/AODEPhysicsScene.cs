@@ -87,7 +87,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             Selected,
             disabled,
 
-            Null             //keep this last it use do dim the methods array. does nothing but pulsing the prim
+            Null             //keep this last used do dim the methods array. does nothing but pulsing the prim
 }
 
 
@@ -132,9 +132,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float PID_D = 3200f;
         public float PID_P = 1400f;
         public float avCapRadius = 0.37f;
-        public float avStandupTensor = 2000000f;
-        private bool avCapsuleTilted = true; // true = old compatibility mode with leaning capsule; false = new corrected mode
-        public bool IsAvCapsuleTilted { get { return avCapsuleTilted; } set { avCapsuleTilted = value; } }
+//        public float avStandupTensor = 2000000f;
+//        private bool avCapsuleTilted = true; // true = old compatibility mode with leaning capsule; false = new corrected mode
+//        public bool IsAvCapsuleTilted { get { return avCapsuleTilted; } set { avCapsuleTilted = value; } }
         public float avDensity = 80f;
         public float avHeightFudgeFactor = 0.52f;
         public float avMovementDivisorWalk = 1.3f;
@@ -143,7 +143,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float maximumMassObject = 10000.01f;
 
         public bool meshSculptedPrim = true;
-        public bool forceSimplePrimMeshing = false;
+        public bool forceSimplePrimMeshing = true;
 
         public float meshSculptLOD = 32;
         public float MeshSculptphysicalLOD = 16;
@@ -206,7 +206,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private d.Contact contact;
         private d.Contact TerrainContact;
         private d.Contact AvatarMovementprimContact;
-        private d.Contact AvatarMovementTerrainContact;
+//        private d.Contact AvatarMovementTerrainContact;
         private d.Contact WaterContact;
         private d.Contact[,] m_materialContacts;
 
@@ -432,13 +432,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 PID_D = 3200.0f;
                 PID_P = 1400.0f;
-                avStandupTensor = 2000000f;
+//                avStandupTensor = 2000000f;
             }
             else
             {
                 PID_D = 2200.0f;
                 PID_P = 900.0f;
-                avStandupTensor = 550000f;
+//                avStandupTensor = 550000f;
             }
 
             if (m_config != null)
@@ -488,7 +488,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     avMovementDivisorWalk = (physicsconfig.GetFloat("av_movement_divisor_walk", 1.3f) * 2);
                     avMovementDivisorRun = (physicsconfig.GetFloat("av_movement_divisor_run", 0.8f) * 2);
                     avCapRadius = physicsconfig.GetFloat("av_capsule_radius", 0.37f);
-                    avCapsuleTilted = physicsconfig.GetBoolean("av_capsule_tilted", true);
+//                    avCapsuleTilted = physicsconfig.GetBoolean("av_capsule_tilted", true);
 
                     contactsPerCollision = physicsconfig.GetInt("contacts_per_collision", 80);
 
@@ -512,14 +512,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         PID_D = physicsconfig.GetFloat("av_pid_derivative_linux", 2200.0f);
                         PID_P = physicsconfig.GetFloat("av_pid_proportional_linux", 900.0f);
-                        avStandupTensor = physicsconfig.GetFloat("av_capsule_standup_tensor_linux", 550000f);
+//                        avStandupTensor = physicsconfig.GetFloat("av_capsule_standup_tensor_linux", 550000f);
                         bodyMotorJointMaxforceTensor = physicsconfig.GetFloat("body_motor_joint_maxforce_tensor_linux", 5f);
                     }
                     else
                     {
                         PID_D = physicsconfig.GetFloat("av_pid_derivative_win", 2200.0f);
                         PID_P = physicsconfig.GetFloat("av_pid_proportional_win", 900.0f);
-                        avStandupTensor = physicsconfig.GetFloat("av_capsule_standup_tensor_win", 550000f);
+//                        avStandupTensor = physicsconfig.GetFloat("av_capsule_standup_tensor_win", 550000f);
                         bodyMotorJointMaxforceTensor = physicsconfig.GetFloat("body_motor_joint_maxforce_tensor_win", 5f);
                     }
                     physics_logging = physicsconfig.GetBoolean("physics_logging", false);
@@ -564,15 +564,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // This is the *non* moving version of friction and bounce
             // Use this when an avatar comes in contact with a prim
             // and is moving
+
+            AvatarMovementprimContact.surface.mode |= d.ContactFlags.Bounce;
             AvatarMovementprimContact.surface.mu = mAvatarObjectContactFriction;
             AvatarMovementprimContact.surface.bounce = mAvatarObjectContactBounce;
 
             // Terrain contact friction bounce and various error correcting calculations
             // Use this when an avatar is in contact with the terrain and moving.
-            AvatarMovementTerrainContact.surface.mode |= d.ContactFlags.SoftERP;
-            AvatarMovementTerrainContact.surface.mu = mTerrainContactFriction;
-            AvatarMovementTerrainContact.surface.bounce = mTerrainContactBounce;
-            AvatarMovementTerrainContact.surface.soft_erp = mTerrainContactERP;
+//            AvatarMovementTerrainContact.surface.mu = mTerrainContactFriction;
+//            AvatarMovementTerrainContact.surface.bounce = mTerrainContactBounce;
+//            AvatarMovementTerrainContact.surface.soft_erp = mTerrainContactERP;
 
 
             /*
@@ -938,11 +939,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 #region InterPenetration Handling - Unintended physics explosions
                 #region disabled code1
 
-//                if (curContact.depth >= 0.08f)
+/*
+
+                if (curContact.depth >= 0.08f)
                     {
                     //This is disabled at the moment only because it needs more tweaking
                     //It will eventually be uncommented
-                    /*
                     if (contact.depth >= 1.00f)
                     {
                         //m_log.Debug("[PHYSICS]: " + contact.depth.ToString());
@@ -956,7 +958,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         
                         //contact.depth = contact.depth * 4.15f;
-                        /*
                         if (p2.PhysicsActorType == (int) ActorTypes.Agent)
                         {
                             p2.CollidingObj = true;
@@ -1038,8 +1039,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             //}
                             #endregion
                         }
-                        */
-                #endregion
+                        
 //                    if (curContact.depth >= 1.0f)
                         {
                         //m_log.Info("[P]: " + contact.depth.ToString());
@@ -1061,7 +1061,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                         p2.CollidingGround = false;
                                         continue;
                                         }
-/*
+
                                     curContact.depth = 0.00000003f;
  
                                     p2.Velocity = p2.Velocity + new Vector3(0f, 0f, 1.5f);
@@ -1070,7 +1070,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                                                   curContact.pos.Y + (p2.Size.Y / 2),
                                                                   curContact.pos.Z + (p2.Size.Z / 2));
                                     character.SetPidStatus(true);
-*/
+
                                     }
                                 }
 
@@ -1087,7 +1087,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                         p1.CollidingGround = false;
                                         continue;
                                         }
-/*
+
                                     curContact.depth = 0.00000003f;
                                     p1.Velocity = p1.Velocity + new Vector3(0f, 0f, 0.5f);
                                     curContact.pos =
@@ -1095,13 +1095,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                                                   curContact.pos.Y + (p1.Size.Y / 2),
                                                                   curContact.pos.Z + (p1.Size.Z / 2));
                                     character.SetPidStatus(true);
- */
+
                                     }
                                 }
                             }
-                        }
-                    }
 
+                        }
+
+                    }
+*/
+                #endregion
                 #endregion
 
                 // Logic for collision handling
@@ -1113,10 +1116,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (p1.VolumeDetect)
                     skipThisContact = true;   // No collision on volume detect prims
 
-                if (!skipThisContact && p2.VolumeDetect)
+                if (p2.VolumeDetect)
                     skipThisContact = true;   // No collision on volume detect prims
 
-                if (!skipThisContact && curContact.depth < 0f)
+                if (curContact.depth < 0f)
                     skipThisContact = true;
 
                 if (!skipThisContact && checkDupe(curContact, p2.PhysicsActorType))
@@ -1130,6 +1133,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // If we're colliding against terrain
                     if (p1.PhysicsActorType == (int)ActorTypes.Ground)
                         {
+/*
                         if (p2.PhysicsActorType == (int)ActorTypes.Agent)
                             {
                             if (Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f)
@@ -1158,7 +1162,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 }
                             }
 
-                        else if (p2.PhysicsActorType == (int)ActorTypes.Prim)
+                        else
+ */
+                         if (p2.PhysicsActorType == (int)ActorTypes.Prim)
                             {
                             // prim terrain contact
                             // int pj294950 = 0;
@@ -1261,7 +1267,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
 
                     if (m_global_contactcount < maxContactsbeforedeath && joint != IntPtr.Zero) // stack collide!
-                        {
+                        {                     
                         d.JointAttach(joint, b1, b2);
                         m_global_contactcount++;
                         }
@@ -1310,7 +1316,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             //This is required for some really weird reason... the heightmap collides every time...
 //                            float terrainHeight = GetTerrainHeightAtXY(p2.Position.X, p2.Position.Y);
 //                            if (terrainHeight + 1 >= (p2.Position.Z - p2.Size.Z / 2))
-                                p2colgnd = true;
+                              p2colgnd = true;
                             break;
                         }
                     }
@@ -1651,8 +1657,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             minx = (int)(aabb.MinX - offsetX);
             miny = (int)(aabb.MinY - offsetY);
-            maxx = (int)(aabb.MaxX - offsetX) + 1;
-            maxy = (int)(aabb.MaxY - offsetY) + 1;
+            maxx = (int)(aabb.MaxX - offsetX);
+            maxy = (int)(aabb.MaxY - offsetY);
            
             if (minx < 0) minx = 0;
             if (miny < 0) miny = 0;
@@ -2653,8 +2659,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             //    //if (pbs.PathCurve == (byte)Primitive.PathCurve.Circle && pbs.ProfileCurve == (byte)Primitive.ProfileCurve.Circle && pbs.PathScaleY <= 0.75f)
             //    //m_log.Debug("needsMeshing: " + " pathCurve: " + pbs.PathCurve.ToString() + " profileCurve: " + pbs.ProfileCurve.ToString() + " pathScaleY: " + Primitive.UnpackPathScale(pbs.PathScaleY).ToString());
-            int iPropertiesNotSupportedDefault = 0;
+//            int iPropertiesNotSupportedDefault = 0;
 
+//            return true;
+
+            if (forceSimplePrimMeshing)
+                return true;
+            // let simple spheres use ode sphere object
+            if(pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte)Extrusion.Curve1
+                    && pbs.Scale.X == pbs.Scale.Y && pbs.Scale.X == pbs.Scale.Z)
+                return false;
+            return true;
+/*
             if (pbs.SculptEntry && !meshSculptedPrim)
             {
 #if SPAM
@@ -2766,6 +2782,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_log.Debug("Mesh");
 #endif
             return true;
+ */
         }
 
         /// <summary>

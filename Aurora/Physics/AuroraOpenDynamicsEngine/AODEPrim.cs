@@ -169,7 +169,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public d.Mass primdMass;
         float primMass; // prim own mass
         float _mass; // prim or object mass
-        d.AABB aabb;
+        public d.AABB IntAABB;
+        public float OuterRadius;
+        public Vector3 IntCMOffset;
 
         public int m_eventsubscription;
         private CollisionEventUpdate CollisionEventsThisFrame;
@@ -315,7 +317,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 d.GeomSetCategoryBits(prim_geom, (int)m_collisionCategories);
                 d.GeomSetCollideBits(prim_geom, (int)m_collisionFlags);
-                d.GeomGetAABB(prim_geom, out aabb);
+                d.GeomGetAABB(prim_geom, out IntAABB);
             }
 
             
@@ -893,26 +895,31 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void calcdMass()
             {
-
-
-
             // very aproximated handling of tortured prims
             Vector3 s;
 
-            s.X = aabb.MaxX - aabb.MinX;
-            s.Y = aabb.MaxY - aabb.MinY;
-            s.Z = aabb.MaxZ - aabb.MinZ;
+            s.X = IntAABB.MaxX - IntAABB.MinX;
+            s.Y = IntAABB.MaxY - IntAABB.MinY;
+            s.Z = IntAABB.MaxZ - IntAABB.MinZ;
+
+            OuterRadius = s.X;
+            if (OuterRadius < s.Y)
+                OuterRadius = s.Y;
+            if (OuterRadius < s.Z)
+                OuterRadius = s.Z;
+
+            OuterRadius *= 0.5f;
 
             d.MassSetBoxTotal(out primdMass, primMass, s.X, s.Y, s.Z);
 
-            s.X = (aabb.MaxX + aabb.MinX) * 0.5f;
-            s.Y = (aabb.MaxY + aabb.MinY) * 0.5f;
-            s.Z = (aabb.MaxZ + aabb.MinZ) * 0.5f;
+            IntCMOffset.X = (IntAABB.MaxX + IntAABB.MinX) * 0.5f;
+            IntCMOffset.Y = (IntAABB.MaxY + IntAABB.MinY) * 0.5f;
+            IntCMOffset.Z = (IntAABB.MaxZ + IntAABB.MinZ) * 0.5f;
 
             d.MassTranslate(ref primdMass,
-                                s.X,
-                                s.Y,
-                                s.Z);
+                                IntCMOffset.X,
+                                IntCMOffset.Y,
+                                IntCMOffset.Z);
             }
 
 
