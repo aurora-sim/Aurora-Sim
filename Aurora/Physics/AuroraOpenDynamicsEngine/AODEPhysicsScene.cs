@@ -87,7 +87,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             Selected,
             disabled,
 
-            Null             //keep this last it use do dim the methods array. does nothing but pulsing the prim
+            Null             //keep this last used do dim the methods array. does nothing but pulsing the prim
 }
 
 
@@ -132,9 +132,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float PID_D = 3200f;
         public float PID_P = 1400f;
         public float avCapRadius = 0.37f;
-        public float avStandupTensor = 2000000f;
-        private bool avCapsuleTilted = true; // true = old compatibility mode with leaning capsule; false = new corrected mode
-        public bool IsAvCapsuleTilted { get { return avCapsuleTilted; } set { avCapsuleTilted = value; } }
+//        public float avStandupTensor = 2000000f;
+//        private bool avCapsuleTilted = true; // true = old compatibility mode with leaning capsule; false = new corrected mode
+//        public bool IsAvCapsuleTilted { get { return avCapsuleTilted; } set { avCapsuleTilted = value; } }
         public float avDensity = 80f;
         public float avHeightFudgeFactor = 0.52f;
         public float avMovementDivisorWalk = 1.3f;
@@ -432,13 +432,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 PID_D = 3200.0f;
                 PID_P = 1400.0f;
-                avStandupTensor = 2000000f;
+//                avStandupTensor = 2000000f;
             }
             else
             {
                 PID_D = 2200.0f;
                 PID_P = 900.0f;
-                avStandupTensor = 550000f;
+//                avStandupTensor = 550000f;
             }
 
             if (m_config != null)
@@ -488,7 +488,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     avMovementDivisorWalk = (physicsconfig.GetFloat("av_movement_divisor_walk", 1.3f) * 2);
                     avMovementDivisorRun = (physicsconfig.GetFloat("av_movement_divisor_run", 0.8f) * 2);
                     avCapRadius = physicsconfig.GetFloat("av_capsule_radius", 0.37f);
-                    avCapsuleTilted = physicsconfig.GetBoolean("av_capsule_tilted", true);
+//                    avCapsuleTilted = physicsconfig.GetBoolean("av_capsule_tilted", true);
 
                     contactsPerCollision = physicsconfig.GetInt("contacts_per_collision", 80);
 
@@ -512,14 +512,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         PID_D = physicsconfig.GetFloat("av_pid_derivative_linux", 2200.0f);
                         PID_P = physicsconfig.GetFloat("av_pid_proportional_linux", 900.0f);
-                        avStandupTensor = physicsconfig.GetFloat("av_capsule_standup_tensor_linux", 550000f);
+//                        avStandupTensor = physicsconfig.GetFloat("av_capsule_standup_tensor_linux", 550000f);
                         bodyMotorJointMaxforceTensor = physicsconfig.GetFloat("body_motor_joint_maxforce_tensor_linux", 5f);
                     }
                     else
                     {
                         PID_D = physicsconfig.GetFloat("av_pid_derivative_win", 2200.0f);
                         PID_P = physicsconfig.GetFloat("av_pid_proportional_win", 900.0f);
-                        avStandupTensor = physicsconfig.GetFloat("av_capsule_standup_tensor_win", 550000f);
+//                        avStandupTensor = physicsconfig.GetFloat("av_capsule_standup_tensor_win", 550000f);
                         bodyMotorJointMaxforceTensor = physicsconfig.GetFloat("body_motor_joint_maxforce_tensor_win", 5f);
                     }
                     physics_logging = physicsconfig.GetBoolean("physics_logging", false);

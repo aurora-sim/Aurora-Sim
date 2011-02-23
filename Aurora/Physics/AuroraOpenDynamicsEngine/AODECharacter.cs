@@ -101,7 +101,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private bool StartingUnderWater = true;
                     
         private float m_tainted_CAPSULE_LENGTH; // set when the capsule length changes. 
-        private float m_tiltMagnitudeWhenProjectedOnXYPlane = 0.113f; // used to introduce a fixed tilt because a straight-up capsule falls through terrain, probably a bug in terrain collider
+//        private float m_tiltMagnitudeWhenProjectedOnXYPlane = 0.113f; // used to introduce a fixed tilt because a straight-up capsule falls through terrain, probably a bug in terrain collider
         private float AvatarHalfsize;
 
 
@@ -613,7 +613,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name="npositionX"></param>
         /// <param name="npositionY"></param>
         /// <param name="npositionZ"></param>
-        private void AvatarGeomAndBodyCreation(float npositionX, float npositionY, float npositionZ, float tensor)
+        private void AvatarGeomAndBodyCreation(float npositionX, float npositionY, float npositionZ)//, float tensor)
         {
             _parent_scene.waitForSpaceUnlock(_parent_scene.space);
             if (CAPSULE_LENGTH <= 0)
@@ -1660,7 +1660,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             );
                             // + (Amotor!=IntPtr.Zero ? "Amotor ":""));
                     }
-                    AvatarGeomAndBodyCreation(_position.X, _position.Y, _position.Z, _parent_scene.avStandupTensor);
+                    AvatarGeomAndBodyCreation(_position.X, _position.Y, _position.Z);//, _parent_scene.avStandupTensor);
                     
                     _parent_scene.geom_name_map[Shell] = m_name;
                     _parent_scene.actor_name_map[Shell] = (PhysicsActor)this;
@@ -1715,7 +1715,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.BodyDestroy(Body);
                     d.GeomDestroy(Shell);
                     AvatarGeomAndBodyCreation(_position.X, _position.Y,
-                                      _position.Z + (CAPSULE_LENGTH - prevCapsule), _parent_scene.avStandupTensor);
+                                      _position.Z + (CAPSULE_LENGTH - prevCapsule));//, _parent_scene.avStandupTensor);
                     Velocity = Vector3.Zero;
 
                     _parent_scene.geom_name_map[Shell] = m_name;
