@@ -574,6 +574,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         {
             if (item != null)
             {
+                item.Owner = remoteClient.AgentId;
                 AssetBase rezAsset = m_scene.AssetService.Get(item.AssetID.ToString());
 
                 if (rezAsset != null)
@@ -775,6 +776,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             List<SceneObjectPart> partList = new List<SceneObjectPart>(group.ChildrenList);
 
             group.SetGroup(remoteClient.ActiveGroupId, remoteClient);
+            item.Owner = remoteClient.AgentId;
             if (rootPart.OwnerID != item.Owner)
             {
                 //Need to kill the for sale here
@@ -910,6 +912,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 List<SceneObjectPart> partList = new List<SceneObjectPart>(group.ChildrenList);
 
                 group.SetGroup(remoteClient.ActiveGroupId, remoteClient);
+                item.Owner = remoteClient.AgentId;
                 if (rootPart.OwnerID != item.Owner)
                 {
                     //Need to kill the for sale here
