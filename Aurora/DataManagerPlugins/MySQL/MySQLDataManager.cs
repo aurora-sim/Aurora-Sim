@@ -778,12 +778,16 @@ namespace Aurora.DataManager.MySQL
                     return "int(30)";
                 case ColumnTypes.Char36:
                     return "char(36)";
+                case ColumnTypes.Char32:
+                    return "char(32)";
                 case ColumnTypes.String:
                     return "TEXT";
                 case ColumnTypes.String1:
                     return "VARCHAR(1)";
                 case ColumnTypes.String2:
                     return "VARCHAR(2)";
+                case ColumnTypes.String16:
+                    return "VARCHAR(16)";
                 case ColumnTypes.String36:
                     return "VARCHAR(36)";
                 case ColumnTypes.String45:
@@ -794,6 +798,8 @@ namespace Aurora.DataManager.MySQL
                     return "VARCHAR(50)";
                 case ColumnTypes.String100:
                     return "VARCHAR(100)";
+                case ColumnTypes.String255:
+                    return "VARCHAR(255)";
                 case ColumnTypes.String512:
                     return "VARCHAR(512)";
                 case ColumnTypes.String1024:
@@ -925,10 +931,14 @@ namespace Aurora.DataManager.MySQL
                     return ColumnTypes.Integer11;
                 case "char(36)":
                     return ColumnTypes.Char36;
+                case "char(32)":
+                    return ColumnTypes.Char32;
                 case "varchar(1)":
                     return ColumnTypes.String1;
                 case "varchar(2)":
                     return ColumnTypes.String2;
+                case "varchar(16)":
+                    return ColumnTypes.String16;
                 case "varchar(36)":
                     return ColumnTypes.String36;
                 case "varchar(45)":
@@ -939,6 +949,8 @@ namespace Aurora.DataManager.MySQL
                     return ColumnTypes.String50;
                 case "varchar(100)":
                     return ColumnTypes.String100;
+                case "varchar(255)":
+                    return ColumnTypes.String255;
                 case "varchar(512)":
                     return ColumnTypes.String512;
                 case "varchar(1024)":
