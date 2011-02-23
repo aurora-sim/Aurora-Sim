@@ -28,24 +28,18 @@
 using System;
 using System.Collections.Generic;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
+using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 
-namespace OpenSim.Data
+namespace OpenSim.Framework
 {
-    public class FriendsData
-    {
-        public UUID PrincipalID;
-        public string Friend;
-        public Dictionary<string, string> Data;
-    }
-
     /// <summary>
     /// An interface for connecting to the friends datastore
     /// </summary>
-    public interface IFriendsData
+    public interface IFriendsData : IAuroraDataPlugin
     {
-        bool Store(FriendsData data);
+        bool Store(UUID PrincipalID, string Friend, int flags, int offered);
         bool Delete(UUID ownerID, string friend);
-        FriendsData[] GetFriends(UUID principalID);
+        FriendInfo[] GetFriends(UUID principalID);
     }
 }

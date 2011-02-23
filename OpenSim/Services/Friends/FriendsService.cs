@@ -54,49 +54,7 @@ namespace OpenSim.Services.Friends
             if (handlerConfig.GetString("FriendsHandler", "") != Name)
                 return;
 
-            string dllName = String.Empty;
-            string connString = String.Empty;
-
-            //
-            // Try reading the [FriendsService] section first, if it exists
-            //
-            IConfig friendsConfig = config.Configs["FriendsService"];
-            if (friendsConfig != null)
-            {
-                dllName = friendsConfig.GetString("StorageProvider", dllName);
-                connString = friendsConfig.GetString("ConnectionString", connString);
-            }
-
-            //
-            // Try reading the [DatabaseService] section, if it exists
-            //
-            IConfig dbConfig = config.Configs["DatabaseService"];
-            if (dbConfig != null)
-            {
-                if (dllName == String.Empty)
-                    dllName = dbConfig.GetString("StorageProvider", String.Empty);
-                if (connString == String.Empty)
-                    connString = dbConfig.GetString("ConnectionString", String.Empty);
-            }
-
-            //
-            // We tried, but this doesn't exist. We can't proceed.
-            //
-            if (String.Empty.Equals(dllName))
-                throw new Exception("No StorageProvider configured");
-
-            ///This was decamel-cased, and it will break MONO appearently as MySQL on MONO cares about case.
-            string realm = "Friends";
-            if (friendsConfig != null)
-                realm = friendsConfig.GetString("Realm", realm);
-
-            m_Database = AuroraModuleLoader.LoadPlugin<IFriendsData>(dllName, new Object[] { connString, realm });
-            if (m_Database == null)
-            {
-                throw new Exception(
-                    string.Format(
-                        "Could not find a storage interface {0} in the given StorageProvider {1}", "IFriendsData", dllName));
-            }
+            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IFriendsData>();
             registry.RegisterModuleInterface<IFriendsService>(this);
         }
 
@@ -110,35 +68,12 @@ namespace OpenSim.Services.Friends
 
         public FriendInfo[] GetFriends(UUID PrincipalID)
         {
-            FriendsData[] data = m_Database.GetFriends(PrincipalID);
-
-            List<FriendInfo> info = new List<FriendInfo>();
-
-            foreach (FriendsData d in data)
-            {
-                FriendInfo i = new FriendInfo();
-
-                i.PrincipalID = d.PrincipalID;
-                i.Friend = d.Friend;
-                i.MyFlags = Convert.ToInt32(d.Data["Flags"]);
-                i.TheirFlags = Convert.ToInt32(d.Data["TheirFlags"]);
-
-                info.Add(i);
-            }
-
-            return info.ToArray();
+            return m_Database.GetFriends(PrincipalID);
         }
 
         public bool StoreFriend(UUID PrincipalID, string Friend, int flags)
         {
-            FriendsData d = new FriendsData();
-
-            d.PrincipalID = PrincipalID;
-            d.Friend = Friend;
-            d.Data = new Dictionary<string, string>();
-            d.Data["Flags"] = flags.ToString();
-
-            return m_Database.Store(d);
+            return m_Database.Store(PrincipalID, Friend, flags, 0);
         }
 
         public bool Delete(UUID PrincipalID, string Friend)

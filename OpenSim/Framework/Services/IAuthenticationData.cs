@@ -33,12 +33,6 @@ using Aurora.Framework;
 
 namespace OpenSim.Framework
 {
-    public class AuthenticationData
-    {
-        public UUID PrincipalID;
-        public Dictionary<string, object> Data;
-    }
-
     public class AuthData
     {
         public UUID PrincipalID;
