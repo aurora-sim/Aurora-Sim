@@ -2659,11 +2659,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             //    //if (pbs.PathCurve == (byte)Primitive.PathCurve.Circle && pbs.ProfileCurve == (byte)Primitive.ProfileCurve.Circle && pbs.PathScaleY <= 0.75f)
             //    //m_log.Debug("needsMeshing: " + " pathCurve: " + pbs.PathCurve.ToString() + " profileCurve: " + pbs.ProfileCurve.ToString() + " pathScaleY: " + Primitive.UnpackPathScale(pbs.PathScaleY).ToString());
-            int iPropertiesNotSupportedDefault = 0;
+//            int iPropertiesNotSupportedDefault = 0;
 
 //            return true;
 
-
+            if (forceSimplePrimMeshing)
+                return true;
+            // let simple spheres use ode sphere object
+            if(pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte)Extrusion.Curve1
+                    && pbs.Scale.X == pbs.Scale.Y && pbs.Scale.X == pbs.Scale.Z)
+                return false;
+            return true;
+/*
             if (pbs.SculptEntry && !meshSculptedPrim)
             {
 #if SPAM
@@ -2775,6 +2782,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_log.Debug("Mesh");
 #endif
             return true;
+ */
         }
 
         /// <summary>
