@@ -228,10 +228,44 @@ namespace OpenSim.Region.CoreModules
 
         public void StartupComplete()
         {
+            MainConsole.Instance.Commands.AddCommand("Estates", true, "change estate", "change estate",
+                "change info about the estate for the given region", ChangeEstate); 
         }
 
         public void Close(Scene scene)
         {
+        }
+
+        protected void ChangeEstate(string module, string[] cmd)
+        {
+            IEstateConnector EstateConnector = DataManager.RequestPlugin<IEstateConnector>();
+            if (EstateConnector != null)
+            {
+                if (MainConsole.Instance.ConsoleScene == null)
+                {
+                    m_log.Warn("Select a region before using this command.");
+                    return;
+                }
+                Scene scene = (Scene)MainConsole.Instance.ConsoleScene;
+                string removeFromEstate = MainConsole.Instance.CmdPrompt("Are you sure you want to leave the estate for region " + scene.RegionInfo.RegionName + "?", "yes");
+                if (removeFromEstate == "yes")
+                {
+                    if (!EstateConnector.DelinkRegion(scene.RegionInfo.RegionID, scene.RegionInfo.EstateSettings.EstatePass))
+                    {
+                        m_log.Warn("Unable to remove this region from the estate.");
+                        return;
+                    }
+                    scene.RegionInfo.EstateSettings = CreateEstateInfo(scene);
+                    IGenericsConnector g = DataManager.RequestPlugin<IGenericsConnector>();
+                    EstatePassword s = null;
+                    if (g != null)
+                        s = g.GetGeneric<EstatePassword>(scene.RegionInfo.RegionID, "EstatePassword", scene.RegionInfo.EstateSettings.EstateID.ToString(), new EstatePassword());
+                    if (s != null)
+                        scene.RegionInfo.EstateSettings.EstatePass = s.Password;
+                }
+                else
+                    m_log.Warn("No action has been taken.");
+            }
         }
 
         /// <summary>
