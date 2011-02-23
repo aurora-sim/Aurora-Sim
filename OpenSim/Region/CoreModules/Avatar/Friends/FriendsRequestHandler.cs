@@ -87,8 +87,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                         return FriendshipTerminated(request);
                     case "grant_rights":
                         return GrantRights(request);
-                    case "status":
-                        return StatusNotification(request);
                 }
             }
             catch (Exception e)
@@ -221,30 +219,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 return FailureResult();
 
             if (m_FriendsModule.LocalGrantRights(UUID.Zero, UUID.Zero, userFlags, rights))
-                return SuccessResult();
-
-            return FailureResult();
-        }
-
-        byte[] StatusNotification(Dictionary<string, object> request)
-        {
-            UUID fromID = UUID.Zero;
-            UUID toID = UUID.Zero;
-            bool online = false;
-
-            if (!request.ContainsKey("FromID") || !request.ContainsKey("ToID") || !request.ContainsKey("Online"))
-                return FailureResult();
-
-            if (!UUID.TryParse(request["FromID"].ToString(), out fromID))
-                return FailureResult();
-
-            if (!UUID.TryParse(request["ToID"].ToString(), out toID))
-                return FailureResult();
-
-            if (!Boolean.TryParse(request["Online"].ToString(), out online))
-                return FailureResult();
-
-            if (m_FriendsModule.LocalStatusNotification(fromID, toID, online))
                 return SuccessResult();
 
             return FailureResult();
