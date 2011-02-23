@@ -45,7 +45,7 @@ namespace OpenSim.Region.CoreModules
 
                 if (account == null)
                 {
-                    string fullName = name[0] + name[1];
+                    string fullName = name[0] + " " + name[1];
                     string createNewUser = MainConsole.Instance.CmdPrompt("Could not find user " + fullName + ". Would you like to create this user?", "yes");
 
                     if (createNewUser == "yes")
