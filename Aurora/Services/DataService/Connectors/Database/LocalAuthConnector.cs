@@ -51,9 +51,10 @@ namespace Aurora.Services.DataService
         public AuthData Get(UUID principalID)
         {
             List<string> query = GD.Query("UUID", principalID.ToString(), m_realm, "*");
-            AuthData data = new AuthData();
+            AuthData data = null;
             for (int i = 0; i < query.Count; i += 5)
             {
+                data = new AuthData();
                 data.PrincipalID = UUID.Parse(query[i]);
                 data.PasswordHash = query[i + 1];
                 data.PasswordSalt = query[i + 2];
