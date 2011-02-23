@@ -634,7 +634,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.GeomSetCategoryBits(Shell, (int)m_collisionCategories);
             d.GeomSetCollideBits(Shell, (int)m_collisionFlags);
 
-            d.MassSetCapsule(out ShellMass, 150f, 2, CAPSULE_RADIUS, CAPSULE_LENGTH); // density 200
+            d.MassSetCapsule(out ShellMass, 150f, 3, CAPSULE_RADIUS, CAPSULE_LENGTH); // density 200
 
             m_mass=ShellMass.mass;
 
@@ -934,7 +934,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
              {
                 //                if (m_WaitGroundCheck >= 10 && vel.Z != 0)
                     {
-                    float groundHeight = _parent_scene.GetTerrainHeightAtXY(tempPos.X, tempPos.Y);
+                    float groundHeight = _parent_scene.GetTerrainHeightAtXY(
+                            tempPos.X + (tempPos.X == 0 ? tempPos.X : timeStep * 0.75f * vel.X),
+                            tempPos.Y + (tempPos.Y == 0 ? tempPos.Y : timeStep * 0.75f * vel.Y));
+
                     if ((tempPos.Z - AvatarHalfsize) < groundHeight)
                         {
                         if (!flying)
@@ -995,8 +998,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // Avatar to Avatar collisions
                     // Prim to avatar collisions
                     // if target vel is zero why was it here ?
-                    //vec.X = -vel.X * PID_D + (_zeroPosition.X - tempPos.X) * PID_P * 2f;
-                    //vec.Y = -vel.Y * PID_D + (_zeroPosition.Y - tempPos.Y) * PID_P * 2f;
+                    vec.X = -vel.X * PID_D + (_zeroPosition.X - tempPos.X) * PID_P * 2f;
+                    vec.Y = -vel.Y * PID_D + (_zeroPosition.Y - tempPos.Y) * PID_P * 2f;
                     }
                 }
             else
