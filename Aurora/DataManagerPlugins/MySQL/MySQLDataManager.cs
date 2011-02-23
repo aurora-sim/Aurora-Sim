@@ -580,6 +580,47 @@ namespace Aurora.DataManager.MySQL
             return true;
         }
 
+        public override string FormatDateTimeString(int time)
+        {
+            if (time == 0)
+                return "now()";
+            return "date_add(now(), interval " + time.ToString() + " minute)'";
+        }
+
+        public override bool Delete(string table, string whereclause)
+        {
+            MySqlConnection dbcon = GetLockedConnection();
+            IDbCommand result;
+            IDataReader reader;
+            string query = "delete from " + table + " WHERE " + whereclause;
+            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            {
+                using (reader = result.ExecuteReader())
+                {
+                    result.Dispose();
+                }
+            }
+            CloseDatabase(dbcon);
+            return true;
+        }
+
+        public override bool DeleteByTime(string table, string key)
+        {
+            MySqlConnection dbcon = GetLockedConnection();
+            IDbCommand result;
+            IDataReader reader;
+            string query = "delete from " + table + " WHERE '" + key + "' < now()";
+            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            {
+                using (reader = result.ExecuteReader())
+                {
+                    result.Dispose();
+                }
+            }
+            CloseDatabase(dbcon);
+            return true;
+        }
+
         public void CloseDatabase(MySqlConnection connection)
         {
             connection.Close();

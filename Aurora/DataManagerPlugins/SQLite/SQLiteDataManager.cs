@@ -400,6 +400,35 @@ namespace Aurora.DataManager.SQLite
             return true;
         }
 
+        public override bool Delete(string table, string whereclause)
+        {
+            var cmd = new SqliteCommand();
+
+            string query = String.Format("delete from {0} " + "where " + whereclause, table);
+            cmd.CommandText = query;
+            ExecuteNonQuery(cmd);
+            CloseReaderCommand(cmd);
+            return true;
+        }
+
+        public override bool DeleteByTime(string table, string key)
+        {
+            var cmd = new SqliteCommand();
+
+            string query = String.Format("delete from {0} " + "where '" + key + "' < datetime('now', 'localtime')", table);
+            cmd.CommandText = query;
+            ExecuteNonQuery(cmd);
+            CloseReaderCommand(cmd);
+            return true;
+        }
+
+        public override string FormatDateTimeString(int time)
+        {
+            if (time == 0)
+                return "datetime('now', 'localtime')";
+            return "datetime('now', 'localtime', '+" + time.ToString() + " minutes')";
+        }
+
         public override bool Insert(string table, object[] values, string updateKey, object updateValue)
         {
             var cmd = new SqliteCommand();

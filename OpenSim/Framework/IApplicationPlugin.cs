@@ -132,7 +132,7 @@ namespace Aurora.Framework
         /// <param name="values"></param>
         /// <returns></returns>
         bool Insert(string table, string[] keys, object[] values);
-       
+
         /// <summary>
         /// delete from 'table' where 'keys' = 'values'
         /// </summary>
@@ -141,6 +141,31 @@ namespace Aurora.Framework
         /// <param name="values"></param>
         /// <returns></returns>
         bool Delete(string table, string[] keys, object[] values);
+
+        /// <summary>
+        /// Formats a datetime string for the given time
+        /// 0 returns now()
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        string FormatDateTimeString(int time);
+
+        /// <summary>
+        /// delete from 'table' where 'key' < now()
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="keys"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        bool DeleteByTime(string table, string keys);
+
+        /// <summary>
+        /// delete from 'table' where whereclause
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="whereclause"></param>
+        /// <returns></returns>
+        bool Delete(string table, string whereclause);
 
         /// <summary>
         /// Replace into 'table' ('keys') values ('values')

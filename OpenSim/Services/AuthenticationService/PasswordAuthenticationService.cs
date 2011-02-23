@@ -118,22 +118,16 @@ namespace OpenSim.Services.AuthenticationService
             if(!m_authenticateUsers)
                 return GetToken(principalID, lifetime);
 
-            AuthenticationData data = m_Database.Get(principalID);
+            AuthData data = m_Database.Get(principalID);
 
-            if (data != null && data.Data != null)
+            if (data != null)
             {
-                if (!data.Data.ContainsKey("passwordHash") ||
-                    !data.Data.ContainsKey("passwordSalt"))
-                {
-                    return String.Empty;
-                }
-
                 string hashed = Util.Md5Hash(password + ":" +
-                        data.Data["passwordSalt"].ToString());
+                        data.PasswordSalt);
 
-                m_log.DebugFormat("[PASS AUTH]: got {0}; hashed = {1}; stored = {2}", password, hashed, data.Data["passwordHash"].ToString());
+                m_log.DebugFormat("[PASS AUTH]: got {0}; hashed = {1}; stored = {2}", password, hashed, data.PasswordHash);
 
-                if (data.Data["passwordHash"].ToString() == hashed)
+                if (data.PasswordHash == hashed)
                 {
                     return GetToken(principalID, lifetime);
                 }

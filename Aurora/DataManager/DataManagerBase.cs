@@ -28,6 +28,8 @@ namespace Aurora.DataManager
         public abstract bool Insert(string table, string[] keys, object[] values);
         public abstract IDataReader QueryReader(string keyRow, object keyValue, string table, string wantedValue);
         public abstract bool Delete(string table, string[] keys, object[] values);
+        public abstract bool Delete(string table, string whereclause);
+        public abstract bool DeleteByTime(string table, string key);
         public abstract bool Insert(string table, object[] values, string updateKey, object updateValue);
         public abstract bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
         public abstract void CloseDatabase();
@@ -39,6 +41,7 @@ namespace Aurora.DataManager
         public abstract string GetColumnTypeStringSymbol(ColumnTypes type);
         public abstract void DropTable(string tableName);
         public abstract void ForceRenameTable(string oldTableName, string newTableName);
+        public abstract string FormatDateTimeString(int time);
 
         public Version GetAuroraVersion(string migratorName)
         {

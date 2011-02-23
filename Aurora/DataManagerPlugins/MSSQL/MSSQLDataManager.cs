@@ -524,8 +524,53 @@ namespace Aurora.DataManager.MSSQL
                 query += keys[i] + " = '" + value.ToString() + "' AND ";
                 i++;
             }
-            if(keys.Length > 0)
+            if (keys.Length > 0)
                 query = query.Remove(query.Length - 5);
+            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            {
+                using (reader = result.ExecuteReader())
+                {
+                    reader.Close();
+                    reader.Dispose();
+                    result.Cancel();
+                    result.Dispose();
+                }
+            }
+            CloseDatabase(dbcon);
+            return true;
+        }
+
+        public override string FormatDateTimeString(int time)
+        {
+            return "";
+        }
+
+        public override bool DeleteByTime(string table, string key)
+        {
+            SqlConnection dbcon = GetLockedConnection();
+            IDbCommand result;
+            IDataReader reader;
+            string query = "delete from " + table + " WHERE 'key' < now()";
+            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            {
+                using (reader = result.ExecuteReader())
+                {
+                    reader.Close();
+                    reader.Dispose();
+                    result.Cancel();
+                    result.Dispose();
+                }
+            }
+            CloseDatabase(dbcon);
+            return true;
+        }
+
+        public override bool Delete(string table, string whereclause)
+        {
+            SqlConnection dbcon = GetLockedConnection();
+            IDbCommand result;
+            IDataReader reader;
+            string query = "delete from " + table + " WHERE " + whereclause;
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
             {
                 using (reader = result.ExecuteReader())

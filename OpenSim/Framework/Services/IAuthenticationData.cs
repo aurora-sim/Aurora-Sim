@@ -26,55 +26,41 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Data;
+using Aurora.Framework;
 
-namespace OpenSim.Data.Null
+namespace OpenSim.Framework
 {
-    public class NullAuthenticationData : IAuthenticationData
+    public class AuthenticationData
     {
-        private static Dictionary<UUID, AuthenticationData> m_DataByUUID = new Dictionary<UUID, AuthenticationData>();
-        private static Dictionary<UUID, string> m_Tokens = new Dictionary<UUID, string>();
+        public UUID PrincipalID;
+        public Dictionary<string, object> Data;
+    }
 
-        public NullAuthenticationData(string connectionString, string realm)
-        {
-        }
+    public class AuthData
+    {
+        public UUID PrincipalID;
+        public string PasswordHash;
+        public string PasswordSalt;
+        public string WebLoginKey;
+        public string AccountType;
+    }
 
-        public AuthenticationData Get(UUID principalID)
-        {
-            if (m_DataByUUID.ContainsKey(principalID))
-                return m_DataByUUID[principalID];
+    /// <summary>
+    /// An interface for connecting to the authentication datastore
+    /// </summary>
+    public interface IAuthenticationData : IAuroraDataPlugin
+    {
+        AuthData Get(UUID principalID);
 
-            return null;
-        }
+        bool Store(AuthData data);
 
-        public bool Store(AuthenticationData data)
-        {
-            m_DataByUUID[data.PrincipalID] = data;
-            return true;
-        }
+        bool SetDataItem(UUID principalID, string item, string value);
 
-        public bool SetDataItem(UUID principalID, string item, string value)
-        {
-            // Not implemented
-            return false;
-        }
+        bool SetToken(UUID principalID, string token, int lifetime);
 
-        public bool SetToken(UUID principalID, string token, int lifetime)
-        {
-            m_Tokens[principalID] = token;
-            return true;
-        }
-
-        public bool CheckToken(UUID principalID, string token, int lifetime)
-        {
-            if (m_Tokens.ContainsKey(principalID))
-                return m_Tokens[principalID] == token;
-
-            return false;
-        }
+        bool CheckToken(UUID principalID, string token, int lifetime);
     }
 }

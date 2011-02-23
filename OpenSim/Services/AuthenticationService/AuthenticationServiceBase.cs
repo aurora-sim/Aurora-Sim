@@ -70,17 +70,16 @@ namespace OpenSim.Services.AuthenticationService
             string passwordSalt = Util.Md5Hash(UUID.Random().ToString());
             string md5PasswdHash = Util.Md5Hash(Util.Md5Hash(password) + ":" + passwordSalt);
 
-            AuthenticationData auth = m_Database.Get(principalID);
+            AuthData auth = m_Database.Get(principalID);
             if (auth == null)
             {
-                auth = new AuthenticationData();
+                auth = new AuthData();
                 auth.PrincipalID = principalID;
-                auth.Data = new System.Collections.Generic.Dictionary<string, object>();
-                auth.Data["accountType"] = "UserAccount";
-                auth.Data["webLoginKey"] = UUID.Zero.ToString();
+                auth.AccountType = "UserAccount";
+                auth.WebLoginKey = UUID.Zero.ToString();
             }
-            auth.Data["passwordHash"] = md5PasswdHash;
-            auth.Data["passwordSalt"] = passwordSalt;
+            auth.PasswordHash = md5PasswdHash;
+            auth.PasswordSalt = passwordSalt;
             if (!m_Database.Store(auth))
             {
                 m_log.DebugFormat("[AUTHENTICATION DB]: Failed to store authentication data");
@@ -106,17 +105,16 @@ namespace OpenSim.Services.AuthenticationService
             string passwordSalt = Util.Md5Hash(UUID.Random().ToString());
             string md5PasswdHash = Util.Md5Hash(Hashedpassword + ":" + passwordSalt);
 
-            AuthenticationData auth = m_Database.Get(principalID);
+            AuthData auth = m_Database.Get(principalID);
             if (auth == null)
             {
-                auth = new AuthenticationData();
+                auth = new AuthData();
                 auth.PrincipalID = principalID;
-                auth.Data = new System.Collections.Generic.Dictionary<string, object>();
-                auth.Data["accountType"] = "UserAccount";
-                auth.Data["webLoginKey"] = UUID.Zero.ToString();
+                auth.AccountType = "UserAccount";
+                auth.WebLoginKey = UUID.Zero.ToString();
             }
-            auth.Data["passwordHash"] = md5PasswdHash;
-            auth.Data["passwordSalt"] = passwordSalt;
+            auth.PasswordHash = md5PasswdHash;
+            auth.PasswordSalt = passwordSalt;
             if (!m_Database.Store(auth))
             {
                 m_log.DebugFormat("[AUTHENTICATION DB]: Failed to store authentication data");
