@@ -584,7 +584,7 @@ namespace Aurora.DataManager.MySQL
         {
             if (time == 0)
                 return "now()";
-            return "date_add(now(), interval " + time.ToString() + " minute)'";
+            return "date_add(now(), interval " + time.ToString() + " minute)";
         }
 
         public override bool Delete(string table, string whereclause)
