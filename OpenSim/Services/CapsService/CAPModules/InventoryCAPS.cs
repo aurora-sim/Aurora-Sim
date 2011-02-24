@@ -78,6 +78,15 @@ namespace OpenSim.Services.CapsService
             service.AddStreamHandler("NewFileAgentInventory",
                 new RestStreamHandler("POST", service.CreateCAPS("NewFileAgentInventory", m_newInventory),
                                                       NewAgentInventoryRequest));
+
+            method = delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                return HandleInventoryItemCreate(request, m_service.AgentID);
+            };
+            service.AddStreamHandler("InventoryItemCreate",
+                new RestStreamHandler("POST", service.CreateCAPS("InventoryItemCreate", ""),
+                                                      method));
         }
 
         public void EnteringRegion()
@@ -433,6 +442,62 @@ namespace OpenSim.Services.CapsService
         /// <returns></returns>
         public string NewAgentInventoryRequest(string request, string path, string param,
                                              OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        {
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+            string asset_type = map["asset_type"].AsString();
+            m_log.Info("[CAPS]: NewAgentInventoryRequest Request is: " + map.ToString());
+            //m_log.Debug("asset upload request via CAPS" + llsdRequest.inventory_type + " , " + llsdRequest.asset_type);
+
+            if (asset_type == "texture" ||
+                asset_type == "animation" ||
+                asset_type == "sound")
+            {
+                /* Disabled until we have a money module that can hook up to this
+                 * IMoneyModule mm = .RequestModuleInterface<IMoneyModule>();
+
+                    if (mm != null)
+                    {
+                        if (!mm.UploadCovered(client, mm.UploadCharge))
+                        {
+                            if (client != null)
+                                client.SendAgentAlertMessage("Unable to upload asset. Insufficient funds.", false);
+
+                            map = new OSDMap();
+                            map["uploader"] = "";
+                            map["state"] = "error";
+                            return OSDParser.SerializeLLSDXmlString(map);
+                        }
+                        else
+                            mm.ApplyUploadCharge(client.AgentId, mm.UploadCharge, "Upload asset.");
+                    }
+                 */
+            }
+
+
+            string assetName = map["name"].AsString();
+            string assetDes = map["description"].AsString();
+            UUID parentFolder = map["folder_id"].AsUUID();
+            string inventory_type = map["inventory_type"].AsString();
+
+            UUID newAsset = UUID.Random();
+            UUID newInvItem = UUID.Random();
+            string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
+            string uploadpath = m_service.CreateCAPS("Upload" + uploaderPath, uploaderPath);
+                
+            AssetUploader uploader =
+                new AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, inventory_type,
+                                  asset_type, uploadpath, "Upload" + uploaderPath, m_service, this);
+            m_service.AddStreamHandler("Upload" + uploaderPath,
+                new BinaryStreamHandler("POST", uploadpath, uploader.uploaderCaps));
+
+            string uploaderURL = m_service.HostUri + uploadpath;
+            map = new OSDMap();
+            map["uploader"] = uploaderURL;
+            map["state"] = "upload";
+            return OSDParser.SerializeLLSDXmlString(map);
+        }
+
+        public string HandleInventoryItemCreate(string request, UUID AgentID)
         {
             OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
             string asset_type = map["asset_type"].AsString();

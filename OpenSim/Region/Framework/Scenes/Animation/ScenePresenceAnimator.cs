@@ -263,7 +263,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             #region Flying
 
-            if (actor != null && actor.Flying)
+            if (actor != null && (m_scenePresence.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) == (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY)
             {
                 m_animTickFall = 0;
                 m_animTickJump = 0;
