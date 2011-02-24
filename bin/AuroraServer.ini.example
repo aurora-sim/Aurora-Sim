@@ -58,7 +58,6 @@
     Include-Main = AuroraServerConfiguration/Main.ini
     
     ;;Other .ini files to add...
-    Include-AssetService = AuroraServerConfiguration/AssetService.ini
     Include-Login = AuroraServerConfiguration/Login.ini
     Include-FreeSwitch = AuroraServerConfiguration/FreeSwitch.ini
     Include-GridInfoService = AuroraServerConfiguration/GridInfoService.ini

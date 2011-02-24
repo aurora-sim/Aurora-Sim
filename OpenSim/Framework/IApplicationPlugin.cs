@@ -177,6 +177,15 @@ namespace Aurora.Framework
         bool Replace(string table, string[] keys, object[] values);
 
         /// <summary>
+        /// Same as replace, but without any '' around the values
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="keys"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        bool DirectReplace(string table, string[] keys, object[] values);
+
+        /// <summary>
         /// Inserts a row into the database 
         /// insert into 'table' values ('values') ON DUPLICATE KEY UPDATE 'updateKey' = 'updateValue'
         /// </summary>

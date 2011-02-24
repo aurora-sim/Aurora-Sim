@@ -336,6 +336,11 @@ namespace Aurora.DataManager.SQLite
             return true;
         }
 
+        public override bool DirectReplace(string table, string[] keys, object[] values)
+        {
+            return Replace(table, keys, values);
+        }
+
         public override bool Replace(string table, string[] keys, object[] values)
         {
             var cmd = new SqliteCommand();

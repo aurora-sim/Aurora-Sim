@@ -524,7 +524,55 @@ namespace Aurora.DataManager.MySQL
                         CloseDatabase(dbcon);
                     }
                 }
-                catch 
+                catch
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public override bool DirectReplace(string table, string[] keys, object[] values)
+        {
+            MySqlConnection dbcon = GetLockedConnection();
+            IDbCommand result;
+            IDataReader reader;
+
+            string query = String.Format("replace into {0} (", table);
+            Dictionary<string, object> param = new Dictionary<string, object>();
+
+            int i = 0;
+            foreach (object key in keys)
+            {
+                string Key = key.ToString();
+                if (key.ToString().Contains('`'))
+                    Key = key.ToString().Replace("`", ""); //Remove them
+
+                query += "`" + Key + "`" + ",";
+                i++;
+            }
+            query = query.Remove(query.Length - 1);
+            query += ") values (";
+
+            foreach (object key in values)
+            {
+                string Key = key.ToString();
+                query += String.Format("{0},", Key);
+            }
+            query = query.Remove(query.Length - 1);
+            query += ")";
+
+            using (result = Query(query, param, dbcon))
+            {
+                try
+                {
+                    using (reader = result.ExecuteReader())
+                    {
+                        result.Dispose();
+                        CloseDatabase(dbcon);
+                    }
+                }
+                catch
                 {
                     return false;
                 }

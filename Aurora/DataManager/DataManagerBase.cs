@@ -37,6 +37,7 @@ namespace Aurora.DataManager
         public abstract void CreateTable(string table, ColumnDefinition[] columns);
         public abstract void UpdateTable(string table, ColumnDefinition[] columns);
         public abstract bool Replace(string table, string[] keys, object[] values);
+        public abstract bool DirectReplace(string table, string[] keys, object[] values);
         public abstract IGenericData Copy();
         public abstract string GetColumnTypeStringSymbol(ColumnTypes type);
         public abstract void DropTable(string tableName);

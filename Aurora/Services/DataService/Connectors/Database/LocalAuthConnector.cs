@@ -81,7 +81,7 @@ namespace Aurora.Services.DataService
         {
             if (System.Environment.TickCount - m_LastExpire > 30000)
                 DoExpire();
-            return GD.Replace(m_tokensrealm, new string[] { "UUID", "token", "validity" }, new object[3] { principalID, token, GD.FormatDateTimeString(lifetime) });
+            return GD.DirectReplace(m_tokensrealm, new string[] { "UUID", "token", "validity" }, new object[3] { "'" + principalID + "'", "'" + token + "'", GD.FormatDateTimeString(lifetime) });
         }
 
         public bool CheckToken(UUID principalID, string token, int lifetime)
