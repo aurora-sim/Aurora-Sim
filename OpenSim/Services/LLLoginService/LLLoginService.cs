@@ -706,8 +706,6 @@ namespace OpenSim.Services.LLLoginService
 
         protected GridRegion FindDestination(UserAccount account, UUID scopeID, UserInfo pinfo, UUID sessionID, string startLocation, GridRegion home, out string where, out Vector3 position, out Vector3 lookAt)
         {
-            m_log.DebugFormat("[LLOGIN SERVICE]: FindDestination for start location {0}", startLocation);
-
             where = "home";
             position = new Vector3(128, 128, 25);
             lookAt = new Vector3(0, 1, 0);
@@ -751,13 +749,32 @@ namespace OpenSim.Services.LLLoginService
                     }
                     else
                     {
-                        m_log.WarnFormat("[LLOGIN SERVICE]: User {0} {1} does not have a valid home and this grid does not have default locations. Attempting to find random region",
-                            account.FirstName, account.LastName);
-                        defaults = m_GridService.GetRegionsByName(scopeID, "", 1);
-                        if (defaults != null && defaults.Count > 0)
+                        List<GridRegion> fallbacks = m_GridService.GetFallbackRegions(account.ScopeID, 0, 0);
+                        if (fallbacks != null && fallbacks.Count > 0)
                         {
-                            region = defaults[0];
+                            region = fallbacks[0];
                             where = "safe";
+                        }
+                        else
+                        {
+                            //Try to find any safe region
+                            List<GridRegion> safeRegions = m_GridService.GetSafeRegions(account.ScopeID, 0, 0);
+                            if (safeRegions != null && safeRegions.Count > 0)
+                            {
+                                region = safeRegions[0];
+                                where = "safe";
+                            }
+                            else
+                            {
+                                m_log.WarnFormat("[LLOGIN SERVICE]: User {0} {1} does not have a valid home and this grid does not have default locations. Attempting to find random region",
+                                    account.FirstName, account.LastName);
+                                defaults = m_GridService.GetRegionsByName(scopeID, "", 1);
+                                if (defaults != null && defaults.Count > 0)
+                                {
+                                    region = defaults[0];
+                                    where = "safe";
+                                }
+                            }
                         }
                     }
                 }
@@ -845,8 +862,27 @@ namespace OpenSim.Services.LLLoginService
                                 }
                                 else
                                 {
-                                    m_log.InfoFormat("[LLLOGIN SERVICE]: Got Custom Login URI {0}, Grid does not provide default regions.", startLocation);
-                                    return null;
+                                    List<GridRegion> fallbacks = m_GridService.GetFallbackRegions(account.ScopeID, 0, 0);
+                                    if (fallbacks != null && fallbacks.Count > 0)
+                                    {
+                                        where = "safe";
+                                        return fallbacks[0];
+                                    }
+                                    else
+                                    {
+                                        //Try to find any safe region
+                                        List<GridRegion> safeRegions = m_GridService.GetSafeRegions(account.ScopeID, 0, 0);
+                                        if (safeRegions != null && safeRegions.Count > 0)
+                                        {
+                                            where = "safe";
+                                            return safeRegions[0];
+                                        }
+                                        else
+                                        {
+                                            m_log.InfoFormat("[LLLOGIN SERVICE]: Got Custom Login URI {0}, Grid does not have any available regions.", startLocation);
+                                            return null;
+                                        }
+                                    }
                                 }
                             }
                             return regions[0];
@@ -882,13 +918,31 @@ namespace OpenSim.Services.LLLoginService
                             return defaults[0];
                         }
                         else
-                            return null;
+                        {
+                            List<GridRegion> fallbacks = m_GridService.GetFallbackRegions(account.ScopeID, 0, 0);
+                            if (fallbacks != null && fallbacks.Count > 0)
+                            {
+                                where = "safe";
+                                return fallbacks[0];
+                            }
+                            else
+                            {
+                                //Try to find any safe region
+                                List<GridRegion> safeRegions = m_GridService.GetSafeRegions(account.ScopeID, 0, 0);
+                                if (safeRegions != null && safeRegions.Count > 0)
+                                {
+                                    where = "safe";
+                                    return safeRegions[0];
+                                }
+                                else
+                                {
+                                    m_log.InfoFormat("[LLLOGIN SERVICE]: Got Custom Login URI {0}, Grid does not have any available regions.", startLocation);
+                                    return null;
+                                }
+                            }
+                        }
                     }
                 }
-                //response.LookAt = "[r0,r1,r0]";
-                //// can be: last, home, safe, url
-                //response.StartLocation = "url";
-
             }
         }
 
@@ -1053,7 +1107,6 @@ namespace OpenSim.Services.LLLoginService
             MainConsole.Instance.Commands.AddCommand("loginservice", false, "login text",
                     "login text <text>",
                     "Set the text users will see on login", HandleLoginCommand);
-
         }
 
         protected void HandleLoginCommand(string module, string[] cmd)
