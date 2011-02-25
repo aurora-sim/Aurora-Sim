@@ -30,6 +30,7 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using System.Collections.Generic;
 using Aurora.Framework;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.Interfaces
 {
@@ -99,7 +100,7 @@ namespace OpenSim.Services.Interfaces
             return NewDicCol;
         }
 
-        public void FromOSD(OSDMap o)
+        public void FromOSD(OSDMap DicCol)
         {
             AbuseDetails = DicCol["AbuseDetails"].AsString();
             AbuseLocation = DicCol["AbuseLocation"].AsString();
@@ -108,7 +109,7 @@ namespace OpenSim.Services.Interfaces
             Active = DicCol["Active"].AsBoolean();
             AssignedTo = DicCol["AssignedTo"].AsString();
             Category = DicCol["Category"].AsString();
-            Checked = DicCol["Checked"].AsString();
+            Checked = Convert.ToBoolean(DicCol["Checked"].AsString());
             Notes = DicCol["Notes"].AsString();
             Number = DicCol["Number"].AsInteger();
             ObjectName = DicCol["ObjectName"].AsString();
@@ -116,7 +117,7 @@ namespace OpenSim.Services.Interfaces
             ObjectUUID = DicCol["ObjectUUID"].AsUUID();
             RegionName = DicCol["RegionName"].AsString();
             ReporterName = DicCol["ReporterName"].AsString();
-            ScreenshotID = DicCol["ScreenshotID"].AsString();
+            ScreenshotID = new UUID(DicCol["ScreenshotID"].AsString());
         }
         public OSDMap ToOSD()
         {
@@ -127,7 +128,7 @@ namespace OpenSim.Services.Interfaces
             NewDicCol["AbuseSummary"] = AbuseSummary;
             NewDicCol["Active"] = Active;
             NewDicCol["AssignedTo"] = AssignedTo;
-            NewDicCol["Category"] = Category;
+            NewDicCol["Category"] = Category.ToString();
             NewDicCol["Checked"] = Checked;
             NewDicCol["Notes"] = Notes;
             NewDicCol["Number"] = Number;
