@@ -7,6 +7,7 @@ using Aurora.DataManager;
 using OpenMetaverse;
 using OpenSim.Framework;
 using Nini.Config;
+using OpenSim.Services.Interfaces;
 
 namespace Aurora.Services.DataService
 {
@@ -83,38 +84,38 @@ namespace Aurora.Services.DataService
         /// <param name="report"></param>
         /// <param name="Password"></param>
         public void AddAbuseReport(AbuseReport report)
-		{
+        {
             List<object> InsertValues = new List<object>();
-			InsertValues.Add(report.Category);
-			InsertValues.Add(report.ReporterName);
-			InsertValues.Add(report.ObjectName);
-			InsertValues.Add(report.ObjectUUID);
-			InsertValues.Add(report.AbuserName);
-			InsertValues.Add(report.AbuseLocation);
-			InsertValues.Add(report.AbuseDetails);
-			InsertValues.Add(report.ObjectPosition);
+            InsertValues.Add(report.Category);
+            InsertValues.Add(report.ReporterName);
+            InsertValues.Add(report.ObjectName);
+            InsertValues.Add(report.ObjectUUID);
+            InsertValues.Add(report.AbuserName);
+            InsertValues.Add(report.AbuseLocation);
+            InsertValues.Add(report.AbuseDetails);
+            InsertValues.Add(report.ObjectPosition);
             InsertValues.Add(report.RegionName);
-			InsertValues.Add(report.ScreenshotID);
-			InsertValues.Add(report.AbuseSummary);
+            InsertValues.Add(report.ScreenshotID);
+            InsertValues.Add(report.AbuseSummary);
 
-			//We do not trust the number sent by the region. Always find it ourselves
-			List<string> values = GD.Query("", "", "abusereports", "Number", " ORDER BY Number DESC");
-			if (values.Count == 0)
-				report.Number = 0;
-			else
-				report.Number = int.Parse(values[0]);
+            //We do not trust the number sent by the region. Always find it ourselves
+            List<string> values = GD.Query("", "", "abusereports", "Number", " ORDER BY Number DESC");
+            if (values.Count == 0)
+                report.Number = 0;
+            else
+                report.Number = int.Parse(values[0]);
 
             report.Number++;
 
-			InsertValues.Add(report.Number);
+            InsertValues.Add(report.Number);
 
-			InsertValues.Add(report.AssignedTo);
+            InsertValues.Add(report.AssignedTo);
             InsertValues.Add(report.Active ? 1 : 0);
             InsertValues.Add(report.Checked ? 1 : 0);
-			InsertValues.Add(report.Notes);
+            InsertValues.Add(report.Notes);
 
-			GD.Insert("abusereports", InsertValues.ToArray());
-		}
+            GD.Insert("abusereports", InsertValues.ToArray());
+        }
 
         /// <summary>
         /// Updates an abuse report and authenticates with the password.

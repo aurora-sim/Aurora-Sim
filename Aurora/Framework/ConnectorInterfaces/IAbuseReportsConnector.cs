@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Aurora.Framework;
 using OpenMetaverse;
+using OpenSim.Services.Interfaces;
 
 namespace Aurora.Framework
 {
