@@ -43,6 +43,7 @@ using OpenSim.Framework.Servers.HttpServer;
 using Aurora.Framework;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Region.CoreModules.Avatar.Friends
 {
@@ -100,6 +101,16 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             get { return m_Scenes[0].UserAccountService; }
         }
 
+        public IAsyncMessagePostService AsyncMessagePostService
+        {
+            get { return m_Scenes[0].RequestModuleInterface<IAsyncMessagePostService>(); }
+        }
+
+        public IAsyncMessageRecievedService AsyncMessageRecievedService
+        {
+            get { return m_Scenes[0].RequestModuleInterface<IAsyncMessageRecievedService>(); }
+        }
+
         public void Initialise(IConfigSource config)
         {
         }
@@ -124,6 +135,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
+
+            //if(m_Scenes.Count == 1)
+            //    AsyncMessageRecievedService.OnMessageReceived += OnMessageReceived;
+        }
+
+        protected OSDMap OnMessageReceived(OSDMap message)
+        {
+            return null;
         }
 
         public void RegionLoaded(Scene scene)

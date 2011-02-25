@@ -24,10 +24,6 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace Aurora.Modules
 {
-    public interface ICommunicationService
-    {
-         GridRegion GetRegionForGrid(string regionName, string url);
-    }
     public class InterWorldCommunications : IService, ICommunicationService
     {
         #region Declares
@@ -131,7 +127,7 @@ namespace Aurora.Modules
         {
             foreach (Connection c in Connections)
             {
-                if (c.URL == connection.URL)//This is the connection we are looking for
+                if (c.URL == url)//This is the connection we are looking for
                 {
                     return c;
                 }
@@ -275,7 +271,7 @@ namespace Aurora.Modules
                }
                else
                {
-                    con = new Connection();
+                    c = new Connection();
             
                     //Build the certificate
                     IWCCertificate cert = new IWCCertificate();
@@ -285,26 +281,26 @@ namespace Aurora.Modules
                     //Add the certificate now
                     CertificateVerification.AddCertificate(cert);
 
-                    con.Certificate = cert;
-                    con.TrustLevel = m_untrustedConnectionsDefaultTrust; //Least amount of our trust for them
+                    c.Certificate = cert;
+                    c.TrustLevel = m_untrustedConnectionsDefaultTrust; //Least amount of our trust for them
                     //Be user friendly, add the http:// if needed as well as the final /
                     Url = (Url.StartsWith("http://") || Url.StartsWith("https://")) ? Url : "http://" + Url;
                     Url = Url.EndsWith("/") ? Url + "iwcconnection" : Url + "/iwcconnection";
-                    con.URL = Url;
+                    c.URL = Url;
 
-                    cert = OutgoingPublicComms.QueryRemoteHost(con);
+                    cert = OutgoingPublicComms.QueryRemoteHost(c);
                     if (cert != null)
                     {
-                        con.Certificate = cert;
+                        c.Certificate = cert;
                         IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
                         //Give the Urls to the config service
                         configService.AddNewUrls(cert.SessionHash, cert.SecureUrls);
-                        Connections.Add(con);
+                        Connections.Add(c);
                         m_log.Warn("Added connection to " + Url + ".");
                         IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
                         if(gridService != null)
                         {
-                              List<GridRegion> regions = gridService.GetRegionsByName(UUID.Zero, regionName);
+                              List<GridRegion> regions = gridService.GetRegionsByName(UUID.Zero, regionName, 1);
                               if(regions != null && regions.Count > 0)
                                    return regions[0];
                         }

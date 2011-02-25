@@ -118,10 +118,6 @@ namespace OpenSim.Services.Connectors
         {
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
@@ -132,17 +128,8 @@ namespace OpenSim.Services.Connectors
             registry.RegisterModuleInterface<IAbuseReports>(this);
         }
 
-        public void PostStart(IConfigSource config, IRegistryCore registry)
+        public void FinishedStartup()
         {
-        }
-
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AbuseReportHandler", "") != Name)
-                return;
-
-            registry.RegisterModuleInterface<IAbuseReports>(this);
         }
 
         #endregion

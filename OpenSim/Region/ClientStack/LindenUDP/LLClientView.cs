@@ -1289,7 +1289,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             AgentCircuitData currentAgentCircuit = this.m_udpServer.m_circuitManager.GetAgentCircuitData(CircuitCode);
             if (currentAgentCircuit != null)
             {
-                agentData.ServiceURLs = currentAgentCircuit.ServiceURLs;
                 agentData.IPAddress = currentAgentCircuit.IPAddress;
             }
 

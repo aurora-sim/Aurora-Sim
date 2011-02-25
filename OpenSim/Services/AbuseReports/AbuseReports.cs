@@ -41,8 +41,6 @@ namespace OpenSim.Services.AbuseReports
 {
     public class AbuseReports : IAbuseReports, IService
     {
-
-
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             string dllName = String.Empty;
@@ -80,19 +78,11 @@ namespace OpenSim.Services.AbuseReports
             registry.RegisterModuleInterface<IAbuseReports>(this);
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void Start(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        public void FinishedStartup()
         {
         }
 

@@ -902,14 +902,14 @@ namespace OpenSim.Services.LLLoginService
 
                             regionName = parts[0];
                             string domainLocator = parts[1];
-                            //ICommunicationService service = m_registry.RequestModuleInterface<ICommunicationService>();
-                            //if(service != null)
-                            //{
-                            //    region = service.GetRegionForGrid(regionName, domainLocator);
-                            //}
+                            ICommunicationService service = m_registry.RequestModuleInterface<ICommunicationService>();
+                            if(service != null)
+                            {
+                                GridRegion region = service.GetRegionForGrid(regionName, domainLocator);
 
-                            if(region != null)
-                                return region;
+                                if (region != null)
+                                    return region;
+                            }
                         }
                     }
                     List<GridRegion> defaults = m_GridService.GetDefaultRegions(scopeID);
