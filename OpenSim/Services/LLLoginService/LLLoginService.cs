@@ -73,6 +73,7 @@ namespace OpenSim.Services.LLLoginService
         protected IAvatarService m_AvatarService;
         protected IAssetService m_AssetService;
         protected ICapsService m_CapsService;
+        protected IRegistryCore m_registry;
 
         protected string m_DefaultRegionName;
         protected string m_WelcomeMessage;
@@ -143,6 +144,7 @@ namespace OpenSim.Services.LLLoginService
                 m_SearchURL = gridInfo.GetString("search", string.Empty);
             }
             registry.RegisterModuleInterface<ILoginService>(this);
+            m_registry = registry;
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
