@@ -98,6 +98,47 @@ namespace OpenSim.Services.Interfaces
             NewDicCol["ScreenshotID"] = ScreenshotID;
             return NewDicCol;
         }
+
+        public void FromOSD(OSDMap o)
+        {
+            AbuseDetails = DicCol["AbuseDetails"].AsString();
+            AbuseLocation = DicCol["AbuseLocation"].AsString();
+            AbuserName = DicCol["AbuserName"].AsString();
+            AbuseSummary = DicCol["AbuseSummary"].AsString();
+            Active = DicCol["Active"].AsBoolean();
+            AssignedTo = DicCol["AssignedTo"].AsString();
+            Category = DicCol["Category"].AsString();
+            Checked = DicCol["Checked"].AsString();
+            Notes = DicCol["Notes"].AsString();
+            Number = DicCol["Number"].AsInteger();
+            ObjectName = DicCol["ObjectName"].AsString();
+            ObjectPosition = DicCol["ObjectPosition"].AsString();
+            ObjectUUID = DicCol["ObjectUUID"].AsUUID();
+            RegionName = DicCol["RegionName"].AsString();
+            ReporterName = DicCol["ReporterName"].AsString();
+            ScreenshotID = DicCol["ScreenshotID"].AsString();
+        }
+        public OSDMap ToOSD()
+        {
+            OSDMap NewDicCol = new OSDMap ();
+            NewDicCol["AbuseDetails"] = AbuseDetails;
+            NewDicCol["AbuseLocation"] = AbuseLocation;
+            NewDicCol["AbuserName"] = AbuserName;
+            NewDicCol["AbuseSummary"] = AbuseSummary;
+            NewDicCol["Active"] = Active;
+            NewDicCol["AssignedTo"] = AssignedTo;
+            NewDicCol["Category"] = Category;
+            NewDicCol["Checked"] = Checked;
+            NewDicCol["Notes"] = Notes;
+            NewDicCol["Number"] = Number;
+            NewDicCol["ObjectName"] = ObjectName;
+            NewDicCol["ObjectPosition"] = ObjectPosition;
+            NewDicCol["ObjectUUID"] = ObjectUUID;
+            NewDicCol["RegionName"] = RegionName;
+            NewDicCol["ReporterName"] = ReporterName;
+            NewDicCol["ScreenshotID"] = ScreenshotID;
+            return NewDicCol;
+        }
     }
 
     public interface IAbuseReports
