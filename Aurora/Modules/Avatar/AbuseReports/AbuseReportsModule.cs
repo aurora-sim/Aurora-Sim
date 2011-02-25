@@ -217,8 +217,8 @@ namespace Aurora.Modules
                         ". Summary: " + report.AbuseSummary + ". Details: " + report.AbuseDetails + ".");
             }
             //Tell the DB about it
-            IAbuseReportsConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
-            if(conn != null)
+            IAbuseReports conn = m_SceneList[0].RequestModuleInterface<IAbuseReports>();
+            if (conn != null)
                 conn.AddAbuseReport(report);
         }
 

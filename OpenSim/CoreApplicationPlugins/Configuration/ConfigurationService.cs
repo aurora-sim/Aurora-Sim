@@ -82,6 +82,7 @@ namespace OpenSim.Services.Connectors.ConfigurationService
                 GetConfigFor("FriendsServerURI", request);
                 GetConfigFor("RemoteServerURI", request);
                 GetConfigFor("EventQueueServiceURI", request);
+                GetConfigFor("AbuseReportURI", request);
                 AddNewUrls("default", request);
             }
             else

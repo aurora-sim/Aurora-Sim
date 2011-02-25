@@ -41,6 +41,7 @@ namespace OpenSim.Server.Handlers
             GetConfigFor("RemoteServerURI");
             GetConfigFor("EventQueueServiceURI");
             GetConfigFor("FreeswitchServiceURL");
+            GetConfigFor("AbuseReportURI");
         }
 
         public void GetConfigFor(string name)
