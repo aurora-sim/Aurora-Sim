@@ -123,6 +123,19 @@ namespace Aurora.Modules
             return null;
         }
 
+        private Connection FindConnectionByURL(string url)
+        {
+            foreach (Connection c in Connections)
+            {
+                if (c.URL == connection.URL)//This is the connection we are looking for
+                {
+                    return c;
+                }
+            }
+            //No connection found
+            return null;
+        }
+
         #endregion
 
         #endregion
@@ -187,7 +200,17 @@ namespace Aurora.Modules
         private void RemoveIWCConnection(string module, string[] cmds)
         {
             string Url = MainConsole.Instance.CmdPrompt("Url to the connection");
-            //TODO:
+            Connection c = FindConnectionByURL(Url);
+            if(c == null)
+            {
+                m_log.Warn("Could not find the connection.");
+                return;
+            }
+            OutgoingPublicComms.DeleteRemoteHost(c);
+            Connections.Remove(c);
+            IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
+            //Remove the Urls from the config service
+            //configService.RemoveNewUrls(cert.SessionHash);
         }
 
         #endregion
