@@ -620,11 +620,15 @@ namespace OpenSim.Region.Framework.Scenes
                 sp = null;
             }
 
+            //Add possible Urls for the given agent
+            IConfigurationService configService = RequestModuleInterface<IConfigurationService>();
+            if(configService != null && agent.OtherInformation.ContainsKey("UserUrls"))
+            {
+                 configService .AddNewUrls(agent.AgentID.ToString(), (OSDMap)agent.OtherInformation["UserUrls"]);
+            }
+
             OSDMap responseMap = new OSDMap();
-
-            OSDMap urls = this.EventManager.TriggerOnRegisterCaps(agent.AgentID);
-
-            responseMap["CapsUrls"] = urls;
+            responseMap["CapsUrls"] = EventManager.TriggerOnRegisterCaps(agent.AgentID);
 
             // In all cases, add or update the circuit data with the new agent circuit data and teleport flags
             agent.teleportFlags = teleportFlags;

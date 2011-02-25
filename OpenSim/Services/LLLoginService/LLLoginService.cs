@@ -73,6 +73,7 @@ namespace OpenSim.Services.LLLoginService
         protected IAvatarService m_AvatarService;
         protected IAssetService m_AssetService;
         protected ICapsService m_CapsService;
+        protected IRegistryCore m_registry;
 
         protected string m_DefaultRegionName;
         protected string m_WelcomeMessage;
@@ -143,6 +144,7 @@ namespace OpenSim.Services.LLLoginService
                 m_SearchURL = gridInfo.GetString("search", string.Empty);
             }
             registry.RegisterModuleInterface<ILoginService>(this);
+            m_registry = registry;
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -889,7 +891,8 @@ namespace OpenSim.Services.LLLoginService
                         }
                         else
                         {
-                           /*string[] parts = regionName.Split(new char[] { '@' });
+                            //This is so that you can login to other grids via IWC (or HG), example"RegionTest@testingserver.com:8002". All this really needs to do is inform the other grid that we have a user who wants to connect. IWC allows users to login by default to other regions (without the host names), but if one is provided and we don't have a link, we need to create one here.
+                            string[] parts = regionName.Split(new char[] { '@' });
                             if (parts.Length < 2)
                             {
                                 m_log.InfoFormat("[LLLOGIN SERVICE]: Got Custom Login URI {0}, can't locate region {1}", startLocation, regionName);
@@ -899,19 +902,17 @@ namespace OpenSim.Services.LLLoginService
 
                             regionName = parts[0];
                             string domainLocator = parts[1];
-                            parts = domainLocator.Split(new char[] { ':' });
-                            string domainName = parts[0];
-                            uint port = 0;
-                            if (parts.Length > 1)
-                                UInt32.TryParse(parts[1], out port);
+                            //ICommunicationService service = m_registry.RequestModuleInterface<ICommunicationService>();
+                            //if(service != null)
+                            //{
+                            //    region = service.GetRegionForGrid(regionName, domainLocator);
+                            //}
 
-                            return region;*/
-                            return null;
+                            if(region != null)
+                                return region;
                         }
                     }
-                    else
-                    {
-                        List<GridRegion> defaults = m_GridService.GetDefaultRegions(scopeID);
+                    List<GridRegion> defaults = m_GridService.GetDefaultRegions(scopeID);
                         if (defaults != null && defaults.Count > 0)
                         {
                             where = "safe";
@@ -942,7 +943,6 @@ namespace OpenSim.Services.LLLoginService
                             }
                         }
                     }
-                }
             }
         }
 
