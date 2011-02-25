@@ -24,7 +24,11 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace Aurora.Modules
 {
-    public class InterWorldCommunications : IService
+    public interface ICommunicationService
+    {
+         GridRegion GetRegionForGrid(string regionName, string url);
+    }
+    public class InterWorldCommunications : IService, ICommunicationService
     {
         #region Declares
 
@@ -229,6 +233,7 @@ namespace Aurora.Modules
                 m_untrustedConnectionsDefaultTrust = (TrustLevel)Enum.Parse(typeof(TrustLevel), m_config.GetString("UntrustedConnectionsDefaultTrust", m_untrustedConnectionsDefaultTrust.ToString()));
             }
 
+            registry.RegisterModuleInterface<ICommunicationService>(this);
             m_registry = registry;
         }
 
@@ -254,6 +259,62 @@ namespace Aurora.Modules
 
         public void FinishedStartup()
         {
+        }
+
+        #endregion
+
+        #region ICommunicationService
+
+        public GridRegion GetRegionForGrid(string regionName, string Url)
+        {
+               Connection c = FindConnectionByURL(Url);
+               if(c != null)
+               {
+                    //If we are already connected, the grid services are together, so we already know of the region if it exists, therefore, it does not exist
+                    return null;
+               }
+               else
+               {
+                    con = new Connection();
+            
+                    //Build the certificate
+                    IWCCertificate cert = new IWCCertificate();
+                    cert.SessionHash = UUID.Random().ToString();
+                    cert.ValidUntil = DateTime.Now.AddDays(1); //One day for now...
+
+                    //Add the certificate now
+                    CertificateVerification.AddCertificate(cert);
+
+                    con.Certificate = cert;
+                    con.TrustLevel = m_untrustedConnectionsDefaultTrust; //Least amount of our trust for them
+                    //Be user friendly, add the http:// if needed as well as the final /
+                    Url = (Url.StartsWith("http://") || Url.StartsWith("https://")) ? Url : "http://" + Url;
+                    Url = Url.EndsWith("/") ? Url + "iwcconnection" : Url + "/iwcconnection";
+                    con.URL = Url;
+
+                    cert = OutgoingPublicComms.QueryRemoteHost(con);
+                    if (cert != null)
+                    {
+                        con.Certificate = cert;
+                        IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
+                        //Give the Urls to the config service
+                        configService.AddNewUrls(cert.SessionHash, cert.SecureUrls);
+                        Connections.Add(con);
+                        m_log.Warn("Added connection to " + Url + ".");
+                        IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
+                        if(gridService != null)
+                        {
+                              List<GridRegion> regions = gridService.GetRegionsByName(UUID.Zero, regionName);
+                              if(regions != null && regions.Count > 0)
+                                   return regions[0];
+                        }
+                    }
+                    else
+                    {
+                        m_log.Warn("Could not add connection to " + Url + ".");
+                    }
+               }
+               return null;
         }
 
         #endregion
