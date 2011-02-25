@@ -109,8 +109,6 @@ namespace OpenSim.Framework
         /// </summary>
         public Vector3 startpos;
 
-        public Dictionary<string, object> ServiceURLs;
-
         public AgentCircuitData()
         {
         }
@@ -143,18 +141,6 @@ namespace OpenSim.Framework
                 args["packed_appearance"] = appmap;
             }
 
-            if (ServiceURLs != null && ServiceURLs.Count > 0)
-            {
-                OSDArray urls = new OSDArray(ServiceURLs.Count * 2);
-                foreach (KeyValuePair<string, object> kvp in ServiceURLs)
-                {
-                    //System.Console.WriteLine("XXX " + kvp.Key + "=" + kvp.Value);
-                    urls.Add(OSD.FromString(kvp.Key));
-                    urls.Add(OSD.FromString((kvp.Value == null) ? string.Empty : kvp.Value.ToString()));
-                }
-                args["service_urls"] = urls;
-            }
-
             return args;
         }
 
@@ -169,8 +155,6 @@ namespace OpenSim.Framework
             Copy.circuitcode = circuitcode;
             Copy.IPAddress = IPAddress;
             Copy.SecureSessionID = SecureSessionID;
-            Copy.ServiceSessionID = ServiceSessionID;
-            Copy.ServiceURLs = ServiceURLs;
             Copy.SessionID = SessionID;
             Copy.startpos = startpos;
             Copy.teleportFlags = teleportFlags;
@@ -239,18 +223,6 @@ namespace OpenSim.Framework
 
             if (args.ContainsKey("otherInfo"))
                 OtherInformation = (OSDMap)OSDParser.DeserializeLLSDXml(args["otherInfo"].AsString());
-
-            ServiceURLs = new Dictionary<string, object>();
-            if (args.ContainsKey("service_urls") && args["service_urls"] != null && (args["service_urls"]).Type == OSDType.Array)
-            {
-                OSDArray urls = (OSDArray)(args["service_urls"]);
-                for (int i = 0; i < urls.Count / 2; i++)
-                {
-                    ServiceURLs[urls[i * 2].AsString()] = urls[(i * 2) + 1].AsString();
-                    //System.Console.WriteLine("XXX " + urls[i * 2].AsString() + "=" + urls[(i * 2) + 1].AsString());
-
-                }
-            }
         }
     }
 }
