@@ -13,12 +13,14 @@ namespace OpenSim.Services.MessagingService
 {
     public class MessagingServiceInHandler : IService, IAsyncMessageRecievedService, IGridRegistrationUrlModule
     {
+        protected bool m_enabled = false;
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            registry.RegisterModuleInterface<IAsyncMessageRecievedService>(this);
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("MessagingServiceInHandler", "") != Name)
                 return;
-            registry.RegisterModuleInterface<IAsyncMessageRecievedService>(this);
+            m_enabled = true;
         }
 
         private IRegistryCore m_registry;
@@ -30,9 +32,9 @@ namespace OpenSim.Services.MessagingService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("MessagingServiceInHandler", "") != Name)
+            if (!m_enabled)
                 return;
+            IConfig handlerConfig = config.Configs["Handlers"];
 
             m_registry = registry;
             m_port = handlerConfig.GetUInt("MessagingServiceInHandlerPort");

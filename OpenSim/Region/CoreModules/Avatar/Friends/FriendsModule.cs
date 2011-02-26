@@ -37,7 +37,6 @@ using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using OpenSim.Services.Connectors.Friends;
 using Aurora.Simulation.Base;
 using OpenSim.Framework.Servers.HttpServer;
 using Aurora.Framework;
@@ -70,8 +69,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected List<Scene> m_Scenes = new List<Scene>();
-
-        protected FriendsSimConnector m_FriendsSimConnector;
 
         protected Dictionary<UUID, UserFriendData> m_Friends =
                 new Dictionary<UUID, UserFriendData>();
@@ -127,8 +124,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         {
             if (!m_enabled)
                 return;
-            if (m_FriendsSimConnector == null)
-                m_FriendsSimConnector = new FriendsSimConnector();
 
             m_Scenes.Add(scene);
             scene.RegisterModuleInterface<IFriendsModule>(this);
@@ -136,12 +131,50 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
 
-            //if(m_Scenes.Count == 1)
-            //    AsyncMessageRecievedService.OnMessageReceived += OnMessageReceived;
+            if(m_Scenes.Count == 1)
+                AsyncMessageRecievedService.OnMessageReceived += OnMessageReceived;
         }
 
         protected OSDMap OnMessageReceived(OSDMap message)
         {
+            if (!message.ContainsKey("Method"))
+                return null;
+            if (message["Method"] == "FriendGrantRights")
+            {
+                UUID Requester = message["Requester"].AsUUID();
+                UUID Target = message["Target"].AsUUID();
+                int MyFlags = message["MyFlags"].AsInteger();
+                int Rights = message["Rights"].AsInteger();
+                LocalGrantRights(Requester, Target, MyFlags, Rights);
+            }
+            else if (message["Method"] == "FriendTerminated")
+            {
+                UUID Requester = message["Requester"].AsUUID();
+                UUID ExFriend = message["ExFriend"].AsUUID();
+                LocalFriendshipTerminated(ExFriend, Requester);
+            }
+            else if (message["Method"] == "FriendshipOffered")
+            {
+                UUID Requester = message["Requester"].AsUUID();
+                UUID ExFriend = message["ExFriend"].AsUUID();
+                GridInstantMessage im = new GridInstantMessage();
+                im.FromOSD((OSDMap)message["IM"]);
+                LocalFriendshipOffered(ExFriend, im);
+            }
+            else if (message["Method"] == "FriendshipDenied")
+            {
+                UUID Requester = message["Requester"].AsUUID();
+                string ClientName = message["ClientName"].AsString();
+                UUID FriendID = message["FriendID"].AsUUID();
+                LocalFriendshipDenied(Requester, ClientName, FriendID);
+            }
+            else if (message["Method"] == "FriendshipApproved")
+            {
+                UUID Requester = message["Requester"].AsUUID();
+                string ClientName = message["ClientName"].AsString();
+                UUID FriendID = message["FriendID"].AsUUID();
+                LocalFriendshipApproved(Requester, ClientName, null, FriendID);
+            }
             return null;
         }
 
@@ -354,7 +387,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             if (friendSession != null && friendSession.IsOnline)
             {
                 GridRegion region = GridService.GetRegionByUUID(m_Scenes[0].RegionInfo.ScopeID, friendSession.CurrentRegionID);
-                m_FriendsSimConnector.FriendshipOffered(region, agentID, friendID, im.message);
+                AsyncMessagePostService.Post(region.RegionHandle, SyncMessageHelper.FriendshipOffered(
+                    agentID, friendID, im, region.RegionHandle));
             }
             // If the prospective friend is not online, he'll get the message upon login.
         }
@@ -394,7 +428,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             if (friendSession != null && friendSession.IsOnline)
             {
                 GridRegion region = GridService.GetRegionByUUID(m_Scenes[0].RegionInfo.ScopeID, friendSession.CurrentRegionID);
-                m_FriendsSimConnector.FriendshipApproved(region, agentID, client.Name, friendID);
+                AsyncMessagePostService.Post(region.RegionHandle, SyncMessageHelper.FriendshipApproved(
+                    agentID, client.Name, friendID, region.RegionHandle));
             }
         }
 
@@ -417,10 +452,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             if (friendSession != null && friendSession.IsOnline)
             {
                 GridRegion region = GridService.GetRegionByUUID(m_Scenes[0].RegionInfo.ScopeID, friendSession.CurrentRegionID);
-                if (region != null)
-                    m_FriendsSimConnector.FriendshipDenied(region, agentID, client.Name, friendID);
-                else
-                    m_log.WarnFormat("[FRIENDS]: Could not find region {0} in locating {1}", friendSession.CurrentRegionID, friendID);
+                AsyncMessagePostService.Post(region.RegionHandle, SyncMessageHelper.FriendshipDenied(
+                    agentID, client.Name, friendID, region.RegionHandle));
             }
         }
 
@@ -446,7 +479,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             if (friendSession != null && friendSession.IsOnline)
             {
                 GridRegion region = GridService.GetRegionByUUID(m_Scenes[0].RegionInfo.ScopeID, friendSession.CurrentRegionID);
-                m_FriendsSimConnector.FriendshipTerminated(region, agentID, exfriendID);
+                AsyncMessagePostService.Post(region.RegionHandle, SyncMessageHelper.FriendTerminated(
+                    agentID, exfriendID, region.RegionHandle));
             }
         }
 
@@ -481,14 +515,17 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 // Notify the friend
                 //
 
+                
                 // Try local
                 if (!LocalGrantRights(requester, target, myFlags, rights))
                 {
                     UserInfo friendSession = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(target.ToString());
                     if (friendSession != null && friendSession.IsOnline)
                     {
-                        GridRegion region = GridService.GetRegionByUUID(m_Scenes[0].RegionInfo.ScopeID, friendSession.CurrentRegionID);
-                        m_FriendsSimConnector.GrantRights(region, requester, target, myFlags, rights);
+                        GridRegion region = GridService.GetRegionByUUID(m_Scenes[0].RegionInfo.ScopeID, 
+                            friendSession.CurrentRegionID);
+                        AsyncMessagePostService.Post(region.RegionHandle, SyncMessageHelper.FriendGrantRights(
+                            requester, target, myFlags, rights, region.RegionHandle));
                     }
                 }
             }

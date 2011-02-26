@@ -122,6 +122,61 @@ namespace OpenSim.Framework
             return buildEvent("AgentLoggedOut", llsdBody, AgentID, requestingRegion);
         }
 
+        public static OSDMap FriendGrantRights(UUID requester, UUID target, int myFlags, int rights, ulong requestingRegion)
+        {
+            OSDMap llsdBody = new OSDMap();
+
+            llsdBody.Add("Requester", requester);
+            llsdBody.Add("Target", target);
+            llsdBody.Add("MyFlags", myFlags);
+            llsdBody.Add("Rights", rights);
+            llsdBody.Add("RequestingRegion", requestingRegion);
+            return buildEvent("FriendGrantRights", llsdBody, requester, requestingRegion);
+        }
+
+        public static OSDMap FriendTerminated(UUID requester, UUID exfriend, ulong requestingRegion)
+        {
+            OSDMap llsdBody = new OSDMap();
+
+            llsdBody.Add("Requester", requester);
+            llsdBody.Add("ExFriend", exfriend);
+            llsdBody.Add("RequestingRegion", requestingRegion);
+            return buildEvent("FriendTerminated", llsdBody, requester, requestingRegion);
+        }
+
+        public static OSDMap FriendshipOffered(UUID requester, UUID friend, GridInstantMessage im, ulong requestingRegion)
+        {
+            OSDMap llsdBody = new OSDMap();
+
+            llsdBody.Add("Requester", requester);
+            llsdBody.Add("Friend", friend);
+            llsdBody.Add("IM", im.ToOSD());
+            llsdBody.Add("RequestingRegion", requestingRegion);
+            return buildEvent("FriendshipOffered", llsdBody, requester, requestingRegion);
+        }
+
+        public static OSDMap FriendshipDenied(UUID requester, string clientName, UUID friendID, ulong requestingRegion)
+        {
+            OSDMap llsdBody = new OSDMap();
+
+            llsdBody.Add("Requester", requester);
+            llsdBody.Add("ClientName", clientName);
+            llsdBody.Add("FriendID", friendID);
+            llsdBody.Add("RequestingRegion", requestingRegion);
+            return buildEvent("FriendshipDenied", llsdBody, requester, requestingRegion);
+        }
+
+        public static OSDMap FriendshipApproved(UUID requester, string clientName, UUID friendID, ulong requestingRegion)
+        {
+            OSDMap llsdBody = new OSDMap();
+
+            llsdBody.Add("Requester", requester);
+            llsdBody.Add("ClientName", clientName);
+            llsdBody.Add("FriendID", friendID);
+            llsdBody.Add("RequestingRegion", requestingRegion);
+            return buildEvent("FriendshipApproved", llsdBody, requester, requestingRegion);
+        }
+
         public static OSDMap LogoutRegionAgents(ulong requestingRegion)
         {
             OSDMap llsdBody = new OSDMap();
