@@ -78,7 +78,7 @@ namespace OpenSim.Services.Interfaces
             ScreenshotID = new UUID(DicCol["ScreenshotID"].ToString());
         }
 
-        public Dictionary<string, object> ToDictionaryCollection()
+        public Dictionary<string, object> ToKeyValuePairs()
         {
             Dictionary<string, object> NewDicCol = new Dictionary<string, object>();
             NewDicCol["AbuseDetails"] = AbuseDetails;
@@ -165,5 +165,14 @@ namespace OpenSim.Services.Interfaces
         /// <param name="report"></param>
         /// <param name="Password"></param>
         void UpdateAbuseReport(AbuseReport report, string Password);
+
+        /// <summary>
+        /// Gets a collection of abuse reports
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="count"></param>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        List<AbuseReport> GetAbuseReports(int start, int count, string filter);
     }
 }

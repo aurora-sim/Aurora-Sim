@@ -123,5 +123,16 @@ namespace OpenSim.Services.AbuseReports
             if (conn != null)
                 conn.UpdateAbuseReport(report, Password);
         }
+
+        public List<AbuseReport> GetAbuseReports(int start, int count, string filter)
+        {
+            IAbuseReportsConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
+            if (conn != null)
+            {
+                return conn.GetAbuseReports(start, count, filter);
+            }
+            else
+                return null;
+        }
     }
 }

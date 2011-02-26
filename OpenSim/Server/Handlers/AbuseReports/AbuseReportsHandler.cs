@@ -85,6 +85,8 @@ namespace OpenSim.Server.Handlers.AbuseReports
                         return GetAbuseReport(request);
                     case "UpdateAbuseReport":
                         return UpdateAbuseReport(request);
+                    case "UpdateAbuseReports":
+                        return GetAbuseReports(request);
                 }
                 m_log.DebugFormat("[ABUSEREPORT HANDLER]: unknown method {0} request {1}", method.Length, method);
             }
@@ -120,7 +122,20 @@ namespace OpenSim.Server.Handlers.AbuseReports
         byte[] GetAbuseReport(Dictionary<string, object> request)
         {
             string xmlString = WebUtils.BuildXmlResponse(
-                m_AbuseReportsService.GetAbuseReport(int.Parse(request["Number"].ToString()), request["Password"].ToString()).ToDictionaryCollection());
+                m_AbuseReportsService.GetAbuseReport(int.Parse(request["Number"].ToString()), request["Password"].ToString()).ToKeyValuePairs());
+            //m_log.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        byte[] GetAbuseReports(Dictionary<string, object> request)
+        {
+            List<AbuseReport> ars = m_AbuseReportsService.GetAbuseReports(int.Parse(request["start"].ToString()), int.Parse(request["count"].ToString()), request["filter"].ToString());
+            Dictionary<string, object> returnvalue = new Dictionary<string,object>();
+            foreach (AbuseReport ar in ars)
+                returnvalue.Add(ar.Number.ToString(), ar);
+
+            string xmlString = WebUtils.BuildXmlResponse(returnvalue);
             //m_log.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);

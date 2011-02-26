@@ -15,12 +15,15 @@ namespace Aurora.Services.DataService
     public class LocalAbuseReportsConnector : IAbuseReportsConnector
 	{
 		private IGenericData GD = null;
+        private string WebPassword = "";
 
         public void Initialize(IGenericData GenericData, ISimulationBase simBase, string defaultConnectionString)
         {
             IConfigSource source = simBase.ConfigSource;
             if(source.Configs["AuroraConnectors"].GetString("AbuseReportsConnector", "LocalConnector") == "LocalConnector")
             {
+                WebPassword = Util.Md5Hash(source.Configs["Handlers"].GetString("WireduxHandlerPassword", String.Empty));
+
                 GD = GenericData;
 
                 if (source.Configs[Name] != null)
@@ -54,31 +57,59 @@ namespace Aurora.Services.DataService
         /// <param name="Password"></param>
         /// <returns></returns>
         public AbuseReport GetAbuseReport(int Number, string Password)
-		{
+        {
             if (!CheckPassword(Password))
                 return null;
-			AbuseReport report = new AbuseReport();
+            AbuseReport report = new AbuseReport();
             List<string> Reports = GD.Query("Number", Number, "abusereports", "*");
             if (Reports.Count == 0)
                 return null;
             report.Category = Reports[0];
-			report.ReporterName = Reports[1];
-			report.ObjectName = Reports[2];
-			report.ObjectUUID = new UUID(Reports[3]);
-			report.AbuserName = Reports[4];
-			report.AbuseLocation = Reports[5];
-			report.AbuseDetails = Reports[6];
-			report.ObjectPosition = Reports[7];
+            report.ReporterName = Reports[1];
+            report.ObjectName = Reports[2];
+            report.ObjectUUID = new UUID(Reports[3]);
+            report.AbuserName = Reports[4];
+            report.AbuseLocation = Reports[5];
+            report.AbuseDetails = Reports[6];
+            report.ObjectPosition = Reports[7];
             report.RegionName = Reports[8];
-			report.ScreenshotID = new UUID(Reports[9]);
-			report.AbuseSummary = Reports[10];
-			report.Number = int.Parse(Reports[11]);
-			report.AssignedTo = Reports[12];
-			report.Active = int.Parse(Reports[13]) == 1;
-			report.Checked = int.Parse(Reports[14]) == 1;
-			report.Notes = Reports[15];
-			return report;
-		}
+            report.ScreenshotID = new UUID(Reports[9]);
+            report.AbuseSummary = Reports[10];
+            report.Number = int.Parse(Reports[11]);
+            report.AssignedTo = Reports[12];
+            report.Active = int.Parse(Reports[13]) == 1;
+            report.Checked = int.Parse(Reports[14]) == 1;
+            report.Notes = Reports[15];
+            return report;
+        }
+
+        public List<AbuseReport> GetAbuseReports(int start, int count, string filter)
+        {
+            System.Data.IDataReader dr = GD.QueryDataFull ("where CONVERT(number, UNSIGNED) >= " + start.ToString() + " and " + filter + " LIMIT 0, 10", "abusereports", "*");
+            List<AbuseReport> rv = new List<AbuseReport>();
+            while (dr.Read())
+            {
+                AbuseReport report = new AbuseReport();
+                report.Category = dr[0].ToString();
+                report.ReporterName = dr[1].ToString();
+                report.ObjectName = dr[2].ToString();
+                report.ObjectUUID = new UUID(dr[3].ToString());
+                report.AbuserName = dr[4].ToString();
+                report.AbuseLocation = dr[5].ToString();
+                report.AbuseDetails = dr[6].ToString();
+                report.ObjectPosition = dr[7].ToString();
+                report.RegionName = dr[8].ToString();
+                report.ScreenshotID = new UUID(dr[9].ToString());
+                report.AbuseSummary = dr[10].ToString();
+                report.Number = int.Parse(dr[11].ToString());
+                report.AssignedTo = dr[12].ToString();
+                report.Active = int.Parse(dr[13].ToString()) == 1;
+                report.Checked = int.Parse(dr[14].ToString()) == 1;
+                report.Notes = dr[15].ToString();
+                rv.Add(report);
+            }
+            return rv;
+        }
 
         /// <summary>
         /// Adds a new abuse report to the database
@@ -157,7 +188,7 @@ namespace Aurora.Services.DataService
             InsertKeys.Add("AbuseLocation");
             InsertKeys.Add("AbuseDetails");
             InsertKeys.Add("ObjectPosition");
-            InsertKeys.Add("EstateID");
+            InsertKeys.Add("RegionName");
             InsertKeys.Add("ScreenshotID");
             InsertKeys.Add("AbuseSummary");
             InsertKeys.Add("Number");
@@ -176,6 +207,8 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         private bool CheckPassword(string Password)
         {
+            if (Password == WebPassword)
+                return true;
             List<string> TruePassword = GD.Query("Method", "abusereports", "passwords", "Password");
             if (TruePassword.Count == 0)
                 return false;

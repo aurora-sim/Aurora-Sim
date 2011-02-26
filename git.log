@@ -1,3 +1,15 @@
+commit 14a1c37420c3a289b430299b34c195ccbbd6e469
+Author: skidzTweak <skidz.tweak_@_gmail.com>
+Date:   Fri Feb 25 12:37:49 2011 -0600
+
+    Fixed some errors
+
+commit cb2fda4cc1cfb6821391fc671ea0b5807655fee6
+Author: RevolutionSmythe <asdfisbetterthanjkl@gmail.com>
+Date:   Fri Feb 25 06:09:56 2011 -0800
+
+    Add OSDMaps to the AbuseReports class, easier to use than the old Dictionary<string,object> (and it can be saved by the generics connector that way).
+
 commit f4763431e74d997ac5e4c0bd0ac10b53dfeba2aa
 Author: skidzTweak <skidz.tweak_@_gmail.com>
 Date:   Fri Feb 25 03:17:56 2011 -0600
