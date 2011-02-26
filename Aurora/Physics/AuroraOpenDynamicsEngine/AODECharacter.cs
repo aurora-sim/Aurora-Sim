@@ -1311,38 +1311,41 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_log.WarnFormat("[ODEPLUGIN]: Avatar Null reference for Avatar {0}, physical actor {1}", m_name, m_uuid);
             }
 
-
-            //  kluge to keep things in bounds.  ODE lets dead avatars drift away (they should be removed!)
-            bool needfixbody = false;
-
-            if (vec.X < 0.0f)
-                {
-                needfixbody = true;
-                vec.X = CAPSULE_RADIUS;
-                }
-            else if (vec.X > (int)_parent_scene.WorldExtents.X - CAPSULE_RADIUS)
-                {
-                needfixbody = true;
-                vec.X = (int)_parent_scene.WorldExtents.X - CAPSULE_RADIUS;
-                }
-
-            if (vec.Y < 0.0f)
-                {
-                needfixbody = true;
-                vec.Y = CAPSULE_RADIUS;
-                }
-            else if (vec.Y > (int)_parent_scene.WorldExtents.Y - CAPSULE_RADIUS)
-                {
-                needfixbody = true;
-                vec.Y = (int)_parent_scene.WorldExtents.Y - CAPSULE_RADIUS;
-                }
-
-            if (needfixbody)
-                d.BodySetPosition(Body, vec.X, vec.Y, vec.Z);
+            // vec is a ptr into internal ode data better not mess with it
 
             _position.X = (float)vec.X;
             _position.Y = (float)vec.Y;
             _position.Z = (float)vec.Z;
+
+            //  kluge to keep things in bounds.  ODE lets dead avatars drift away (they should be removed!)
+
+            bool needfixbody = false;
+
+            if (_position.X < 0.0f)
+                {
+                needfixbody = true;
+                _position.X = CAPSULE_RADIUS;
+                }
+            else if (_position.X > (int)_parent_scene.WorldExtents.X - CAPSULE_RADIUS)
+                {
+                needfixbody = true;
+                _position.X = (int)_parent_scene.WorldExtents.X - CAPSULE_RADIUS;
+                }
+
+            if (_position.Y < 0.0f)
+                {
+                needfixbody = true;
+                _position.Y = CAPSULE_RADIUS;
+                }
+            else if (_position.Y > (int)_parent_scene.WorldExtents.Y - CAPSULE_RADIUS)
+                {
+                needfixbody = true;
+                _position.Y = (int)_parent_scene.WorldExtents.Y - CAPSULE_RADIUS;
+                }
+
+            if (needfixbody)
+                d.BodySetPosition(Body, _position.X, _position.Y, _position.Z);
+
 
             // Did we move last? = zeroflag
             // This helps keep us from sliding all over
@@ -1381,8 +1384,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     vec.Z = _velocity.Z;
                 }
 
-
-
                 /*
                                 if (vec.X == 0 && vec.Y == 0 && vec.Z == 0)
                                 {
@@ -1390,40 +1391,46 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 }
                                 else
                 */
+
+                // vec is a ptr into internal ode data better not mess with it
+
+                _velocity.X = vec.X;
+                _velocity.Y = vec.Y;
+                _velocity.Z = vec.Z;
+
                 needfixbody = false;
 
-                if (Math.Abs(vec.X) < 0.001 && vec.X != 0)
+                if (Math.Abs(_velocity.X) < 0.001)
                     {
                     needfixbody = true;
-                    vec.X = 0;
+                    _velocity.X = 0;
                     }
-                if (Math.Abs(vec.Y) < 0.001 && vec.Y != 0)
+                if (Math.Abs(_velocity.Y) < 0.001)
                     {
                     needfixbody = true;
-                    vec.Y = 0;
+                    _velocity.Y = 0;
                     }
-                if (Math.Abs(vec.Z) < 0.001 && vec.Z != 0)
+                if (Math.Abs(_velocity.Z) < 0.001)
                     {
                     needfixbody = true;
-                    vec.Z = 0;
+                    _velocity.Z = 0;
                     }
 
                 if (needfixbody)
-                    d.BodySetLinearVel(Body, vec.X, vec.Y, vec.Z);
+                    d.BodySetLinearVel(Body, _velocity.X, _velocity.Y, _velocity.Z);
 
-                _velocity = new Vector3((float)(vec.X), (float)(vec.Y), (float)(vec.Z));
 
                 const float VELOCITY_TOLERANCE = 0.001f;
                 const float POSITION_TOLERANCE = 0.05f;
 
                 //Check to see whether we need to trigger the significant movement method in the presence
-                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
-                    !Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
+// avas don't rotate for now                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
+                if (    !Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
                     !Position.ApproxEquals(m_lastPosition, POSITION_TOLERANCE))
                 {
                     // Update the "last" values
                     m_lastPosition = Position;
-                    m_lastRotationalVelocity = RotationalVelocity;
+//                    m_lastRotationalVelocity = RotationalVelocity;
                     m_lastVelocity = Velocity;
                     base.RequestPhysicsterseUpdate();
                     base.TriggerSignificantMovement();
