@@ -1527,12 +1527,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                         // PhysicsVector vec = new PhysicsVector();
 
-                        _target_velocity =
-                            new Vector3(
-                                (float)(m_PIDTarget.X - dcpos.X) * ((/*PID_G - */m_PIDTau) * timestep),
-                                (float)(m_PIDTarget.Y - dcpos.Y) * ((/*PID_G - */m_PIDTau) * timestep),
-                                (float)(m_PIDTarget.Z - dcpos.Z) * ((/*PID_G - */m_PIDTau) * timestep)
-                                );
+                        _target_velocity.X = (float)(m_PIDTarget.X - dcpos.X) * ((/*PID_G - */m_PIDTau) * timestep);
+                        _target_velocity.Y = (float)(m_PIDTarget.Y - dcpos.Y) * ((/*PID_G - */m_PIDTau) * timestep);
+                        _target_velocity.Z = (float)(m_PIDTarget.Z - dcpos.Z) * ((/*PID_G - */m_PIDTau) * timestep);
 
                         //  if velocity is zero, use position control; otherwise, velocity control
 
@@ -1626,10 +1623,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             }     // end switch (m_PIDHoverType)
 
 
-                        _target_velocity =
-                            new Vector3(0.0f, 0.0f,
-                                (float)(m_targetHoverHeight - dcpos.Z) * ((PID_G - m_PIDHoverTau) * timestep)
-                                );
+                        _target_velocity.X = 0;
+                        _target_velocity.Y = 0;
+                        _target_velocity.Z = (float)(m_targetHoverHeight - dcpos.Z) * ((PID_G - m_PIDHoverTau) * timestep);
 
                         //  if velocity is zero, use position control; otherwise, velocity control
 
@@ -2450,39 +2446,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 bool lastZeroFlag = _zeroFlag;
                 if (Body != IntPtr.Zero && prim_geom != IntPtr.Zero) // FIXME -> or if it is a joint
                     {
-                    d.Vector3 cpos = d.BodyGetPosition(Body);
-                    d.Vector3 lpos = d.GeomGetPosition(prim_geom);
-
-                    d.Matrix3 mat = d.GeomGetRotation(prim_geom); // 11.1 may have getQuaternion but calculations are identical
+                    d.Vector3 cpos = d.BodyGetPosition(Body); // object position ( center of mass)
+                    d.Vector3 lpos = d.GeomGetPosition(prim_geom); // root position that is seem by rest of simulator
                     d.Quaternion ori;
-                    d.QfromR(out ori, ref mat);
-
+                    d.GeomCopyQuaternion(prim_geom, out ori);
                     d.Vector3 vel = d.BodyGetLinearVel(Body);
                     d.Vector3 rotvel = d.BodyGetAngularVel(Body);
 
                     m_lastposition = _position;
                     m_lastorientation = _orientation;
 
-                    Vector3 l_position;
-                    l_position.X = (float)lpos.X;
-                    l_position.Y = (float)lpos.Y;
-                    l_position.Z = (float)lpos.Z;
-                    Quaternion l_orientation;
-                    l_orientation.X = (float)ori.X;
-                    l_orientation.Y = (float)ori.Y;
-                    l_orientation.Z = (float)ori.Z;
-                    l_orientation.W = (float)ori.W;
-
                     if (cpos.X > ((int)_parent_scene.WorldExtents.X - 0.05f) || 
                         cpos.X < 0f ||
                         cpos.Y > ((int)_parent_scene.WorldExtents.Y - 0.05f) || 
                         cpos.Y < 0f)
                         {
-                        //base.RaiseOutOfBounds(l_position);
 
                         if (m_crossingfailures < _parent_scene.geomCrossingFailuresBeforeOutofbounds)
                             {
-                            _position = l_position;
+                            _position.X = (float)lpos.X;
+                            _position.Y = (float)lpos.Y;
+                            _position.Z = (float)lpos.Z;
                             m_crossingfailures++;
                             base.RequestPhysicsterseUpdate();
                             return;
@@ -2490,6 +2474,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         else
                             {
                             m_frozen = true;
+
+                            Vector3 l_position;
+                            l_position.X = (float)lpos.X;
+                            l_position.Y = (float)lpos.Y;
+                            l_position.Z = (float)lpos.Z;
+
                             base.RaiseOutOfBounds(l_position);
                             return;
                             }
@@ -2536,9 +2526,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                     #endregion
 
-                    if ((Math.Abs(m_lastposition.X - l_position.X) < 0.001)
-                        && (Math.Abs(m_lastposition.Y - l_position.Y) < 0.001)
-                        && (Math.Abs(m_lastposition.Z - l_position.Z) < 0.001)
+                    if ((Math.Abs(m_lastposition.X - lpos.X) < 0.001)
+                        && (Math.Abs(m_lastposition.Y - lpos.Y) < 0.001)
+                        && (Math.Abs(m_lastposition.Z - lpos.Z) < 0.001)
                         && (Math.Abs(vel.X) < 0.001)
                         && (Math.Abs(vel.Y) < 0.001)
                         && (Math.Abs(vel.Z) < 0.001)
@@ -2592,7 +2582,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_lastVelocity = _velocity;
                         if (m_vehicle.Type == Vehicle.TYPE_NONE)
                             {
-                            _position = l_position;
+                            _position.X = (float)lpos.X;
+                            _position.Y = (float)lpos.Y;
+                            _position.Z = (float)lpos.Z;
 
                             _velocity.X = (float)vel.X;
                             _velocity.Y = (float)vel.Y;
