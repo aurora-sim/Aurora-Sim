@@ -81,7 +81,7 @@ namespace OpenSim.Services
                 {
                     string first = requestData["first"].ToString();
                     string last = requestData["last"].ToString();
-                    string name = requestData["name"].ToString();
+                    string name = requestData["name"] != null ? requestData["name"].ToString() : "";
                     string passwd = requestData["passwd"].ToString();
                     string startLocation = string.Empty;
                     UUID scopeID = UUID.Zero;
