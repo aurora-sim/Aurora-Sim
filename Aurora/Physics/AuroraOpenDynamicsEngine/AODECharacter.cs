@@ -1380,26 +1380,34 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 _velocity.Z = vec.Z;
 
                 needfixbody = false;
+                bool VelIsZero = false;
+                int chkzerovel = 0;
 
                 if (Math.Abs(_velocity.X) < 0.001)
                     {
+                    chkzerovel++;
                     needfixbody = true;
                     _velocity.X = 0;
                     }
                 if (Math.Abs(_velocity.Y) < 0.001)
                     {
+                    chkzerovel++;
                     needfixbody = true;
                     _velocity.Y = 0;
                     }
                 if (Math.Abs(_velocity.Z) < 0.001)
                     {
+                    chkzerovel++;
                     needfixbody = true;
                     _velocity.Z = 0;
                     }
 
                 if (needfixbody)
+                    {
+                    if (chkzerovel == 3)
+                        VelIsZero = true;
                     d.BodySetLinearVel(Body, _velocity.X, _velocity.Y, _velocity.Z);
-
+                    }
                 // slow down updates
                 m_UpdateTimecntr += timestep;
                 if (m_UpdateTimecntr < m_UpdateFPScntr)
@@ -1410,33 +1418,46 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 const float VELOCITY_TOLERANCE = 0.01f;
                 const float POSITION_TOLERANCE = 0.05f;
                 bool needSendUpdate = false;
+
+                   
                 //Check to see whether we need to trigger the significant movement method in the presence
  // avas don't rotate for now                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
-                if (!Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
+                if (!VelIsZero && (!Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
                     !Position.ApproxEquals(m_lastPosition, POSITION_TOLERANCE)
-                    )
-                        {
-                        // Update the "last" values
-                        needSendUpdate = true;
-                        m_ZeroUpdateSent = false;
-                        m_lastPosition = Position;
+                    ))
+                    {
+                            // Update the "last" values
+                            needSendUpdate = true;
+                            m_lastPosition = Position;
                         //                        m_lastRotationalVelocity = RotationalVelocity;
-                        m_lastVelocity = Velocity;
+                            m_lastVelocity = Velocity;
 //                        base.RequestPhysicsterseUpdate();
 //                        base.TriggerSignificantMovement();
-                        }
+                     }
 
-                if (needSendUpdate || !m_ZeroUpdateSent)
+                if (VelIsZero)
+                    {
+                    if (!m_ZeroUpdateSent)
+                        {
+                        needSendUpdate = true;
+                        m_ZeroUpdateSent = true;
+                        }
+                    }
+                else
+                    m_ZeroUpdateSent = false;
+                    
+                
+                if (needSendUpdate)
                     {
                     base.RequestPhysicsterseUpdate();
                     base.TriggerSignificantMovement();
-                    base.TriggerMovementUpdate();
-                    m_ZeroUpdateSent = true;
+//                    base.TriggerMovementUpdate();
                     }
 
 
                 //Tell any listeners about the new info
-//                base.TriggerMovementUpdate();
+                // guess something needs this to be here, don't know why for now
+                base.TriggerMovementUpdate();
 //            }
         }
 
