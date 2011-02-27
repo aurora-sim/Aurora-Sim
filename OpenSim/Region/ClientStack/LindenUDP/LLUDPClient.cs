@@ -365,6 +365,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (category >= 0 && category < m_packetOutboxes.Length)
             {
                 OpenSim.Framework.LocklessQueue<OutgoingPacket> queue = m_packetOutboxes[category];
+/*
                 TokenBucket bucket = m_throttleCategories[category];
 
                 if (!forceQueue && bucket.RemoveTokens(packet.Buffer.DataLength))
@@ -373,6 +374,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     return false;
                 }
                 else
+ */
                 {
                     // Force queue specified or not enough tokens in the bucket, queue this packet
                     queue.Enqueue(packet);

@@ -32,7 +32,8 @@ namespace OpenSim.Framework
     public enum ThrottleOutPacketType : int
     {
         /// <summary>Unthrottled packets</summary>
-        Unknown = -1,
+    //        Unknown = -1,  hack forcing unknown to State
+        Unknown = 7,
         /// <summary>Packets that are being resent</summary>
         Resend = 0,
         /// <summary>Terrain data</summary>
