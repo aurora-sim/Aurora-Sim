@@ -780,14 +780,16 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 m_log.Warn("[ParcelManagement]: Could not find user for parcel, please give a valid user to make the owner");
                 string userName = MainConsole.Instance.CmdPrompt("User Name:", "");
-                if (userName == "" && userName.Split(' ').Length < 2)
+                if (userName == "")
                 {
-                    m_log.Warn("Put in a valid username with a space inbetween.");
+                    m_log.Warn("Put in a valid username.");
                     continue;
                 }
                 account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, userName);
-                if(account != null)
+                if (account != null)
                     fullSimParcel.LandData.OwnerID = account.PrincipalID;
+                else
+                    m_log.Warn("Could not find the user.");
             }
             m_log.Info("[ParcelManagement]: No land found for region " + m_scene.RegionInfo.RegionName +
                 ", setting owner to " + fullSimParcel.LandData.OwnerID);

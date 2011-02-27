@@ -51,11 +51,9 @@ namespace OpenSim.Services.CapsService
             get { return m_server; }
         }
 
-        protected string m_hostName;
-        protected uint m_port;
         public string HostUri
         {
-            get { return m_hostName + ":" + m_port; }
+            get { return m_server.HostName + ":" + m_server.Port; }
         }
 
         #endregion
@@ -72,14 +70,6 @@ namespace OpenSim.Services.CapsService
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("CapsHandler", "") != Name)
                 return;
-
-            IConfig networkConfig = config.Configs["Network"];
-            m_hostName = networkConfig.GetString("HostName", String.Empty);
-            if (m_hostName != "")
-                //Sanitize the results, remove / and :
-                m_hostName = m_hostName.EndsWith("/") ? m_hostName.Remove(m_hostName.Length - 1) : m_hostName;
-            else
-                m_hostName = "http://127.0.0.1";
             m_registry = registry;
             registry.RegisterModuleInterface<ICapsService>(this);
         }
@@ -88,7 +78,6 @@ namespace OpenSim.Services.CapsService
         {
             ISimulationBase simBase = registry.RequestModuleInterface<ISimulationBase>();
             m_server = simBase.GetHttpServer(0);
-            m_port = m_server.Port;
 
             MainConsole.Instance.Commands.AddCommand("CapsService", false, "show presences", "show presences", "Shows all presences in the grid", ShowUsers);
         }
