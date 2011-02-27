@@ -263,54 +263,60 @@ namespace Aurora.Modules
 
         public GridRegion GetRegionForGrid(string regionName, string Url)
         {
-               Connection c = FindConnectionByURL(Url);
-               if(c != null)
-               {
-                    //If we are already connected, the grid services are together, so we already know of the region if it exists, therefore, it does not exist
-                    return null;
-               }
-               else
-               {
-                    c = new Connection();
-            
-                    //Build the certificate
-                    IWCCertificate cert = new IWCCertificate();
-                    cert.SessionHash = UUID.Random().ToString();
-                    cert.ValidUntil = DateTime.Now.AddDays(1); //One day for now...
+            Connection c = FindConnectionByURL(Url);
+            if (c != null)
+            {
+                //If we are already connected, the grid services are together, so we already know of the region if it exists, therefore, it does not exist
+                return null;
+            }
+            else
+            {
+                c = new Connection();
 
-                    //Add the certificate now
-                    CertificateVerification.AddCertificate(cert);
+                //Build the certificate
+                IWCCertificate cert = new IWCCertificate();
+                cert.SessionHash = UUID.Random().ToString();
+                cert.ValidUntil = DateTime.Now.AddDays(1); //One day for now...
 
+                //Add the certificate now
+                CertificateVerification.AddCertificate(cert);
+
+                c.Certificate = cert;
+                c.TrustLevel = m_untrustedConnectionsDefaultTrust; //Least amount of our trust for them
+                //Be user friendly, add the http:// if needed as well as the final /
+                Url = (Url.StartsWith("http://") || Url.StartsWith("https://")) ? Url : "http://" + Url;
+                Url = Url.EndsWith("/") ? Url + "iwcconnection" : Url + "/iwcconnection";
+                c.URL = Url;
+
+                cert = OutgoingPublicComms.QueryRemoteHost(c);
+                if (cert != null)
+                {
                     c.Certificate = cert;
-                    c.TrustLevel = m_untrustedConnectionsDefaultTrust; //Least amount of our trust for them
-                    //Be user friendly, add the http:// if needed as well as the final /
-                    Url = (Url.StartsWith("http://") || Url.StartsWith("https://")) ? Url : "http://" + Url;
-                    Url = Url.EndsWith("/") ? Url + "iwcconnection" : Url + "/iwcconnection";
-                    c.URL = Url;
+                    IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
+                    //Give the Urls to the config service
+                    configService.AddNewUrls(cert.SessionHash, cert.SecureUrls);
+                    Connections.Add(c);
+                    m_log.Warn("Added connection to " + Url + ".");
+                    IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
+                    if (gridService != null)
+                    {
+                        List<GridRegion> regions = gridService.GetRegionsByName(UUID.Zero, regionName, 1);
+                        if (regions != null && regions.Count > 0)
+                            return regions[0];
+                    }
+                }
+                else
+                {
+                    m_log.Warn("Could not add connection to " + Url + ".");
+                }
+            }
+            return null;
+        }
 
-                    cert = OutgoingPublicComms.QueryRemoteHost(c);
-                    if (cert != null)
-                    {
-                        c.Certificate = cert;
-                        IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
-                        //Give the Urls to the config service
-                        configService.AddNewUrls(cert.SessionHash, cert.SecureUrls);
-                        Connections.Add(c);
-                        m_log.Warn("Added connection to " + Url + ".");
-                        IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
-                        if(gridService != null)
-                        {
-                              List<GridRegion> regions = gridService.GetRegionsByName(UUID.Zero, regionName, 1);
-                              if(regions != null && regions.Count > 0)
-                                   return regions[0];
-                        }
-                    }
-                    else
-                    {
-                        m_log.Warn("Could not add connection to " + Url + ".");
-                    }
-               }
-               return null;
+        public OSDMap GetUrlsForUser(GridRegion region, UUID userID)
+        {
+            IGridRegistrationService r = Registry.RequestModuleInterface<IGridRegistrationService>();
+            return r.GetUrlForRegisteringClient(userID.ToString(), region.RegionHandle);
         }
 
         #endregion
@@ -487,9 +493,12 @@ namespace Aurora.Modules
         private IWCCertificate BuildSecureUrlsForConnection(IWCCertificate c)
         {
             IConfigurationService service = IWC.Registry.RequestModuleInterface<IConfigurationService>();
-            //Give the basic Urls that we have
-            c.SecureUrls = service.GetValuesFor("default");
-            c.SecureUrls["TeleportAgent"] = "";
+            IGridRegistrationService gridRegistration = IWC.Registry.RequestModuleInterface<IGridRegistrationService>();
+            if (gridRegistration != null)
+            {
+                //Give the basic Urls that we have
+                c.SecureUrls = gridRegistration.GetUrlForRegisteringClient(c.SessionHash, 0);
+            }
             return c;
         }
 

@@ -83,7 +83,7 @@ namespace OpenSim.Services
             get { return "AgentInfoServerURI"; }
         }
 
-        public void AddExistingUrlForClient(UUID SessionID, ulong RegionHandle, string url)
+        public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
 
@@ -91,7 +91,7 @@ namespace OpenSim.Services
             server.AddStreamHandler(handler);
         }
 
-        public string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)
+        public string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
         {
             string url = "/agentinfo" + UUID.Random();
 

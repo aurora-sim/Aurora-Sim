@@ -87,14 +87,14 @@ namespace OpenSim.Services.MessagingService
             get { return m_port; }
         }
 
-        public void AddExistingUrlForClient(UUID SessionID, ulong RegionHandle, string url)
+        public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
 
             server.AddStreamHandler(new MessagingServiceInPostHandler(url, m_registry, this, RegionHandle));
         }
 
-        public string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)
+        public string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
         {
             string url = "/messagingservice" + UUID.Random();
 

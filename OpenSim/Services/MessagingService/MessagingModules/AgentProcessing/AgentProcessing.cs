@@ -320,6 +320,12 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     return result;
                 }
 
+                ICommunicationService commsService = m_registry.RequestModuleInterface<ICommunicationService>();
+                if (commsService != null)
+                {
+                    circuitData.OtherInformation["UserUrls"] = commsService.GetUrlsForUser(neighbor, circuitData.AgentID);
+                }
+
                 bool regionAccepted = SimulationService.CreateAgent(neighbor, circuitData,
                         TeleportFlags, agentData, out reason);
                 if (regionAccepted)

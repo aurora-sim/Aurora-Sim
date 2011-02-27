@@ -1072,6 +1072,12 @@ namespace OpenSim.Services.LLLoginService
                 regionClientCaps = m_CapsService.GetClientCapsService(aCircuit.AgentID).GetCapsService(region.RegionHandle);
             }
 
+            ICommunicationService commsService = m_registry.RequestModuleInterface<ICommunicationService>();
+            if (commsService != null)
+            {
+                aCircuit.OtherInformation["UserUrls"] = commsService.GetUrlsForUser(region, aCircuit.AgentID);
+            }
+
             // As we are creating the agent, we must also initialize the CapsService for the agent
             bool success = simConnector.CreateAgent(region, aCircuit, (int)TeleportFlags.ViaLogin, null, out reason);
             if (!success) // If it failed, do not set up any CapsService for the client

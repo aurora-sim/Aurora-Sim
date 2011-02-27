@@ -237,7 +237,7 @@ namespace OpenSim.Services
             resultMap["Result"] = result;
             if (result == "")
             {
-                OSDMap urls = m_registry.RequestModuleInterface<IGridRegistrationService>().GetUrlForRegisteringClient(SecureSessionID, rinfo.RegionHandle);
+                OSDMap urls = m_registry.RequestModuleInterface<IGridRegistrationService>().GetUrlForRegisteringClient(SecureSessionID.ToString(), rinfo.RegionHandle);
                 resultMap["URLs"] = urls;
             }
 

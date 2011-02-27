@@ -49,7 +49,7 @@ namespace OpenSim.Services.GridService
             {
                 foreach (IGridRegistrationUrlModule module in m_modules.Values)
                 {
-                    module.AddExistingUrlForClient(url.SessionID, url.RegionHandle, url.URLS[module.UrlName]);
+                    module.AddExistingUrlForClient(url.SessionID.ToString(), url.RegionHandle, url.URLS[module.UrlName]);
                 }
             }
         }
@@ -58,7 +58,7 @@ namespace OpenSim.Services.GridService
 
         #region IGridRegistrationService Members
 
-        public OSDMap GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)
+        public OSDMap GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
         {
             OSDMap databaseSave = new OSDMap();
             //Get the URLs from all the modules that have registered with us
@@ -97,7 +97,7 @@ namespace OpenSim.Services.GridService
         public class GridRegistrationURLs : IDataTransferable
         {
             public OSDMap URLS;
-            public UUID SessionID;
+            public string SessionID;
             public ulong RegionHandle;
 
             public override OSDMap ToOSD()
@@ -112,7 +112,7 @@ namespace OpenSim.Services.GridService
             public override void FromOSD(OSDMap retVal)
             {
                 URLS = (OSDMap)retVal["URLS"];
-                SessionID = retVal["SessionID"].AsUUID();
+                SessionID = retVal["SessionID"].AsString();
                 RegionHandle = retVal["RegionHandle"].AsULong();
             }
 
@@ -149,8 +149,9 @@ namespace OpenSim.Services.GridService
                         lastSetHost = 0;
                     return url;
                 }
-                else
+                else if (m_urls.Count > 0)
                     return m_urls[0];
+                return "";
             }
         }
 

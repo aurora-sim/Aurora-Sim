@@ -585,7 +585,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="SessionID"></param>
         /// <param name="RegionHandle"></param>
         /// <returns></returns>
-        OSDMap GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle);
+        OSDMap GetUrlForRegisteringClient(string SessionID, ulong RegionHandle);
 
         /// <summary>
         /// Registers a module that will be requested when GetUrlForRegisteringClient is called
@@ -615,7 +615,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="SessionID"></param>
         /// <returns></returns>
-        string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle);
+        string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle);
 
         /// <summary>
         /// Adds an existing URL to the module for the given SessionID and RegionHandle
@@ -623,6 +623,6 @@ namespace OpenSim.Services.Interfaces
         /// <param name="uUID"></param>
         /// <param name="p"></param>
         /// <param name="oSD"></param>
-        void AddExistingUrlForClient(UUID SessionID, ulong RegionHandle, string url);
+        void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url);
     }
 }

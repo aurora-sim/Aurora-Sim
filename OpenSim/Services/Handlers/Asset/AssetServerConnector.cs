@@ -93,7 +93,7 @@ namespace OpenSim.Services
             get { return m_port; }
         }
 
-        public void AddExistingUrlForClient(UUID SessionID, ulong RegionHandle, string url)
+        public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
             
@@ -103,7 +103,7 @@ namespace OpenSim.Services
             server.AddStreamHandler(new AssetServerDeleteHandler(m_AssetService, m_allowDelete, url));
         }
 
-        public string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)
+        public string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
             string url = "/assets" + UUID.Random();

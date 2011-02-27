@@ -148,7 +148,7 @@ namespace OpenSim.Services
             get { return m_port; }
         }
 
-        public void AddExistingUrlForClient(UUID SessionID, ulong RegionHandle, string url)
+        public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
 
@@ -158,7 +158,7 @@ namespace OpenSim.Services
             server.AddHTTPHandler(String.Format("{0}/{1}/region-config", m_freeSwitchAPIPrefix, UUID.Random()), RegionConfigHTTPHandler);
         }
 
-        public string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)
+        public string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
         {
             string url = "/CAPS/EQMPOSTER" + UUID.Random();
 

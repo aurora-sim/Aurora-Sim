@@ -84,14 +84,14 @@ namespace OpenSim.Services
             get { return m_port; }
         }
 
-        public void AddExistingUrlForClient(UUID SessionID, ulong RegionHandle, string url)
+        public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
 
             server.AddStreamHandler(new UserAccountServerPostHandler(url, m_registry.RequestModuleInterface<IUserAccountService>()));
         }
 
-        public string GetUrlForRegisteringClient(UUID SessionID, ulong RegionHandle)
+        public string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
         {
             string url = "/accounts" + UUID.Random();
 
