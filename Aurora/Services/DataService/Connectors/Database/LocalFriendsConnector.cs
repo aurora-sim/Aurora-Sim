@@ -80,11 +80,14 @@ namespace Aurora.Services.DataService
                 values.Add(info.Friend);
                 values.Add(info.PrincipalID);
             }
-            query = GD.Query(keys.ToArray(), values.ToArray(), m_realm, "Flags");
-
-            for (int i = 0; i < query.Count; i++)
+            if (keys.Count != 0)
             {
-                infos[i].TheirFlags = int.Parse(query[i]);
+                query = GD.Query(keys.ToArray(), values.ToArray(), m_realm, "Flags");
+
+                for (int i = 0; i < query.Count; i++)
+                {
+                    infos[i].TheirFlags = int.Parse(query[i]);
+                }
             }
 
             return infos.ToArray();
