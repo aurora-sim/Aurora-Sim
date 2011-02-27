@@ -290,8 +290,11 @@ namespace Aurora.Services.DataService
                                 if (obj is Dictionary<string, object>)
                                 {
                                     Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
-                                    EstateSettings es = new EstateSettings(dictionary);
-                                    Estates.Add(es);
+                                    foreach (object objobj in dictionary.Values)
+                                    {
+                                        EstateSettings es = new EstateSettings(objobj as Dictionary<string, object>);
+                                        Estates.Add(es);
+                                    }
                                 }
                             }
                             return Estates;

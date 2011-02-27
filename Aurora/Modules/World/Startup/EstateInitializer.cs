@@ -36,11 +36,6 @@ namespace OpenSim.Region.CoreModules
                 IEstateConnector EstateConnector = DataManager.RequestPlugin<IEstateConnector>();
 
                 string name = MainConsole.Instance.CmdPrompt("Estate owner name", LastEstateOwner);
-                if (name.Length != 2)
-                {
-                    m_log.Warn("Please enter a valid name.");
-                    continue;
-                }
                 UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, name);
 
                 if (account == null)
