@@ -304,7 +304,7 @@ namespace OpenSim.Services.UserAccountService
                     {
                         success = m_AuthenticationService.SetPasswordHashed(account.PrincipalID, password);
                         if (!success)
-                            m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0} {1}.",
+                            m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0}.",
                                 name);
                     }
 
@@ -312,18 +312,18 @@ namespace OpenSim.Services.UserAccountService
                     {
                         success = m_InventoryService.CreateUserInventory(account.PrincipalID);
                         if (!success)
-                            m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to create inventory for account {0} {1}.",
+                            m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to create inventory for account {0}.",
                                 name);
                     }
 
-                    m_log.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} {1} created successfully", name);
+                    m_log.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} created successfully", name);
                 } else {
-                    m_log.ErrorFormat("[USER ACCOUNT SERVICE]: Account creation failed for account {0} {1}", name);
+                    m_log.ErrorFormat("[USER ACCOUNT SERVICE]: Account creation failed for account {0}", name);
                 }
             }
             else
             {
-                m_log.ErrorFormat("[USER ACCOUNT SERVICE]: A user with the name {0} {1} already exists!", name);
+                m_log.ErrorFormat("[USER ACCOUNT SERVICE]: A user with the name {0} already exists!", name);
             }
         }
     }
