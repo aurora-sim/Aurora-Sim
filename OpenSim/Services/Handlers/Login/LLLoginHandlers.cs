@@ -81,6 +81,7 @@ namespace OpenSim.Services
                 {
                     string first = requestData["first"].ToString();
                     string last = requestData["last"].ToString();
+                    string name = requestData["name"].ToString();
                     string passwd = requestData["passwd"].ToString();
                     string startLocation = string.Empty;
                     UUID scopeID = UUID.Zero;
@@ -119,11 +120,12 @@ namespace OpenSim.Services
                         tosExists = true;
                         tosAccepted = requestData["agree_to_tos"].ToString();
                     }
-                    reply = m_LocalService.VerifyClient(first, last, passwd, scopeID,
+                    string loginName = name == "" ? first + " " + last : name;
+                    reply = m_LocalService.VerifyClient(loginName, passwd, scopeID,
                         tosExists, tosAccepted, mac, clientVersion, out secureSessionID);
                     if (reply == null)
                     {
-                        reply = m_LocalService.Login(first, last, passwd, startLocation, scopeID, clientVersion, channel, mac, id0, remoteClient, requestData, secureSessionID);
+                        reply = m_LocalService.Login(loginName, passwd, startLocation, scopeID, clientVersion, channel, mac, id0, remoteClient, requestData, secureSessionID);
                     }
                     XmlRpcResponse response = new XmlRpcResponse();
                     response.Value = reply.ToHashtable();
@@ -202,11 +204,12 @@ namespace OpenSim.Services
                         tosExists = true;
                         tosAccepted = map["agree_to_tos"].ToString();
                     }
-                    reply = m_LocalService.VerifyClient(map["first"].AsString(), map["last"].AsString(), map["passwd"].AsString(), scopeID,
+                    string loginName = map["name"].AsString() == "" ? map["first"].AsString() + " " + map["last"].AsString() : map["name"].AsString();
+                    reply = m_LocalService.VerifyClient(loginName, map["passwd"].AsString(), scopeID,
                         tosExists, tosAccepted, "", "", out secureSessionID);
                     if (reply == null)
                     {
-                        reply = m_LocalService.Login(map["first"].AsString(), map["last"].AsString(), map["passwd"].AsString(), startLocation, scopeID,
+                        reply = m_LocalService.Login(loginName, map["passwd"].AsString(), startLocation, scopeID,
                             "", "", "", "", remoteClient, new Hashtable(), secureSessionID);
                     }
                     return reply.ToOSDMap();

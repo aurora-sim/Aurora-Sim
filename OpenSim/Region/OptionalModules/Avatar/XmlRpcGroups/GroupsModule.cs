@@ -529,8 +529,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                         if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: Received an accept invite notice.");
 
                         // and the sessionid is the role
-                        string[] name = inviteInfo.FromAgentName.Split(' ');
-                        UserAccount account = m_sceneList[0].UserAccountService.GetUserAccount(UUID.Zero, name[0], name[1]);
+                        UserAccount account = m_sceneList[0].UserAccountService.GetUserAccount(UUID.Zero, inviteInfo.FromAgentName);
                         if (account != null)
                         {
                             m_groupData.AddAgentToGroup(account.PrincipalID, inviteInfo.AgentID, inviteInfo.GroupID, inviteInfo.RoleID);

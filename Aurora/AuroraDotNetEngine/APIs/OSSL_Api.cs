@@ -1857,7 +1857,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osAvatarName2Key", m_host, "OSSL");
 
-            UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, firstname, lastname);
+            UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, firstname + " " + lastname);
             if (null == account)
             {
                 return UUID.Zero.ToString();

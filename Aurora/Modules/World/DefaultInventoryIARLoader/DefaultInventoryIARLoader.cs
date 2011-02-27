@@ -90,11 +90,9 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
             //Make the user account for the default IAR
             if (uinfo == null)
             {
-                m_log.Warn("Creating user " + m_service.LibraryOwnerName[0] + " " + m_service.LibraryOwnerName[1]);
-                m_MockScene.UserAccountService.CreateUser(m_service.LibraryOwnerName[0],
-                    m_service.LibraryOwnerName[1], "", "");
-                uinfo = m_MockScene.UserAccountService.GetUserAccount(UUID.Zero, m_service.LibraryOwnerName[0],
-                    m_service.LibraryOwnerName[1]);
+                m_log.Warn("Creating user " + m_service.LibraryOwnerName);
+                m_MockScene.UserAccountService.CreateUser(m_service.LibraryOwnerName, "", "");
+                uinfo = m_MockScene.UserAccountService.GetUserAccount(UUID.Zero, m_service.LibraryOwnerName);
                 m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID);
             }
 

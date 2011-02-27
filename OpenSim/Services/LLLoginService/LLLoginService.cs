@@ -276,15 +276,15 @@ namespace OpenSim.Services.LLLoginService
             return response;
         }
 
-        public LoginResponse VerifyClient(string firstName, string lastName, string passwd, UUID scopeID, bool tosExists, string tosAccepted, string mac, string clientVersion, out UUID secureSession)
+        public LoginResponse VerifyClient(string Name, string passwd, UUID scopeID, bool tosExists, string tosAccepted, string mac, string clientVersion, out UUID secureSession)
         {
             m_log.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0} {1}",
-                firstName, lastName);
+                Name);
 
             //
             // Get the account and check that it exists
             //
-            UserAccount account = m_UserAccountService.GetUserAccount(scopeID, firstName, lastName);
+            UserAccount account = m_UserAccountService.GetUserAccount(scopeID, Name);
             if (!passwd.StartsWith("$1$"))
                 passwd = "$1$" + Util.Md5Hash(passwd);
             passwd = passwd.Remove(0, 3); //remove $1$
@@ -299,8 +299,8 @@ namespace OpenSim.Services.LLLoginService
                 }
                 else
                 {
-                    m_UserAccountService.CreateUser(firstName, lastName, passwd, "");
-                    account = m_UserAccountService.GetUserAccount(scopeID, firstName, lastName);
+                    m_UserAccountService.CreateUser(Name, passwd, "");
+                    account = m_UserAccountService.GetUserAccount(scopeID, Name);
                 }
             }
 
@@ -403,16 +403,16 @@ namespace OpenSim.Services.LLLoginService
             return null;
         }
 
-        public LoginResponse Login(string firstName, string lastName, string passwd, string startLocation, UUID scopeID,
+        public LoginResponse Login(string Name, string passwd, string startLocation, UUID scopeID,
             string clientVersion, string channel, string mac, string id0, IPEndPoint clientIP, Hashtable requestData, UUID secureSession)
         {
             UUID session = UUID.Random();
 
             m_log.InfoFormat("[LLOGIN SERVICE]: Login request for {0} {1} from {2} with user agent {3} starting in {4}",
-                firstName, lastName, clientIP.Address.ToString(), clientVersion, startLocation);
+                Name, clientIP.Address.ToString(), clientVersion, startLocation);
             try
             {
-                UserAccount account = m_UserAccountService.GetUserAccount(scopeID, firstName, lastName);
+                UserAccount account = m_UserAccountService.GetUserAccount(scopeID, Name);
                 IAgentInfo agent = null;
 
                 IAgentConnector agentData = DataManager.RequestPlugin<IAgentConnector>();
@@ -446,7 +446,7 @@ namespace OpenSim.Services.LLLoginService
                     string archiveName = (UPI.AArchiveName != "" && UPI.AArchiveName != " ") ? UPI.AArchiveName : m_DefaultUserAvatarArchive;
                     if (UPI.IsNewUser && archiveName != "")
                     {
-                        archiver.LoadAvatarArchive(archiveName, account.FirstName, account.LastName);
+                        archiver.LoadAvatarArchive(archiveName, account.Name);
                         UPI.AArchiveName = "";
                     }
                     if (UPI.IsNewUser)
@@ -558,7 +558,7 @@ namespace OpenSim.Services.LLLoginService
                         {
                             m_log.Error("[LLoginService]: Cannot find an appearance for user " + account.Name +
                                 ", loading the default avatar from " + m_DefaultUserAvatarArchive + ".");
-                            archiver.LoadAvatarArchive(m_DefaultUserAvatarArchive, firstName, lastName);
+                            archiver.LoadAvatarArchive(m_DefaultUserAvatarArchive, account.Name);
                         }
                         else
                         {
@@ -658,7 +658,7 @@ namespace OpenSim.Services.LLLoginService
             }
             catch (Exception e)
             {
-                m_log.WarnFormat("[LLOGIN SERVICE]: Exception processing login for {0} {1}: {2}", firstName, lastName, e.ToString());
+                m_log.WarnFormat("[LLOGIN SERVICE]: Exception processing login for {0} {1}: {2}", Name, e.ToString());
                 return LLFailedLoginResponse.InternalError;
             }
             
@@ -1160,17 +1160,17 @@ namespace AvatarArchives
 
         protected void HandleLoadAvatarArchive(string module, string[] cmdparams)
         {
-            if (cmdparams.Length != 6)
+            if (cmdparams.Length < 5)
             {
                 m_log.Info("[AvatarArchive] Not enough parameters!");
                 return;
             }
-            LoadAvatarArchive(cmdparams[5], cmdparams[3], cmdparams[4]);
+            LoadAvatarArchive(cmdparams[5], cmdparams[3] + " " + cmdparams[4]);
         }
 
-        public void LoadAvatarArchive(string FileName, string First, string Last)
+        public void LoadAvatarArchive(string FileName, string Name)
         {
-            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, First, Last);
+            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, Name);
             m_log.Info("[AvatarArchive] Loading archive from " + FileName);
             if (account == null)
             {
@@ -1567,8 +1567,7 @@ namespace AvatarArchives
 
             Dictionary<string, object> results = replyData["result"] as Dictionary<string, object>;
             UserAccount UDA = new UserAccount();
-            UDA.FirstName = cmdparams[3];
-            UDA.LastName = cmdparams[4];
+            UDA.Name = cmdparams[3] + cmdparams[4];
             UDA.PrincipalID = UUID.Random();
             UDA.ScopeID = UUID.Zero;
             UDA.UserFlags = int.Parse(results["UserFlags"].ToString());

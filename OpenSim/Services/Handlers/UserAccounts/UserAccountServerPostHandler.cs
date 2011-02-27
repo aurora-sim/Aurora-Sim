@@ -123,10 +123,8 @@ namespace OpenSim.Services
                 if (UUID.TryParse(request["UserID"].ToString(), out userID))
                     account = m_UserAccountService.GetUserAccount(scopeID, userID);
             }
-
-            else if (request.ContainsKey("Email") && request["Email"] != null)
-                account = m_UserAccountService.GetUserAccount(scopeID, request["Email"].ToString());
-
+            else if (request.ContainsKey("Name") && request["Name"] != null)
+                account = m_UserAccountService.GetUserAccount(scopeID, request["Name"].ToString());
             else if (request.ContainsKey("FirstName") && request.ContainsKey("LastName") &&
                 request["FirstName"] != null && request["LastName"] != null)
                 account = m_UserAccountService.GetUserAccount(scopeID, request["FirstName"].ToString(), request["LastName"].ToString());

@@ -785,7 +785,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     m_log.Warn("Put in a valid username with a space inbetween.");
                     continue;
                 }
-                account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, userName.Split(' ')[0], userName.Split(' ')[1]);
+                account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, userName);
                 if(account != null)
                     fullSimParcel.LandData.OwnerID = account.PrincipalID;
             }

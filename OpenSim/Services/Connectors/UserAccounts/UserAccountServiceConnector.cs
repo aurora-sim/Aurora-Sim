@@ -69,7 +69,7 @@ namespace OpenSim.Services.Connectors
             return account;
         }
 
-        public virtual UserAccount GetUserAccount(UUID scopeID, string email)
+        public virtual UserAccount GetUserAccount(UUID scopeID, string name)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
             //sendData["SCOPEID"] = scopeID.ToString();
@@ -78,7 +78,7 @@ namespace OpenSim.Services.Connectors
             sendData["METHOD"] = "getaccount";
 
             sendData["ScopeID"] = scopeID;
-            sendData["Email"] = email;
+            sendData["Name"] = name;
 
             return SendAndGetReply(UUID.Zero, sendData);
         }
@@ -170,7 +170,7 @@ namespace OpenSim.Services.Connectors
             return accounts;
         }
 
-        public virtual void CreateUser(string firstName, string lastName, string password, string email)
+        public virtual void CreateUser(string name, string password, string email)
         {
         }
 

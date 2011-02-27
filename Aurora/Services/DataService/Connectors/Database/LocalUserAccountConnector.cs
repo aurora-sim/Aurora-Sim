@@ -54,14 +54,15 @@ namespace Aurora.Services.DataService
 
         private void ParseQuery(List<string> query, ref List<UserAccount> list)
         {
-            for (int i = 0; i < query.Count; i += 10)
+            for (int i = 0; i < query.Count; i += 11)
             {
                 UserAccount data = new UserAccount();
 
                 data.PrincipalID = UUID.Parse(query[i + 0]);
                 data.ScopeID = UUID.Parse(query[i + 1]);
-                data.FirstName = query[i + 2];
-                data.LastName = query[i + 3];
+                //We keep these even though we don't always use them because we might need to create the "Name" from them
+                string FirstName = query[i + 2];
+                string LastName = query[i + 3];
                 data.Email = query[i + 4];
 
                 string[] URLs = query[i + 5].Split(new char[] { ' ' });
@@ -83,6 +84,13 @@ namespace Aurora.Services.DataService
                 data.UserLevel = Int32.Parse(query[i + 7]);
                 data.UserFlags = Int32.Parse(query[i + 8]);
                 data.UserTitle = query[i + 9];
+                data.Name = query[i + 10];
+                if (data.Name == null || data.Name == "")
+                {
+                    data.Name = FirstName + " " + LastName;
+                    //Save the change!
+                    Store(data);
+                }
                 list.Add(data);
             }
         }
@@ -103,9 +111,9 @@ namespace Aurora.Services.DataService
             string serviceUrls = string.Join(" ", parts.ToArray());
 
             return GD.Replace(m_realm, new string[] { "PrincipalID", "ScopeID", "FirstName",
-                "LastName", "Email", "ServiceURLs", "Created", "UserLevel", "UserFlags", "UserTitle"}, new object[]{
+                "LastName", "Email", "ServiceURLs", "Created", "UserLevel", "UserFlags", "UserTitle","Name"}, new object[]{
                 data.PrincipalID, data.ScopeID, data.FirstName, data.LastName, data.Email,
-                serviceUrls, data.Created, data.UserLevel, data.UserFlags, data.UserTitle});
+                serviceUrls, data.Created, data.UserLevel, data.UserFlags, data.UserTitle, data.Name});
         }
 
         public bool Delete(string field, string val)
@@ -135,7 +143,9 @@ namespace Aurora.Services.DataService
             if (words.Length > 2)
                 return new UserAccount[0];
 
-            List<string> retVal = GD.Query("(ScopeID='" + scopeID + "' or ScopeID='00000000-0000-0000-0000-000000000000') and (FirstName like '%" + words[0] + "%' " + 
+            List<string> retVal = GD.Query("(ScopeID='" + scopeID + "' or ScopeID='00000000-0000-0000-0000-000000000000') " +
+                "and (Name like '%" + query + "%' or " + 
+                "FirstName like '%" + words[0] + "%' " + 
                 ((words.Length == 1) ? 
                     " or LastName like '%" + words[0]
                     : " and LastName like '%" + words[1])

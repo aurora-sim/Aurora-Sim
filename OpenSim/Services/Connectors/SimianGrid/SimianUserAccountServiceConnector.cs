@@ -109,12 +109,12 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return GetUser(requestArgs);
         }
 
-        public UserAccount GetUserAccount(UUID scopeID, string email)
+        public UserAccount GetUserAccount(UUID scopeID, string name)
         {
             NameValueCollection requestArgs = new NameValueCollection
             {
                 { "RequestMethod", "GetUser" },
-                { "Email", email }
+                { "Name", name }
             };
 
             return GetUser(requestArgs);
@@ -233,7 +233,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return false;
         }
 
-        public void CreateUser(string firstName, string lastName, string password, string email)
+        public void CreateUser(string name, string password, string email)
         {
         }
 
@@ -282,7 +282,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             account.UserFlags = response["UserFlags"].AsInteger();
             account.UserLevel = response["AccessLevel"].AsInteger();
             account.UserTitle = response["UserTitle"].AsString();
-            GetFirstLastName(response["Name"].AsString(), out account.FirstName, out account.LastName);
+            account.Name = response["Name"].AsString();
 
             // Cache the user account info
             m_accountCache.AddOrUpdate(account.PrincipalID, account, CACHE_EXPIRATION_SECONDS);

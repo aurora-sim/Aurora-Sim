@@ -60,7 +60,7 @@ namespace OpenSim.Services.LLLoginService
         public static string Redirect = "redirect"; //Redirect! TBA!
     }
 
-    public class LLFailedLoginResponse : FailedLoginResponse
+    public class LLFailedLoginResponse : LoginResponse
     {
         protected string m_key;
         protected string m_value;

@@ -81,12 +81,12 @@ namespace Aurora.Modules
                 m_log.Info("[AvatarArchive] Not enough parameters!");
 				return;
 			}
-			LoadAvatarArchive(cmdparams[5], cmdparams[3], cmdparams[4]);
+			LoadAvatarArchive(cmdparams[5], cmdparams[3] + " " + cmdparams[4]);
 		}
 
-        public void LoadAvatarArchive(string FileName, string First, string Last)
+        public void LoadAvatarArchive(string FileName, string Name)
         {
-            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, First, Last);
+            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, Name);
             m_log.Info("[AvatarArchive] Loading archive from " + FileName);
             if (account == null)
             {
@@ -220,7 +220,7 @@ namespace Aurora.Modules
             {
                 m_log.Info("[AvatarArchive] Not enough parameters!");
             }
-            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
+            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3] + " " + cmdparams[4]);
             if (account == null)
             {
                 m_log.Error("[AvatarArchive] User not found!");

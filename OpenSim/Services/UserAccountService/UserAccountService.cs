@@ -124,31 +124,31 @@ namespace OpenSim.Services.UserAccountService
             return d[0];
         }
 
-        public UserAccount GetUserAccount(UUID scopeID, string email)
+        public UserAccount GetUserAccount(UUID scopeID, string name)
         {
             UserAccount[] d;
 
             if (scopeID != UUID.Zero)
             {
                 d = m_Database.Get(
-                        new string[] { "ScopeID", "Email" },
-                        new string[] { scopeID.ToString(), email });
-                if (d.Length < 1)
-                {
-                    d = m_Database.Get(
-                            new string[] { "ScopeID", "Email" },
-                            new string[] { UUID.Zero.ToString(), email });
-                }
+                        new string[] { "ScopeID", "Name" },
+                        new string[] { scopeID.ToString(), name });
             }
             else
             {
                 d = m_Database.Get(
-                        new string[] { "Email" },
-                        new string[] { email });
+                        new string[] { "Name" },
+                        new string[] { name });
             }
 
             if (d.Length < 1)
+            {
+                string[] split = name.Split(' ');
+                if (split.Length == 2)
+                    return GetUserAccount(scopeID, split[0], split[1]);
+                
                 return null;
+            }
 
             return d[0];
         }
@@ -238,7 +238,7 @@ namespace OpenSim.Services.UserAccountService
                 email = MainConsole.Instance.CmdPrompt("Email", "");
             else email = cmdparams[5];
 
-            CreateUser(firstName, lastName, Util.Md5Hash(password), email);
+            CreateUser(firstName + " " + lastName, Util.Md5Hash(password), email);
         }
 
         protected void HandleResetUserPassword(string module, string[] cmdparams)
@@ -282,12 +282,12 @@ namespace OpenSim.Services.UserAccountService
         /// <param name="lastName"></param>
         /// <param name="password"></param>
         /// <param name="email"></param>
-        public void CreateUser(string firstName, string lastName, string password, string email)
+        public void CreateUser(string name, string password, string email)
         {
-            UserAccount account = GetUserAccount(UUID.Zero, firstName, lastName);
+            UserAccount account = GetUserAccount(UUID.Zero, name);
             if (null == account)
             {
-                account = new UserAccount(UUID.Zero, firstName, lastName, email);
+                account = new UserAccount(UUID.Zero, name, email);
                 if (account.ServiceURLs == null || (account.ServiceURLs != null && account.ServiceURLs.Count == 0))
                 {
                     account.ServiceURLs = new Dictionary<string, object>();
@@ -305,7 +305,7 @@ namespace OpenSim.Services.UserAccountService
                         success = m_AuthenticationService.SetPasswordHashed(account.PrincipalID, password);
                         if (!success)
                             m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0} {1}.",
-                                firstName, lastName);
+                                name);
                     }
 
                     if (m_InventoryService != null)
@@ -313,17 +313,17 @@ namespace OpenSim.Services.UserAccountService
                         success = m_InventoryService.CreateUserInventory(account.PrincipalID);
                         if (!success)
                             m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to create inventory for account {0} {1}.",
-                                firstName, lastName);
+                                name);
                     }
 
-                    m_log.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} {1} created successfully", firstName, lastName);
+                    m_log.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} {1} created successfully", name);
                 } else {
-                    m_log.ErrorFormat("[USER ACCOUNT SERVICE]: Account creation failed for account {0} {1}", firstName, lastName);
+                    m_log.ErrorFormat("[USER ACCOUNT SERVICE]: Account creation failed for account {0} {1}", name);
                 }
             }
             else
             {
-                m_log.ErrorFormat("[USER ACCOUNT SERVICE]: A user with the name {0} {1} already exists!", firstName, lastName);
+                m_log.ErrorFormat("[USER ACCOUNT SERVICE]: A user with the name {0} {1} already exists!", name);
             }
         }
     }

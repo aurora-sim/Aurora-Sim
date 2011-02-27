@@ -35,27 +35,26 @@ namespace OpenSim.Region.CoreModules
             {
                 IEstateConnector EstateConnector = DataManager.RequestPlugin<IEstateConnector>();
 
-                string[] name = MainConsole.Instance.CmdPrompt("Estate owner name", LastEstateOwner).Split(' ');
+                string name = MainConsole.Instance.CmdPrompt("Estate owner name", LastEstateOwner);
                 if (name.Length != 2)
                 {
                     m_log.Warn("Please enter a valid name.");
                     continue;
                 }
-                UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, name[0], name[1]);
+                UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, name);
 
                 if (account == null)
                 {
-                    string fullName = name[0] + " " + name[1];
-                    string createNewUser = MainConsole.Instance.CmdPrompt("Could not find user " + fullName + ". Would you like to create this user?", "yes");
+                    string createNewUser = MainConsole.Instance.CmdPrompt("Could not find user " + name + ". Would you like to create this user?", "yes");
 
                     if (createNewUser == "yes")
                     {
                         // Create a new account
-                        string password = MainConsole.Instance.PasswdPrompt(fullName + "'s password");
-                        string email = MainConsole.Instance.CmdPrompt(fullName + "'s email", "");
+                        string password = MainConsole.Instance.PasswdPrompt(name + "'s password");
+                        string email = MainConsole.Instance.CmdPrompt(name + "'s email", "");
 
-                        scene.UserAccountService.CreateUser(name[0], name[1], Util.Md5Hash(password), email);
-                        account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, name[0], name[1]);
+                        scene.UserAccountService.CreateUser(name, Util.Md5Hash(password), email);
+                        account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, name);
 
                         if (account == null)
                         {

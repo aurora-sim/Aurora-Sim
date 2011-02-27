@@ -89,8 +89,7 @@ namespace Aurora.Modules
 
             Dictionary<string, object> results = replyData["result"] as Dictionary<string, object>;
             UserAccount UDA = new UserAccount();
-            UDA.FirstName = cmdparams[3];
-            UDA.LastName = cmdparams[4];
+            UDA.Name = cmdparams[3] + cmdparams[4];
             UDA.PrincipalID = UUID.Random();
             UDA.ScopeID = UUID.Zero;
             UDA.UserFlags = int.Parse(results["UserFlags"].ToString());
@@ -137,7 +136,7 @@ namespace Aurora.Modules
                 m_log.Info("[AvatarProfileArchiver] Not enough parameters!");
                 return;
             }
-            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
+            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3] + " " + cmdparams[4]);
             if (account == null)
             {
                 m_log.Info("Account could not be found, stopping now.");

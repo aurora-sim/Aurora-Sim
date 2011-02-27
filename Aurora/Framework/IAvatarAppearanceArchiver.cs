@@ -13,8 +13,7 @@ namespace Aurora.Framework
         /// Updates an avatars appearance from the saved AvatarArchive in the database.
         /// </summary>
         /// <param name="FileName"></param>
-        /// <param name="First"></param>
-        /// <param name="Last"></param>
-		void LoadAvatarArchive(string FileName, string First, string Last);
+        /// <param name="Name"></param>
+        void LoadAvatarArchive(string FileName, string Name);
 	}
 }

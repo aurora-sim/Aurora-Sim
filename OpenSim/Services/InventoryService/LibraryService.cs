@@ -54,7 +54,7 @@ namespace OpenSim.Services.InventoryService
 
         private UUID libOwner = new UUID("11111111-1111-0000-0000-000100bba000");
 
-        private string[] libOwnerName = new string[2] { "Library", "Owner"};
+        private string libOwnerName = "Library Owner";
         private string pLibName = "Aurora Library";
         private bool m_enabled = false;
 
@@ -68,7 +68,7 @@ namespace OpenSim.Services.InventoryService
             get { return libOwner; }
         }
 
-        public string[] LibraryOwnerName
+        public string LibraryOwnerName
         {
             get { return libOwnerName; }
         }
@@ -87,14 +87,7 @@ namespace OpenSim.Services.InventoryService
             {
                 m_enabled = true;
                 pLibName = libConfig.GetString("LibraryName", pLibName);
-                pLibOwnerName = libConfig.GetString("LibraryOwnerName", pLibOwnerName);
-            }
-
-            libOwnerName = pLibOwnerName.Split(' ');
-            if (libOwnerName.Length != 2)
-            {
-                //Reset it if it isn't the right length
-                libOwnerName = new string[2] { "Library", "Owner" };
+                libOwnerName = libConfig.GetString("LibraryOwnerName", pLibOwnerName);
             }
 
             //m_log.Debug("[LIBRARY]: Starting library service...");
@@ -158,8 +151,7 @@ namespace OpenSim.Services.InventoryService
             if (uinfo == null)
             {
                 uinfo = new UserAccount(LibraryOwner);
-                uinfo.FirstName = LibraryOwnerName[0];
-                uinfo.LastName = LibraryOwnerName[1];
+                uinfo.Name = LibraryOwnerName;
                 uinfo.Email = "";
                 uinfo.ServiceURLs = new Dictionary<string, object>();
                 uinfo.UserLevel = 0;

@@ -114,7 +114,7 @@ namespace OpenSim.Services
             UUID secureSessionID;
             UUID userID = UUID.Zero;
 
-            LoginResponse loginresp = loginService.VerifyClient(FirstName, LastName, Password, UUID.Zero, false, "", "", "", out secureSessionID);
+            LoginResponse loginresp = loginService.VerifyClient(FirstName + " " + LastName, Password, UUID.Zero, false, "", "", "", out secureSessionID);
             //Null means it went through without an error
             Verified = loginresp == null;
 
@@ -284,7 +284,7 @@ namespace OpenSim.Services
                     if (user == null)
                     {
                         //The pass is in plain text... so put it in and create the account
-                        accountService.CreateUser(username, lastName, password, email);
+                        accountService.CreateUser(username + " " + lastName, password, email);
                         DateTime time = DateTime.ParseExact(dob, "YYYY-MM-DD", System.Globalization.CultureInfo.InvariantCulture);
                         user = accountService.GetUserAccount(UUID.Zero, username, lastName);
                         //Update the dob

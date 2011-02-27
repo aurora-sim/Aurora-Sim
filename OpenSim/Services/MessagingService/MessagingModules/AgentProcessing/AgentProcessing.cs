@@ -238,12 +238,12 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             INeighborService neighborService = m_registry.RequestModuleInterface<INeighborService>();
             if (neighborService != null)
             {
-                uint x, y;
-                Utils.LongToUInts(requestingRegion, out x, out y);
-                GridRegion ourRegion = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
+                int x, y;
+                Util.UlongToInts(requestingRegion, out x, out y);
+                GridRegion ourRegion = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, x, y);
                 if (ourRegion == null)
                 {
-                    m_log.Info("[EQMService]: Failed to inform neighbors about new agent, could not find our region. ");
+                    m_log.Info("[EQMService]: Failed to inform neighbors about new agent, could not find our region.");
                     return false;
                 }
                 List<GridRegion> neighbors = neighborService.GetNeighbors(ourRegion, DrawDistance);

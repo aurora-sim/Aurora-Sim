@@ -560,8 +560,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public string aaAvatarFullName2Key(string fullname)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAAvatarFullName2Key", m_host, "AA");
-            string[] Split = fullname.Split(new Char[] { ' ' });
-            UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, Split[0], Split[1]);
+            UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, fullname);
 
             if (null == account)
                 return UUID.Zero.ToString();

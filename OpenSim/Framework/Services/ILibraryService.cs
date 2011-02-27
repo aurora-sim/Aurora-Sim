@@ -39,7 +39,7 @@ namespace OpenSim.Services.Interfaces
 
         UUID LibraryOwner { get; }
 
-        string[] LibraryOwnerName { get; }
+        string LibraryOwnerName { get; }
         string LibraryName { get; }
 
         Dictionary<UUID, InventoryFolderImpl> GetAllFolders();

@@ -44,19 +44,17 @@ namespace OpenSim.Services.Interfaces
             PrincipalID = principalID;
         }
 
-        public UserAccount(UUID scopeID, string firstName, string lastName, string email)
+        public UserAccount(UUID scopeID, string name, string email)
         {
             PrincipalID = UUID.Random();
             ScopeID = scopeID;
-            FirstName = firstName;
-            LastName = lastName;
+            Name = name;
             Email = email;
             ServiceURLs = new Dictionary<string, object>();
             Created = Util.UnixTimeSinceEpoch();
         }
 
-        public string FirstName;
-        public string LastName;
+        public string Name;
         public string Email;
         public UUID PrincipalID;
         public UUID ScopeID;
@@ -68,17 +66,28 @@ namespace OpenSim.Services.Interfaces
 
         public int Created;
 
-        public string Name
+        public string FirstName
         {
-            get { return FirstName + " " + LastName; }
+            get { return Name.Split(' ')[0]; }
+        }
+
+        public string LastName
+        {
+            get
+            {
+                string[] split = Name.Split(' ');
+                if (split.Length > 1)
+                    return Name.Split(' ')[1];
+                else return "";
+            }
         }
 
         public UserAccount(Dictionary<string, object> kvp)
         {
-            if (kvp.ContainsKey("FirstName"))
-                FirstName = kvp["FirstName"].ToString();
-            if (kvp.ContainsKey("LastName"))
-                LastName = kvp["LastName"].ToString();
+            if (kvp.ContainsKey("FirstName") && kvp.ContainsKey("LastName"))
+                Name = kvp["FirstName"].ToString() + " " + kvp["LastName"].ToString();
+            if (kvp.ContainsKey("Name"))
+                Name = kvp["Name"].ToString();
             if (kvp.ContainsKey("Email"))
                 Email = kvp["Email"].ToString();
             if (kvp.ContainsKey("PrincipalID"))
@@ -157,12 +166,12 @@ namespace OpenSim.Services.Interfaces
         UserAccount GetUserAccount(UUID scopeID, string FirstName, string LastName);
 
         /// <summary>
-        /// Get a user given by an email address
+        /// Get a user given by its full name
         /// </summary>
         /// <param name="scopeID"></param>
         /// <param name="Email"></param>
         /// <returns></returns>
-        UserAccount GetUserAccount(UUID scopeID, string Email);
+        UserAccount GetUserAccount(UUID scopeID, string Name);
 
         /// <summary>
         /// Returns the list of avatars that matches both the search criterion and the scope ID passed
@@ -182,11 +191,10 @@ namespace OpenSim.Services.Interfaces
         /// <summary>
         /// Create the user with the given info
         /// </summary>
-        /// <param name="firstName"></param>
-        /// <param name="lastName"></param>
+        /// <param name="name"></param>
         /// <param name="md5password">MD5 hashed password</param>
         /// <param name="email"></param>
-        void CreateUser(string firstName, string lastName, string md5password, string email);
+        void CreateUser(string name, string md5password, string email);
     }
 
     /// <summary>
