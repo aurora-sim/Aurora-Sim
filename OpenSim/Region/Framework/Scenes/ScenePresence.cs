@@ -2420,22 +2420,20 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         List<GridRegion> neighbors = neighborService.GetNeighbors(Scene.RegionInfo);
 
-                        int RegionCrossX = Scene.RegionInfo.RegionLocX;
-                        int RegionCrossY = Scene.RegionInfo.RegionLocY;
+                        float TargetX = (float)Scene.RegionInfo.RegionLocX + pos2.X;
+                        float TargetY = (float)Scene.RegionInfo.RegionLocY + pos2.Y;
 
-                        if (pos2.X < 0f) RegionCrossX -= Constants.RegionSize;
-                        if (pos2.Y < 0f) RegionCrossY -= Constants.RegionSize;
-                        if (pos2.X > Scene.RegionInfo.RegionSizeX) RegionCrossX += (int)Scene.RegionInfo.RegionSizeX;
-                        if (pos2.Y > Scene.RegionInfo.RegionSizeY) RegionCrossY += (int)Scene.RegionInfo.RegionSizeY;
                         GridRegion neighborRegion = null;
 
                         foreach (GridRegion region in neighbors)
                         {
-                            if (region.RegionLocX == RegionCrossX &&
-                                region.RegionLocY == RegionCrossY)
+                        if (TargetX > region.RegionLocX
+                            && TargetY > region.RegionLocY
+                            && TargetX < region.RegionLocX + region.RegionSizeX
+                            && TargetY < region.RegionLocY + region.RegionSizeY)
                             {
-                                neighborRegion = region;
-                                break;
+                            neighborRegion = region;
+                            break;
                             }
                         }
 
@@ -2443,6 +2441,7 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             InTransit();
                             bool isFlying = false;
+
                             if (m_physicsActor != null)
                                 isFlying = m_physicsActor.Flying;
 
@@ -2453,7 +2452,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 m_log.DebugFormat("[ScenePresence]: Unable to cross agent to neighbouring region, because there is no AgentTransferModule");
                         }
                         else
-                            m_log.Debug("[ScenePresence]: Could not find region for " + Name + " to cross into @ {" + RegionCrossX / 256 + ", " + RegionCrossY / 256 + "}");
+                            m_log.Debug("[ScenePresence]: Could not find region for " + Name + " to cross into @ {" + TargetX / 256 + ", " + TargetY / 256 + "}");
                     }
                 }
             }
