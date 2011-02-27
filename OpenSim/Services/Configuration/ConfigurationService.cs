@@ -99,6 +99,7 @@ namespace OpenSim.Services.ConfigurationService
                 GetConfigFor("InventoryServerURI", request);
                 GetConfigFor("AvatarServerURI", request);
                 GetConfigFor("PresenceServerURI", request);
+                GetConfigFor("UserInfoServerURI", request);
                 GetConfigFor("UserAccountServerURI", request);
                 GetConfigFor("AuthenticationServerURI", request);
                 GetConfigFor("FriendsServerURI", request);

@@ -262,7 +262,9 @@ namespace OpenSim.Framework
         public UUID PreyAgent;
         public Byte AgentAccess;
         public UUID ActiveGroupID;
-        public bool SentInitialWearables;
+        public bool SentInitialWearables; 
+        //Evil... only for OpenSim...
+        public string CallbackURI;
 
         public AgentGroupData[] Groups;
         public Animation[] Anims;
@@ -457,6 +459,9 @@ namespace OpenSim.Framework
 
             if (args["prey_agent"] != null)
                 PreyAgent = args["prey_agent"].AsUUID();
+
+            if (args["callback_uri"] != null)
+                CallbackURI = args["callback_uri"].AsString();
 
             if (args["agent_access"] != null)
                 Byte.TryParse(args["agent_access"].AsString(), out AgentAccess);

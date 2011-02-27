@@ -206,6 +206,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         private const int NumMovementsBetweenRayCast = 5;
 
+        public string m_callbackURI = null;
+
         private bool CameraConstraintActive;
         //private int m_moveToPositionStateStatus;
         //*****************************************************
@@ -2608,6 +2610,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             try
             {
+                m_callbackURI = cAgent.CallbackURI;
                 m_pos = cAgent.Position;
                 Velocity = cAgent.Velocity;
                 m_CameraCenter = cAgent.Center;

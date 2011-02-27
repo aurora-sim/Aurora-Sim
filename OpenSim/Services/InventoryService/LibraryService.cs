@@ -168,6 +168,12 @@ namespace OpenSim.Services.InventoryService
                 uinfo.UserTitle = "";
                 UserAccountService.StoreUserAccount(uinfo);
                 InventoryService.CreateUserInventory(uinfo.PrincipalID);
+                uinfo = UserAccountService.GetUserAccount(UUID.Zero, LibraryOwner);
+                if (uinfo == null)
+                {
+                    //Grid mode, can't create the user... leave
+                    return;
+                }
             }
             InventoryCollection col = InventoryService.GetFolderContent(LibraryOwner, UUID.Zero);
             foreach (InventoryFolderBase folder in col.Folders)

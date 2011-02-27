@@ -624,7 +624,7 @@ namespace OpenSim.Region.Framework.Scenes
             IConfigurationService configService = RequestModuleInterface<IConfigurationService>();
             if(configService != null && agent.OtherInformation.ContainsKey("UserUrls"))
             {
-                 configService .AddNewUrls(agent.AgentID.ToString(), (OSDMap)agent.OtherInformation["UserUrls"]);
+                 configService.AddNewUrls(agent.AgentID.ToString(), (OSDMap)agent.OtherInformation["UserUrls"]);
             }
 
             OSDMap responseMap = new OSDMap();
@@ -635,6 +635,11 @@ namespace OpenSim.Region.Framework.Scenes
 
             //Add the circuit at the end
             AuthenticateHandler.AddNewCircuit(agent.circuitcode, agent);
+
+            OSDMap eventMap = responseMap;
+            responseMap["Agent"] = agent.PackAgentCircuitData();
+
+            AuroraEventManager.FireGenericEventHandler("NewUserConnection", eventMap);
 
             m_log.InfoFormat(
                 "[ConnectionBegin]: Region {0} authenticated and authorized incoming {1} agent {2} (circuit code {3})",

@@ -42,6 +42,8 @@ namespace Aurora.Framework
         ///      param is a UserInfo
         /// PreRegisterRegion - A region is about to be registered
         ///      param is a GridRegion
+        /// NewUserConnection - A new user has been added to the scene (child or root)
+        ///      param is the OSDMap that will be returned to the server
         /// 
         /// </summary>
         public event OnGenericEventHandler OnGenericEvent;
