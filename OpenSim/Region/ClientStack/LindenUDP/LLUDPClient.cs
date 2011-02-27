@@ -426,8 +426,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             int i = m_lastthrottleCategoryChecked;
             for (int j = 0; j < (int)ThrottleOutPacketType.OutBand; j++) // don't check OutBand
                 {
-                if (++i >= (int)ThrottleOutPacketType.OutBand)
-                    i = 0;
 
                 bucket = m_throttleCategories[i];
                 //queueDebugOutput += m_packetOutboxes[i].Count + " ";  // Serious debug business
@@ -482,6 +480,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         emptyCategories |= CategoryToFlag(i);
                         }
                     }
+
+                if (++i >= (int)ThrottleOutPacketType.OutBand)
+                    i = 0;
+
                 if (--npacksTosent == 0)
                     break;
                 }
