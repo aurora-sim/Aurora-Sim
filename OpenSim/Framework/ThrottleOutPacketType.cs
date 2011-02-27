@@ -33,7 +33,7 @@ namespace OpenSim.Framework
     {
         /// <summary>Unthrottled packets</summary>
     //        Unknown = -1,  hack forcing unknown to State
-        Unknown = 7,
+        Unknown = 9,
         /// <summary>Packets that are being resent</summary>
         Resend = 0,
         /// <summary>Terrain data</summary>
