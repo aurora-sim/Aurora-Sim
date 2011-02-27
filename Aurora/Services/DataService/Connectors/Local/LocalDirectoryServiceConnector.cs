@@ -28,7 +28,7 @@ namespace Aurora.Services.DataService
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
                 minTimeBeforeNextParcelUpdate = source.Configs[Name].GetInt("MinUpdateTimeForParcels", minTimeBeforeNextParcelUpdate);
             }
-            GD.ConnectToDatabase(defaultConnectionString, "Directory");
+            GD.ConnectToDatabase(defaultConnectionString, "Directory", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
             DataManager.DataManager.RegisterPlugin(Name+"Local", this);
 

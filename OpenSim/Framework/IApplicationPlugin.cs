@@ -200,7 +200,7 @@ namespace Aurora.Framework
         /// Connects to the database and then performs migrations
         /// </summary>
         /// <param name="connectionString"></param>
-        void ConnectToDatabase(string connectionString, string migrationName);
+        void ConnectToDatabase(string connectionString, string migrationName, bool validateTables);
 
         /// <summary>
         /// Makes a copy of the IGenericData plugin

@@ -26,12 +26,12 @@ namespace Aurora.DataManager.SQLite
             get { return "SQLiteConnector"; }
         }
 
-        public override void ConnectToDatabase(string connectionString, string migratorName)
+        public override void ConnectToDatabase(string connectionString, string migratorName, bool validateTables)
         {
             m_Connection = new SqliteConnection(connectionString);
             m_Connection.Open();
 
-            var migrationManager = new MigrationManager(this, migratorName);
+            var migrationManager = new MigrationManager(this, migratorName, validateTables);
             migrationManager.DetermineOperation();
             migrationManager.ExecuteOperation();
         }

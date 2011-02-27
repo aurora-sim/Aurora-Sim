@@ -15,11 +15,13 @@ namespace Aurora.DataManager.Migration
         private IRestorePoint restorePoint;
         private bool rollback;
         private string migratorName;
+        private bool validateTables;
 
-        public MigrationManager(IDataConnector genericData, string migratorName)
+        public MigrationManager(IDataConnector genericData, string migratorName, bool validateTables)
         {
             this.genericData = genericData;
             this.migratorName = migratorName;
+            this.validateTables = validateTables;
             List<IMigrator> allMigrators = Aurora.Framework.AuroraModuleLoader.PickupModules<IMigrator>();
             foreach (IMigrator m in allMigrators)
             {
@@ -118,12 +120,16 @@ namespace Aurora.DataManager.Migration
                     executed = true;
                 }
 
-                //lets first validate where we think we are
-                bool validated = currentMigrator.Validate(genericData);
-
-                if (!validated)
+                if (validateTables)
                 {
-                    throw new MigrationOperationException(string.Format("Current version {0} did not validate. Stopping here so we don't cause any trouble. No changes were made.", currentMigrator.Version));
+
+                    //lets first validate where we think we are
+                    bool validated = currentMigrator.Validate(genericData);
+
+                    if (!validated)
+                    {
+                        throw new MigrationOperationException(string.Format("Current version {0} did not validate. Stopping here so we don't cause any trouble. No changes were made.", currentMigrator.Version));
+                    }
                 }
 
                 bool restoreTaken = false;
@@ -133,9 +139,12 @@ namespace Aurora.DataManager.Migration
                 //only restore if we are going to do something
                 if (executingMigrator != null)
                 {
-                    //prepare restore point if something goes wrong
-                    restorePoint = currentMigrator.PrepareRestorePoint(genericData);
-                    restoreTaken = true;
+                    if (validateTables)
+                    {
+                        //prepare restore point if something goes wrong
+                        restorePoint = currentMigrator.PrepareRestorePoint(genericData);
+                        restoreTaken = true;
+                    }
                 }
 
 
@@ -150,13 +159,16 @@ namespace Aurora.DataManager.Migration
                         
                     }
                     executed = true;
-                    validated = executingMigrator.Validate(genericData);
-
-                    //if it doesn't validate, rollback
-                    if (!validated)
+                    if (validateTables)
                     {
-                        RollBackOperation();
-                        throw new MigrationOperationException(string.Format("Migrating to version {0} did not validate. Restoring to restore point.", currentMigrator.Version));
+                        bool validated = executingMigrator.Validate(genericData);
+
+                        //if it doesn't validate, rollback
+                        if (!validated)
+                        {
+                            RollBackOperation();
+                            throw new MigrationOperationException(string.Format("Migrating to version {0} did not validate. Restoring to restore point.", currentMigrator.Version));
+                        }
                     }
 
                     if( executingMigrator.Version == operationDescription.EndVersion )
