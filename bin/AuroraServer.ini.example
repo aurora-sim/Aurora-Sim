@@ -1,5 +1,7 @@
 [Network]
     http_listener_port = 8003
+    ;; 127.0.0.1 should be your IP address or DNS
+    HostName = http://127.0.0.1
 
 [LibraryService]
     ;;  Set this if you want to change the name of the Aurora Library
