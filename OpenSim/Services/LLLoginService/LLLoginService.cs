@@ -51,12 +51,6 @@ using AvatarArchives;
 
 namespace OpenSim.Services.LLLoginService
 {
-    public interface ILoginModule
-    {
-        void Initialize(LLLoginService service, IConfigSource config, IUserAccountService UAService);
-        bool Login(Hashtable request, UUID User, out string message);
-    }
-
     public class LLLoginService : ILoginService, IService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

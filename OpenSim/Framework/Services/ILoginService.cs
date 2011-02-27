@@ -32,6 +32,7 @@ using System.Net;
 
 using OpenMetaverse.StructuredData;
 using OpenMetaverse;
+using Nini.Config;
 
 namespace OpenSim.Services.Interfaces
 {
@@ -39,6 +40,12 @@ namespace OpenSim.Services.Interfaces
     {
         public abstract Hashtable ToHashtable();
         public abstract OSD ToOSDMap();
+    }
+
+    public interface ILoginModule
+    {
+        void Initialize(ILoginService service, IConfigSource config, IUserAccountService UAService);
+        bool Login(Hashtable request, UUID User, out string message);
     }
 
     public interface ILoginService

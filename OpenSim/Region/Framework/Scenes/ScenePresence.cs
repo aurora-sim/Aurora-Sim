@@ -842,19 +842,12 @@ namespace OpenSim.Region.Framework.Scenes
             else
                 Animator.ResetAnimations();
 
-
-//            m_log.DebugFormat(
-//                 "[SCENEPRESENCE]: Downgrading root agent {0}, {1} to a child agent in {2}",
-//                 Name, UUID, m_scene.RegionInfo.RegionName);
-
-            // Don't zero out the velocity since this can cause problems when an avatar is making a region crossing,
-            // depending on the exact timing.  This shouldn't matter anyway since child agent positions are not updated.
-            //Velocity = new Vector3(0, 0, 0);
+            m_log.DebugFormat(
+                 "[SCENEPRESENCE]: Downgrading root agent {0}, {1} to a child agent in {2}",
+                 Name, UUID, m_scene.RegionInfo.RegionName);
 
             IsChildAgent = true;
             RemoveFromPhysicalScene();
-
-            // FIXME: Set m_rootRegionHandle to the region handle of the scene this agent is moving into
 
             IAttachmentsModule attMod = Scene.RequestModuleInterface<IAttachmentsModule>();
             if (attMod != null)
@@ -2419,10 +2412,14 @@ namespace OpenSim.Region.Framework.Scenes
                         int RegionCrossX = Scene.RegionInfo.RegionLocX;
                         int RegionCrossY = Scene.RegionInfo.RegionLocY;
 
-                        if (pos2.X < 0f) RegionCrossX -= Constants.RegionSize;
-                        if (pos2.Y < 0f) RegionCrossY -= Constants.RegionSize;
-                        if (pos2.X > Scene.RegionInfo.RegionSizeX) RegionCrossX += (int)Scene.RegionInfo.RegionSizeX;
-                        if (pos2.Y > Scene.RegionInfo.RegionSizeY) RegionCrossY += (int)Scene.RegionInfo.RegionSizeY;
+                        if (pos2.X < 0f) 
+                            RegionCrossX -= Constants.RegionSize;
+                        if (pos2.Y < 0f)
+                            RegionCrossY -= Constants.RegionSize;
+                        if (pos2.X > Scene.RegionInfo.RegionSizeX) 
+                            RegionCrossX += (int)Scene.RegionInfo.RegionSizeX;
+                        if (pos2.Y > Scene.RegionInfo.RegionSizeY)
+                            RegionCrossY += (int)Scene.RegionInfo.RegionSizeY;
                         GridRegion neighborRegion = null;
 
                         foreach (GridRegion region in neighbors)
