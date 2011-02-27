@@ -440,7 +440,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 packet.Header.Reliable = false;
                 packet.Packets = blocks.ToArray();
 
-                SendPacket(udpClient, packet, ThrottleOutPacketType.Unknown, true);
+                SendPacket(udpClient, packet, ThrottleOutPacketType.OutBand, true);
             }
         }
 
@@ -453,14 +453,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // We *could* get OldestUnacked, but it would hurt performance and not provide any benefit
             pc.PingID.OldestUnacked = 0;
 
-            SendPacket(udpClient, pc, ThrottleOutPacketType.Unknown, false);
+            SendPacket(udpClient, pc, ThrottleOutPacketType.OutBand, false);
         }
 
         public void CompletePing(LLUDPClient udpClient, byte pingID)
         {
             CompletePingCheckPacket completePing = new CompletePingCheckPacket();
             completePing.PingID.PingID = pingID;
-            SendPacket(udpClient, completePing, ThrottleOutPacketType.Unknown, false);
+            SendPacket(udpClient, completePing, ThrottleOutPacketType.OutBand, false);
         }
 
         public void ResendUnacked(LLUDPClient udpClient)
@@ -1051,7 +1051,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             SendPing(udpClient);
 
                         // Dequeue any outgoing packets that are within the throttle limits
-                        if (udpClient.DequeueOutgoing())
+                        if (udpClient.DequeueOutgoing(20)) // limit number of packets for each client per call
                             m_packetSent = true;
                     }
                 }

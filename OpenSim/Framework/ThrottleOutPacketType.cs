@@ -64,7 +64,8 @@ namespace OpenSim.Framework
         AvatarInfo = 8,
         /// <summary>The number of packet categories to throttle on.
         /// If a throttle category is added or removed, this number must also change</summary>
-        Count = 9,
+        OutBand = 9, // this must be the LAST one 
+        Count = 10,
     }
 
     [Flags]
@@ -78,5 +79,6 @@ namespace OpenSim.Framework
         Asset = 1 << 5,
         State = 1 << 6,
         AvatarInfo = 1 << 7,
+        OutBand = 1 << 8
     }
 }

@@ -146,6 +146,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private int m_defaultRTO = 3000;
         private int m_maxRTO = 60000;
 
+        private int m_lastthrottleCategoryChecked = 0;
+
         /// <summary>
         /// Default constructor
         /// </summary>
@@ -182,6 +184,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_throttleCategories[i] = new TokenBucket(m_throttle, rates.GetLimit(type), rates.GetRate(type));
             }
 
+            m_lastthrottleCategoryChecked = 0;
+
             // Default the retransmission timeout to three seconds
             RTO = m_defaultRTO;
 
@@ -206,19 +210,22 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public string GetStats()
         {
-            return string.Format(
-                "{0,9} {1,9} {2,9} {3,8} {4,7} {5,7} {6,7} {7,7} {8,9} {9,7} {10,7}",
-                PacketsSent,
-                PacketsReceived,
-                UnackedBytes,
-                m_throttleCategories[(int)ThrottleOutPacketType.Resend].Content,
-                m_throttleCategories[(int)ThrottleOutPacketType.Land].Content,
-                m_throttleCategories[(int)ThrottleOutPacketType.Wind].Content,
-                m_throttleCategories[(int)ThrottleOutPacketType.Cloud].Content,
-                m_throttleCategories[(int)ThrottleOutPacketType.Task].Content,
-                m_throttleCategories[(int)ThrottleOutPacketType.Texture].Content,
-                m_throttleCategories[(int)ThrottleOutPacketType.Asset].Content,
-                m_throttleCategories[(int)ThrottleOutPacketType.State].Content);
+        return string.Format(
+            "{0,9} {1,9} {2,9} {3,8} {4,7} {5,7} {6,7} {7,7} {8,9} {9,7} {10,7} {11,7}",
+            PacketsSent,
+            PacketsReceived,
+            UnackedBytes,
+            m_throttleCategories[(int)ThrottleOutPacketType.Resend].Content,
+            m_throttleCategories[(int)ThrottleOutPacketType.Land].Content,
+            m_throttleCategories[(int)ThrottleOutPacketType.Wind].Content,
+            m_throttleCategories[(int)ThrottleOutPacketType.Cloud].Content,
+            m_throttleCategories[(int)ThrottleOutPacketType.Task].Content,
+            m_throttleCategories[(int)ThrottleOutPacketType.Texture].Content,
+            m_throttleCategories[(int)ThrottleOutPacketType.Asset].Content,
+            m_throttleCategories[(int)ThrottleOutPacketType.State].Content,
+            m_throttleCategories[(int)ThrottleOutPacketType.OutBand].Content
+            );
+              
         }
 
         public void SendPacketStats()
@@ -329,6 +336,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             bucket.DripRate = avatarinfo;
             bucket.MaxBurst = avatarinfo;
 
+            bucket = m_throttleCategories[(int)ThrottleOutPacketType.OutBand];
+            bucket.DripRate = 0;
+            bucket.MaxBurst = 0;
+
             // Reset the packed throttles cached data
             m_packedThrottles = null;
         }
@@ -401,72 +412,143 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <remarks>This function is only called from a synchronous loop in the
         /// UDPServer so we don't need to bother making this thread safe</remarks>
         /// <returns>True if any packets were sent, otherwise false</returns>
-        public bool DequeueOutgoing()
+        public bool DequeueOutgoing(int MaxNPacks)
         {
             OutgoingPacket packet;
             OpenSim.Framework.LocklessQueue<OutgoingPacket> queue;
             TokenBucket bucket;
             bool packetSent = false;
             ThrottleOutPacketTypeFlags emptyCategories = 0;
+            
+                //string queueDebugOutput = String.Empty; // Serious debug business
+            int npacksTosent = MaxNPacks;
 
-            //string queueDebugOutput = String.Empty; // Serious debug business
+            int i = m_lastthrottleCategoryChecked;
+            for (int j = 0; j < (int)ThrottleOutPacketType.OutBand; j++) // don't check OutBand
+                {
+                if (++i >= (int)ThrottleOutPacketType.OutBand)
+                    i = 0;
 
-            for (int i = 0; i < (int)ThrottleOutPacketType.Count; i++)
-            {
                 bucket = m_throttleCategories[i];
                 //queueDebugOutput += m_packetOutboxes[i].Count + " ";  // Serious debug business
 
                 if (m_nextPackets[i] != null)
-                {
+                    {
                     // This bucket was empty the last time we tried to send a packet,
                     // leaving a dequeued packet still waiting to be sent out. Try to
                     // send it again
                     OutgoingPacket nextPacket = m_nextPackets[i];
                     if (bucket.RemoveTokens(nextPacket.Buffer.DataLength))
-                    {
+                        {
                         // Send the packet
                         m_udpServer.SendPacketFinal(nextPacket);
                         m_nextPackets[i] = null;
                         packetSent = true;
                         this.PacketsSent++;
+                        }
                     }
-                }
                 else
-                {
+                    {
                     // No dequeued packet waiting to be sent, try to pull one off
                     // this queue
                     queue = m_packetOutboxes[i];
                     if (queue.Dequeue(out packet))
-                    {
+                        {
                         // A packet was pulled off the queue. See if we have
                         // enough tokens in the bucket to send it out
                         if (bucket.RemoveTokens(packet.Buffer.DataLength))
-                        {
+                            {
                             // Send the packet
                             m_udpServer.SendPacketFinal(packet);
                             packetSent = true;
                             this.PacketsSent++;
-                        }
+                            }
                         else
-                        {
+                            {
                             // Save the dequeued packet for the next iteration
                             m_nextPackets[i] = packet;
-                        }
+                            }
 
                         // If the queue is empty after this dequeue, fire the queue
                         // empty callback now so it has a chance to fill before we 
                         // get back here
                         if (queue.Count == 0)
                             emptyCategories |= CategoryToFlag(i);
-                    }
+                        }
                     else
-                    {
+                        {
                         // No packets in this queue. Fire the queue empty callback
                         // if it has not been called recently
                         emptyCategories |= CategoryToFlag(i);
+                        }
                     }
+                if (--npacksTosent == 0)
+                    break;
                 }
-            }
+            m_lastthrottleCategoryChecked = i;
+
+            if (npacksTosent <= 0)
+                npacksTosent = 1; // check at least one outband packet
+
+            // do the same for OutBand now
+
+            i = (int)ThrottleOutPacketType.OutBand;
+
+            while(npacksTosent > 0)
+                {
+                
+                bucket = m_throttleCategories[i];
+
+                if (m_nextPackets[i] != null)
+                    {
+                    OutgoingPacket nextPacket = m_nextPackets[i];
+                    if (bucket.RemoveTokens(nextPacket.Buffer.DataLength))
+                        {
+                        // Send the packet
+                        m_udpServer.SendPacketFinal(nextPacket);
+                        m_nextPackets[i] = null;
+                        packetSent = true;
+                        this.PacketsSent++;
+                        }
+                    }
+                else
+                    {
+                    // No dequeued packet waiting to be sent, try to pull one off
+                    // this queue
+                    queue = m_packetOutboxes[i];
+                    if (queue.Dequeue(out packet))
+                        {
+                        // A packet was pulled off the queue. See if we have
+                        // enough tokens in the bucket to send it out
+                        if (bucket.RemoveTokens(packet.Buffer.DataLength))
+                            {
+                            // Send the packet
+                            m_udpServer.SendPacketFinal(packet);
+                            packetSent = true;
+                            this.PacketsSent++;
+                            }
+                        else
+                            {
+                            // Save the dequeued packet for the next iteration
+                            m_nextPackets[i] = packet;
+                            }
+
+                        // If the queue is empty after this dequeue, fire the queue
+                        // empty callback now so it has a chance to fill before we 
+                        // get back here
+                        if (queue.Count == 0)
+                            emptyCategories |= CategoryToFlag(i);
+                        }
+                    else
+                        {
+                        // No packets in this queue. Fire the queue empty callback
+                        // if it has not been called recently
+                        emptyCategories |= CategoryToFlag(i);
+                        }
+                    }
+                npacksTosent--;
+                }
+
 
             if (emptyCategories != 0)
                 BeginFireQueueEmpty(emptyCategories);
