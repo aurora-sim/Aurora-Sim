@@ -58,9 +58,14 @@ namespace OpenSim.Services.Connectors.AgentInfo
                 request["userID"] = userID;
                 request["Method"] = "GetUserInfo";
                 OSDMap result = WebUtils.PostToService(url, request);
-                UserInfo info = new UserInfo();
-                info.FromOSD((OSDMap)result["Result"]);
-                return info;
+                OSD r = OSDParser.DeserializeJson(result["_RawResult"]);
+                if (r is OSDMap)
+                {
+                    OSDMap innerresult = (OSDMap)r;
+                    UserInfo info = new UserInfo();
+                    info.FromOSD((OSDMap)innerresult["Result"]);
+                    return info;
+                }
             }
             return null;
         }
@@ -79,15 +84,20 @@ namespace OpenSim.Services.Connectors.AgentInfo
                 request["userIDs"] = requestArray;
                 request["Method"] = "GetUserInfos";
                 OSDMap result = WebUtils.PostToService(url, request);
-                OSDArray resultArray = (OSDArray)result["Result"];
-                List<UserInfo> retVal = new List<UserInfo>();
-                foreach (OSD o in resultArray)
+                OSD r = OSDParser.DeserializeJson(result["_RawResult"]);
+                if (r is OSDMap)
                 {
-                    UserInfo info = new UserInfo();
-                    info.FromOSD((OSDMap)o);
-                    retVal.Add(info);
+                    OSDMap innerresult = (OSDMap)r;
+                    OSDArray resultArray = (OSDArray)innerresult["Result"];
+                    List<UserInfo> retVal = new List<UserInfo>();
+                    foreach (OSD o in resultArray)
+                    {
+                        UserInfo info = new UserInfo();
+                        info.FromOSD((OSDMap)o);
+                        retVal.Add(info);
+                    }
+                    return retVal.ToArray();
                 }
-                return retVal.ToArray();
             }
             return null;
         }
@@ -106,13 +116,18 @@ namespace OpenSim.Services.Connectors.AgentInfo
                 request["userIDs"] = requestArray;
                 request["Method"] = "GetAgentsLocations";
                 OSDMap result = WebUtils.PostToService(url, request);
-                OSDArray resultArray = (OSDArray)result["Result"];
-                List<string> retVal = new List<string>();
-                foreach (OSD o in resultArray)
+                OSD r = OSDParser.DeserializeJson(result["_RawResult"]);
+                if (r is OSDMap)
                 {
-                    retVal.Add(o.AsString());
+                    OSDMap innerresult = (OSDMap)r;
+                    OSDArray resultArray = (OSDArray)innerresult["Result"];
+                    List<string> retVal = new List<string>();
+                    foreach (OSD o in resultArray)
+                    {
+                        retVal.Add(o.AsString());
+                    }
+                    return retVal.ToArray();
                 }
-                return retVal.ToArray();
             }
             return null;
         }
