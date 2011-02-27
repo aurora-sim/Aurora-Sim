@@ -278,7 +278,7 @@ namespace OpenSim.Services.LLLoginService
 
         public LoginResponse VerifyClient(string Name, string passwd, UUID scopeID, bool tosExists, string tosAccepted, string mac, string clientVersion, out UUID secureSession)
         {
-            m_log.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0} {1}",
+            m_log.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0}",
                 Name);
 
             //
@@ -408,7 +408,7 @@ namespace OpenSim.Services.LLLoginService
         {
             UUID session = UUID.Random();
 
-            m_log.InfoFormat("[LLOGIN SERVICE]: Login request for {0} {1} from {2} with user agent {3} starting in {4}",
+            m_log.InfoFormat("[LLOGIN SERVICE]: Login request for {0} from {1} with user agent {2} starting in {3}",
                 Name, clientIP.Address.ToString(), clientVersion, startLocation);
             try
             {
