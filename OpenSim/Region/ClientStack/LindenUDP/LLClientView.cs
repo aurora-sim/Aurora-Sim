@@ -538,7 +538,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 kupack.TargetBlock.TargetIP = 0;
                 kupack.TargetBlock.TargetPort = 0;
                 kupack.UserInfo.Reason = Util.StringToBytes256(message);
-                OutPacket(kupack, ThrottleOutPacketType.Unknown);
+                OutPacket(kupack, ThrottleOutPacketType.Task);
                 // You must sleep here or users get no message!
                 Thread.Sleep(500);
             }
@@ -736,7 +736,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             handshake.RegionInfo3.ProductName = Util.StringToBytes256(regionInfo.RegionType);
             handshake.RegionInfo3.ProductSKU = Utils.EmptyBytes;
 
-            OutPacket(handshake, ThrottleOutPacketType.Unknown);
+            OutPacket(handshake, ThrottleOutPacketType.Task);
         }
 
         /// <summary>
@@ -781,7 +781,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //Don't split me up!
             reply.HasVariableBlocks = false;
             // Hack to get this out immediately and skip throttles
-            OutPacket(reply, ThrottleOutPacketType.Unknown);
+            OutPacket(reply, ThrottleOutPacketType.OutBand);
         }
 
         public void SendTelehubInfo(Vector3 TelehubPos, Quaternion TelehubRot, List<Vector3> SpawnPoint, UUID ObjectID, string Name)
@@ -832,7 +832,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 msg.MessageBlock.Message = Util.StringToBytes1024(im.message);
                 msg.MessageBlock.BinaryBucket = im.binaryBucket;
 
-                OutPacket(msg, ThrottleOutPacketType.Unknown);
+                OutPacket(msg, ThrottleOutPacketType.OutBand);
             }
         }
 
@@ -1069,7 +1069,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 else
                 {
-                    OutPacket(layerpack, ThrottleOutPacketType.Unknown);
+                    OutPacket(layerpack, ThrottleOutPacketType.Land);
                 }
             }
             catch (OverflowException)
@@ -1112,7 +1112,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLandPacket(map, x, y, type, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
 
-                OutPacket(layerpack, ThrottleOutPacketType.Unknown);
+                OutPacket(layerpack, ThrottleOutPacketType.Land);
             }
             catch (Exception e)
             {
@@ -1169,7 +1169,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     else
                     {
-                        OutPacket(layerpack, ThrottleOutPacketType.Unknown);
+                        OutPacket(layerpack, ThrottleOutPacketType.Land);
                     }
                 }
                 catch (OverflowException)
