@@ -46,27 +46,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Vector3 m_lastPosition;
         private d.Vector3 _zeroPosition;
         // private d.Matrix3 m_StandUpRotation;
-        private bool _zeroFlag = false;
-        private bool m_lastUpdateSent = false;
-        /*private Vector3 __velocity; //For testing to see when Vector3.Zero is set for the velocity
-        private Vector3 _velocity
-        {
-            get { return __velocity; }
-            set 
-            {
-                if (value == Vector3.Zero)
-                {
-                    m_log.Warn("VECTOR3 ZERO! zero flag: " + _zeroFlag + ", flying: " + flying);
-                }
-                __velocity = value;
-            }
-        }*/
         private Vector3 _velocity;
         private Vector3 m_lastVelocity;
         private Vector3 _target_velocity;
         private Vector3 _acceleration;
         private Vector3 m_rotationalVelocity;
         private Vector3 m_lastRotationalVelocity;
+
+        private bool _zeroFlag = false;
+        private bool m_ZeroUpdateSent = false;
+
+        float m_UpdateTimecntr = 0;
+        float m_UpdateFPScntr = 0.05f;
+
         private float m_mass = 80f;
         private bool m_pidControllerActive = true;
         //private static float POSTURE_SERVO = 10000.0f;
@@ -192,7 +184,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_tainted_isPhysical = true; // new tainted status: need to create ODE information
 
             _parent_scene.AddPhysicsActorTaint(this);
-            
+
+            m_UpdateTimecntr = 0;
+            m_UpdateFPScntr = 2.5f * parent_scene.StepTime; // this parameter needs retunning and possible came from ini file
+            if (m_UpdateTimecntr > .1f) // try to keep it under 100ms
+                m_UpdateTimecntr = .1f;
             m_name = avName;
         }
 
@@ -1346,51 +1342,36 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (needfixbody)
                 d.BodySetPosition(Body, _position.X, _position.Y, _position.Z);
 
-
-            // Did we move last? = zeroflag
-            // This helps keep us from sliding all over
-
+/*
             if (_zeroFlag)
-            {
-                /*if (CollisionEventsThisFrame != null)
                 {
-                    base.SendCollisionUpdate(CollisionEventsThisFrame);
-                }
-                CollisionEventsThisFrame = new CollisionEventUpdate();
-                m_eventsubscription = 0;*/
                 _velocity = Vector3.Zero;
 
                 // Did we send out the 'stopped' message?
-                if (!m_lastUpdateSent)
-                {
-                    m_lastUpdateSent = true;
+                if (!m_ZeroUpdateSent)
+                    {
+                    m_ZeroUpdateSent = true;
                     base.RequestPhysicsterseUpdate();
-                }
+                    }
 
                 //Tell any listeners that we've stopped
                 base.TriggerMovementUpdate();
-            }
-            else
-            {
-                m_lastUpdateSent = false;
-                try
-                {
-                    vec = d.BodyGetLinearVel(Body);
                 }
-                catch (NullReferenceException)
+            else
                 {
+                m_ZeroUpdateSent = false;
+ */
+                try
+                    {
+                    vec = d.BodyGetLinearVel(Body);
+                    }
+                catch (NullReferenceException)
+                    {
                     vec.X = _velocity.X;
                     vec.Y = _velocity.Y;
                     vec.Z = _velocity.Z;
-                }
+                    }
 
-                /*
-                                if (vec.X == 0 && vec.Y == 0 && vec.Z == 0)
-                                {
-                                    m_log.Warn("[AODECharacter]: We have a malformed Velocity, ignoring...");
-                                }
-                                else
-                */
 
                 // vec is a ptr into internal ode data better not mess with it
 
@@ -1419,25 +1400,44 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (needfixbody)
                     d.BodySetLinearVel(Body, _velocity.X, _velocity.Y, _velocity.Z);
 
+                // slow down updates
+                m_UpdateTimecntr += timestep;
+                if (m_UpdateTimecntr < m_UpdateFPScntr)
+                    return;
 
-                const float VELOCITY_TOLERANCE = 0.001f;
+                m_UpdateTimecntr = 0;
+
+                const float VELOCITY_TOLERANCE = 0.01f;
                 const float POSITION_TOLERANCE = 0.05f;
-
+                bool needSendUpdate = false;
                 //Check to see whether we need to trigger the significant movement method in the presence
-// avas don't rotate for now                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
-                if (    !Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
-                    !Position.ApproxEquals(m_lastPosition, POSITION_TOLERANCE))
-                {
-                    // Update the "last" values
-                    m_lastPosition = Position;
-//                    m_lastRotationalVelocity = RotationalVelocity;
-                    m_lastVelocity = Velocity;
+ // avas don't rotate for now                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
+                if (!Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
+                    !Position.ApproxEquals(m_lastPosition, POSITION_TOLERANCE)
+                    )
+                        {
+                        // Update the "last" values
+                        needSendUpdate = true;
+                        m_ZeroUpdateSent = false;
+                        m_lastPosition = Position;
+                        //                        m_lastRotationalVelocity = RotationalVelocity;
+                        m_lastVelocity = Velocity;
+//                        base.RequestPhysicsterseUpdate();
+//                        base.TriggerSignificantMovement();
+                        }
+
+                if (needSendUpdate || !m_ZeroUpdateSent)
+                    {
                     base.RequestPhysicsterseUpdate();
                     base.TriggerSignificantMovement();
-                }
+                    base.TriggerMovementUpdate();
+                    m_ZeroUpdateSent = true;
+                    }
+
+
                 //Tell any listeners about the new info
-                base.TriggerMovementUpdate();
-            }
+//                base.TriggerMovementUpdate();
+//            }
         }
 
         #endregion
