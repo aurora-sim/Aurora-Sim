@@ -72,7 +72,11 @@ namespace OpenSim.Services.GridService
                 return;
 
             //m_log.DebugFormat("[GRID SERVICE]: Starting...");
-
+            Configure(config, registry);
+        }
+            
+        public void Configure(IConfigSource config, IRegistryCore registry)
+        {
             m_config = config;
             IConfig gridConfig = config.Configs["GridService"];
             if (gridConfig != null)

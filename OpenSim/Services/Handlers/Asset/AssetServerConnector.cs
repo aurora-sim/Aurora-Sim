@@ -63,6 +63,7 @@ namespace OpenSim.Services
             if (handlerConfig.GetBoolean("UnsecureUrls", false))
             {
                 IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+                m_port = server.Port;
                 string url = "/assets";
 
                 IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService>();
@@ -96,6 +97,7 @@ namespace OpenSim.Services
         public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            m_port = server.Port;
             
             IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService>();
             server.AddStreamHandler(new AssetServerGetHandler(m_AssetService, url));
@@ -106,6 +108,7 @@ namespace OpenSim.Services
         public string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            m_port = server.Port;
             string url = "/assets" + UUID.Random();
 
             IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService>();

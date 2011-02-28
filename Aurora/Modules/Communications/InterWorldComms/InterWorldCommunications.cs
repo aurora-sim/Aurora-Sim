@@ -160,6 +160,22 @@ namespace Aurora.Modules
         private void AddIWCConnection(string module, string[] cmds)
         {
             string Url = MainConsole.Instance.CmdPrompt("Url to the connection");
+            string RegionName = MainConsole.Instance.CmdPrompt("Name of the region that this connection will be for");
+            Scene region = null;
+            while (true)
+            {
+                SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
+                if (manager == null)
+                    break;
+                else
+                {
+                    manager.TryGetScene(RegionName, out region);
+                    if (region == null)
+                        RegionName = MainConsole.Instance.CmdPrompt("Name of the region that this connection will be for");
+                    else
+                        break;
+                }
+            }
             string timeUntilExpires = MainConsole.Instance.CmdPrompt("Time until the connection expires (ends, in days)");
             string trustLevel = MainConsole.Instance.CmdPrompt("Trust level of this connection");
             int timeInDays = int.Parse(timeUntilExpires);
@@ -169,6 +185,7 @@ namespace Aurora.Modules
             //Build the certificate
             IWCCertificate cert = new IWCCertificate();
             cert.SessionHash = UUID.Random().ToString();
+            cert.RegionHandle = region.RegionInfo.RegionHandle;
             cert.ValidUntil = DateTime.Now.AddDays(timeInDays);
 
             //Add the certificate now
@@ -497,7 +514,7 @@ namespace Aurora.Modules
             if (gridRegistration != null)
             {
                 //Give the basic Urls that we have
-                c.SecureUrls = gridRegistration.GetUrlForRegisteringClient(c.SessionHash, 0);
+                c.SecureUrls = gridRegistration.GetUrlForRegisteringClient(c.SessionHash, c.RegionHandle);
             }
             return c;
         }
@@ -602,6 +619,10 @@ namespace Aurora.Modules
         protected string m_SessionHash;
         protected OSDMap m_SecureUrls = new OSDMap();
         protected TrustLevel m_TrustLevel;
+        /// <summary>
+        /// The RegionHandle of the connecting region
+        /// </summary>
+        public ulong RegionHandle;
 
         /// <summary>
         /// The SessionID of the certificate
@@ -647,6 +668,7 @@ namespace Aurora.Modules
             SecureUrls = (OSDMap)map["SecureUrls"];
             if(map.ContainsKey("TrustLevel"))
                 TrustLevel = (TrustLevel)map["TrustLevel"].AsInteger();
+            RegionHandle = map["RegionHandle"].AsULong();
         }
 
         public OSDMap ToOSD(bool Secure)
@@ -656,6 +678,7 @@ namespace Aurora.Modules
             map.Add("ValidUntil", ValidUntil);
             map.Add("SecureUrls", SecureUrls);
             map.Add("TrustLevel", (int)TrustLevel);
+            map.Add("RegionHandle", RegionHandle);
             return map;
         }
 

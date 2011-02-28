@@ -69,6 +69,7 @@ namespace OpenSim.Services
                 string url = "/xinventory";
 
                 IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+                m_port = server.Port;
 
                 server.AddStreamHandler(new XInventoryConnectorPostHandler(url, registry.RequestModuleInterface<IInventoryService>()));
             }
@@ -94,6 +95,7 @@ namespace OpenSim.Services
         public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            m_port = server.Port;
 
             server.AddStreamHandler(new XInventoryConnectorPostHandler(url, m_registry.RequestModuleInterface<IInventoryService>()));
         }
@@ -103,6 +105,7 @@ namespace OpenSim.Services
             string url = "/xinventory" + UUID.Random();
 
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            m_port = server.Port;
 
             server.AddStreamHandler(new XInventoryConnectorPostHandler(url, m_registry.RequestModuleInterface<IInventoryService>()));
 

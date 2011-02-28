@@ -688,7 +688,7 @@ namespace OpenSim.Services.LLLoginService
             }
             catch (Exception e)
             {
-                m_log.WarnFormat("[LLOGIN SERVICE]: Exception processing login for {0} {1}: {2}", Name, e.ToString());
+                m_log.WarnFormat("[LLOGIN SERVICE]: Exception processing login for {0} : {1}", Name, e.ToString());
                 return LLFailedLoginResponse.InternalError;
             }
             

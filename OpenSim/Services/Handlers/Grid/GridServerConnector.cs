@@ -64,6 +64,7 @@ namespace OpenSim.Services
             string url = "/grid";
 
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            m_port = server.Port;
 
             GridServerPostHandler handler = new GridServerPostHandler(url, registry, registry.RequestModuleInterface<IGridService>(), handlerConfig.GetBoolean("UnsecureUrls", false));
             server.AddStreamHandler(handler);
@@ -84,6 +85,7 @@ namespace OpenSim.Services
         public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            m_port = server.Port;
 
             GridServerPostHandler handler = new GridServerPostHandler(url, m_registry, m_registry.RequestModuleInterface<IGridService>(), true);
             server.AddStreamHandler(handler);
@@ -94,6 +96,7 @@ namespace OpenSim.Services
             string url = "/grid" + UUID.Random();
 
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            m_port = server.Port;
 
             GridServerPostHandler handler = new GridServerPostHandler(url, m_registry, m_registry.RequestModuleInterface<IGridService>(), true);
             server.AddStreamHandler(handler);

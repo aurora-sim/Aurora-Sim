@@ -66,6 +66,7 @@ namespace OpenSim.Services
                 string url = "/avatar";
 
                 IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+                m_port = server.Port;
 
                 server.AddStreamHandler(new AvatarServerPostHandler(url, registry.RequestModuleInterface<IAvatarService>()));
             }
@@ -91,6 +92,7 @@ namespace OpenSim.Services
         public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            m_port = server.Port;
             
             server.AddStreamHandler(new AvatarServerPostHandler(url, m_registry.RequestModuleInterface<IAvatarService>()));
         }
@@ -98,6 +100,7 @@ namespace OpenSim.Services
         public string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            m_port = server.Port;
             string url = "/avatar" + UUID.Random();
 
             server.AddStreamHandler(new AvatarServerPostHandler(url, m_registry.RequestModuleInterface<IAvatarService>()));

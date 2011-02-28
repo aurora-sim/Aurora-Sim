@@ -624,7 +624,7 @@ namespace OpenSim.Region.Framework.Scenes
             IConfigurationService configService = RequestModuleInterface<IConfigurationService>();
             if(configService != null && agent.OtherInformation.ContainsKey("UserUrls"))
             {
-                 configService.AddNewUrls(agent.AgentID.ToString(), (OSDMap)agent.OtherInformation["UserUrls"]);
+                 configService.AddNewUser(agent.AgentID.ToString(), (OSDMap)agent.OtherInformation["UserUrls"]);
             }
 
             OSDMap responseMap = new OSDMap();

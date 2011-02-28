@@ -224,6 +224,8 @@ namespace OpenSim.Services.Connectors
             sendData["METHOD"] = "get_region_by_uuid";
 
             string reply = string.Empty;
+
+            GridRegion rinfo = null;
             try
             {
                 List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
@@ -232,6 +234,24 @@ namespace OpenSim.Services.Connectors
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if ((replyData != null) && (replyData.ContainsKey("result") && replyData["result"] != null))
+                        {
+                            if (replyData["result"] is Dictionary<string, object>)
+                                rinfo = new GridRegion((Dictionary<string, object>)replyData["result"]);
+                            //else
+                            //    m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByUUID {0}, {1} received null response",
+                            //        scopeID, regionID);
+                        }
+                        else
+                            m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByUUID {0}, {1} received null response: {2}",
+                                scopeID, regionID, reply);
+                    }
+                    else
+                        m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByUUID received null reply");
                 }
             }
             catch (Exception e)
@@ -239,27 +259,6 @@ namespace OpenSim.Services.Connectors
                 m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
                 return null;
             }
-
-            GridRegion rinfo = null;
-
-            if (reply != string.Empty)
-            {
-                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                if ((replyData != null) && (replyData.ContainsKey("result") && replyData["result"] != null))
-                {
-                    if (replyData["result"] is Dictionary<string, object>)
-                        rinfo = new GridRegion((Dictionary<string, object>)replyData["result"]);
-                    //else
-                    //    m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByUUID {0}, {1} received null response",
-                    //        scopeID, regionID);
-                }
-                else
-                    m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByUUID {0}, {1} received null response: {2}",
-                        scopeID, regionID, reply);
-            }
-            else
-                m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByUUID received null reply");
 
             return rinfo;
         }
@@ -274,6 +273,7 @@ namespace OpenSim.Services.Connectors
 
             sendData["METHOD"] = "get_region_by_position";
             string reply = string.Empty;
+            GridRegion rinfo = null;
             try
             {
                 List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
@@ -282,6 +282,25 @@ namespace OpenSim.Services.Connectors
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
+
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if ((replyData != null) && (replyData["result"] != null))
+                        {
+                            if (replyData["result"] is Dictionary<string, object>)
+                                rinfo = new GridRegion((Dictionary<string, object>)replyData["result"]);
+                            //else
+                            //    m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition {0}, {1}-{2} received no region",
+                            //        scopeID, x, y);
+                        }
+                        else
+                            m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition {0}, {1}-{2} received null response",
+                                scopeID, x, y);
+                    }
+                    else
+                        m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition received null reply");
                 }
             }
             catch (Exception e)
@@ -289,26 +308,6 @@ namespace OpenSim.Services.Connectors
                 m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
                 return null;
             }
-
-            GridRegion rinfo = null;
-            if (reply != string.Empty)
-            {
-                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                if ((replyData != null) && (replyData["result"] != null))
-                {
-                    if (replyData["result"] is Dictionary<string, object>)
-                        rinfo = new GridRegion((Dictionary<string, object>)replyData["result"]);
-                    //else
-                    //    m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition {0}, {1}-{2} received no region",
-                    //        scopeID, x, y);
-                }
-                else
-                    m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition {0}, {1}-{2} received null response",
-                        scopeID, x, y);
-            }
-            else
-                m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition received null reply");
 
             return rinfo;
         }
@@ -321,6 +320,7 @@ namespace OpenSim.Services.Connectors
             sendData["NAME"] = regionName;
 
             sendData["METHOD"] = "get_region_by_name";
+            GridRegion rinfo = null;
             string reply = string.Empty;
             try
             {
@@ -330,6 +330,21 @@ namespace OpenSim.Services.Connectors
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if ((replyData != null) && (replyData["result"] != null))
+                        {
+                            if (replyData["result"] is Dictionary<string, object>)
+                                rinfo = new GridRegion((Dictionary<string, object>)replyData["result"]);
+                        }
+                        else
+                            m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition {0}, {1} received null response",
+                                scopeID, regionName);
+                    }
+                    else
+                        m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByName received null reply");
                 }
             }
             catch (Exception e)
@@ -337,23 +352,6 @@ namespace OpenSim.Services.Connectors
                 m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
                 return null;
             }
-
-            GridRegion rinfo = null;
-            if (reply != string.Empty)
-            {
-                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                if ((replyData != null) && (replyData["result"] != null))
-                {
-                    if (replyData["result"] is Dictionary<string, object>)
-                        rinfo = new GridRegion((Dictionary<string, object>)replyData["result"]);
-                }
-                else
-                    m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition {0}, {1} received null response",
-                        scopeID, regionName);
-            }
-            else
-                m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByName received null reply");
 
             return rinfo;
         }
@@ -377,6 +375,28 @@ namespace OpenSim.Services.Connectors
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection rinfosList = replyData.Values;
+                            foreach (object r in rinfosList)
+                            {
+                                if (r is Dictionary<string, object>)
+                                {
+                                    GridRegion rinfo = new GridRegion((Dictionary<string, object>)r);
+                                    rinfos.Add(rinfo);
+                                }
+                            }
+                        }
+                        else
+                            m_log.DebugFormat("[GRID CONNECTOR]: GetRegionsByName {0}, {1}, {2} received null response",
+                                scopeID, name, maxNumber);
+                    }
+                    else
+                        m_log.DebugFormat("[GRID CONNECTOR]: GetRegionsByName received null reply");
                 }
             }
             catch (Exception e)
@@ -384,29 +404,6 @@ namespace OpenSim.Services.Connectors
                 m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
                 return rinfos;
             }
-
-            if (reply != string.Empty)
-            {
-                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                if (replyData != null)
-                {
-                    Dictionary<string, object>.ValueCollection rinfosList = replyData.Values;
-                    foreach (object r in rinfosList)
-                    {
-                        if (r is Dictionary<string, object>)
-                        {
-                            GridRegion rinfo = new GridRegion((Dictionary<string, object>)r);
-                            rinfos.Add(rinfo);
-                        }
-                    }
-                }
-                else
-                    m_log.DebugFormat("[GRID CONNECTOR]: GetRegionsByName {0}, {1}, {2} received null response",
-                        scopeID, name, maxNumber);
-            }
-            else
-                m_log.DebugFormat("[GRID CONNECTOR]: GetRegionsByName received null reply");
 
             return rinfos;
         }
@@ -434,6 +431,29 @@ namespace OpenSim.Services.Connectors
                             m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
 
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection rinfosList = replyData.Values;
+                            foreach (object r in rinfosList)
+                            {
+                                if (r is Dictionary<string, object>)
+                                {
+                                    GridRegion rinfo = new GridRegion((Dictionary<string, object>)r);
+                                    rinfos.Add(rinfo);
+                                }
+                            }
+                        }
+                        else
+                            m_log.DebugFormat("[GRID CONNECTOR]: GetRegionRange {0}, {1}-{2} {3}-{4} received null response",
+                                scopeID, xmin, xmax, ymin, ymax);
+                    }
+                    else
+                        m_log.DebugFormat("[GRID CONNECTOR]: GetRegionRange received null reply");
+
                     //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
                 }
             }
@@ -442,29 +462,6 @@ namespace OpenSim.Services.Connectors
                 m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
                 return rinfos;
             }
-
-            if (reply != string.Empty)
-            {
-                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                if (replyData != null)
-                {
-                    Dictionary<string, object>.ValueCollection rinfosList = replyData.Values;
-                    foreach (object r in rinfosList)
-                    {
-                        if (r is Dictionary<string, object>)
-                        {
-                            GridRegion rinfo = new GridRegion((Dictionary<string, object>)r);
-                            rinfos.Add(rinfo);
-                        }
-                    }
-                }
-                else
-                    m_log.DebugFormat("[GRID CONNECTOR]: GetRegionRange {0}, {1}-{2} {3}-{4} received null response",
-                        scopeID, xmin, xmax, ymin, ymax);
-            }
-            else
-                m_log.DebugFormat("[GRID CONNECTOR]: GetRegionRange received null reply");
 
             return rinfos;
         }
@@ -698,6 +695,8 @@ namespace OpenSim.Services.Connectors
 
             sendData["METHOD"] = "get_region_flags";
 
+            int flags = -1;
+
             string reply = string.Empty;
             try
             {
@@ -707,6 +706,25 @@ namespace OpenSim.Services.Connectors
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if ((replyData != null) && replyData.ContainsKey("result") && (replyData["result"] != null))
+                        {
+                            Int32.TryParse((string)replyData["result"], out flags);
+                            //else
+                            //    m_log.DebugFormat("[GRID CONNECTOR]: GetRegionFlags {0}, {1} received wrong type {2}",
+                            //        scopeID, regionID, replyData["result"].GetType());
+                        }
+                        else
+                            m_log.DebugFormat("[GRID CONNECTOR]: GetRegionFlags {0}, {1} received null response",
+                                scopeID, regionID);
+                    }
+                    else
+                        m_log.DebugFormat("[GRID CONNECTOR]: GetRegionFlags received null reply");
+                    if (flags != -1)
+                        return flags;
                 }
             }
             catch (Exception e)
@@ -714,26 +732,6 @@ namespace OpenSim.Services.Connectors
                 m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
                 return -1;
             }
-
-            int flags = -1;
-
-            if (reply != string.Empty)
-            {
-                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                if ((replyData != null) && replyData.ContainsKey("result") && (replyData["result"] != null))
-                {
-                    Int32.TryParse((string)replyData["result"], out flags);
-                    //else
-                    //    m_log.DebugFormat("[GRID CONNECTOR]: GetRegionFlags {0}, {1} received wrong type {2}",
-                    //        scopeID, regionID, replyData["result"].GetType());
-                }
-                else
-                    m_log.DebugFormat("[GRID CONNECTOR]: GetRegionFlags {0}, {1} received null response",
-                        scopeID, regionID);
-            }
-            else
-                m_log.DebugFormat("[GRID CONNECTOR]: GetRegionFlags received null reply");
 
             return flags;
         }
@@ -801,12 +799,12 @@ namespace OpenSim.Services.Connectors
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            m_registry = registry;
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("GridHandler", "") != Name)
                 return;
 
             registry.RegisterModuleInterface<IGridService>(this);
-            m_registry = registry;
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)

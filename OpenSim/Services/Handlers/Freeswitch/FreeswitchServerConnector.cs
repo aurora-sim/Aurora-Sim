@@ -71,6 +71,7 @@ namespace OpenSim.Services
             if (handlerConfig.GetBoolean("UnsecureUrls", false))
             {
                 IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+                m_port = server.Port;
 
                 m_FreeswitchService = registry.RequestModuleInterface<IFreeswitchService>();
 
@@ -151,6 +152,7 @@ namespace OpenSim.Services
         public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            m_port = server.Port;
 
             m_FreeswitchService = m_registry.RequestModuleInterface<IFreeswitchService>();
 
@@ -163,6 +165,7 @@ namespace OpenSim.Services
             string url = "/CAPS/EQMPOSTER" + UUID.Random();
 
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            m_port = server.Port;
 
             m_FreeswitchService = m_registry.RequestModuleInterface<IFreeswitchService>();
 

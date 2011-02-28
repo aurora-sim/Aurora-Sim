@@ -62,6 +62,7 @@ namespace OpenSim.Services
                 string url = "/accounts";
 
                 IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+                m_port = server.Port;
 
                 server.AddStreamHandler(new UserAccountServerPostHandler(url, registry.RequestModuleInterface<IUserAccountService>()));
             }
@@ -87,6 +88,7 @@ namespace OpenSim.Services
         public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            m_port = server.Port;
 
             server.AddStreamHandler(new UserAccountServerPostHandler(url, m_registry.RequestModuleInterface<IUserAccountService>()));
         }
@@ -96,6 +98,7 @@ namespace OpenSim.Services
             string url = "/accounts" + UUID.Random();
 
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            m_port = server.Port;
 
             server.AddStreamHandler(new UserAccountServerPostHandler(url, m_registry.RequestModuleInterface<IUserAccountService>()));
             return url;

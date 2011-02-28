@@ -129,6 +129,8 @@ namespace OpenSim.Services.ConfigurationService
         {
             foreach (KeyValuePair<string, OSD> kvp in urls)
             {
+                if (kvp.Value == "")
+                    continue;
                 if (!m_autoConfig.ContainsKey(kvp.Key))
                     m_autoConfig[kvp.Key] = kvp.Value;
                 else
@@ -162,7 +164,20 @@ namespace OpenSim.Services.ConfigurationService
             {
                 keys = FindValueOfFromConfiguration(key);
             }
+            RemoveBlanks(ref keys);
             return keys;
+        }
+
+        public virtual void RemoveBlanks(ref List<string> keys)
+        {
+            for (int i = 0; i < keys.Count; i++)
+            {
+                if (keys[i] == "")
+                {
+                    keys.RemoveAt(i);
+                    i--;
+                }
+            }
         }
 
         public virtual List<string> FindValueOf(string userID, string key)

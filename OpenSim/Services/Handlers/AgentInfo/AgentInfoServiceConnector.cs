@@ -65,6 +65,7 @@ namespace OpenSim.Services
                 string url = "/agentinfo";
 
                 IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+                m_port = server.Port;
 
                 AgentInfoServerPostHandler handler = new AgentInfoServerPostHandler(url, registry, registry.RequestModuleInterface<IAgentInfoService>());
                 server.AddStreamHandler(handler);
@@ -86,6 +87,7 @@ namespace OpenSim.Services
         public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            m_port = server.Port;
 
             AgentInfoServerPostHandler handler = new AgentInfoServerPostHandler(url, m_registry, m_registry.RequestModuleInterface<IAgentInfoService>());
             server.AddStreamHandler(handler);
@@ -96,6 +98,7 @@ namespace OpenSim.Services
             string url = "/agentinfo" + UUID.Random();
 
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            m_port = server.Port;
 
             AgentInfoServerPostHandler handler = new AgentInfoServerPostHandler(url, m_registry, m_registry.RequestModuleInterface<IAgentInfoService>());
             server.AddStreamHandler(handler);

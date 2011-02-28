@@ -48,6 +48,7 @@ namespace OpenSim.Services
                 string url = "/CAPS/EQMPOSTER";
 
                 IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+                m_port = server.Port;
 
                 server.AddStreamHandler(new EQMEventPoster(url, registry.RequestModuleInterface<IEventQueueService>(),
                 registry.RequestModuleInterface<ICapsService>(), 0));
@@ -76,6 +77,7 @@ namespace OpenSim.Services
         public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            m_port = server.Port;
 
             server.AddStreamHandler(new EQMEventPoster(url, m_registry.RequestModuleInterface<IEventQueueService>(),
                     m_registry.RequestModuleInterface<ICapsService>(), RegionHandle));
@@ -86,6 +88,7 @@ namespace OpenSim.Services
             string url = "/CAPS/EQMPOSTER" + UUID.Random();
 
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            m_port = server.Port;
 
             server.AddStreamHandler(new EQMEventPoster(url, m_registry.RequestModuleInterface<IEventQueueService>(),
                     m_registry.RequestModuleInterface<ICapsService>(), RegionHandle));
