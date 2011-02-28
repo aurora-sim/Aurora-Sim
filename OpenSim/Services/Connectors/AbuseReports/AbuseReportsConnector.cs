@@ -55,7 +55,7 @@ namespace OpenSim.Services.Connectors
             {
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> ar = abuse_report.ToDictionaryCollection();
+                    Dictionary<string, object> ar = abuse_report.ToKeyValuePairs();
                     ar.Add("METHOD", "AddAbuseReport");
 
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -87,11 +87,36 @@ namespace OpenSim.Services.Connectors
             }
         }
 
+        public List<AbuseReport> GetAbuseReports(int start, int count, string filter)
+        {
+            try
+            {
+                Dictionary<string, object> send = new Dictionary<string, object>();
+                send.Add("start", start);
+                send.Add("count", count);
+                send.Add("filter", filter);
+                send.Add("METHOD", "GetAbuseReports");
+                Dictionary<string, object> ars = WebUtils.ParseXmlResponse(SynchronousRestFormsRequester.MakeRequest("POST",
+                    m_ServerURIs[0] + "/abusereport",
+                    WebUtils.BuildQueryString(send)));
+                List<AbuseReport> returnvalue = new List<AbuseReport>();
+                foreach (object ar in ars)
+                    returnvalue.Add((AbuseReport)ar);
+                return returnvalue;
+                    
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[ABUSEREPORT CONNECTOR]: Exception when contacting friends server: {0}", e.Message);
+                return null;
+            }
+        }
+
         public void UpdateAbuseReport(AbuseReport report, string Password)
         {
             try
             {
-                Dictionary<string, object> send = report.ToDictionaryCollection();
+                Dictionary<string, object> send = report.ToKeyValuePairs();
                 send.Add("Password", Password);
                 send.Add("METHOD", "AddAbuseReport");
 

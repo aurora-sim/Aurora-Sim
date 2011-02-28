@@ -184,9 +184,14 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             PhysicsActor actor = m_scenePresence.PhysicsActor;
 
             // Create forward and left vectors from the current avatar rotation
-            Matrix4 rotMatrix = Matrix4.CreateFromQuaternion(m_scenePresence.Rotation);
-            Vector3 fwd = Vector3.Transform(Vector3.UnitX, rotMatrix);
-            Vector3 left = Vector3.Transform(Vector3.UnitY, rotMatrix);
+            /*
+                        Matrix4 rotMatrix = Matrix4.CreateFromQuaternion(m_scenePresence.Rotation);
+                        Vector3 fwd = Vector3.Transform(Vector3.UnitX, rotMatrix);
+                        Vector3 left = Vector3.Transform(Vector3.UnitY, rotMatrix);
+            */
+
+            Vector3 fwd = Vector3.UnitX * m_scenePresence.Rotation;
+            Vector3 left = Vector3.UnitY * m_scenePresence.Rotation;
 
             // Check control flags
             bool heldForward =
@@ -263,6 +268,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             #region Flying
 
+//            if (actor != null && actor.Flying)
             if (actor != null && (m_scenePresence.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) == (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY)
             {
                 m_animTickFall = 0;

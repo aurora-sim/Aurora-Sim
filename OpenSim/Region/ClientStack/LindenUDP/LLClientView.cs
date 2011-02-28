@@ -742,7 +742,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             handshake.RegionInfo3.ProductName = Util.StringToBytes256(regionInfo.RegionType);
             handshake.RegionInfo3.ProductSKU = Utils.EmptyBytes;
 
-            OutPacket(handshake, ThrottleOutPacketType.Unknown);
+            OutPacket(handshake, ThrottleOutPacketType.Task);
         }
 
         /// <summary>
@@ -787,7 +787,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //Don't split me up!
             reply.HasVariableBlocks = false;
             // Hack to get this out immediately and skip throttles
-            OutPacket(reply, ThrottleOutPacketType.Unknown);
+            OutPacket(reply, ThrottleOutPacketType.OutBand);
         }
 
         public void SendTelehubInfo(Vector3 TelehubPos, Quaternion TelehubRot, List<Vector3> SpawnPoint, UUID ObjectID, string Name)
@@ -838,7 +838,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 msg.MessageBlock.Message = Util.StringToBytes1024(im.message);
                 msg.MessageBlock.BinaryBucket = im.binaryBucket;
 
-                OutPacket(msg, ThrottleOutPacketType.Unknown);
+                OutPacket(msg, ThrottleOutPacketType.OutBand);
             }
         }
 
@@ -1075,7 +1075,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 else
                 {
-                    OutPacket(layerpack, ThrottleOutPacketType.Unknown);
+                    OutPacket(layerpack, ThrottleOutPacketType.Land);
                 }
             }
             catch (OverflowException)
@@ -1118,7 +1118,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLandPacket(map, x, y, type, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
 
-                OutPacket(layerpack, ThrottleOutPacketType.Unknown);
+                OutPacket(layerpack, ThrottleOutPacketType.Land);
             }
             catch (Exception e)
             {
@@ -1175,7 +1175,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     else
                     {
-                        OutPacket(layerpack, ThrottleOutPacketType.Unknown);
+                        OutPacket(layerpack, ThrottleOutPacketType.Land);
                     }
                 }
                 catch (OverflowException)
@@ -1230,14 +1230,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             patches[1] = new TerrainPatch();
             patches[1].Data = new float[16 * 16];
 
-            for (int y = 0; y < 16; y++)
-            {
-                for (int x = 0; x < 16; x++)
+            
+//            for (int y = 0; y < 16*16; y+=16)
+//            {
+                for (int x = 0; x < 16*16; x++)
                 {
-                    patches[0].Data[y * 16 + x] = windSpeeds[y * 16 + x].X;
-                    patches[1].Data[y * 16 + x] = windSpeeds[y * 16 + x].Y;
+                    patches[0].Data[x] = windSpeeds[x].X;
+                    patches[1].Data[x] = windSpeeds[x].Y;
                 }
-            }
+//            }
             byte type = (byte)TerrainPatch.LayerType.Wind;
             if (m_scene.RegionInfo.RegionSizeX > Constants.RegionSize || m_scene.RegionInfo.RegionSizeY > Constants.RegionSize)
             {
@@ -1259,11 +1260,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             patches[0] = new TerrainPatch();
             patches[0].Data = new float[16 * 16];
 
-            for (int y = 0; y < 16; y++)
+//            for (int y = 0; y < 16*16; y+=16)
             {
-                for (int x = 0; x < 16; x++)
+                for (int x = 0; x < 16*16; x++)
                 {
-                    patches[0].Data[y * 16 + x] = cloudCover[y * 16 + x];
+                    patches[0].Data[x] = cloudCover[x];
                 }
             }
 
@@ -4541,7 +4542,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             pos += 4;
 
             // Avatar/CollisionPlane
-            data[pos++] = (byte)((attachPoint % 16) * 16 + (attachPoint / 16)); ;
+            data[pos] = (byte)((attachPoint & 0x0f) << 4);
+            data[pos++] += (byte)(attachPoint >> 4);
+
             if (avatar)
             {
                 data[pos++] = 1;

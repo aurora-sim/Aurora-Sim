@@ -46,27 +46,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Vector3 m_lastPosition;
         private d.Vector3 _zeroPosition;
         // private d.Matrix3 m_StandUpRotation;
-        private bool _zeroFlag = false;
-        private bool m_lastUpdateSent = false;
-        /*private Vector3 __velocity; //For testing to see when Vector3.Zero is set for the velocity
-        private Vector3 _velocity
-        {
-            get { return __velocity; }
-            set 
-            {
-                if (value == Vector3.Zero)
-                {
-                    m_log.Warn("VECTOR3 ZERO! zero flag: " + _zeroFlag + ", flying: " + flying);
-                }
-                __velocity = value;
-            }
-        }*/
         private Vector3 _velocity;
         private Vector3 m_lastVelocity;
         private Vector3 _target_velocity;
         private Vector3 _acceleration;
         private Vector3 m_rotationalVelocity;
         private Vector3 m_lastRotationalVelocity;
+
+        private bool _zeroFlag = false;
+        private bool m_ZeroUpdateSent = false;
+
+        float m_UpdateTimecntr = 0;
+        float m_UpdateFPScntr = 0.05f;
+
         private float m_mass = 80f;
         private bool m_pidControllerActive = true;
         //private static float POSTURE_SERVO = 10000.0f;
@@ -162,8 +154,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                _position = new Vector3(((float)parent_scene.WorldExtents.X * 0.5f), ((float)parent_scene.WorldExtents.Y * 0.5f),
-                    parent_scene.GetTerrainHeightAtXY(parent_scene.Region.RegionSizeX * 0.5f, parent_scene.Region.RegionSizeY * 0.5f) + 10f);
+            _position.X = (float)parent_scene.Region.RegionSizeX * 0.5f;
+            _position.Y = (float)parent_scene.Region.RegionSizeY * 0.5f;
+            _position.Z = parent_scene.GetTerrainHeightAtXY(_position.X, _position.Y) + 10f;
+                    
                 m_taintPosition.X = _position.X;
                 m_taintPosition.Y = _position.Y;
                 m_taintPosition.Z = _position.Z;
@@ -192,7 +186,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_tainted_isPhysical = true; // new tainted status: need to create ODE information
 
             _parent_scene.AddPhysicsActorTaint(this);
-            
+
+            m_UpdateTimecntr = 0;
+            m_UpdateFPScntr = 2.5f * parent_scene.StepTime; // this parameter needs retunning and possible came from ini file
+            if (m_UpdateTimecntr > .1f) // try to keep it under 100ms
+                m_UpdateTimecntr = .1f;
             m_name = avName;
         }
 
@@ -1001,8 +999,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // Avatar to Avatar collisions
                     // Prim to avatar collisions
                     // if target vel is zero why was it here ?
-                    vec.X = -vel.X * PID_D + (_zeroPosition.X - tempPos.X) * PID_P * 2f;
-                    vec.Y = -vel.Y * PID_D + (_zeroPosition.Y - tempPos.Y) * PID_P * 2f;
+                    vec.X = -vel.X * PID_D + (_zeroPosition.X - tempPos.X) * PID_P;
+                    vec.Y = -vel.Y * PID_D + (_zeroPosition.Y - tempPos.Y) * PID_P;
                     }
                 }
             else
@@ -1311,126 +1309,148 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_log.WarnFormat("[ODEPLUGIN]: Avatar Null reference for Avatar {0}, physical actor {1}", m_name, m_uuid);
             }
 
-
-            //  kluge to keep things in bounds.  ODE lets dead avatars drift away (they should be removed!)
-            bool needfixbody = false;
-
-            if (vec.X < 0.0f)
-                {
-                needfixbody = true;
-                vec.X = CAPSULE_RADIUS;
-                }
-            else if (vec.X > (int)_parent_scene.WorldExtents.X - CAPSULE_RADIUS)
-                {
-                needfixbody = true;
-                vec.X = (int)_parent_scene.WorldExtents.X - CAPSULE_RADIUS;
-                }
-
-            if (vec.Y < 0.0f)
-                {
-                needfixbody = true;
-                vec.Y = CAPSULE_RADIUS;
-                }
-            else if (vec.Y > (int)_parent_scene.WorldExtents.Y - CAPSULE_RADIUS)
-                {
-                needfixbody = true;
-                vec.Y = (int)_parent_scene.WorldExtents.Y - CAPSULE_RADIUS;
-                }
-
-            if (needfixbody)
-                d.BodySetPosition(Body, vec.X, vec.Y, vec.Z);
+            // vec is a ptr into internal ode data better not mess with it
 
             _position.X = (float)vec.X;
             _position.Y = (float)vec.Y;
             _position.Z = (float)vec.Z;
 
-            // Did we move last? = zeroflag
-            // This helps keep us from sliding all over
+            //  kluge to keep things in bounds.  ODE lets dead avatars drift away (they should be removed!)
 
-            if (_zeroFlag)
-            {
-                /*if (CollisionEventsThisFrame != null)
+            bool needfixbody = false;
+
+            if (_position.X < 0.0f)
                 {
-                    base.SendCollisionUpdate(CollisionEventsThisFrame);
+                needfixbody = true;
+                _position.X = 0.1f;
                 }
-                CollisionEventsThisFrame = new CollisionEventUpdate();
-                m_eventsubscription = 0;*/
+            else if (_position.X > (int)_parent_scene.Region.RegionSizeX - 0.1f)
+                {
+                needfixbody = true;
+                _position.X = (int)_parent_scene.Region.RegionSizeX - 0.1f;
+                }
+
+            if (_position.Y < 0.0f)
+                {
+                needfixbody = true;
+                _position.Y = 0.1f;
+                }
+            else if (_position.Y > (int)_parent_scene.Region.RegionSizeY - 0.1)
+                {
+                needfixbody = true;
+                _position.Y = (int)_parent_scene.Region.RegionSizeY - 0.1f;
+                }
+
+            if (needfixbody)
+                d.BodySetPosition(Body, _position.X, _position.Y, _position.Z);
+
+/*
+            if (_zeroFlag)
+                {
                 _velocity = Vector3.Zero;
 
                 // Did we send out the 'stopped' message?
-                if (!m_lastUpdateSent)
-                {
-                    m_lastUpdateSent = true;
+                if (!m_ZeroUpdateSent)
+                    {
+                    m_ZeroUpdateSent = true;
                     base.RequestPhysicsterseUpdate();
-                }
+                    }
 
                 //Tell any listeners that we've stopped
                 base.TriggerMovementUpdate();
-            }
-            else
-            {
-                m_lastUpdateSent = false;
-                try
-                {
-                    vec = d.BodyGetLinearVel(Body);
                 }
-                catch (NullReferenceException)
+            else
                 {
+                m_ZeroUpdateSent = false;
+ */
+                try
+                    {
+                    vec = d.BodyGetLinearVel(Body);
+                    }
+                catch (NullReferenceException)
+                    {
                     vec.X = _velocity.X;
                     vec.Y = _velocity.Y;
                     vec.Z = _velocity.Z;
-                }
-
-
-
-                /*
-                                if (vec.X == 0 && vec.Y == 0 && vec.Z == 0)
-                                {
-                                    m_log.Warn("[AODECharacter]: We have a malformed Velocity, ignoring...");
-                                }
-                                else
-                */
-                needfixbody = false;
-
-                if (Math.Abs(vec.X) < 0.001 && vec.X != 0)
-                    {
-                    needfixbody = true;
-                    vec.X = 0;
-                    }
-                if (Math.Abs(vec.Y) < 0.001 && vec.Y != 0)
-                    {
-                    needfixbody = true;
-                    vec.Y = 0;
-                    }
-                if (Math.Abs(vec.Z) < 0.001 && vec.Z != 0)
-                    {
-                    needfixbody = true;
-                    vec.Z = 0;
                     }
 
-                if (needfixbody)
-                    d.BodySetLinearVel(Body, vec.X, vec.Y, vec.Z);
 
-                _velocity = new Vector3((float)(vec.X), (float)(vec.Y), (float)(vec.Z));
+                // vec is a ptr into internal ode data better not mess with it
 
-                const float VELOCITY_TOLERANCE = 0.001f;
+                _velocity.X = vec.X;
+                _velocity.Y = vec.Y;
+                _velocity.Z = vec.Z;
+
+                bool VelIsZero = false;
+                int vcntr = 0;
+                if (Math.Abs(_velocity.X) < 0.001)
+                    {
+                    vcntr++;
+                    _velocity.X = 0;
+                    }
+                if (Math.Abs(_velocity.Y) < 0.001)
+                    {
+                    vcntr++;
+                    _velocity.Y = 0;
+                    }
+                if (Math.Abs(_velocity.Z) < 0.001)
+                    {
+                    vcntr++;
+                    _velocity.Z = 0;
+                    }
+                if (vcntr == 3)
+                    VelIsZero = true;
+                
+                // slow down updates
+                m_UpdateTimecntr += timestep;
+                if (m_UpdateTimecntr < m_UpdateFPScntr)
+                    return;
+
+                m_UpdateTimecntr = 0;
+
+                const float VELOCITY_TOLERANCE = 0.01f;
                 const float POSITION_TOLERANCE = 0.05f;
+                bool needSendUpdate = false;
 
+                   
                 //Check to see whether we need to trigger the significant movement method in the presence
-                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
-                    !Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
-                    !Position.ApproxEquals(m_lastPosition, POSITION_TOLERANCE))
-                {
-                    // Update the "last" values
-                    m_lastPosition = Position;
-                    m_lastRotationalVelocity = RotationalVelocity;
-                    m_lastVelocity = Velocity;
+ // avas don't rotate for now                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
+                if (!VelIsZero &&
+                    (!Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
+                    !Position.ApproxEquals(m_lastPosition, POSITION_TOLERANCE)))
+                    {
+                            // Update the "last" values
+                            needSendUpdate = true;
+                            m_ZeroUpdateSent = false;
+                            m_lastPosition = Position;
+                        //                        m_lastRotationalVelocity = RotationalVelocity;
+                            m_lastVelocity = Velocity;
+//                        base.RequestPhysicsterseUpdate();
+//                        base.TriggerSignificantMovement();
+                     }
+
+                else if(VelIsZero)
+                    {
+                    if (!m_ZeroUpdateSent)
+                        {
+                        needSendUpdate = true;
+                        m_ZeroUpdateSent = true;
+                        }
+                    }                  
+                    
+                
+                if (needSendUpdate)
+                    {
                     base.RequestPhysicsterseUpdate();
                     base.TriggerSignificantMovement();
-                }
+//                    base.TriggerMovementUpdate();
+                    }
+
+
                 //Tell any listeners about the new info
+                // guess something needs this to be here, don't know why for now
                 base.TriggerMovementUpdate();
-            }
+//            }
         }
 
         #endregion

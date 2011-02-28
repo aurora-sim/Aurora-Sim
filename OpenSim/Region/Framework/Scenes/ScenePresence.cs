@@ -1335,12 +1335,17 @@ namespace OpenSim.Region.Framework.Scenes
                                 // Theoretically we might need a more complex PID approach here if other 
                                 // unknown forces are acting on the avatar and we need to adaptively respond
                                 // to such forces, but the following simple approach seems to works fine.
-                                Vector3 LocalVectorToTarget3D =
-                                    (m_moveToPositionTarget - AbsolutePosition) // vector from cur. pos to target in global coords
-                                    * Matrix4.CreateFromQuaternion(Quaternion.Inverse(bodyRotation)); // change to avatar coords
+                            Vector3 LocalVectorToTarget3D=
+                                                         (m_moveToPositionTarget - AbsolutePosition) // vector from cur. pos to target in global coords
+                                //                                    * Matrix4.CreateFromQuaternion(Quaternion.Inverse(bodyRotation)); // change to avatar coords
+                                                        * Quaternion.Inverse(bodyRotation); // mult by matix is faster but with creation, use *quarternion
                                 // Ignore z component of vector
-                                Vector3 LocalVectorToTarget2D = new Vector3((float)(LocalVectorToTarget3D.X), (float)(LocalVectorToTarget3D.Y), 0f);
-                                LocalVectorToTarget2D.Normalize();
+                                Vector3 LocalVectorToTarget2D;
+                                LocalVectorToTarget2D.X = LocalVectorToTarget3D.X;
+                                LocalVectorToTarget2D.Y = LocalVectorToTarget3D.Y;
+                                LocalVectorToTarget2D.Z = 0f;
+
+ // we live without heavy norm      LocalVectorToTarget2D.Normalize();
                                 agent_control_v3 += LocalVectorToTarget2D;
 
                                 // update avatar movement flags. the avatar coordinate system is as follows:
@@ -2409,26 +2414,20 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         List<GridRegion> neighbors = neighborService.GetNeighbors(Scene.RegionInfo);
 
-                        int RegionCrossX = Scene.RegionInfo.RegionLocX;
-                        int RegionCrossY = Scene.RegionInfo.RegionLocY;
+                        float TargetX = (float)Scene.RegionInfo.RegionLocX + pos2.X;
+                        float TargetY = (float)Scene.RegionInfo.RegionLocY + pos2.Y;
 
-                        if (pos2.X < 0f) 
-                            RegionCrossX -= Constants.RegionSize;
-                        if (pos2.Y < 0f)
-                            RegionCrossY -= Constants.RegionSize;
-                        if (pos2.X > Scene.RegionInfo.RegionSizeX) 
-                            RegionCrossX += (int)Scene.RegionInfo.RegionSizeX;
-                        if (pos2.Y > Scene.RegionInfo.RegionSizeY)
-                            RegionCrossY += (int)Scene.RegionInfo.RegionSizeY;
                         GridRegion neighborRegion = null;
 
                         foreach (GridRegion region in neighbors)
                         {
-                            if (region.RegionLocX == RegionCrossX &&
-                                region.RegionLocY == RegionCrossY)
+                        if (TargetX > region.RegionLocX
+                            && TargetY > region.RegionLocY
+                            && TargetX < region.RegionLocX + region.RegionSizeX
+                            && TargetY < region.RegionLocY + region.RegionSizeY)
                             {
-                                neighborRegion = region;
-                                break;
+                            neighborRegion = region;
+                            break;
                             }
                         }
 
@@ -2436,6 +2435,7 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             InTransit();
                             bool isFlying = false;
+
                             if (m_physicsActor != null)
                                 isFlying = m_physicsActor.Flying;
 
@@ -2446,7 +2446,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 m_log.DebugFormat("[ScenePresence]: Unable to cross agent to neighbouring region, because there is no AgentTransferModule");
                         }
                         else
-                            m_log.Debug("[ScenePresence]: Could not find region for " + Name + " to cross into @ {" + RegionCrossX / 256 + ", " + RegionCrossY / 256 + "}");
+                            m_log.Debug("[ScenePresence]: Could not find region for " + Name + " to cross into @ {" + TargetX / 256 + ", " + TargetY / 256 + "}");
                     }
                 }
             }

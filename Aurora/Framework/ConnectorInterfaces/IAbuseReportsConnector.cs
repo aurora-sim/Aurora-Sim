@@ -31,5 +31,14 @@ namespace Aurora.Framework
         /// <param name="report"></param>
         /// <param name="Password"></param>
         void UpdateAbuseReport(AbuseReport report, string Password);
+
+        /// <summary>
+        /// returns a collection of abuse reports
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="count"></param>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        List<AbuseReport> GetAbuseReports(int start, int count, string filter);
 	}
 }

@@ -252,6 +252,14 @@ namespace OpenMetaverse
             {
                 try
                 {
+                    // well not async but blocking 
+                    m_udpSocket.SendTo(
+                        buf.Data,
+                        0,
+                        buf.DataLength,
+                        SocketFlags.None,
+                        buf.RemoteEndPoint);
+/*
                     m_udpSocket.BeginSendTo(
                         buf.Data,
                         0,
@@ -260,12 +268,13 @@ namespace OpenMetaverse
                         buf.RemoteEndPoint,
                         AsyncEndSend,
                         buf);
+ */
                 }
                 catch (SocketException) { }
                 catch (ObjectDisposedException) { }
             }
         }
-
+/*
         void AsyncEndSend(IAsyncResult result)
         {
             try
@@ -276,5 +285,7 @@ namespace OpenMetaverse
             catch (SocketException) { }
             catch (ObjectDisposedException) { }
         }
+ */
     }
+ 
 }

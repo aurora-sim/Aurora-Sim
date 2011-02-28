@@ -138,7 +138,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     return State;
                 case ThrottleOutPacketType.AvatarInfo:
                     return AvatarInfo;
-                case ThrottleOutPacketType.Unknown:
+//                case ThrottleOutPacketType.Unknown:
                 default:
                     return 0;
             }
@@ -166,7 +166,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     return StateLimit;
                 case ThrottleOutPacketType.AvatarInfo:
                     return AvatarInfoLimit;
-                case ThrottleOutPacketType.Unknown:
+//                case ThrottleOutPacketType.Unknown:
                 default:
                     return 0;
             }
