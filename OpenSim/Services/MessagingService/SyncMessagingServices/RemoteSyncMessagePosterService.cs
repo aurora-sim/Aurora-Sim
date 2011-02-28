@@ -77,6 +77,8 @@ namespace OpenSim.Services.MessagingService
 
         private OSDMap CreateWebResponse(OSDMap request)
         {
+            if (request == null)
+                return null;
             return (OSDMap)OSDParser.DeserializeJson(request["_RawResult"]);
         }
 

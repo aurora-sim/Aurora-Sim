@@ -77,7 +77,6 @@ namespace Aurora.Modules
         private void ContactOtherServers()
         {
             List<Connection> NewConnections = new List<Connection>(Connections);
-            Connections.Clear();
             foreach (Connection connection in NewConnections)
             {
                 TryAddConnection(connection);
@@ -100,10 +99,13 @@ namespace Aurora.Modules
 
         private void AddConnection(Connection c)
         {
-            Connections.Add(c);
-            IGenericsConnector genericsConnector = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            if (genericsConnector != null)
-                genericsConnector.AddGeneric(UUID.Zero, "InterWorldConnections", c.URL, c.ToOSD());
+            if (!Connections.Contains(c))
+            {
+                Connections.Add(c);
+                IGenericsConnector genericsConnector = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+                if (genericsConnector != null)
+                    genericsConnector.AddGeneric(UUID.Zero, "InterWorldConnections", c.URL, c.ToOSD());
+            }
         }
 
         private void TryAddConnection(Connection c)
@@ -116,12 +118,10 @@ namespace Aurora.Modules
                 //Give the Urls to the config service
                 configService.AddNewUrls(cert.SessionHash, cert.SecureUrls);
                 AddConnection(c);
-                m_log.Warn("Added connection to " + c.URL + ".");
+                c.Active = true;
             }
             else
-            {
-                m_log.Warn("Could not add connection.");
-            }
+                c.Active = false;
         }
 
         #endregion
@@ -162,11 +162,11 @@ namespace Aurora.Modules
 
         private void AddConsoleCommands()
         {
-            MainConsole.Instance.Commands.AddCommand("IWC", true, "add connection", "add connection",
+            MainConsole.Instance.Commands.AddCommand("IWC", true, "iwc add connection", "iwc add connection",
                 "Add an IWC connection to another host.", AddIWCConnection);
-            MainConsole.Instance.Commands.AddCommand("IWC", true, "remove connection", "remove connection",
+            MainConsole.Instance.Commands.AddCommand("IWC", true, "iwc remove connection", "iwc remove connection",
                 "Remove an IWC connection from another host.", RemoveIWCConnection);
-            MainConsole.Instance.Commands.AddCommand("IWC", true, "show connections", "show connections",
+            MainConsole.Instance.Commands.AddCommand("IWC", true, "iwc show connections", "iwc show connections",
                 "Shows all active IWC connections.", ShowIWCConnections);
         }
 
@@ -180,6 +180,29 @@ namespace Aurora.Modules
         private void AddIWCConnection(string module, string[] cmds)
         {
             string Url = MainConsole.Instance.CmdPrompt("Url to the connection");
+            //Be user friendly, add the http:// if needed as well as the final /
+            Url = (Url.StartsWith("http://") || Url.StartsWith("https://")) ? Url : "http://" + Url;
+            Url = Url.EndsWith("/") ? Url + "iwcconnection" : Url + "/iwcconnection";
+
+            Connection con = FindConnectionByURL(Url);
+            if(con != null)
+            {
+                if (con.Active)
+                {
+                    m_log.Warn("A connection to this server already exists.");
+                }
+                else
+                {
+                    string activate = MainConsole.Instance.CmdPrompt("A connection to this server already exists, do you wish to active it?");
+                    if (activate == "yes" || activate == "true")
+                    {
+                        TryAddConnection(con);
+                    }
+                }
+                return;
+            }
+            con = new Connection();
+            con.URL = Url;
             string RegionName = MainConsole.Instance.CmdPrompt("Name of the region that this connection will be for");
             Scene region = null;
             while (true)
@@ -200,7 +223,6 @@ namespace Aurora.Modules
             string trustLevel = MainConsole.Instance.CmdPrompt("Trust level of this connection");
             int timeInDays = int.Parse(timeUntilExpires);
 
-            Connection con = new Connection();
             
             //Build the certificate
             IWCCertificate cert = new IWCCertificate();
@@ -213,10 +235,6 @@ namespace Aurora.Modules
 
             con.Certificate = cert;
             con.TrustLevel = (TrustLevel)Enum.Parse(typeof(TrustLevel), trustLevel);
-            //Be user friendly, add the http:// if needed as well as the final /
-            Url = (Url.StartsWith("http://") || Url.StartsWith("https://")) ? Url : "http://" + Url;
-            Url = Url.EndsWith("/") ? Url + "iwcconnection" : Url + "/iwcconnection";
-            con.URL = Url;
 
             TryAddConnection(con);
         }
@@ -245,6 +263,7 @@ namespace Aurora.Modules
                 m_log.Info("Url: " + Connections[i].URL);
                 m_log.Info("TrustLevel: " + Connections[i].TrustLevel);
                 m_log.Info("Valid Until: " + Connections[i].Certificate.ValidUntil);
+                m_log.Info("Active: " + Connections[i].Active);
                 m_log.Info("-------------");
             }
         }
@@ -496,6 +515,8 @@ namespace Aurora.Modules
             OSDMap result = Certificate.ToOSD(false);
             result["Result"] = "Successful";
 
+            m_log.WarnFormat("[IWC]: {0} successfully connected to us.", Certificate.RegionHandle);
+
             return Return(result);
         }
 
@@ -584,6 +605,10 @@ namespace Aurora.Modules
         /// The (base, unsecure) Url of the host (target) we are connecting to
         /// </summary>
         public string URL;
+        /// <summary>
+        /// Whether this connection is currently active and able to be used
+        /// </summary>
+        public bool Active = true;
 
         public override void FromOSD(OSDMap map)
         {
