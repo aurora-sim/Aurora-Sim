@@ -87,13 +87,13 @@ namespace OpenSim.Services.UserAccountService
             m_GridService = registry.RequestModuleInterface<IGridService>();
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
             m_InventoryService = registry.RequestModuleInterface<IInventoryService>();
+            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IUserAccountData>();
+            if (m_Database == null)
+                throw new Exception("Could not find a storage interface in the given module");
         }
 
         public void FinishedStartup()
         {
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IUserAccountData>();
-            if (m_Database == null)
-                throw new Exception("Could not find a storage interface in the given module");
         }
 
         #region IUserAccountService

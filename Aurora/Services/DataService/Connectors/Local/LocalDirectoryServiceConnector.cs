@@ -183,7 +183,13 @@ namespace Aurora.Services.DataService
                 LandData.OwnerID = UUID.Parse(Query[i + 17]);
                 LandData.GroupID = UUID.Parse(Query[i + 18]);
                 LandData.SnapshotID = UUID.Parse(Query[i + 20]);
-                LandData.Bitmap = OSDParser.DeserializeLLSDXml(Query[i + 21]);
+                try
+                {
+                    LandData.Bitmap = OSDParser.DeserializeLLSDXml(Query[i + 21]);
+                }
+                catch
+                {
+                }
 
                 Lands.Add(LandData);
                 LandData = new LandData();

@@ -76,20 +76,12 @@ namespace Aurora.Modules
         /// </summary>
         private void ContactOtherServers()
         {
-            List<Connection> NewConnections = new List<Connection>();
-            foreach (Connection connection in Connections)
+            List<Connection> NewConnections = new List<Connection>(Connections);
+            Connections.Clear();
+            foreach (Connection connection in NewConnections)
             {
-                IWCCertificate cert = OutgoingPublicComms.QueryRemoteHost(connection);
-                if (cert != null)
-                {
-                    //Add the new certificate to the connection
-                    Connection newConnection = (Connection)connection.Duplicate();
-                    newConnection.Certificate = cert;
-                    NewConnections.Add(newConnection);
-                }
+                TryAddConnection(connection);
             }
-            //Fix the list with the newly updated ones
-            Connections = NewConnections;
         }
 
         /// <summary>
@@ -112,6 +104,24 @@ namespace Aurora.Modules
             IGenericsConnector genericsConnector = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
             if (genericsConnector != null)
                 genericsConnector.AddGeneric(UUID.Zero, "InterWorldConnections", c.URL, c.ToOSD());
+        }
+
+        private void TryAddConnection(Connection c)
+        {
+            IWCCertificate cert = OutgoingPublicComms.QueryRemoteHost(c);
+            if (cert != null)
+            {
+                c.Certificate = cert;
+                IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
+                //Give the Urls to the config service
+                configService.AddNewUrls(cert.SessionHash, cert.SecureUrls);
+                AddConnection(c);
+                m_log.Warn("Added connection to " + c.URL + ".");
+            }
+            else
+            {
+                m_log.Warn("Could not add connection.");
+            }
         }
 
         #endregion
@@ -208,20 +218,7 @@ namespace Aurora.Modules
             Url = Url.EndsWith("/") ? Url + "iwcconnection" : Url + "/iwcconnection";
             con.URL = Url;
 
-            cert = OutgoingPublicComms.QueryRemoteHost(con);
-            if (cert != null)
-            {
-                con.Certificate = cert;
-                IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
-                //Give the Urls to the config service
-                configService.AddNewUrls(cert.SessionHash, cert.SecureUrls);
-                AddConnection(con);
-                m_log.Warn("Added connection to " + Url + ".");
-            }
-            else
-            {
-                m_log.Warn("Could not add connection.");
-            }
+            TryAddConnection(con);
         }
 
         private void RemoveIWCConnection(string module, string[] cmds)

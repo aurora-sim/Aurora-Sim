@@ -65,20 +65,23 @@ namespace Aurora.Services.DataService
                 string LastName = query[i + 3];
                 data.Email = query[i + 4];
 
-                string[] URLs = query[i + 5].Split(new char[] { ' ' });
                 data.ServiceURLs = new Dictionary<string, object>();
-
-                foreach (string url in URLs)
+                if (query[i + 5] != null)
                 {
-                    string[] parts = url.Split(new char[] { '=' });
+                    string[] URLs = query[i + 5].Split(new char[] { ' ' });
 
-                    if (parts.Length != 2)
-                        continue;
+                    foreach (string url in URLs)
+                    {
+                        string[] parts = url.Split(new char[] { '=' });
 
-                    string name = System.Web.HttpUtility.UrlDecode(parts[0]);
-                    string val = System.Web.HttpUtility.UrlDecode(parts[1]);
+                        if (parts.Length != 2)
+                            continue;
 
-                    data.ServiceURLs[name] = val;
+                        string name = System.Web.HttpUtility.UrlDecode(parts[0]);
+                        string val = System.Web.HttpUtility.UrlDecode(parts[1]);
+
+                        data.ServiceURLs[name] = val;
+                    }
                 }
                 data.Created = Int32.Parse(query[i + 6]);
                 data.UserLevel = Int32.Parse(query[i + 7]);

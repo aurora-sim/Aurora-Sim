@@ -194,7 +194,8 @@ namespace OpenSim.Services.Connectors
                                 result = true;
                             });
 
-                    return result;
+                    if(result)
+                        return result;
                 }
                 else
                 {
@@ -289,11 +290,8 @@ namespace OpenSim.Services.Connectors
             {
                 string uri = m_ServerURI + "/" + id;
 
-                if (!SynchronousRestObjectRequester.
-                        MakeRequest<int, bool>("DELETE", uri, 0))
-                {
-                    return false;
-                }
+                SynchronousRestObjectRequester.
+                        MakeRequest<int, bool>("DELETE", uri, 0);
             }
             if (m_Cache != null)
                 m_Cache.Expire(id);
@@ -348,6 +346,7 @@ namespace OpenSim.Services.Connectors
 
         public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            m_registry = registry;
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AssetHandler", "") != Name)
                 return;
@@ -357,7 +356,6 @@ namespace OpenSim.Services.Connectors
                                           "dump one cached asset", HandleDumpAsset);
 
             registry.RegisterModuleInterface<IAssetService>(this);
-            m_registry = registry;
         }
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
