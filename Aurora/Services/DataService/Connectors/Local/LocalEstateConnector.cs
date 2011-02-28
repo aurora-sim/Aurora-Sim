@@ -17,10 +17,12 @@ namespace Aurora.Services.DataService
 	{
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IGenericData GD = null;
+        private IRegistryCore m_registry;
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore registry, string defaultConnectionString)
         {
             GD = GenericData;
+            m_registry = registry;
 
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
@@ -272,6 +274,8 @@ namespace Aurora.Services.DataService
             SaveUUIDList(es.EstateID, "EstateManagers", es.EstateManagers);
             SaveUUIDList(es.EstateID, "EstateAccess", es.EstateAccess);
             SaveUUIDList(es.EstateID, "EstateGroups", es.EstateGroups);
+
+            m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("EstateUpdated", es);
         }
 
         public List<int> GetEstates(string search)

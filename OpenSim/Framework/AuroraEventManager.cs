@@ -44,6 +44,8 @@ namespace Aurora.Framework
         ///      param is a GridRegion
         /// NewUserConnection - A new user has been added to the scene (child or root)
         ///      param is the OSDMap that will be returned to the server
+        /// EstateUpdated - An estate has been updated
+        ///      param is the EstateSettings of the changed estate
         /// 
         /// </summary>
         public event OnGenericEventHandler OnGenericEvent;

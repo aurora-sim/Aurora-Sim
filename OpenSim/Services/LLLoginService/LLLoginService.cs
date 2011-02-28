@@ -492,8 +492,13 @@ namespace OpenSim.Services.LLLoginService
                 List<InventoryFolderBase> inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
                 if (m_RequireInventory && ((inventorySkel == null) || (inventorySkel != null && inventorySkel.Count == 0)))
                 {
-                    m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: unable to retrieve user inventory");
-                    return LLFailedLoginResponse.InventoryProblem;
+                    m_InventoryService.CreateUserInventory(account.PrincipalID);
+                    inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
+                    if (m_RequireInventory && ((inventorySkel == null) || (inventorySkel != null && inventorySkel.Count == 0)))
+                    {
+                        m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: unable to retrieve user inventory");
+                        return LLFailedLoginResponse.InventoryProblem;
+                    }
                 }
 
                 // Get active gestures

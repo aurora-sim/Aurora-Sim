@@ -245,7 +245,11 @@ namespace Aurora.DataManager.SQLite
                 {
                     for (int i = 0; i < reader.FieldCount; i++)
                     {
-                        RetVal.Add(reader.GetString(i));
+                        Type r = reader[i].GetType();
+                        if (r == typeof(DBNull))
+                            RetVal.Add(null);
+                        else
+                            RetVal.Add(reader.GetString(i));
                     }
                 }
             }
@@ -275,7 +279,11 @@ namespace Aurora.DataManager.SQLite
             {
                 for (i = 0; i < reader.FieldCount; i++)
                 {
-                    RetVal.Add(reader[i].ToString());
+                    Type r = reader[i].GetType();
+                    if (r == typeof(DBNull))
+                        RetVal.Add(null);
+                    else
+                        RetVal.Add(reader[i].ToString());
                 }
             }
             reader.Close();
