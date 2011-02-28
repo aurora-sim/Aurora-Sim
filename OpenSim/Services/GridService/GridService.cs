@@ -65,6 +65,11 @@ namespace OpenSim.Services.GridService
             get { return GetType().Name; }
         }
 
+        public virtual IGridService InnerService
+        {
+            get { return this; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];

@@ -148,6 +148,7 @@ namespace OpenSim.Services.Interfaces
 
     public interface IUserAccountService
     {
+        IUserAccountService InnerService { get; }
         /// <summary>
         /// Get a user given by UUID
         /// </summary>

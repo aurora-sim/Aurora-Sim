@@ -49,6 +49,11 @@ namespace OpenSim.Services.Connectors
 
         private IRegistryCore m_registry;
 
+        public virtual IGridService InnerService
+        {
+            get { return this; }
+        }
+
         #region IGridService
 
         public virtual string RegisterRegion(GridRegion regionInfo, UUID SecureSessionID, out UUID SessionID)

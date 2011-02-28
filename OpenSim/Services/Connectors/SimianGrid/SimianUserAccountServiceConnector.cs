@@ -54,7 +54,12 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_serverUrl = String.Empty;
-        private ExpiringCache<UUID, UserAccount> m_accountCache = new ExpiringCache<UUID,UserAccount>();
+        private ExpiringCache<UUID, UserAccount> m_accountCache = new ExpiringCache<UUID, UserAccount>();
+
+        public virtual IUserAccountService InnerService
+        {
+            get { return this; }
+        }
 
         #region IService Members
 

@@ -37,6 +37,7 @@ namespace OpenSim.Services.Interfaces
 {
     public interface IGridService
     {
+        IGridService InnerService { get; }
         /// <summary>
         /// Register a region with the grid service.
         /// </summary>

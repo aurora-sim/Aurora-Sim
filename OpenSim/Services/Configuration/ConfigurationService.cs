@@ -196,7 +196,7 @@ namespace OpenSim.Services.ConfigurationService
             {
                 foreach (string name in m_allConfigs.Keys)
                 {
-                    if (m_allConfigs[name].ContainsKey(key))
+                    if (m_allConfigs[name].ContainsKey(key) && m_allConfigs[name][key] != "")
                     {
                         return FindValueOfFromOSDMap(key, m_allConfigs[name]);
                     }

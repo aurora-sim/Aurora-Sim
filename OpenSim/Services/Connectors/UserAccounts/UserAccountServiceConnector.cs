@@ -47,6 +47,11 @@ namespace OpenSim.Services.Connectors
         private UserAccountCache m_cache = new UserAccountCache();
         private IRegistryCore m_registry;
 
+        public virtual IUserAccountService InnerService
+        {
+            get { return this; }
+        }
+
         public virtual UserAccount GetUserAccount(UUID scopeID, string firstName, string lastName)
         {
             UserAccount account;
@@ -118,6 +123,8 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[ACCOUNTS CONNECTOR]: queryString = {0}", reqString);
+            List<UserAccount> accounts = new List<UserAccount>();
+
             try
             {
                 List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("UserAccountServerURI");
@@ -131,41 +138,38 @@ namespace OpenSim.Services.Connectors
                         m_log.DebugFormat("[ACCOUNT CONNECTOR]: GetUserAccounts received null or empty reply");
                         return null;
                     }
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        if (replyData.ContainsKey("result") && replyData.ContainsKey("result").ToString() == "null")
+                        {
+                            continue;
+                        }
+
+                        Dictionary<string, object>.ValueCollection accountList = replyData.Values;
+                        //m_log.DebugFormat("[ACCOUNTS CONNECTOR]: GetAgents returned {0} elements", pinfosList.Count);
+                        foreach (object acc in accountList)
+                        {
+                            if (acc is Dictionary<string, object>)
+                            {
+                                UserAccount pinfo = new UserAccount((Dictionary<string, object>)acc);
+                                m_cache.Cache(pinfo.PrincipalID, pinfo);
+                                accounts.Add(pinfo);
+                            }
+                            else
+                                m_log.DebugFormat("[ACCOUNT CONNECTOR]: GetUserAccounts received invalid response type {0}",
+                                    acc.GetType());
+                        }
+                    }
+                    else
+                        m_log.DebugFormat("[ACCOUNTS CONNECTOR]: GetUserAccounts received null response");
                 }
             }
             catch (Exception e)
             {
                 m_log.DebugFormat("[ACCOUNT CONNECTOR]: Exception when contacting accounts server: {0}", e.Message);
             }
-
-            List<UserAccount> accounts = new List<UserAccount>();
-
-            Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-            if (replyData != null)
-            {
-                if (replyData.ContainsKey("result") && replyData.ContainsKey("result").ToString() == "null")
-                {
-                    return accounts;
-                }
-
-                Dictionary<string, object>.ValueCollection accountList = replyData.Values;
-                //m_log.DebugFormat("[ACCOUNTS CONNECTOR]: GetAgents returned {0} elements", pinfosList.Count);
-                foreach (object acc in accountList)
-                {
-                    if (acc is Dictionary<string, object>)
-                    {
-                        UserAccount pinfo = new UserAccount((Dictionary<string, object>)acc);
-                        m_cache.Cache(pinfo.PrincipalID, pinfo);
-                        accounts.Add(pinfo);
-                    }
-                    else
-                        m_log.DebugFormat("[ACCOUNT CONNECTOR]: GetUserAccounts received invalid response type {0}",
-                            acc.GetType());
-                }
-            }
-            else
-                m_log.DebugFormat("[ACCOUNTS CONNECTOR]: GetUserAccounts received null response");
 
             return accounts;
         }
@@ -202,6 +206,7 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[ACCOUNTS CONNECTOR]: queryString = {0}", reqString);
+            UserAccount account = null;
             try
             {
                 List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(avatarID.ToString(), "UserAccountServerURI");
@@ -215,22 +220,21 @@ namespace OpenSim.Services.Connectors
                         m_log.DebugFormat("[ACCOUNT CONNECTOR]: GetUserAccount received null or empty reply");
                         return null;
                     }
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                    if ((replyData != null) && replyData.ContainsKey("result") && (replyData["result"] != null))
+                    {
+                        if (replyData["result"] is Dictionary<string, object>)
+                        {
+                            account = new UserAccount((Dictionary<string, object>)replyData["result"]);
+                            return account;
+                        }
+                    }
                 }
             }
             catch (Exception e)
             {
                 m_log.DebugFormat("[ACCOUNT CONNECTOR]: Exception when contacting user account server: {0}", e.Message);
-            }
-
-            Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-            UserAccount account = null;
-
-            if ((replyData != null) && replyData.ContainsKey("result") && (replyData["result"] != null))
-            {
-                if (replyData["result"] is Dictionary<string, object>)
-                {
-                    account = new UserAccount((Dictionary<string, object>)replyData["result"]);
-                }
             }
 
             return account;
@@ -257,8 +261,6 @@ namespace OpenSim.Services.Connectors
                         {
                             if (replyData["result"].ToString().ToLower() == "success")
                                 return true;
-                            else
-                                return false;
                         }
                         else
                             m_log.DebugFormat("[ACCOUNTS CONNECTOR]: Set or Create UserAccount reply data does not contain result field");
@@ -285,11 +287,11 @@ namespace OpenSim.Services.Connectors
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            m_registry = registry;
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("UserAccountHandler", "") != Name)
                 return;
 
-            m_registry = registry;
             registry.RegisterModuleInterface<IUserAccountService>(this);
         }
 

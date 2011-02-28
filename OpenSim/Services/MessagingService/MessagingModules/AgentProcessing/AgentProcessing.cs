@@ -84,16 +84,18 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             else if (message["Method"] == "DisableSimulator")
             {
                 //KILL IT!
-                if (regionCaps == null)
+                if (regionCaps == null || clientCaps == null)
                     return null;
                 regionCaps.Close();
                 clientCaps.RemoveCAPS(requestingRegion);
             }
             else if (message["Method"] == "ArrivedAtDestination")
             {
+                if (regionCaps == null || clientCaps == null)
+                    return null;
                 //Recieved a callback
-                if(clientCaps.InTeleport) //Only set this if we are in a teleport, 
-                                          //  otherwise (such as on login), this won't check after the first tp!
+                if (clientCaps.InTeleport) //Only set this if we are in a teleport, 
+                    //  otherwise (such as on login), this won't check after the first tp!
                     clientCaps.CallbackHasCome = true;
 
                 regionCaps.Disabled = false;
@@ -112,6 +114,8 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             }
             else if (message["Method"] == "CancelTeleport")
             {
+                if (regionCaps == null || clientCaps == null)
+                    return null;
                 //The user has requested to cancel the teleport, stop them.
                 clientCaps.RequestToCancelTeleport = true;
                 regionCaps.Disabled = false;
@@ -134,6 +138,8 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             }
             else if (message["Method"] == "SendChildAgentUpdate")
             {
+                if (regionCaps == null || clientCaps == null)
+                    return null;
                 OSDMap body = ((OSDMap)message["Message"]);
 
                 AgentPosition pos = new AgentPosition();
@@ -144,6 +150,8 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             }
             else if (message["Method"] == "TeleportAgent")
             {
+                if (regionCaps == null || clientCaps == null)
+                    return null;
                 OSDMap body = ((OSDMap)message["Message"]);
 
                 GridRegion destination = new GridRegion();
@@ -168,6 +176,8 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             }
             else if (message["Method"] == "CrossAgent")
             {
+                if (regionCaps == null || clientCaps == null)
+                    return null;
                 //This is a simulator message that tells us to cross the agent
                 OSDMap body = ((OSDMap)message["Message"]);
 
@@ -399,12 +409,14 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     if (!InformClientOfNeighbor(AgentID, requestingRegion, circuit, destination, TeleportFlags,
                         agentData, out reason))
                     {
+                        ResetFromTransit(AgentID);
                         return false;
                     }
                 }
                 else
                 {
                     reason = "Could not find the grid service";
+                    ResetFromTransit(AgentID);
                     return false;
                 }
                 

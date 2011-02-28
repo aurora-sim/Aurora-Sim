@@ -62,6 +62,11 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         #region IService Members
 
+        public virtual IGridService InnerService
+        {
+            get { return this; }
+        }
+
         public string Name { get { return GetType().Name; } }
 
         public void Initialize(IConfigSource config, IRegistryCore registry)

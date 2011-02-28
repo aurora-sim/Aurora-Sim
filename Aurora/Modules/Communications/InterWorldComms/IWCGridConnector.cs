@@ -24,6 +24,11 @@ namespace Aurora.Modules
             get { return GetType().Name; }
         }
 
+        public virtual IGridService InnerService
+        {
+            get { return m_localService; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];

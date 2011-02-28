@@ -23,12 +23,12 @@ namespace OpenSim.Services.MessagingService
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            m_registry = registry;
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("SyncMessagePosterServiceHandler", "") != Name)
                 return;
 
             registry.RegisterModuleInterface<ISyncMessagePosterService>(this);
-            m_registry = registry;
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)

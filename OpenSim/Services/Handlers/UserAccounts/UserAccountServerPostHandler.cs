@@ -53,7 +53,7 @@ namespace OpenSim.Services
         public UserAccountServerPostHandler(string url, IUserAccountService service) :
                 base("POST", url)
         {
-            m_UserAccountService = service;
+            m_UserAccountService = service.InnerService;
         }
 
         public override byte[] Handle(string path, Stream requestData,

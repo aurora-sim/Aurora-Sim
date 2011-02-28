@@ -55,12 +55,20 @@ namespace OpenSim.Services.UserAccountService
             get { return GetType().Name; }
         }
 
+        public virtual IUserAccountService InnerService
+        {
+            get { return this; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("UserAccountHandler", "") != Name)
                 return;
-
+            Configure(config, registry);
+        }
+        public void Configure(IConfigSource config, IRegistryCore registry)
+        {
             if (MainConsole.Instance != null)
             {
                 MainConsole.Instance.Commands.AddCommand("UserService", false,

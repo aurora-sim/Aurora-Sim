@@ -35,11 +35,11 @@ namespace OpenSim.Services.MessagingService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+            m_registry = registry;
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AsyncMessagePostServiceHandler", "") != Name)
                 return;
 
-            m_registry = registry;
             registry.RegisterModuleInterface<IAsyncMessagePostService>(this);
             m_asyncReceiverService = registry.RequestModuleInterface<IAsyncMessageRecievedService>();
 
