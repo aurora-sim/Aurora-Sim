@@ -140,8 +140,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
 
             // NOTE: No idea what prequant and postquant should be or what they do
-            int[] patch = CompressPatch(patchData, header, 10);
-            int wbits = EncodePatchHeader(output, header, patch, Constants.RegionSize, Constants.RegionSize);
+
+            int wbits;
+            int[] patch = CompressPatch(patchData, header, 10, out wbits);
+            wbits = EncodePatchHeader(output, header, patch, Constants.RegionSize, Constants.RegionSize,wbits);
             EncodePatch(output, patch, 0, wbits);
         }
 
@@ -171,8 +173,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
 
             // NOTE: No idea what prequant and postquant should be or what they do
-            int[] patch = CompressPatch(heightmap, x, y, header, 10, RegionSizeX, RegionSizeY);
-            int wbits = EncodePatchHeader(output, header, patch, RegionSizeX, RegionSizeY);
+            int wbits;
+            int[] patch = CompressPatch(heightmap, x, y, header, 10, RegionSizeX, RegionSizeY,out wbits);
+            wbits = EncodePatchHeader(output, header, patch, RegionSizeX, RegionSizeY,wbits);
             EncodePatch(output, patch, 0, wbits);
         }
 
@@ -247,52 +250,54 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return header;
         }
 
-        private static int EncodePatchHeader(BitPack output, TerrainPatch.Header header, int[] patch, int RegionSizeX, int RegionSizeY)
+        private static int EncodePatchHeader(BitPack output, TerrainPatch.Header header, int[] patch, int RegionSizeX, int RegionSizeY,int wbits)
         {
-            int temp;
-            int wbits = (header.QuantWBits & 0x0f) + 2;
-            uint maxWbits = (uint)wbits + 5;
-            uint minWbits = ((uint)wbits >> 1);
-            int wbitsMaxValue;
+        /*
+                    int temp;
+                    int wbits = (header.QuantWBits & 0x0f) + 2;
+                    uint maxWbits = (uint)wbits + 5;
+                    uint minWbits = ((uint)wbits >> 1);
+                    int wbitsMaxValue;
+        */
+        // gool is to determ minimum number of bits to use so all data fits
+        /*
+                    wbits = (int)minWbits;
+                    wbitsMaxValue = (1 << wbits);
 
-// gool is to determ minimum number of bits to use so all data fits
-
-            wbits = (int)minWbits;
-            wbitsMaxValue = (1 << wbits);
-
-            for (int i = 0; i < patch.Length; i++)
-            {
-                temp = patch[i];
-                if (temp != 0)
-                {
-                    // Get the absolute value
-                    if (temp < 0) temp *= -1;
-
-/* no coments..
-
-                    for (int j = (int)maxWbits; j > (int)minWbits; j--)
+                    for (int i = 0; i < patch.Length; i++)
                     {
-                        if ((temp & (1 << j)) != 0)
+                        temp = patch[i];
+                        if (temp != 0)
                         {
-                            if (j > wbits) wbits = j;
-                            break;
+                            // Get the absolute value
+                            if (temp < 0) temp *= -1;
+
+         no coments..
+
+                            for (int j = (int)maxWbits; j > (int)minWbits; j--)
+                            {
+                                if ((temp & (1 << j)) != 0)
+                                {
+                                    if (j > wbits) wbits = j;
+                                    break;
+                                }
+                            }
+ 
+                            while (temp > wbitsMaxValue)
+                                {
+                                wbits++;
+                                if (wbits == maxWbits)
+                                    goto Done;
+                                wbitsMaxValue = 1 << wbits;
+                                }
                         }
                     }
- */
-                    while (temp > wbitsMaxValue)
-                        {
-                        wbits++;
-                        if (wbits == maxWbits)
-                            goto Done;
-                        wbitsMaxValue = 1 << wbits;
-                        }
-                }
-            }
 
-        Done:
+                Done:
 
-            //            wbits += 1;
-            // better check
+                    //            wbits += 1;
+         */
+        // better check
             if (wbits > 17)
                 wbits = 16;
             else if (wbits < 3)
@@ -465,6 +470,72 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
             }
 
+        private static int DCTColumn16Wbits(float[] linein, int[] lineout, int column,int wbits,int maxwbits)
+            {
+            // input columns are in fact stored in lines now
+
+            int tmp;
+            bool dowbits = !(wbits==maxwbits);
+            int wbitsMaxValue = 1 << wbits;
+
+            float total = 0.0f;
+            //            const float oosob = 2.0f / Constants.TerrainPatchSize;
+            int inlinesptr = Constants.TerrainPatchSize * column;
+
+            for (int n = 0; n < Constants.TerrainPatchSize; n++)
+                {
+                total += linein[inlinesptr + n];
+                }
+
+            //            lineout[CopyMatrix16[column]] = (int)(OO_SQRT2 * total * oosob * QuantizeTable16[column]);
+            tmp = (int)(OO_SQRT2 * total * QuantizeTable16[column]);
+            lineout[CopyMatrix16[column]] = tmp;
+
+            if (dowbits)
+                {
+                if (tmp < 0) tmp *= -1;
+                while (tmp > wbitsMaxValue)
+                    {
+                    wbits++;
+                    wbitsMaxValue = 1 << wbits;
+                    if (wbits == maxwbits)
+                        {
+                        dowbits = false;
+                        break;
+                        }
+                    }
+                }
+
+            for (int uptr = Constants.TerrainPatchSize; uptr < Constants.TerrainPatchSize * Constants.TerrainPatchSize; uptr += Constants.TerrainPatchSize)
+                {
+                total = 0.0f;
+
+                for (int n = inlinesptr, ptru = uptr; n < inlinesptr + Constants.TerrainPatchSize; n++, ptru++)
+                    {
+                    total += linein[n] * CosineTable16[ptru];
+                    }
+
+                tmp = (int)(total * QuantizeTable16[uptr + column]);
+                lineout[CopyMatrix16[uptr + column]] = tmp;
+
+                if (dowbits)
+                    {
+                    if (tmp < 0) tmp *= -1;
+                    while (tmp > wbitsMaxValue)
+                        {
+                        wbits++;
+                        wbitsMaxValue = 1 << wbits;
+                        if (wbits == maxwbits)
+                            {
+                            dowbits = false;
+                            break;
+                            }
+                        }
+                    }
+                }
+            return wbits;
+            }
+
         public static void DecodePatch(int[] patches, BitPack bitpack, TerrainPatch.Header header, int size)
         {
             int temp;
@@ -617,17 +688,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return output;
         }
 
-        private static int[] CompressPatch(float[] patchData, TerrainPatch.Header header, int prequant)
+        private static int[] CompressPatch(float[] patchData, TerrainPatch.Header header, int prequant,out int wbits)
         {
             float[] block = new float[Constants.TerrainPatchSize * Constants.TerrainPatchSize];
-            int wordsize = prequant;
+            int wordsize = (prequant - 2) & 0x0f;
             float oozrange = 1.0f / (float)header.Range;
             float range = (float)(1 << prequant);
             float premult = oozrange * range;
             float sub = (float)(1 << (prequant - 1)) + header.DCOffset * premult;
 
-            header.QuantWBits = wordsize - 2;
-            header.QuantWBits |= (prequant - 2) << 4;
+            header.QuantWBits = wordsize;
+            header.QuantWBits |= wordsize << 4;
 
             int k = 0;
             for (int j = 0; j < Constants.TerrainPatchSize; j++)
@@ -639,25 +710,29 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             float[] ftemp = new float[Constants.TerrainPatchSize * Constants.TerrainPatchSize];
             int[] itemp = new int[Constants.TerrainPatchSize * Constants.TerrainPatchSize];
 
+
+            int maxWbits = prequant + 5;
+            wbits = (prequant >> 1);
+
             for (int o = 0; o < Constants.TerrainPatchSize; o++)
                 DCTLine16(block, ftemp, o);
             for (int o = 0; o < Constants.TerrainPatchSize; o++)
-                DCTColumn16(ftemp, itemp, o);
+                wbits = DCTColumn16Wbits(ftemp, itemp, o,wbits,maxWbits);
 
             return itemp;
         }
 
-        private static int[] CompressPatch(float[,] patchData, TerrainPatch.Header header, int prequant)
+        private static int[] CompressPatch(float[,] patchData, TerrainPatch.Header header, int prequant,out int wbits)
         {
             float[] block = new float[Constants.TerrainPatchSize * Constants.TerrainPatchSize];
-            int wordsize = prequant;
             float oozrange = 1.0f / (float)header.Range;
             float range = (float)(1 << prequant);
             float premult = oozrange * range;
             float sub = (float)(1 << (prequant - 1)) + header.DCOffset * premult;
+            int wordsize = (prequant - 2) & 0x0f;
 
-            header.QuantWBits = wordsize - 2;
-            header.QuantWBits |= (prequant - 2) << 4;
+            header.QuantWBits = wordsize;
+            header.QuantWBits |= wordsize << 4;
 
             int k = 0;
             for (int j = 0; j < Constants.TerrainPatchSize; j++)
@@ -669,15 +744,19 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             float[] ftemp = new float[Constants.TerrainPatchSize * Constants.TerrainPatchSize];
             int[] itemp = new int[Constants.TerrainPatchSize * Constants.TerrainPatchSize];
 
+            int maxWbits = prequant + 5;
+            wbits = (prequant >> 1);
+
             for (int o = 0; o < Constants.TerrainPatchSize; o++)
                 DCTLine16(block, ftemp, o);
             for (int o = 0; o < Constants.TerrainPatchSize; o++)
-                DCTColumn16(ftemp, itemp, o);
+                wbits = DCTColumn16Wbits(ftemp, itemp, o, wbits, maxWbits);
 
             return itemp;
         }
 
-        private static int[] CompressPatch(float[] heightmap, int patchX, int patchY, TerrainPatch.Header header, int prequant, int RegionSizeX, int RegionSizeY)
+        private static int[] CompressPatch(float[] heightmap, int patchX, int patchY, TerrainPatch.Header header,
+                int prequant, int RegionSizeX, int RegionSizeY, out int wbits)
         {
             float[] block = new float[Constants.TerrainPatchSize * Constants.TerrainPatchSize];
             int wordsize = prequant;
@@ -690,27 +769,23 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             header.QuantWBits |= (prequant - 2) << 4;
 
             int k = 0;
-//            int sqrt = (int)Math.Sqrt(heightmap.Length);
-            //OpenSim.Framework.Console.MainConsole.Instance.Output(sqrt + "," + patchX + "," + patchY + ","+
-            //    patchX * Constants.TerrainPatchSize + "," + 
-            //    ((patchX >= (RegionSizeX / Constants.TerrainPatchSize) ? (RegionSizeX - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchX) + 1) * Constants.TerrainPatchSize + "," +
-            //    patchY * Constants.TerrainPatchSize + "," +
-            //    ((patchY >= (RegionSizeY / Constants.TerrainPatchSize) ? (RegionSizeY - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchY) + 1) * Constants.TerrainPatchSize);
 
             for (int j = patchY * Constants.TerrainPatchSize; j < ((patchY >= (RegionSizeY / Constants.TerrainPatchSize) ? (RegionSizeY - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchY) + 1) * Constants.TerrainPatchSize; j++)
             {
                 for (int i = patchX * Constants.TerrainPatchSize; i < ((patchX >= (RegionSizeX / Constants.TerrainPatchSize) ? (RegionSizeX - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchX) + 1) * Constants.TerrainPatchSize; i++)
-//                    block[k++] = heightmap[j * sqrt + i] * premult - sub;
                     block[k++] = heightmap[j * RegionSizeX + i] * premult - sub;
             }
 
             float[] ftemp = new float[Constants.TerrainPatchSize * Constants.TerrainPatchSize];
             int[] itemp = new int[Constants.TerrainPatchSize * Constants.TerrainPatchSize];
 
+            int maxWbits = prequant + 5;
+            wbits = (prequant >> 1);
+
             for (int o = 0; o < Constants.TerrainPatchSize; o++)
                 DCTLine16(block, ftemp, o);
             for (int o = 0; o < Constants.TerrainPatchSize; o++)
-                DCTColumn16(ftemp, itemp, o);
+                wbits = DCTColumn16Wbits(ftemp, itemp, o, wbits, maxWbits);
 
             return itemp;
         }
