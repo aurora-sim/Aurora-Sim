@@ -1381,26 +1381,25 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 _velocity.Y = vec.Y;
                 _velocity.Z = vec.Z;
 
-//                needfixbody = false;
-
+                bool VelIsZero = false;
+                int vcntr = 0;
                 if (Math.Abs(_velocity.X) < 0.001)
                     {
-//                    needfixbody = true;
+                    vcntr++;
                     _velocity.X = 0;
                     }
                 if (Math.Abs(_velocity.Y) < 0.001)
                     {
-//                    needfixbody = true;
+                    vcntr++;
                     _velocity.Y = 0;
                     }
                 if (Math.Abs(_velocity.Z) < 0.001)
                     {
-//                    needfixbody = true;
+                    vcntr++;
                     _velocity.Z = 0;
                     }
-
-//                if (needfixbody)
-//                    d.BodySetLinearVel(Body, _velocity.X, _velocity.Y, _velocity.Z);
+                if (vcntr == 3)
+                    VelIsZero = true;
                 
                 // slow down updates
                 m_UpdateTimecntr += timestep;
@@ -1416,9 +1415,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                    
                 //Check to see whether we need to trigger the significant movement method in the presence
  // avas don't rotate for now                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
-                if ((!Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
-                    !Position.ApproxEquals(m_lastPosition, POSITION_TOLERANCE)
-                    ))
+                if (!VelIsZero &&
+                    (!Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
+                    !Position.ApproxEquals(m_lastPosition, POSITION_TOLERANCE)))
                     {
                             // Update the "last" values
                             needSendUpdate = true;
@@ -1430,7 +1429,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 //                        base.TriggerSignificantMovement();
                      }
 
-                else
+                else if(VelIsZero)
                     {
                     if (!m_ZeroUpdateSent)
                         {
