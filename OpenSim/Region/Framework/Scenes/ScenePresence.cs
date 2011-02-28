@@ -1344,12 +1344,17 @@ namespace OpenSim.Region.Framework.Scenes
                                 // Theoretically we might need a more complex PID approach here if other 
                                 // unknown forces are acting on the avatar and we need to adaptively respond
                                 // to such forces, but the following simple approach seems to works fine.
-                                Vector3 LocalVectorToTarget3D =
-                                    (m_moveToPositionTarget - AbsolutePosition) // vector from cur. pos to target in global coords
-                                    * Matrix4.CreateFromQuaternion(Quaternion.Inverse(bodyRotation)); // change to avatar coords
+                            Vector3 LocalVectorToTarget3D=
+                                                         (m_moveToPositionTarget - AbsolutePosition) // vector from cur. pos to target in global coords
+                                //                                    * Matrix4.CreateFromQuaternion(Quaternion.Inverse(bodyRotation)); // change to avatar coords
+                                                        * Quaternion.Inverse(bodyRotation); // mult by matix is faster but with creation, use *quarternion
                                 // Ignore z component of vector
-                                Vector3 LocalVectorToTarget2D = new Vector3((float)(LocalVectorToTarget3D.X), (float)(LocalVectorToTarget3D.Y), 0f);
-                                LocalVectorToTarget2D.Normalize();
+                                Vector3 LocalVectorToTarget2D;
+                                LocalVectorToTarget2D.X = LocalVectorToTarget3D.X;
+                                LocalVectorToTarget2D.Y = LocalVectorToTarget3D.Y;
+                                LocalVectorToTarget2D.Z = 0f;
+
+ // we live without heavy norm      LocalVectorToTarget2D.Normalize();
                                 agent_control_v3 += LocalVectorToTarget2D;
 
                                 // update avatar movement flags. the avatar coordinate system is as follows:
