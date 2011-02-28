@@ -253,17 +253,22 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             int wbits = (header.QuantWBits & 0x0f) + 2;
             uint maxWbits = (uint)wbits + 5;
             uint minWbits = ((uint)wbits >> 1);
+            int wbitsMaxValue;
+
+// gool is to determ minimum number of bits to use so all data fits
 
             wbits = (int)minWbits;
+            wbitsMaxValue = (1 << wbits);
 
             for (int i = 0; i < patch.Length; i++)
             {
                 temp = patch[i];
-
                 if (temp != 0)
                 {
                     // Get the absolute value
                     if (temp < 0) temp *= -1;
+
+/* no coments..
 
                     for (int j = (int)maxWbits; j > (int)minWbits; j--)
                     {
@@ -273,10 +278,25 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             break;
                         }
                     }
+ */
+                    while (temp > wbitsMaxValue)
+                        {
+                        wbits++;
+                        if (wbits == maxWbits)
+                            goto Done;
+                        wbitsMaxValue = 1 << wbits;
+                        }
                 }
             }
 
-            wbits += 1;
+        Done:
+
+            //            wbits += 1;
+            // better check
+            if (wbits > 17)
+                wbits = 16;
+            else if (wbits < 3)
+                wbits = 3;
 
             header.QuantWBits &= 0xf0;
 
@@ -377,10 +397,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             for (int u = Constants.TerrainPatchSize; u <Constants.TerrainPatchSize * Constants.TerrainPatchSize; u+=Constants.TerrainPatchSize)
                 {
                 total = 0.0f;
-
-                for (int n = 0; n < Constants.TerrainPatchSize; n++)
+                for (int ptrn = lineSize , ptru = u; ptrn < lineSize + Constants.TerrainPatchSize; ptrn++,ptru++)
                     {
-                    total += linein[lineSize + n] * CosineTable16[u + n];
+                    total += linein[ptrn] * CosineTable16[ptru];
                     }
 
                 lineout[line + u] = total;
@@ -436,9 +455,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                 total = 0.0f;
 
-                for (int n = 0; n < Constants.TerrainPatchSize; n++)
+                for (int n = inlinesptr, ptru = uptr; n < inlinesptr + Constants.TerrainPatchSize; n++, ptru++)
                     {
-                    total += linein[inlinesptr + n] * CosineTable16[uptr + n];
+                    total += linein[n] * CosineTable16[ptru];
                     }
 
 //                lineout[CopyMatrix16[Constants.TerrainPatchSize * u + column]] = (int)(total * oosob * QuantizeTable16[Constants.TerrainPatchSize * u + column]);
@@ -495,6 +514,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private static void EncodePatch(BitPack output, int[] patch, int postquant, int wbits)
         {
             int temp;
+            int maxwbitssize = (1 << wbits) - 1;
             bool eob;
 
             if (postquant > Constants.TerrainPatchSize * Constants.TerrainPatchSize || postquant < 0)
@@ -539,14 +559,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     {
                         temp *= -1;
 
-                        if (temp > (1 << wbits)) temp = (1 << wbits);
+                        if (temp > maxwbitssize) temp = maxwbitssize;
 
                         output.PackBits(NEGATIVE_VALUE, 3);
                         output.PackBits(temp, wbits);
                     }
                     else
                     {
-                        if (temp > (1 << wbits)) temp = (1 << wbits);
+                        if (temp > maxwbitssize) temp = maxwbitssize;
 
                         output.PackBits(POSITIVE_VALUE, 3);
                         output.PackBits(temp, wbits);
