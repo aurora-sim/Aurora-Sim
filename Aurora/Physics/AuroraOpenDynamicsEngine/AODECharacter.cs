@@ -51,7 +51,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Vector3 _target_velocity;
         private Vector3 _acceleration;
         private Vector3 m_rotationalVelocity;
-        private Vector3 m_lastRotationalVelocity;
+        //private Vector3 m_lastRotationalVelocity;
 
         private bool _zeroFlag = false;
         private bool m_ZeroUpdateSent = false;
