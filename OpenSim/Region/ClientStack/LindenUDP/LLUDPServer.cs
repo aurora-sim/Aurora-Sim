@@ -1051,7 +1051,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             SendPing(udpClient);
 
                         // Dequeue any outgoing packets that are within the throttle limits
-                        if (udpClient.DequeueOutgoing(20)) // limit number of packets for each client per call
+                        if (udpClient.DequeueOutgoing(4)) // limit number of packets for each client per call
                             m_packetSent = true;
                     }
                 }
