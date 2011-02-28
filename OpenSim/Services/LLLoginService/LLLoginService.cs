@@ -300,6 +300,13 @@ namespace OpenSim.Services.LLLoginService
 
             //Set the scopeID for the user
             scopeID = account.ScopeID;
+            return InnerVerifyClient(account, passwd, tosExists, tosAccepted, mac, clientVersion, out secureSession);
+        }
+
+        protected LoginResponse InnerVerifyClient(UserAccount account, string passwd, bool tosExists, string tosAccepted, string mac, string clientVersion, out UUID secureSession)
+        {
+            secureSession = UUID.Zero;
+            
             //
             // Authenticate this user
             //
@@ -395,6 +402,30 @@ namespace OpenSim.Services.LLLoginService
                 }
             }
             return null;
+        }
+
+        public LoginResponse VerifyClient(UUID AgentID, string passwd, UUID scopeID, bool tosExists, string tosAccepted, string mac, string clientVersion, out UUID secureSession)
+        {
+            m_log.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0}",
+                AgentID);
+
+            //
+            // Get the account and check that it exists
+            //
+            UserAccount account = m_UserAccountService.GetUserAccount(scopeID, AgentID);
+            if (!passwd.StartsWith("$1$"))
+                passwd = "$1$" + Util.Md5Hash(passwd);
+            passwd = passwd.Remove(0, 3); //remove $1$
+
+            secureSession = UUID.Zero;
+            if (account == null)
+            {
+                return null;
+            }
+
+            //Set the scopeID for the user
+            scopeID = account.ScopeID;
+            return InnerVerifyClient(account, passwd, tosExists, tosAccepted, mac, clientVersion, out secureSession);
         }
 
         public LoginResponse Login(string Name, string passwd, string startLocation, UUID scopeID,
