@@ -106,6 +106,14 @@ namespace Aurora.Modules
             return connections;
         }
 
+        private void AddConnection(Connection c)
+        {
+            Connections.Add(c);
+            IGenericsConnector genericsConnector = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            if (genericsConnector != null)
+                genericsConnector.AddGeneric(UUID.Zero, "InterWorldConnections", c.URL, c.ToOSD());
+        }
+
         #endregion
 
         #region Find Connections
@@ -148,6 +156,8 @@ namespace Aurora.Modules
                 "Add an IWC connection to another host.", AddIWCConnection);
             MainConsole.Instance.Commands.AddCommand("IWC", true, "remove connection", "remove connection",
                 "Remove an IWC connection from another host.", RemoveIWCConnection);
+            MainConsole.Instance.Commands.AddCommand("IWC", true, "show connections", "show connections",
+                "Shows all active IWC connections.", ShowIWCConnections);
         }
 
         #region Commands
@@ -205,7 +215,7 @@ namespace Aurora.Modules
                 IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
                 //Give the Urls to the config service
                 configService.AddNewUrls(cert.SessionHash, cert.SecureUrls);
-                Connections.Add(con);
+                AddConnection(con);
                 m_log.Warn("Added connection to " + Url + ".");
             }
             else
@@ -218,7 +228,7 @@ namespace Aurora.Modules
         {
             string Url = MainConsole.Instance.CmdPrompt("Url to the connection");
             Connection c = FindConnectionByURL(Url);
-            if(c == null)
+            if (c == null)
             {
                 m_log.Warn("Could not find the connection.");
                 return;
@@ -228,6 +238,18 @@ namespace Aurora.Modules
             IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
             //Remove the Urls from the config service
             //configService.RemoveNewUrls(cert.SessionHash);
+        }
+
+        private void ShowIWCConnections(string module, string[] cmds)
+        {
+            m_log.InfoFormat("Showing {0} active IWC connections.", Connections.Count);
+            for (int i = 0; i < Connections.Count; i++)
+            {
+                m_log.Info("Url: " + Connections[i].URL);
+                m_log.Info("TrustLevel: " + Connections[i].TrustLevel);
+                m_log.Info("Valid Until: " + Connections[i].Certificate.ValidUntil);
+                m_log.Info("-------------");
+            }
         }
 
         #endregion
@@ -312,7 +334,7 @@ namespace Aurora.Modules
                     IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
                     //Give the Urls to the config service
                     configService.AddNewUrls(cert.SessionHash, cert.SecureUrls);
-                    Connections.Add(c);
+                    AddConnection(c);
                     m_log.Warn("Added connection to " + Url + ".");
                     IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
                     if (gridService != null)
