@@ -81,7 +81,7 @@ namespace OpenSim.Services
                 {
                     string first = requestData["first"].ToString();
                     string last = requestData["last"].ToString();
-                    string name = requestData["name"] != null ? requestData["name"].ToString() : "";
+                    string name = requestData.ContainsKey("name") ? requestData["name"].ToString() : "";
                     string passwd = requestData["passwd"].ToString();
                     string startLocation = string.Empty;
                     UUID scopeID = UUID.Zero;
@@ -120,7 +120,7 @@ namespace OpenSim.Services
                         tosExists = true;
                         tosAccepted = requestData["agree_to_tos"].ToString();
                     }
-                    string loginName = name == "" ? first + " " + last : name;
+                    string loginName = (name == "" || name == null) ? first + " " + last : name;
                     reply = m_LocalService.VerifyClient(loginName, passwd, scopeID,
                         tosExists, tosAccepted, mac, clientVersion, out secureSessionID);
                     if (reply == null)
