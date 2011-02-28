@@ -1224,14 +1224,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             patches[1] = new TerrainPatch();
             patches[1].Data = new float[16 * 16];
 
-            for (int y = 0; y < 16; y++)
-            {
-                for (int x = 0; x < 16; x++)
+            
+//            for (int y = 0; y < 16*16; y+=16)
+//            {
+                for (int x = 0; x < 16*16; x++)
                 {
-                    patches[0].Data[y * 16 + x] = windSpeeds[y * 16 + x].X;
-                    patches[1].Data[y * 16 + x] = windSpeeds[y * 16 + x].Y;
+                    patches[0].Data[x] = windSpeeds[x].X;
+                    patches[1].Data[x] = windSpeeds[x].Y;
                 }
-            }
+//            }
             byte type = (byte)TerrainPatch.LayerType.Wind;
             if (m_scene.RegionInfo.RegionSizeX > Constants.RegionSize || m_scene.RegionInfo.RegionSizeY > Constants.RegionSize)
             {
@@ -1253,11 +1254,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             patches[0] = new TerrainPatch();
             patches[0].Data = new float[16 * 16];
 
-            for (int y = 0; y < 16; y++)
+//            for (int y = 0; y < 16*16; y+=16)
             {
-                for (int x = 0; x < 16; x++)
+                for (int x = 0; x < 16*16; x++)
                 {
-                    patches[0].Data[y * 16 + x] = cloudCover[y * 16 + x];
+                    patches[0].Data[x] = cloudCover[x];
                 }
             }
 
@@ -4536,7 +4537,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             pos += 4;
 
             // Avatar/CollisionPlane
-            data[pos++] = (byte)((attachPoint % 16) * 16 + (attachPoint / 16)); ;
+            data[pos] = (byte)((attachPoint & 0x0f) << 4);
+            data[pos++] += (byte)(attachPoint >> 4);
+
             if (avatar)
             {
                 data[pos++] = 1;
