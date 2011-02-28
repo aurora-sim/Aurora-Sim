@@ -154,8 +154,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                _position = new Vector3(((float)parent_scene.WorldExtents.X * 0.5f), ((float)parent_scene.WorldExtents.Y * 0.5f),
-                    parent_scene.GetTerrainHeightAtXY(parent_scene.Region.RegionSizeX * 0.5f, parent_scene.Region.RegionSizeY * 0.5f) + 10f);
+            _position.X = (float)parent_scene.Region.RegionSizeX * 0.5f;
+            _position.Y = (float)parent_scene.Region.RegionSizeY * 0.5f;
+            _position.Z = parent_scene.GetTerrainHeightAtXY(_position.X, _position.Y) + 10f;
+                    
                 m_taintPosition.X = _position.X;
                 m_taintPosition.Y = _position.Y;
                 m_taintPosition.Z = _position.Z;
@@ -997,8 +999,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // Avatar to Avatar collisions
                     // Prim to avatar collisions
                     // if target vel is zero why was it here ?
-                    vec.X = -vel.X * PID_D + (_zeroPosition.X - tempPos.X) * PID_P * 2f;
-                    vec.Y = -vel.Y * PID_D + (_zeroPosition.Y - tempPos.Y) * PID_P * 2f;
+                    vec.X = -vel.X * PID_D + (_zeroPosition.X - tempPos.X) * PID_P;
+                    vec.Y = -vel.Y * PID_D + (_zeroPosition.Y - tempPos.Y) * PID_P;
                     }
                 }
             else
@@ -1320,23 +1322,23 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (_position.X < 0.0f)
                 {
                 needfixbody = true;
-                _position.X = CAPSULE_RADIUS;
+                _position.X = 0.1f;
                 }
-            else if (_position.X > (int)_parent_scene.WorldExtents.X - CAPSULE_RADIUS)
+            else if (_position.X > (int)_parent_scene.Region.RegionSizeX - 0.1f)
                 {
                 needfixbody = true;
-                _position.X = (int)_parent_scene.WorldExtents.X - CAPSULE_RADIUS;
+                _position.X = (int)_parent_scene.Region.RegionSizeX - 0.1f;
                 }
 
             if (_position.Y < 0.0f)
                 {
                 needfixbody = true;
-                _position.Y = CAPSULE_RADIUS;
+                _position.Y = 0.1f;
                 }
-            else if (_position.Y > (int)_parent_scene.WorldExtents.Y - CAPSULE_RADIUS)
+            else if (_position.Y > (int)_parent_scene.Region.RegionSizeY - 0.1)
                 {
                 needfixbody = true;
-                _position.Y = (int)_parent_scene.WorldExtents.Y - CAPSULE_RADIUS;
+                _position.Y = (int)_parent_scene.Region.RegionSizeY - 0.1f;
                 }
 
             if (needfixbody)
@@ -1379,26 +1381,26 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 _velocity.Y = vec.Y;
                 _velocity.Z = vec.Z;
 
-                needfixbody = false;
+//                needfixbody = false;
 
                 if (Math.Abs(_velocity.X) < 0.001)
                     {
-                    needfixbody = true;
+//                    needfixbody = true;
                     _velocity.X = 0;
                     }
                 if (Math.Abs(_velocity.Y) < 0.001)
                     {
-                    needfixbody = true;
+//                    needfixbody = true;
                     _velocity.Y = 0;
                     }
                 if (Math.Abs(_velocity.Z) < 0.001)
                     {
-                    needfixbody = true;
+//                    needfixbody = true;
                     _velocity.Z = 0;
                     }
 
-                if (needfixbody)
-                    d.BodySetLinearVel(Body, _velocity.X, _velocity.Y, _velocity.Z);
+//                if (needfixbody)
+//                    d.BodySetLinearVel(Body, _velocity.X, _velocity.Y, _velocity.Z);
                 
                 // slow down updates
                 m_UpdateTimecntr += timestep;
