@@ -941,7 +941,6 @@ namespace OpenSim.Region.CoreModules.World.Land
                 {
                     IPrimCounts primCounts = primCountModule.GetPrimCounts(LandData.GlobalID);
                     Dictionary<UUID, LandObjectOwners> owners = new Dictionary<UUID, LandObjectOwners>();
-                    List<UUID> groups = primCounts.Groups;
                     foreach(SceneObjectPart part in primCounts.Objects)
                     {
                         bool newlyAdded = false;
@@ -953,20 +952,20 @@ namespace OpenSim.Region.CoreModules.World.Land
                         LandObjectOwners landObj = owners[part.OwnerID];
                         landObj.Count++;
                         //Only do all of this once
-                        if(newlyAdded)
+                        if (newlyAdded)
                         {
-                        if (LandData.GroupID == part.OwnerID || groups.Contains(part.OwnerID))
-                            landObj.GroupOwned = true;
-                        else
-                            landObj.GroupOwned = false;
-                        if(landObj.GroupOwned)
-                            landObj.Online = false;
-                        else
-                        {
-                            IAgentInfoService presenceS = m_scene.RequestModuleInterface<IAgentInfoService>();
-                            landObj.Online = presenceS.GetUserInfo(part.OwnerID.ToString()).IsOnline;
-                        }
-                        landObj.OwnerID = part.OwnerID;
+                            if (LandData.GroupID == part.OwnerID || part.GroupID != UUID.Zero)
+                                landObj.GroupOwned = true;
+                            else
+                                landObj.GroupOwned = false;
+                            if (landObj.GroupOwned)
+                                landObj.Online = false;
+                            else
+                            {
+                                IAgentInfoService presenceS = m_scene.RequestModuleInterface<IAgentInfoService>();
+                                landObj.Online = presenceS.GetUserInfo(part.OwnerID.ToString()).IsOnline;
+                            }
+                            landObj.OwnerID = part.OwnerID;
                         }
                         if(part.Rezzed > landObj.TimeLastRezzed)
                             landObj.TimeLastRezzed = part.Rezzed; 

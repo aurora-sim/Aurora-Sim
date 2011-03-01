@@ -49,8 +49,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         public int Temporary = 0;
         public Dictionary<UUID, int> Users =
                 new Dictionary<UUID, int>();
-        public List<SceneObjectPart> Objects = new List<SceneObjectPart>();
-        public List<UUID> GroupsInThisParcel = new List<UUID>();
+        public Dictionary<UUID, SceneObjectPart> Objects = new Dictionary<UUID, SceneObjectPart>();
     }
 
     public class PrimCountModule : IPrimCountModule, INonSharedRegionModule
@@ -223,26 +222,14 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                 foreach (SceneObjectPart child in obj.ChildrenList)
                 {
-                    if (parcelCounts.Objects.Contains(child))
+                    if (parcelCounts.Objects.ContainsKey(child.UUID))
                     {
                         //Well... replace it then
-                        parcelCounts.Objects.Remove(child);
-                        parcelCounts.Objects.Add(child);
-
-                        if (landData.IsGroupOwned)
-                        {
-                            UUID GroupUUID = obj.GroupID;
-                            if (obj.OwnerID == landData.GroupID)
-                                GroupUUID = obj.OwnerID;
-
-                            //Add it to the list of all groups in this parcel
-                            if (!parcelCounts.GroupsInThisParcel.Contains(GroupUUID))
-                                parcelCounts.GroupsInThisParcel.Add(GroupUUID);
-                        }
+                        parcelCounts.Objects[child.UUID] = child;
                     }
                     else
                     {
-                        parcelCounts.Objects.Add(child);
+                        parcelCounts.Objects[child.UUID] = child;
                         m_SimwideCounts[landOwner] += 1;
                         if (parcelCounts.Users.ContainsKey(obj.OwnerID))
                             parcelCounts.Users[obj.OwnerID] += 1;
@@ -261,10 +248,6 @@ namespace OpenSim.Region.CoreModules.World.Land
                                 parcelCounts.Group += 1;
                             else
                                 parcelCounts.Others += 1;
-
-                            //Add it to the list of all groups in this parcel
-                            if (!parcelCounts.GroupsInThisParcel.Contains(GroupUUID))
-                                parcelCounts.GroupsInThisParcel.Add(GroupUUID);
                         }
                         else
                         {
@@ -304,13 +287,13 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                 foreach (SceneObjectPart child in obj.ChildrenList)
                 {
-                    if (!parcelCounts.Objects.Contains(child))
+                    if (!parcelCounts.Objects.ContainsKey(child.UUID))
                     {
                         //Well... now what?
                     }
                     else
                     {
-                        parcelCounts.Objects.Remove(child);
+                        parcelCounts.Objects.Remove(child.UUID);
                         if (m_SimwideCounts.ContainsKey(landOwner))
                             m_SimwideCounts[landOwner] -= 1;
                         if (parcelCounts.Users.ContainsKey(obj.OwnerID))
@@ -374,22 +357,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             return new Dictionary<UUID, int>();
         }
 
-        public List<UUID> GetAllGroups(UUID parcelID)
-        {
-            lock (m_TaintLock)
-            {
-                if (m_Tainted)
-                    Recount();
-
-                ParcelCounts counts;
-                if (m_ParcelCounts.TryGetValue(parcelID, out counts))
-                {
-                    return new List<UUID>(counts.GroupsInThisParcel);
-                }
-            }
-            return new List<UUID>();
-        }
-
         public List<SceneObjectPart> GetParcelObjects(UUID parcelID)
         {
             lock (m_TaintLock)
@@ -400,7 +367,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 ParcelCounts counts;
                 if (m_ParcelCounts.TryGetValue(parcelID, out counts))
                 {
-                    return new List<SceneObjectPart>(counts.Objects);
+                    return new List<SceneObjectPart>(counts.Objects.Values);
                 }
             }
             return new List<SceneObjectPart>();
@@ -623,11 +590,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 return m_Parent.GetGroupCount(m_ParcelID);
             }
-        }
-
-        public List<UUID> Groups
-        {
-            get { return m_Parent.GetAllGroups(m_ParcelID); }
         }
 
         public List<SceneObjectPart> Objects

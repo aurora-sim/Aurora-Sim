@@ -52,7 +52,6 @@ namespace OpenSim.Region.Framework.Interfaces
         int Selected { get; }
         int Temporary { get; }
         int Total { get; }
-        List<UUID> Groups { get; }
         List<SceneObjectPart> Objects { get; }
         IUserPrimCounts Users { get; }
 
