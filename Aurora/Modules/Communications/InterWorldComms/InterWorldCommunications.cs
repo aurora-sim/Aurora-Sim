@@ -343,26 +343,13 @@ namespace Aurora.Modules
                 Url = Url.EndsWith("/") ? Url + "iwcconnection" : Url + "/iwcconnection";
                 c.URL = Url;
 
-                cert = OutgoingPublicComms.QueryRemoteHost(c);
-                if (cert != null)
+                TryAddConnection(c);
+                IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
+                if (gridService != null)
                 {
-                    c.Certificate = cert;
-                    IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
-                    //Give the Urls to the config service
-                    configService.AddNewUrls(cert.SessionHash, cert.SecureUrls);
-                    AddConnection(c);
-                    m_log.Warn("Added connection to " + Url + ".");
-                    IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
-                    if (gridService != null)
-                    {
-                        List<GridRegion> regions = gridService.GetRegionsByName(UUID.Zero, regionName, 1);
-                        if (regions != null && regions.Count > 0)
-                            return regions[0];
-                    }
-                }
-                else
-                {
-                    m_log.Warn("Could not add connection to " + Url + ".");
+                    List<GridRegion> regions = gridService.GetRegionsByName(UUID.Zero, regionName, 1);
+                    if (regions != null && regions.Count > 0)
+                        return regions[0];
                 }
             }
             return null;

@@ -2421,13 +2421,13 @@ namespace OpenSim.Region.Framework.Scenes
 
                         foreach (GridRegion region in neighbors)
                         {
-                        if (TargetX > region.RegionLocX
-                            && TargetY > region.RegionLocY
-                            && TargetX < region.RegionLocX + region.RegionSizeX
-                            && TargetY < region.RegionLocY + region.RegionSizeY)
+                            if (TargetX >= region.RegionLocX
+                                && TargetY >= region.RegionLocY
+                                && TargetX < region.RegionLocX + region.RegionSizeX
+                                && TargetY < region.RegionLocY + region.RegionSizeY)
                             {
-                            neighborRegion = region;
-                            break;
+                                neighborRegion = region;
+                                break;
                             }
                         }
 
