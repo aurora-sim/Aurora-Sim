@@ -152,6 +152,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private bool m_throttleUpdates;
         private int throttleCounter;
+
+        float m_UpdateTimecntr = 0;
+        float m_UpdateFPScntr = 0.05f;
+
         //private int _updatesPerThrottledUpdate;
         public int m_interpenetrationcount;
         public float m_collisionscore;
@@ -253,6 +257,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             m_forceacc = Vector3.Zero;
             m_angularforceacc = Vector3.Zero;
+
+            m_UpdateTimecntr = 0;
+            m_UpdateFPScntr = 2.5f * parent_scene.StepTime; // this parameter needs retunning and possible came from ini file
+            if (m_UpdateTimecntr > .1f) // try to keep it under 100ms
+                m_UpdateTimecntr = .1f;
 
             AddChange(changes.Add, null);
         }
@@ -2453,8 +2462,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.Vector3 vel = d.BodyGetLinearVel(Body);
                     d.Vector3 rotvel = d.BodyGetAngularVel(Body);
 
-                    m_lastposition = _position;
-                    m_lastorientation = _orientation;
 
                     if (cpos.X > ((int)_parent_scene.WorldExtents.X - 0.05f) || 
                         cpos.X < 0f ||
@@ -2468,6 +2475,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             _position.Y = (float)lpos.Y;
                             _position.Z = (float)lpos.Z;
                             m_crossingfailures++;
+
+                            m_lastposition = _position;
+                            m_lastorientation = _orientation;
+
                             base.RequestPhysicsterseUpdate();
                             return;
                             }
@@ -2517,19 +2528,40 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         d.BodySetAngularVel(Body, 0, 0, 0); // stop it
                         d.BodySetPosition(Body, cpos.X, cpos.Y, cpos.Z); // put it somewhere 
 
+                        m_lastposition = _position;
+                        m_lastorientation = _orientation;
                         base.RequestPhysicsterseUpdate();
 
                         m_throttleUpdates = false;
                         throttleCounter = 0;
                         _zeroFlag = true;
                         m_frozen = true;
+                        return;
                         }
                     #endregion
 
-                    if ((Math.Abs(m_lastposition.X - lpos.X) < 0.001)
-                        && (Math.Abs(m_lastposition.Y - lpos.Y) < 0.001)
-                        && (Math.Abs(m_lastposition.Z - lpos.Z) < 0.001)
-                        && (Math.Abs(vel.X) < 0.001)
+                    if (m_vehicle.Type == Vehicle.TYPE_NONE)
+                        {
+
+                        m_lastVelocity = _velocity; // for acelaration
+                        _position.X = (float)lpos.X;
+                        _position.Y = (float)lpos.Y;
+                        _position.Z = (float)lpos.Z;
+                        }
+                    _orientation.X = (float)ori.X;
+                    _orientation.Y = (float)ori.Y;
+                    _orientation.Z = (float)ori.Z;
+                    _orientation.W = (float)ori.W;
+
+                    if (
+                        //                        (Math.Abs(m_lastposition.X - lpos.X) < 0.001)
+                        //                        && (Math.Abs(m_lastposition.Y - lpos.Y) < 0.001)
+                        //                        && (Math.Abs(m_lastposition.Z - lpos.Z) < 0.001)
+                        //                        && (Math.Abs(m_lastorientation.X - ori.X) < 0.001)
+                        //                        && (Math.Abs(m_lastorientation.Y - ori.Y) < 0.001)
+                        //                        && (Math.Abs(m_lastorientation.Z - ori.Z) < 0.001)
+                        //                        &&
+                        (Math.Abs(vel.X) < 0.001)
                         && (Math.Abs(vel.Y) < 0.001)
                         && (Math.Abs(vel.Z) < 0.001)
                         && (Math.Abs(rotvel.X) < 0.0001)
@@ -2547,6 +2579,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_lastUpdateSent = 1;
                         }
 
+                    bool needupdate = false;
+                    bool forceupdate = false;
+
                     if (_zeroFlag)
                         {
                         _velocity.X = 0.0f;
@@ -2561,31 +2596,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_rotationalVelocity.Y = 0;
                         m_rotationalVelocity.Z = 0;
 
-                        d.BodySetLinearVel(Body, 0, 0, 0);
-                        d.BodySetAngularVel(Body, 0, 0, 0);
+// better let ode keep dealing with small values
+//                        d.BodySetLinearVel(Body, 0, 0, 0);
+//                        d.BodySetAngularVel(Body, 0, 0, 0);
 
                         if (m_lastUpdateSent > 0)
                             {
                             if (throttleCounter > 100 || m_lastUpdateSent >= 2)
                                 {
-                                base.RequestPhysicsterseUpdate();
+                                needupdate = true;
+                                forceupdate = true;
                                 m_lastUpdateSent--;
-
                                 throttleCounter = 0;
                                 }
                             else
-                                throttleCounter++;
+                                throttleCounter += 2;
                              }
                         }
                     else
                         {
-                        m_lastVelocity = _velocity;
                         if (m_vehicle.Type == Vehicle.TYPE_NONE)
                             {
-                            _position.X = (float)lpos.X;
-                            _position.Y = (float)lpos.Y;
-                            _position.Z = (float)lpos.Z;
-
                             _velocity.X = (float)vel.X;
                             _velocity.Y = (float)vel.Y;
                             _velocity.Z = (float)vel.Z;
@@ -2593,21 +2624,46 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             _acceleration = ((_velocity - m_lastVelocity) / timestep);
                             //m_log.Info("[PHYSICS]: V1: " + _velocity + " V2: " + m_lastVelocity + " Acceleration: " + _acceleration.ToString());
 
-                            m_lastRotationalVelocity = m_rotationalVelocity;
-                            m_rotationalVelocity = new Vector3((float)rotvel.X, (float)rotvel.Y, (float)rotvel.Z);
-
+                            m_rotationalVelocity.X = (float)rotvel.X;
+                            m_rotationalVelocity.Y = (float)rotvel.Y;
+                            m_rotationalVelocity.Z = (float)rotvel.Z;
                             }
-                        _orientation.X = (float)ori.X;
-                        _orientation.Y = (float)ori.Y;
-                        _orientation.Z = (float)ori.Z;
-                        _orientation.W = (float)ori.W;
+                        }
+
+                    // slow down updates
+                    m_UpdateTimecntr += timestep;
+                    if (!forceupdate && m_UpdateTimecntr < m_UpdateFPScntr)
+                        return;
+                    m_UpdateTimecntr = 0;
+
+                    if (//!_zeroFlag && !needupdate && (
+                         (Math.Abs(m_lastposition.X - _position.X) > 0.001)
+                        || (Math.Abs(m_lastposition.Y - _position.Y) > 0.001)
+                        || (Math.Abs(m_lastposition.Z - _position.Z) > 0.001)
+                        || (Math.Abs(m_lastorientation.X - _orientation.X) > 0.001)
+                        || (Math.Abs(m_lastorientation.Y - _orientation.Y) > 0.001)
+                        || (Math.Abs(m_lastorientation.Z - _orientation.Z) > 0.001)
+                        || (Math.Abs(_acceleration.X) > 0.005)
+                        || (Math.Abs(_acceleration.Y) > 0.005)
+                        || (Math.Abs(_acceleration.Z) > 0.005)
+                        )//)
+                        {
                         if (!m_throttleUpdates || throttleCounter > _parent_scene.geomUpdatesPerThrottledUpdate)
                             {
-                            base.RequestPhysicsterseUpdate();
+                            needupdate = true;
                             }
                         else
-                            throttleCounter++;
+                            throttleCounter +=2;
                         }
+
+                    
+                    if (needupdate)
+                        {
+                        m_lastposition = _position;
+                        m_lastorientation = _orientation;
+                        base.RequestPhysicsterseUpdate();
+                        }
+
                     }
                 else
                     {

@@ -2414,17 +2414,17 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         List<GridRegion> neighbors = neighborService.GetNeighbors(Scene.RegionInfo);
 
-                        float TargetX = (float)Scene.RegionInfo.RegionLocX + pos2.X;
-                        float TargetY = (float)Scene.RegionInfo.RegionLocY + pos2.Y;
+                        double TargetX = (double)Scene.RegionInfo.RegionLocX + (double)pos2.X;
+                        double TargetY = (double)Scene.RegionInfo.RegionLocY + (double)pos2.Y;
 
                         GridRegion neighborRegion = null;
 
                         foreach (GridRegion region in neighbors)
                         {
-                            if (TargetX >= region.RegionLocX
-                                && TargetY >= region.RegionLocY
-                                && TargetX < region.RegionLocX + region.RegionSizeX
-                                && TargetY < region.RegionLocY + region.RegionSizeY)
+                        if (TargetX >= region.RegionLocX
+                            && TargetY >= region.RegionLocY
+                            && TargetX < region.RegionLocX + region.RegionSizeX
+                            && TargetY < region.RegionLocY + region.RegionSizeY)
                             {
                                 neighborRegion = region;
                                 break;
