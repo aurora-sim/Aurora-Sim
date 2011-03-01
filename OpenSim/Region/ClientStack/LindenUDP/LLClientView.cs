@@ -374,9 +374,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         protected IAssetService m_assetService;
         private bool m_checkPackets = true;
 
-        private Timer m_propertiesPacketTimer;
-        private List<ObjectPropertiesPacket.ObjectDataBlock> m_propertiesBlocks = new List<ObjectPropertiesPacket.ObjectDataBlock>();
-
         #endregion Class Members
 
         #region Properties
@@ -472,9 +469,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             m_udpClient.OnQueueEmpty += HandleQueueEmpty;
             m_udpClient.OnPacketStats += PopulateStats;
 
-            m_propertiesPacketTimer = new Timer(10);
-            m_propertiesPacketTimer.Elapsed += ProcessObjectPropertiesPacket;
-
             m_prioritizer = new Prioritizer(m_scene);
 
             RegisterLocalPacketHandlers();
@@ -496,7 +490,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void Stop()
         {
             DisableSimulatorPacket disable = (DisableSimulatorPacket)PacketPool.Instance.GetPacket(PacketType.DisableSimulator);
-            OutPacket(disable, ThrottleOutPacketType.Unknown);
+            OutPacket(disable, ThrottleOutPacketType.OutBand);
         }
 
         /// <summary>
@@ -510,7 +504,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             // Send the STOP packet
             DisableSimulatorPacket disable = (DisableSimulatorPacket)PacketPool.Instance.GetPacket(PacketType.DisableSimulator);
-            OutPacket(disable, ThrottleOutPacketType.Unknown);
+            OutPacket(disable, ThrottleOutPacketType.OutBand);
 
             IsActive = false;
 
@@ -544,7 +538,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 kupack.TargetBlock.TargetIP = 0;
                 kupack.TargetBlock.TargetPort = 0;
                 kupack.UserInfo.Reason = Util.StringToBytes256(message);
-                OutPacket(kupack, ThrottleOutPacketType.Unknown);
+                OutPacket(kupack, ThrottleOutPacketType.OutBand);
                 // You must sleep here or users get no message!
                 Thread.Sleep(500);
             }
@@ -768,7 +762,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             mov.Data.LookAt = look;
 
             // Hack to get this out immediately and skip the throttles
-            OutPacket(mov, ThrottleOutPacketType.Unknown);
+            OutPacket(mov, ThrottleOutPacketType.OutBand);
         }
 
         public void SendChatMessage(string message, byte type, Vector3 fromPos, string fromName,
@@ -1355,7 +1349,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             tpLocal.Info.Position = position;
 
             // Hack to get this out immediately and skip throttles
-            OutPacket(tpLocal, ThrottleOutPacketType.Unknown);
+            OutPacket(tpLocal, ThrottleOutPacketType.OutBand);
         }
 
         public virtual void SendRegionTeleport(ulong regionHandle, byte simAccess, IPEndPoint newRegionEndPoint, uint locationID,
@@ -1383,7 +1377,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             teleport.Info.TeleportFlags = 1 << 4;
 
             // Hack to get this out immediately and skip throttles.
-            OutPacket(teleport, ThrottleOutPacketType.Unknown);
+            OutPacket(teleport, ThrottleOutPacketType.OutBand);
         }
 
         /// <summary>
@@ -1397,7 +1391,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             tpFailed.AlertInfo = new TeleportFailedPacket.AlertInfoBlock[0];
 
             // Hack to get this out immediately and skip throttles
-            OutPacket(tpFailed, ThrottleOutPacketType.Unknown);
+            OutPacket(tpFailed, ThrottleOutPacketType.OutBand);
         }
 
         /// <summary>
@@ -1410,7 +1404,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             tpStart.Info.TeleportFlags = flags; //16; // Teleport via location
 
             // Hack to get this out immediately and skip throttles
-            OutPacket(tpStart, ThrottleOutPacketType.Unknown);
+            OutPacket(tpStart, ThrottleOutPacketType.OutBand);
         }
 
         public void SendTeleportProgress(uint flags, string message)
@@ -1421,7 +1415,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             tpProgress.Info.Message = Util.StringToBytes256(message);
 
             // Hack to get this out immediately and skip throttles
-            OutPacket(tpProgress, ThrottleOutPacketType.Unknown);
+            OutPacket(tpProgress, ThrottleOutPacketType.OutBand);
         }
 
         public void SendMoneyBalance(UUID transaction, bool success, byte[] description, int balance)
@@ -1517,7 +1511,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // We *could* get OldestUnacked, but it would hurt performance and not provide any benefit
             pc.PingID.OldestUnacked = 0;
 
-            OutPacket(pc, ThrottleOutPacketType.Unknown);
+            OutPacket(pc, ThrottleOutPacketType.OutBand);
         }
 
         public void SendKillObject(ulong regionHandle, ISceneEntity[] entities)
@@ -2422,7 +2416,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 logReply.InventoryData[0] = new LogoutReplyPacket.InventoryDataBlock();
                 logReply.InventoryData[0].ItemID = UUID.Zero;
 
-                OutPacket(logReply, ThrottleOutPacketType.Unknown);
+                OutPacket(logReply, ThrottleOutPacketType.OutBand);
             }
         }
 
@@ -3783,7 +3777,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket(packet, ThrottleOutPacketType.Unknown, true);
+                OutPacket(packet, ThrottleOutPacketType.OutBand, true);
             }
 
             if (compressedUpdateBlocks.IsValueCreated)
@@ -3798,7 +3792,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket(packet, ThrottleOutPacketType.Unknown, true);
+                OutPacket(packet, ThrottleOutPacketType.OutBand, true);
             }
 
             if (cachedUpdateBlocks.IsValueCreated)
@@ -3813,7 +3807,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket(packet, ThrottleOutPacketType.Unknown, true);
+                OutPacket(packet, ThrottleOutPacketType.OutBand, true);
             }
 
             if (terseUpdateBlocks.IsValueCreated)
@@ -3828,7 +3822,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket(packet, ThrottleOutPacketType.Unknown, true);
+                OutPacket(packet, ThrottleOutPacketType.OutBand, true);
             }
 
             #endregion Packet Sending
@@ -3943,7 +3937,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void SendShutdownConnectionNotice()
         {
-            OutPacket(PacketPool.Instance.GetPacket(PacketType.DisableSimulator), ThrottleOutPacketType.Unknown);
+            OutPacket(PacketPool.Instance.GetPacket(PacketType.DisableSimulator), ThrottleOutPacketType.OutBand);
         }
 
         public void SendSimStats(SimStats stats)
@@ -4038,49 +4032,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 //            proper.ObjectData[0].AggregatePermTexturesOwner = 0;
                 block.SaleType = part.ParentGroup.RootPart.ObjectSaleType;
                 block.SalePrice = part.ParentGroup.RootPart.SalePrice;
-                if (!blocks.Contains(block))
-                    blocks.Add(block);
+                blocks.Add(block);
             }
-            //ProcessObjectPropertiesPacket(null, null);
-
+            //Theres automatic splitting, just let it go on through
             ObjectPropertiesPacket proper = (ObjectPropertiesPacket)PacketPool.Instance.GetPacket(PacketType.ObjectProperties);
             
             proper.ObjectData = blocks.ToArray();
 
             proper.Header.Zerocoded = true;
-            OutPacket(proper, ThrottleOutPacketType.Unknown);
-        }
-
-        private void ProcessObjectPropertiesPacket(Object sender, ElapsedEventArgs e)
-        {
-            ObjectPropertiesPacket proper = (ObjectPropertiesPacket)PacketPool.Instance.GetPacket(PacketType.ObjectProperties);
-
-            lock (m_propertiesPacketTimer)
-            {
-                if (m_propertiesBlocks.Count > 100)
-                {
-                    for (int i = 0; i < (m_propertiesBlocks.Count / 100); i++)
-                    {
-                        proper = (ObjectPropertiesPacket)PacketPool.Instance.GetPacket(PacketType.ObjectProperties);
-                        proper.ObjectData = m_propertiesBlocks.GetRange(0, 100).ToArray();
-                        m_propertiesBlocks.RemoveRange(0, 100);
-
-                        proper.Header.Zerocoded = true;
-                        OutPacket(proper, ThrottleOutPacketType.State);
-                    }
-                    return;
-                }
-                else
-                {
-                    m_propertiesPacketTimer.Stop();
-
-                    proper.ObjectData = m_propertiesBlocks.GetRange(0, m_propertiesBlocks.Count).ToArray();
-                    m_propertiesBlocks.Clear();
-
-                    proper.Header.Zerocoded = true;
-                    OutPacket(proper, ThrottleOutPacketType.State);
-                }
-            }
+            OutPacket(proper, ThrottleOutPacketType.State);
         }
 
         #region Estate Data Sending Methods
