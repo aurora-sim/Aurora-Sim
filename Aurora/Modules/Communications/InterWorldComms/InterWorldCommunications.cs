@@ -108,7 +108,7 @@ namespace Aurora.Modules
             }
         }
 
-        private void TryAddConnection(Connection c)
+        public void TryAddConnection(Connection c)
         {
             IWCCertificate cert = OutgoingPublicComms.QueryRemoteHost(c);
             if (cert != null)
@@ -128,11 +128,11 @@ namespace Aurora.Modules
 
         #region Find Connections
 
-        private Connection FindConnectionBySessionHash(Connection connection)
+        public Connection FindConnectionBySessionHash(string hash)
         {
             foreach (Connection c in Connections)
             {
-                if (c.Certificate.SessionHash == connection.Certificate.SessionHash)//This is the connection we are looking for
+                if (c.Certificate.SessionHash == hash)//This is the connection we are looking for
                 {
                     return c;
                 }
@@ -509,6 +509,15 @@ namespace Aurora.Modules
 
             //Update them in the database so that they can connect again later
             CertificateVerification.AddCertificate(Certificate);
+            
+            Connection ourConnectionToThem = IWC.FindConnectionBySessionHash(Certificate.SessionHash);
+            if (ourConnectionToThem != null)
+            {
+                //Verify that our connection is ok with them as well
+                //Tenitively set to active so that we don't get a loop
+                ourConnectionToThem.Active = true;
+                Util.FireAndForget(QueryOtherHost, ourConnectionToThem);
+            }
 
             BuildSecureUrlsForConnection(Certificate);
 
@@ -518,6 +527,12 @@ namespace Aurora.Modules
             m_log.WarnFormat("[IWC]: {0} successfully connected to us.", Certificate.RegionHandle);
 
             return Return(result);
+        }
+
+        private void QueryOtherHost(object o)
+        {
+            Connection ourConnectionToThem = (Connection)o;
+            IWC.TryAddConnection(ourConnectionToThem);
         }
 
         /// <summary>
