@@ -288,6 +288,11 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         private bool InformClientOfNeighbor(UUID AgentID, ulong requestingRegion, AgentCircuitData circuitData, GridRegion neighbor,
             uint TeleportFlags, AgentData agentData, out string reason)
         {
+            if (neighbor == null)
+            {
+                reason = "Could not find neighbor to inform";
+                return false;
+            }
             m_log.Info("[EventQueueService]: Starting to inform client about neighbor " + neighbor.RegionName);
 
             //Notes on this method

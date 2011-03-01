@@ -494,6 +494,8 @@ namespace OpenSim.Services.GridService
         public void SetRegionUnsafe(UUID ID)
         {
             GridRegion data = m_Database.Get(ID, UUID.Zero);
+            if (data == null)
+                return;
             if ((data.Flags & (int)RegionFlags.Safe) != (int)RegionFlags.Safe)
                 data.Flags &= (int)RegionFlags.Safe; //Remove the safe var
             if ((data.Flags & (int)RegionFlags.RegionOnline) != (int)RegionFlags.RegionOnline)
