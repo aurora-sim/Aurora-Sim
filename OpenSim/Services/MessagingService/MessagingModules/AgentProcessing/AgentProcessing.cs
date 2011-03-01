@@ -565,7 +565,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         {
             IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
             
-            int count = 100;
+            int count = 1000;
             while (!clientCaps.CallbackHasCome && count > 0)
             {
                 //m_log.Debug("  >>> Waiting... " + count);
@@ -576,7 +576,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     callWasCanceled = true;
                     return true;
                 }
-                Thread.Sleep(100);
+                Thread.Sleep(10);
                 count--;
             }
             //If we made it through the whole loop, we havn't been canceled,

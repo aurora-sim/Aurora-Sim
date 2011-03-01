@@ -67,7 +67,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         // TODO: Make this a config setting
         /// <summary>Percentage of the task throttle category that is allocated to avatar and prim
         /// state updates</summary>
-        const float STATE_TASK_PERCENTAGE = 0.8f;
+        const float STATE_TASK_PERCENTAGE = 0.3f;
+        const float AVATAR_INFO_TASK_PERCENTAGE = 0.2f;
 
         private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -272,8 +273,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             int texture = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f); pos += 4;
             int asset = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f);
             // These are subcategories of task that we allocate a percentage to
-            int state = (int)((float)task * STATE_TASK_PERCENTAGE);
-            int avatarinfo = (int)((float)task * STATE_TASK_PERCENTAGE);
+            int state = (int)(task * STATE_TASK_PERCENTAGE);
+            int avatarinfo = (int)(task * AVATAR_INFO_TASK_PERCENTAGE);
             task -= state;
             task -= avatarinfo;
 
@@ -291,8 +292,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             int total = resend + land + wind + cloud + task + texture + asset + state + avatarinfo;
 
-            //m_log.DebugFormat("[LLUDPCLIENT]: {0} is setting throttles. Resend={1}, Land={2}, Wind={3}, Cloud={4}, Task={5}, Texture={6}, Asset={7}, State={8}, Total={9}",
-            //    AgentID, resend, land, wind, cloud, task, texture, asset, state, total);
+            //m_log.WarnFormat("[LLUDPCLIENT]: {0} is setting throttles. Resend={1}, Land={2}, Wind={3}, Cloud={4}, Task={5}, Texture={6}, Asset={7}, State={8}, AvatarInfo={9}, TaskFull={10}, Total={11}",
+            //    AgentID, resend, land, wind, cloud, task, texture, asset, state, avatarinfo, task + state + avatarinfo, total);
 
             // Update the token buckets with new throttle values
             TokenBucket bucket;
