@@ -66,7 +66,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Vector3 _velocity;
         private Vector3 _torque = Vector3.Zero;
         private Vector3 m_lastVelocity;
-        private Vector3 m_lastRotationalVelocity;
+        //private Vector3 m_lastRotationalVelocity;
         private Vector3 m_lastposition;
         //private Vector3 m_lastSignificantPosition;
         private Quaternion m_lastorientation = new Quaternion();

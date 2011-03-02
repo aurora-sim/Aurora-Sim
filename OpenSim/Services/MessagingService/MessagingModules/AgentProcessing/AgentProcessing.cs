@@ -127,6 +127,26 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 {
                     if (regionCaps.RootAgent)
                     {
+                        //Close all neighbor agents as well, the root is closing itself, so don't call them
+                        foreach (IRegionClientCapsService regionClient in clientCaps.GetCapsServices())
+                        {
+                            if (regionClient.RegionHandle != regionCaps.RegionHandle)
+                            {
+                                ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
+                                if (SimulationService != null)
+                                {
+                                    IGridService GridService = m_registry.RequestModuleInterface<IGridService>();
+                                    if (GridService != null)
+                                    {
+                                        int x, y;
+                                        Util.UlongToInts(regionClient.RegionHandle, out x, out y);
+                                        GridRegion neighborAgentRegion = GridService.GetRegionByPosition(UUID.Zero, x, y);
+                                        if(neighborAgentRegion != null)
+                                            SimulationService.CloseAgent(neighborAgentRegion, regionCaps.AgentID);
+                                    }
+                                }
+                            }
+                        }
                         //Close all caps
                         clientCaps.Close();
 
