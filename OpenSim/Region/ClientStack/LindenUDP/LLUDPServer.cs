@@ -591,7 +591,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 Interlocked.Add(ref udpClient.UnackedBytes, outgoingPacket.Buffer.DataLength);
 
             // Put the UDP payload on the wire
-            AsyncBeginSend(buffer);
+//            AsyncBeginSend(buffer);
+
+            SyncSend(buffer);
 
             // Keep track of when this packet was sent out (right now)
             outgoingPacket.TickCount = Environment.TickCount & Int32.MaxValue;
@@ -878,7 +880,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             Buffer.BlockCopy(packetData, 0, buffer.Data, 0, length);
 
-            AsyncBeginSend(buffer);
+            //            AsyncBeginSend(buffer);
+            SyncSend(buffer);
+
         }
 
         private bool IsClientAuthorized(UseCircuitCodePacket useCircuitCode, IPEndPoint remoteEndPoint, out AgentCircuitData sessionInfo)

@@ -67,7 +67,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         // TODO: Make this a config setting
         /// <summary>Percentage of the task throttle category that is allocated to avatar and prim
         /// state updates</summary>
-        const float STATE_TASK_PERCENTAGE = 0.8f;
+        /// 
+        /// this constants must add to one !!!
+        const float STATE_TASK_PERCENTAGE = 0.6f; // comes out from task
+        const float AVATARINFO_STATE_PERCENTAGE = 0.2f; // comes out form state above
+        
 
         private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -272,10 +276,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             int texture = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f); pos += 4;
             int asset = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f);
             // These are subcategories of task that we allocate a percentage to
+            // state cames out from task
             int state = (int)((float)task * STATE_TASK_PERCENTAGE);
-            int avatarinfo = (int)((float)task * STATE_TASK_PERCENTAGE);
             task -= state;
-            task -= avatarinfo;
+
+            // avatar info cames out from state
+            int avatarinfo = (int)((float)state * AVATARINFO_STATE_PERCENTAGE);
+            state -= avatarinfo;
 
             // Make sure none of the throttles are set below our packet MTU,
             // otherwise a throttle could become permanently clogged
@@ -373,8 +380,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             int category = (int)packet.Category;
 
-            if (category >= 0 && category < m_packetOutboxes.Length)
+            if (category >= 0 && category < m_packetOutboxes.Length )  
             {
+
                 OpenSim.Framework.LocklessQueue<OutgoingPacket> queue = m_packetOutboxes[category];
 /*
                 TokenBucket bucket = m_throttleCategories[category];
@@ -394,6 +402,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             else
             {
+                // all known packs should have a known
                 // We don't have a token bucket for this category, so it will not be queued
                 return false;
             }
@@ -484,36 +493,38 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 if (++i >= (int)ThrottleOutPacketType.OutBand)
                     i = 0;
 
-                if (--npacksTosent == 0)
+                if (--npacksTosent <= 0)
                     break;
                 }
+
             m_lastthrottleCategoryChecked = i;
 
-            if (npacksTosent <= 0)
-                npacksTosent = 1; // check at least one outband packet
+            // send at least one outband packet 
 
-            // do the same for OutBand now
+            if (npacksTosent<=0)
+                npacksTosent=1;
 
             i = (int)ThrottleOutPacketType.OutBand;
 
-            while(npacksTosent > 0)
+            while (npacksTosent > 0)
                 {
-                
-                bucket = m_throttleCategories[i];
+                /* outband has no tokens checking and no throttle
+                                bucket = m_throttleCategories[i];
 
-                if (m_nextPackets[i] != null)
-                    {
-                    OutgoingPacket nextPacket = m_nextPackets[i];
-                    if (bucket.RemoveTokens(nextPacket.Buffer.DataLength))
-                        {
-                        // Send the packet
-                        m_udpServer.SendPacketFinal(nextPacket);
-                        m_nextPackets[i] = null;
-                        packetSent = true;
-                        this.PacketsSent++;
-                        }
-                    }
-                else
+                                if (m_nextPackets[i] != null)
+                                    {
+                                    OutgoingPacket nextPacket = m_nextPackets[i];
+                                    if (bucket.RemoveTokens(nextPacket.Buffer.DataLength))
+                                        {
+                                        // Send the packet
+                                        m_udpServer.SendPacketFinal(nextPacket);
+                                        m_nextPackets[i] = null;
+                                        packetSent = true;
+                                        this.PacketsSent++;
+                                        }
+                                    }
+                                else
+                 */
                     {
                     // No dequeued packet waiting to be sent, try to pull one off
                     // this queue
@@ -522,18 +533,21 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         {
                         // A packet was pulled off the queue. See if we have
                         // enough tokens in the bucket to send it out
-                        if (bucket.RemoveTokens(packet.Buffer.DataLength))
-                            {
-                            // Send the packet
-                            m_udpServer.SendPacketFinal(packet);
-                            packetSent = true;
-                            this.PacketsSent++;
-                            }
-                        else
-                            {
-                            // Save the dequeued packet for the next iteration
-                            m_nextPackets[i] = packet;
-                            }
+
+                        //                        if (bucket.RemoveTokens(packet.Buffer.DataLength))
+                        //                            {
+                        // Send the packet
+                        m_udpServer.SendPacketFinal(packet);
+                        packetSent = true;
+                        this.PacketsSent++;
+                        //                            }
+                        /*
+                                                else
+                                                    {
+                                                    // Save the dequeued packet for the next iteration
+                                                    m_nextPackets[i] = packet;
+                                                    }
+                        */
 
                         // If the queue is empty after this dequeue, fire the queue
                         // empty callback now so it has a chance to fill before we 
@@ -546,11 +560,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         // No packets in this queue. Fire the queue empty callback
                         // if it has not been called recently
                         emptyCategories |= CategoryToFlag(i);
+                        break;
                         }
                     }
-                npacksTosent--;
+                    npacksTosent--;
                 }
-
 
             if (emptyCategories != 0)
                 BeginFireQueueEmpty(emptyCategories);
