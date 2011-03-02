@@ -218,6 +218,11 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual void RebuildPhysicalRepresentation()
         {
         }
+
+        public virtual Vector3 GroupScale()
+        {
+            return Vector3.Zero;
+        }
     }
 
     //Nested Classes

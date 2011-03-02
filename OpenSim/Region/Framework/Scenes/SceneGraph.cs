@@ -439,7 +439,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Primitive Ray Tracing
             float closestDistance = 280f;
             EntityIntersection result = new EntityIntersection();
-            EntityBase[] EntityList = GetEntities();
+            EntityBase[] EntityList = Entities.GetEntities();
             foreach (EntityBase ent in EntityList)
             {
                 if (ent is SceneObjectGroup)
@@ -489,16 +489,6 @@ namespace OpenSim.Region.Framework.Scenes
             return sop;
         }
 
-        /// <summary>
-        /// Returns a list of the entities in the scene.  This is a new list so no locking is required to iterate over
-        /// it
-        /// </summary>
-        /// <returns></returns>
-        protected internal EntityBase[] GetEntities()
-        {
-            return Entities.GetEntities();
-        }
-
         #endregion
 
         #region ForEach* Methods
@@ -509,7 +499,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="action"></param>
         protected internal void ForEachSOG(Action<SceneObjectGroup> action)
         {
-            EntityBase[] objlist = Entities.GetEntities();
+            EntityBase[] objlist = Entities.GetEntitiesUnsafe();
             foreach (EntityBase obj in objlist)
             {
                 try

@@ -130,6 +130,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
+            scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
 
             if(m_Scenes.Count == 1)
                 AsyncMessageRecievedService.OnMessageReceived += OnMessageReceived;
@@ -192,6 +193,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
 
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
+            scene.EventManager.OnMakeRootAgent -= OnMakeRootAgent;
         }
 
         public string Name
@@ -220,10 +222,19 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             client.OnDenyFriendRequest += OnDenyFriendRequest;
             client.OnTerminateFriendship += OnTerminateFriendship;
             client.OnGrantUserRights += OnGrantUserRights;
+            //Only send if they are root!
+            //Util.FireAndForget(delegate(object o)
+            //{
+            //    SendFriendsOnlineIfNeeded(client);
+            //});
+        }
 
+        void OnMakeRootAgent(ScenePresence presence)
+        {
+            //Only send if they are root!
             Util.FireAndForget(delegate(object o)
             {
-                SendFriendsOnlineIfNeeded(client);
+                SendFriendsOnlineIfNeeded(presence.ControllingClient);
             });
         }
 

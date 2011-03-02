@@ -36,5 +36,6 @@ namespace OpenSim.Framework
         int LinkNum { get; set; }
         Vector3 AbsolutePosition { get; }
         void ResetEntityIDs();
+        Vector3 GroupScale();
     }
 }

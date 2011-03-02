@@ -628,6 +628,11 @@ namespace OpenSim.Region.Framework.Scenes
                 SetComponentState("ForceMouselook", value);
             }
         }
+
+        public Vector3 GroupScale()
+        {
+            return m_parentGroup.GroupScale();
+        }
         
         private UUID m_collisionSound;
         private UUID m_collisionSprite;

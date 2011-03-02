@@ -163,7 +163,7 @@ namespace Aurora.Modules
                         && m_dontPersistBefore != 0))
                     {
                         //Add the time now plus minimum persistance time so that we can force a run if it goes wrong
-                        m_lastRanBackupInHeartbeat = DateTime.Now.AddMinutes(((double)m_dontPersistBefore / 60));
+                        m_lastRanBackupInHeartbeat = DateTime.Now.AddMinutes((m_dontPersistBefore / 60));
                         Util.FireAndForget(Backup);
                     }
                 }
@@ -279,10 +279,7 @@ namespace Aurora.Modules
                 //Set loading prims here to block backup
                 LoadingPrims = true;
                 EntityBase[] entities;
-                lock (m_scene.Entities)
-                {
-                    entities = m_scene.Entities.GetEntities();
-                }
+                entities = m_scene.Entities.GetEntities();
                 foreach (EntityBase group in entities)
                 {
                     if (group is SceneObjectGroup)
@@ -612,24 +609,24 @@ namespace Aurora.Modules
                 // don't backup while it's selected or you're asking for changes mid stream.
                 DateTime startTime = DateTime.Now;
 
-                SceneObjectGroup backup_group = (SceneObjectGroup)grp.Copy(true);
+                //SceneObjectGroup backup_group = (SceneObjectGroup)grp.Copy(true);
                 //Do this we don't try to re-persist to the DB
-                backup_group.m_isLoaded = false;
-                m_scene.SimulationDataService.StoreObject(backup_group, m_scene.RegionInfo.RegionID);
+                //backup_group.m_isLoaded = false;
+                m_scene.SimulationDataService.StoreObject(grp, m_scene.RegionInfo.RegionID);
 
                 //Backup inventory, no lock as this isn't added ANYWHERE but here
-                foreach (SceneObjectPart part in backup_group.ChildrenList)
+                foreach (SceneObjectPart part in grp.ChildrenList)
                 {
                     part.Inventory.ProcessInventoryBackup(m_scene.SimulationDataService);
                 }
 
                 m_log.DebugFormat(
                         "[BackupModule]: Stored {0}, {1} in {2} at {3} in {4} seconds",
-                        backup_group.Name, backup_group.UUID, m_scene.RegionInfo.RegionName, backup_group.AbsolutePosition.ToString(), (DateTime.Now - startTime).TotalSeconds);
+                        grp.Name, grp.UUID, m_scene.RegionInfo.RegionName, grp.AbsolutePosition.ToString(), (DateTime.Now - startTime).TotalSeconds);
 
 
                 grp.HasGroupChanged = false;
-                backup_group = null;
+                //backup_group = null;
                 return true;
             }
 

@@ -199,7 +199,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (entity is SceneObjectGroup) //Only objects
                 {
                     //Check to see if they are in range
-                    if (CheckForCulling((SceneObjectGroup)entity))
+                    if (CheckForCulling(entity))
                     {
                         //Check if we already have sent them an update
                         if (!m_objectsInView.Contains(entity.UUID))
@@ -221,7 +221,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="grp"></param>
         /// <returns></returns>
-        private bool CheckForCulling(SceneObjectGroup grp)
+        private bool CheckForCulling(ISceneEntity grp)
         {
             if (!m_presence.Scene.CheckForObjectCulling)
                 return true;
@@ -295,7 +295,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //If they are not in this region, we check to make sure that we allow seeing into neighbors
                 if (!m_presence.IsChildAgent || (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor))
                 {
-                    EntityBase[] entities = m_presence.Scene.Entities.GetEntities();
+                    EntityBase[] entities = m_presence.Scene.Entities.GetEntitiesUnsafe();
                     //Use the PriorityQueue so that we can send them in the correct order
                     PriorityQueue<EntityUpdate, double> entityUpdates = new PriorityQueue<EntityUpdate, double>(entities.Length);
 
@@ -303,26 +303,15 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         if (e != null && e is SceneObjectGroup)
                         {
-                            SceneObjectGroup grp = (SceneObjectGroup)e;
-
                             //Check for culling here!
-                            if (!CheckForCulling(grp))
+                            if (!CheckForCulling(e))
                                 continue;
 
                             //Get the correct priority and add to the queue
-                            double priority = m_prioritizer.GetUpdatePriority(m_presence.ControllingClient, grp);
-                            PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate,double>(
-                                new EntityUpdate(grp, PrimUpdateFlags.FullUpdate), priority);
-                            entityUpdates.Enqueue(item); //New object, send full
+                            SendUpdate(PrimUpdateFlags.FullUpdate, (SceneObjectGroup)e);
                         }
                     }
                     entities = null;
-                    //Send all the updates to the client
-                    PriorityQueueItem<EntityUpdate, double> update;
-                    while (entityUpdates.TryDequeue(out update))
-                    {
-                        SendUpdate(PrimUpdateFlags.FullUpdate, (SceneObjectGroup)update.Value.Entity);
-                    }
                 }
             }
 

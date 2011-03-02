@@ -327,66 +327,40 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
             List<int> xs = new List<int>();
             List<int> ys = new List<int>();
-            if (m_scene.RegionInfo.RegionSizeX != int.MaxValue)
-            {
-                for (int x = 0; x <
+            for (int x = 0; x <
                     m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize; x++) //Make sure that we don't send past what viewers like
-                {
-                    for (int y = 0; y <
-                        m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize; y++) //Make sure that we don't send past what viewers like
-                    {
-                        //Need to make sure we don't send the same ones over and over
-                        if (!m_terrainPatchesSent[presence.UUID][x, y])
-                        {
-                            //Check which has less distance, camera or avatar position, both have to be done
-                            double posdistance = Util.GetFlatDistanceTo(presence.AbsolutePosition,
-                                new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0));
-                            double camdistance = Util.GetFlatDistanceTo(presence.CameraPosition,
-                                new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0));
-                            //Take the smaller of the two
-                            double distance = posdistance > camdistance ? camdistance : posdistance;
-                            if (distance < presence.DrawDistance + 35) //Its not a radius, its a diameter and we add 35 so that it doesn't look like it cuts off
-                            {
-                                //They can see it, send it ot them
-                                m_terrainPatchesSent[presence.UUID][x, y] = true;
-                                xs.Add(x);
-                                ys.Add(y);
-                                //Wait and send them all at once
-                                //presence.ControllingClient.SendLayerData(x, y, serializedMap);
-                            }
-                        }
-                    }
-                }
-            }
-            else
             {
-                ///MegaRegion!
-                for (int x = 0; x <
-                    Constants.RegionSize / Constants.TerrainPatchSize; x++)
+                for (int y = 0; y <
+                    m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize; y++) //Make sure that we don't send past what viewers like
                 {
-                    for (int y = 0; y <
-                        Constants.RegionSize / Constants.TerrainPatchSize; y++)
+                    //Need to make sure we don't send the same ones over and over
+                    if (!m_terrainPatchesSent[presence.UUID][x, y])
                     {
-                        //Need to make sure we don't send the same ones over and over
-                        if (!m_terrainPatchesSent[presence.UUID][x, y])
+                        //Check which has less distance, camera or avatar position, both have to be done
+                        double posdistance = Util.GetFlatDistanceTo(presence.AbsolutePosition,
+                            new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0));
+                        double camdistance = Util.GetFlatDistanceTo(presence.CameraPosition,
+                            new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0));
+                        //Take the smaller of the two
+                        double distance = posdistance > camdistance ? camdistance : posdistance;
+                        if (distance < presence.DrawDistance + 35) //Its not a radius, its a diameter and we add 35 so that it doesn't look like it cuts off
                         {
-                            double distance = Util.GetFlatDistanceTo(presence.AbsolutePosition,
-                                new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0));
-                            if (distance < presence.DrawDistance + 35) //Its not a radius, its a diameter and we add 35 so that it doesn't look like it cuts off
-                            {
-                                //They can see it, send it ot them
-                                m_terrainPatchesSent[presence.UUID][x, y] = true;
-                                xs.Add(x);
-                                ys.Add(y);
-                            }
+                            //They can see it, send it ot them
+                            m_terrainPatchesSent[presence.UUID][x, y] = true;
+                            xs.Add(x);
+                            ys.Add(y);
+                            //Wait and send them all at once
+                            //presence.ControllingClient.SendLayerData(x, y, serializedMap);
                         }
                     }
                 }
             }
-            float[] serializedTerrainMap = m_channel.GetFloatsSerialised(m_scene);
-            //Send all the terrain patches at once
-            presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), serializedTerrainMap, TerrainPatch.LayerType.Land);
-
+            if (xs.Count != 0)
+            {
+                float[] serializedTerrainMap = m_channel.GetFloatsSerialised(m_scene);
+                //Send all the terrain patches at once
+                presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), serializedTerrainMap, TerrainPatch.LayerType.Land);
+            }
             if (m_use3DWater)
             {
                 float[] serializedWaterMap = m_waterChannel.GetFloatsSerialised(m_scene);
