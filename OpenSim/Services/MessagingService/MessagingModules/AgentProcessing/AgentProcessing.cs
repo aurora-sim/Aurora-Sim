@@ -37,21 +37,10 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             m_registry = registry;
             //Also look for incoming messages to display
             registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
-
-            registry.RequestModuleInterface<ISimulationBase>().EventManager.OnGenericEvent += OnGenericEvent;
         }
 
         public void FinishedStartup()
         {
-        }
-
-        protected object OnGenericEvent(string FunctionName, object parameters)
-        {
-            if (FunctionName == "RegionRegistered")
-            {
-                EnableChildAgentsForRegion((GridRegion)parameters);
-            }
-            return null;
         }
 
         #endregion
@@ -72,13 +61,20 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 regionCaps = clientCaps.GetCapsService(requestingRegion);
             if (message["Method"] == "LogoutRegionAgents")
             {
-                IRegionCapsService fullregionCaps = m_registry.RequestModuleInterface<ICapsService>().GetCapsForRegion(requestingRegion);
-                if (fullregionCaps != null)
+                LogOutAllAgentsForRegion(requestingRegion);
+            }
+            else if (message["Method"] == "RegionIsOnline")
+            {
+                //Log out all the agents first, then add any child agents that should be in this region
+                LogOutAllAgentsForRegion(requestingRegion);
+                IGridService GridService = m_registry.RequestModuleInterface<IGridService>();
+                if (GridService != null)
                 {
-                    //Close all regions and remove them from the region
-                    fullregionCaps.Close();
-                    //Now kill the region in the caps Service
-                    m_registry.RequestModuleInterface<ICapsService>().RemoveCapsForRegion(requestingRegion);
+                    int x, y;
+                    Util.UlongToInts(requestingRegion, out x, out y);
+                    GridRegion requestingGridRegion = GridService.GetRegionByPosition(UUID.Zero, x, y);
+                    if (requestingGridRegion != null)
+                        EnableChildAgentsForRegion(requestingGridRegion);
                 }
             }
             else if (message["Method"] == "DisableSimulator")
@@ -219,6 +215,18 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 return result;
             }
             return null;
+        }
+
+        private void LogOutAllAgentsForRegion(ulong requestingRegion)
+        {
+            IRegionCapsService fullregionCaps = m_registry.RequestModuleInterface<ICapsService>().GetCapsForRegion(requestingRegion);
+            if (fullregionCaps != null)
+            {
+                //Close all regions and remove them from the region
+                fullregionCaps.Close();
+                //Now kill the region in the caps Service
+                m_registry.RequestModuleInterface<ICapsService>().RemoveCapsForRegion(requestingRegion);
+            }
         }
 
         #region EnableChildAgents

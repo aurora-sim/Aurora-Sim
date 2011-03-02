@@ -77,9 +77,11 @@ namespace OpenSim.Region.CoreModules
 
         void EventManager_OnStartupFullyComplete(IScene scene, List<string> data)
         {
+            //Just send the RegionIsOnline message, it will log out all the agents for the region as well
             ISyncMessagePosterService syncMessage = scene.RequestModuleInterface<ISyncMessagePosterService>();
             if (syncMessage != null)
-                syncMessage.Post(SyncMessageHelper.LogoutRegionAgents(scene.RegionInfo.RegionHandle), scene.RegionInfo.RegionHandle);
+            //    syncMessage.Post(SyncMessageHelper.LogoutRegionAgents(scene.RegionInfo.RegionHandle), scene.RegionInfo.RegionHandle);
+                syncMessage.Post(SyncMessageHelper.RegionIsOnline(scene.RegionInfo.RegionHandle), scene.RegionInfo.RegionHandle);
         }
 
         public string Name
