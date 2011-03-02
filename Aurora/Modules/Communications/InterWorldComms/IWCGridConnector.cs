@@ -44,12 +44,14 @@ namespace Aurora.Modules
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_localService.Start(config, registry);
+            if(m_localService != null)
+                m_localService.Start(config, registry);
         }
 
         public void FinishedStartup()
         {
-            m_localService.FinishedStartup();
+            if (m_localService != null)
+                m_localService.FinishedStartup();
         }
 
         #endregion

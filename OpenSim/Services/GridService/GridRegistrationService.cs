@@ -5,6 +5,7 @@ using System.Text;
 using Nini.Config;
 using Aurora.Simulation.Base;
 using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -19,6 +20,7 @@ namespace OpenSim.Services.GridService
         protected Dictionary<string, IGridRegistrationUrlModule> m_modules = new Dictionary<string, IGridRegistrationUrlModule>();
         protected LoadBalancerUrls m_loadBalancer = new LoadBalancerUrls();
         protected IGenericsConnector m_genericsConnector;
+        protected ISimulationBase m_simulationBase;
 
         #endregion
 
@@ -27,6 +29,7 @@ namespace OpenSim.Services.GridService
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             registry.RegisterModuleInterface<IGridRegistrationService>(this);
+            m_simulationBase = registry.RequestModuleInterface<ISimulationBase>();
             m_loadBalancer.SetUrls(config.Configs["Configuration"].GetString("HostNames", "http://localhost").Split(','));
         }
 
@@ -82,6 +85,24 @@ namespace OpenSim.Services.GridService
             m_genericsConnector.AddGeneric(UUID.Zero, "GridRegistrationUrls", RegionHandle.ToString(), urls.ToOSD());
 
             return retVal;
+        }
+
+        public void RemoveUrlsForClient(string SessionID, ulong RegionHandle)
+        {
+            GridRegistrationURLs urls = m_genericsConnector.GetGeneric<GridRegistrationURLs>(UUID.Zero,
+                "GridRegistrationUrls", RegionHandle.ToString(), new GridRegistrationURLs());
+            if (urls != null)
+            {
+                //Remove all the handlers from the HTTP Server
+                foreach (KeyValuePair<string, OSD> kvp in urls.URLS)
+                {
+                    IGridRegistrationUrlModule module = m_modules[kvp.Key];
+                    IHttpServer server = m_simulationBase.GetHttpServer(module.Port);
+                    server.RemoveHTTPHandler("POST", kvp.Value);
+                }
+                //Remove from the database so that they don't pop up later
+                m_genericsConnector.RemoveGeneric(UUID.Zero, "GridRegistrationUrls", RegionHandle.ToString());
+            }
         }
 
         public void RegisterModule(IGridRegistrationUrlModule module)

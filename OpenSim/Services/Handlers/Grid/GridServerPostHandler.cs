@@ -237,6 +237,8 @@ namespace OpenSim.Services
             resultMap["Result"] = result;
             if (result == "")
             {
+                //Remove any previous URLs
+                m_registry.RequestModuleInterface<IGridRegistrationService>().RemoveUrlsForClient(SecureSessionID.ToString(), rinfo.RegionHandle);
                 OSDMap urls = m_registry.RequestModuleInterface<IGridRegistrationService>().GetUrlForRegisteringClient(SecureSessionID.ToString(), rinfo.RegionHandle);
                 resultMap["URLs"] = urls;
             }
@@ -272,8 +274,12 @@ namespace OpenSim.Services
                 UUID.TryParse(request["SESSIONID"].ToString(), out sessionID);
             else
                 m_log.WarnFormat("[GRID HANDLER]: no sessionID in request to deregister region");
-
+            GridRegion r = m_GridService.GetRegionByUUID(UUID.Zero, regionID);
             bool result = m_GridService.DeregisterRegion(regionID, sessionID);
+            if (result && r != null)
+            {
+                m_registry.RequestModuleInterface<IGridRegistrationService>().RemoveUrlsForClient(sessionID.ToString(), r.RegionHandle);
+            }
 
             if (result)
                 return SuccessResult();

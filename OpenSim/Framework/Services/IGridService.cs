@@ -593,6 +593,13 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="module"></param>
         void RegisterModule(IGridRegistrationUrlModule module);
+
+        /// <summary>
+        /// Remove the URLs for the given region
+        /// </summary>
+        /// <param name="SessionID"></param>
+        /// <param name="RegionHandle"></param>
+        void RemoveUrlsForClient(string SessionID, ulong RegionHandle);
     }
 
     /// <summary>
