@@ -714,15 +714,19 @@ namespace OpenSim.Services.GridService
             //Get a list of all the clients in the region and add them
             foreach (IRegionClientCapsService clientCaps in regionCaps.GetClients())
             {
-                //Normalize the positions to 5 meter blocks so that agents stack instead of cover up each other
-                Vector3 position = new Vector3(NormalizePosition(clientCaps.LastPosition.X),
-                    NormalizePosition(clientCaps.LastPosition.Y), 0);
-                int Number = 0;
-                //Find the number of agents currently at this position
-                if (!Positions.TryGetValue(position, out Number))
-                    Number = 0;
-                Number++;
-                Positions[position] = Number;
+                //Only root agents!
+                if (clientCaps.RootAgent)
+                {
+                    //Normalize the positions to 5 meter blocks so that agents stack instead of cover up each other
+                    Vector3 position = new Vector3(NormalizePosition(clientCaps.LastPosition.X),
+                        NormalizePosition(clientCaps.LastPosition.Y), 0);
+                    int Number = 0;
+                    //Find the number of agents currently at this position
+                    if (!Positions.TryGetValue(position, out Number))
+                        Number = 0;
+                    Number++;
+                    Positions[position] = Number;
+                }
             }
             //Build the mapItemReply blocks
             foreach (KeyValuePair<Vector3, int> position in Positions)
