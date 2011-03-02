@@ -1380,12 +1380,7 @@ namespace OpenSim.Services
         {
             //Warning! This services two different methods
             EstateSettings ES = null;
-            if (request.ContainsKey("ESTATEID"))
-            {
-                int EstateID = int.Parse(request["ESTATEID"].ToString());
-                ES = EstateConnector.LoadEstateSettings(EstateID);
-            }
-            else
+            if (request.ContainsKey("REGIONID"))
             {
                 string regionID = request["REGIONID"].ToString();
                 if(regionID != null)

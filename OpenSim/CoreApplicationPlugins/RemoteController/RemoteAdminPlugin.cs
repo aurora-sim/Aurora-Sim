@@ -690,15 +690,6 @@ namespace OpenSim.CoreApplicationPlugins
                         // Persistence does not seem to effect the need to save a new estate
                         region.EstateSettings.Save();
                     }
-                    else
-                    {
-                        int estateID = estateIDs[0];
-
-                        region.EstateSettings = estateService.LoadEstateSettings(estateID);
-
-                        if (!estateService.LinkRegion(region.RegionID, estateID, ""))
-                            throw new Exception("Failed to join estate.");
-                    }
 
                     // Create the region and perform any initial initialization
 

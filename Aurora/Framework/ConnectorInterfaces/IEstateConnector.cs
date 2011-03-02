@@ -17,13 +17,6 @@ namespace Aurora.Framework
 		bool LoadEstateSettings(UUID regionID, out EstateSettings settings);
 
         /// <summary>
-        /// Loads the estate data for the given estate ID
-        /// </summary>
-        /// <param name="estateID"></param>
-        /// <returns></returns>
-		EstateSettings LoadEstateSettings(int estateID);
-
-        /// <summary>
         /// Updates the given Estate data in the database
         /// </summary>
         /// <param name="es"></param>

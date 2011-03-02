@@ -97,50 +97,6 @@ namespace Aurora.Services.DataService
             return false;
         }
 
-        public EstateSettings LoadEstateSettings(int estateID)
-        {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
-            EstateSettings ES = new EstateSettings();
-            ES.OnSave += SaveEstateSettings;
-            
-            sendData["ESTATEID"] = estateID;
-            sendData["METHOD"] = "loadestatesettings";
-
-            string reqString = WebUtils.BuildQueryString(sendData);
-
-            try
-            {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
-                {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI,
-                        reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                        {
-                            ES = new EstateSettings(replyData);
-                            ES.OnSave += SaveEstateSettings;
-                            return ES;
-                        }
-
-                        else
-                            m_log.DebugFormat("[AuroraRemoteEstateConnector]: LoadEstateSettings {0} received null response",
-                                estateID);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
-            }
-
-            return null;
-        }
-
         public void SaveEstateSettings(EstateSettings es)
         {
             Dictionary<string, object> sendData = es.ToKeyValuePairs(true);
