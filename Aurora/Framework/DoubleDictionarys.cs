@@ -213,9 +213,12 @@ namespace Aurora.Framework
         public TValue[] GetUnsafe()
         {
             TValue[] value = new TValue[Dictionary1.Count];
-            for (int i = 0; i < value.Length; i++)
+            lock (m_lock)
             {
-                value[i] = Dictionary1.ElementAt(i).Value;
+                for (int i = 0; i < value.Length; i++)
+                {
+                    value[i] = Dictionary1.ElementAt(i).Value;
+                }
             }
             return value;
         }

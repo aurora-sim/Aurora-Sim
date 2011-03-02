@@ -87,6 +87,16 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private ITerrainChannel m_waterRevert;
         private Scene m_scene;
 
+        public ITerrainChannel TerrainMap
+        {
+            get { return m_channel; }
+        }
+
+        public ITerrainChannel TerrainRevertMap
+        {
+            get { return m_revert; }
+        }
+
         private long m_queueNextSave = 0;
         private int m_savetime = 2; // seconds to wait before saving terrain
         private Timer m_queueTimer = new Timer();
@@ -1023,7 +1033,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_painteffects[StandardTerrainEffects.Smooth] = new SmoothSphere();
             m_painteffects[StandardTerrainEffects.Noise] = new NoiseSphere();
             m_painteffects[StandardTerrainEffects.Flatten] = new FlattenSphere();
-            m_painteffects[StandardTerrainEffects.Revert] = new RevertSphere(m_revert);
+            m_painteffects[StandardTerrainEffects.Revert] = new RevertSphere(this);
             m_painteffects[StandardTerrainEffects.Erode] = new ErodeSphere();
             m_painteffects[StandardTerrainEffects.Weather] = new WeatherSphere();
             m_painteffects[StandardTerrainEffects.Olsen] = new OlsenSphere();
@@ -1034,7 +1044,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_floodeffects[StandardTerrainEffects.Smooth] = new SmoothArea();
             m_floodeffects[StandardTerrainEffects.Noise] = new NoiseArea();
             m_floodeffects[StandardTerrainEffects.Flatten] = new FlattenArea();
-            m_floodeffects[StandardTerrainEffects.Revert] = new RevertArea(m_revert);
+            m_floodeffects[StandardTerrainEffects.Revert] = new RevertArea(this);
 
             // Filesystem load/save loaders
             m_loaders[".r32"] = new RAW32();
@@ -1064,6 +1074,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         public void UpdateRevertMap()
         {
+            m_revert = null;
             m_revert = m_channel.MakeCopy();
             SaveRevertTerrain(m_revert);
         }

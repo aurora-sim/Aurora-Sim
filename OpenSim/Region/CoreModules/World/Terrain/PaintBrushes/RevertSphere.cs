@@ -33,18 +33,18 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 {
     public class RevertSphere : ITerrainPaintableEffect
     {
-        private readonly ITerrainChannel m_revertmap;
+        private readonly ITerrainModule m_module;
 
-        public RevertSphere(ITerrainChannel revertmap)
+        public RevertSphere(ITerrainModule module)
         {
-            m_revertmap = revertmap;
+            m_module = module;
         }
 
         #region ITerrainPaintableEffect Members
 
         public void PaintEffect(ITerrainChannel map, bool[,] mask, double rx, double ry, double rz, double strength, double duration, float BrushSize, List<Scene> scene)
         {
-            if (m_revertmap == null)
+            if (m_module == null)
                 return;
             strength = TerrainUtil.MetersToSphericalStrength(BrushSize);
             duration = 0.03; //MCP Should be read from ini file
@@ -70,7 +70,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 
                     if (z > 0.0)
                     {
-                        map[x, y] = (map[x, y] * (1.0 - z)) + (m_revertmap[x, y] * z);
+                        map[x, y] = (map[x, y] * (1.0 - z)) + (m_module.TerrainRevertMap[x, y] * z);
                     }
                 }
             }

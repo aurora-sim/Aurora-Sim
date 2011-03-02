@@ -373,6 +373,16 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 landData.Add(parcel);
             }
             m_scene.EventManager.TriggerIncomingLandDataFromStorage(landData);
+            //Update the database as well!
+            IParcelManagementModule parcelManagementModule = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagementModule != null)
+            {
+                foreach (LandData parcel in landData)
+                {
+                    parcelManagementModule.UpdateLandObject(parcel.LocalID, parcel);
+                }
+            }
+
             m_log.InfoFormat("[ARCHIVER]: Restored {0} parcels.", landData.Count);
 
             //Clean it out

@@ -31,11 +31,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
 {
     public class RevertArea : ITerrainFloodEffect
     {
-        private readonly ITerrainChannel m_revertmap;
+        private readonly ITerrainModule m_module;
 
-        public RevertArea(ITerrainChannel revertmap)
+        public RevertArea(ITerrainModule module)
         {
-            m_revertmap = revertmap;
+            m_module = module;
         }
 
         #region ITerrainFloodEffect Members
@@ -56,7 +56,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
                 {
                     if (fillArea[x, y])
                     {
-                        map[x, y] = m_revertmap[x, y];
+                        map[x, y] = m_module.TerrainRevertMap[x, y];
                     }
                 }
             }
