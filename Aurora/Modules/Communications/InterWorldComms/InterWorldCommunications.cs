@@ -282,10 +282,9 @@ namespace Aurora.Modules
                 m_Enabled = m_config.GetBoolean("Enabled", false);
                 m_allowUntrustedConnections = m_config.GetBoolean("AllowUntrustedConnections", m_allowUntrustedConnections);
                 m_untrustedConnectionsDefaultTrust = (TrustLevel)Enum.Parse(typeof(TrustLevel), m_config.GetString("UntrustedConnectionsDefaultTrust", m_untrustedConnectionsDefaultTrust.ToString()));
+                registry.RegisterModuleInterface<ICommunicationService>(this);
+                m_registry = registry;
             }
-
-            registry.RegisterModuleInterface<ICommunicationService>(this);
-            m_registry = registry;
         }
 
         public void Start(IConfigSource source, IRegistryCore registry)
