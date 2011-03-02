@@ -43,7 +43,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         int maxBurst;
         /// <summary>Rate that the bucket fills, in bytes per millisecond. If
         /// zero, the bucket always remains full</summary>
-        int tokensPerMS;
+        float tokensPerMS;
         /// <summary>Number of tokens currently in the bucket</summary>
         int content;
         /// <summary>Time of the last drip, in system ticks</summary>
@@ -78,7 +78,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <remarks>Tokens are added to the bucket any time 
         /// <seealso cref="RemoveTokens"/> is called, at the granularity of
         /// the system tick interval (typically around 15-22ms)</remarks>
-        public int DripRate
+        public float DripRate
         {
             get { return tokensPerMS * 1000; }
             set
@@ -90,7 +90,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     int bpms = (int)((float)value / 1000.0f);
 
                     if (bpms <= 0)
-                        tokensPerMS = 1; // 1 byte/ms is the minimum granularity
+                        tokensPerMS = .5f; // .5 byte/ms is the minimum granularity
                     else
                         tokensPerMS = bpms;
                 }
@@ -100,7 +100,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>
         /// The speed limit of this bucket in bytes per millisecond
         /// </summary>
-        public int DripPerMS
+        public float DripPerMS
         {
             get { return tokensPerMS; }
         }
@@ -205,7 +205,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     return false;
                 }
 
-                int dripAmount = deltaMS * tokensPerMS;
+                int dripAmount = (int)(deltaMS * tokensPerMS);
 
                 content = Math.Min(content + dripAmount, maxBurst);
                 lastDrip = now;

@@ -284,8 +284,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             int avatarinfo = (int)((float)state * AVATARINFO_STATE_PERCENTAGE);
             state -= avatarinfo;
 
+//            int total = resend + land + wind + cloud + task + texture + asset + state + avatarinfo;
+
             // Make sure none of the throttles are set below our packet MTU,
             // otherwise a throttle could become permanently clogged
+
+/* this is not respect some viewers requests of less 11200kbits/s per cat
             resend = Math.Max(resend, LLUDPServer.MTU);
             land = Math.Max(land, LLUDPServer.MTU);
             wind = Math.Max(wind, LLUDPServer.MTU);
@@ -295,7 +299,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             asset = Math.Max(asset, LLUDPServer.MTU);
             state = Math.Max(state, LLUDPServer.MTU);
             avatarinfo = Math.Max(avatarinfo, LLUDPServer.MTU);
-
+*/
             int total = resend + land + wind + cloud + task + texture + asset + state + avatarinfo;
 
             //m_log.DebugFormat("[LLUDPCLIENT]: {0} is setting throttles. Resend={1}, Land={2}, Wind={3}, Cloud={4}, Task={5}, Texture={6}, Asset={7}, State={8}, Total={9}",
@@ -328,8 +332,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             bucket.MaxBurst = asset;
 
             bucket = m_throttleCategories[(int)ThrottleOutPacketType.Task];
-            bucket.DripRate = task + state + avatarinfo;
-            bucket.MaxBurst = task + state + avatarinfo;
+            /*
+                        bucket.DripRate = task + state + avatarinfo;
+                        bucket.MaxBurst = task + state + avatarinfo;
+            */
+            bucket.DripRate = task;
+            bucket.MaxBurst = task;
 
             bucket = m_throttleCategories[(int)ThrottleOutPacketType.State];
             bucket.DripRate = state;
