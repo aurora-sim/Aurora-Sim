@@ -2379,7 +2379,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (_zeroFlag)
                     return Vector3.Zero;
 
-                if (m_rotationalVelocity.ApproxEquals(Vector3.Zero, 0.2f))
+                if (m_rotationalVelocity.ApproxEquals(Vector3.Zero, 0.00001f))
                     return Vector3.Zero;
 
                 return m_rotationalVelocity;
@@ -2610,7 +2610,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 throttleCounter = 0;
                                 }
                             else
-                                throttleCounter += 2;
+                                throttleCounter += 4;
                              }
                         }
                     else
@@ -2640,9 +2640,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                          (Math.Abs(m_lastposition.X - _position.X) > 0.001)
                         || (Math.Abs(m_lastposition.Y - _position.Y) > 0.001)
                         || (Math.Abs(m_lastposition.Z - _position.Z) > 0.001)
-                        || (Math.Abs(m_lastorientation.X - _orientation.X) > 0.001)
-                        || (Math.Abs(m_lastorientation.Y - _orientation.Y) > 0.001)
-                        || (Math.Abs(m_lastorientation.Z - _orientation.Z) > 0.001)
+                        || (Math.Abs(m_lastorientation.X - _orientation.X) > 0.0001)
+                        || (Math.Abs(m_lastorientation.Y - _orientation.Y) > 0.0001)
+                        || (Math.Abs(m_lastorientation.Z - _orientation.Z) > 0.0001)
                         || (Math.Abs(_acceleration.X) > 0.005)
                         || (Math.Abs(_acceleration.Y) > 0.005)
                         || (Math.Abs(_acceleration.Z) > 0.005)
@@ -2653,7 +2653,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             needupdate = true;
                             }
                         else
-                            throttleCounter +=2;
+                            throttleCounter +=4;
                         }
 
                     

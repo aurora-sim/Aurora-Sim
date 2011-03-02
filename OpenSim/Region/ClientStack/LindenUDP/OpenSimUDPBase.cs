@@ -246,7 +246,7 @@ namespace OpenMetaverse
             }
         }
 
-        public void AsyncBeginSend(UDPPacketBuffer buf)
+        public void SyncSend(UDPPacketBuffer buf)
         {
             if (!m_shutdownFlag)
             {
@@ -259,7 +259,18 @@ namespace OpenMetaverse
                         buf.DataLength,
                         SocketFlags.None,
                         buf.RemoteEndPoint);
-/*
+                }
+                catch (SocketException) { }
+                catch (ObjectDisposedException) { }
+            }
+        }
+/* not in use Send Sync now
+        public void AsyncBeginSend(UDPPacketBuffer buf)
+        {
+            if (!m_shutdownFlag)
+            {
+                try
+                {
                     m_udpSocket.BeginSendTo(
                         buf.Data,
                         0,
@@ -268,13 +279,13 @@ namespace OpenMetaverse
                         buf.RemoteEndPoint,
                         AsyncEndSend,
                         buf);
- */
+ 
                 }
                 catch (SocketException) { }
                 catch (ObjectDisposedException) { }
             }
         }
-/*
+
         void AsyncEndSend(IAsyncResult result)
         {
             try
