@@ -41,7 +41,7 @@ namespace Aurora.Services.DataService
 
         public void CacheStateSaves()
         {
-            List<string> Query = GD.Query("", "", "auroradotnetstatesaves", "*");
+            /*List<string> Query = GD.Query("", "", "auroradotnetstatesaves", "*");
 
             //Save this, as the query count changes over time
             int count = Query.Count;
@@ -53,7 +53,7 @@ namespace Aurora.Services.DataService
                 if(s.UserInventoryID != UUID.Zero)
                     m_cachedStateSaves[s.UserInventoryID] = s;
                 Query.RemoveRange(0, 11);
-            }
+            }*/
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace Aurora.Services.DataService
         {
             StateSave StateSave = new StateSave();
             //Check the caches
-            if (m_cachedStateSaves.TryGetValue(itemID, out StateSave))
+            /*if (m_cachedStateSaves.TryGetValue(itemID, out StateSave))
                 return StateSave;
             else if (UserInventoryItemID != UUID.Zero &&
                 m_cachedStateSaves.TryGetValue(UserInventoryItemID, out StateSave))
@@ -75,7 +75,7 @@ namespace Aurora.Services.DataService
             else if (onlyCached)
                 return null;
             else
-                StateSave = new StateSave();
+                StateSave = new StateSave();*/
 
 
             try
@@ -106,7 +106,6 @@ namespace Aurora.Services.DataService
             Dictionary<string, object> vars = new Dictionary<string, object>();
             StateSave.State = StateSaveRetVals[0];
             StateSave.ItemID = new UUID(StateSaveRetVals[1]);
-            StateSave.Source = StateSaveRetVals[2];
             StateSave.Running = int.Parse(StateSaveRetVals[3]) == 1;
 
             string varsmap = StateSaveRetVals[4];
@@ -163,9 +162,9 @@ namespace Aurora.Services.DataService
         /// <param name="state"></param>
 		public void SaveStateSave(StateSave state)
         {
-            m_cachedStateSaves[state.ItemID] = state;
+            /*m_cachedStateSaves[state.ItemID] = state;
             if(state.UserInventoryID != UUID.Zero) //Too many scripts have this and is dangerous to pull from this
-                m_cachedStateSaves[state.UserInventoryID] = state;
+                m_cachedStateSaves[state.UserInventoryID] = state;*/
             List<string> Keys = new List<string>();
             Keys.Add("State");
             Keys.Add("ItemID");
@@ -182,7 +181,7 @@ namespace Aurora.Services.DataService
             List<object> Insert = new List<object>();
             Insert.Add(state.State);
             Insert.Add(state.ItemID);
-            Insert.Add(state.Source);
+            Insert.Add("");
             Insert.Add(state.Running ? 1 : 0);
             Insert.Add(state.Variables);
             Insert.Add(state.Plugins);
@@ -200,7 +199,7 @@ namespace Aurora.Services.DataService
         /// <param name="itemID"></param>
         public void DeleteStateSave(UUID itemID)
         {
-            m_cachedStateSaves.Remove(itemID);
+            //m_cachedStateSaves.Remove(itemID);
             GD.Delete("auroradotnetstatesaves", new string[] { "ItemID" }, new object[] { itemID });
         }
 

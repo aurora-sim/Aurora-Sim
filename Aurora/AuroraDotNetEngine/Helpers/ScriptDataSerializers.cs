@@ -33,8 +33,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             StateSave Insert = new StateSave();
             Insert.State = instance.State;
             Insert.ItemID = instance.ItemID;
-            string source = instance.Source.Replace("\n", " ");
-            Insert.Source = source.Replace("'", " ");
             Insert.Running = instance.Running;
             //Vars
             Dictionary<string, Object> vars = new Dictionary<string, object>();

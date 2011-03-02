@@ -256,8 +256,6 @@ namespace Aurora.Modules
                     }
                     m_scene.EventManager.TriggerIncomingLandDataFromStorage(conn.LoadLandObjects(m_scene.RegionInfo.RegionID));
                 }
-                else
-                    m_scene.EventManager.TriggerIncomingLandDataFromStorage(LandObjects);
             }
 
             internal void FinishStartup()

@@ -11,7 +11,6 @@ namespace Aurora.Framework
     {
         public string State;
         public UUID ItemID;
-        public string Source;
         public bool Running;
         public bool Disabled;
         public object Variables;
@@ -25,7 +24,6 @@ namespace Aurora.Framework
         {
             State = map["State"].AsString();
             ItemID = map["ItemID"].AsUUID();
-            Source = map["Source"].AsString();
             Running = map["Running"].AsBoolean();
             Disabled = map["Disabled"].AsBoolean();
             Variables = map["Variables"].AsString();
@@ -41,7 +39,6 @@ namespace Aurora.Framework
             OSDMap map = new OSDMap();
             map.Add("State", State);
             map.Add("ItemID", ItemID);
-            map.Add("Source", Source);
             map.Add("Running", Running);
             map.Add("Disabled", Disabled);
             map.Add("Variables", Variables.ToString());
