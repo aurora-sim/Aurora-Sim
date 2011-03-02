@@ -37,6 +37,13 @@ namespace Aurora.Framework
         List<int> GetEstates(string name);
 
         /// <summary>
+        /// Get all regions in the current estate
+        /// </summary>
+        /// <param name="estateID"></param>
+        /// <returns></returns>
+        List<UUID> GetRegions(uint estateID);
+
+        /// <summary>
         /// Gets the estates that have the given owner
         /// </summary>
         /// <param name="search"></param>

@@ -260,6 +260,12 @@ namespace Aurora.Services.DataService
             return null;
         }
 
+        public List<UUID> GetRegions(uint estateID)
+        {
+            //Regions arn't allowed to find other regions in their estate.
+            return null;
+        }
+
         public List<EstateSettings> GetEstates(UUID owner)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();

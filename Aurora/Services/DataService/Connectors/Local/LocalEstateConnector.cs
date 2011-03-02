@@ -292,6 +292,19 @@ namespace Aurora.Services.DataService
             return result;
         }
 
+        public List<UUID> GetRegions(uint estateID)
+        {
+            List<UUID> result = new List<UUID>();
+            List<string> RetVal = GD.Query(new string[]{"Key","Value"}, new object[]{"EstateID",estateID}, "estates", "ID");
+            if (RetVal.Count == 0)
+                return null;
+            foreach (string val in RetVal)
+            {
+                result.Add(UUID.Parse(val));
+            }
+            return result;
+        }
+
         public List<EstateSettings> GetEstates(UUID OwnerID)
         {
             List<EstateSettings> result = new List<EstateSettings>();
