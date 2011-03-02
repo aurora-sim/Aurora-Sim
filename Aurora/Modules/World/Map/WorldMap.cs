@@ -222,7 +222,7 @@ namespace Aurora.Modules
 		{
             string regionimage = "regionImage" + m_scene.RegionInfo.RegionID.ToString();
             regionimage = regionimage.Replace("-", "");
-            m_log.Debug("[WORLD MAP]: JPEG Map location: http://" + m_scene.RegionInfo.ServerURI + "/index.php?method=" + regionimage);
+            m_log.Debug("[WORLD MAP]: JPEG Map location: " + m_scene.RegionInfo.ServerURI + "/index.php?method=" + regionimage);
 
             MainServer.Instance.AddHTTPHandler(regionimage, OnHTTPGetMapImage);
 
