@@ -1181,7 +1181,8 @@ namespace OpenSim.Region.Framework.Scenes
             PhysicsActor actor = PhysicsActor;
             if (actor == null)
             {
-                m_log.Debug("Null physical actor in AgentUpdate in " + m_scene.RegionInfo.RegionName);
+                //This happens while sitting, don't spam it
+                //m_log.Debug("Null physical actor in AgentUpdate in " + m_scene.RegionInfo.RegionName);
                 return;
             }
             
