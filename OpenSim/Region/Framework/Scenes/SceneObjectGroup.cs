@@ -260,7 +260,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public Quaternion GroupRotation
+        public override Quaternion GroupRotation
         {
             get { return m_rootPart.RotationOffset; }
         }

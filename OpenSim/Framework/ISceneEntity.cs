@@ -37,5 +37,6 @@ namespace OpenSim.Framework
         Vector3 AbsolutePosition { get; }
         void ResetEntityIDs();
         Vector3 GroupScale();
+        Quaternion GroupRotation { get; }
     }
 }

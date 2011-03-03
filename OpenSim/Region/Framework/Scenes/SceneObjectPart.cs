@@ -140,7 +140,12 @@ namespace OpenSim.Region.Framework.Scenes
         [XmlIgnore]
         public bool IsRoot 
         {
-           get { return ParentGroup.RootPart == this; } 
+           get { return ParentGroup.RootPart == this; }
+        }
+
+        public virtual Quaternion GroupRotation
+        {
+            get { return ParentGroup.GroupRotation; }
         }
 
         // use only one serializer to give the runtime a chance to optimize it (it won't do that if you

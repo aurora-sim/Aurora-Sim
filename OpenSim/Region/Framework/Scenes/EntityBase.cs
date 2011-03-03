@@ -223,6 +223,11 @@ namespace OpenSim.Region.Framework.Scenes
         {
             return Vector3.Zero;
         }
+
+        public virtual Quaternion GroupRotation
+        {
+            get { return Quaternion.Identity; }
+        }
     }
 
     //Nested Classes
