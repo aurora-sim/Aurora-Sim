@@ -1066,35 +1066,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         {
             UserServiceURL = "";
             SessionID = UUID.Zero;
-
-
-            // Need to rework this based on changes to User Services
-            /*
-            UserAccount userAccount = m_accountService.GetUserAccount(UUID.Zero,AgentID);
-            if (userAccount == null)
-            {
-                // This should be impossible.  If I've been passed a reference to a client
-                // that client should be registered with the UserService.  So something
-                // is horribly wrong somewhere.
-
-                m_log.WarnFormat("[GROUPS]: Could not find a UserServiceURL for {0}", AgentID);
-
-            }
-            else if (userProfile is ForeignUserProfileData)
-            {
-                // They aren't from around here
-                ForeignUserProfileData fupd = (ForeignUserProfileData)userProfile;
-                UserServiceURL = fupd.UserServerURI;
-                SessionID = fupd.CurrentAgent.SessionID;
-
-            }
-            else
-            {
-                // They're a local user, use this:
-                UserServiceURL = m_commManager.NetworkServersInfo.UserURL;
-                SessionID = userProfile.CurrentAgent.SessionID;
-            }
-            */
         }
 
         public List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID)
