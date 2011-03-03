@@ -110,26 +110,26 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             int i = 0;
             foreach (string param in mainParams)
             {
-                if (param.StartsWith("OffsetX"))
+                if (param.StartsWith("OffsetX", StringComparison.CurrentCultureIgnoreCase))
                 {
                     string retVal = param.Remove(0, 8);
                     int.TryParse(retVal, out offsetX);
                 }
-                if (param.StartsWith("OffsetY"))
+                if (param.StartsWith("OffsetY", StringComparison.CurrentCultureIgnoreCase))
                 {
                     string retVal = param.Remove(0, 8);
                     int.TryParse(retVal, out offsetY);
                 }
-                if (param.StartsWith("OffsetZ"))
+                if (param.StartsWith("OffsetZ", StringComparison.CurrentCultureIgnoreCase))
                 {
                     string retVal = param.Remove(0, 8);
                     int.TryParse(retVal, out offsetZ);
                 }
-                if (param.StartsWith("FlipX"))
+                if (param.StartsWith("FlipX", StringComparison.CurrentCultureIgnoreCase))
                 {
                     flipX = true;
                 }
-                if (param.StartsWith("FlipY"))
+                if (param.StartsWith("FlipY", StringComparison.CurrentCultureIgnoreCase))
                 {
                     flipY = true;
                 }
