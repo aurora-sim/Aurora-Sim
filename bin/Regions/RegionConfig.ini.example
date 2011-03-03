@@ -1,6 +1,6 @@
-;; * This file must be renamed to RegionConfig.ini and moved to the Regions/
-;; * subdirectory to work!
-;; * You can put multiple regions into one file or make one file per region
+;; * This file should be renamed to RegionConfig.ini (removing the .example)
+;; * You can put multiple regions into one file by adding another [] section with a region name in it
+;;   or make a new file like this one under a different name (ending with the .ini file extention)
 ;; * The section name is the region name
 ;; *
 [Default Region]
@@ -23,19 +23,22 @@ ExternalHostName = "SYSTEMIP"
 ;PhysicalPrimMax = 10
 ;ClampPrimSize = False
 ;MaxPrims = 15000
-;; *
-;; * Multi-Tenancy. Only set if needed
-;; *
-;ScopeID = "00000000-0000-0000-0000-000000000000"
+;; if you would like to allow prims to be physical and move by physics with the physical checkbox in the client set this to true.
+;AllowPhysicalPrims = true
 ;; *
 ;; * Product name (used in search from viewer 1.23
 ;; *
 ;RegionType = "Mainland"
+;; * 
+;; * Other Advanced Settings
+;; *
 ;; Should avatars in neighbor sims see objects in this sim?
-SeeIntoThisSimFromNeighbor = true
+;SeeIntoThisSimFromNeighbor = true
 ;; Region crossing
-AllowScriptCrossing = false
+;AllowScriptCrossing = false
 ;; Trust Script Binaries. Enabling this can allow foreign agents to execute binary code on your simulator!
-TrustBinariesFromForeignSims = false
-;; if you would like to allow prims to be physical and move by physics with the physical checkbox in the client set this to true.
-AllowPhysicalPrims = true
+;TrustBinariesFromForeignSims = false
+;; *
+;; * Multi-Tenancy. Only set if needed
+;; *
+;ScopeID = "00000000-0000-0000-0000-000000000000"
