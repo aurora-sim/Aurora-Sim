@@ -231,12 +231,12 @@ namespace OpenSim.Region.Framework.Scenes
                 Vector3 gprpos = grp.AbsolutePosition; // not doing this was making several calls
                 Vector3 grpsize = grp.GroupScale(); // and this is heavy someone needs to look to it and cache for static prims
                 Quaternion grprot = grp.GroupRotation;
-                 
-                CheckCullingAgainstPosition(m_presence.AbsolutePosition, gprpos, grpsize, grprot);
-                
+
+                grpsize = grpsize * grprot; // prims are rotated in world
+
                 //Check for part position against the av and the camera position
-                if (CheckCullingAgainstPosition(m_presence.AbsolutePosition, gprpos, grpsize, grprot) ||
-                    CheckCullingAgainstPosition(m_presence.CameraPosition, gprpos, grpsize, grprot))
+                if (CheckCullingAgainstPosition(m_presence.AbsolutePosition, gprpos, grpsize) ||
+                    CheckCullingAgainstPosition(m_presence.CameraPosition, gprpos, grpsize))
                 {
                     return true;
                 }
@@ -251,8 +251,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="groupPosition"></param>
         /// <param name="groupSize"></param>
         /// <returns></returns>
-        private bool CheckCullingAgainstPosition(Vector3 checkPosition, Vector3 groupPosition, Vector3 groupSize,Quaternion rotation)
-        {
+        private bool CheckCullingAgainstPosition(Vector3 checkPosition, Vector3 groupPosition, Vector3 groupSizeRotated)
+            {
             //First just check against the position 
             // not good prims can be huge and also distance calls sqrt and that takes more time than all the rest of this code
 //            if (Util.DistanceLessThan(checkPosition, groupPosition, m_presence.DrawDistance))
@@ -261,19 +261,18 @@ namespace OpenSim.Region.Framework.Scenes
             //NOTE: This really should be checking as a sphere.. but that hasn't been done yet
 
             // no check agains AABB
-            Vector3 gsize = groupSize * rotation; // prims are rotated in world
 
-            if (checkPosition.X - (groupPosition.X + gsize.X) < m_presence.DrawDistance)
+            if (checkPosition.X - (groupPosition.X + groupSizeRotated.X) < m_presence.DrawDistance)
                 return true;
-            if (checkPosition.X - (groupPosition.X - gsize.X) < m_presence.DrawDistance)
+            if (checkPosition.X - (groupPosition.X - groupSizeRotated.X) < m_presence.DrawDistance)
                 return true;
-            if (checkPosition.Y - (groupPosition.Y + gsize.Y) < m_presence.DrawDistance)
+            if (checkPosition.Y - (groupPosition.Y + groupSizeRotated.Y) < m_presence.DrawDistance)
                 return true;
-            if (checkPosition.Y - (groupPosition.Y - gsize.Y) < m_presence.DrawDistance)
+            if (checkPosition.Y - (groupPosition.Y - groupSizeRotated.Y) < m_presence.DrawDistance)
                 return true;
-            if (checkPosition.Z - (groupPosition.Z + gsize.Z) < m_presence.DrawDistance)
+            if (checkPosition.Z - (groupPosition.Z + groupSizeRotated.Z) < m_presence.DrawDistance)
                 return true;
-            if (checkPosition.Z - (groupPosition.Z - gsize.Z) < m_presence.DrawDistance)
+            if (checkPosition.Z - (groupPosition.Z - groupSizeRotated.Z) < m_presence.DrawDistance)
                 return true;
             //All done then...
             return false;
