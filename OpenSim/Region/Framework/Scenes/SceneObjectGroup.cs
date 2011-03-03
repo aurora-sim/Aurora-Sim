@@ -758,9 +758,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         public Vector3 GroupScale()
         {
-            Vector3 minScale = new Vector3(Scene.RegionInfo.RegionSizeX, Scene.RegionInfo.RegionSizeY, 10000);
-            Vector3 maxScale = Vector3.Zero;
-            Vector3 finalScale = new Vector3(0.5f, 0.5f, 0.5f);
+            Vector3 minScale = new Vector3(int.MaxValue, int.MaxValue, int.MaxValue);
+            Vector3 maxScale = new Vector3(int.MinValue,int.MinValue,int.MinValue) ;
+            Vector3 finalScale;
 
             lock (m_partsLock)
             {
@@ -768,20 +768,23 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     Vector3 partscale = part.Scale;
                     Vector3 partoffset = part.OffsetPosition;
+                    if (part.ParentID != 0) // prims are rotated in group
+                        partscale = partscale * part.RotationOffset;
 
-                    minScale.X = (partscale.X + partoffset.X < minScale.X) ? partscale.X + partoffset.X : minScale.X;
-                    minScale.Y = (partscale.Y + partoffset.Y < minScale.Y) ? partscale.Y + partoffset.Y : minScale.Y;
-                    minScale.Z = (partscale.Z + partoffset.Z < minScale.Z) ? partscale.Z + partoffset.Z : minScale.Z;
+                    minScale.X = (partoffset.X - partscale.X < minScale.X) ? partoffset.X - partscale.X : minScale.X;
+                    minScale.Y = (partoffset.Y - partscale.Y < minScale.Y) ? partoffset.Y - partscale.Y : minScale.Y;
+                    minScale.Z = (partoffset.Z - partscale.Z < minScale.Z) ? partoffset.Z - partscale.Z : minScale.Z;
 
                     maxScale.X = (partscale.X + partoffset.X > maxScale.X) ? partscale.X + partoffset.X : maxScale.X;
                     maxScale.Y = (partscale.Y + partoffset.Y > maxScale.Y) ? partscale.Y + partoffset.Y : maxScale.Y;
                     maxScale.Z = (partscale.Z + partoffset.Z > maxScale.Z) ? partscale.Z + partoffset.Z : maxScale.Z;
+
                 }
             }
 
-            finalScale.X = (minScale.X > maxScale.X) ? minScale.X : maxScale.X;
-            finalScale.Y = (minScale.Y > maxScale.Y) ? minScale.Y : maxScale.Y;
-            finalScale.Z = (minScale.Z > maxScale.Z) ? minScale.Z : maxScale.Z;
+            finalScale.X = Math.Abs(maxScale.X - minScale.X);
+            finalScale.Y = Math.Abs(maxScale.Y - minScale.Y);
+            finalScale.Z = Math.Abs(maxScale.Z - minScale.Z);
             return finalScale;
         }
 
