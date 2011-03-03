@@ -104,7 +104,12 @@ namespace Aurora.Modules
 
         protected void EventManager_OnRemovePresence(ScenePresence presence)
         {
-            //presence.UnregisterModuleInterface<PerClientSelectionParticles>();
+            PerClientSelectionParticles particles = presence.RequestModuleInterface<PerClientSelectionParticles>();
+            if (particles != null)
+            {
+                particles.Close();
+                presence.UnregisterModuleInterface<PerClientSelectionParticles>(particles);
+            }
         }
 
         /// <summary>
@@ -295,6 +300,17 @@ namespace Aurora.Modules
                 m_module = mod;
                 //Hook up to onFrame so that we can send the updates
                 m_presence.Scene.EventManager.OnFrame += EventManager_OnFrame;
+            }
+
+            public void Close()
+            {
+                m_presence.Scene.EventManager.OnFrame -= EventManager_OnFrame;
+                m_SelectedUUID = null;
+                m_IsSelecting = false;
+                m_module = null;
+                m_EffectColor = null;
+                SendEffectPackets = 0;
+                m_presence = null;
             }
 
             public SceneObjectPart SelectedUUID
