@@ -295,7 +295,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //If they are not in this region, we check to make sure that we allow seeing into neighbors
                 if (!m_presence.IsChildAgent || (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor))
                 {
-                    EntityBase[] entities = m_presence.Scene.Entities.GetEntitiesUnsafe();
+                    EntityBase[] entities = m_presence.Scene.Entities.GetEntities();
                     //Use the PriorityQueue so that we can send them in the correct order
                     PriorityQueue<EntityUpdate, double> entityUpdates = new PriorityQueue<EntityUpdate, double>(entities.Length);
 

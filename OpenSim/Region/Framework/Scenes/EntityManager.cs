@@ -186,11 +186,6 @@ namespace OpenSim.Region.Framework.Scenes
             return tmp.ToArray();
         }
 
-        public EntityBase[] GetEntitiesUnsafe()
-        {
-            return m_entities.GetUnsafe();
-        }
-
         public void ForEach(Action<EntityBase> action)
         {
             m_entities.ForEach(action);

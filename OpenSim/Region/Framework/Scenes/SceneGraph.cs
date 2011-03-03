@@ -499,7 +499,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="action"></param>
         protected internal void ForEachSOG(Action<SceneObjectGroup> action)
         {
-            EntityBase[] objlist = Entities.GetEntitiesUnsafe();
+            EntityBase[] objlist = Entities.GetEntities();
             foreach (EntityBase obj in objlist)
             {
                 try

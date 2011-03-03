@@ -141,12 +141,12 @@ namespace Aurora.Modules.RegionLoader
 
         private void Update_Click(object sender, EventArgs e)
         {
-            if (textBox1.Text == "")
+            RegionInfo region = m_connector.GetRegionInfo(textBox1.Text);
+            if (region == null)
             {
-                MessageBox.Show("You must enter a region name!");
+                MessageBox.Show("You must enter a valid region name!");
                 return;
             }
-            RegionInfo region = new RegionInfo();
             region.RegionName = textBox1.Text;
             region.RegionID = CurrentRegionID;
             region.RegionLocX = int.Parse(textBox3.Text) * Constants.RegionSize;
