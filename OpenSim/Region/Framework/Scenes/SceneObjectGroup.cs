@@ -766,19 +766,26 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 foreach (SceneObjectPart part in m_partsList)
                 {
-                    Vector3 partscale = part.Scale;
+                    Vector3 partscale =  part.Scale * 0.5f;
                     Vector3 partoffset = part.OffsetPosition;
                     if (part.ParentID != 0) // prims are rotated in group
                         partscale = partscale * part.RotationOffset;
 
-                    minScale.X = (partoffset.X - partscale.X < minScale.X) ? partoffset.X - partscale.X : minScale.X;
-                    minScale.Y = (partoffset.Y - partscale.Y < minScale.Y) ? partoffset.Y - partscale.Y : minScale.Y;
-                    minScale.Z = (partoffset.Z - partscale.Z < minScale.Z) ? partoffset.Z - partscale.Z : minScale.Z;
+                    Vector3 delta = partoffset - partscale;
+                    if(delta.X < minScale.X)
+                        minScale.X = delta.X;
+                    if(delta.Y < minScale.Y)
+                        minScale.Y =  delta.Y;
+                    if(delta.Z < minScale.Z)
+                        minScale.Z =  delta.Z;
 
-                    maxScale.X = (partscale.X + partoffset.X > maxScale.X) ? partscale.X + partoffset.X : maxScale.X;
-                    maxScale.Y = (partscale.Y + partoffset.Y > maxScale.Y) ? partscale.Y + partoffset.Y : maxScale.Y;
-                    maxScale.Z = (partscale.Z + partoffset.Z > maxScale.Z) ? partscale.Z + partoffset.Z : maxScale.Z;
-
+                    delta = partoffset + partscale;
+                    if(delta.X > maxScale.X)
+                        maxScale.X = delta.X;
+                    if(delta.Y > maxScale.Y)
+                        maxScale.Y = delta.Y;
+                    if(delta.Z > maxScale.Z)
+                        maxScale.Z = delta.Z;
                 }
             }
 
