@@ -3672,6 +3672,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                         if (updateFlags.HasFlag(PrimUpdateFlags.PrimFlags) ||
                             updateFlags.HasFlag(PrimUpdateFlags.ParentID) ||
+                            updateFlags.HasFlag(PrimUpdateFlags.AttachmentPoint) ||
                             updateFlags.HasFlag(PrimUpdateFlags.Shape) ||
                             updateFlags.HasFlag(PrimUpdateFlags.PrimData) ||
                             updateFlags.HasFlag(PrimUpdateFlags.Text) ||
@@ -3705,6 +3706,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     {
                         //Do NOT send cached updates for terse updates
                         bool isTerse = updateFlags.HasFlag((PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity));
+                        //ONLY send full updates for attachments unless you want to figure out all the little screwy things with sending compressed updates and attachments
+                        if (update.Value.Entity is SceneObjectPart && 
+                            ((SceneObjectPart)update.Value.Entity).IsAttachment)
+                        {
+                            canUseCached = false;
+                            canUseImproved = false;
+                            canUseCompressed = false;
+                        }
                         if (canUseCached && !isTerse)
                         {
                             cachedUpdateBlocks.Value.Add(CreatePrimCachedUpdateBlock((SceneObjectPart)update.Value.Entity, this.m_agentId));
@@ -3739,8 +3748,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                 Flags |= CompressedFlags.TextureAnimation;
                             if (updateFlags.HasFlag(PrimUpdateFlags.NameValue) || ((SceneObjectPart)update.Value.Entity).IsAttachment)
                                 Flags |= CompressedFlags.HasNameValues;
-                            if (((SceneObjectPart)update.Value.Entity).IsAttachment)
-                                Flags |= CompressedFlags.HasParent;
 
                             compressedUpdateBlocks.Value.Add(CreateCompressedUpdateBlock((SceneObjectPart)update.Value.Entity, Flags, updateFlags));
                         }
