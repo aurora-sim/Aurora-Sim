@@ -260,19 +260,13 @@ namespace OpenSim.Region.Framework.Scenes
             //Next, start checking aginst the group corners
             //NOTE: This really should be checking as a sphere.. but that hasn't been done yet
 
-            // no check agains AABB
+            // no check grp AABB against a distance cube
 
-            if (checkPosition.X - (groupPosition.X + groupSizeRotated.X) < m_presence.DrawDistance)
+            if (Math.Abs(checkPosition.X - groupPosition.X) - groupSizeRotated.X < m_presence.DrawDistance)
                 return true;
-            if (checkPosition.X - (groupPosition.X - groupSizeRotated.X) < m_presence.DrawDistance)
+            if (Math.Abs(checkPosition.Y - groupPosition.Y) - groupSizeRotated.Y < m_presence.DrawDistance)
                 return true;
-            if (checkPosition.Y - (groupPosition.Y + groupSizeRotated.Y) < m_presence.DrawDistance)
-                return true;
-            if (checkPosition.Y - (groupPosition.Y - groupSizeRotated.Y) < m_presence.DrawDistance)
-                return true;
-            if (checkPosition.Z - (groupPosition.Z + groupSizeRotated.Z) < m_presence.DrawDistance)
-                return true;
-            if (checkPosition.Z - (groupPosition.Z - groupSizeRotated.Z) < m_presence.DrawDistance)
+            if (Math.Abs(checkPosition.Z - groupPosition.Z) - groupSizeRotated.Z < m_presence.DrawDistance)
                 return true;
             //All done then...
             return false;
