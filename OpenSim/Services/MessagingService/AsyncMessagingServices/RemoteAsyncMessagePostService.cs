@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Timers;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using Aurora.Framework;

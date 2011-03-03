@@ -28,7 +28,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Timers;
 using log4net;
 using OpenMetaverse;
 using OpenSim.Framework;

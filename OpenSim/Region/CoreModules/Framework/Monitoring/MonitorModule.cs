@@ -140,6 +140,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             public MonitorRegistry(MonitorModule module)
             {
                 m_module = module;
+                for (int i = 0; i < sb.Length; i++)
+                {
+                    sb[i] = new SimStatsPacket.StatBlock();
+                }
             }
 
             #endregion
@@ -398,6 +402,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
 
             #region Stats Heartbeat
 
+            private SimStatsPacket.StatBlock[] sb = new SimStatsPacket.StatBlock[35];
+
             /// <summary>
             /// This is called by a timer and makes a SimStats class of the current stats that we have in this simulator.
             ///  It then sends the packet to the client and triggers the events to tell followers about the updated stats
@@ -407,7 +413,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             /// <param name="e"></param>
             protected void statsHeartBeat(object sender, EventArgs e)
             {
-                SimStatsPacket.StatBlock[] sb = new SimStatsPacket.StatBlock[35];
                 SimStatsPacket.RegionBlock rb = new SimStatsPacket.RegionBlock();
 
                 // Know what's not thread safe in Mono... modifying timers.
@@ -458,17 +463,13 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     timeDilationMonitor.SetPhysicsFPS(physfps);
 
                     #endregion
-                    for (int i = 0; i < sb.Length; i++)
-                    {
-                        sb[i] = new SimStatsPacket.StatBlock();
-                    }
 
                     #region Add the stats packets
 
                     //Some info on this packet http://wiki.secondlife.com/wiki/Statistics_Bar_Guide
 
                     sb[0].StatID = (uint)Stats.TimeDilation;
-                    sb[0].StatValue = (float)timeDilationMonitor.GetValue(); //((((m_timeDilation + (0.10f * statsUpdateFactor)) /10)  / statsUpdateFactor));
+                    sb[0].StatValue = (float)timeDilationMonitor.GetValue();
 
                     sb[1].StatID = (uint)Stats.FPS;
                     sb[1].StatValue = simfps;
@@ -540,15 +541,16 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     sb[20].StatID = (uint)Stats.PendingUploads;
                     sb[20].StatValue = (float)(networkMonitor.PendingUploads);
 
+                    //21 and 22 are forced to the GC memory as they WILL make memory usage go up rapidly otherwise!
                     sb[21].StatID = (uint)Stats.VirtualSizeKB;
-                    sb[21].StatValue = System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / (1024);
+                    sb[21].StatValue = GC.GetTotalMemory(false) / 1024;// System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / (1024);
 
                     sb[22].StatID = (uint)Stats.ResidentSizeKB;
-                    sb[22].StatValue = (float)System.Diagnostics.Process.GetCurrentProcess().PrivateMemorySize64 / (1024);
-
+                    sb[22].StatValue = GC.GetTotalMemory(false) / 1024;//(float)System.Diagnostics.Process.GetCurrentProcess().PrivateMemorySize64 / (1024);
+                    
                     sb[23].StatID = (uint)Stats.PendingLocalUploads;
                     sb[23].StatValue = (float)(networkMonitor.PendingUploads / statsUpdateFactor);
-
+                    
                     sb[24].StatID = (uint)Stats.TotalUnackedBytes;
                     sb[24].StatValue = (float)(networkMonitor.UnackedBytes);
 
@@ -572,7 +574,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
 
                     sb[31].StatID = (uint)Stats.ScriptEPS;
                     sb[31].StatValue = totalScriptMonitor.ScriptEPS / statsUpdateFactor;
-
+                    
                     sb[32].StatID = (uint)Stats.SimSpareTime;
                     //Spare time is the total time minus the stats that are in the same category in the client
                     // It is the sleep time, physics step, update physics shape, physics other, and pumpI0.

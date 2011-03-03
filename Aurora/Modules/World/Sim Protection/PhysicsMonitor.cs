@@ -68,7 +68,6 @@ namespace Aurora.Modules
             {
                 m_physicsStatTimer = new Timer();
                 m_physicsStatTimer.Interval = 10000;
-                m_physicsStatTimer.Enabled = true;
                 m_physicsStatTimer.Elapsed += PhysicsStatsHeartbeat;
             }
         }

@@ -398,7 +398,7 @@ namespace OpenSim.Region.Framework.Scenes
         #region Tracker
 
         /// <summary>
-        /// Start the timer which triggers regular scene updates
+        /// Start the heartbeat which triggers regular scene updates
         /// </summary>
         public void StartHeartbeat()
         {

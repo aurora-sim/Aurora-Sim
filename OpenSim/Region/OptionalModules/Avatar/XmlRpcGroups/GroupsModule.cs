@@ -29,7 +29,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Timers;
 
 using log4net;
 using Nini.Config;

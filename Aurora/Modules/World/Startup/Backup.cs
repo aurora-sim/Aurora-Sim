@@ -8,7 +8,6 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using System.Timers;
 using System.Xml;
 using Nini.Config;
 using log4net;

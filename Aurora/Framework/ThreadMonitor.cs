@@ -61,16 +61,13 @@ namespace Aurora.Framework
         {
             while (m_timesToIterate >= 0)
             {
-                InternalHeartbeat[] heartbeats = new InternalHeartbeat[m_heartbeats.Count];
-                //Pull them out so we don't have issues with locking this the whole time we are doing the async pieces
                 lock (m_lock)
                 {
-                    m_heartbeats.CopyTo(heartbeats);
-                }
-                foreach (InternalHeartbeat intHB in heartbeats)
-                {
-                    if (!CallAndWait(intHB.millisecondTimeOut, intHB.heartBeat))
-                        Console.WriteLine("WARNING: Could not run Heartbeat in specified limits!");
+                    foreach (InternalHeartbeat intHB in m_heartbeats)
+                    {
+                        if (!CallAndWait(intHB.millisecondTimeOut, intHB.heartBeat))
+                            Console.WriteLine("WARNING: Could not run Heartbeat in specified limits!");
+                    }
                 }
                 //0 is infinite
                 if (m_timesToIterate != 0)

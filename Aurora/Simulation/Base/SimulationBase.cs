@@ -431,6 +431,8 @@ namespace Aurora.Simulation.Base
             m_console.Commands.AddCommand("region", false, "reload config", "reload config", "Reloads .ini file configuration", HandleConfigRefresh);
 
             m_console.Commands.AddCommand("region", false, "set timer script interval", "set timer script interval", "Set the interval for the timer script (in minutes).", HandleTimerScriptTime);
+
+            m_console.Commands.AddCommand("region", false, "force GC", "force GC", "Forces garbage collection.", HandleForceGC);
         }
 
         private void HandleQuit(string module, string[] args)
@@ -489,6 +491,12 @@ namespace Aurora.Simulation.Base
                     m_console.RunCommand(currentCommand);
                 }
             }
+        }
+
+        public virtual void HandleForceGC(string mod, string[] cmd)
+        {
+            GC.Collect();
+            m_log.Warn("Garbage collection finished");
         }
 
         public virtual void HandleTimerScriptTime(string mod, string[] cmd)
