@@ -229,14 +229,14 @@ namespace OpenSim.Region.Framework.Scenes
 
                 {
                 Vector3 gprpos = grp.AbsolutePosition; // not doing this was making several calls
-                Vector3 grpsize = grp.GroupScale(); // and this is heavy someone needs to look to it and cache for static prims
+                Vector3 grphsize = grp.GroupScale(); // and this is heavy someone needs to look to it and cache for static prims
                 Quaternion grprot = grp.GroupRotation;
 
-                grpsize = grpsize * grprot; // prims are rotated in world
-
+                grphsize = grphsize * grprot; // prims are rotated in world
+                grphsize = grphsize * 0.5f; // save same cpu in the 2 calls
                 //Check for part position against the av and the camera position
-                if (CheckCullingAgainstPosition(m_presence.AbsolutePosition, gprpos, grpsize) ||
-                    CheckCullingAgainstPosition(m_presence.CameraPosition, gprpos, grpsize))
+                if (CheckCullingAgainstPosition(m_presence.AbsolutePosition, gprpos, grphsize) ||
+                    CheckCullingAgainstPosition(m_presence.CameraPosition, gprpos, grphsize))
                 {
                     return true;
                 }
@@ -251,7 +251,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="groupPosition"></param>
         /// <param name="groupSize"></param>
         /// <returns></returns>
-        private bool CheckCullingAgainstPosition(Vector3 checkPosition, Vector3 groupPosition, Vector3 groupSizeRotated)
+        private bool CheckCullingAgainstPosition(Vector3 checkPosition, Vector3 groupPosition, Vector3 groupHalfSizeRotated)
             {
             //First just check against the position 
             // not good prims can be huge and also distance calls sqrt and that takes more time than all the rest of this code
@@ -262,11 +262,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             // no check grp AABB against a distance cube
 
-            if (Math.Abs(checkPosition.X - groupPosition.X) - groupSizeRotated.X < m_presence.DrawDistance)
+
+            if (Math.Abs(checkPosition.X - groupPosition.X) - groupHalfSizeRotated.X < m_presence.DrawDistance)
                 return true;
-            if (Math.Abs(checkPosition.Y - groupPosition.Y) - groupSizeRotated.Y < m_presence.DrawDistance)
+            if (Math.Abs(checkPosition.Y - groupPosition.Y) - groupHalfSizeRotated.Y < m_presence.DrawDistance)
                 return true;
-            if (Math.Abs(checkPosition.Z - groupPosition.Z) - groupSizeRotated.Z < m_presence.DrawDistance)
+            if (Math.Abs(checkPosition.Z - groupPosition.Z) - groupHalfSizeRotated.Z < m_presence.DrawDistance)
                 return true;
             //All done then...
             return false;
