@@ -758,30 +758,40 @@ namespace OpenSim.Region.Framework.Scenes
 
         public override Vector3 GroupScale()
         {
-            Vector3 minScale = new Vector3(Scene.RegionInfo.RegionSizeX, Scene.RegionInfo.RegionSizeY, 10000);
-            Vector3 maxScale = Vector3.Zero;
-            Vector3 finalScale = new Vector3(0.5f, 0.5f, 0.5f);
+            Vector3 minScale = new Vector3(int.MaxValue, int.MaxValue, int.MaxValue);
+            Vector3 maxScale = new Vector3(int.MinValue,int.MinValue,int.MinValue) ;
+            Vector3 finalScale;
 
             lock (m_partsLock)
             {
                 foreach (SceneObjectPart part in m_partsList)
                 {
-                    Vector3 partscale = part.Scale;
+                    Vector3 partscale =  part.Scale * 0.5f;
                     Vector3 partoffset = part.OffsetPosition;
+                    if (part.ParentID != 0) // prims are rotated in group
+                        partscale = partscale * part.RotationOffset;
 
-                    minScale.X = (partscale.X + partoffset.X < minScale.X) ? partscale.X + partoffset.X : minScale.X;
-                    minScale.Y = (partscale.Y + partoffset.Y < minScale.Y) ? partscale.Y + partoffset.Y : minScale.Y;
-                    minScale.Z = (partscale.Z + partoffset.Z < minScale.Z) ? partscale.Z + partoffset.Z : minScale.Z;
+                    Vector3 delta = partoffset - partscale;
+                    if(delta.X < minScale.X)
+                        minScale.X = delta.X;
+                    if(delta.Y < minScale.Y)
+                        minScale.Y =  delta.Y;
+                    if(delta.Z < minScale.Z)
+                        minScale.Z =  delta.Z;
 
-                    maxScale.X = (partscale.X + partoffset.X > maxScale.X) ? partscale.X + partoffset.X : maxScale.X;
-                    maxScale.Y = (partscale.Y + partoffset.Y > maxScale.Y) ? partscale.Y + partoffset.Y : maxScale.Y;
-                    maxScale.Z = (partscale.Z + partoffset.Z > maxScale.Z) ? partscale.Z + partoffset.Z : maxScale.Z;
+                    delta = partoffset + partscale;
+                    if(delta.X > maxScale.X)
+                        maxScale.X = delta.X;
+                    if(delta.Y > maxScale.Y)
+                        maxScale.Y = delta.Y;
+                    if(delta.Z > maxScale.Z)
+                        maxScale.Z = delta.Z;
                 }
             }
 
-            finalScale.X = (minScale.X > maxScale.X) ? minScale.X : maxScale.X;
-            finalScale.Y = (minScale.Y > maxScale.Y) ? minScale.Y : maxScale.Y;
-            finalScale.Z = (minScale.Z > maxScale.Z) ? minScale.Z : maxScale.Z;
+            finalScale.X = Math.Abs(maxScale.X - minScale.X);
+            finalScale.Y = Math.Abs(maxScale.Y - minScale.Y);
+            finalScale.Z = Math.Abs(maxScale.Z - minScale.Z);
             return finalScale;
         }
 
@@ -833,6 +843,52 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public void GetAxisAlignedBoundingBoxRaw(out float minX, out float maxX, out float minY, out float maxY, out float minZ, out float maxZ)
         {
+            Vector3 pos = m_rootPart.AbsolutePosition;
+            Quaternion rot = m_rootPart.RotationOffset;
+            Vector3 size = GroupScale();
+            Vector3 minScale = new Vector3(int.MaxValue, int.MaxValue, int.MaxValue);
+            Vector3 maxScale = new Vector3(int.MinValue, int.MinValue, int.MinValue);
+            //limits in group frame
+            lock (m_partsLock)
+                {
+                foreach (SceneObjectPart part in m_partsList)
+                    {
+                    Vector3 partscale = part.Scale * 0.5f;
+                    Vector3 partoffset = part.OffsetPosition;
+                    if (part.ParentID != 0) // prims are rotated in group
+                        partscale = partscale * part.RotationOffset;
+
+                    Vector3 delta = partoffset - partscale;
+                    if (delta.X < minScale.X)
+                        minScale.X = delta.X;
+                    if (delta.Y < minScale.Y)
+                        minScale.Y = delta.Y;
+                    if (delta.Z < minScale.Z)
+                        minScale.Z = delta.Z;
+
+                    delta = partoffset + partscale;
+                    if (delta.X > maxScale.X)
+                        maxScale.X = delta.X;
+                    if (delta.Y > maxScale.Y)
+                        maxScale.Y = delta.Y;
+                    if (delta.Z > maxScale.Z)
+                        maxScale.Z = delta.Z;
+                    }
+                }
+
+            // group rotation
+            maxScale = maxScale * rot;
+            minScale = minScale * rot;
+
+            // group position
+            minX = pos.X + minScale.X;
+            minY = pos.Y + minScale.Y;
+            minZ = pos.Z + minScale.Z;
+            maxX = pos.X + maxScale.X;
+            maxY = pos.Y + maxScale.Y;
+            maxZ = pos.Z + maxScale.Z;
+
+/*
             maxX = -256f;
             maxY = -256f;
             maxZ = -256f;
@@ -1019,6 +1075,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (backBottomLeft.Z < minZ)
                     minZ = backBottomLeft.Z;
             }
+ */
         }
 
         public Vector3 GetAxisAlignedBoundingBox(out float offsetHeight)
@@ -1033,20 +1090,25 @@ namespace OpenSim.Region.Framework.Scenes
             GetAxisAlignedBoundingBoxRaw(out minX, out maxX, out minY, out maxY, out minZ, out maxZ);
             Vector3 boundingBox = new Vector3(maxX - minX, maxY - minY, maxZ - minZ);
 
-            offsetHeight = 0;
-            float lower = (minZ * -1);
-            if (lower > maxZ)
-            {
-                offsetHeight = lower - (boundingBox.Z / 2);
 
-            }
-            else if (maxZ > lower)
-            {
-                offsetHeight = maxZ - (boundingBox.Z / 2);
-                offsetHeight *= -1;
-            }
+            offsetHeight = 0.5f * (maxZ + minZ);
+            offsetHeight -= m_rootPart.AbsolutePosition.Z;
 
-           // m_log.InfoFormat("BoundingBox is {0} , {1} , {2} ", boundingBox.X, boundingBox.Y, boundingBox.Z);
+            /*
+                        offsetHeight = 0;
+                        float lower = (minZ * -1);
+                        if (lower > maxZ)
+                        {
+                            offsetHeight = lower - (boundingBox.Z / 2);
+
+                        }
+                        else if (maxZ > lower)
+                        {
+                            offsetHeight = maxZ - (boundingBox.Z / 2);
+                            offsetHeight *= -1;
+                        }
+            */
+            // m_log.InfoFormat("BoundingBox is {0} , {1} , {2} ", boundingBox.X, boundingBox.Y, boundingBox.Z);
             return boundingBox;
         }
 
