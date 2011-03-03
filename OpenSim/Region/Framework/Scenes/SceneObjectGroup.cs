@@ -843,6 +843,21 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public void GetAxisAlignedBoundingBoxRaw(out float minX, out float maxX, out float minY, out float maxY, out float minZ, out float maxZ)
         {
+
+            Vector3 pos = m_rootPart.AbsolutePosition;
+            Vector3 size = GroupScale();
+
+            size = size * m_rootPart.RotationOffset;
+            size *= 0.5f;
+
+            minX = pos.X - size.X;
+            minY = pos.Y - size.Y;
+            minZ = pos.Z - size.Z;
+            maxX = pos.X + size.X;
+            maxY = pos.Y + size.Y;
+            maxZ = pos.Z + size.Z;
+
+/*
             maxX = -256f;
             maxY = -256f;
             maxZ = -256f;
@@ -1029,6 +1044,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (backBottomLeft.Z < minZ)
                     minZ = backBottomLeft.Z;
             }
+ */
         }
 
         public Vector3 GetAxisAlignedBoundingBox(out float offsetHeight)
@@ -1043,20 +1059,25 @@ namespace OpenSim.Region.Framework.Scenes
             GetAxisAlignedBoundingBoxRaw(out minX, out maxX, out minY, out maxY, out minZ, out maxZ);
             Vector3 boundingBox = new Vector3(maxX - minX, maxY - minY, maxZ - minZ);
 
-            offsetHeight = 0;
-            float lower = (minZ * -1);
-            if (lower > maxZ)
-            {
-                offsetHeight = lower - (boundingBox.Z / 2);
 
-            }
-            else if (maxZ > lower)
-            {
-                offsetHeight = maxZ - (boundingBox.Z / 2);
-                offsetHeight *= -1;
-            }
+            offsetHeight = 0.5f * (maxZ + minZ);
+            offsetHeight -= m_rootPart.AbsolutePosition.Z;
 
-           // m_log.InfoFormat("BoundingBox is {0} , {1} , {2} ", boundingBox.X, boundingBox.Y, boundingBox.Z);
+            /*
+                        offsetHeight = 0;
+                        float lower = (minZ * -1);
+                        if (lower > maxZ)
+                        {
+                            offsetHeight = lower - (boundingBox.Z / 2);
+
+                        }
+                        else if (maxZ > lower)
+                        {
+                            offsetHeight = maxZ - (boundingBox.Z / 2);
+                            offsetHeight *= -1;
+                        }
+            */
+            // m_log.InfoFormat("BoundingBox is {0} , {1} , {2} ", boundingBox.X, boundingBox.Y, boundingBox.Z);
             return boundingBox;
         }
 
