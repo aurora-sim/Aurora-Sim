@@ -321,7 +321,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 reason = "Could not find neighbor to inform";
                 return false;
             }
-            m_log.Info("[EventQueueService]: Starting to inform client about neighbor " + neighbor.RegionName);
+            m_log.Info("[AgentProcessing]: Starting to inform client about neighbor " + neighbor.RegionName);
 
             //Notes on this method
             // 1) the SimulationService.CreateAgent MUST have a fixed CapsUrl for the region, so we have to create (if needed)
@@ -398,17 +398,17 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                         neighbor.RegionSizeY,
                         requestingRegion);
 
-                    m_log.Info("[EventQueueService]: Completed inform client about neighbor " + neighbor.RegionName);
+                    m_log.Info("[AgentProcessing]: Completed inform client about neighbor " + neighbor.RegionName);
                 }
                 else
                 {
-                    m_log.Error("[EventQueueService]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: " + reason);
+                    m_log.Error("[AgentProcessing]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: " + reason);
                     return false;
                 }
                 return true;
             }
             reason = "SimulationService does not exist";
-            m_log.Error("[EventQueueService]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: " + reason + "!");
+            m_log.Error("[AgentProcessing]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: " + reason + "!");
             return false;
         }
 
@@ -480,7 +480,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 {
                     if (!callWasCanceled)
                     {
-                        m_log.Warn("[EntityTransferModule]: Callback never came for teleporting agent " +
+                        m_log.Warn("[AgentProcessing]: Callback never came for teleporting agent " +
                             AgentID + ". Resetting.");
                     }
                     INeighborService service = m_registry.RequestModuleInterface<INeighborService>();
@@ -532,7 +532,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     List<GridRegion> byebyeRegions = new List<GridRegion>();
 
                     m_log.InfoFormat(
-                        "[NeighborService]: Closing child agents. Checking {0} regions around {1}",
+                        "[AgentProcessing]: Closing child agents. Checking {0} regions around {1}",
                         NeighborsOfCurrentRegion.Count, oldRegion.RegionName);
 
                     foreach (GridRegion region in NeighborsOfCurrentRegion)
@@ -545,7 +545,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
                     if (byebyeRegions.Count > 0)
                     {
-                        m_log.Info("[NeighborService]: Closing " + byebyeRegions.Count + " child agents");
+                        m_log.Info("[AgentProcessing]: Closing " + byebyeRegions.Count + " child agents");
                         SendCloseChildAgent(AgentID, byebyeRegions);
                     }
                 }
@@ -557,7 +557,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             //Close all agents that we've been given regions for
             foreach (GridRegion region in regionsToClose)
             {
-                m_log.Debug("[NeighborService]: Closing child agent in " + region.RegionName);
+                m_log.Debug("[AgentProcessing]: Closing child agent in " + region.RegionName);
                 m_registry.RequestModuleInterface<ISimulationService>().CloseAgent(region, agentID);
             }
         }
@@ -577,7 +577,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             
             if (clientCaps.InTeleport)
             {
-                m_log.Warn("[EventQueueService]: Got a request to teleport during another teleport for agent " + AgentID + "!");
+                m_log.Warn("[AgentProcessing]: Got a request to teleport during another teleport for agent " + AgentID + "!");
                 return false; //What??? Stop here and don't go forward
             }
 
@@ -657,7 +657,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     crossingRegion = GridService.GetRegionByUUID(UUID.Zero, crossingRegion.RegionID);
                     if (!SimulationService.UpdateAgent(crossingRegion, cAgent))
                     {
-                        m_log.Warn("[EventQueue]: Failed to cross agent " + AgentID + " because region did not accept it. Resetting.");
+                        m_log.Warn("[AgentProcessing]: Failed to cross agent " + AgentID + " because region did not accept it. Resetting.");
                         reason = "Failed to update an agent";
                     }
                     else
@@ -681,7 +681,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                         result = WaitForCallback(AgentID);
                         if (!result)
                         {
-                            m_log.Warn("[EntityTransferModule]: Callback never came in crossing agent " + circuit.AgentID + ". Resetting.");
+                            m_log.Warn("[AgentProcessing]: Callback never came in crossing agent " + circuit.AgentID + ". Resetting.");
                             reason = "Crossing timed out";
                         }
                         else
@@ -737,7 +737,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     GridRegion ourRegion = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, regionCaps.RegionX, regionCaps.RegionY);
                     if (ourRegion == null)
                     {
-                        m_log.Info("[EQMService]: Failed to inform neighbors about updating agent, could not find our region. ");
+                        m_log.Info("[AgentProcessing]: Failed to inform neighbors about updating agent, could not find our region. ");
                         return;
                     }
                     //Set the last location in the database
@@ -764,7 +764,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                         //Update all the neighbors that we have
                         if (!SimulationService.UpdateAgent(region, agentpos))
                         {
-                            m_log.Info("[EQMService]: Failed to inform " + region.RegionName + " about updating agent. ");
+                            m_log.Info("[AgentProcessing]: Failed to inform " + region.RegionName + " about updating agent. ");
                         }
                     }
                 }
