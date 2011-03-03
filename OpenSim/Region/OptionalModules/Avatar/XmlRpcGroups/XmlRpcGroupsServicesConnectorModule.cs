@@ -64,7 +64,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         private bool m_disableKeepAlive = false;
 
-        private string m_groupReadKey  = string.Empty;
+        private string m_groupReadKey = string.Empty;
         private string m_groupWriteKey = string.Empty;
 
         private IUserAccountService m_accountService = null;
@@ -576,7 +576,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     memberships.Add(HashTableToGroupMembershipData((Hashtable)membership));
                 }
             }
-            
+
             return memberships;
         }
 
@@ -640,10 +640,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
 
             return Roles;
-
         }
-
-
 
         public List<GroupMembersData> GetGroupMembers(UUID requestingAgentID, UUID GroupID)
         {
@@ -887,7 +884,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
             return group;
         }
-        
+
         private static GroupMembershipData HashTableToGroupMembershipData(Hashtable respData)
         {
             GroupMembershipData data = new GroupMembershipData();
@@ -920,7 +917,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             data.MembershipFee = int.Parse((string)respData["MembershipFee"]);
             data.OpenEnrollment = ((string)respData["OpenEnrollment"] == "1");
             data.ShowInList = ((string)respData["ShowInList"] == "1");
-            
+
             return data;
         }
 
@@ -957,13 +954,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     m_memoryCache.TryGetValue(CacheKey, out resp);
                 }
             }
-            
+
             if (resp == null)
             {
                 string UserService;
                 UUID SessionID;
                 GetClientGroupRequestID(requestingAgentID, out UserService, out SessionID);
-                
+
                 param.Add("RequestingAgentID", requestingAgentID.ToString());
                 param.Add("RequestingAgentUserService", UserService);
                 param.Add("RequestingSessionID", SessionID.ToString());
@@ -987,8 +984,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 }
                 catch (Exception e)
                 {
-                    m_log.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: An error has occured while attempting to access the XmlRpcGroups server method: {0}", function);
-                    m_log.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: {0} ", e.ToString());
+                    m_log.ErrorFormat(
+                        "[XMLRPC-GROUPS-CONNECTOR]: An error has occured while attempting to access the XmlRpcGroups server method {0} at {1}",
+                        function, m_groupsServerURI);
+
+                    m_log.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: {0}{1}", e.Message, e.StackTrace);
 
                     foreach (string ResponseLine in req.RequestResponse.Split(new string[] { Environment.NewLine }, StringSplitOptions.None))
                     {
@@ -1054,7 +1054,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 }
             }
         }
-        
+
         /// <summary>
         /// Group Request Tokens are an attempt to allow the groups service to authenticate 
         /// requests.

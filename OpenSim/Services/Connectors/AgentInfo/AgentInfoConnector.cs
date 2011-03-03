@@ -54,17 +54,23 @@ namespace OpenSim.Services.Connectors.AgentInfo
             List<string> urls = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(userID, "AgentInfoServerURI");
             foreach (string url in urls)
             {
-                OSDMap request = new OSDMap();
-                request["userID"] = userID;
-                request["Method"] = "GetUserInfo";
-                OSDMap result = WebUtils.PostToService(url, request);
-                OSD r = OSDParser.DeserializeJson(result["_RawResult"]);
-                if (r is OSDMap)
+                try
                 {
-                    OSDMap innerresult = (OSDMap)r;
-                    UserInfo info = new UserInfo();
-                    info.FromOSD((OSDMap)innerresult["Result"]);
-                    return info;
+                    OSDMap request = new OSDMap();
+                    request["userID"] = userID;
+                    request["Method"] = "GetUserInfo";
+                    OSDMap result = WebUtils.PostToService(url, request);
+                    OSD r = OSDParser.DeserializeJson(result["_RawResult"]);
+                    if (r is OSDMap)
+                    {
+                        OSDMap innerresult = (OSDMap)r;
+                        UserInfo info = new UserInfo();
+                        info.FromOSD((OSDMap)innerresult["Result"]);
+                        return info;
+                    }
+                }
+                catch
+                {
                 }
             }
             return null;

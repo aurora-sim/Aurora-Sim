@@ -105,7 +105,10 @@ namespace OpenSim.Services
             UserInfo result = m_AgentInfoService.GetUserInfo(userID);
 
             OSDMap resultMap = new OSDMap();
-            resultMap["Result"] = result.ToOSD();
+            if (result == null)
+                resultMap["Result"] = "null";
+            else
+                resultMap["Result"] = result.ToOSD();
             return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(resultMap));
         }
 
