@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using FluentNHibernate.Cfg;
-using FluentNHibernate.Cfg.Db;
 using Nini.Config;
 using Aurora.Framework;
 using OpenMetaverse;

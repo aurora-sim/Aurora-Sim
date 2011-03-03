@@ -294,7 +294,6 @@
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
 
-      <Reference name="FluentNHibernate" path="../../bin/"/>
       <Reference name="log4net" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
@@ -401,7 +400,7 @@
       <Reference name="OpenMetaverseTypes" path="../../../../bin/"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="false"/>
+        <Match pattern="*.cs" recurse="true"/>
       </Files>
     </Project>
 
@@ -671,7 +670,6 @@
       <Reference name="OpenSim.Framework"/>
 
       <Reference name="C5" path="../../bin/"/>
-      <Reference name="FluentNHibernate" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
