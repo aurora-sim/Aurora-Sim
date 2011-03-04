@@ -511,9 +511,6 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                         CloseNeighborAgents(oldRegion, destination, AgentID);
                         reason = "";
                     }
-
-                    //All done
-                    ResetFromTransit(AgentID);
                 }
                 else
                     reason = "No SimulationService found!";
@@ -521,8 +518,9 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             catch (Exception ex)
             {
                 m_log.WarnFormat("[AgentProcessing]: Exception occured during agent teleport, {0}", ex.ToString());
+                reason = "Exception occured.";
             }
-            reason = "Exception occured.";
+            //All done
             ResetFromTransit(AgentID);
             return result;
         }
