@@ -101,7 +101,7 @@ namespace Aurora.Modules
             tag += "Region." + nextScene.RegionInfo.RegionName;
             tag += ".Desc." + Description;
             tag += ".Version." + nextVersion;
-            tag += ".Date." + DateTime.Now.ToString();
+            tag += ".Date." + DateTime.Now.Year + "." + DateTime.Now.Month + "." + DateTime.Now.Day + "." + DateTime.Now.Hour;
             nextVersion++;
             MainConsole.Instance.RunCommand("save oar " + tag + ".vc.oar");
             //Change back
