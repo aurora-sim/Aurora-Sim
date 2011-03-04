@@ -28,6 +28,14 @@ namespace OpenSim.Services.GridService
         /// Timeout before the handlers expire (in hours)
         /// </summary>
         protected int m_timeBeforeTimeout = 24;
+        public int ExpiresTime 
+        { 
+            get
+            {
+                return m_timeBeforeTimeout; 
+            }
+        }
+
         protected ThreatLevel m_defaultRegionThreatLevel = ThreatLevel.Full;
         protected Dictionary<ThreatLevel, PermissionSet> Permissions = new Dictionary<ThreatLevel, PermissionSet>();
 
@@ -81,8 +89,27 @@ namespace OpenSim.Services.GridService
 
         public void FinishedStartup()
         {
+            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
             m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
             LoadFromDatabase();
+        }
+        
+        /// <summary>
+        /// We do handle the RegisterHandlers message here, as we deal with all of the handlers in this module
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        OSDMap OnMessageReceived(OSDMap message)
+        {
+            if (message.ContainsKey("Method") && message["Method"] == "RegisterHandlers")
+            {
+                ulong regionHandle = message["RegionHandle"].AsULong();
+                if (CheckThreatLevel("", regionHandle, "RegisterHandlers", ThreatLevel.None))
+                {
+                    UpdateUrlsForClient(regionHandle);
+                }
+            }
+            return null;
         }
 
         protected void ReadConfiguration(IConfig config)
@@ -208,6 +235,17 @@ namespace OpenSim.Services.GridService
                 }
                 //Remove from the database so that they don't pop up later
                 m_genericsConnector.RemoveGeneric(UUID.Zero, "GridRegistrationUrls", RegionHandle.ToString());
+            }
+        }
+
+        public void UpdateUrlsForClient(ulong RegionHandle)
+        {
+            GridRegistrationURLs urls = m_genericsConnector.GetGeneric<GridRegistrationURLs>(UUID.Zero,
+                "GridRegistrationUrls", RegionHandle.ToString(), new GridRegistrationURLs());
+            if (urls != null)
+            {
+                urls.Expiration = DateTime.Now.AddHours(m_timeBeforeTimeout);
+                m_genericsConnector.AddGeneric(UUID.Zero, "GridRegistrationUrls", RegionHandle.ToString(), urls.ToOSD());
             }
         }
 

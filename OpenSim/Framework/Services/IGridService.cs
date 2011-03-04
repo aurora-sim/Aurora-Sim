@@ -581,6 +581,11 @@ namespace OpenSim.Services.Interfaces
     public interface IGridRegistrationService
     {
         /// <summary>
+        /// Time before handlers will need to reregister (in hours)
+        /// </summary>
+        int ExpiresTime { get; }
+        
+        /// <summary>
         /// Gets a list of secure URLs for the given RegionHandle and SessionID
         /// </summary>
         /// <param name="SessionID"></param>
