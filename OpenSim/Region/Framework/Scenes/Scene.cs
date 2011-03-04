@@ -773,16 +773,11 @@ namespace OpenSim.Region.Framework.Scenes
                 ISyncMessagePosterService syncPoster = RequestModuleInterface<ISyncMessagePosterService>();
                 if (syncPoster != null)
                 {
-                    //Make sure that the disable simulator packet doesn't kill root agents right now... it kills the client
-
-                    // Don't do this to root agents on logout, it's not nice for the viewer
-                    // Tell a single agent to disconnect from the region.
-
+                    //Tell the grid that we are logged out
                     syncPoster.Post(SyncMessageHelper.DisableSimulator(presence.UUID, RegionInfo.RegionHandle), RegionInfo.RegionHandle);
-
-                    //Kill the client's connection to this sim...
-                    presence.ControllingClient.Stop();
                 }
+                //Kill the client's connection to this sim...
+                presence.ControllingClient.Stop();
 
                 return RetVal;
             }
