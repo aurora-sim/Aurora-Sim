@@ -3782,7 +3782,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket(packet, ThrottleOutPacketType.OutBand, true);
+                OutPacket(packet, ThrottleOutPacketType.Task, true);
             }
 
             if (compressedUpdateBlocks.IsValueCreated)
@@ -3797,7 +3797,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket(packet, ThrottleOutPacketType.OutBand, true);
+                OutPacket(packet, ThrottleOutPacketType.Task, true);
             }
 
             if (cachedUpdateBlocks.IsValueCreated)
@@ -3812,7 +3812,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket(packet, ThrottleOutPacketType.OutBand, true);
+                OutPacket(packet, ThrottleOutPacketType.Task, true);
             }
 
             if (terseUpdateBlocks.IsValueCreated)
@@ -3827,7 +3827,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket(packet, ThrottleOutPacketType.OutBand, true);
+                OutPacket(packet, ThrottleOutPacketType.Task, true);
             }
 
             #endregion Packet Sending

@@ -71,6 +71,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // PromRatemask:  0x03 promotes on each 4 calls, 0x1 on each 2 calls etc
             nlevels = NumberOfLevels;
             queues = new OpenSim.Framework.LocklessQueue<object>[nlevels];
+            for (int i = 0; i < nlevels; i++)
+                queues[i] = new OpenSim.Framework.LocklessQueue<object>();
 
             promotioncntr = 0;
             promotionratemask = PromRateMask;
@@ -200,9 +202,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private readonly TokenBucket[] m_throttleCategories;
         /// <summary>Outgoing queues for throttled packets</summary>
         private readonly OpenSim.Framework.LocklessQueue<OutgoingPacket>[] m_packetOutboxes = new OpenSim.Framework.LocklessQueue<OutgoingPacket>[(int)ThrottleOutPacketType.Count];
+
+        private UDPprioQueue m_outbox = new UDPprioQueue(6, 0x02); // 6  priority levels (5 max, 0 lowest), autopromotion on every 2 enqueues
+        public int[] MapCatsToPriority = new int[(int)ThrottleOutPacketType.Count];
         /// <summary>A container that can hold one packet for each outbox, used to store
         /// dequeued packets that are being held for throttling</summary>
         private readonly OutgoingPacket[] m_nextPackets = new OutgoingPacket[(int)ThrottleOutPacketType.Count];
+        private OutgoingPacket m_nextOutPackets;
         /// <summary>A reference to the LLUDPServer that is managing this client</summary>
         private readonly LLUDPServer m_udpServer;
 
@@ -249,6 +255,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 // Initialize the token buckets that control the throttling for each category
                 m_throttleCategories[i] = new TokenBucket(m_throttle, rates.GetLimit(type), rates.GetRate(type));
             }
+
+            MapCatsToPriority[(int)ThrottleOutPacketType.Resend] = 2;
+            MapCatsToPriority[(int)ThrottleOutPacketType.Land] = 1;
+            MapCatsToPriority[(int)ThrottleOutPacketType.Wind] = 0;
+            MapCatsToPriority[(int)ThrottleOutPacketType.Cloud] = 0;
+            MapCatsToPriority[(int)ThrottleOutPacketType.Task] = 4;
+            MapCatsToPriority[(int)ThrottleOutPacketType.Texture] = 2;
+            MapCatsToPriority[(int)ThrottleOutPacketType.Asset] = 3;
+            MapCatsToPriority[(int)ThrottleOutPacketType.State] = 4;
+            MapCatsToPriority[(int)ThrottleOutPacketType.AvatarInfo] = 4;
+            MapCatsToPriority[(int)ThrottleOutPacketType.OutBand] = 5;
 
             m_lastthrottleCategoryChecked = 0;
 
@@ -345,6 +362,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             int avatarinfo = (int)((float)state * AVATAR_INFO_STATE_PERCENTAGE);
             state -= avatarinfo;
 
+
+
 //            int total = resend + land + wind + cloud + task + texture + asset + state + avatarinfo;
 
             // Make sure none of the throttles are set below our packet MTU,
@@ -370,6 +389,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             TokenBucket bucket;
 
             bucket = m_throttle;
+            bucket.DripRate = total;
             bucket.MaxBurst = total;
 
             bucket = m_throttleCategories[(int)ThrottleOutPacketType.Resend];
@@ -448,12 +468,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public bool EnqueueOutgoing(OutgoingPacket packet, bool forceQueue)
         {
             int category = (int)packet.Category;
+            int prio;
 
             if (category >= 0 && category < m_packetOutboxes.Length )  
             {
-
-                OpenSim.Framework.LocklessQueue<OutgoingPacket> queue = m_packetOutboxes[category];
 /*
+                OpenSim.Framework.LocklessQueue<OutgoingPacket> queue = m_packetOutboxes[category];
+
                 TokenBucket bucket = m_throttleCategories[category];
 
                 if (!forceQueue && bucket.RemoveTokens(packet.Buffer.DataLength))
@@ -462,12 +483,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     return false;
                 }
                 else
- */
+
                 {
                     // Force queue specified or not enough tokens in the bucket, queue this packet
                     queue.Enqueue(packet);
                     return true;
                 }
+ */
+                prio = MapCatsToPriority[category];
+                m_outbox.Enqueue(prio, (object)packet);
+                return true;
             }
             else
             {
@@ -491,8 +516,58 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// UDPServer so we don't need to bother making this thread safe</remarks>
         /// <returns>True if any packets were sent, otherwise false</returns>
         public bool DequeueOutgoing(int MaxNPacks)
-        {
+            {
             OutgoingPacket packet;
+            bool packetSent = false;
+            ThrottleOutPacketTypeFlags emptyCategories = 0;
+
+            if (m_nextOutPackets != null)
+                {
+                OutgoingPacket nextPacket = m_nextOutPackets;
+                if (m_throttle.RemoveTokens(nextPacket.Buffer.DataLength))
+                    {
+                    // Send the packet
+                    m_udpServer.SendPacketFinal(nextPacket);
+                    m_nextOutPackets = null;
+                    packetSent = true;
+                    this.PacketsSent++;
+                    }
+                }
+            else
+                {
+                // No dequeued packet waiting to be sent, try to pull one off
+                // this queue
+                if (m_outbox.Dequeue(out packet))
+                    {
+                    // A packet was pulled off the queue. See if we have
+                    // enough tokens in the bucket to send it out
+                    if (m_throttle.RemoveTokens(packet.Buffer.DataLength) || packet.Category == ThrottleOutPacketType.OutBand)
+                        {
+                        // Send the packet
+                        m_udpServer.SendPacketFinal(packet);
+                        packetSent = true;
+                        this.PacketsSent++;
+                        }
+                    else
+                        {
+                        m_nextOutPackets = packet;
+                        }
+
+                    }
+                else
+                    {
+                    emptyCategories = (ThrottleOutPacketTypeFlags)0xffff;
+                    }
+                }
+
+            if (emptyCategories != 0)
+                BeginFireQueueEmpty(emptyCategories);
+
+            //m_log.Info("[LLUDPCLIENT]: Queues: " + queueDebugOutput); // Serious debug business
+            return packetSent;
+/*
+  
+             OutgoingPacket packet;
             OpenSim.Framework.LocklessQueue<OutgoingPacket> queue;
             TokenBucket bucket;
             bool packetSent = false;
@@ -593,13 +668,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     packetSent = true;
                     this.PacketsSent++;
                     //                            }
-                    /*
-                                            else
-                                                {
+//                                            else
+//                                                {
                                                 // Save the dequeued packet for the next iteration
-                                                m_nextPackets[i] = packet;
-                                                }
-                    */
+//                                                m_nextPackets[i] = packet;
+//                                                }
 
                     // If the queue is empty after this dequeue, fire the queue
                     // empty callback now so it has a chance to fill before we 
@@ -622,7 +695,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             //m_log.Info("[LLUDPCLIENT]: Queues: " + queueDebugOutput); // Serious debug business
             return packetSent;
-        }
+ */
+
+            }
 
         /// <summary>
         /// Called when an ACK packet is received and a round-trip time for a
