@@ -750,7 +750,7 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="ter">terrain heightfield</param>
         /// <param name="regionID">region UUID</param>
-        public void StoreTerrain(double[,] ter, UUID regionID, bool Revert)
+        public void StoreTerrain(byte[] ter, UUID regionID, bool Revert)
         {
             lock (ds)
             {
@@ -784,7 +784,7 @@ namespace OpenSim.Data.SQLite
                 {
                     cmd.Parameters.Add(new SqliteParameter(":RegionUUID", regionID.ToString()));
                     cmd.Parameters.Add(new SqliteParameter(":Revision", revision));
-                    cmd.Parameters.Add(new SqliteParameter(":Heightfield", serializeTerrain(ter)));
+                    cmd.Parameters.Add(new SqliteParameter(":Heightfield", ter));
                     cmd.Parameters.Add(new SqliteParameter(":Revert", Revert.ToString()));
                     cmd.ExecuteNonQuery();
                 }
@@ -796,7 +796,7 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="ter">terrain heightfield</param>
         /// <param name="regionID">region UUID</param>
-        public void StoreWater(double[,] water, UUID regionID, bool Revert)
+        public void StoreWater(byte[] water, UUID regionID, bool Revert)
         {
             int r = Revert ? 3 : 2; //Use numbers so that we can coexist with terrain
             lock (ds)
@@ -831,7 +831,7 @@ namespace OpenSim.Data.SQLite
                 {
                     cmd.Parameters.Add(new SqliteParameter(":RegionUUID", regionID.ToString()));
                     cmd.Parameters.Add(new SqliteParameter(":Revision", revision));
-                    cmd.Parameters.Add(new SqliteParameter(":Heightfield", serializeTerrain(water)));
+                    cmd.Parameters.Add(new SqliteParameter(":Heightfield", water));
                     cmd.Parameters.Add(new SqliteParameter(":Revert", r));
                     cmd.ExecuteNonQuery();
                 }
@@ -1823,29 +1823,6 @@ namespace OpenSim.Data.SQLite
             entry.Flags = (AccessList) row["Flags"];
             entry.Time = new DateTime();
             return entry;
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="val"></param>
-        /// <returns></returns>
-        private byte[] serializeTerrain(double[,] val)
-        {
-            byte[] array = new byte[val.GetLength(0) * val.GetLength(1) * sizeof(double)];
-
-            // TODO: COMPATIBILITY - Add byte-order conversions
-            int i = 0;
-            for (int x = 0; x < val.GetLength(0); x++)
-            {
-                for (int y = 0; y < val.GetLength(1); y++)
-                {
-                    Array.Copy(BitConverter.GetBytes(val[x,y]), 0, array, i, sizeof(double));
-                    i += sizeof(double);
-                }
-            }
-
-            return array;
         }
 
         /// <summary>

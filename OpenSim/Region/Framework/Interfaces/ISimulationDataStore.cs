@@ -93,7 +93,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="ter">HeightField data</param>
         /// <param name="regionID">region UUID</param>
-        void StoreTerrain(double[,] terrain, UUID regionID, bool Revert);
+        void StoreTerrain(byte[] terrain, UUID regionID, bool Revert);
 
         /// <summary>
         /// Load the latest terrain revision from region storage
@@ -107,7 +107,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="ter">HeightField data</param>
         /// <param name="regionID">region UUID</param>
-        void StoreWater(double[,] terrain, UUID regionID, bool Revert);
+        void StoreWater(byte[] terrain, UUID regionID, bool Revert);
 
         /// <summary>
         /// Load the latest water revision from region storage

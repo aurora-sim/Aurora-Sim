@@ -645,7 +645,7 @@ namespace OpenSim.Data.MySQL
             }
         }
 
-        public void StoreTerrain(double[,] ter, UUID regionID, bool Revert)
+        public void StoreTerrain(byte[] ter, UUID regionID, bool Revert)
         {
             m_log.Info("[REGION DB]: Storing terrain");
 
@@ -667,7 +667,7 @@ namespace OpenSim.Data.MySQL
                             "Revision, Heightfield, Revert) values (?RegionUUID, " +
                             "1, ?Heightfield, ?Revert)";
 
-                        cmd.Parameters.AddWithValue("Heightfield", serializeTerrain(ter));
+                        cmd.Parameters.AddWithValue("Heightfield", ter);
 
                         ExecuteNonQuery(cmd);
                     }
@@ -675,7 +675,7 @@ namespace OpenSim.Data.MySQL
             }
         }
 
-        public void StoreWater(double[,] water, UUID regionID, bool Revert)
+        public void StoreWater(byte[] water, UUID regionID, bool Revert)
         {
             m_log.Info("[REGION DB]: Storing terrain");
 
@@ -699,7 +699,7 @@ namespace OpenSim.Data.MySQL
                             "Revision, Heightfield, Revert) values (?RegionUUID, " +
                             "1, ?Heightfield, ?Revert)";
 
-                        cmd.Parameters.AddWithValue("Heightfield", serializeTerrain(water));
+                        cmd.Parameters.AddWithValue("Heightfield", water);
 
                         ExecuteNonQuery(cmd);
                     }
@@ -1648,29 +1648,6 @@ namespace OpenSim.Data.MySQL
             entry.Flags = (AccessList) Convert.ToInt32(row["Flags"]);
             entry.Time = new DateTime();
             return entry;
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="val"></param>
-        /// <returns></returns>
-        private byte[] serializeTerrain(double[,] val)
-        {
-            byte[] array = new byte[val.GetLength(0) * val.GetLength(1) * sizeof(double)];
-
-            // TODO: COMPATIBILITY - Add byte-order conversions
-            int i = 0;
-            for (int x = 0; x < val.GetLength(0); x++)
-            {
-                for (int y = 0; y < val.GetLength(1); y++)
-                {
-                    Array.Copy(BitConverter.GetBytes(val[x, y]), 0, array, i, sizeof(double));
-                    i += sizeof(double);
-                }
-            }
-
-            return array;
         }
 
         /// <summary>

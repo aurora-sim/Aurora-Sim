@@ -44,7 +44,7 @@ namespace OpenSim.Region.Framework.Scenes
         private bool[,] taint;
         private double[,] map;
         private float[] m_cachedMap;
-        private bool m_tainted = false;
+        private byte[] m_byteCachedMap;
         private IScene m_scene;
 
         public TerrainChannel(IScene scene)
@@ -134,7 +134,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public float[] GetFloatsSerialised(IScene scene)
         {
-            if (m_cachedMap != null && !m_tainted)
+            if (m_cachedMap != null)
                 return m_cachedMap;
             // Move the member variables into local variables, calling
             // member variables 256*256 times gets expensive
@@ -152,8 +152,31 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
             m_cachedMap = heights;
-            m_tainted = false;
             return heights;
+        }
+
+        public byte[] GetBytesSerialised(IScene scene)
+        {
+            if (m_byteCachedMap != null)
+                return m_byteCachedMap;
+            // Move the member variables into local variables, calling
+            // member variables 256*256 times gets expensive
+            int w = Width;
+            int h = Height;
+            byte[] array = new byte[w * h * sizeof(double)];
+
+            // TODO: COMPATIBILITY - Add byte-order conversions
+            int i = 0;
+            for (int x = 0; x < w; x++)
+            {
+                for (int y = 0; y < h; y++)
+                {
+                    Array.Copy(BitConverter.GetBytes(map[x, y]), 0, array, i, sizeof(double));
+                    i += sizeof(double);
+                }
+            }
+            m_byteCachedMap = array;
+            return array;
         }
 
         public double[,] GetDoubles(IScene scene)

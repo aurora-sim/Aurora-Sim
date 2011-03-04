@@ -159,11 +159,11 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             warp_Object obj = new warp_Object(256 * 256, 255 * 255 * 2);
 
-            for (int y = 0; y < 256; y++)
+            for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
             {
-                for (int x = 0; x < 256; x++)
+                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
                 {
-                    int v = y * 256 + x;
+                    int v = y * m_scene.RegionInfo.RegionSizeX + x;
                     float height = heightmap[v];
 
                     warp_Vector pos = ConvertVector(new Vector3(x, y, height));
@@ -171,18 +171,18 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 }
             }
 
-            for (int y = 0; y < 256; y++)
+            for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
             {
-                for (int x = 0; x < 256; x++)
+                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
                 {
-                    if (x < 255 && y < 255)
+                    if (x < m_scene.RegionInfo.RegionSizeX - 1 && y < m_scene.RegionInfo.RegionSizeY - 1)
                     {
-                        int v = y * 256 + x;
+                        int v = y * m_scene.RegionInfo.RegionSizeX + x;
 
                         // Normal
-                        Vector3 v1 = new Vector3(x, y, heightmap[y * 256 + x]);
-                        Vector3 v2 = new Vector3(x + 1, y, heightmap[y * 256 + x + 1]);
-                        Vector3 v3 = new Vector3(x, y + 1, heightmap[(y + 1) * 256 + x]);
+                        Vector3 v1 = new Vector3(x, y, heightmap[y * m_scene.RegionInfo.RegionSizeX + x]);
+                        Vector3 v2 = new Vector3(x + 1, y, heightmap[y * m_scene.RegionInfo.RegionSizeX + x + 1]);
+                        Vector3 v3 = new Vector3(x, y + 1, heightmap[(y + 1) * m_scene.RegionInfo.RegionSizeX + x]);
                         warp_Vector norm = ConvertVector(SurfaceNormal(v1, v2, v3));
                         norm = norm.reverse();
                         obj.vertex(v).n = norm;
@@ -191,12 +191,12 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         obj.addTriangle(
                             v,
                             v + 1,
-                            v + 256);
+                            v + m_scene.RegionInfo.RegionSizeX);
 
                         // Triangle 2
                         obj.addTriangle(
-                            v + 256 + 1,
-                            v + 256,
+                            v + m_scene.RegionInfo.RegionSizeX + 1,
+                            v + m_scene.RegionInfo.RegionSizeX,
                             v + 1);
                     }
                 }

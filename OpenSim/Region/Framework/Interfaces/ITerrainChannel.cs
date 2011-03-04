@@ -40,6 +40,12 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <returns></returns>
         float[] GetFloatsSerialised(IScene scene);
 
+        /// <summary>
+        /// Squash the entire heightmap into a single dimensional byte array
+        /// </summary>
+        /// <returns></returns>
+        byte[] GetBytesSerialised(IScene scene);
+
         double[,] GetDoubles(IScene scene);
         bool Tainted(int x, int y);
         ITerrainChannel MakeCopy();

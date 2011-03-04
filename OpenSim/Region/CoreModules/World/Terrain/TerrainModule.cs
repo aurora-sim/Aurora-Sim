@@ -384,7 +384,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         public void SaveTerrain()
         {
-            m_scene.SimulationDataService.StoreTerrain(m_channel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+            m_scene.SimulationDataService.StoreTerrain(m_channel.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
         }
 
         /// <summary>
@@ -392,7 +392,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         public void SaveWater()
         {
-            m_scene.SimulationDataService.StoreWater(m_waterChannel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+            m_scene.SimulationDataService.StoreWater(m_waterChannel.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
         }
 
         /// <summary>
@@ -423,7 +423,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         public void SaveRevertTerrain(ITerrainChannel channel)
         {
-            m_scene.SimulationDataService.StoreTerrain(m_revert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+            m_scene.SimulationDataService.StoreTerrain(m_revert.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, true);
         }
 
         /// <summary>
@@ -431,7 +431,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         public void SaveRevertWater(ITerrainChannel channel)
         {
-            m_scene.SimulationDataService.StoreWater(m_waterRevert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+            m_scene.SimulationDataService.StoreWater(m_waterRevert.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, true);
         }
 
         /// <summary>
@@ -446,7 +446,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 {
                     m_revert = m_channel.MakeCopy();
 
-                    m_scene.SimulationDataService.StoreTerrain(m_revert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+                    m_scene.SimulationDataService.StoreTerrain(m_revert.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, true);
                 }
                 else
                 {
@@ -461,7 +461,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 {
                     m_revert = m_channel.MakeCopy();
 
-                    m_scene.SimulationDataService.StoreTerrain(m_revert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+                    m_scene.SimulationDataService.StoreTerrain(m_revert.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, true);
                 }
             }
             catch (IndexOutOfRangeException e)
@@ -469,14 +469,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 m_log.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e.ToString() + " Regenerating");
                 m_revert = m_channel.MakeCopy();
 
-                m_scene.SimulationDataService.StoreTerrain(m_revert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+                m_scene.SimulationDataService.StoreTerrain(m_revert.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, true);
             }
             catch (ArgumentOutOfRangeException e)
             {
                 m_log.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e.ToString() + " Regenerating");
                 m_revert = m_channel.MakeCopy();
 
-                m_scene.SimulationDataService.StoreTerrain(m_revert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+                m_scene.SimulationDataService.StoreTerrain(m_revert.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, true);
             }
             catch (Exception e)
             {
@@ -496,7 +496,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 {
                     m_waterRevert = m_waterChannel.MakeCopy();
 
-                    m_scene.SimulationDataService.StoreWater(m_waterRevert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+                    m_scene.SimulationDataService.StoreWater(m_waterRevert.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, true);
                 }
                 else
                 {
@@ -511,7 +511,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 {
                     m_waterRevert = m_waterChannel.MakeCopy();
 
-                    m_scene.SimulationDataService.StoreWater(m_waterRevert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+                    m_scene.SimulationDataService.StoreWater(m_waterRevert.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, true);
                 }
             }
             catch (IndexOutOfRangeException e)
@@ -519,21 +519,21 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 m_log.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e.ToString() + " Regenerating");
                 m_waterRevert = m_waterChannel.MakeCopy();
 
-                m_scene.SimulationDataService.StoreWater(m_waterRevert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+                m_scene.SimulationDataService.StoreWater(m_waterRevert.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, true);
             }
             catch (ArgumentOutOfRangeException e)
             {
                 m_log.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e.ToString() + " Regenerating");
                 m_waterRevert = m_waterChannel.MakeCopy();
 
-                m_scene.SimulationDataService.StoreWater(m_waterRevert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+                m_scene.SimulationDataService.StoreWater(m_waterRevert.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, true);
             }
             catch (Exception e)
             {
                 m_log.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e.ToString());
                 m_waterRevert = m_waterChannel.MakeCopy();
 
-                m_scene.SimulationDataService.StoreWater(m_waterRevert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+                m_scene.SimulationDataService.StoreWater(m_waterRevert.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, true);
             }
         }
 
@@ -550,7 +550,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     m_log.Info("[TERRAIN]: No default terrain. Generating a new terrain.");
                     m_channel = new TerrainChannel(m_scene);
 
-                    m_scene.SimulationDataService.StoreTerrain(m_channel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+                    m_scene.SimulationDataService.StoreTerrain(m_channel.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
                 }
                 else
                 {
@@ -565,7 +565,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 {
                     m_channel = new TerrainChannel(m_scene);
 
-                    m_scene.SimulationDataService.StoreTerrain(m_channel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+                    m_scene.SimulationDataService.StoreTerrain(m_channel.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
                 }
             }
             catch (IndexOutOfRangeException e)
@@ -573,21 +573,21 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 m_log.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e.ToString() + " Regenerating");
                 m_channel = new TerrainChannel(m_scene);
 
-                m_scene.SimulationDataService.StoreTerrain(m_channel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+                m_scene.SimulationDataService.StoreTerrain(m_channel.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
             }
             catch (ArgumentOutOfRangeException e)
             {
                 m_log.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e.ToString() + " Regenerating");
                 m_channel = new TerrainChannel(m_scene);
 
-                m_scene.SimulationDataService.StoreTerrain(m_channel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+                m_scene.SimulationDataService.StoreTerrain(m_channel.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
             }
             catch (Exception e)
             {
                 m_log.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e.ToString());
                 m_channel = new TerrainChannel(m_scene);
 
-                m_scene.SimulationDataService.StoreTerrain(m_channel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+                m_scene.SimulationDataService.StoreTerrain(m_channel.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
             }
             LoadRevertMap();
             m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
@@ -608,7 +608,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     m_log.Info("[TERRAIN]: No default water. Generating a new water.");
                     m_waterChannel = new TerrainChannel(m_scene);
 
-                    m_scene.SimulationDataService.StoreWater(m_waterChannel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+                    m_scene.SimulationDataService.StoreWater(m_waterChannel.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
                 }
                 else
                 {
@@ -623,7 +623,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 {
                     m_waterChannel = new TerrainChannel(m_scene);
 
-                    m_scene.SimulationDataService.StoreWater(m_waterChannel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+                    m_scene.SimulationDataService.StoreWater(m_waterChannel.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
                 }
             }
             catch (IndexOutOfRangeException e)
@@ -631,21 +631,21 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 m_log.Warn("[TERRAIN]: LoadWorldWaterMap() - Failed with exception " + e.ToString() + " Regenerating");
                 m_waterChannel = new TerrainChannel(m_scene);
 
-                m_scene.SimulationDataService.StoreWater(m_waterChannel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+                m_scene.SimulationDataService.StoreWater(m_waterChannel.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
             }
             catch (ArgumentOutOfRangeException e)
             {
                 m_log.Warn("[TERRAIN]: LoadWorldWaterMap() - Failed with exception " + e.ToString() + " Regenerating");
                 m_waterChannel = new TerrainChannel(m_scene);
 
-                m_scene.SimulationDataService.StoreWater(m_waterChannel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+                m_scene.SimulationDataService.StoreWater(m_waterChannel.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
             }
             catch (Exception e)
             {
                 m_log.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e.ToString());
                 m_waterChannel = new TerrainChannel(m_scene);
 
-                m_scene.SimulationDataService.StoreWater(m_waterChannel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+                m_scene.SimulationDataService.StoreWater(m_waterChannel.GetBytesSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
             }
             LoadRevertWaterMap();
         }
@@ -1189,12 +1189,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             if (shouldTaint || forceSendOfTerrainInfo)
                 QueueTerrainUpdate();
 
-            float[] serialised = channel.GetFloatsSerialised(m_scene);
             foreach (ScenePresence presence in m_scene.ScenePresences)
             {
                 if (!m_sendTerrainUpdatesByViewDistance)
                 {
-                     presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), serialised, TerrainPatch.LayerType.Land);
+                    float[] serialised = channel.GetFloatsSerialised(m_scene);
+                    presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), serialised, TerrainPatch.LayerType.Land);
                 }
                 else
                 {

@@ -661,7 +661,7 @@ ELSE
         /// </summary>
         /// <param name="terrain">terrain map data.</param>
         /// <param name="regionID">regionID.</param>
-        public void StoreTerrain(double[,] terrain, UUID regionID, bool Revert)
+        public void StoreTerrain(byte[] terrain, UUID regionID, bool Revert)
         {
             int revision = Util.UnixTimeSinceEpoch();
 
@@ -683,7 +683,7 @@ ELSE
             {
                 cmd.Parameters.Add(_Database.CreateParameter("@RegionUUID", regionID));
                 cmd.Parameters.Add(_Database.CreateParameter("@Revision", revision));
-                cmd.Parameters.Add(_Database.CreateParameter("@Heightfield", serializeTerrain(terrain)));
+                cmd.Parameters.Add(_Database.CreateParameter("@Heightfield", terrain));
                 cmd.Parameters.Add(_Database.CreateParameter("@Revert", Revert.ToString()));
                 conn.Open();
                 cmd.ExecuteNonQuery();
@@ -697,7 +697,7 @@ ELSE
         /// </summary>
         /// <param name="terrain">terrain map data.</param>
         /// <param name="regionID">regionID.</param>
-        public void StoreWater(double[,] water, UUID regionID, bool Revert)
+        public void StoreWater(byte[] water, UUID regionID, bool Revert)
         {
             int revision = Util.UnixTimeSinceEpoch();
 
@@ -721,7 +721,7 @@ ELSE
             {
                 cmd.Parameters.Add(_Database.CreateParameter("@RegionUUID", regionID));
                 cmd.Parameters.Add(_Database.CreateParameter("@Revision", revision));
-                cmd.Parameters.Add(_Database.CreateParameter("@Heightfield", serializeTerrain(water)));
+                cmd.Parameters.Add(_Database.CreateParameter("@Heightfield", water));
                 cmd.Parameters.Add(_Database.CreateParameter("@Revert", r));
                 conn.Open();
                 cmd.ExecuteNonQuery();
@@ -935,30 +935,6 @@ VALUES
         }
 
         #region Private Methods
-
-        /// <summary>
-        /// Serializes the terrain data for storage in DB.
-        /// </summary>
-        /// <param name="val">terrain data</param>
-        /// <returns></returns>
-        private static Array serializeTerrain(double[,] val)
-        {
-            MemoryStream str = new MemoryStream((val.GetLength(0) * val.GetLength(1)) * sizeof(double));
-            BinaryWriter bw = new BinaryWriter(str);
-
-            // TODO: COMPATIBILITY - Add byte-order conversions
-            for (int x = 0; x < val.GetLength(0); x++)
-                for (int y = 0; y < val.GetLength(1); y++)
-                {
-                    double height = val[x, y];
-                    if (height == 0.0)
-                        height = double.Epsilon;
-
-                    bw.Write(height);
-                }
-
-            return str.ToArray();
-        }
 
         /// <summary>
         /// Stores new regionsettings.

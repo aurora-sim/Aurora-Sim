@@ -103,11 +103,11 @@ namespace OpenSim.Data.Null
         {
         }
 
-        public void StoreTerrain(double[,] terrain, UUID regionID, bool Revert)
+        public void StoreTerrain(byte[] terrain, UUID regionID, bool Revert)
         {
         }
 
-        public void StoreWater(double[,] water, UUID regionID, bool Revert)
+        public void StoreWater(byte[] water, UUID regionID, bool Revert)
         {
         }
 
