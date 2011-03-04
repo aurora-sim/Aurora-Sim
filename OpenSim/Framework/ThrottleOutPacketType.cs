@@ -63,9 +63,7 @@ namespace OpenSim.Framework
         AvatarInfo = 8,
         /// <summary>The number of packet categories to throttle on.
         /// If a throttle category is added or removed, this number must also change</summary>
-        OutBand = 7, // this must be the LAST one 
-                    //  this should be count -1  and only used for special packets that should go around bandwith limits
-                    // but it's currently over abused, so downgrade until all packets get right cats
+        OutBand = 9, // this must be the LAST one 
         Count = 10,
     }
 
