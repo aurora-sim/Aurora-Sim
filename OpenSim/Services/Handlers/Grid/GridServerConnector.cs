@@ -60,17 +60,15 @@ namespace OpenSim.Services
             m_registry = registry;
             m_port = handlerConfig.GetUInt("GridInHandlerPort");
 
-            if (handlerConfig.GetBoolean("UnsecureUrls", false))
-            {
-                //This registers regions... got to have it
-                string url = "/grid";
+            //This registers regions... got to have it
+            string url = "/grid";
 
-                IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-                m_port = server.Port;
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            m_port = server.Port;
 
-                GridServerPostHandler handler = new GridServerPostHandler(url, registry, registry.RequestModuleInterface<IGridService>().InnerService, handlerConfig.GetBoolean("UnsecureUrls", false), 0);
-                server.AddStreamHandler(handler);
-            }
+            GridServerPostHandler handler = new GridServerPostHandler(url, registry, registry.RequestModuleInterface<IGridService>().InnerService, handlerConfig.GetBoolean("UnsecureUrls", false), 0);
+            server.AddStreamHandler(handler);
+
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
 
