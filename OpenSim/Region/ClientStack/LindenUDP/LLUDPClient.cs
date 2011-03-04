@@ -63,14 +63,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
         public OpenSim.Framework.LocklessQueue<object>[] queues;
         public int promotioncntr;
+        public int promotionratemask;
         public int nlevels;
 
-        public UDPprioQueue(int NumberOfLevels)
+        public UDPprioQueue(int NumberOfLevels,int PromRateMask)
             {
+            // PromRatemask:  0x03 promotes on each 4 calls, 0x1 on each 2 calls etc
             nlevels = NumberOfLevels;
             queues = new OpenSim.Framework.LocklessQueue<object>[nlevels];
 
             promotioncntr = 0;
+            promotionratemask = PromRateMask;
             }
 
         public bool Enqueue(int prio, object o) // object so it can be a complex info with methods to call etc to get packets on dequeue 
@@ -80,52 +83,44 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             queues[prio].Enqueue(o); // store it in its level
 
+            Interlocked.Increment(ref promotioncntr);
+
+            if ((promotioncntr & promotionratemask) == 0)
+            // time to move objects up in priority
+            // so they don't get stalled if high trafic on higher levels               
+                {
+                object ob;
+                int i = prio;
+                while (--i >= 0)
+                    {
+                    if (queues[i].Dequeue(out ob))
+                        queues[i+1].Enqueue(ob);
+                    }
+                }
+
             return true;
             }
 
         public bool Dequeue(out OutgoingPacket pack)
             {
             object o;
-            int i = nlevels -1;
-            bool res = false;
-            pack = null;
+            int i = nlevels;
 
-            while (i >= 0) // go down levels looking for data
+            while (--i >= 0) // go down levels looking for data
                 {
                 if (queues[i].Dequeue(out o))
                     {
                     if (o is OutgoingPacket)
                         {
                         pack = (OutgoingPacket)o;
-                        res=true;
-                        break;
+                        return true;
                         }
                     // else  do call to a funtion that will return the packet or whatever
                     }
-                i--;
                 }
-
-            promotioncntr++;
-            promotioncntr &= 0x1;  // 0x03 promotes on each 4 calls, 0x1 on each 2 calls etc
-            if (promotioncntr == 0)
-            // time to move objects up in priority
-            // so they don't get stalled if high trafic on higher levels               
-                {
-                object ob;
-                // only promote to next level now
-                //                int j = nlevels - 1;
-//                i = j;
-                i = nlevels - 2;
-                while (i >= 0)
-                    {
-                    if (queues[i].Dequeue(out ob))
-//                        queues[j--].Enqueue(ob);
-                        queues[i+1].Enqueue(ob);
-                    i--;
-                    }
-                }
-
-            return res;
+               
+            pack=null;
+            return false;
             }
         }
 
