@@ -41,7 +41,7 @@ namespace OpenSim.Services.GridService
 
         protected class PermissionSet
         {
-            private string[] PermittedFunctions;
+            private List<string> PermittedFunctions = new List<string>();
             private IRegistryCore m_registry;
 
             public PermissionSet(IRegistryCore registry)
@@ -51,9 +51,27 @@ namespace OpenSim.Services.GridService
 
             public void ReadFunctions(IConfig config, ThreatLevel threatLevel)
             {
-                string list = config.GetString("Threat_Level_" + threatLevel.ToString(), "");
-                if (list != "")
-                    PermittedFunctions = list.Split(' ');
+                //Combine all threat level configs for ones that are less than our given threat level as well
+                foreach (ThreatLevel allThreatLevel in Enum.GetValues(typeof(ThreatLevel)))
+                {
+                    if (allThreatLevel <= threatLevel)
+                    {
+                        string list = config.GetString("Threat_Level_" + allThreatLevel.ToString(), "");
+                        if (list != "")
+                        {
+                            string[] functions = list.Split(',');
+                            foreach (string function in functions)
+                            {
+                                string f = function;
+                                //Clean them up
+                                f = f.Replace(" ", "");
+                                f = f.Replace("\r", "");
+                                f = f.Replace("\n", "");
+                                PermittedFunctions.Add(f);
+                            }
+                        }
+                    }
+                }
             }
 
             public bool CheckPermission(string function, ulong RegionHandle)
