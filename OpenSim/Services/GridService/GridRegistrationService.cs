@@ -28,8 +28,8 @@ namespace OpenSim.Services.GridService
         /// Timeout before the handlers expire (in hours)
         /// </summary>
         protected int m_timeBeforeTimeout = 24;
-        protected string m_defaultRegionThreatLevel = "Full";
-        protected Dictionary<string, PermissionSet> Permissions = new Dictionary<string, PermissionSet>();
+        protected ThreatLevel m_defaultRegionThreatLevel = ThreatLevel.Full;
+        protected Dictionary<ThreatLevel, PermissionSet> Permissions = new Dictionary<ThreatLevel, PermissionSet>();
 
         protected class PermissionSet
         {
@@ -41,9 +41,9 @@ namespace OpenSim.Services.GridService
                 m_registry = registry;
             }
 
-            public void ReadFunctions(IConfig config, string threatLevel)
+            public void ReadFunctions(IConfig config, ThreatLevel threatLevel)
             {
-                string list = config.GetString("Threat_Level_" + threatLevel, "");
+                string list = config.GetString("Threat_Level_" + threatLevel.ToString(), "");
                 if (list != "")
                     PermittedFunctions = list.Split(' ');
             }
@@ -56,14 +56,6 @@ namespace OpenSim.Services.GridService
                 }
                 return false;
             }
-        }
-
-        protected enum ThreatLevel
-        {
-            Low,
-            Medium,
-            High,
-            Full
         }
 
         #endregion
@@ -96,50 +88,57 @@ namespace OpenSim.Services.GridService
         protected void ReadConfiguration(IConfig config)
         {
             m_timeBeforeTimeout = config.GetInt("DefaultTimeout", m_timeBeforeTimeout);
-            m_defaultRegionThreatLevel = config.GetString("DefaultRegionThreatLevel", m_defaultRegionThreatLevel);
+            m_defaultRegionThreatLevel = (ThreatLevel)Enum.Parse(typeof(ThreatLevel), config.GetString("DefaultRegionThreatLevel", m_defaultRegionThreatLevel.ToString()));
 
             PermissionSet nonePermissions = new PermissionSet(m_registry);
-            nonePermissions.ReadFunctions(config, "None");
-            Permissions.Add("None", nonePermissions);
+            nonePermissions.ReadFunctions(config, ThreatLevel.None);
+            Permissions.Add(ThreatLevel.None, nonePermissions);
 
             PermissionSet lowPermissions = new PermissionSet(m_registry);
-            lowPermissions.ReadFunctions(config, "Low");
-            Permissions.Add("Low", lowPermissions);
+            lowPermissions.ReadFunctions(config, ThreatLevel.Low);
+            Permissions.Add(ThreatLevel.Low, lowPermissions);
 
             PermissionSet mediumPermissions = new PermissionSet(m_registry);
-            mediumPermissions.ReadFunctions(config, "Medium");
-            Permissions.Add("Medium", mediumPermissions);
+            mediumPermissions.ReadFunctions(config, ThreatLevel.Medium);
+            Permissions.Add(ThreatLevel.Medium, mediumPermissions);
 
             PermissionSet highPermissions = new PermissionSet(m_registry);
-            highPermissions.ReadFunctions(config, "High");
-            Permissions.Add("High", highPermissions);
+            highPermissions.ReadFunctions(config, ThreatLevel.High);
+            Permissions.Add(ThreatLevel.High, highPermissions);
 
             PermissionSet fullPermissions = new PermissionSet(m_registry);
-            fullPermissions.ReadFunctions(config, "Full");
-            Permissions.Add("Full", fullPermissions);
+            fullPermissions.ReadFunctions(config, ThreatLevel.Full);
+            Permissions.Add(ThreatLevel.Full, fullPermissions);
         }
 
-        protected string FindThreatLevelForFunction(string function, string defaultThreatLevel, ulong RegionHandle)
+        protected ThreatLevel FindThreatLevelForFunction(string function, ThreatLevel defaultThreatLevel, ulong RegionHandle)
         {
             GridRegion region = FindRegion(RegionHandle);
             if (region == null)
-                return "None";
-            string regionThreatLevel = region.GenericMap["ThreatLevel"].AsString();
-            if (regionThreatLevel == "")
-                regionThreatLevel = m_defaultRegionThreatLevel;
+                return ThreatLevel.None;
+            string rThreat = region.GenericMap["ThreatLevel"].AsString();
+            ThreatLevel regionThreatLevel = m_defaultRegionThreatLevel;
+            if (rThreat != "")
+                regionThreatLevel = (ThreatLevel)Enum.Parse(typeof(ThreatLevel), rThreat);
 
             string permission = m_permissionConfig.GetString(function, "");
             if (permission == "")
-                return defaultThreatLevel;
-            return permission;
+                return FindMoreRestrictiveThreatLevel(defaultThreatLevel, regionThreatLevel);
+            ThreatLevel permissionThreatLevel = (ThreatLevel)Enum.Parse(typeof(ThreatLevel), permission);
+            return FindMoreRestrictiveThreatLevel(permissionThreatLevel, regionThreatLevel);
         }
 
-        protected PermissionSet FindPermissionsForThreatLevel(string threatLevel)
+        protected ThreatLevel FindMoreRestrictiveThreatLevel(ThreatLevel a, ThreatLevel b)
+        {
+            return a < b ? a : b;
+        }
+
+        protected PermissionSet FindPermissionsForThreatLevel(ThreatLevel threatLevel)
         {
             if (Permissions.ContainsKey(threatLevel))
                 return Permissions[threatLevel];
             else
-                return Permissions["None"];
+                return Permissions[ThreatLevel.None];
         }
 
         private GridRegion FindRegion(ulong RegionHandle)
@@ -218,7 +217,7 @@ namespace OpenSim.Services.GridService
             m_modules.Add(module.UrlName, module);
         }
 
-        public bool CheckThreatLevel(string SessionID, ulong RegionHandle, string function, string defaultThreatLevel)
+        public bool CheckThreatLevel(string SessionID, ulong RegionHandle, string function, ThreatLevel defaultThreatLevel)
         {
             GridRegistrationURLs urls = m_genericsConnector.GetGeneric<GridRegistrationURLs>(UUID.Zero,
                 "GridRegistrationUrls", RegionHandle.ToString(), new GridRegistrationURLs());

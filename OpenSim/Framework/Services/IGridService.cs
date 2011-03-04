@@ -609,7 +609,16 @@ namespace OpenSim.Services.Interfaces
         /// <param name="function"></param>
         /// <param name="defaultThreatLevel"></param>
         /// <returns></returns>
-        bool CheckThreatLevel(string SessionID, ulong RegionHandle, string function, string defaultThreatLevel);
+        bool CheckThreatLevel(string SessionID, ulong RegionHandle, string function, ThreatLevel defaultThreatLevel);
+    }
+
+    public enum ThreatLevel
+    {
+        None = 1,
+        Low = 2,
+        Medium = 4,
+        High = 8,
+        Full = 16
     }
 
     /// <summary>
