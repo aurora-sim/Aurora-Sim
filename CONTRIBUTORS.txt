@@ -1,4 +1,4 @@
-Aurora contributors (Thanks for all the patches :))
+--------------- Aurora contributors (Thanks for all the patches :)) --------------------------
 
 Revolution Smythe
 Mahakala Dharmapala
@@ -8,6 +8,9 @@ Whitestar Magic
 Major Rasputin
 Quilz
 Skidz Tweak
+Matto Destiny
+Enrico Nirvana
+djphil
 
 
 ------------------ OpenSim ------------------
