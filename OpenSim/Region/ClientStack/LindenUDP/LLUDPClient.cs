@@ -93,6 +93,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                 object ob;
                 int i = prio;
+
                 while (--i >= 0)
                     {
                     if (queues[i].Dequeue(out ob))
@@ -203,7 +204,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>Outgoing queues for throttled packets</summary>
         private readonly OpenSim.Framework.LocklessQueue<OutgoingPacket>[] m_packetOutboxes = new OpenSim.Framework.LocklessQueue<OutgoingPacket>[(int)ThrottleOutPacketType.Count];
 
-        private UDPprioQueue m_outbox = new UDPprioQueue(6, 0x02); // 6  priority levels (5 max, 0 lowest), autopromotion on every 2 enqueues
+        private UDPprioQueue m_outbox = new UDPprioQueue(6, 0x01); // 6  priority levels (5 max, 0 lowest), autopromotion on every 2 enqueues
+                                                                    // valid values 0x01, 0x03,0x07 0x0f...
         public int[] MapCatsToPriority = new int[(int)ThrottleOutPacketType.Count];
         /// <summary>A container that can hold one packet for each outbox, used to store
         /// dequeued packets that are being held for throttling</summary>
@@ -381,7 +383,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             avatarinfo = Math.Max(avatarinfo, LLUDPServer.MTU);
 */
             int total = resend + land + wind + cloud + task + texture + asset + state + avatarinfo;
-
+            if (total > 655000)
+                total = 655000;
             //m_log.WarnFormat("[LLUDPCLIENT]: {0} is setting throttles. Resend={1}, Land={2}, Wind={3}, Cloud={4}, Task={5}, Texture={6}, Asset={7}, State={8}, AvatarInfo={9}, TaskFull={10}, Total={11}",
             //    AgentID, resend, land, wind, cloud, task, texture, asset, state, avatarinfo, task + state + avatarinfo, total);
 
