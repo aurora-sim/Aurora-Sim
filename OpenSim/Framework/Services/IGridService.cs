@@ -600,6 +600,16 @@ namespace OpenSim.Services.Interfaces
         /// <param name="SessionID"></param>
         /// <param name="RegionHandle"></param>
         void RemoveUrlsForClient(string SessionID, ulong RegionHandle);
+
+        /// <summary>
+        /// Checks that the given client can access the function that it is calling
+        /// </summary>
+        /// <param name="SessionID"></param>
+        /// <param name="RegionHandle"></param>
+        /// <param name="function"></param>
+        /// <param name="defaultThreatLevel"></param>
+        /// <returns></returns>
+        bool CheckThreatLevel(string SessionID, ulong RegionHandle, string function, string defaultThreatLevel);
     }
 
     /// <summary>

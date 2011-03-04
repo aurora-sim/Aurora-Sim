@@ -10,6 +10,7 @@ using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.GridService
 {
@@ -21,6 +22,49 @@ namespace OpenSim.Services.GridService
         protected LoadBalancerUrls m_loadBalancer = new LoadBalancerUrls();
         protected IGenericsConnector m_genericsConnector;
         protected ISimulationBase m_simulationBase;
+        protected IConfig m_permissionConfig;
+        protected IRegistryCore m_registry;
+        /// <summary>
+        /// Timeout before the handlers expire (in hours)
+        /// </summary>
+        protected int m_timeBeforeTimeout = 24;
+        protected string m_defaultRegionThreatLevel = "Full";
+        protected Dictionary<string, PermissionSet> Permissions = new Dictionary<string, PermissionSet>();
+
+        protected class PermissionSet
+        {
+            private string[] PermittedFunctions;
+            private IRegistryCore m_registry;
+
+            public PermissionSet(IRegistryCore registry)
+            {
+                m_registry = registry;
+            }
+
+            public void ReadFunctions(IConfig config, string threatLevel)
+            {
+                string list = config.GetString("Threat_Level_" + threatLevel, "");
+                if (list != "")
+                    PermittedFunctions = list.Split(' ');
+            }
+
+            public bool CheckPermission(string function, ulong RegionHandle)
+            {
+                if (PermittedFunctions.Contains(function))
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        protected enum ThreatLevel
+        {
+            Low,
+            Medium,
+            High,
+            Full
+        }
 
         #endregion
 
@@ -29,8 +73,14 @@ namespace OpenSim.Services.GridService
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             registry.RegisterModuleInterface<IGridRegistrationService>(this);
+            m_registry = registry;
             m_simulationBase = registry.RequestModuleInterface<ISimulationBase>();
+
             m_loadBalancer.SetUrls(config.Configs["Configuration"].GetString("HostNames", "http://localhost").Split(','));
+
+            m_permissionConfig = config.Configs["RegionPermissions"];
+            if (m_permissionConfig != null)
+                ReadConfiguration(m_permissionConfig);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -41,6 +91,62 @@ namespace OpenSim.Services.GridService
         {
             m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
             LoadFromDatabase();
+        }
+
+        protected void ReadConfiguration(IConfig config)
+        {
+            m_timeBeforeTimeout = config.GetInt("DefaultTimeout", m_timeBeforeTimeout);
+            m_defaultRegionThreatLevel = config.GetString("DefaultRegionThreatLevel", m_defaultRegionThreatLevel);
+
+            PermissionSet nonePermissions = new PermissionSet(m_registry);
+            nonePermissions.ReadFunctions(config, "None");
+            Permissions.Add("None", nonePermissions);
+
+            PermissionSet lowPermissions = new PermissionSet(m_registry);
+            lowPermissions.ReadFunctions(config, "Low");
+            Permissions.Add("Low", lowPermissions);
+
+            PermissionSet mediumPermissions = new PermissionSet(m_registry);
+            mediumPermissions.ReadFunctions(config, "Medium");
+            Permissions.Add("Medium", mediumPermissions);
+
+            PermissionSet highPermissions = new PermissionSet(m_registry);
+            highPermissions.ReadFunctions(config, "High");
+            Permissions.Add("High", highPermissions);
+
+            PermissionSet fullPermissions = new PermissionSet(m_registry);
+            fullPermissions.ReadFunctions(config, "Full");
+            Permissions.Add("Full", fullPermissions);
+        }
+
+        protected string FindThreatLevelForFunction(string function, string defaultThreatLevel, ulong RegionHandle)
+        {
+            GridRegion region = FindRegion(RegionHandle);
+            if (region == null)
+                return "None";
+            string regionThreatLevel = region.GenericMap["ThreatLevel"].AsString();
+            if (regionThreatLevel == "")
+                regionThreatLevel = m_defaultRegionThreatLevel;
+
+            string permission = m_permissionConfig.GetString(function, "");
+            if (permission == "")
+                return defaultThreatLevel;
+            return permission;
+        }
+
+        protected PermissionSet FindPermissionsForThreatLevel(string threatLevel)
+        {
+            if (Permissions.ContainsKey(threatLevel))
+                return Permissions[threatLevel];
+            else
+                return Permissions["None"];
+        }
+
+        private GridRegion FindRegion(ulong RegionHandle)
+        {
+            int x, y;
+            Util.UlongToInts(RegionHandle, out x, out y);
+            return m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, x, y);
         }
 
         protected void LoadFromDatabase()
@@ -82,6 +188,7 @@ namespace OpenSim.Services.GridService
             urls.URLS = databaseSave;
             urls.RegionHandle = RegionHandle;
             urls.SessionID = SessionID;
+            urls.Expiration = DateTime.Now.AddHours(m_timeBeforeTimeout);
             m_genericsConnector.AddGeneric(UUID.Zero, "GridRegistrationUrls", RegionHandle.ToString(), urls.ToOSD());
 
             return retVal;
@@ -111,6 +218,25 @@ namespace OpenSim.Services.GridService
             m_modules.Add(module.UrlName, module);
         }
 
+        public bool CheckThreatLevel(string SessionID, ulong RegionHandle, string function, string defaultThreatLevel)
+        {
+            GridRegistrationURLs urls = m_genericsConnector.GetGeneric<GridRegistrationURLs>(UUID.Zero,
+                "GridRegistrationUrls", RegionHandle.ToString(), new GridRegistrationURLs());
+            if (urls != null)
+            {
+                //Past time for it to expire
+                if (urls.Expiration < DateTime.Now)
+                {
+                    RemoveUrlsForClient(SessionID, RegionHandle);
+                    return false;
+                }
+                //Find the permission set by function name in the config if it exists
+                PermissionSet permissions = FindPermissionsForThreatLevel(FindThreatLevelForFunction(function, defaultThreatLevel, RegionHandle));
+                return permissions.CheckPermission(function, RegionHandle);
+            }
+            return false;
+        }
+
         #endregion
 
         #region Classes
@@ -120,6 +246,7 @@ namespace OpenSim.Services.GridService
             public OSDMap URLS;
             public string SessionID;
             public ulong RegionHandle;
+            public DateTime Expiration;
 
             public override OSDMap ToOSD()
             {
@@ -127,6 +254,7 @@ namespace OpenSim.Services.GridService
                 retVal["URLS"] = URLS;
                 retVal["SessionID"] = SessionID;
                 retVal["RegionHandle"] = RegionHandle;
+                retVal["Expiration"] = Expiration;
                 return retVal;
             }
 
@@ -135,6 +263,7 @@ namespace OpenSim.Services.GridService
                 URLS = (OSDMap)retVal["URLS"];
                 SessionID = retVal["SessionID"].AsString();
                 RegionHandle = retVal["RegionHandle"].AsULong();
+                Expiration = retVal["Expiration"].AsDate();
             }
 
             public override IDataTransferable Duplicate()
