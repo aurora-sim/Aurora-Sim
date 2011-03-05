@@ -39,6 +39,7 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using Aurora.Framework;
 using OpenSim.Framework;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.CapsService
 {
@@ -51,11 +52,52 @@ namespace OpenSim.Services.CapsService
 
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
+
         private ulong m_RegionHandle;
         public ulong RegionHandle
         {
             get { return m_RegionHandle; }
+        }
+
+        private IRegistryCore m_registry;
+        public IRegistryCore Registry
+        {
+            get { return m_registry; }
+        }
+
+        public int RegionX
+        {
+            get
+            {
+                int x, y;
+                Util.UlongToInts(m_RegionHandle, out x, out y);
+                return x;
+            }
+        }
+
+        public int RegionY
+        {
+            get
+            {
+                int x, y;
+                Util.UlongToInts(m_RegionHandle, out x, out y);
+                return y;
+            }
+        }
+
+        private GridRegion m_cachedRegion;
+        public GridRegion Region
+        {
+            get
+            {
+                if (m_cachedRegion != null)
+                    return m_cachedRegion;
+                else
+                {
+                    m_cachedRegion = Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, RegionX, RegionY);
+                    return m_cachedRegion;
+                }
+            }
         }
 
         protected Dictionary<UUID, IRegionClientCapsService> m_clientsInThisRegion =
@@ -70,9 +112,10 @@ namespace OpenSim.Services.CapsService
         /// </summary>
         /// <param name="regionHandle"></param>
         /// <param name="regionID"></param>
-        public void Initialise(ulong regionHandle)
+        public void Initialise(ulong regionHandle, IRegistryCore registry)
         {
             m_RegionHandle = regionHandle;
+            m_registry = registry;
         }
 
         public void Close()

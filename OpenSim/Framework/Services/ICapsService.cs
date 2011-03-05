@@ -225,6 +225,11 @@ namespace OpenSim.Services.Interfaces
         int RegionY { get; }
 
         /// <summary>
+        /// The Region for this caps
+        /// </summary>
+        GridRegion Region { get; }
+
+        /// <summary>
         /// The last circuit data we were updated with
         /// </summary>
         AgentCircuitData CircuitData { get; }
@@ -265,6 +270,11 @@ namespace OpenSim.Services.Interfaces
         IClientCapsService ClientCaps { get; }
 
         /// <summary>
+        /// Our parent region that we are attached to
+        /// </summary>
+        IRegionCapsService RegionCaps { get; }
+
+        /// <summary>
         /// Whether the agent is a root agent
         /// </summary>
         bool RootAgent { get; set; }
@@ -277,7 +287,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="capsBase"></param>
         /// <param name="urlToInform"></param>
         /// <param name="circuitData"></param>
-        void Initialise(IClientCapsService clientCapsService, ulong regionHandle, string capsBase, AgentCircuitData circuitData);
+        void Initialise(IClientCapsService clientCapsService, IRegionCapsService regionCapsService, string capsBase, AgentCircuitData circuitData);
         
         /// <summary>
         /// Closes the region caps, removes all caps handlers and removes itself
@@ -341,10 +351,25 @@ namespace OpenSim.Services.Interfaces
         ulong RegionHandle { get; }
 
         /// <summary>
+        /// The Region X Location (in meters)
+        /// </summary>
+        int RegionX { get; }
+
+        /// <summary>
+        /// The Region Y Location (in meters)
+        /// </summary>
+        int RegionY { get; }
+
+        /// <summary>
+        /// The Region for this caps
+        /// </summary>
+        GridRegion Region { get; }
+
+        /// <summary>
         /// Initialise the service
         /// </summary>
         /// <param name="regionHandle"></param>
-        void Initialise(ulong regionHandle);
+        void Initialise(ulong regionHandle, IRegistryCore registry);
 
         /// <summary>
         /// Close the service and all underlieing services

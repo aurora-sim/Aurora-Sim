@@ -37,6 +37,7 @@ using OpenMetaverse.StructuredData;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using Aurora.Framework;
 using OpenSim.Framework;
 
@@ -66,19 +67,19 @@ namespace OpenSim.Services.CapsService
             set { m_disabled = value; }
         }
         
-        private ulong m_RegionHandle;
         public ulong RegionHandle
         {
-            get { return m_RegionHandle; }
+            get
+            {
+                return m_regionCapsService.RegionHandle;
+            }
         }
 
         public int RegionX
         {
             get
             {
-                int x, y;
-                Util.UlongToInts(m_RegionHandle, out x, out y);
-                return x;
+                return m_regionCapsService.RegionX;
             }
         }
 
@@ -86,9 +87,15 @@ namespace OpenSim.Services.CapsService
         {
             get
             {
-                int x, y;
-                Util.UlongToInts(m_RegionHandle, out x, out y);
-                return y;
+                return m_regionCapsService.RegionY;
+            }
+        }
+
+        public GridRegion Region
+        {
+            get
+            {
+                return m_regionCapsService.Region;
             }
         }
 
@@ -122,6 +129,12 @@ namespace OpenSim.Services.CapsService
             get { return m_clientCapsService; }
         }
 
+        protected IRegionCapsService m_regionCapsService;
+        public IRegionCapsService RegionCaps
+        {
+            get { return m_regionCapsService; }
+        }
+
         #endregion
 
         #region Properties
@@ -153,10 +166,10 @@ namespace OpenSim.Services.CapsService
 
         #region Initialize
 
-        public void Initialise(IClientCapsService clientCapsService, ulong regionHandle, string capsBase, AgentCircuitData circuitData)
+        public void Initialise(IClientCapsService clientCapsService, IRegionCapsService regionCapsService, string capsBase, AgentCircuitData circuitData)
         {
             m_clientCapsService = clientCapsService;
-            m_RegionHandle = regionHandle;
+            m_regionCapsService = regionCapsService;
             m_circuitData = circuitData;
             AddSEEDCap(capsBase);
 

@@ -64,12 +64,11 @@ namespace Aurora.Services.DataService
             object[] values = new object[8];
             values[0] = info.UserID;
             values[1] = info.CurrentRegionID;
-            values[2] = UUID.Zero;
-            values[3] = Util.ToUnixTime(DateTime.Now); //Convert to binary so that it can be converted easily
-            values[4] = info.IsOnline ? 1 : 0;
-            values[5] = Util.ToUnixTime(info.LastLogin);
-            values[6] = Util.ToUnixTime(info.LastLogout);
-            values[7] = OSDParser.SerializeJsonString(info.ToOSD());
+            values[2] = Util.ToUnixTime(DateTime.Now); //Convert to binary so that it can be converted easily
+            values[3] = info.IsOnline ? 1 : 0;
+            values[4] = Util.ToUnixTime(info.LastLogin);
+            values[5] = Util.ToUnixTime(info.LastLogout);
+            values[6] = OSDParser.SerializeJsonString(info.ToOSD());
             GD.Delete(m_realm, new string[1] { "UserID" }, new object[1] { info.UserID });
             return GD.Insert(m_realm, values);
         }
@@ -82,14 +81,13 @@ namespace Aurora.Services.DataService
             UserInfo user = new UserInfo();
             user.UserID = query[0];
             user.CurrentRegionID = UUID.Parse(query[1]);
-            //users[i / 8].SessionID = UUID.Parse(query[2]);
-            user.IsOnline = query[4] == "1" ? true : false;
-            user.LastLogin = Util.ToDateTime(int.Parse(query[5]));
-            user.LastLogout = Util.ToDateTime(int.Parse(query[6]));
+            user.IsOnline = query[3] == "1" ? true : false;
+            user.LastLogin = Util.ToDateTime(int.Parse(query[4]));
+            user.LastLogout = Util.ToDateTime(int.Parse(query[5]));
             UserInfo innerUser = new UserInfo();
             try
             {
-                innerUser.FromOSD((OSDMap)OSDParser.DeserializeJson(query[7]));
+                innerUser.FromOSD((OSDMap)OSDParser.DeserializeJson(query[6]));
                 user.Info = innerUser.Info;
                 user.CurrentLookAt = innerUser.CurrentLookAt;
                 user.CurrentPosition = innerUser.CurrentPosition;
@@ -104,7 +102,7 @@ namespace Aurora.Services.DataService
             }
 
             //Check LastSeen
-            if (m_checkLastSeen && user.IsOnline && (Util.ToDateTime(int.Parse(query[3])).AddHours(1) < DateTime.Now))
+            if (m_checkLastSeen && user.IsOnline && (Util.ToDateTime(int.Parse(query[2])).AddHours(1) < DateTime.Now))
             {
                 m_log.Warn("[UserInfoService]: Found a user (" + user.UserID + ") that was not seen within the last hour! Logging them out.");
                 user.IsOnline = false;

@@ -138,11 +138,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                                     IGridService GridService = m_registry.RequestModuleInterface<IGridService>();
                                     if (GridService != null)
                                     {
-                                        int x, y;
-                                        Util.UlongToInts(regionClient.RegionHandle, out x, out y);
-                                        GridRegion neighborAgentRegion = GridService.GetRegionByPosition(UUID.Zero, x, y);
-                                        if(neighborAgentRegion != null)
-                                            SimulationService.CloseAgent(neighborAgentRegion, regionCaps.AgentID);
+                                        SimulationService.CloseAgent(regionClient.Region, regionCaps.AgentID);
                                     }
                                 }
                             }
@@ -518,10 +514,8 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                         otherRegion.RootAgent = true;
                         regionCaps.RootAgent = false;
 
-                        GridRegion oldRegion = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, regionCaps.RegionX, regionCaps.RegionY);
-
                         // Next, let's close the child agent connections that are too far away.
-                        CloseNeighborAgents(oldRegion, destination, AgentID);
+                        CloseNeighborAgents(regionCaps.Region, destination, AgentID);
                         reason = "";
                     }
                 }
@@ -722,8 +716,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                                     otherRegion.RootAgent = true;
                                     requestingRegionCaps.RootAgent = false;
 
-                                    GridRegion oldRegion = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, requestingRegionCaps.RegionX, requestingRegionCaps.RegionY);
-                                    CloseNeighborAgents(oldRegion, crossingRegion, AgentID);
+                                    CloseNeighborAgents(requestingRegionCaps.Region, crossingRegion, AgentID);
                                 }
                                 reason = "";
                             }
@@ -769,12 +762,6 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
                 if (SimulationService != null)
                 {
-                    GridRegion ourRegion = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, regionCaps.RegionX, regionCaps.RegionY);
-                    if (ourRegion == null)
-                    {
-                        m_log.Info("[AgentProcessing]: Failed to inform neighbors about updating agent, could not find our region. ");
-                        return;
-                    }
                     //Set the last location in the database
                     IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
                     if (agentInfoService != null)
@@ -785,7 +772,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                         if (lookAt != Vector3.Zero)
                             lookAt = Util.GetNormalizedVector(lookAt);
                         //Update the database
-                        agentInfoService.SetLastPosition(regionCaps.AgentID.ToString(), ourRegion.RegionID,
+                        agentInfoService.SetLastPosition(regionCaps.AgentID.ToString(), regionCaps.Region.RegionID,
                             agentpos.Position, lookAt);
                     }
 
@@ -793,7 +780,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     regionCaps.LastPosition = agentpos.Position;
                     
                     //Tell all neighbor regions about the new position as well
-                    List<GridRegion> ourNeighbors = service.GetNeighbors(ourRegion);
+                    List<GridRegion> ourNeighbors = service.GetNeighbors(regionCaps.Region);
                     foreach (GridRegion region in ourNeighbors)
                     {
                         //Update all the neighbors that we have

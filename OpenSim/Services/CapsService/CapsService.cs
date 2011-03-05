@@ -216,7 +216,7 @@ namespace OpenSim.Services.CapsService
             if (!m_RegionCapsServices.ContainsKey(RegionHandle))
             {
                 IRegionCapsService service = new PerRegionCapsService();
-                service.Initialise(RegionHandle);
+                service.Initialise(RegionHandle, Registry);
 
                 m_RegionCapsServices.Add(RegionHandle, service);
             }

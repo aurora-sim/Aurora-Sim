@@ -941,7 +941,6 @@ namespace OpenSim.Region.CoreModules.World.Land
         public void EventManagerOnSignificantClientMovement(IClientAPI remote_client)
         {
             ScenePresence clientAvatar = m_scene.GetScenePresence(remote_client.AgentId);
-
             if (clientAvatar != null)
             {
                 ILandObject over = GetLandObject((int)clientAvatar.AbsolutePosition.X, (int)clientAvatar.AbsolutePosition.Y);
