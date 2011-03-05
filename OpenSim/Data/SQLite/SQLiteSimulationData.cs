@@ -840,7 +840,14 @@ namespace OpenSim.Data.SQLite
                 {
                     cmd.Parameters.Add(new SqliteParameter(":RegionUUID", regionID.ToString()));
                     cmd.Parameters.Add(new SqliteParameter(":Revision", revision));
-                    cmd.Parameters.Add(new SqliteParameter(":Heightfield", water));
+                    byte[] waterheightmap = new byte[water.Length * sizeof(short)];
+                    int ii = 0;
+                    for (int i = 0; i < water.Length; i++)
+                    {
+                        Utils.Int16ToBytes(water[i], waterheightmap, ii);
+                        ii += 2;
+                    }
+                    cmd.Parameters.Add(new SqliteParameter(":Heightfield", waterheightmap));
                     cmd.Parameters.Add(new SqliteParameter(":Revert", r));
                     cmd.Parameters.Add(new SqliteParameter(":X", 0));
                     cmd.Parameters.Add(new SqliteParameter(":Y", 0));
@@ -886,7 +893,7 @@ namespace OpenSim.Data.SQLite
                                 int ii = 0;
                                 for (int i = 0; i < heightmap.Length; i += sizeof(double))
                                 {
-                                    map[ii] = (short)(Utils.BytesToDouble(heightmap, i) * 10);
+                                    map[ii] = (short)(Utils.BytesToDouble(heightmap, i) * Constants.TerrainCompression);
                                     ii++;
                                 }
                                 this.StoreTerrain(map, regionID, revert);
@@ -897,7 +904,7 @@ namespace OpenSim.Data.SQLite
                                 byte[] heightmap = (byte[])row["Heightfield"];
                                 short[] map = new short[RegionSizeX * RegionSizeX];
                                 int ii = 0;
-                                for (int i = 0; i < heightmap.Length; i+= 2)
+                                for (int i = 0; i < heightmap.Length; i += sizeof(short))
                                 {
                                     map[ii] = Utils.BytesToInt16(heightmap, i);
                                     ii++;
@@ -932,12 +939,12 @@ namespace OpenSim.Data.SQLite
                 String sql = "";
                 if (revert)
                 {
-                    sql = "select RegionUUID, Revision, Heightfield from terrain" +
+                    sql = "select Heightfield,X,Y from terrain" +
                               " where RegionUUID=:RegionUUID and Revert = '3' order by Revision desc";
                 }
                 else
                 {
-                    sql = "select RegionUUID, Revision, Heightfield from terrain" +
+                    sql = "select Heightfield,X,Y from terrain" +
                               " where RegionUUID=:RegionUUID and Revert = '2' order by Revision desc";
                 }
 
@@ -949,7 +956,31 @@ namespace OpenSim.Data.SQLite
                     {
                         if (row.Read())
                         {
-                            return (short[])row["Heightfield"];
+                            if (row["X"].ToString() == "-1")
+                            {
+                                byte[] heightmap = (byte[])row["Heightfield"];
+                                short[] map = new short[RegionSizeX * RegionSizeX];
+                                int ii = 0;
+                                for (int i = 0; i < heightmap.Length; i += sizeof(double))
+                                {
+                                    map[ii] = (short)(Utils.BytesToDouble(heightmap, i) * Constants.TerrainCompression);
+                                    ii++;
+                                }
+                                this.StoreWater(map, regionID, revert);
+                                return map;
+                            }
+                            else
+                            {
+                                byte[] heightmap = (byte[])row["Heightfield"];
+                                short[] map = new short[RegionSizeX * RegionSizeX];
+                                int ii = 0;
+                                for (int i = 0; i < heightmap.Length; i += sizeof(short))
+                                {
+                                    map[ii] = Utils.BytesToInt16(heightmap, i);
+                                    ii++;
+                                }
+                                return map;
+                            }
                         }
                         else
                         {

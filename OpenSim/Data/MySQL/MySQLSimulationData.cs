@@ -664,10 +664,18 @@ namespace OpenSim.Data.MySQL
                         ExecuteNonQuery(cmd);
 
                         cmd.CommandText = "insert into terrain (RegionUUID, " +
-                            "Revision, Heightfield, Revert) values (?RegionUUID, " +
-                            "1, ?Heightfield, ?Revert)";
-
-                        cmd.Parameters.AddWithValue("Heightfield", ter);
+                            "Revision, Heightfield, Revert,X,Y) values (?RegionUUID, " +
+                            "1, ?Heightfield, ?Revert, ?X, ?Y)";
+                        byte[] heightmap = new byte[ter.Length * sizeof(short)];
+                        int ii = 0;
+                        for (int i = 0; i < ter.Length; i++)
+                        {
+                            Utils.Int16ToBytes(ter[i], heightmap, ii);
+                            ii += 2;
+                        }
+                        cmd.Parameters.AddWithValue("Heightfield", heightmap);
+                        cmd.Parameters.AddWithValue("X", "0");
+                        cmd.Parameters.AddWithValue("Y", "0");
 
                         ExecuteNonQuery(cmd);
                     }
@@ -696,10 +704,18 @@ namespace OpenSim.Data.MySQL
                         ExecuteNonQuery(cmd);
 
                         cmd.CommandText = "insert into terrain (RegionUUID, " +
-                            "Revision, Heightfield, Revert) values (?RegionUUID, " +
-                            "1, ?Heightfield, ?Revert)";
-
-                        cmd.Parameters.AddWithValue("Heightfield", water);
+                            "Revision, Heightfield, Revert, X, Y) values (?RegionUUID, " +
+                            "1, ?Heightfield, ?Revert, ?X, ?Y)";
+                        byte[] waterheightmap = new byte[water.Length * sizeof(short)];
+                        int ii = 0;
+                        for (int i = 0; i < water.Length; i++)
+                        {
+                            Utils.Int16ToBytes(water[i], waterheightmap, ii);
+                            ii += 2;
+                        }
+                        cmd.Parameters.AddWithValue("Heightfield", waterheightmap);
+                        cmd.Parameters.AddWithValue("X", "0");
+                        cmd.Parameters.AddWithValue("Y", "0");
 
                         ExecuteNonQuery(cmd);
                     }
@@ -717,7 +733,7 @@ namespace OpenSim.Data.MySQL
 
                     using (MySqlCommand cmd = dbcon.CreateCommand())
                     {
-                        cmd.CommandText = "select RegionUUID, Revision, Heightfield " +
+                        cmd.CommandText = "select Heightfield,X,Y " +
                             "from terrain where RegionUUID = ?RegionUUID and Revert = '" + Revert.ToString() + "'" +
                             "order by Revision desc limit 1";
 
@@ -727,9 +743,31 @@ namespace OpenSim.Data.MySQL
                         {
                             while (reader.Read())
                             {
-                                int rev = Convert.ToInt32(reader["Revision"]);
-
-                                return (short[])reader["Heightfield"];
+                                if (reader["X"].ToString() == "-1")
+                                {
+                                    byte[] heightmap = (byte[])reader["Heightfield"];
+                                    short[] map = new short[RegionSizeX * RegionSizeX];
+                                    int ii = 0;
+                                    for (int i = 0; i < heightmap.Length; i += sizeof(double))
+                                    {
+                                        map[ii] = (short)(Utils.BytesToDouble(heightmap, i) * Constants.TerrainCompression);
+                                        ii++;
+                                    }
+                                    this.StoreTerrain(map, regionID, Revert);
+                                    return map;
+                                }
+                                else
+                                {
+                                    byte[] heightmap = (byte[])reader["Heightfield"];
+                                    short[] map = new short[RegionSizeX * RegionSizeX];
+                                    int ii = 0;
+                                    for (int i = 0; i < heightmap.Length; i += sizeof(short))
+                                    {
+                                        map[ii] = Utils.BytesToInt16(heightmap, i);
+                                        ii++;
+                                    }
+                                    return map;
+                                }
                             }
                         }
                     }
@@ -751,7 +789,7 @@ namespace OpenSim.Data.MySQL
 
                     using (MySqlCommand cmd = dbcon.CreateCommand())
                     {
-                        cmd.CommandText = "select RegionUUID, Revision, Heightfield " +
+                        cmd.CommandText = "select Heightfield,X,Y " +
                             "from terrain where RegionUUID = ?RegionUUID and Revert = '" + r + "'" +
                             "order by Revision desc limit 1";
 
@@ -761,7 +799,31 @@ namespace OpenSim.Data.MySQL
                         {
                             while (reader.Read())
                             {
-                                return (short[])reader["Heightfield"];
+                                if (reader["X"].ToString() == "-1")
+                                {
+                                    byte[] heightmap = (byte[])reader["Heightfield"];
+                                    short[] map = new short[RegionSizeX * RegionSizeX];
+                                    int ii = 0;
+                                    for (int i = 0; i < heightmap.Length; i += sizeof(double))
+                                    {
+                                        map[ii] = (short)(Utils.BytesToDouble(heightmap, i) * Constants.TerrainCompression);
+                                        ii++;
+                                    }
+                                    this.StoreTerrain(map, regionID, Revert);
+                                    return map;
+                                }
+                                else
+                                {
+                                    byte[] heightmap = (byte[])reader["Heightfield"];
+                                    short[] map = new short[RegionSizeX * RegionSizeX];
+                                    int ii = 0;
+                                    for (int i = 0; i < heightmap.Length; i += sizeof(short))
+                                    {
+                                        map[ii] = Utils.BytesToInt16(heightmap, i);
+                                        ii++;
+                                    }
+                                    return map;
+                                }
                             }
                         }
                     }
