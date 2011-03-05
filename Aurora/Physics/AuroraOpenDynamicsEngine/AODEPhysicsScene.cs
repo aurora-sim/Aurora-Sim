@@ -197,9 +197,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private readonly Dictionary<String, PhysicsJoint> SOPName_to_activeJoint = new Dictionary<String, PhysicsJoint>();
         private readonly Dictionary<String, PhysicsJoint> SOPName_to_pendingJoint = new Dictionary<String, PhysicsJoint>();
         private readonly DoubleDictionary<Vector3, IntPtr, IntPtr> RegionTerrain = new DoubleDictionary<Vector3, IntPtr, IntPtr>();
-        private readonly Dictionary<IntPtr, float[]> TerrainHeightFieldHeights = new Dictionary<IntPtr, float[]>();
+        private readonly Dictionary<IntPtr, short[]> TerrainHeightFieldHeights = new Dictionary<IntPtr, short[]>();
         private readonly Dictionary<IntPtr, float[]> TerrainHeightFieldlimits = new Dictionary<IntPtr, float[]>();
-        private readonly Dictionary<UUID, float[]> WaterHeightFieldHeights = new Dictionary<UUID, float[]>();
+        private readonly Dictionary<UUID, short[]> WaterHeightFieldHeights = new Dictionary<UUID, short[]>();
         public bool m_EnableAutoConfig = true;
         public bool m_DisableSlowPrims = true;
 
@@ -1769,15 +1769,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                         if((dx +dy) <= 1.0f)
                             {
-                            h0 = TerrainHeightFieldHeights[heightFieldGeom][iy + ix];
+                                h0 = TerrainHeightFieldHeights[heightFieldGeom][iy + ix] / Constants.TerrainCompression;
 
                             if(dx >0)
-                                h1 = (TerrainHeightFieldHeights[heightFieldGeom][iy + ix + 1] - h0) * dx; 
+                                h1 = (TerrainHeightFieldHeights[heightFieldGeom][iy + ix + 1] / Constants.TerrainCompression - h0) * dx; 
                             else
                                 h1 = 0;
 
                             if(dy >0)
-                                h2 = (TerrainHeightFieldHeights[heightFieldGeom][iy +  m_region.RegionSizeX + ix] - h0) * dy;
+                                h2 = (TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix] / Constants.TerrainCompression - h0) * dy;
                             else
                                 h2=0;
 
@@ -1785,15 +1785,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             }
                         else
                             {
-                            h0 = TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix +1];
+                                h0 = TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix + 1] / Constants.TerrainCompression;
 
                             if(dx >0)
-                                h1 = (TerrainHeightFieldHeights[heightFieldGeom][iy + ix + 1] - h0) * (1 - dy); 
+                                h1 = (TerrainHeightFieldHeights[heightFieldGeom][iy + ix + 1] / Constants.TerrainCompression - h0) * (1 - dy); 
                             else
                                 h1 = 0;
 
                             if(dy >0)
-                                h2 = (TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix] - h0) * (1 - dx);
+                                h2 = (TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix] / Constants.TerrainCompression - h0) * (1 - dx);
                             else
                                 h2=0;
 
@@ -3730,7 +3730,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 */
         #endregion
 
-        public override void SetTerrain(float[] heightMap)
+        public override void SetTerrain(short[] heightMap)
         {
             if (m_worldOffset != Vector3.Zero && m_parentScene != null)
             {
@@ -3745,9 +3745,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public void SetTerrain(float[] heightMap, Vector3 pOffset)
+        public void SetTerrain(short[] heightMap, Vector3 pOffset)
             {
-            float[] _heightmap = new float[((m_region.RegionSizeX + 3) * (m_region.RegionSizeY + 3))];
+                float[] _heightmap = new float[((m_region.RegionSizeX + 3) * (m_region.RegionSizeY + 3))];
 
             int heightmapWidth = m_region.RegionSizeX + 2;
             int heightmapHeight = m_region.RegionSizeY + 2;
@@ -3768,7 +3768,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     int xx = Util.Clip(x - 1, 0, m_region.RegionSizeX - 1);
                     int yy = Util.Clip(y - 1, 0, m_region.RegionSizeY - 1);
 
-                    float val = heightMap[yy * m_region.RegionSizeX + xx];
+                    float val = (float)(heightMap[yy * m_region.RegionSizeX + xx] / Constants.TerrainCompression);
                     //ODE is evil... flip x and y
                     _heightmap[(x * heightmapHeightSamples) + y] = val;
 
@@ -3795,7 +3795,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     geom_name_map.Remove(GroundGeom);
                     }
 
-                const float scale = 1.0f;
+                const float scale = 1;
                 const float offset = 0.0f;
                 float thickness = (float)hfmin;
                 const int wrap = 0;
@@ -3928,7 +3928,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public override void SetWaterLevel(float[] map)
+        public override void SetWaterLevel(short[] map)
         {
             WaterHeightFieldHeights.Remove(m_region.RegionID);
             WaterHeightFieldHeights.Add(m_region.RegionID, map);

@@ -533,19 +533,24 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             
         }
 
-        public override void SetTerrain(float[] heightMap)
+        public override void SetTerrain(short[] shortheightMap)
         {
+            float[] heightMap = new float[shortheightMap.Length];
+            for (int i = 0; i < shortheightMap.Length; i++)
+            {
+                heightMap[i] = shortheightMap[i] / 10;
+            }
             if (m_terrainShape != null)
                 DeleteTerrain();
 
             float hfmax = -9000;
             float hfmin = 90000;
             
-            for (int i = 0; i <heightMap.Length;i++)
+            for (int i = 0; i < heightMap.Length;i++)
             {
                 if (Single.IsNaN(heightMap[i]) || Single.IsInfinity(heightMap[i]))
                 {
-                    heightMap[i] = 0f;
+                    heightMap[i] = 0;
                 }
 
                 hfmin = (heightMap[i] < hfmin) ? heightMap[i] : hfmin;
@@ -609,7 +614,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             m_world.addRigidBody(TerrainBody);
         }
 
-        public override void SetWaterLevel(float[] map)
+        public override void SetWaterLevel(short[] map)
         {
             
         }

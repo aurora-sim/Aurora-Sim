@@ -566,19 +566,19 @@ namespace OpenSim.Region.OptionalModules.World.NPC
 
         }
 
-        public virtual void SendLayerData(float[] map)
+        public virtual void SendLayerData(short[] map)
         {
         }
 
-        public virtual void SendLayerData(int px, int py, float[] map)
+        public virtual void SendLayerData(int px, int py, short[] map)
         {
         }
 
-        public void SendLayerData(int[] x, int[] y, float[] map, TerrainPatch.LayerType type)
+        public void SendLayerData(int[] x, int[] y, short[] map, TerrainPatch.LayerType type)
         {
 
         }
-        public virtual void SendLayerData(int px, int py, float[] map, bool track)
+        public virtual void SendLayerData(int px, int py, short[] map, bool track)
         {
         }
         public void SendAgentCachedTexture(List<CachedAgentArgs> args)

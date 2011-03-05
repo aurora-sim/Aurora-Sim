@@ -138,11 +138,6 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_scene = value; }
         }
 
-        public float[] GetFloatsSerialised(IScene scene)
-        {
-            return null;
-        }
-
         public short[] GetSerialised(IScene scene)
         {
             return m_map;
@@ -153,20 +148,22 @@ namespace OpenSim.Region.Framework.Scenes
             get
             {
                 if (x >= 0 && x < Width && y >= 0 && y < Height)
-                    return m_map[y * Width + x] / 10;
+                    return m_map[y * Width + x] / 100;
                 else
                     return 0;
             }
             set
             {
                 // Will "fix" terrain hole problems. Although not fantastically.
-                if (value / 10 > ushort.MaxValue)
-                    return;
+                if (value * Constants.TerrainCompression > short.MaxValue)
+                    value = short.MaxValue;
+                if (value * Constants.TerrainCompression < short.MinValue)
+                    value = short.MinValue;
 
                 if (m_map[y * Width + x] != value)
                 {
                     taint[x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize] = true;
-                    m_map[y * Width + x] = (short)((short)value * 10);
+                    m_map[y * Width + x] = (short)(value * Constants.TerrainCompression);
                 }
             }
         }

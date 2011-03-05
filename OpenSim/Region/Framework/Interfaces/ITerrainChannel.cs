@@ -38,7 +38,6 @@ namespace OpenSim.Region.Framework.Interfaces
         /// Squash the entire heightmap into a single dimensioned array
         /// </summary>
         /// <returns></returns>
-        float[] GetFloatsSerialised(IScene scene);
         short[] GetSerialised(IScene scene);
 
         bool Tainted(int x, int y);

@@ -37,7 +37,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
     public class BasicScene : PhysicsScene
     {
         private List<BasicActor> _actors = new List<BasicActor>();
-        private float[] _heightMap;
+        private short[] _heightMap;
         private RegionInfo m_region;
 
         //protected internal string sceneIdentifier;
@@ -179,7 +179,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
         }
 
-        public override void SetWaterLevel(float[] map)
+        public override void SetWaterLevel(short[] map)
         {
         }
 
@@ -189,7 +189,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             return returncolliders;
         }
 
-        public override void SetTerrain(float[] heightMap)
+        public override void SetTerrain(short[] heightMap)
         {
             _heightMap = heightMap;
         }

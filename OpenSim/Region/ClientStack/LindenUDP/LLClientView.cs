@@ -1003,7 +1003,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         ///  Send the region heightmap to the client
         /// </summary>
         /// <param name="map">heightmap</param>
-        public virtual void SendLayerData(float[] map)
+        public virtual void SendLayerData(short[] map)
         {
             DoSendLayerData((object)map);
             Util.FireAndForget(DoSendLayerData, map);
@@ -1015,7 +1015,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <param name="o"></param>
         private void DoSendLayerData(object o)
         {
-            float[] map = (float[])o;
+            short[] map = (short[])o;
             try
             {
                 for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize; y++)
@@ -1039,7 +1039,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <param name="map">heightmap</param>
         /// <param name="px">X coordinate for patches 0..12</param>
         /// <param name="py">Y coordinate for patches 0..15</param>
-        public void SendLayerPacket(float[] map, int y, int x)
+        public void SendLayerPacket(short[] map, int y, int x)
         {
             int[] xs = new int[] { x + 0, x + 1, x + 2, x + 3 };
             int[] ys = new int[] { y,y,y,y };
@@ -1096,7 +1096,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <param name="px">Patch coordinate (x) 0..regionSize/16</param>
         /// <param name="py">Patch coordinate (y) 0..regionSize/16</param>
         /// <param name="map">heightmap</param>
-        public void SendLayerData(int px, int py, float[] map)
+        public void SendLayerData(int px, int py, short[] map)
         {
             try
             {
@@ -1124,7 +1124,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <param name="px">Patch coordinates (x) 0..regionSize/16</param>
         /// <param name="py">Patch coordinates (y) 0..regionSize/16</param>
         /// <param name="map">heightmap</param>
-        public void SendLayerData(int[] x, int[] y, float[] map, TerrainPatch.LayerType layertype)
+        public void SendLayerData(int[] x, int[] y, short[] map, TerrainPatch.LayerType layertype)
         {
             LayerDataPacket layerpack;
             int MaxPatches = 10;

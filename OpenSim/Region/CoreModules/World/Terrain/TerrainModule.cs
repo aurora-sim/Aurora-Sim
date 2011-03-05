@@ -134,7 +134,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
             LoadWorldHeightmap();
             LoadWorldWaterMap();
-            scene.SceneGraph.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(scene));
+            scene.SceneGraph.PhysicsScene.SetTerrain(m_channel.GetSerialised(scene));
             UpdateWaterHeight(scene.RegionInfo.RegionSettings.WaterHeight);
 
             m_scene.RegisterModuleInterface<ITerrainModule>(this);
@@ -203,7 +203,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 m_queueNextSave = 0;
                 //Save the terarin
                 SaveTerrain();
-                m_scene.SceneGraph.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(m_scene));
+                m_scene.SceneGraph.PhysicsScene.SetTerrain(m_channel.GetSerialised(m_scene));
                 
                 if(m_queueNextSave == 0)
                     m_queueTimer.Stop();
@@ -218,20 +218,20 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         public void UpdateWaterHeight(double height)
         {
-            float[] waterMap;
+            short[] waterMap;
             if (m_waterChannel == null)
             {
-                waterMap = new float[m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeY];
+                waterMap = new short[m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeY];
                 for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
                 {
                     for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
                     {
-                        waterMap[y * m_scene.RegionInfo.RegionSizeX + x] = (float)height;
+                        waterMap[y * m_scene.RegionInfo.RegionSizeX + x] = (short)height;
                     }
                 }
             }
             else
-                waterMap = m_waterChannel.GetFloatsSerialised(m_scene);
+                waterMap = m_waterChannel.GetSerialised(m_scene);
             m_scene.SceneGraph.PhysicsScene.SetWaterLevel(waterMap);
         }
 
@@ -289,7 +289,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             if (!m_sendTerrainUpdatesByViewDistance)
             {
                 //Default way, send the full terrain at once
-                RemoteClient.SendLayerData(m_channel.GetFloatsSerialised(RemoteClient.Scene));
+                RemoteClient.SendLayerData(m_channel.GetSerialised(RemoteClient.Scene));
             }
             else
             {
@@ -367,15 +367,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
             if (xs.Count != 0)
             {
-                float[] serializedTerrainMap = m_channel.GetFloatsSerialised(m_scene);
                 //Send all the terrain patches at once
-                presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), serializedTerrainMap, TerrainPatch.LayerType.Land);
-            }
-            if (m_use3DWater)
-            {
-                float[] serializedWaterMap = m_waterChannel.GetFloatsSerialised(m_scene);
-                //Send all the water patches at once
-                presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), serializedWaterMap, TerrainPatch.LayerType.Water);
+                presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), m_channel.GetSerialised(m_scene), TerrainPatch.LayerType.Land);
+                if (m_use3DWater)
+                {
+                    //Send all the water patches at once
+                    presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), m_waterChannel.GetSerialised(m_scene), TerrainPatch.LayerType.Water);
+                }
             }
         }
 
@@ -1193,7 +1191,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 if (!m_sendTerrainUpdatesByViewDistance)
                 {
-                    presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), channel.GetFloatsSerialised(m_scene), TerrainPatch.LayerType.Land);
+                    presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), channel.GetSerialised(m_scene), TerrainPatch.LayerType.Land);
                 }
                 else
                 {
@@ -1291,7 +1289,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// <param name="serialised">A copy of the terrain as a 1D float array of size w*h</param>
         /// <param name="x">The patch corner to send</param>
         /// <param name="y">The patch corner to send</param>
-        private void SendToClients(float[] serialised, int x, int y)
+        private void SendToClients(short[] serialised, int x, int y)
         {
             m_scene.ForEachClient(
                 delegate(IClientAPI controller)
@@ -1409,7 +1407,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         protected void client_OnUnackedTerrain(IClientAPI client, int patchX, int patchY)
         {
             //m_log.Debug("Terrain packet unacked, resending patch: " + patchX + " , " + patchY);
-            client.SendLayerData(patchX, patchY, m_channel.GetFloatsSerialised(m_scene));
+            client.SendLayerData(patchX, patchY, m_channel.GetSerialised(m_scene));
         }
 
         private void StoreUndoState()
@@ -1514,7 +1512,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
             foreach (TerrainModule tmodule in m)
             {
-                tmodule.m_scene.SceneGraph.PhysicsScene.SetTerrain(tmodule.m_channel.GetFloatsSerialised(tmodule.m_scene));
+                tmodule.m_scene.SceneGraph.PhysicsScene.SetTerrain(tmodule.m_channel.GetSerialised(tmodule.m_scene));
             }
         }
 

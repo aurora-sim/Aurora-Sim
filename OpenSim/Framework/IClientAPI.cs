@@ -1135,7 +1135,7 @@ namespace OpenSim.Framework
         /// Send the entire terrain map to the client
         /// </summary>
         /// <param name="map"></param>
-        void SendLayerData(float[] map);
+        void SendLayerData(short[] map);
 
 
         /// <summary>
@@ -1145,7 +1145,7 @@ namespace OpenSim.Framework
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <param name="map"></param>
-        void SendLayerData(int px, int py, float[] map);
+        void SendLayerData(int px, int py, short[] map);
 
         /// <summary>
         /// Send an array of patches to the client
@@ -1154,7 +1154,7 @@ namespace OpenSim.Framework
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <param name="map"></param>
-        void SendLayerData(int[] x, int[] y, float[] map, TerrainPatch.LayerType type);
+        void SendLayerData(int[] x, int[] y, short[] map, TerrainPatch.LayerType type);
 
         void SendWindData(Vector2[] windSpeeds);
         void SendCloudData(float[] cloudCover);

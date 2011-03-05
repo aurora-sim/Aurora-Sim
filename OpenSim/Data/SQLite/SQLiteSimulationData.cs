@@ -777,15 +777,24 @@ namespace OpenSim.Data.SQLite
                 // the following is an work around for .NET.  The perf
                 // issues associated with it aren't as bad as you think.
                 m_log.Debug("[SQLITE REGION DB]: Storing terrain revision r" + revision.ToString());
-                String sql = "insert into terrain(RegionUUID, Revision, Heightfield, Revert)" +
-                             " values(:RegionUUID, :Revision, :Heightfield, :Revert)";
+                String sql = "insert into terrain(RegionUUID, Revision, Heightfield, Revert, X, Y)" +
+                             " values(:RegionUUID, :Revision, :Heightfield, :Revert, :X, :Y)";
 
                 using (SqliteCommand cmd = new SqliteCommand(sql, m_conn))
                 {
                     cmd.Parameters.Add(new SqliteParameter(":RegionUUID", regionID.ToString()));
                     cmd.Parameters.Add(new SqliteParameter(":Revision", revision));
-                    cmd.Parameters.Add(new SqliteParameter(":Heightfield", ter));
+                    byte[] heightmap = new byte[ter.Length * sizeof(short)];
+                    int ii = 0;
+                    for (int i = 0; i < ter.Length; i++)
+                    {
+                        Utils.Int16ToBytes(ter[i], heightmap, ii);
+                        ii += 2;
+                    }
+                    cmd.Parameters.Add(new SqliteParameter(":Heightfield", heightmap));
                     cmd.Parameters.Add(new SqliteParameter(":Revert", Revert.ToString()));
+                    cmd.Parameters.Add(new SqliteParameter(":X", "0"));
+                    cmd.Parameters.Add(new SqliteParameter(":Y", "0"));
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -824,8 +833,8 @@ namespace OpenSim.Data.SQLite
                 // the following is an work around for .NET.  The perf
                 // issues associated with it aren't as bad as you think.
                 m_log.Debug("[SQLITE REGION DB]: Storing terrain revision r" + revision.ToString());
-                String sql = "insert into terrain(RegionUUID, Revision, Heightfield, Revert)" +
-                             " values(:RegionUUID, :Revision, :Heightfield, :Revert)";
+                String sql = "insert into terrain(RegionUUID, Revision, Heightfield, Revert, X, Y)" +
+                             " values(:RegionUUID, :Revision, :Heightfield, :Revert, :X, :Y)";
 
                 using (SqliteCommand cmd = new SqliteCommand(sql, m_conn))
                 {
@@ -833,6 +842,9 @@ namespace OpenSim.Data.SQLite
                     cmd.Parameters.Add(new SqliteParameter(":Revision", revision));
                     cmd.Parameters.Add(new SqliteParameter(":Heightfield", water));
                     cmd.Parameters.Add(new SqliteParameter(":Revert", r));
+                    cmd.Parameters.Add(new SqliteParameter(":X", 0));
+                    cmd.Parameters.Add(new SqliteParameter(":Y", 0));
+                    cmd.ExecuteNonQuery();
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -850,12 +862,12 @@ namespace OpenSim.Data.SQLite
                 String sql = "";
                 if (revert)
                 {
-                    sql = "select RegionUUID, Revision, Heightfield from terrain" +
+                    sql = "select Heightfield,X,Y from terrain" +
                               " where RegionUUID=:RegionUUID and Revert = 'True' order by Revision desc";
                 }
                 else
                 {
-                    sql = "select RegionUUID, Revision, Heightfield from terrain" +
+                    sql = "select Heightfield,X,Y from terrain" +
                               " where RegionUUID=:RegionUUID and Revert = 'False' order by Revision desc";
                 }
 
@@ -867,7 +879,31 @@ namespace OpenSim.Data.SQLite
                     {
                         if (row.Read())
                         {
-                            return (short[])row["Heightfield"];
+                            if (row["X"].ToString() == "-1")
+                            {
+                                byte[] heightmap = (byte[])row["Heightfield"];
+                                short[] map = new short[RegionSizeX * RegionSizeX];
+                                int ii = 0;
+                                for (int i = 0; i < heightmap.Length; i += sizeof(double))
+                                {
+                                    map[ii] = (short)(Utils.BytesToDouble(heightmap, i) * 10);
+                                    ii++;
+                                }
+                                this.StoreTerrain(map, regionID, revert);
+                                return map;
+                            }
+                            else
+                            {
+                                byte[] heightmap = (byte[])row["Heightfield"];
+                                short[] map = new short[RegionSizeX * RegionSizeX];
+                                int ii = 0;
+                                for (int i = 0; i < heightmap.Length; i+= 2)
+                                {
+                                    map[ii] = Utils.BytesToInt16(heightmap, i);
+                                    ii++;
+                                }
+                                return map;
+                            }
                         }
                         else
                         {
