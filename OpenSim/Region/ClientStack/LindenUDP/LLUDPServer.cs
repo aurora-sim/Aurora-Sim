@@ -492,6 +492,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 // Exponential backoff of the retransmission timeout
                 udpClient.BackoffRTO();
 
+                lock (udpClient)
+                    {
+                    udpClient.SlowDownSend();
+                    }
+
                 // Resend packets
                 for (int i = 0; i < expiredPackets.Count; i++)
                 {
