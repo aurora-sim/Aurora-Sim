@@ -1193,8 +1193,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 if (!m_sendTerrainUpdatesByViewDistance)
                 {
-                    float[] serialised = channel.GetFloatsSerialised(m_scene);
-                    presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), serialised, TerrainPatch.LayerType.Land);
+                    presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), channel.GetFloatsSerialised(m_scene), TerrainPatch.LayerType.Land);
                 }
                 else
                 {

@@ -2352,22 +2352,22 @@ default
             string retstr = "";
             string tmpstr = "";
 
-            retstr += GenerateIndentedLine("do", dws);
+            tmpstr += GenerateIndentedLine("do", dws);
             if (IsParentEnumerable)
             {
-                retstr += GenerateLine("{"); // SLAM!
-                retstr += GenerateLine("if (CheckSlice()) yield return null;");
+                tmpstr += GenerateLine("{"); // SLAM!
+                tmpstr += GenerateLine("if (CheckSlice()) yield return null;");
             }
 
             // CompoundStatement handles indentation itself but we need to do it
             // otherwise.
             bool indentHere = dws.kids.Top is Statement;
             if (indentHere) m_braceCount++;
-            retstr += GenerateNode((SYMBOL)dws.kids.Pop());
+            tmpstr += GenerateNode((SYMBOL)dws.kids.Pop());
             if (indentHere) m_braceCount--;
 
             if (IsParentEnumerable)
-                retstr += GenerateLine("}");
+                tmpstr += GenerateLine("}");
 
             bool marc = FuncCallsMarc();
 

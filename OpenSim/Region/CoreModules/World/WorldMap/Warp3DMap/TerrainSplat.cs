@@ -33,6 +33,7 @@ using log4net;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
+using OpenSim.Region.Framework.Interfaces;
 
 namespace OpenSim.Region.CoreModules.World.Warp3DMap
 {
@@ -76,9 +77,8 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
         /// <returns>A composited 256x256 RGB texture ready for rendering</returns>
         /// <remarks>Based on the algorithm described at http://opensimulator.org/wiki/Terrain_Splatting
         /// </remarks>
-        public static Bitmap Splat(float[] heightmap, UUID[] textureIDs, float[] startHeights, float[] heightRanges, Vector3d regionPosition, IAssetService assetService, bool textureTerrain)
+        public static Bitmap Splat(ITerrainChannel heightmap, UUID[] textureIDs, float[] startHeights, float[] heightRanges, Vector3d regionPosition, IAssetService assetService, bool textureTerrain)
         {
-            Debug.Assert(heightmap.Length == 256 * 256);
             Debug.Assert(textureIDs.Length == 4);
             Debug.Assert(startHeights.Length == 4);
             Debug.Assert(heightRanges.Length == 4);
@@ -194,7 +194,7 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
             {
                 for (int x = 0; x < 256; x++)
                 {
-                    float height = heightmap[y * 256 + x];
+                    float height = (float)heightmap[x, y];
 
                     float pctX = (float)x / 255f;
                     float pctY = (float)y / 255f;

@@ -155,18 +155,16 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private void CreateTerrain(WarpRenderer renderer, bool textureTerrain)
         {
             ITerrainChannel terrain = m_scene.RequestModuleInterface<ITerrainChannel>();
-            float[] heightmap = terrain.GetFloatsSerialised(m_scene);
-
+            
             warp_Object obj = new warp_Object(256 * 256, 255 * 255 * 2);
 
             for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
             {
                 for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
                 {
-                    int v = y * m_scene.RegionInfo.RegionSizeX + x;
-                    float height = heightmap[v];
+                    double height = terrain[x,y];
 
-                    warp_Vector pos = ConvertVector(new Vector3(x, y, height));
+                    warp_Vector pos = ConvertVector(new Vector3(x, y, (float)height));
                     obj.addVertex(new warp_Vertex(pos, (float)x / 255f, (float)(255 - y) / 255f));
                 }
             }
@@ -180,10 +178,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         int v = y * m_scene.RegionInfo.RegionSizeX + x;
 
                         // Normal
-                        Vector3 v1 = new Vector3(x, y, heightmap[y * m_scene.RegionInfo.RegionSizeX + x]);
-                        Vector3 v2 = new Vector3(x + 1, y, heightmap[y * m_scene.RegionInfo.RegionSizeX + x + 1]);
-                        Vector3 v3 = new Vector3(x, y + 1, heightmap[(y + 1) * m_scene.RegionInfo.RegionSizeX + x]);
-                        warp_Vector norm = ConvertVector(SurfaceNormal(v1, v2, v3));
+                        warp_Vector norm = new warp_Vector(x, y, terrain.GetNormalizedGroundHeight(x, y));
                         norm = norm.reverse();
                         obj.vertex(v).n = norm;
 
@@ -228,7 +223,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             uint globalX, globalY;
             Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out globalX, out globalY);
 
-            Bitmap image = TerrainSplat.Splat(heightmap, textureIDs, startHeights, heightRanges, new Vector3d(globalX, globalY, 0.0), m_scene.AssetService, textureTerrain);
+            Bitmap image = TerrainSplat.Splat(terrain, textureIDs, startHeights, heightRanges, new Vector3d(globalX, globalY, 0.0), m_scene.AssetService, textureTerrain);
             warp_Texture texture = new warp_Texture(image);
             warp_Material material = new warp_Material(texture);
             material.setReflectivity(50);
@@ -409,17 +404,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 c |= (byte)(color.A * 255f) << 24;
 
             return c;
-        }
-
-        private static Vector3 SurfaceNormal(Vector3 c1, Vector3 c2, Vector3 c3)
-        {
-            Vector3 edge1 = new Vector3(c2.X - c1.X, c2.Y - c1.Y, c2.Z - c1.Z);
-            Vector3 edge2 = new Vector3(c3.X - c1.X, c3.Y - c1.Y, c3.Z - c1.Z);
-
-            Vector3 normal = Vector3.Cross(edge1, edge2);
-            normal.Normalize();
-
-            return normal;
         }
 
         public static Color4 GetAverageColor(UUID textureID, byte[] j2kData, out int width, out int height)

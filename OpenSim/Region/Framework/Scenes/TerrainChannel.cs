@@ -42,20 +42,21 @@ namespace OpenSim.Region.Framework.Scenes
     public class TerrainChannel : ITerrainChannel
     {
         private bool[,] taint;
-        private double[,] map;
-        private float[] m_cachedMap;
+        private float[] m_map;
         private byte[] m_byteCachedMap;
         private IScene m_scene;
+        private int m_Width = 0;
 
         public TerrainChannel(IScene scene)
         {
             m_scene = scene;
+            m_Width = m_scene.RegionInfo.RegionSizeX;
             CreateDefaultTerrain();
         }
 
         private void CreateDefaultTerrain()
         {
-            map = new double[m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY];
+            m_map = new float[m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeX];
             taint = new bool[m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize, m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize];
 
             int x;
@@ -64,13 +65,13 @@ namespace OpenSim.Region.Framework.Scenes
                 int y;
                 for (y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
                 {
-                    map[x, y] = TerrainUtil.PerlinNoise2D(x, y, 2, 0.125) * 10;
-                    double spherFacA = TerrainUtil.SphericalFactor(x, y, m_scene.RegionInfo.RegionSizeX / 2.0, m_scene.RegionInfo.RegionSizeY / 2.0, 50) * 0.01;
-                    double spherFacB = TerrainUtil.SphericalFactor(x, y, m_scene.RegionInfo.RegionSizeX / 2.0, m_scene.RegionInfo.RegionSizeY / 2.0, 100) * 0.001;
-                    if (map[x, y] < spherFacA)
-                        map[x, y] = spherFacA;
-                    if (map[x, y] < spherFacB)
-                        map[x, y] = spherFacB;
+                    m_map[y * m_scene.RegionInfo.RegionSizeX + x] = (float)TerrainUtil.PerlinNoise2D(x, y, 2, 0.125) * 10;
+                    float spherFacA = (float)(TerrainUtil.SphericalFactor(x, y, m_scene.RegionInfo.RegionSizeX / 2.0, m_scene.RegionInfo.RegionSizeY / 2.0, 50) * 0.01);
+                    float spherFacB = (float)(TerrainUtil.SphericalFactor(x, y, m_scene.RegionInfo.RegionSizeX / 2.0, m_scene.RegionInfo.RegionSizeY / 2.0, 100) * 0.001);
+                    if (m_map[y * m_scene.RegionInfo.RegionSizeX + x] < spherFacA)
+                        m_map[y * m_scene.RegionInfo.RegionSizeX + x] = spherFacA;
+                    if (m_map[y * m_scene.RegionInfo.RegionSizeX + x] < spherFacB)
+                        m_map[y * m_scene.RegionInfo.RegionSizeX + x] = spherFacB;
                 }
             }
         }
@@ -79,6 +80,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_scene = scene;
             map = import;
+            m_Width = m_scene.RegionInfo.RegionSizeX;
             taint = new bool[Width, Height];
             if ((Width != scene.RegionInfo.RegionSizeX ||
                 Height != scene.RegionInfo.RegionSizeY) &&
@@ -93,6 +95,7 @@ namespace OpenSim.Region.Framework.Scenes
         public TerrainChannel(bool createMap, IScene scene)
         {
             m_scene = scene;
+            m_Width = Constants.RegionSize;
             if (createMap)
             {
                 int width = Constants.RegionSize;
@@ -102,7 +105,7 @@ namespace OpenSim.Region.Framework.Scenes
                     width = (int)scene.RegionInfo.RegionSizeX;
                     height = (int)scene.RegionInfo.RegionSizeY;
                 }
-                map = new double[width, height];
+                m_map = new float[m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeX];
                 taint = new bool[width / Constants.TerrainPatchSize, height / Constants.TerrainPatchSize];
             }
         }
@@ -110,7 +113,8 @@ namespace OpenSim.Region.Framework.Scenes
         public TerrainChannel(int w, int h, IScene scene)
         {
             m_scene = scene;
-            map = new double[w, h];
+            m_Width = w;
+            m_map = new float[w * h];
             taint = new bool[w / Constants.TerrainPatchSize, h / Constants.TerrainPatchSize];
         }
 
@@ -118,12 +122,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         public int Width
         {
-            get { return map.GetLength(0); }
+            get { return m_Width; }
         }
 
         public int Height
         {
-            get { return map.GetLength(1); }
+            get { return m_Width; }
         }
 
         public IScene Scene
@@ -134,25 +138,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public float[] GetFloatsSerialised(IScene scene)
         {
-            if (m_cachedMap != null)
-                return m_cachedMap;
-            // Move the member variables into local variables, calling
-            // member variables 256*256 times gets expensive
-            int w = Width;
-            int h = Height;
-            float[] heights = new float[w * h];
-
-            int i, j; // map coordinates
-            int idx = 0; // index into serialized array
-            for (i = 0; i < h; i++)
-            {
-                for (j = 0; j < w; j++)
-                {
-                    heights[idx++] = (float)map[j, i];
-                }
-            }
-            m_cachedMap = heights;
-            return heights;
+            return m_map;
         }
 
         public byte[] GetBytesSerialised(IScene scene)
@@ -165,23 +151,15 @@ namespace OpenSim.Region.Framework.Scenes
             int h = Height;
             byte[] array = new byte[w * h * sizeof(double)];
 
-            // TODO: COMPATIBILITY - Add byte-order conversions
             int i = 0;
-            for (int x = 0; x < w; x++)
+            int sizeOfFloat = sizeof(float);
+            for (int floatArrayI = 0; floatArrayI < m_map.Length; floatArrayI++)
             {
-                for (int y = 0; y < h; y++)
-                {
-                    Array.Copy(BitConverter.GetBytes(map[x, y]), 0, array, i, sizeof(double));
-                    i += sizeof(double);
-                }
+                Utils.FloatToBytes(m_map[floatArrayI], array, i);
+                i += sizeOfFloat;
             }
             m_byteCachedMap = array;
             return array;
-        }
-
-        public double[,] GetDoubles(IScene scene)
-        {
-            return map;
         }
 
         public double this[int x, int y]
@@ -204,8 +182,6 @@ namespace OpenSim.Region.Framework.Scenes
                     taint[x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize] = true;
                     //m_tainted = true;
                     map[x, y] = value;
-                    if(m_cachedMap != null)
-                        m_cachedMap[y * map.GetLength(0) + x] = (float)value;
                 }
             }
         }
@@ -225,7 +201,7 @@ namespace OpenSim.Region.Framework.Scenes
         public ITerrainChannel MakeCopy()
         {
             TerrainChannel copy = new TerrainChannel(false, m_scene);
-            copy.map = (double[,])map.Clone();
+            copy.m_map = (float[])m_map.Clone();
             copy.taint = (bool[,])taint.Clone();
             return copy;
         }

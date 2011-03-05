@@ -508,3 +508,12 @@ ALTER TABLE regionsettings ADD COLUMN covenantlastupdated varchar(36) NOT NULL d
 ALTER TABLE regionsettings ADD COLUMN generic varchar(8196) NOT NULL default '';
 
 commit;
+
+:VERSION 26
+
+BEGIN;
+
+ALTER TABLE terrain ADD COLUMN X varchar(10) NOT NULL DEFAULT '0';
+ALTER TABLE terrain ADD COLUMN Y varchar(10) NOT NULL DEFAULT '0';
+
+COMMIT;

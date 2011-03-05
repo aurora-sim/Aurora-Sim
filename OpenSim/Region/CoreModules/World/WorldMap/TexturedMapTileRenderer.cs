@@ -283,7 +283,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
         // the heigthfield might have some jumps in values. Rendered land is smooth, though,
         // as a slope is rendered at that place. So average 4 neighbour values to emulate that.
-        private float getHeight(double[,] hm, int x, int y) {
+        private float getHeight(ITerrainChannel hm, int x, int y) {
             if (x < (m_scene.RegionInfo.RegionSizeX - 1) && y < (m_scene.RegionInfo.RegionSizeY - 1))
                 return (float)(hm[x, y] * .444 + (hm[x + 1, y] + hm[x, y + 1]) * .222 + hm[x + 1, y +1] * .112);
             else
@@ -326,8 +326,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             float waterHeight = (float)settings.WaterHeight;
 
             ITerrainChannel heightmap = m_scene.RequestModuleInterface<ITerrainChannel>();
-            double[,] hm = heightmap.GetDoubles(m_scene);
-
+            
             for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
             {
                 float rowRatio = y / (m_scene.RegionInfo.RegionSizeY - 1); // 0 - 1, for interpolation
@@ -338,7 +337,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     // Y flip the cordinates for the bitmap: hf origin is lower left, bm origin is upper left
                     int yr = (m_scene.RegionInfo.RegionSizeY - 1) - y;
 
-                    float heightvalue = getHeight(hm, x, y);
+                    float heightvalue = getHeight(heightmap, x, y);
                     if (Single.IsInfinity(heightvalue) || Single.IsNaN(heightvalue))
                         heightvalue = 0;
 
@@ -390,7 +389,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         // Shade the terrain for shadows
                         if (x < (m_scene.RegionInfo.RegionSizeX - 1) && y < (m_scene.RegionInfo.RegionSizeY - 1))
                         {
-                            float hfvaluecompare = getHeight(hm, x + 1, y + 1); // light from north-east => look at land height there
+                            float hfvaluecompare = getHeight(heightmap, x + 1, y + 1); // light from north-east => look at land height there
                             if (Single.IsInfinity(hfvaluecompare) || Single.IsNaN(hfvaluecompare))
                                 hfvaluecompare = 0f;
 

@@ -46,7 +46,6 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <returns></returns>
         byte[] GetBytesSerialised(IScene scene);
 
-        double[,] GetDoubles(IScene scene);
         bool Tainted(int x, int y);
         ITerrainChannel MakeCopy();
 
