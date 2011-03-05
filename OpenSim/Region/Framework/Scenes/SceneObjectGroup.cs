@@ -2095,8 +2095,8 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         private void LinkNonRootPart(SceneObjectPart part, Vector3 oldGroupPosition, Quaternion oldGroupRotation, int linkNum)
-        {
-            Quaternion oldRot = part.RotationOffset;
+            {
+            Quaternion WorldRot = oldGroupRotation * part.RotationOffset;
 
             // first fix from old local to world 
             // position
@@ -2104,7 +2104,7 @@ namespace OpenSim.Region.Framework.Scenes
             axPos *= oldGroupRotation;
             part.SetGroupPosition(oldGroupPosition + axPos);
             //offset
-            part.SetRotationOffset(false, Quaternion.Inverse(oldGroupRotation) * Quaternion.Inverse(oldRot) ,false);
+            part.SetRotationOffset(false, WorldRot, false);
 
             // have it in world coords lets fix other things
             m_scene.SceneGraph.LinkPartToSOG(this, part, linkNum);
@@ -2117,11 +2117,11 @@ namespace OpenSim.Region.Framework.Scenes
             pos *= Quaternion.Inverse(rootRotation);
             part.SetOffsetPosition(pos);
 
-            Quaternion newRot = Quaternion.Inverse(rootRotation) * oldRot;
+            Quaternion newRot = Quaternion.Inverse(rootRotation) * WorldRot;
             part.SetRotationOffset(false,newRot,false);
             // caller will tell the rest about this position changes..
 
-        }
+            }
 
         #endregion
 
