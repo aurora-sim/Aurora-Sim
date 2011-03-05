@@ -27,7 +27,13 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("IsOnline", ColumnTypes.String36),
                 ColDef("LastLogin", ColumnTypes.String50),
                 ColDef("LastLogout", ColumnTypes.String50),
-                ColDef("Info", ColumnTypes.String512)));
+                ColDef("Info", ColumnTypes.String512),
+                ColDef("CurrentRegionID", ColumnTypes.Char36),
+                ColDef("CurrentPosition", ColumnTypes.String16),
+                ColDef("CurrentLookat", ColumnTypes.String16),
+                ColDef("HomeRegionID", ColumnTypes.Char36),
+                ColDef("HomePosition", ColumnTypes.String16),
+                ColDef("HomeLookat", ColumnTypes.String16)));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

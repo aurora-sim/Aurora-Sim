@@ -158,6 +158,8 @@ namespace OpenSim.Services.Interfaces
     public interface IAgentInfoConnector : IAuroraDataPlugin
     {
         bool Set(UserInfo info);
+        void SetLastPosition(string userID, UUID regionID, Vector3 Position, Vector3 LookAt);
+        void SetHomePosition(string userID, UUID regionID, Vector3 Position, Vector3 LookAt);
         UserInfo Get(string userID);
     }
 }

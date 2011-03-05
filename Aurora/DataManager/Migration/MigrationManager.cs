@@ -122,7 +122,6 @@ namespace Aurora.DataManager.Migration
 
                 if (validateTables)
                 {
-
                     //lets first validate where we think we are
                     bool validated = currentMigrator.Validate(genericData);
 
