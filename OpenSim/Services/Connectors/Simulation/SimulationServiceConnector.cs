@@ -106,15 +106,13 @@ namespace OpenSim.Services.Connectors.Simulation
                         OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
                         if (responseMap.ContainsKey("Reason"))
                             reason = responseMap["Reason"].AsString();
-                        if (responseMap.ContainsKey("Success"))
-                            return responseMap["Success"].AsBoolean();
+                        return responseMap["Success"].AsBoolean();
                     }
                     catch
                     {
                         //Not right... don't return true;
                         return false;
                     }
-                    return true;
                 }
 
                 reason = result["Message"] != null ? result["Message"].AsString() : "error";

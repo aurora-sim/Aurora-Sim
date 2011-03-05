@@ -61,15 +61,6 @@ namespace Aurora.Services.DataService
 
         public bool Set(UserInfo info)
         {
-            string[] keys = new string[8];
-            keys[0] = "UserID";
-            keys[1] = "RegionID";
-            keys[2] = "SessionID";
-            keys[3] = "LastSeen";
-            keys[4] = "IsOnline";
-            keys[5] = "LastLogin";
-            keys[6] = "LastLogout";
-            keys[7] = "Info";
             object[] values = new object[8];
             values[0] = info.UserID;
             values[1] = info.CurrentRegionID;
@@ -79,7 +70,8 @@ namespace Aurora.Services.DataService
             values[5] = Util.ToUnixTime(info.LastLogin);
             values[6] = Util.ToUnixTime(info.LastLogout);
             values[7] = OSDParser.SerializeJsonString(info.ToOSD());
-            return GD.Replace(m_realm, keys, values);
+            GD.Delete(m_realm, new string[1] { "UserID" }, new object[1] { info.UserID });
+            return GD.Insert(m_realm, values);
         }
 
         public UserInfo Get(string userID)

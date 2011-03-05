@@ -112,27 +112,30 @@ namespace OpenSim.Services.PresenceService
         public bool SetHomePosition(string userID, UUID homeID, Vector3 homePosition, Vector3 homeLookAt)
         {
             UserInfo userInfo = GetUserInfo(userID);
-            if (userInfo != null)
+            if (userInfo == null)
             {
-                userInfo.HomeRegionID = homeID;
-                userInfo.HomePosition = homePosition;
-                userInfo.HomeLookAt = homeLookAt;
-                Save(userInfo);
-                return true;
+                userInfo = new UserInfo();
+                userInfo.UserID = userID;
             }
-            return false;
+            userInfo.HomeRegionID = homeID;
+            userInfo.HomePosition = homePosition;
+            userInfo.HomeLookAt = homeLookAt;
+            Save(userInfo);
+            return true;
         }
 
         public void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
         {
             UserInfo userInfo = GetUserInfo(userID);
-            if (userInfo != null)
+            if (userInfo == null)
             {
-                userInfo.CurrentRegionID = regionID;
-                userInfo.CurrentPosition = lastPosition;
-                userInfo.CurrentLookAt = lastLookAt;
-                Save(userInfo);
+                userInfo = new UserInfo();
+                userInfo.UserID = userID;
             }
+            userInfo.CurrentRegionID = regionID;
+            userInfo.CurrentPosition = lastPosition;
+            userInfo.CurrentLookAt = lastLookAt;
+            Save(userInfo);
         }
 
         public void SetLoggedIn(string userID, bool loggingIn)
