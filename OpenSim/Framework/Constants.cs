@@ -32,6 +32,7 @@ namespace OpenSim.Framework
     {
         public const int RegionSize = 256;
         public const byte TerrainPatchSize = 16;
+        public const int TerrainCompression = 100;
         public const int MinRegionSize = 16;
     }
 }

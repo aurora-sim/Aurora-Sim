@@ -148,7 +148,7 @@ namespace OpenSim.Region.Framework.Scenes
             get
             {
                 if (x >= 0 && x < Width && y >= 0 && y < Height)
-                    return m_map[y * Width + x] / 100;
+                    return ((float)m_map[y * Width + x]) / Constants.TerrainCompression;
                 else
                     return 0;
             }
@@ -160,7 +160,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (value * Constants.TerrainCompression < short.MinValue)
                     value = short.MinValue;
 
-                if (m_map[y * Width + x] != value)
+                if (m_map[y * Width + x] != value * Constants.TerrainCompression)
                 {
                     taint[x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize] = true;
                     m_map[y * Width + x] = (short)(value * Constants.TerrainCompression);

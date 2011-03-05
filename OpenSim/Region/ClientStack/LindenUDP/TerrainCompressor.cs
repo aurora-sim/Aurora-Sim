@@ -214,7 +214,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 for (int i = patchX * Constants.TerrainPatchSize; i < ((patchX >= (RegionSizeX / Constants.TerrainPatchSize) ? (RegionSizeX - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchX) + 1) * Constants.TerrainPatchSize; i++)
                 {
-                    float val = heightmap[j + i] / Constants.TerrainCompression;
+                    float val = ((float)heightmap[j + i]) / Constants.TerrainCompression;
                     if (val > zmax) zmax = val;
                     if (val < zmin) zmin = val;
                 }
@@ -773,7 +773,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             for (int j = patchY * Constants.TerrainPatchSize; j < ((patchY >= (RegionSizeY / Constants.TerrainPatchSize) ? (RegionSizeY - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchY) + 1) * Constants.TerrainPatchSize; j++)
             {
                 for (int i = patchX * Constants.TerrainPatchSize; i < ((patchX >= (RegionSizeX / Constants.TerrainPatchSize) ? (RegionSizeX - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchX) + 1) * Constants.TerrainPatchSize; i++)
-                    block[k++] = (heightmap[j * RegionSizeX + i] / Constants.TerrainCompression) * premult - sub;
+                {
+                    block[k++] = (((float)heightmap[j * RegionSizeX + i]) / Constants.TerrainCompression) * premult - sub;
+                }
             }
 
             float[] ftemp = new float[Constants.TerrainPatchSize * Constants.TerrainPatchSize];

@@ -1721,7 +1721,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (heightFieldGeom != IntPtr.Zero)
                 {
                     if (TerrainHeightFieldHeights.ContainsKey(heightFieldGeom))
-                        {
+                    {
 
 
                         //int index;
@@ -1734,32 +1734,32 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             x = 0;
                         if (y < 0)
                             y = 0;
-                        
+
                         int ix;
                         int iy;
                         float dx;
                         float dy;
 
                         if (x < m_region.RegionSizeX - 1)
-                            {
-                            ix = (int) x;
+                        {
+                            ix = (int)x;
                             dx = x - (float)ix;
-                            }
+                        }
                         else
-                            {
+                        {
                             ix = (int)m_region.RegionSizeX - 1;
-                            dx=0;
-                            }
+                            dx = 0;
+                        }
                         if (y < m_region.RegionSizeY - 1)
-                            {
-                            iy = (int) y;
+                        {
+                            iy = (int)y;
                             dy = y - (float)iy;
-                            }
+                        }
                         else
-                            {
+                        {
                             iy = (int)m_region.RegionSizeY - 1;
-                            dy=0;
-                            }
+                            dy = 0;
+                        }
 
                         float h0;
                         float h1;
@@ -1767,51 +1767,38 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                         iy *= m_region.RegionSizeX;
 
-                        if((dx +dy) <= 1.0f)
-                            {
-                                h0 = TerrainHeightFieldHeights[heightFieldGeom][iy + ix] / Constants.TerrainCompression;
+                        if ((dx + dy) <= 1.0f)
+                        {
+                            h0 = ((float)TerrainHeightFieldHeights[heightFieldGeom][iy + ix]) / Constants.TerrainCompression;
 
-                            if(dx >0)
-                                h1 = (TerrainHeightFieldHeights[heightFieldGeom][iy + ix + 1] / Constants.TerrainCompression - h0) * dx; 
+                            if (dx > 0)
+                                h1 = (((float)TerrainHeightFieldHeights[heightFieldGeom][iy + ix + 1]) / Constants.TerrainCompression - h0) * dx;
                             else
                                 h1 = 0;
 
-                            if(dy >0)
-                                h2 = (TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix] / Constants.TerrainCompression - h0) * dy;
+                            if (dy > 0)
+                                h2 = (((float)TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix]) / Constants.TerrainCompression - h0) * dy;
                             else
-                                h2=0;
+                                h2 = 0;
 
                             return h0 + h1 + h2;
-                            }
+                        }
                         else
-                            {
-                                h0 = TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix + 1] / Constants.TerrainCompression;
+                        {
+                            h0 = ((float)TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix + 1]) / Constants.TerrainCompression;
 
-                            if(dx >0)
-                                h1 = (TerrainHeightFieldHeights[heightFieldGeom][iy + ix + 1] / Constants.TerrainCompression - h0) * (1 - dy); 
+                            if (dx > 0)
+                                h1 = (((float)TerrainHeightFieldHeights[heightFieldGeom][iy + ix + 1]) / Constants.TerrainCompression - h0) * (1 - dy);
                             else
                                 h1 = 0;
 
-                            if(dy >0)
-                                h2 = (TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix] / Constants.TerrainCompression - h0) * (1 - dx);
+                            if (dy > 0)
+                                h2 = (((float)TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix]) / Constants.TerrainCompression - h0) * (1 - dx);
                             else
-                                h2=0;
+                                h2 = 0;
 
                             return h0 + h1 + h2;
-                            }
-
-                        //index = (int)((int)x * (int)Constants.RegionSize) - ((int)Constants.RegionSize - (int)y);
-
-                        //index = (int)((int)x * (((2 * Constants.RegionSize) + 2)) + (int)y);
-
-                        //if (index < NormalTerrainHeightFieldHeights[heightFieldGeom].Length)
-                        //{
-                            //m_log.DebugFormat("x{0} y{1} = {2}", x, y, (float)TerrainHeightFieldHeights[heightFieldGeom][index]);
-//                        return (float)TerrainHeightFieldHeights[heightFieldGeom][((int)y * m_region.RegionSizeX) + (int)x];
-                        //}
-
-                        //else
-                        //    return 0f;
+                        }
                     }
                 }
             }
@@ -3747,7 +3734,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void SetTerrain(short[] heightMap, Vector3 pOffset)
             {
-                float[] _heightmap = new float[((m_region.RegionSizeX + 3) * (m_region.RegionSizeY + 3))];
+                short[] _heightmap = new short[((m_region.RegionSizeX + 3) * (m_region.RegionSizeY + 3))];
 
             int heightmapWidth = m_region.RegionSizeX + 2;
             int heightmapHeight = m_region.RegionSizeY + 2;
@@ -3768,7 +3755,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     int xx = Util.Clip(x - 1, 0, m_region.RegionSizeX - 1);
                     int yy = Util.Clip(y - 1, 0, m_region.RegionSizeY - 1);
 
-                    float val = (float)(heightMap[yy * m_region.RegionSizeX + xx] / Constants.TerrainCompression);
+                    short val = heightMap[yy * m_region.RegionSizeX + xx];
                     //ODE is evil... flip x and y
                     _heightmap[(x * heightmapHeightSamples) + y] = val;
 
@@ -3795,7 +3782,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     geom_name_map.Remove(GroundGeom);
                     }
 
-                const float scale = 1;
+                const float scale = (1f / (float)Constants.TerrainCompression);
                 const float offset = 0.0f;
                 float thickness = (float)hfmin;
                 const int wrap = 0;
@@ -3803,7 +3790,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 IntPtr HeightmapData = d.GeomHeightfieldDataCreate();
                 //                d.GeomHeightfieldDataBuildDouble(HeightmapData, _heightmap, 1, heightmapWidth, heightmapHeight,
                 //                                                 heightmapWidthSamples, heightmapHeightSamples, scale,
-                d.GeomHeightfieldDataBuildSingle(HeightmapData, _heightmap, 1, heightmapHeight, heightmapWidth,
+                d.GeomHeightfieldDataBuildShort(HeightmapData, _heightmap, 1, heightmapHeight, heightmapWidth,
                                                  heightmapHeightSamples, heightmapWidthSamples, scale,
                                                  offset, thickness, wrap);
 

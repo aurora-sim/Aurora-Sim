@@ -66,10 +66,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                         continue;
 
                     // Calculate a cos-sphere and add it to the heighmap
-                    float r = (float)Math.Sqrt((x - rx) * (x - rx) + ((y - ry) * (y - ry)));
-                    float z = (float)Math.Cos(r * Math.PI / (BrushSize * 2));
+                    double r = Math.Sqrt((x - rx) * (x - rx) + ((y - ry) * (y - ry)));
+                    double z = Math.Cos(r * Math.PI / (BrushSize * 2));
                     if (z > 0.0)
-                        map[x, y] += (z * duration);
+                        map[x, y] += (float)(z * duration);
                 }
             }
         }
