@@ -74,31 +74,43 @@ namespace Aurora.Services.DataService
             values[0] = info.UserID;
             values[1] = info.CurrentRegionID;
             values[2] = UUID.Zero;
-            values[3] =  DateTime.Now.ToBinary(); //Convert to binary so that it can be converted easily
+            values[3] = Util.ToUnixTime(DateTime.Now); //Convert to binary so that it can be converted easily
             values[4] = info.IsOnline ? 1 : 0;
-            values[5] = info.LastLogin.ToBinary();
-            values[6] = info.LastLogout.ToBinary();
-            values[7] = OSDParser.SerializeJsonString(info.Info);
+            values[5] = Util.ToUnixTime(info.LastLogin);
+            values[6] = Util.ToUnixTime(info.LastLogout);
+            values[7] = OSDParser.SerializeJsonString(info.ToOSD());
             return GD.Replace(m_realm, keys, values);
         }
 
         public UserInfo Get(string userID)
         {
             List<string> query = GD.Query("UserID", userID, m_realm, "*");
+            if (query.Count == 0)
+                return null;
             UserInfo user = new UserInfo();
             user.UserID = query[0];
             user.CurrentRegionID = UUID.Parse(query[1]);
             //users[i / 8].SessionID = UUID.Parse(query[2]);
+            user.IsOnline = query[4] == "1" ? true : false;
+            user.LastLogin = Util.ToDateTime(int.Parse(query[5]));
+            user.LastLogout = Util.ToDateTime(int.Parse(query[6]));
+            UserInfo innerUser = new UserInfo();
+            innerUser.FromOSD((OSDMap)OSDParser.DeserializeJson(query[7]));
+            user.Info = innerUser.Info;
+            user.CurrentLookAt = innerUser.CurrentLookAt;
+            user.CurrentPosition = innerUser.CurrentPosition;
+            user.CurrentRegionID = innerUser.CurrentRegionID;
+            user.HomeLookAt = innerUser.HomeLookAt;
+            user.HomePosition = innerUser.HomePosition;
+            user.HomeRegionID = innerUser.HomeRegionID;
+
             //Check LastSeen
-            if (m_checkLastSeen && (new DateTime(long.Parse(query[3])).AddHours(1) < DateTime.Now))
+            if (m_checkLastSeen && user.IsOnline && (Util.ToDateTime(int.Parse(query[3])).AddHours(1) < DateTime.Now))
             {
                 m_log.Warn("[UserInfoService]: Found a user (" + user.UserID + ") that was not seen within the last hour! Logging them out.");
-                return null;
+                user.IsOnline = false;
+                Set(user);
             }
-            user.IsOnline = query[4] == "1" ? true : false;
-            user.LastLogin = new DateTime(long.Parse(query[5]));
-            user.LastLogout = new DateTime(long.Parse(query[6]));
-            user.Info = (OSDMap)OSDParser.DeserializeJson(query[7]);
             return user;
         }
 

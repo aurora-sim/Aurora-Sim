@@ -108,6 +108,17 @@ namespace Aurora.Modules
             }
         }
 
+        private void RemoveConnection(IWCCertificate c)
+        {
+            if (Connections.Contains(c))
+            {
+                Connections.Remove(c);
+                IGenericsConnector genericsConnector = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+                if (genericsConnector != null)
+                    genericsConnector.RemoveGeneric(UUID.Zero, "InterWorldConnections", c.URL);
+            }
+        }
+
         public void TryAddConnection(IWCCertificate c)
         {
             IWCCertificate cert = OutgoingPublicComms.QueryRemoteHost(c);
@@ -233,7 +244,7 @@ namespace Aurora.Modules
                 return;
             }
             OutgoingPublicComms.DeleteRemoteHost(c);
-            Connections.Remove(c);
+            RemoveConnection(c);
             IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
             //Remove the Urls from the config service
             configService.RemoveUrls(c.UserName);
