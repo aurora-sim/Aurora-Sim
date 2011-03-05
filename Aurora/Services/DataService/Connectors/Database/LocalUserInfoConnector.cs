@@ -95,14 +95,21 @@ namespace Aurora.Services.DataService
             user.LastLogin = Util.ToDateTime(int.Parse(query[5]));
             user.LastLogout = Util.ToDateTime(int.Parse(query[6]));
             UserInfo innerUser = new UserInfo();
-            innerUser.FromOSD((OSDMap)OSDParser.DeserializeJson(query[7]));
-            user.Info = innerUser.Info;
-            user.CurrentLookAt = innerUser.CurrentLookAt;
-            user.CurrentPosition = innerUser.CurrentPosition;
-            user.CurrentRegionID = innerUser.CurrentRegionID;
-            user.HomeLookAt = innerUser.HomeLookAt;
-            user.HomePosition = innerUser.HomePosition;
-            user.HomeRegionID = innerUser.HomeRegionID;
+            try
+            {
+                innerUser.FromOSD((OSDMap)OSDParser.DeserializeJson(query[7]));
+                user.Info = innerUser.Info;
+                user.CurrentLookAt = innerUser.CurrentLookAt;
+                user.CurrentPosition = innerUser.CurrentPosition;
+                user.CurrentRegionID = innerUser.CurrentRegionID;
+                user.HomeLookAt = innerUser.HomeLookAt;
+                user.HomePosition = innerUser.HomePosition;
+                user.HomeRegionID = innerUser.HomeRegionID;
+            }
+            catch
+            { 
+                //Eat it!
+            }
 
             //Check LastSeen
             if (m_checkLastSeen && user.IsOnline && (Util.ToDateTime(int.Parse(query[3])).AddHours(1) < DateTime.Now))
