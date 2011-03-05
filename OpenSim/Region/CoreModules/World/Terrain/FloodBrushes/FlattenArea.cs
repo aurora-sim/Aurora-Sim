@@ -33,10 +33,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
     {
         #region ITerrainFloodEffect Members
 
-        public void FloodEffect(ITerrainChannel map, bool[,] fillArea, double strength)
+        public void FloodEffect(ITerrainChannel map, bool[,] fillArea, float strength)
         {
-            double sum = 0.0;
-            double steps = 0.0;
+            float sum = 0;
+            float steps = 0;
 
             int x, y;
             for (x = 0; x < map.Width; x++)
@@ -46,21 +46,21 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
                     if (fillArea[x, y])
                     {
                         sum += map[x, y];
-                        steps += 1.0;
+                        steps += 1;
                     }
                 }
             }
 
-            double avg = sum / steps;
+            float avg = sum / steps;
 
-            double str = 0.1 * strength; // == 0.2 in the default client
+            float str = 0.1f * strength; // == 0.2 in the default client
 
             for (x = 0; x < map.Width; x++)
             {
                 for (y = 0; y < map.Height; y++)
                 {
                     if (fillArea[x, y])
-                        map[x, y] = (map[x, y] * (1.0 - str)) + (avg * str);
+                        map[x, y] = (map[x, y] * (1 - str)) + (avg * str);
                 }
             }
         }

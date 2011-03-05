@@ -35,16 +35,16 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
     {
         #region ITerrainPaintableEffect Members
 
-        public void PaintEffect(ITerrainChannel map, bool[,] mask, double rx, double ry, double rz, double strength, double duration, float BrushSize, List<Scene> scenes)
+        public void PaintEffect(ITerrainChannel map, bool[,] mask, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<Scene> scenes)
         {
             if(BrushSize > 6) //If it gets too high, it will start roughening at an ever increasing rate when held down
                 BrushSize = 6;
             strength = TerrainUtil.MetersToSphericalStrength(BrushSize);
             int x, y;
 
-            double area = BrushSize;
-            double step = BrushSize / 4;
-            duration *= 0.03; //MCP Should be read from ini file
+            float area = BrushSize;
+            float step = BrushSize / 4;
+            duration *= 0.03f; //MCP Should be read from ini file
 
             for (x = 0; x < map.Width; x++)
             {
@@ -53,25 +53,25 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                     if (!mask[x, y])
                         continue;
 
-                    double z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) / (strength);
+                    float z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) / (strength);
                     if (z > 0) // add in non-zero amount
                     {
-                        double average = 0.0;
+                        float average = 0;
                         int avgsteps = 0;
 
-                        double n;
-                        for (n = 0.0 - area; n < area; n += step)
+                        float n;
+                        for (n = 0 - area; n < area; n += step)
                         {
-                            double l;
-                            for (l = 0.0 - area; l < area; l += step)
+                            float l;
+                            for (l = 0 - area; l < area; l += step)
                             {
                                 avgsteps++;
                                 average += TerrainUtil.GetBilinearInterpolate(x + n, y + l, map, scenes);
                             }
                         }
-                        double da = z;
-                        double a = (map[x, y] - (average / avgsteps)) * da;
-                        double newz = map[x, y] - (a * duration);
+                        float da = z;
+                        float a = (map[x, y] - (average / avgsteps)) * da;
+                        float newz = map[x, y] - (a * duration);
 
                         if (newz > 0.0)
                             map[x, y] = newz;

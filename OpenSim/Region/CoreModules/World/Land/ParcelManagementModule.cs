@@ -283,7 +283,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         private Vector3 GetPositionAtGround(float x, float y)
         {
             ITerrainChannel heightmap = m_scene.RequestModuleInterface<ITerrainChannel>();
-            return new Vector3(x, y, heightmap.GetNormalizedGroundHeight(x, y));
+            return new Vector3(x, y, heightmap.GetNormalizedGroundHeight((int)x, (int)y));
         }
 
         #endregion

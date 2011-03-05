@@ -77,11 +77,6 @@ namespace OpenSim.Data.Null
         {
         }
 
-        public double[,] LoadTerrain(UUID regionID)
-        {
-            return null;
-        }
-
         public void RemoveLandObject(UUID globalID)
         {
         }
@@ -103,20 +98,20 @@ namespace OpenSim.Data.Null
         {
         }
 
-        public void StoreTerrain(byte[] terrain, UUID regionID, bool Revert)
+        public void StoreTerrain(short[] terrain, UUID regionID, bool Revert)
         {
         }
 
-        public void StoreWater(byte[] water, UUID regionID, bool Revert)
+        public void StoreWater(short[] water, UUID regionID, bool Revert)
         {
         }
 
-        public double[,] LoadTerrain(UUID regionID, bool RevertMap, int RegionSizeX, int RegionSizeY)
+        public short[] LoadTerrain(UUID regionID, bool RevertMap, int RegionSizeX, int RegionSizeY)
         {
             return null;
         }
 
-        public double[,] LoadWater(UUID regionID, bool RevertMap, int RegionSizeX, int RegionSizeY)
+        public short[] LoadWater(UUID regionID, bool RevertMap, int RegionSizeX, int RegionSizeY)
         {
             return null;
         }

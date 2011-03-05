@@ -287,7 +287,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             if (x < (m_scene.RegionInfo.RegionSizeX - 1) && y < (m_scene.RegionInfo.RegionSizeY - 1))
                 return (float)(hm[x, y] * .444 + (hm[x + 1, y] + hm[x, y + 1]) * .222 + hm[x + 1, y +1] * .112);
             else
-                return (float)hm[x, y];
+                return hm[x, y];
         }
         #endregion
 
@@ -351,8 +351,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         //float hmod = heightvalue + smallNoise * 3f + S(S(bigNoise)) * 10f;
                         float hmod =
                             heightvalue +
-                            (float)TerrainUtil.InterpolatedNoise(x + 33, y + 43) * 1.5f + 1.5f + // 0 - 3
-                            S(S((float)TerrainUtil.InterpolatedNoise(x / 8.0, y / 8.0) * .5f + .5f)) * 10f; // 0 - 10
+                            TerrainUtil.InterpolatedNoise(x + 33, y + 43) * 1.5f + 1.5f + // 0 - 3
+                            S(S(TerrainUtil.InterpolatedNoise(x / 8, y / 8) * .5f + .5f)) * 10f; // 0 - 10
 
                         // find the low/high values for this point (interpolated bilinearily)
                         // (and remember, x=0,y=0 is SW)

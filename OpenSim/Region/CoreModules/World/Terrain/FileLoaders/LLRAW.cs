@@ -113,7 +113,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                 for (x = 0; x < sectionWidth; x++)
                 {
                     // Read a strip and continue
-                    retval[x, y] = bs.ReadByte() * (bs.ReadByte() / 128.0);
+                    retval[x, y] = bs.ReadByte() * (bs.ReadByte() / 128);
                     bs.ReadBytes(11);
                 }
                 // record that we wrote it
@@ -146,7 +146,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                 int x;
                 for (x = 0; x < retval.Width; x++)
                 {
-                    retval[x, (retval.Height - 1) - y] = bs.ReadByte() * (bs.ReadByte() / 128.0);
+                    retval[x, (retval.Height - 1) - y] = bs.ReadByte() * (bs.ReadByte() / 128);
                     bs.ReadBytes(11); // Advance the stream to next bytes.
                 }
             }

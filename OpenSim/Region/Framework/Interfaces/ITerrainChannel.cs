@@ -30,7 +30,7 @@ namespace OpenSim.Region.Framework.Interfaces
     public interface ITerrainChannel
     {
         int Height { get; }
-        double this[int x, int y] { get; set; }
+        float this[int x, int y] { get; set; }
         int Width { get; }
         IScene Scene { get; set; }
 
@@ -39,12 +39,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <returns></returns>
         float[] GetFloatsSerialised(IScene scene);
-
-        /// <summary>
-        /// Squash the entire heightmap into a single dimensional byte array
-        /// </summary>
-        /// <returns></returns>
-        byte[] GetBytesSerialised(IScene scene);
+        short[] GetSerialised(IScene scene);
 
         bool Tainted(int x, int y);
         ITerrainChannel MakeCopy();
@@ -55,6 +50,6 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
-        float GetNormalizedGroundHeight(float x, float y);
+        float GetNormalizedGroundHeight(int x, int y);
     }
 }

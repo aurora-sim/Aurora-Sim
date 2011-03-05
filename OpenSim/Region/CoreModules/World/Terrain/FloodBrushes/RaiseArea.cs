@@ -33,7 +33,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
     {
         #region ITerrainFloodEffect Members
 
-        public void FloodEffect(ITerrainChannel map, bool[,] fillArea, double strength)
+        public void FloodEffect(ITerrainChannel map, bool[,] fillArea, float strength)
         {
             int x;
             for (x = 0; x < map.Width; x++)

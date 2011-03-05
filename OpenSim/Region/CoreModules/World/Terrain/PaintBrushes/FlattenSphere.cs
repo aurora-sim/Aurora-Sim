@@ -36,7 +36,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
     {
         #region ITerrainPaintableEffect Members
 
-        public void PaintEffect(ITerrainChannel map, bool[,] mask, double rx, double ry, double rz, double strength, double duration, float BrushSize, List<Scene> scene)
+        public void PaintEffect(ITerrainChannel map, bool[,] mask, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<Scene> scene)
         {
             strength = TerrainUtil.MetersToSphericalStrength(BrushSize);
 
@@ -67,25 +67,25 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                     if (!mask[x,y])
                         continue;
 
-                    double z;
+                    float z;
                     if (duration < 4.0)
                     {
-                        z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) * duration * 0.25;
+                        z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) * duration * 0.25f;
                     }
                     else {
-                        z = 1.0;
+                        z = 1;
                     }
 
-                    double delta = rz - map[x, y];
+                    float delta = rz - map[x, y];
                     if (Math.Abs(delta) > 0.1)
                     {
-                        if (z > 1.0)
+                        if (z > 1)
                         {
-                            z = 1.0;
+                            z = 1;
                         }
-                        else if (z < 0.0)
+                        else if (z < 0)
                         {
-                            z = 0.0;
+                            z = 0;
                         }
                         delta *= z;
                     }

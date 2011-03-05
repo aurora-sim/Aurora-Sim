@@ -188,13 +188,13 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
 
             #region Layer Map
 
-            float[] layermap = new float[256 * 256];
+            float[] layermap = new float[heightmap.Width * heightmap.Width];
 
-            for (int y = 0; y < 256; y++)
+            for (int y = 0; y < heightmap.Width; y++)
             {
-                for (int x = 0; x < 256; x++)
+                for (int x = 0; x < heightmap.Width; x++)
                 {
-                    float height = (float)heightmap[x, y];
+                    float height = heightmap[x, y];
 
                     float pctX = (float)x / 255f;
                     float pctY = (float)y / 255f;

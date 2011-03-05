@@ -42,8 +42,10 @@ namespace OpenSim.Region.Framework.Scenes
     public class TerrainChannel : ITerrainChannel
     {
         private bool[,] taint;
-        private float[] m_map;
-        private byte[] m_byteCachedMap;
+        /// <summary>
+        /// NOTE: This is NOT a normal map, it has a resolution of 10x
+        /// </summary>
+        private short[] m_map;
         private IScene m_scene;
         private int m_Width = 0;
 
@@ -56,7 +58,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void CreateDefaultTerrain()
         {
-            m_map = new float[m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeX];
+            m_map = new short[m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeX];
             taint = new bool[m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize, m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize];
 
             int x;
@@ -65,21 +67,21 @@ namespace OpenSim.Region.Framework.Scenes
                 int y;
                 for (y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
                 {
-                    m_map[y * m_scene.RegionInfo.RegionSizeX + x] = (float)TerrainUtil.PerlinNoise2D(x, y, 2, 0.125) * 10;
-                    float spherFacA = (float)(TerrainUtil.SphericalFactor(x, y, m_scene.RegionInfo.RegionSizeX / 2.0, m_scene.RegionInfo.RegionSizeY / 2.0, 50) * 0.01);
-                    float spherFacB = (float)(TerrainUtil.SphericalFactor(x, y, m_scene.RegionInfo.RegionSizeX / 2.0, m_scene.RegionInfo.RegionSizeY / 2.0, 100) * 0.001);
+                    this[x,y] = TerrainUtil.PerlinNoise2D(x, y, 2, 0.125f) * 10;
+                    float spherFacA = TerrainUtil.SphericalFactor(x, y, m_scene.RegionInfo.RegionSizeX / 2, m_scene.RegionInfo.RegionSizeY / 2, 50) * 0.01f;
+                    float spherFacB = TerrainUtil.SphericalFactor(x, y, m_scene.RegionInfo.RegionSizeX / 2, m_scene.RegionInfo.RegionSizeY / 2, 100) * 0.001f;
                     if (m_map[y * m_scene.RegionInfo.RegionSizeX + x] < spherFacA)
-                        m_map[y * m_scene.RegionInfo.RegionSizeX + x] = spherFacA;
+                        this[x, y] = spherFacA;
                     if (m_map[y * m_scene.RegionInfo.RegionSizeX + x] < spherFacB)
-                        m_map[y * m_scene.RegionInfo.RegionSizeX + x] = spherFacB;
+                        this[x, y] = spherFacB;
                 }
             }
         }
 
-        public TerrainChannel(double[,] import, IScene scene)
+        public TerrainChannel(short[] import, IScene scene)
         {
             m_scene = scene;
-            map = import;
+            m_map = import;
             m_Width = m_scene.RegionInfo.RegionSizeX;
             taint = new bool[Width, Height];
             if ((Width != scene.RegionInfo.RegionSizeX ||
@@ -105,7 +107,7 @@ namespace OpenSim.Region.Framework.Scenes
                     width = (int)scene.RegionInfo.RegionSizeX;
                     height = (int)scene.RegionInfo.RegionSizeY;
                 }
-                m_map = new float[m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeX];
+                m_map = new short[m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeX];
                 taint = new bool[width / Constants.TerrainPatchSize, height / Constants.TerrainPatchSize];
             }
         }
@@ -114,7 +116,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_scene = scene;
             m_Width = w;
-            m_map = new float[w * h];
+            m_map = new short[w * h];
             taint = new bool[w / Constants.TerrainPatchSize, h / Constants.TerrainPatchSize];
         }
 
@@ -138,50 +140,33 @@ namespace OpenSim.Region.Framework.Scenes
 
         public float[] GetFloatsSerialised(IScene scene)
         {
+            return null;
+        }
+
+        public short[] GetSerialised(IScene scene)
+        {
             return m_map;
         }
 
-        public byte[] GetBytesSerialised(IScene scene)
-        {
-            if (m_byteCachedMap != null)
-                return m_byteCachedMap;
-            // Move the member variables into local variables, calling
-            // member variables 256*256 times gets expensive
-            int w = Width;
-            int h = Height;
-            byte[] array = new byte[w * h * sizeof(double)];
-
-            int i = 0;
-            int sizeOfFloat = sizeof(float);
-            for (int floatArrayI = 0; floatArrayI < m_map.Length; floatArrayI++)
-            {
-                Utils.FloatToBytes(m_map[floatArrayI], array, i);
-                i += sizeOfFloat;
-            }
-            m_byteCachedMap = array;
-            return array;
-        }
-
-        public double this[int x, int y]
+        public float this[int x, int y]
         {
             get
             {
                 if (x >= 0 && x < Width && y >= 0 && y < Height)
-                    return map[x, y];
+                    return m_map[y * Width + x] / 10;
                 else
                     return 0;
             }
             set
             {
                 // Will "fix" terrain hole problems. Although not fantastically.
-                if (Double.IsNaN(value) || Double.IsInfinity(value))
+                if (value / 10 > ushort.MaxValue)
                     return;
 
-                if (map[x, y] != value)
+                if (m_map[y * Width + x] != value)
                 {
                     taint[x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize] = true;
-                    //m_tainted = true;
-                    map[x, y] = value;
+                    m_map[y * Width + x] = (short)((short)value * 10);
                 }
             }
         }
@@ -201,7 +186,7 @@ namespace OpenSim.Region.Framework.Scenes
         public ITerrainChannel MakeCopy()
         {
             TerrainChannel copy = new TerrainChannel(false, m_scene);
-            copy.m_map = (float[])m_map.Clone();
+            copy.m_map = (short[])m_map.Clone();
             copy.taint = (bool[,])taint.Clone();
             return copy;
         }
@@ -212,7 +197,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
-        public float GetNormalizedGroundHeight(float x, float y)
+        public float GetNormalizedGroundHeight(int x, int y)
         {
             if (x < 0)
                 x = 0;
@@ -223,7 +208,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (y >= Height)
                 y = Height - 1;
 
-            Vector3 p0 = new Vector3(x, y, (float)this[(int)x, (int)y]);
+            Vector3 p0 = new Vector3(x, y, (float)this[x, y]);
             Vector3 p1 = new Vector3(p0);
             Vector3 p2 = new Vector3(p0);
 
@@ -247,10 +232,7 @@ namespace OpenSim.Region.Framework.Scenes
             vsn.Z = (v0.X * v1.Y) - (v0.Y * v1.X);
             vsn.Normalize();
 
-            float xdiff = x - (float)((int)x);
-            float ydiff = y - (float)((int)y);
-
-            return (((vsn.X * xdiff) + (vsn.Y * ydiff)) / (-1 * vsn.Z)) + p0.Z;
+            return ((vsn.X + vsn.Y) / (-1 * vsn.Z)) + p0.Z;
         }
     }
 }

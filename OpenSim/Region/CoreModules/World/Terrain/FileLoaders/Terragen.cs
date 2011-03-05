@@ -120,7 +120,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                             for (int x = 0; x < sectionWidth; x++)
                             {
                                 // Read a strip and continue
-                                retval[x, y] = baseHeight + bs.ReadInt16() * (double)heightScale / 65536.0;
+                                retval[x, y] = baseHeight + bs.ReadInt16() * heightScale / 65536;
                             }
                             // record that we wrote it
                             currFileXOffset++;
@@ -197,7 +197,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                             {
                                 for (int x = 0; x < w; x++)
                                 {
-                                    retval[x, y] = baseHeight + bs.ReadInt16() * (double)heightScale / 65536.0;
+                                    retval[x, y] = baseHeight + bs.ReadInt16() * heightScale / 65536;
                                 }
                             }
                             break;

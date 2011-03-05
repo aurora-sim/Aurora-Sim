@@ -36,7 +36,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
     {
         #region ITerrainPaintableEffect Members
 
-        public void PaintEffect(ITerrainChannel map, bool[,] mask, double rx, double ry, double rz, double strength, double duration, float BrushSize, List<Scene> scene)
+        public void PaintEffect(ITerrainChannel map, bool[,] mask, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<Scene> scene)
         {
             strength = TerrainUtil.MetersToSphericalStrength(BrushSize);
 
@@ -68,11 +68,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                         continue;
 
                     // Calculate a sphere and add it to the heighmap
-                    double z = strength;
+                    float z = strength;
                     z *= z;
                     z -= ((x - rx) * (x - rx)) + ((y - ry) * (y - ry));
 
-                    double noise = TerrainUtil.PerlinNoise2D(x / map.Scene.RegionInfo.RegionSizeX, y / map.Scene.RegionInfo.RegionSizeY, 8, 1.0);
+                    float noise = TerrainUtil.PerlinNoise2D(x / map.Scene.RegionInfo.RegionSizeX, y / map.Scene.RegionInfo.RegionSizeY, 8, 1);
 
                     if (z > 0.0)
                         map[x, y] += noise * z * duration;

@@ -41,8 +41,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.Effects
             {
                 for (y = 0; y < map.Height; y++)
                 {
-                    map[x, y] = TerrainUtil.PerlinNoise2D(x, y, 3, 0.25) * 10;
-                    double spherFac = TerrainUtil.SphericalFactor(x, y, map.Scene.RegionInfo.RegionSizeX / 2, map.Scene.RegionInfo.RegionSizeY / 2, 50) * 0.01;
+                    map[x, y] = TerrainUtil.PerlinNoise2D(x, y, 3, 0.25f) * 10;
+                    float spherFac = TerrainUtil.SphericalFactor(x, y, map.Scene.RegionInfo.RegionSizeX / 2, map.Scene.RegionInfo.RegionSizeY / 2, 50) * 0.01f;
                     if (map[x, y] < spherFac)
                     {
                         map[x, y] = spherFac;

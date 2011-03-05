@@ -36,7 +36,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
     /// </summary>
     public class WeatherSphere : ITerrainPaintableEffect
     {
-        private const double talus = 0.2;
+        private const float talus = 0.2f;
         private const NeighbourSystem type = NeighbourSystem.Moore;
 
         #region Supporting Functions
@@ -149,7 +149,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 
         #region ITerrainPaintableEffect Members
 
-        public void PaintEffect(ITerrainChannel map, bool[,] mask, double rx, double ry, double rz, double strength, double duration, float BrushSize, List<Scene> scene)
+        public void PaintEffect(ITerrainChannel map, bool[,] mask, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<Scene> scene)
         {
             strength = TerrainUtil.MetersToSphericalStrength(strength);
 
@@ -163,7 +163,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                     if (!mask[x,y])
                         continue;
 
-                    double z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength);
+                    float z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength);
 
                     if (z > 0) // add in non-zero amount
                     {
@@ -188,12 +188,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                                 if (coords[1] < 0)
                                     continue;
 
-                                double heightF = map[x, y];
-                                double target = map[coords[0], coords[1]];
+                                float heightF = map[x, y];
+                                float target = map[coords[0], coords[1]];
 
                                 if (target > heightF + talus)
                                 {
-                                    double calc = duration * ((target - heightF) - talus) * z;
+                                    float calc = duration * ((target - heightF) - talus) * z;
                                     heightF += calc;
                                     target -= calc;
                                 }

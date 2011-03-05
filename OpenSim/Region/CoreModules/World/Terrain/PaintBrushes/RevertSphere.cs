@@ -42,15 +42,15 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 
         #region ITerrainPaintableEffect Members
 
-        public void PaintEffect(ITerrainChannel map, bool[,] mask, double rx, double ry, double rz, double strength, double duration, float BrushSize, List<Scene> scene)
+        public void PaintEffect(ITerrainChannel map, bool[,] mask, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<Scene> scene)
         {
             if (m_module == null)
                 return;
             strength = TerrainUtil.MetersToSphericalStrength(BrushSize);
-            duration = 0.03; //MCP Should be read from ini file
+            duration = 0.03f; //MCP Should be read from ini file
  
             if (duration > 1.0)
-                duration = 1.0;
+                duration = 1;
             if (duration < 0)
                 return;
 
@@ -64,13 +64,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                         continue;
 
                     // Calculate a sphere and add it to the heighmap
-                    double z = 0;
+                    float z = 0;
                     if (duration < 4.0)
-                        z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) * duration * 0.25;
+                        z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) * duration * 0.25f;
 
                     if (z > 0.0)
                     {
-                        map[x, y] = (map[x, y] * (1.0 - z)) + (m_module.TerrainRevertMap[x, y] * z);
+                        map[x, y] = (map[x, y] * (1 - z)) + (m_module.TerrainRevertMap[x, y] * z);
                     }
                 }
             }

@@ -750,7 +750,7 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="ter">terrain heightfield</param>
         /// <param name="regionID">region UUID</param>
-        public void StoreTerrain(byte[] ter, UUID regionID, bool Revert)
+        public void StoreTerrain(short[] ter, UUID regionID, bool Revert)
         {
             lock (ds)
             {
@@ -796,7 +796,7 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="ter">terrain heightfield</param>
         /// <param name="regionID">region UUID</param>
-        public void StoreWater(byte[] water, UUID regionID, bool Revert)
+        public void StoreWater(short[] water, UUID regionID, bool Revert)
         {
             int r = Revert ? 3 : 2; //Use numbers so that we can coexist with terrain
             lock (ds)
@@ -843,13 +843,10 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="regionID">the region UUID</param>
         /// <returns>Heightfield data</returns>
-        public double[,] LoadTerrain(UUID regionID, bool revert, int RegionSizeX, int RegionSizeY)
+        public short[] LoadTerrain(UUID regionID, bool revert, int RegionSizeX, int RegionSizeY)
         {
             lock (ds)
             {
-                double[,] terret = new double[RegionSizeX, RegionSizeY];
-                terret.Initialize();
-
                 String sql = "";
                 if (revert)
                 {
@@ -868,20 +865,9 @@ namespace OpenSim.Data.SQLite
 
                     using (IDataReader row = cmd.ExecuteReader())
                     {
-                        int rev = 0;
                         if (row.Read())
                         {
-                            byte[] heightMap = (byte[])row["Heightfield"];
-                            int i = 0;
-                            for (int x = 0; x < RegionSizeX; x++)
-                            {
-                                for (int y = 0; y < RegionSizeY; y++)
-                                {
-                                    terret[x, y] = BitConverter.ToDouble(heightMap, i);
-                                    i += sizeof(double);
-                                }
-                            }
-                            rev = Convert.ToInt32(row["Revision"]);
+                            return (short[])row["Heightfield"];
                         }
                         else
                         {
@@ -889,10 +875,9 @@ namespace OpenSim.Data.SQLite
                             return null;
                         }
 
-                        m_log.Debug("[SQLITE REGION DB]: Loaded terrain revision r" + rev.ToString());
+                        //m_log.Debug("[SQLITE REGION DB]: Loaded terrain revision r" + rev.ToString());
                     }
                 }
-                return terret;
             }
         }
 
@@ -901,7 +886,7 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="regionID">the region UUID</param>
         /// <returns>Heightfield data</returns>
-        public double[,] LoadWater(UUID regionID, bool revert, int RegionSizeX, int RegionSizeY)
+        public short[] LoadWater(UUID regionID, bool revert, int RegionSizeX, int RegionSizeY)
         {
             lock (ds)
             {
@@ -926,35 +911,17 @@ namespace OpenSim.Data.SQLite
 
                     using (IDataReader row = cmd.ExecuteReader())
                     {
-                        int rev = 0;
                         if (row.Read())
                         {
-                            // TODO: put this into a function
-                            using (MemoryStream str = new MemoryStream((byte[])row["Heightfield"]))
-                            {
-                                using (BinaryReader br = new BinaryReader(str))
-                                {
-                                    for (int x = 0; x < RegionSizeX; x++)
-                                    {
-                                        for (int y = 0; y < RegionSizeY; y++)
-                                        {
-                                            terret[x, y] = br.ReadDouble();
-                                        }
-                                    }
-                                }
-                            }
-                            rev = Convert.ToInt32(row["Revision"]);
+                            return (short[])row["Heightfield"];
                         }
                         else
                         {
                             m_log.Warn("[SQLITE REGION DB]: No terrain found for region");
                             return null;
                         }
-
-                        m_log.Debug("[SQLITE REGION DB]: Loaded terrain revision r" + rev.ToString());
                     }
                 }
-                return terret;
             }
         }
 

@@ -272,7 +272,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                         pos.X = m_scene.RegionInfo.RegionSizeX - 1;
                                     if((int)pos.Y == m_scene.RegionInfo.RegionSizeY)
                                         pos.Y = m_scene.RegionInfo.RegionSizeY - 1;
-                                    isBelow256AboveTerrain = (pos.Z < ((float)heightmap[(int)pos.X, (int)pos.Y] + 256f));
+                                    isBelow256AboveTerrain = (pos.Z < (heightmap[(int)pos.X, (int)pos.Y] + 256f));
                                 }
                                 catch (Exception)
                                 {

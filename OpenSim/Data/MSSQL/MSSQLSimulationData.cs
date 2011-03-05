@@ -566,11 +566,8 @@ ELSE
         /// </summary>
         /// <param name="regionID">regionID.</param>
         /// <returns></returns>
-        public double[,] LoadTerrain(UUID regionID, bool Revert, int RegionSizeX, int RegionSizeY)
+        public short[] LoadTerrain(UUID regionID, bool Revert, int RegionSizeX, int RegionSizeY)
         {
-            double[,] terrain = new double[RegionSizeX, RegionSizeY];
-            terrain.Initialize();
-
             string sql = "select top 1 RegionUUID, Revision, Heightfield from terrain where RegionUUID = @RegionUUID and Revert = @Revert order by Revision desc";
 
             using (SqlConnection conn = new SqlConnection(m_connectionString))
@@ -584,16 +581,7 @@ ELSE
                 {
                     if (reader.Read())
                     {
-                        byte[] heightMap = (byte[])reader["Heightfield"];
-                        int i = 0;
-                        for (int x = 0; x < RegionSizeX; x++)
-                        {
-                            for (int y = 0; y < RegionSizeY; y++)
-                            {
-                                terrain[x, y] = BitConverter.ToDouble(heightMap, i);
-                                i += sizeof(double);
-                            }
-                        }
+                        return (short[])reader["Heightfield"];
                     }
                     else
                     {
@@ -603,8 +591,6 @@ ELSE
                     //_Log.Info("[REGION DB]: Loaded terrain revision r" + rev);
                 }
             }
-
-            return terrain;
         }
 
         /// <summary>
@@ -612,11 +598,8 @@ ELSE
         /// </summary>
         /// <param name="regionID">regionID.</param>
         /// <returns></returns>
-        public double[,] LoadWater(UUID regionID, bool Revert, int RegionSizeX, int RegionSizeY)
+        public short[] LoadWater(UUID regionID, bool Revert, int RegionSizeX, int RegionSizeY)
         {
-            double[,] terrain = new double[RegionSizeX, RegionSizeY];
-            terrain.Initialize();
-
             string sql = "select top 1 RegionUUID, Revision, Heightfield from terrain where RegionUUID = @RegionUUID and Revert = @Revert order by Revision desc";
 
             int r = Revert ? 3 : 2; //Use numbers so that we can coexist with terrain
@@ -630,19 +613,9 @@ ELSE
                 conn.Open();
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
-                    int rev;
                     if (reader.Read())
                     {
-                        MemoryStream str = new MemoryStream((byte[])reader["Heightfield"]);
-                        BinaryReader br = new BinaryReader(str);
-                        for (int x = 0; x < RegionSizeX; x++)
-                        {
-                            for (int y = 0; y < RegionSizeY; y++)
-                            {
-                                terrain[x, y] = br.ReadDouble();
-                            }
-                        }
-                        rev = (int)reader["Revision"];
+                        return (short[])reader["Heightfield"];
                     }
                     else
                     {
@@ -652,8 +625,6 @@ ELSE
                     //_Log.Info("[REGION DB]: Loaded terrain revision r" + rev);
                 }
             }
-
-            return terrain;
         }
 
         /// <summary>
@@ -661,7 +632,7 @@ ELSE
         /// </summary>
         /// <param name="terrain">terrain map data.</param>
         /// <param name="regionID">regionID.</param>
-        public void StoreTerrain(byte[] terrain, UUID regionID, bool Revert)
+        public void StoreTerrain(short[] terrain, UUID regionID, bool Revert)
         {
             int revision = Util.UnixTimeSinceEpoch();
 
@@ -697,7 +668,7 @@ ELSE
         /// </summary>
         /// <param name="terrain">terrain map data.</param>
         /// <param name="regionID">regionID.</param>
-        public void StoreWater(byte[] water, UUID regionID, bool Revert)
+        public void StoreWater(short[] water, UUID regionID, bool Revert)
         {
             int revision = Util.UnixTimeSinceEpoch();
 

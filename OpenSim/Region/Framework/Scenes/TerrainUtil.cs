@@ -34,18 +34,18 @@ namespace OpenSim.Region.Framework.Scenes
 {
     public static class TerrainUtil
     {
-        public static double MetersToSphericalStrength(double size)
+        public static float MetersToSphericalStrength(float size)
         {
             //return Math.Pow(2, size);
-            return (size + 1) * 1.35; // MCP: a more useful brush size range
+            return (size + 1) * 1.35f; // MCP: a more useful brush size range
         }
 
-        public static double SphericalFactor(double x, double y, double rx, double ry, double size)
+        public static float SphericalFactor(float x, float y, float rx, float ry, float size)
         {
             return size * size - ((x - rx) * (x - rx) + (y - ry) * (y - ry));
         }
 
-        public static double GetBilinearInterpolate(double x, double y, ITerrainChannel map, List<Scene> scenes)
+        public static float GetBilinearInterpolate(float x, float y, ITerrainChannel map, List<Scene> scenes)
         {
             int w = map.Width;
             int h = map.Height;
@@ -86,7 +86,7 @@ namespace OpenSim.Region.Framework.Scenes
                     map = scene.RequestModuleInterface<ITerrainChannel>();
                 }
                 else //1 away from the edge if we don't have a sim on this instance
-                    x = 0.0;
+                    x = 0;
             }
             if (y < 0.0)
             {
@@ -98,7 +98,7 @@ namespace OpenSim.Region.Framework.Scenes
                     map = scene.RequestModuleInterface<ITerrainChannel>();
                 }
                 else //1 away from the edge if we don't have a sim on this instance
-                    y = 0.0;
+                    y = 0;
             }
 
             if (x > map.Width - 2)
@@ -111,21 +111,21 @@ namespace OpenSim.Region.Framework.Scenes
                 y = 0;
 
             const int stepSize = 1;
-            double h00 = map[(int)x, (int)y];
-            double h10 = map[(int)x + stepSize, (int)y];
-            double h01 = map[(int)x, (int)y + stepSize];
-            double h11 = map[(int)x + stepSize, (int)y + stepSize];
-            double h1 = h00;
-            double h2 = h10;
-            double h3 = h01;
-            double h4 = h11;
-            double a00 = h1;
-            double a10 = h2 - h1;
-            double a01 = h3 - h1;
-            double a11 = h1 - h2 - h3 + h4;
-            double partialx = x - (int)x;
-            double partialz = y - (int)y;
-            double hi = a00 + (a10 * partialx) + (a01 * partialz) + (a11 * partialx * partialz);
+            float h00 = map[(int)x, (int)y];
+            float h10 = map[(int)x + stepSize, (int)y];
+            float h01 = map[(int)x, (int)y + stepSize];
+            float h11 = map[(int)x + stepSize, (int)y + stepSize];
+            float h1 = h00;
+            float h2 = h10;
+            float h3 = h01;
+            float h4 = h11;
+            float a00 = h1;
+            float a10 = h2 - h1;
+            float a01 = h3 - h1;
+            float a11 = h1 - h2 - h3 + h4;
+            float partialx = x - (int)x;
+            float partialz = y - (int)y;
+            float hi = a00 + (a10 * partialx) + (a01 * partialz) + (a11 * partialx * partialz);
             return hi;
         }
 
@@ -142,53 +142,53 @@ namespace OpenSim.Region.Framework.Scenes
             return null;
         }
 
-        private static double Noise(double x, double y)
+        private static float Noise(float x, float y)
         {
             int n = (int)x + (int)(y * 749);
             n = (n << 13) ^ n;
-            return (1.0 - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0);
+            return (1 - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824);
         }
 
-        private static double SmoothedNoise1(double x, double y)
+        private static float SmoothedNoise1(float x, float y)
         {
-            double corners = (Noise(x - 1, y - 1) + Noise(x + 1, y - 1) + Noise(x - 1, y + 1) + Noise(x + 1, y + 1)) / 16;
-            double sides = (Noise(x - 1, y) + Noise(x + 1, y) + Noise(x, y - 1) + Noise(x, y + 1)) / 8;
-            double center = Noise(x, y) / 4;
+            float corners = (Noise(x - 1, y - 1) + Noise(x + 1, y - 1) + Noise(x - 1, y + 1) + Noise(x + 1, y + 1)) / 16;
+            float sides = (Noise(x - 1, y) + Noise(x + 1, y) + Noise(x, y - 1) + Noise(x, y + 1)) / 8;
+            float center = Noise(x, y) / 4;
             return corners + sides + center;
         }
 
-        private static double Interpolate(double x, double y, double z)
+        private static float Interpolate(float x, float y, float z)
         {
-            return (x * (1.0 - z)) + (y * z);
+            return (x * (1 - z)) + (y * z);
         }
 
-        public static double InterpolatedNoise(double x, double y)
+        public static float InterpolatedNoise(float x, float y)
         {
             int integer_X = (int)(x);
-            double fractional_X = x - integer_X;
+            float fractional_X = x - integer_X;
 
             int integer_Y = (int)y;
-            double fractional_Y = y - integer_Y;
+            float fractional_Y = y - integer_Y;
 
-            double v1 = SmoothedNoise1(integer_X, integer_Y);
-            double v2 = SmoothedNoise1(integer_X + 1, integer_Y);
-            double v3 = SmoothedNoise1(integer_X, integer_Y + 1);
-            double v4 = SmoothedNoise1(integer_X + 1, integer_Y + 1);
+            float v1 = SmoothedNoise1(integer_X, integer_Y);
+            float v2 = SmoothedNoise1(integer_X + 1, integer_Y);
+            float v3 = SmoothedNoise1(integer_X, integer_Y + 1);
+            float v4 = SmoothedNoise1(integer_X + 1, integer_Y + 1);
 
-            double i1 = Interpolate(v1, v2, fractional_X);
-            double i2 = Interpolate(v3, v4, fractional_X);
+            float i1 = Interpolate(v1, v2, fractional_X);
+            float i2 = Interpolate(v3, v4, fractional_X);
 
             return Interpolate(i1, i2, fractional_Y);
         }
 
-        public static double PerlinNoise2D(double x, double y, int octaves, double persistence)
+        public static float PerlinNoise2D(float x, float y, int octaves, float persistence)
         {
-            double total = 0.0;
+            float total = 0;
 
             for (int i = 0; i < octaves; i++)
             {
-                double frequency = Math.Pow(2, i);
-                double amplitude = Math.Pow(persistence, i);
+                float frequency = (float)Math.Pow(2, i);
+                float amplitude = (float)Math.Pow(persistence, i);
 
                 total += InterpolatedNoise(x * frequency, y * frequency) * amplitude;
             }

@@ -64,18 +64,18 @@ namespace OpenSim.Region.CoreModules.World.Terrain.Effects
 
             for (int i = 0; i < rounds; i++)
             {
-                smoothFunction.FloodEffect(map, bitmap, 1.0);
+                smoothFunction.FloodEffect(map, bitmap, 1);
             }
         }
 
-        private void FillMap(ITerrainChannel map, double val)
+        private void FillMap(ITerrainChannel map, float val)
         {
             for (int x = 0; x < map.Width; x++)
                 for (int y = 0; y < map.Height; y++)
                     map[x, y] = val;
         }
 
-        private void BuildTiles(ITerrainChannel map, double height)
+        private void BuildTiles(ITerrainChannel map, float height)
         {
             int channelWidth = (int) Math.Floor((map.Width / num_w) * 0.8);
             int channelHeight = (int) Math.Floor((map.Height / num_h) * 0.8);

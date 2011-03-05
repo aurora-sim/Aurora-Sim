@@ -61,7 +61,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.Effects
                     allowMask[x,y] = true;
 
                     // Start underwater
-                    map[x, y] = TerrainUtil.PerlinNoise2D(x, y, 3, 0.25) * 5;
+                    map[x, y] = TerrainUtil.PerlinNoise2D(x, y, 3, 0.25f) * 5;
                     // Add a little height. (terrain should now be above water, mostly.)
                     map[x, y] += 20;
 
@@ -84,7 +84,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.Effects
                 for (y = 0; y < map.Height; y++)
                 {
                     if (cliffMask[x, y])
-                        eroder.PaintEffect(map, allowMask, x, y, -1, 4, 0.1, 4, new System.Collections.Generic.List<Scene>());
+                        eroder.PaintEffect(map, allowMask, x, y, -1, 4, 0.1f, 4, new System.Collections.Generic.List<Scene>());
                 }
             }
 
@@ -93,7 +93,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.Effects
                 for (y = 0; y < map.Height; y += 2)
                 {
                     if (map[x, y] < 0.1)
-                        map[x, y] = 0.1;
+                        map[x, y] = 0.1f;
                     if (map[x, y] > 256)
                         map[x, y] = 256;
                 }

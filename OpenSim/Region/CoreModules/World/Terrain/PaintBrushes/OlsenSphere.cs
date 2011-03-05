@@ -40,7 +40,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
     /// </summary>
     public class OlsenSphere : ITerrainPaintableEffect
     {
-        private const double nConst = 1024.0;
+        private const float nConst = 1024;
         private const NeighbourSystem type = NeighbourSystem.Moore;
 
         #region Supporting Functions
@@ -153,7 +153,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 
         #region ITerrainPaintableEffect Members
 
-        public void PaintEffect(ITerrainChannel map, bool[,] mask, double rx, double ry, double rz, double strength, double duration, float BrushSize, List<Scene> scene)
+        public void PaintEffect(ITerrainChannel map, bool[,] mask, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<Scene> scene)
         {
             strength = TerrainUtil.MetersToSphericalStrength(strength);
 
@@ -184,14 +184,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                     if (!mask[x,y])
                         continue;
 
-                    double z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength);
+                    float z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength);
 
                     if (z > 0) // add in non-zero amount
                     {
                         const int NEIGHBOUR_ME = 4;
                         const int NEIGHBOUR_MAX = 9;
 
-                        double max = Double.MinValue;
+                        float max = float.MinValue;
                         int loc = 0;
 
 
@@ -213,7 +213,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                                 if (coords[1] < 0)
                                     continue;
 
-                                double cellmax = map[x, y] - map[coords[0], coords[1]];
+                                float cellmax = map[x, y] - map[coords[0], coords[1]];
                                 if (cellmax > max)
                                 {
                                     max = cellmax;
@@ -222,12 +222,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                             }
                         }
 
-                        double T = nConst / ((map.Width + map.Height) / 2.0);
+                        float T = nConst / ((map.Width + map.Height) / 2);
                         // Apply results
                         if (0 < max && max <= T)
                         {
                             int[] maxCoords = Neighbours(type, loc);
-                            double heightDelta = 0.5 * max * z * duration;
+                            float heightDelta = 0.5f * max * z * duration;
                             map[x, y] -= heightDelta;
                             map[x + maxCoords[0], y + maxCoords[1]] += heightDelta;
                         }

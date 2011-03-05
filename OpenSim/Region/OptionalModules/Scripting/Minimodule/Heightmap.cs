@@ -39,7 +39,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             m_scene = scene;
         }
 
-        public double this[int x, int y]
+        public float this[int x, int y]
         {
             get { return Get(x, y); }
             set { Set(x, y, value); }
@@ -55,12 +55,12 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             get { return m_scene.RequestModuleInterface<ITerrainChannel>().Width; }
         }
 
-        protected double Get(int x, int y)
+        protected float Get(int x, int y)
         {
             return m_scene.RequestModuleInterface<ITerrainChannel>()[x, y];
         }
 
-        protected void Set(int x, int y, double val)
+        protected void Set(int x, int y, float val)
         {
             m_scene.RequestModuleInterface<ITerrainChannel>()[x, y] = val;
         }

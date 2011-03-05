@@ -26,6 +26,7 @@
  */
 
 using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
 {
@@ -33,10 +34,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
     {
         #region ITerrainFloodEffect Members
 
-        public void FloodEffect(ITerrainChannel map, bool[,] fillArea, double strength)
+        public void FloodEffect(ITerrainChannel map, bool[,] fillArea, float strength)
         {
-            double area = strength;
-            double step = strength / 4.0;
+            float area = strength;
+            float step = strength / 4;
 
             int x, y;
             for (x = 0; x < map.Width; x++)
@@ -46,17 +47,17 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
                     if (!fillArea[x, y])
                         continue;
 
-                    double average = 0.0;
+                    float average = 0;
                     int avgsteps = 0;
 
-                    double n;
-                    for (n = 0.0 - area; n < area; n += step)
+                    float n;
+                    for (n = 0 - area; n < area; n += step)
                     {
-                        double l;
-                        for (l = 0.0 - area; l < area; l += step)
+                        float l;
+                        for (l = 0 - area; l < area; l += step)
                         {
                             avgsteps++;
-                            average += GetBilinearInterpolate(x + n, y + l, map);
+                            average += TerrainUtil.GetBilinearInterpolate(x + n, y + l, map, new System.Collections.Generic.List<Scene>());
                         }
                     }
 
@@ -67,37 +68,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
 
         #endregion
 
-        private static double GetBilinearInterpolate(double x, double y, ITerrainChannel map)
-        {
-            int w = map.Width;
-            int h = map.Height;
-
-            if (x > w - 2.0)
-                x = w - 2.0;
-            if (y > h - 2.0)
-                y = h - 2.0;
-            if (x < 0.0)
-                x = 0.0;
-            if (y < 0.0)
-                y = 0.0;
-
-            const int stepSize = 1;
-            double h00 = map[(int) x, (int) y];
-            double h10 = map[(int) x + stepSize, (int) y];
-            double h01 = map[(int) x, (int) y + stepSize];
-            double h11 = map[(int) x + stepSize, (int) y + stepSize];
-            double h1 = h00;
-            double h2 = h10;
-            double h3 = h01;
-            double h4 = h11;
-            double a00 = h1;
-            double a10 = h2 - h1;
-            double a01 = h3 - h1;
-            double a11 = h1 - h2 - h3 + h4;
-            double partialx = x - (int) x;
-            double partialz = y - (int) y;
-            double hi = a00 + (a10 * partialx) + (a01 * partialz) + (a11 * partialx * partialz);
-            return hi;
-        }
+        
     }
 }

@@ -1310,7 +1310,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 pos.Y = heightmap.Height - 1;
 
             //Get the height for the integer coordinates from the Heightmap
-            float baseheight = (float)heightmap[(int)pos.X, (int)pos.Y];
+            float baseheight = heightmap[(int)pos.X, (int)pos.Y];
 
             //Calculate the difference between the actual coordinates and the integer coordinates
             float xdiff = pos.X - (float)((int)pos.X);
@@ -2201,7 +2201,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             ITerrainChannel heightmap = World.RequestModuleInterface<ITerrainChannel>();
             if(heightmap != null)
-                ground = heightmap.GetNormalizedGroundHeight((float)targetPos.x, (float)targetPos.y);
+                ground = heightmap.GetNormalizedGroundHeight((int)(float)targetPos.x, (int)(float)targetPos.y);
             if (part.ParentGroup == null)
             {
                 if (ground != 0 && (targetPos.z < ground) && disable_underground_movement && m_host.AttachmentPoint == 0)
@@ -6883,21 +6883,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             //Find two points in addition to the position to define a plane
             Vector3 p0 = new Vector3(pos.X, pos.Y,
-                                     (float)heightmap[(int)pos.X, (int)pos.Y]);
+                                     heightmap[(int)pos.X, (int)pos.Y]);
             Vector3 p1 = new Vector3();
             Vector3 p2 = new Vector3();
             if ((pos.X + 1.0f) >= heightmap.Width)
                 p1 = new Vector3(pos.X + 1.0f, pos.Y,
-                            (float)heightmap[(int)pos.X, (int)pos.Y]);
+                            heightmap[(int)pos.X, (int)pos.Y]);
             else
                 p1 = new Vector3(pos.X + 1.0f, pos.Y,
-                            (float)heightmap[(int)(pos.X + 1.0f), (int)pos.Y]);
+                            heightmap[(int)(pos.X + 1.0f), (int)pos.Y]);
             if ((pos.Y + 1.0f) >= heightmap.Height)
                 p2 = new Vector3(pos.X, pos.Y + 1.0f,
-                            (float)heightmap[(int)pos.X, (int)pos.Y]);
+                            heightmap[(int)pos.X, (int)pos.Y]);
             else
                 p2 = new Vector3(pos.X, pos.Y + 1.0f,
-                            (float)heightmap[(int)pos.X, (int)(pos.Y + 1.0f)]);
+                            heightmap[(int)pos.X, (int)(pos.Y + 1.0f)]);
 
             //Find normalized vectors from p0 to p1 and p0 to p2
             Vector3 v0 = new Vector3(p1.X - p0.X, p1.Y - p0.Y, p1.Z - p0.Z);

@@ -192,7 +192,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (World.Permissions.CanTerraformLand(m_host.OwnerID, new Vector3(x, y, 0)))
             {
                 ITerrainChannel heightmap = World.RequestModuleInterface<ITerrainChannel>();
-                heightmap[x, y] = val;
+                heightmap[x, y] = (float)val;
                 ITerrainModule terrainModule = World.RequestModuleInterface<ITerrainModule>();
                 if (terrainModule != null) terrainModule.TaintTerrain();
                 return 1;

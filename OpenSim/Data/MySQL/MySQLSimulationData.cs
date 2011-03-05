@@ -645,7 +645,7 @@ namespace OpenSim.Data.MySQL
             }
         }
 
-        public void StoreTerrain(byte[] ter, UUID regionID, bool Revert)
+        public void StoreTerrain(short[] ter, UUID regionID, bool Revert)
         {
             m_log.Info("[REGION DB]: Storing terrain");
 
@@ -675,7 +675,7 @@ namespace OpenSim.Data.MySQL
             }
         }
 
-        public void StoreWater(byte[] water, UUID regionID, bool Revert)
+        public void StoreWater(short[] water, UUID regionID, bool Revert)
         {
             m_log.Info("[REGION DB]: Storing terrain");
 
@@ -707,10 +707,8 @@ namespace OpenSim.Data.MySQL
             }
         }
 
-        public double[,] LoadTerrain(UUID regionID, bool Revert, int RegionSizeX, int RegionSizeY)
+        public short[] LoadTerrain(UUID regionID, bool Revert, int RegionSizeX, int RegionSizeY)
         {
-            double[,] terrain = null;
-
             lock (m_dbLock)
             {
                 using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
@@ -731,32 +729,18 @@ namespace OpenSim.Data.MySQL
                             {
                                 int rev = Convert.ToInt32(reader["Revision"]);
 
-                                terrain = new double[RegionSizeX, RegionSizeY];
-                                terrain.Initialize();
-
-                                byte[] heightMap = (byte[])reader["Heightfield"];
-                                int i = 0;
-                                for (int x = 0; x < RegionSizeX; x++)
-                                {
-                                    for (int y = 0; y < RegionSizeY; y++)
-                                    {
-                                        terrain[x, y] = BitConverter.ToDouble(heightMap, i);
-                                        i += sizeof(double);
-                                    }
-                                }
+                                return (short[])reader["Heightfield"];
                             }
                         }
                     }
                 }
             }
 
-            return terrain;
+            return null;
         }
 
-        public double[,] LoadWater(UUID regionID, bool Revert, int RegionSizeX, int RegionSizeY)
+        public short[] LoadWater(UUID regionID, bool Revert, int RegionSizeX, int RegionSizeY)
         {
-            double[,] terrain = null;
-
             lock (m_dbLock)
             {
                 using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
@@ -777,33 +761,14 @@ namespace OpenSim.Data.MySQL
                         {
                             while (reader.Read())
                             {
-                                int rev = Convert.ToInt32(reader["Revision"]);
-
-                                terrain = new double[RegionSizeX, RegionSizeY];
-                                terrain.Initialize();
-
-                                using (MemoryStream mstr = new MemoryStream((byte[])reader["Heightfield"]))
-                                {
-                                    using (BinaryReader br = new BinaryReader(mstr))
-                                    {
-                                        for (int x = 0; x < RegionSizeX; x++)
-                                        {
-                                            for (int y = 0; y < RegionSizeY; y++)
-                                            {
-                                                terrain[x, y] = br.ReadDouble();
-                                            }
-                                        }
-                                    }
-
-                                    //m_log.InfoFormat("[REGION DB]: Loaded terrain revision r{0}", rev);
-                                }
+                                return (short[])reader["Heightfield"];
                             }
                         }
                     }
                 }
             }
 
-            return terrain;
+            return null;
         }
 
         public void RemoveLandObject(UUID RegionID, UUID globalID)

@@ -44,7 +44,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
         /// World.Heightmap[128,128] *= 5.0;
         /// World.Heightmap[128,128] = 25;
         /// </example>
-        double this[int x, int y]
+        float this[int x, int y]
         {
             get;
             set;

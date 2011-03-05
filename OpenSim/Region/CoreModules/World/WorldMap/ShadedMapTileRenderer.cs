@@ -68,7 +68,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             {
                 for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
                 {
-                    float hmval = (float)heightmap[x, y];
+                    float hmval = heightmap[x, y];
                     if (hmval < low)
                         low = hmval;
                     if (hmval > high)
@@ -85,7 +85,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     // Y flip the cordinates for the bitmap: hf origin is lower left, bm origin is upper left
                     int yr = (m_scene.RegionInfo.RegionSizeY - 1) - y;
 
-                    float heightvalue = (float)heightmap[x, y];
+                    float heightvalue = heightmap[x, y];
 
                     if (heightvalue > waterHeight)
                     {
@@ -112,12 +112,12 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                             // Shade the terrain for shadows
                             if (x < (m_scene.RegionInfo.RegionSizeX - 1) && yr < (m_scene.RegionInfo.RegionSizeY - 1))
                             {
-                                float hfvalue = (float)heightmap[x, y];
+                                float hfvalue = heightmap[x, y];
                                 float hfvaluecompare = 0f;
 
                                 if ((x + 1 < m_scene.RegionInfo.RegionSizeX) && (y + 1 < m_scene.RegionInfo.RegionSizeY))
                                 {
-                                    hfvaluecompare = (float)heightmap[x + 1, y + 1]; // light from north-east => look at land height there
+                                    hfvaluecompare = heightmap[x + 1, y + 1]; // light from north-east => look at land height there
                                 }
                                 if (Single.IsInfinity(hfvalue) || Single.IsNaN(hfvalue))
                                     hfvalue = 0f;

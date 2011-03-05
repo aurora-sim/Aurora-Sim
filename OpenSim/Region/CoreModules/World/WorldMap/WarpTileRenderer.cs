@@ -162,9 +162,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             {
                 for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
                 {
-                    double height = terrain[x,y];
+                    float height = terrain[x, y];
 
-                    warp_Vector pos = ConvertVector(new Vector3(x, y, (float)height));
+                    warp_Vector pos = ConvertVector(new Vector3(x, y, height));
                     obj.addVertex(new warp_Vertex(pos, (float)x / 255f, (float)(255 - y) / 255f));
                 }
             }
