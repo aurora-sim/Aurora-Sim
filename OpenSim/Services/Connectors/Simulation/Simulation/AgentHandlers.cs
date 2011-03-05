@@ -193,7 +193,7 @@ namespace OpenSim.Services
             // This is the meaning of POST agent
             bool result = CreateAgent(destination, aCircuit, teleportFlags, agent, out reason);
 
-            resp["reason"] = OSD.FromString(reason);
+            resp["reason"] = reason;
             resp["success"] = OSD.FromBoolean(result);
             // Let's also send out the IP address of the caller back to the caller (HG 1.5)
             resp["your_ip"] = OSD.FromString(GetCallerIP(request));

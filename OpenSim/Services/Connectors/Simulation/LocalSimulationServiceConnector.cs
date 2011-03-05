@@ -10,6 +10,7 @@ using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using Aurora.Simulation.Base;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.Connectors.Simulation
 {
@@ -117,7 +118,10 @@ namespace OpenSim.Services.Connectors.Simulation
             }
 
             m_log.DebugFormat("[LOCAL SIMULATION CONNECTOR]: Did not find region {0} for CreateAgent", destination.RegionName);
-            reason = "Did not find region " + destination.RegionName;
+            OSDMap map = new OSDMap();
+            map["Reason"] = "Did not find region " + destination.RegionName;
+            map["Success"] = false;
+            reason = OSDParser.SerializeJsonString(map);
             return false;
         }
 

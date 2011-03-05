@@ -606,7 +606,13 @@ namespace OpenSim.Region.Framework.Scenes
                 agent.circuitcode, teleportFlags);
 
             if (!AuthorizeUser(agent, out reason))
+            {
+                OSDMap map = new OSDMap();
+                map["Reason"] = reason;
+                map["Success"] = false;
+                reason = OSDParser.SerializeJsonString(map);
                 return false;
+            }
 
             ScenePresence sp = GetScenePresence(agent.AgentID);
 
@@ -646,6 +652,7 @@ namespace OpenSim.Region.Framework.Scenes
                 RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
                 agent.circuitcode);
 
+            responseMap["Success"] = true;
             reason = OSDParser.SerializeJsonString(responseMap);
             return true;
         }
