@@ -779,7 +779,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //Don't split me up!
             reply.HasVariableBlocks = false;
             // Hack to get this out immediately and skip throttles
-            OutPacket(reply, ThrottleOutPacketType.OutBand);
+            OutPacket(reply, ThrottleOutPacketType.AvatarInfo);
         }
 
         public void SendTelehubInfo(Vector3 TelehubPos, Quaternion TelehubRot, List<Vector3> SpawnPoint, UUID ObjectID, string Name)
@@ -830,7 +830,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 msg.MessageBlock.Message = Util.StringToBytes1024(im.message);
                 msg.MessageBlock.BinaryBucket = im.binaryBucket;
 
-                OutPacket(msg, ThrottleOutPacketType.OutBand);
+                OutPacket(msg, ThrottleOutPacketType.AvatarInfo);
             }
         }
 
@@ -855,7 +855,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 gmp.ParamList[i++].Parameter = val;
             }
 
-            OutPacket(gmp, ThrottleOutPacketType.Task);
+            OutPacket(gmp, ThrottleOutPacketType.AvatarInfo);
         }
 
         public void SendGroupActiveProposals(UUID groupID, UUID transactionID, GroupActiveProposals[] Proposals)
@@ -2200,7 +2200,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             sendAgentDataUpdate.AgentData.GroupPowers = grouppowers;
             sendAgentDataUpdate.AgentData.GroupTitle = Util.StringToBytes256(grouptitle);
             sendAgentDataUpdate.AgentData.LastName = Util.StringToBytes256(lastname);
-            OutPacket(sendAgentDataUpdate, ThrottleOutPacketType.Task);
+            OutPacket(sendAgentDataUpdate, ThrottleOutPacketType.AvatarInfo);
         }
 
         /// <summary>
@@ -3505,7 +3505,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             objupdate.ObjectData = new ObjectUpdatePacket.ObjectDataBlock[1];
             objupdate.ObjectData[0] = CreateAvatarUpdateBlock(presence);
 
-            OutPacket(objupdate, ThrottleOutPacketType.Task);
+            OutPacket(objupdate, ThrottleOutPacketType.AvatarInfo);
         }
 
         public void SendCoarseLocationUpdate(List<UUID> users, List<Vector3> CoarseLocations)
@@ -3545,7 +3545,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             ib.Prey = -1;
             loc.Index = ib;
 
-            OutPacket(loc, ThrottleOutPacketType.Land);
+            OutPacket(loc, ThrottleOutPacketType.AvatarInfo);
         }
 
         #endregion Avatar Packet/Data Sending Methods
