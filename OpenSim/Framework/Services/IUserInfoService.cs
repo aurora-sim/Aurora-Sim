@@ -70,17 +70,18 @@ namespace OpenSim.Services.Interfaces
 
         public override void FromOSD(OSDMap retVal)
         {
-             UserID = retVal["UserID"].AsString();
-             CurrentRegionID = retVal["CurrentRegionID"].AsUUID();
-             CurrentPosition = retVal["CurrentPosition"].AsVector3();
-             CurrentLookAt = retVal["CurrentLookAt"].AsVector3();
-             HomeRegionID = retVal["HomeRegionID"].AsUUID();
-             HomePosition = retVal["HomePosition"].AsVector3();
-             HomeLookAt = retVal["HomeLookAt"].AsVector3();
-             IsOnline = retVal["IsOnline"].AsBoolean();
-             LastLogin = retVal["LastLogin"].AsDate();
-             LastLogout = retVal["LastLogout"].AsDate();
-             Info = (OSDMap)retVal["Info"];
+            UserID = retVal["UserID"].AsString();
+            CurrentRegionID = retVal["CurrentRegionID"].AsUUID();
+            CurrentPosition = retVal["CurrentPosition"].AsVector3();
+            CurrentLookAt = retVal["CurrentLookAt"].AsVector3();
+            HomeRegionID = retVal["HomeRegionID"].AsUUID();
+            HomePosition = retVal["HomePosition"].AsVector3();
+            HomeLookAt = retVal["HomeLookAt"].AsVector3();
+            IsOnline = retVal["IsOnline"].AsBoolean();
+            LastLogin = retVal["LastLogin"].AsDate();
+            LastLogout = retVal["LastLogout"].AsDate();
+            if (retVal["Info"].Type == OSDType.Map)
+                Info = (OSDMap)retVal["Info"];
         }
 
         public override Dictionary<string, object> ToKeyValuePairs()

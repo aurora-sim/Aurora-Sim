@@ -2104,7 +2104,7 @@ namespace OpenSim.Region.Framework.Scenes
             axPos *= oldGroupRotation;
             part.SetGroupPosition(oldGroupPosition + axPos);
             //offset
-            part.SetRotationOffset(false, oldGroupRotation * oldRot ,false);
+            part.SetRotationOffset(false, Quaternion.Inverse(oldGroupRotation) * Quaternion.Inverse(oldRot) ,false);
 
             // have it in world coords lets fix other things
             m_scene.SceneGraph.LinkPartToSOG(this, part, linkNum);
