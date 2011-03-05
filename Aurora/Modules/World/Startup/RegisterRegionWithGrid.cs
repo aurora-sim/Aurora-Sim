@@ -19,6 +19,7 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using System.Timers;
 
 namespace Aurora.Modules
 {
@@ -30,6 +31,7 @@ namespace Aurora.Modules
         private IConfigSource m_config;
         private List<Scene> m_scenes = new List<Scene>();
         private Dictionary<string, string> genericInfo = new Dictionary<string, string>();
+        private Timer m_timer;
 
         #endregion
 
@@ -43,6 +45,40 @@ namespace Aurora.Modules
             scene.RegisterModuleInterface<IGridRegisterModule>(this);
             //Now register our region with the grid
             RegisterRegionWithGrid(scene);
+
+            openSimBase.EventManager.OnGenericEvent += OnGenericEvent;
+        }
+
+        object OnGenericEvent(string FunctionName, object parameters)
+        {
+            if (FunctionName == "GridRegionRegistered")
+            {
+                object[] o = (object[])parameters;
+                OSDMap map = (OSDMap)o[1];
+                if (m_timer != null)
+                {
+                    m_timer = new Timer();
+                    //Give it an extra minute after making hours into milliseconds
+                    m_timer.Interval = (map["TimeToReRegister"].AsInteger() * 1000 * 60 * 60) - (1000 * 60);
+                    m_timer.Elapsed += m_timer_Elapsed;
+                    m_timer.Start();
+                }
+            }
+            return null;
+        }
+
+        void m_timer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            ISyncMessagePosterService syncMessagePoster = m_scenes[0].RequestModuleInterface<ISyncMessagePosterService>();
+            if (syncMessagePoster != null)
+            {
+                foreach (Scene scene in m_scenes)
+                {
+                    OSDMap map = new OSDMap();
+                    map["Method"] = "RegisterHandlers";
+                    syncMessagePoster.Post(map, scene.RegionInfo.RegionHandle);
+                }
+            }
         }
 
         public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)

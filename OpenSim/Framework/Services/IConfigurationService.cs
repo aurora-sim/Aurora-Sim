@@ -66,5 +66,11 @@ namespace OpenSim.Services.Interfaces
         /// <param name="key">A generic key to check for URLs</param>
         /// <returns>A list of URLs that are registered for this key</returns>
         List<string> FindValueOf(string userID, string user2, string key);
+
+        /// <summary>
+        /// Remove the URLs that we have for this key
+        /// </summary>
+        /// <param name="key"></param>
+        void RemoveUrls(string key);
     }
 }

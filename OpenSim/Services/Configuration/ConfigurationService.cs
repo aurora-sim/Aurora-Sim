@@ -142,6 +142,11 @@ namespace OpenSim.Services.ConfigurationService
             m_allConfigs[key] = urls;
         }
 
+        public virtual void RemoveUrls(string key)
+        {
+            m_allConfigs.Remove(key);
+        }
+
         public virtual OSDMap GetValues()
         {
             return m_autoConfig;

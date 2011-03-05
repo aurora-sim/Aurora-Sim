@@ -35,7 +35,7 @@ namespace Aurora.Framework
         /// ObjectChangedPhysicalStatus - An object's physical status has changed
         ///      param is a SceneObjectGroup
         /// ObjectEnteringNewParcel - An object has entered a new parcel
-        ///      param is a object[], with o[0] a SceneObjectGroup, o[1] the new parcel UUID, and o[2] the old parcel UUID
+        ///      param is an object[], with o[0] a SceneObjectGroup, o[1] the new parcel UUID, and o[2] the old parcel UUID
         /// RegionRegistered - New Region has been registered
         ///      param is a GridRegion
         /// UserStatusChange - User's status (logged in/out) has changed
@@ -46,6 +46,8 @@ namespace Aurora.Framework
         ///      param is the OSDMap that will be returned to the server
         /// EstateUpdated - An estate has been updated
         ///      param is the EstateSettings of the changed estate
+        /// GridRegionRegistered - New Region has been registered with remote grid service
+        ///      param is an object[], with o[0] a GridRegion, o[1] the OSDMap response from the server
         /// 
         /// </summary>
         public event OnGenericEventHandler OnGenericEvent;

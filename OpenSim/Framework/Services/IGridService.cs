@@ -581,6 +581,11 @@ namespace OpenSim.Services.Interfaces
     public interface IGridRegistrationService
     {
         /// <summary>
+        /// Time before handlers will need to reregister (in hours)
+        /// </summary>
+        int ExpiresTime { get; }
+        
+        /// <summary>
         /// Gets a list of secure URLs for the given RegionHandle and SessionID
         /// </summary>
         /// <param name="SessionID"></param>
@@ -600,6 +605,25 @@ namespace OpenSim.Services.Interfaces
         /// <param name="SessionID"></param>
         /// <param name="RegionHandle"></param>
         void RemoveUrlsForClient(string SessionID, ulong RegionHandle);
+
+        /// <summary>
+        /// Checks that the given client can access the function that it is calling
+        /// </summary>
+        /// <param name="SessionID"></param>
+        /// <param name="RegionHandle"></param>
+        /// <param name="function"></param>
+        /// <param name="defaultThreatLevel"></param>
+        /// <returns></returns>
+        bool CheckThreatLevel(string SessionID, ulong RegionHandle, string function, ThreatLevel defaultThreatLevel);
+    }
+
+    public enum ThreatLevel
+    {
+        None = 1,
+        Low = 2,
+        Medium = 4,
+        High = 8,
+        Full = 16
     }
 
     /// <summary>

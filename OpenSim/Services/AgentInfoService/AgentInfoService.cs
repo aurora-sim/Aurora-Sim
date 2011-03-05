@@ -45,7 +45,7 @@ namespace OpenSim.Services.PresenceService
     {
         #region Declares
 
-        protected IGenericsConnector m_genericsConnector;
+        protected IAgentInfoConnector m_agentInfoConnector;
         protected IRegistryCore m_registry;
 
         #endregion
@@ -68,7 +68,7 @@ namespace OpenSim.Services.PresenceService
 
         public void FinishedStartup()
         {
-            m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            m_agentInfoConnector = Aurora.DataManager.DataManager.RequestPlugin<IAgentInfoConnector>();
         }
 
         public string Name
@@ -82,7 +82,7 @@ namespace OpenSim.Services.PresenceService
 
         public UserInfo GetUserInfo(string userID)
         {
-            return m_genericsConnector.GetGeneric<UserInfo>(UUID.Parse(userID), "UserInfo", userID, new UserInfo());
+            return m_agentInfoConnector.Get(userID);
         }
 
         public UserInfo[] GetUserInfos(string[] userIDs)
@@ -156,7 +156,7 @@ namespace OpenSim.Services.PresenceService
 
         public void Save(UserInfo userInfo)
         {
-            m_genericsConnector.AddGeneric(UUID.Parse(userInfo.UserID), "UserInfo", userInfo.UserID, userInfo.ToOSD());
+            m_agentInfoConnector.Set(userInfo);
         }
 
         #endregion

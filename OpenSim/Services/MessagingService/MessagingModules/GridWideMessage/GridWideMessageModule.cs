@@ -107,14 +107,16 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         protected void KickUserMessage(string module, string[] cmd)
         {
             //Combine the params and figure out the message
-            string user = CombineParams(cmd, 3, 5);
+            string user = CombineParams(cmd, 2, 4);
+            if (user.EndsWith(" "))
+                user = user.Remove(user.Length - 1);
             string message = CombineParams(cmd, 5);
 
             //Get required interfaces
             IAsyncMessagePostService messagePost = m_registry.RequestModuleInterface<IAsyncMessagePostService>();
             ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
             IUserAccountService userService = m_registry.RequestModuleInterface<IUserAccountService>();
-            UserAccount account = userService.GetUserAccount(UUID.Zero, user.Split(' ')[0], user.Split(' ')[1]);
+            UserAccount account = userService.GetUserAccount(UUID.Zero, user);
             if (account == null)
             {
                 MainConsole.Instance.Output("User does not exist.");
