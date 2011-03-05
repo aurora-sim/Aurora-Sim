@@ -19,6 +19,7 @@ namespace Aurora.DataManager.Migration.Migrators
             //
             //   Add the new UserInfo table that replaces the GridUser and Presence tables
             //
+            RemoveSchema("userinfo");
             AddSchema("userinfo", ColDefs(
                 ColDef("UserID", ColumnTypes.String50, true),
                 ColDef("RegionID", ColumnTypes.String50),

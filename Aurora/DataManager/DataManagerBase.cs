@@ -116,6 +116,7 @@ namespace Aurora.DataManager
             }
 
             List<ColumnDefinition> extractedColumns = ExtractColumnsFromTable(tableName);
+            List<ColumnDefinition> newColumns = new List<ColumnDefinition>(columnDefinitions);
             foreach (ColumnDefinition columnDefinition in columnDefinitions)
             {
                 if (!extractedColumns.Contains(columnDefinition))
@@ -123,6 +124,29 @@ namespace Aurora.DataManager
                     ColumnDefinition thisDef = null;
                     //Check to see whether the two tables have the same type, but under different names
                     foreach (ColumnDefinition extractedDefinition in extractedColumns)
+                    {
+                        if (extractedDefinition.Name == columnDefinition.Name)
+                        {
+                            thisDef = extractedDefinition;
+                            break;
+                        }
+                    }
+                    if (thisDef != null)
+                    {
+                        if (GetColumnTypeStringSymbol(thisDef.Type) == GetColumnTypeStringSymbol(columnDefinition.Type))
+                            continue; //They are the same type, let them go on through
+                    }
+                    MainConsole.Instance.Output("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name + " when verifing tables exist", "Debug");
+                    return false;
+                }
+            }
+            foreach (ColumnDefinition columnDefinition in extractedColumns)
+            {
+                if (!newColumns.Contains(columnDefinition))
+                {
+                    ColumnDefinition thisDef = null;
+                    //Check to see whether the two tables have the same type, but under different names
+                    foreach (ColumnDefinition extractedDefinition in newColumns)
                     {
                         if (extractedDefinition.Name == columnDefinition.Name)
                         {

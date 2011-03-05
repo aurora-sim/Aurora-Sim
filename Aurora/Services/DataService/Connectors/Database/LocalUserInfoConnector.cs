@@ -61,7 +61,7 @@ namespace Aurora.Services.DataService
 
         public bool Set(UserInfo info)
         {
-            object[] values = new object[8];
+            object[] values = new object[7];
             values[0] = info.UserID;
             values[1] = info.CurrentRegionID;
             values[2] = Util.ToUnixTime(DateTime.Now); //Convert to binary so that it can be converted easily
