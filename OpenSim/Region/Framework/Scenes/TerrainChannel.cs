@@ -107,7 +107,7 @@ namespace OpenSim.Region.Framework.Scenes
                     width = (int)scene.RegionInfo.RegionSizeX;
                     height = (int)scene.RegionInfo.RegionSizeY;
                 }
-                m_map = new short[m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeX];
+                m_map = new short[width * height];
                 taint = new bool[width / Constants.TerrainPatchSize, height / Constants.TerrainPatchSize];
             }
         }
