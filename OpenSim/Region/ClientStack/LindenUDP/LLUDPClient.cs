@@ -600,6 +600,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if (emptyCategories != 0)
                 BeginFireQueueEmpty(emptyCategories);
+            else
+                {
+                int i = MapCatsToPriority[(int)ThrottleOutPacketType.Texture]; // hack to keep textures flowing for now
+                if (m_outbox.queues[i].Count == 0)
+                    {
+                    emptyCategories |= ThrottleOutPacketTypeFlags.Texture;
+                    BeginFireQueueEmpty(emptyCategories);
+                    }
+                }
+
 
             //m_log.Info("[LLUDPCLIENT]: Queues: " + queueDebugOutput); // Serious debug business
             return packetSent;
