@@ -81,31 +81,27 @@ namespace Aurora.Services.DataService
 
         public void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
         {
-            string[] keys = new string[4];
-            keys[0] = "UserID";
-            keys[1] = "CurrentRegionID";
-            keys[2] = "CurrentPosition";
-            keys[3] = "CurrentLookat";
-            object[] values = new object[4];
-            values[0] = userID;
-            values[1] = regionID;
-            values[2] = lastPosition;
-            values[3] = lastLookAt;
+            string[] keys = new string[3];
+            keys[0] = "CurrentRegionID";
+            keys[1] = "CurrentPosition";
+            keys[2] = "CurrentLookat";
+            object[] values = new object[3];
+            values[0] = regionID;
+            values[1] = lastPosition;
+            values[2] = lastLookAt;
             GD.Update(m_realm, values, keys, new string[1] { "UserID" }, new object[1] { userID });
         }
 
         public void SetHomePosition(string userID, UUID regionID, Vector3 Position, Vector3 LookAt)
         {
-            string[] keys = new string[4];
-            keys[0] = "UserID";
-            keys[1] = "HomeRegionID";
-            keys[2] = "HomePosition";
-            keys[3] = "HomeLookat";
-            object[] values = new object[4];
-            values[0] = userID;
-            values[1] = regionID;
-            values[2] = Position;
-            values[3] = LookAt;
+            string[] keys = new string[3];
+            keys[0] = "HomeRegionID";
+            keys[1] = "HomePosition";
+            keys[2] = "HomeLookat";
+            object[] values = new object[3];
+            values[0] = regionID;
+            values[1] = Position;
+            values[2] = LookAt;
             GD.Update(m_realm, values, keys, new string[1] { "UserID" }, new object[1] { userID });
         }
 

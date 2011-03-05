@@ -303,7 +303,7 @@ namespace Aurora.DataManager.SQLite
                 object v = value;
                 if (v is byte[])
                     v = OpenMetaverse.Utils.BytesToString((byte[])v);
-                query = String.Format(query + "'{0}',", v);
+                query = query + "'" + v.ToString() + "',";
             }
             query = query.Remove(query.Length - 1);
             query += ")";
