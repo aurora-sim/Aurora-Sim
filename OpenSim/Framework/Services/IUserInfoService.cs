@@ -153,4 +153,10 @@ namespace OpenSim.Services.Interfaces
         /// <param name="loggingIn">Whether the user is logging in or out</param>
         void SetLoggedIn(string userID, bool loggingIn);
     }
+
+    public interface IAgentInfoConnector : IAuroraDataPlugin
+    {
+        bool Set(UserInfo info);
+        UserInfo Get(string userID);
+    }
 }

@@ -220,7 +220,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private int m_defaultRTO = 3000;
         private int m_maxRTO = 60000;
 
-        private int m_lastthrottleCategoryChecked = 0;
+        //private int m_lastthrottleCategoryChecked = 0;
 
         /// <summary>
         /// Default constructor
@@ -269,7 +269,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             MapCatsToPriority[(int)ThrottleOutPacketType.AvatarInfo] = 4;
             MapCatsToPriority[(int)ThrottleOutPacketType.OutBand] = 5;
 
-            m_lastthrottleCategoryChecked = 0;
+            //m_lastthrottleCategoryChecked = 0;
 
             // Default the retransmission timeout to three seconds
             RTO = m_defaultRTO;

@@ -14,12 +14,7 @@ using RegionFlags = Aurora.Framework.RegionFlags;
 
 namespace Aurora.Services.DataService
 {
-    public interface IUserInfoConnector : IAuroraDataPlugin
-    {
-        bool Set(UserInfo info);
-        UserInfo[] Get(string userID);
-    }
-    public class LocalUserInfoConnector : IUserInfoConnector
+    public class LocalUserInfoConnector : IAgentInfoConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -55,7 +50,7 @@ namespace Aurora.Services.DataService
 
         public string Name
         {
-            get { return "IUserInfoData"; }
+            get { return "IAgentInfoConnector"; }
         }
 
         public void Dispose()
@@ -87,29 +82,24 @@ namespace Aurora.Services.DataService
             return GD.Replace(m_realm, keys, values);
         }
 
-        public UserInfo[] Get(string userID)
+        public UserInfo Get(string userID)
         {
             List<string> query = GD.Query("UserID", userID, m_realm, "*");
-            UserInfo[] users = new UserInfo[query.Count / 8];
-            for (int i = 0; i < query.Count; i += 8)
+            UserInfo user = new UserInfo();
+            user.UserID = query[0];
+            user.CurrentRegionID = UUID.Parse(query[1]);
+            //users[i / 8].SessionID = UUID.Parse(query[2]);
+            //Check LastSeen
+            if (m_checkLastSeen && (new DateTime(long.Parse(query[3])).AddHours(1) < DateTime.Now))
             {
-                //Build each user now
-                users[i / 8] = new UserInfo();
-                users[i / 8].UserID = query[i];
-                users[i / 8].CurrentRegionID = UUID.Parse(query[i+1]);
-                //users[i / 8].SessionID = UUID.Parse(query[i+2]);
-                //Check LastSeen
-                if (m_checkLastSeen && (new DateTime(long.Parse(query[i + 3])).AddHours(1) < DateTime.Now))
-                {
-                    m_log.Warn("[UserInfoService]: Found a user (" + users[i / 8].UserID + ") that was not seen within the last hour! Logging them out.");
-                    return null;
-                }
-                users[i / 8].IsOnline = query[i+4] == "1" ? true : false;
-                users[i / 8].LastLogin = new DateTime(long.Parse(query[i+5]));
-                users[i / 8].LastLogout = new DateTime(long.Parse(query[i+6]));
-                users[i / 8].Info = (OSDMap)OSDParser.DeserializeJson(query[i+7]);
+                m_log.Warn("[UserInfoService]: Found a user (" + user.UserID + ") that was not seen within the last hour! Logging them out.");
+                return null;
             }
-            return users;
+            user.IsOnline = query[4] == "1" ? true : false;
+            user.LastLogin = new DateTime(long.Parse(query[5]));
+            user.LastLogout = new DateTime(long.Parse(query[6]));
+            user.Info = (OSDMap)OSDParser.DeserializeJson(query[7]);
+            return user;
         }
 
         #endregion
