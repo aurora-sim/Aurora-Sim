@@ -95,14 +95,15 @@ namespace OpenSim.Services.CapsService
         {
             if (!m_RegionCapsServices.ContainsKey(regionHandle))
             {
+                //Now add this client to the region caps
+                //Create if needed
+                m_CapsService.AddCapsForRegion(regionHandle);
                 IRegionCapsService regionCaps = m_CapsService.GetCapsForRegion(regionHandle);
+
                 PerRegionClientCapsService regionClient = new PerRegionClientCapsService();
                 regionClient.Initialise(this, regionCaps, CAPSBase, circuitData);
                 m_RegionCapsServices[regionHandle] = regionClient;
 
-                //Now add this client to the region caps
-                //Create if needed
-                m_CapsService.AddCapsForRegion(regionHandle);
                 //Now get and add them
                 regionCaps.AddClientToRegion(regionClient);
             }
