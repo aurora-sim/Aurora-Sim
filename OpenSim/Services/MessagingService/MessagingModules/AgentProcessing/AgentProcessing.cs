@@ -112,9 +112,13 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             {
                 if (regionCaps == null || clientCaps == null)
                     return null;
-                //The user has requested to cancel the teleport, stop them.
-                clientCaps.RequestToCancelTeleport = true;
-                regionCaps.Disabled = false;
+                //Only the region the client is root in can do this
+                if (clientCaps.GetRootCapsService().RegionHandle == regionCaps.RegionHandle)
+                {
+                    //The user has requested to cancel the teleport, stop them.
+                    clientCaps.RequestToCancelTeleport = true;
+                    regionCaps.Disabled = false;
+                }
             }
             else if (message["Method"] == "AgentLoggedOut")
             {
@@ -156,63 +160,72 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             {
                 if (regionCaps == null || clientCaps == null)
                     return null;
-                OSDMap body = ((OSDMap)message["Message"]);
+                if (clientCaps.GetRootCapsService().RegionHandle == regionCaps.RegionHandle)
+                {
+                    OSDMap body = ((OSDMap)message["Message"]);
 
-                AgentPosition pos = new AgentPosition();
-                pos.Unpack((OSDMap)body["AgentPos"]);
+                    AgentPosition pos = new AgentPosition();
+                    pos.Unpack((OSDMap)body["AgentPos"]);
 
-                SendChildAgentUpdate(pos, regionCaps);
-                regionCaps.Disabled = false;
+                    SendChildAgentUpdate(pos, regionCaps);
+                    regionCaps.Disabled = false;
+                }
             }
             else if (message["Method"] == "TeleportAgent")
             {
                 if (regionCaps == null || clientCaps == null)
                     return null;
-                OSDMap body = ((OSDMap)message["Message"]);
+                if (clientCaps.GetRootCapsService().RegionHandle == regionCaps.RegionHandle)
+                {
+                    OSDMap body = ((OSDMap)message["Message"]);
 
-                GridRegion destination = new GridRegion();
-                destination.FromOSD((OSDMap)body["Region"]);
+                    GridRegion destination = new GridRegion();
+                    destination.FromOSD((OSDMap)body["Region"]);
 
-                uint TeleportFlags = body["TeleportFlags"].AsUInteger();
-                int DrawDistance = body["DrawDistance"].AsInteger();
+                    uint TeleportFlags = body["TeleportFlags"].AsUInteger();
+                    int DrawDistance = body["DrawDistance"].AsInteger();
 
-                AgentCircuitData Circuit = new AgentCircuitData();
-                Circuit.UnpackAgentCircuitData((OSDMap)body["Circuit"]);
+                    AgentCircuitData Circuit = new AgentCircuitData();
+                    Circuit.UnpackAgentCircuitData((OSDMap)body["Circuit"]);
 
-                AgentData AgentData = new AgentData();
-                AgentData.Unpack((OSDMap)body["AgentData"]);
-                regionCaps.Disabled = false;
+                    AgentData AgentData = new AgentData();
+                    AgentData.Unpack((OSDMap)body["AgentData"]);
+                    regionCaps.Disabled = false;
 
-                OSDMap result = new OSDMap();
-                string reason = "";
-                result["Success"] = TeleportAgent(destination, TeleportFlags, DrawDistance,
-                    Circuit, AgentData, AgentID, requestingRegion, out reason);
-                result["Reason"] = reason;
-                return result;
+                    OSDMap result = new OSDMap();
+                    string reason = "";
+                    result["Success"] = TeleportAgent(destination, TeleportFlags, DrawDistance,
+                        Circuit, AgentData, AgentID, requestingRegion, out reason);
+                    result["Reason"] = reason;
+                    return result;
+                }
             }
             else if (message["Method"] == "CrossAgent")
             {
                 if (regionCaps == null || clientCaps == null)
                     return null;
-                //This is a simulator message that tells us to cross the agent
-                OSDMap body = ((OSDMap)message["Message"]);
+                if (clientCaps.GetRootCapsService().RegionHandle == regionCaps.RegionHandle)
+                {
+                    //This is a simulator message that tells us to cross the agent
+                    OSDMap body = ((OSDMap)message["Message"]);
 
-                Vector3 pos = body["Pos"].AsVector3();
-                Vector3 Vel = body["Vel"].AsVector3();
-                GridRegion Region = new GridRegion();
-                Region.FromOSD((OSDMap)body["Region"]);
-                AgentCircuitData Circuit = new AgentCircuitData();
-                Circuit.UnpackAgentCircuitData((OSDMap)body["Circuit"]);
-                AgentData AgentData = new AgentData();
-                AgentData.Unpack((OSDMap)body["AgentData"]);
-                regionCaps.Disabled = false;
+                    Vector3 pos = body["Pos"].AsVector3();
+                    Vector3 Vel = body["Vel"].AsVector3();
+                    GridRegion Region = new GridRegion();
+                    Region.FromOSD((OSDMap)body["Region"]);
+                    AgentCircuitData Circuit = new AgentCircuitData();
+                    Circuit.UnpackAgentCircuitData((OSDMap)body["Circuit"]);
+                    AgentData AgentData = new AgentData();
+                    AgentData.Unpack((OSDMap)body["AgentData"]);
+                    regionCaps.Disabled = false;
 
-                OSDMap result = new OSDMap();
-                string reason = "";
-                result["Success"] = CrossAgent(Region, pos, Vel, Circuit, AgentData,
-                    AgentID, requestingRegion, out reason);
-                result["Reason"] = reason;
-                return result;
+                    OSDMap result = new OSDMap();
+                    string reason = "";
+                    result["Success"] = CrossAgent(Region, pos, Vel, Circuit, AgentData,
+                        AgentID, requestingRegion, out reason);
+                    result["Reason"] = reason;
+                    return result;
+                }
             }
             return null;
         }
