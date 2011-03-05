@@ -62,7 +62,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 	    public class UDPprioQueue
         {
         public OpenSim.Framework.LocklessQueue<object>[] queues;
-        public int promotioncntr;
+        public int[] promotioncntr;
         public int promotionratemask;
         public int nlevels;
 
@@ -71,10 +71,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // PromRatemask:  0x03 promotes on each 4 calls, 0x1 on each 2 calls etc
             nlevels = NumberOfLevels;
             queues = new OpenSim.Framework.LocklessQueue<object>[nlevels];
+            promotioncntr = new int[nlevels];
             for (int i = 0; i < nlevels; i++)
+                {
                 queues[i] = new OpenSim.Framework.LocklessQueue<object>();
-
-            promotioncntr = 0;
+                promotioncntr[i] = 0;
+                }
             promotionratemask = PromRateMask;
             }
 
@@ -85,9 +87,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             queues[prio].Enqueue(o); // store it in its level
 
-            Interlocked.Increment(ref promotioncntr);
+            Interlocked.Increment(ref promotioncntr[prio]);
 
-            if ((promotioncntr & promotionratemask) == 0)
+            if ((promotioncntr[prio] & promotionratemask) == 0)
             // time to move objects up in priority
             // so they don't get stalled if high trafic on higher levels               
                 {
@@ -603,7 +605,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             else
                 {
                 int i = MapCatsToPriority[(int)ThrottleOutPacketType.Texture]; // hack to keep textures flowing for now
-                if (m_outbox.queues[i].Count == 0)
+                if (m_outbox.queues[i].Count < 2)
                     {
                     emptyCategories |= ThrottleOutPacketTypeFlags.Texture;
                     BeginFireQueueEmpty(emptyCategories);
