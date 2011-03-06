@@ -857,3 +857,10 @@ BEGIN;
 ALTER TABLE regionsettings ADD covenantlastupdated VARCHAR(36) NOT NULL DEFAULT '0';
 ALTER TABLE regionsettings ADD generic VARCHAR(8196) NOT NULL DEFAULT '';
 COMMIT;
+
+:VERSION 43         #---------------------
+
+BEGIN;
+ALTER TABLE terrain ADD X VARCHAR(10) NOT NULL DEFAULT '-1';
+ALTER TABLE terrain ADD Y VARCHAR(10) NOT NULL DEFAULT '-1';
+COMMIT;
