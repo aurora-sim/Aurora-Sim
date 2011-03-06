@@ -117,14 +117,18 @@ namespace Aurora.Services.DataService
             user.LastLogin = Util.ToDateTime(int.Parse(query[4]));
             user.LastLogout = Util.ToDateTime(int.Parse(query[5]));
             user.Info = (OSDMap)OSDParser.DeserializeJson(query[6]);
-            user.CurrentRegionID = UUID.Parse(query[7]);
             try
             {
-                user.CurrentPosition = Vector3.Parse(query[8]);
-                user.CurrentLookAt = Vector3.Parse(query[9]);
+                user.CurrentRegionID = UUID.Parse(query[7]);
+                if(query[8] != "")
+                    user.CurrentPosition = Vector3.Parse(query[8]);
+                if (query[9] != "")
+                    user.CurrentLookAt = Vector3.Parse(query[9]);
                 user.HomeRegionID = UUID.Parse(query[10]);
-                user.HomePosition = Vector3.Parse(query[11]);
-                user.HomeLookAt = Vector3.Parse(query[12]);
+                if (query[11] != "")
+                    user.HomePosition = Vector3.Parse(query[11]);
+                if (query[12] != "")
+                    user.HomeLookAt = Vector3.Parse(query[12]);
             }
             catch
             {
