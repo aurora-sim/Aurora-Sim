@@ -37,50 +37,43 @@ namespace OpenSim.Services.GridService
         }
 
         protected ThreatLevel m_defaultRegionThreatLevel = ThreatLevel.Full;
-        protected Dictionary<ThreatLevel, PermissionSet> Permissions = new Dictionary<ThreatLevel, PermissionSet>();
-
+        
         protected class PermissionSet
         {
-            private List<string> PermittedFunctions = new List<string>();
-            private IRegistryCore m_registry;
+            private static Dictionary<string, ThreatLevel> PermittedFunctions = new Dictionary<string, ThreatLevel>();
+            private static IConfig m_config;
 
-            public PermissionSet(IRegistryCore registry)
+            public static void ReadFunctions(IConfig config)
             {
-                m_registry = registry;
-            }
+                m_config = config;
 
-            public void ReadFunctions(IConfig config, ThreatLevel threatLevel)
-            {
                 //Combine all threat level configs for ones that are less than our given threat level as well
                 foreach (ThreatLevel allThreatLevel in Enum.GetValues(typeof(ThreatLevel)))
                 {
-                    if (allThreatLevel <= threatLevel)
+                    string list = config.GetString("Threat_Level_" + allThreatLevel.ToString(), "");
+                    if (list != "")
                     {
-                        string list = config.GetString("Threat_Level_" + allThreatLevel.ToString(), "");
-                        if (list != "")
+                        string[] functions = list.Split(',');
+                        foreach (string function in functions)
                         {
-                            string[] functions = list.Split(',');
-                            foreach (string function in functions)
-                            {
-                                string f = function;
-                                //Clean them up
-                                f = f.Replace(" ", "");
-                                f = f.Replace("\r", "");
-                                f = f.Replace("\n", "");
-                                PermittedFunctions.Add(f);
-                            }
+                            string f = function;
+                            //Clean them up
+                            f = f.Replace(" ", "");
+                            f = f.Replace("\r", "");
+                            f = f.Replace("\n", "");
+                            PermittedFunctions[f] = allThreatLevel;
                         }
                     }
                 }
             }
 
-            public bool CheckPermission(string function, ulong RegionHandle)
+            public static ThreatLevel FindThreatLevelForFunction(string function, ThreatLevel requestedLevel)
             {
-                if (PermittedFunctions.Contains(function))
+                if (PermittedFunctions.ContainsKey(function))
                 {
-                    return true;
+                    return PermittedFunctions[function];
                 }
-                return false;
+                return requestedLevel;
             }
         }
 
@@ -132,50 +125,9 @@ namespace OpenSim.Services.GridService
 
         protected void ReadConfiguration(IConfig config)
         {
+            PermissionSet.ReadFunctions(config);
             m_timeBeforeTimeout = config.GetInt("DefaultTimeout", m_timeBeforeTimeout);
             m_defaultRegionThreatLevel = (ThreatLevel)Enum.Parse(typeof(ThreatLevel), config.GetString("DefaultRegionThreatLevel", m_defaultRegionThreatLevel.ToString()));
-
-            PermissionSet nonePermissions = new PermissionSet(m_registry);
-            nonePermissions.ReadFunctions(config, ThreatLevel.None);
-            Permissions.Add(ThreatLevel.None, nonePermissions);
-
-            PermissionSet lowPermissions = new PermissionSet(m_registry);
-            lowPermissions.ReadFunctions(config, ThreatLevel.Low);
-            Permissions.Add(ThreatLevel.Low, lowPermissions);
-
-            PermissionSet mediumPermissions = new PermissionSet(m_registry);
-            mediumPermissions.ReadFunctions(config, ThreatLevel.Medium);
-            Permissions.Add(ThreatLevel.Medium, mediumPermissions);
-
-            PermissionSet highPermissions = new PermissionSet(m_registry);
-            highPermissions.ReadFunctions(config, ThreatLevel.High);
-            Permissions.Add(ThreatLevel.High, highPermissions);
-
-            PermissionSet fullPermissions = new PermissionSet(m_registry);
-            fullPermissions.ReadFunctions(config, ThreatLevel.Full);
-            Permissions.Add(ThreatLevel.Full, fullPermissions);
-        }
-
-        protected ThreatLevel FindThreatLevelForFunction(string function, ThreatLevel defaultThreatLevel)
-        {
-            string permission = m_permissionConfig.GetString(function, "");
-            if (permission == "")
-                return defaultThreatLevel;
-            ThreatLevel permissionThreatLevel = (ThreatLevel)Enum.Parse(typeof(ThreatLevel), permission);
-            return FindMoreRestrictiveThreatLevel(permissionThreatLevel, defaultThreatLevel);
-        }
-
-        protected ThreatLevel FindMoreRestrictiveThreatLevel(ThreatLevel a, ThreatLevel b)
-        {
-            return a < b ? a : b;
-        }
-
-        protected PermissionSet FindPermissionsForThreatLevel(ThreatLevel threatLevel)
-        {
-            if (Permissions.ContainsKey(threatLevel))
-                return Permissions[threatLevel];
-            else
-                return Permissions[ThreatLevel.None];
         }
 
         private GridRegion FindRegion(ulong RegionHandle)
@@ -278,25 +230,18 @@ namespace OpenSim.Services.GridService
                     return false;
                 }
                 //First find the threat level that this setting has to have do be able to run
-                ThreatLevel functionThreatLevel = FindThreatLevelForFunction(function, defaultThreatLevel);
+                ThreatLevel functionThreatLevel = PermissionSet.FindThreatLevelForFunction(function, defaultThreatLevel);
                 //Now find the permission for that threat level
-                PermissionSet permissions = FindPermissionsForThreatLevel(functionThreatLevel);
-                //If this permission doesn't have that setting, return false
-                if (!permissions.CheckPermission(function, RegionHandle))
+                //else, check it against the threat level that the region has
+                GridRegion region = FindRegion(RegionHandle);
+                if (region == null)
                     return false;
-                else
-                {
-                    //else, check it against the threat level that the region has
-                    GridRegion region = FindRegion(RegionHandle);
-                    if (region == null)
-                        return false;
-                    string rThreat = region.GenericMap["ThreatLevel"].AsString();
-                    ThreatLevel regionThreatLevel = m_defaultRegionThreatLevel;
-                    if (rThreat != "")
-                        regionThreatLevel = (ThreatLevel)Enum.Parse(typeof(ThreatLevel), rThreat);
-                    //Return whether the region threat level is higher than the function threat level
-                    return functionThreatLevel <= regionThreatLevel;
-                }
+                string rThreat = region.GenericMap["ThreatLevel"].AsString();
+                ThreatLevel regionThreatLevel = m_defaultRegionThreatLevel;
+                if (rThreat != "")
+                    regionThreatLevel = (ThreatLevel)Enum.Parse(typeof(ThreatLevel), rThreat);
+                //Return whether the region threat level is higher than the function threat level
+                return functionThreatLevel <= regionThreatLevel;
             }
             return false;
         }
