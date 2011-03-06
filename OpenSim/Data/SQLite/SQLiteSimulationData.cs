@@ -890,12 +890,27 @@ namespace OpenSim.Data.SQLite
                             {
                                 byte[] heightmap = (byte[])row["Heightfield"];
                                 short[] map = new short[RegionSizeX * RegionSizeX];
-                                int ii = 0;
-                                for (int i = 0; i < heightmap.Length; i += sizeof(double))
+                                double[,] terrain = null;
+                                terrain = new double[RegionSizeX, RegionSizeY];
+                                terrain.Initialize();
+
+                                int i = 0;
+                                for (int x = 0; x < RegionSizeX; x++)
                                 {
-                                    map[ii] = (short)(BitConverter.ToDouble(heightmap, i) * Constants.TerrainCompression);
-                                    ii++;
+                                    for (int y = 0; y < RegionSizeY; y++)
+                                    {
+                                        terrain[x, y] = BitConverter.ToDouble(heightmap, i);
+                                        i += sizeof(double);
+                                    }
                                 }
+                                for (int x = 0; x < RegionSizeX; x++)
+                                {
+                                    for (int y = 0; y < RegionSizeY; y++)
+                                    {
+                                        map[y * RegionSizeX + x] = (short)(terrain[x, y] * Constants.TerrainCompression);
+                                    }
+                                }
+
                                 this.StoreTerrain(map, regionID, revert);
                                 return map;
                             }
