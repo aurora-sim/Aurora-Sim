@@ -510,7 +510,19 @@ namespace OpenSim.Services.LLLoginService
                 //
                 if (m_CapsService != null)
                 {
-                    m_CapsService.RemoveCAPS(account.PrincipalID);
+                    IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing>();
+                    if (agentProcessor != null)
+                    {
+                        IClientCapsService clientCaps = m_CapsService.GetClientCapsService(account.PrincipalID);
+                        if (clientCaps != null)
+                        {
+                            IRegionClientCapsService rootRegionCaps = clientCaps.GetRootCapsService();
+                            if (rootRegionCaps != null)
+                                agentProcessor.LogoutAgent(rootRegionCaps);
+                        }
+                    }
+                    else
+                        m_CapsService.RemoveCAPS(account.PrincipalID);
                 }
 
                 //
@@ -1113,7 +1125,11 @@ namespace OpenSim.Services.LLLoginService
             if (!success) // If it failed, do not set up any CapsService for the client
             {
                 //Delete the Caps!
-                m_CapsService.RemoveCAPS(aCircuit.AgentID);
+                IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing>();
+                if (agentProcessor != null && m_CapsService != null)
+                    agentProcessor.LogoutAgent(regionClientCaps);
+                else if(m_CapsService != null)
+                    m_CapsService.RemoveCAPS(aCircuit.AgentID);
                 return success;
             }
 

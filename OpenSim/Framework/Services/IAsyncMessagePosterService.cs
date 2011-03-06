@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using OpenSim.Framework;
+using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.Interfaces
@@ -69,5 +71,76 @@ namespace OpenSim.Services.Interfaces
         /// <param name="RegionHandle"></param>
         /// <param name="request"></param>
         void Post(ulong RegionHandle, OSDMap request);
+    }
+
+    public interface IAgentProcessing
+    {
+        /// <summary>
+        /// Log out the current agent
+        /// </summary>
+        /// <param name="regionCaps"></param>
+        void LogoutAgent(IRegionClientCapsService regionCaps);
+
+        /// <summary>
+        /// Logout all agents in the given region
+        /// </summary>
+        /// <param name="requestingRegion"></param>
+        void LogOutAllAgentsForRegion(ulong requestingRegion);
+
+        /// <summary>
+        /// Enable any child agents that might need added for the restarted region
+        /// </summary>
+        /// <param name="requestingRegion"></param>
+        /// <returns></returns>
+        bool EnableChildAgentsForRegion(GridRegion requestingRegion);
+
+        /// <summary>
+        /// Enable all child agents that should exist in neighboring regions for the given avatar
+        /// </summary>
+        /// <param name="AgentID"></param>
+        /// <param name="requestingRegion"></param>
+        /// <param name="DrawDistance"></param>
+        /// <param name="circuit"></param>
+        /// <returns></returns>
+        bool EnableChildAgents(UUID AgentID, ulong requestingRegion, int DrawDistance, AgentCircuitData circuit);
+
+        /// <summary>
+        /// Teleport the given agent to another sim
+        /// </summary>
+        /// <param name="destination"></param>
+        /// <param name="TeleportFlags"></param>
+        /// <param name="DrawDistance"></param>
+        /// <param name="circuit"></param>
+        /// <param name="agentData"></param>
+        /// <param name="AgentID"></param>
+        /// <param name="requestingRegion"></param>
+        /// <param name="reason"></param>
+        /// <returns></returns>
+        bool TeleportAgent(GridRegion destination, uint TeleportFlags, int DrawDistance,
+            AgentCircuitData circuit, AgentData agentData, UUID AgentID, ulong requestingRegion,
+            out string reason);
+
+        /// <summary>
+        /// Cross the given agent to another sim
+        /// </summary>
+        /// <param name="crossingRegion"></param>
+        /// <param name="pos"></param>
+        /// <param name="velocity"></param>
+        /// <param name="circuit"></param>
+        /// <param name="cAgent"></param>
+        /// <param name="AgentID"></param>
+        /// <param name="requestingRegion"></param>
+        /// <param name="reason"></param>
+        /// <returns></returns>
+        bool CrossAgent(GridRegion crossingRegion, Vector3 pos,
+            Vector3 velocity, AgentCircuitData circuit, AgentData cAgent, UUID AgentID, ulong requestingRegion, out string reason);
+
+        /// <summary>
+        /// Send an agent update to all neighbors for the given agent
+        /// This updates the agent's position, throttles, velocity, etc
+        /// </summary>
+        /// <param name="agentpos"></param>
+        /// <param name="regionCaps"></param>
+        void SendChildAgentUpdate(AgentPosition agentpos, IRegionClientCapsService regionCaps);
     }
 }

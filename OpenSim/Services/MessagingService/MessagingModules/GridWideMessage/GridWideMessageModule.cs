@@ -130,8 +130,9 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 {
                     //Send the message to the client
                     messagePost.Post(regionClient.RegionHandle, BuildRequest("KickUserMessage", message, regionClient.AgentID.ToString()));
-                    client.Close();
-                    capsService.RemoveCAPS(client.AgentID);
+                    IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing>();
+                    if (agentProcessor != null)
+                        agentProcessor.LogoutAgent(regionClient);
                     MainConsole.Instance.Output("User Kicked sent.");
                     return;
                 }

@@ -15,9 +15,9 @@ using OpenSim.Region.Framework.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using log4net;
 
-namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
+namespace OpenSim.Services.MessagingService
 {
-    public class AgentProcessing : IService
+    public class AgentProcessing : IService, IAgentProcessing
     {
         #region Declares
 
@@ -30,11 +30,12 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            m_registry = registry;
+            m_registry.RegisterModuleInterface<IAgentProcessing>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_registry = registry;
             //Also look for incoming messages to display
             registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
         }
@@ -127,28 +128,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 {
                     if (regionCaps.RootAgent)
                     {
-                        //Close all neighbor agents as well, the root is closing itself, so don't call them
-                        foreach (IRegionClientCapsService regionClient in clientCaps.GetCapsServices())
-                        {
-                            if (regionClient.RegionHandle != regionCaps.RegionHandle)
-                            {
-                                ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
-                                if (SimulationService != null)
-                                {
-                                    IGridService GridService = m_registry.RequestModuleInterface<IGridService>();
-                                    if (GridService != null)
-                                    {
-                                        SimulationService.CloseAgent(regionClient.Region, regionCaps.AgentID);
-                                    }
-                                }
-                            }
-                        }
-                        //Close all caps
-                        clientCaps.Close();
-
-                        IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
-                        if (agentInfoService != null)
-                            agentInfoService.SetLoggedIn(regionCaps.AgentID.ToString(), false);
+                        LogoutAgent(regionCaps);
                     }
                 }
             }
@@ -226,7 +206,37 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             return null;
         }
 
-        private void LogOutAllAgentsForRegion(ulong requestingRegion)
+        public void LogoutAgent(IRegionClientCapsService regionCaps)
+        {
+            //Close all neighbor agents as well, the root is closing itself, so don't call them
+            ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
+            if (SimulationService != null)
+            {
+                IGridService GridService = m_registry.RequestModuleInterface<IGridService>();
+                if (GridService != null)
+                {
+                    foreach (IRegionClientCapsService regionClient in regionCaps.ClientCaps.GetCapsServices())
+                    {
+                        if (regionClient.RegionHandle != regionCaps.RegionHandle)
+                        {
+                            SimulationService.CloseAgent(regionClient.Region, regionCaps.AgentID);
+                        }
+                    }
+                }
+            }
+            //Close all caps
+            regionCaps.ClientCaps.Close();
+
+            IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+            if (agentInfoService != null)
+                agentInfoService.SetLoggedIn(regionCaps.AgentID.ToString(), false);
+
+            ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
+            if (capsService != null)
+                capsService.RemoveCAPS(regionCaps.AgentID);
+        }
+
+        public void LogOutAllAgentsForRegion(ulong requestingRegion)
         {
             IRegionCapsService fullregionCaps = m_registry.RequestModuleInterface<ICapsService>().GetCapsForRegion(requestingRegion);
             if (fullregionCaps != null)
@@ -425,7 +435,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
         #region Teleporting
 
-        protected bool TeleportAgent(GridRegion destination, uint TeleportFlags, int DrawDistance,
+        public bool TeleportAgent(GridRegion destination, uint TeleportFlags, int DrawDistance,
             AgentCircuitData circuit, AgentData agentData, UUID AgentID, ulong requestingRegion, 
             out string reason)
         {
@@ -653,7 +663,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
         #region Crossing
 
-        protected bool CrossAgent(GridRegion crossingRegion, Vector3 pos,
+        public bool CrossAgent(GridRegion crossingRegion, Vector3 pos,
             Vector3 velocity, AgentCircuitData circuit, AgentData cAgent, UUID AgentID, ulong requestingRegion, out string reason)
         {
             try
@@ -745,7 +755,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
         #region Agent Update
 
-        protected void SendChildAgentUpdate(AgentPosition agentpos, IRegionClientCapsService regionCaps)
+        public void SendChildAgentUpdate(AgentPosition agentpos, IRegionClientCapsService regionCaps)
         {
             Util.FireAndForget(delegate(object o)
             {
