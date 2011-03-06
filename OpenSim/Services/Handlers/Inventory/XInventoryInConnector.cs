@@ -71,7 +71,7 @@ namespace OpenSim.Services
                 IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
                 m_port = server.Port;
 
-                server.AddStreamHandler(new XInventoryConnectorPostHandler(url, registry.RequestModuleInterface<IInventoryService>()));
+                server.AddStreamHandler(new XInventoryConnectorPostHandler(url, registry.RequestModuleInterface<IInventoryService>(), 0, m_registry));
             }
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
@@ -97,7 +97,7 @@ namespace OpenSim.Services
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
             m_port = server.Port;
 
-            server.AddStreamHandler(new XInventoryConnectorPostHandler(url, m_registry.RequestModuleInterface<IInventoryService>()));
+            server.AddStreamHandler(new XInventoryConnectorPostHandler(url, m_registry.RequestModuleInterface<IInventoryService>(), RegionHandle, m_registry));
         }
 
         public string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
@@ -107,7 +107,7 @@ namespace OpenSim.Services
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
             m_port = server.Port;
 
-            server.AddStreamHandler(new XInventoryConnectorPostHandler(url, m_registry.RequestModuleInterface<IInventoryService>()));
+            server.AddStreamHandler(new XInventoryConnectorPostHandler(url, m_registry.RequestModuleInterface<IInventoryService>(), RegionHandle, m_registry));
 
             return url;
         }
@@ -120,11 +120,15 @@ namespace OpenSim.Services
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IInventoryService m_InventoryService;
+        protected ulong m_regionHandle;
+        protected IRegistryCore m_registry;
 
-        public XInventoryConnectorPostHandler(string url, IInventoryService service) :
+        public XInventoryConnectorPostHandler(string url, IInventoryService service, ulong regionHandle, IRegistryCore registry) :
                 base("POST", url)
         {
             m_InventoryService = service;
+            m_regionHandle = regionHandle;
+            m_registry = registry;
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -147,46 +151,104 @@ namespace OpenSim.Services
 
                 string method = request["METHOD"].ToString();
                 request.Remove("METHOD");
-
+                IGridRegistrationService urlModule =
+                            m_registry.RequestModuleInterface<IGridRegistrationService>();
                 switch (method)
                 {
                     case "CREATEUSERINVENTORY":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Full))
+                                return FailureResult();
                         return HandleCreateUserInventory(request);
                     case "GETINVENTORYSKELETON":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return HandleGetInventorySkeleton(request);
                     case "GETROOTFOLDER":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return HandleGetRootFolder(request);
                     case "GETFOLDERFORTYPE":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return HandleGetFolderForType(request);
                     case "GETFOLDERCONTENT":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return HandleGetFolderContent(request);
                     case "GETFOLDERITEMS":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return HandleGetFolderItems(request);
                     case "ADDFOLDER":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return HandleAddFolder(request);
                     case "UPDATEFOLDER":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.High))
+                                return FailureResult();
                         return HandleUpdateFolder(request);
                     case "MOVEFOLDER":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return HandleMoveFolder(request);
                     case "DELETEFOLDERS":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.High))
+                                return FailureResult();
                         return HandleDeleteFolders(request);
                     case "PURGEFOLDER":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.High))
+                                return FailureResult();
                         return HandlePurgeFolder(request);
                     case "ADDITEM":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return HandleAddItem(request);
                     case "UPDATEITEM":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.High))
+                                return FailureResult();
                         return HandleUpdateItem(request);
                     case "MOVEITEMS":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return HandleMoveItems(request);
                     case "DELETEITEMS":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.High))
+                                return FailureResult();
                         return HandleDeleteItems(request);
                     case "GETITEM":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return HandleGetItem(request);
                     case "GETFOLDER":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return HandleGetFolder(request);
                     case "GETACTIVEGESTURES":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return HandleGetActiveGestures(request);
                     case "GETASSETPERMISSIONS":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return HandleGetAssetPermissions(request);
                 }
                 m_log.DebugFormat("[XINVENTORY HANDLER]: unknown method request: {0}", method);

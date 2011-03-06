@@ -49,11 +49,15 @@ namespace OpenSim.Services
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IUserAccountService m_UserAccountService;
+        protected ulong m_regionHandle;
+        protected IRegistryCore m_registry;
 
-        public UserAccountServerPostHandler(string url, IUserAccountService service) :
+        public UserAccountServerPostHandler(string url, IUserAccountService service, ulong regionHandle, IRegistryCore registry) :
                 base("POST", url)
         {
             m_UserAccountService = service.InnerService;
+            m_regionHandle = regionHandle;
+            m_registry = registry;
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -78,14 +82,24 @@ namespace OpenSim.Services
                     return FailureResult();
 
                 method = request["METHOD"].ToString();
-
+                IGridRegistrationService urlModule =
+                            m_registry.RequestModuleInterface<IGridRegistrationService>();
                 switch (method)
                 {
                     case "getaccount":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.None))
+                                return new byte[0];
                         return GetAccount(request);
                     case "getaccounts":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.None))
+                                return new byte[0];
                         return GetAccounts(request);
                     case "setaccount":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Full))
+                                return new byte[0];
                         return StoreAccount(request);
                 }
                 m_log.DebugFormat("[USER SERVICE HANDLER]: unknown method request: {0}", method);

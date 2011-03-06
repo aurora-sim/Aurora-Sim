@@ -64,7 +64,7 @@ namespace OpenSim.Services
                 IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
                 m_port = server.Port;
 
-                server.AddStreamHandler(new UserAccountServerPostHandler(url, registry.RequestModuleInterface<IUserAccountService>()));
+                server.AddStreamHandler(new UserAccountServerPostHandler(url, registry.RequestModuleInterface<IUserAccountService>(), 0, registry));
             }
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
@@ -90,7 +90,7 @@ namespace OpenSim.Services
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
             m_port = server.Port;
 
-            server.AddStreamHandler(new UserAccountServerPostHandler(url, m_registry.RequestModuleInterface<IUserAccountService>()));
+            server.AddStreamHandler(new UserAccountServerPostHandler(url, m_registry.RequestModuleInterface<IUserAccountService>(), RegionHandle, m_registry));
         }
 
         public string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
@@ -100,7 +100,7 @@ namespace OpenSim.Services
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
             m_port = server.Port;
 
-            server.AddStreamHandler(new UserAccountServerPostHandler(url, m_registry.RequestModuleInterface<IUserAccountService>()));
+            server.AddStreamHandler(new UserAccountServerPostHandler(url, m_registry.RequestModuleInterface<IUserAccountService>(), RegionHandle, m_registry));
             return url;
         }
 

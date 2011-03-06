@@ -50,11 +50,15 @@ namespace OpenSim.Services
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IFriendsService m_FriendsService;
+        protected ulong m_regionHandle;
+        protected IRegistryCore m_registry;
 
-        public FriendsServerPostHandler(string url, IFriendsService service) :
+        public FriendsServerPostHandler(string url, IFriendsService service, ulong regionHandle, IRegistryCore registry) :
                 base("POST", url)
         {
             m_FriendsService = service;
+            m_regionHandle = regionHandle;
+            m_registry = registry;
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -77,15 +81,27 @@ namespace OpenSim.Services
 
                 string method = request["METHOD"].ToString();
 
+                IGridRegistrationService urlModule =
+                            m_registry.RequestModuleInterface<IGridRegistrationService>();
+
                 switch (method)
                 {
                     case "getfriends":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return GetFriends(request);
 
                     case "storefriend":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.High))
+                                return FailureResult();
                         return StoreFriend(request);
 
                     case "deletefriend":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.High))
+                                return FailureResult();
                         return DeleteFriend(request);
 
                 }

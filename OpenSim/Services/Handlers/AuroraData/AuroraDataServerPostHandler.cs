@@ -32,10 +32,14 @@ namespace OpenSim.Services
         private MuteInfoHandler MuteHandler = new MuteInfoHandler();
         private DirectoryInfoHandler DirectoryHandler = new DirectoryInfoHandler();
         private GroupsServiceHandler GroupsHandler = new GroupsServiceHandler();
+        protected ulong m_regionHandle;
+        protected IRegistryCore m_registry;
 
-        public AuroraDataServerPostHandler(string url) :
+        public AuroraDataServerPostHandler(string url, ulong regionHandle, IRegistryCore registry) :
             base("POST", url)
         {
+            m_regionHandle = regionHandle;
+            m_registry = registry;
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -62,141 +66,319 @@ namespace OpenSim.Services
                     return FailureResult();
 
                 method = request["METHOD"].ToString();
-
+                IGridRegistrationService urlModule =
+                            m_registry.RequestModuleInterface<IGridRegistrationService>();
                 switch (method)
                 {
                     #region Profile
                     case "getprofile":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.None))
+                                return FailureResult();
                         return ProfileHandler.GetProfile(request);
                     case "updateprofile":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.High))
+                                return FailureResult();
                         return ProfileHandler.UpdateProfile(request);
                     #endregion
                     #region Agents
                     case "getagent":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return AgentHandler.GetAgent(request);
                     #endregion
                     #region Assets
                     case "updatelsldata":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return AssetHandler.UpdateLSLData(request);
                     case "findlsldata":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return AssetHandler.FindLSLData(request);
                     #endregion
                     #region Estates
                     case "loadestatesettings":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return EstateHandler.LoadEstateSettings(request);
                     case "saveestatesettings":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return EstateHandler.SaveEstateSettings(request);
                     case "linkregionestate":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return EstateHandler.LinkRegionEstate(request);
                     case "delinkregionestate":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return EstateHandler.DelinkRegionEstate(request);
                     case "createestate":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return EstateHandler.CreateEstate(request);
                     case "deleteestate":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return EstateHandler.DeleteEstate(request);
                     case "getestates":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return EstateHandler.GetEstates(request);
                     case "getestatesowner":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return EstateHandler.GetEstatesOwner(request);
                     #endregion
                     #region Mutes
                     case "getmutelist":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return MuteHandler.GetMuteList(request);
                     case "updatemute":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return MuteHandler.UpdateMute(request);
                     case "deletemute":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return MuteHandler.DeleteMute(request);
                     case "ismuted":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return MuteHandler.IsMuted(request);
                     #endregion
                     #region Offline Messages
                     case "addofflinemessage":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return OfflineMessagesHandler.AddOfflineMessage(request);
                     case "getofflinemessages":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return OfflineMessagesHandler.GetOfflineMessages(request);
                     #endregion
                     #region Search
                     case "addlandobject":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return DirectoryHandler.AddLandObject(request);
                     case "getparcelinfo":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return DirectoryHandler.GetParcelInfo(request);
                     case "getparcelbyowner":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return DirectoryHandler.GetParcelByOwner(request);
                     case "findland":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return DirectoryHandler.FindLand(request);
                     case "findlandforsale":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return DirectoryHandler.FindLandForSale(request);
                     case "findevents":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return DirectoryHandler.FindEvents(request);
                     case "findeventsinregion":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return DirectoryHandler.FindEventsInRegion(request);
                     case "findclassifieds":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return DirectoryHandler.FindClassifieds(request);
                     case "geteventinfo":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return DirectoryHandler.GetEventInfo(request);
                     case "findclassifiedsinregion":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return DirectoryHandler.FindClassifiedsInRegion(request);
                     #endregion
                     #region Groups
                     case "CreateGroup":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return GroupsHandler.CreateGroup(request);
                     case "AddGroupNotice":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return GroupsHandler.AddGroupNotice(request);
                     case "SetAgentActiveGroup":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return GroupsHandler.SetAgentActiveGroup(request);
                     case "SetAgentGroupSelectedRole":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return GroupsHandler.SetAgentGroupSelectedRole(request);
                     case "AddAgentToGroup":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return GroupsHandler.AddAgentToGroup(request);
                     case "AddRoleToGroup":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return GroupsHandler.AddRoleToGroup(request);
                     case "UpdateGroup":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return GroupsHandler.UpdateGroup(request);
                     case "RemoveRoleFromGroup":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return GroupsHandler.RemoveRoleFromGroup(request);
                     case "UpdateRole":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return GroupsHandler.UpdateRole(request);
                     case "SetAgentGroupInfo":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return GroupsHandler.SetAgentGroupInfo(request);
                     case "AddAgentGroupInvite":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return GroupsHandler.AddAgentGroupInvite(request);
                     case "RemoveAgentInvite":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return GroupsHandler.RemoveAgentInvite(request);
                     case "AddAgentToRole":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return GroupsHandler.AddAgentToRole(request);
                     case "RemoveAgentFromRole":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return GroupsHandler.RemoveAgentFromRole(request);
                     case "GetGroupRecord":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return GroupsHandler.GetGroupRecord(request);
                     case "GetMemberGroupProfile":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return GroupsHandler.GetMemberGroupProfile(request);
                     case "GetGroupMembershipData":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return GroupsHandler.GetGroupMembershipData(request);
                     case "RemoveAgentFromGroup":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return GroupsHandler.RemoveAgentFromGroup(request);
                     case "GetAgentActiveGroup":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return GroupsHandler.GetAgentActiveGroup(request);
                     case "GetAgentToGroupInvite":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return GroupsHandler.GetAgentToGroupInvite(request);
                     case "GetAgentGroupMemberData":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return GroupsHandler.GetAgentGroupMemberData(request);
                     case "GetGroupNotice":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return GroupsHandler.GetGroupNotice(request);
                     case "GetAgentGroupMemberships":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return GroupsHandler.GetAgentGroupMemberships(request);
                     case "FindGroups":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return GroupsHandler.FindGroups(request);
                     case "GetAgentGroupRoles":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return GroupsHandler.GetAgentGroupRoles(request);
                     case "GetGroupRoles":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return GroupsHandler.GetGroupRoles(request);
                     case "GetGroupMembers":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return GroupsHandler.GetGroupMembers(request);
                     case "GetGroupRoleMembers":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return GroupsHandler.GetGroupRoleMembers(request);
                     case "GetGroupNotices":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return GroupsHandler.GetGroupNotices(request);
                     case "GetGroupInvites":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return GroupsHandler.GetGroupInvites(request);
                     #endregion
                 }
