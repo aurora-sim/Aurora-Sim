@@ -893,7 +893,7 @@ namespace OpenSim.Data.SQLite
                                 int ii = 0;
                                 for (int i = 0; i < heightmap.Length; i += sizeof(double))
                                 {
-                                    map[ii] = (short)(Utils.BytesToDouble(heightmap, i) * Constants.TerrainCompression);
+                                    map[ii] = (short)(BitConverter.ToDouble(heightmap, i) * Constants.TerrainCompression);
                                     ii++;
                                 }
                                 this.StoreTerrain(map, regionID, revert);
