@@ -1899,8 +1899,10 @@ namespace OpenSim.Region.CoreModules.World.Land
                     }
                     else
                     {
+                        int RegionX, RegionY;
+                        Util.UlongToInts(RegionHandle, out RegionX, out RegionY);
                         // most likely still cached from building the extLandData entry
-                        info = m_scene.GridService.GetRegionByPosition(UUID.Zero, (int)X, (int)Y);
+                        info = m_scene.GridService.GetRegionByPosition(UUID.Zero, RegionX, RegionY);
                     }
                     if (info == null)
                     {

@@ -178,6 +178,8 @@ namespace Aurora.Modules
 
         private GridRegion UpdateGridRegionForIWC(ref GridRegion r)
         {
+            if (r == null)
+                return r;
             InterWorldCommunications comms = m_registry.RequestModuleInterface<InterWorldCommunications>();
             r.Flags |= (int)Aurora.Framework.RegionFlags.Foreign;
             if (r.GenericMap["GridUrl"] == "")

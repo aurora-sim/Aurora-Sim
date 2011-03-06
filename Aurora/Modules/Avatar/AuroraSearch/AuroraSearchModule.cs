@@ -182,19 +182,21 @@ namespace Aurora.Modules
             List<DirPlacesReplyData> ReturnValues = new List<DirPlacesReplyData>(directoryService.FindLand(queryText, category.ToString(), queryStart, (uint)queryFlags));
             
             //Only send 10 at a time so that we don't kill the client with too big of a packet
-            DirPlacesReplyData[] data = new DirPlacesReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
+            DirPlacesReplyData[] data = new DirPlacesReplyData[Math.Min(10, ReturnValues.Count)];
 
             int endCount = ReturnValues.Count;
-            for (int i = 0; i < 10 || i < endCount; i++)
+            for (int i = 0; i < Math.Min(10, endCount); i++)
             {
                 data[i] = ReturnValues[0];
                 ReturnValues.RemoveAt(0);
-                if (i % 10 == 0)
+                if (i % 10 == 0 && i != 0)
                 {
                     remoteClient.SendDirPlacesReply(queryID, data);
-                    data = new DirPlacesReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
+                    data = new DirPlacesReplyData[Math.Min(10, ReturnValues.Count)];
                 }
             }
+            if(data.Length != 0)
+                remoteClient.SendDirPlacesReply(queryID, data);
         }
 
         public void DirPopularQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags)
@@ -220,19 +222,21 @@ namespace Aurora.Modules
         {
             List<DirLandReplyData> ReturnValues = new List<DirLandReplyData>(directoryService.FindLandForSale(searchType.ToString(), price.ToString(), area.ToString(), queryStart, queryFlags));
             //Send only 10 at a time
-            DirLandReplyData[] data = new DirLandReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
+            DirLandReplyData[] data = new DirLandReplyData[Math.Min(10, ReturnValues.Count)];
 
             int endCount = ReturnValues.Count;
-            for (int i = 0; i < 10 || i < endCount; i++)
+            for (int i = 0; i < Math.Min(10, endCount); i++)
             {
                 data[i] = ReturnValues[0];
                 ReturnValues.RemoveAt(0);
-                if (i % 10 == 0)
+                if (i % 10 == 0 && i != 0)
                 {
                     remoteClient.SendDirLandReply(queryID, data);
-                    data = new DirLandReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
+                    data = new DirLandReplyData[Math.Min(10, ReturnValues.Count)];
                 }
             }
+            if(data.Length != 0)
+                remoteClient.SendDirLandReply(queryID, data);
         }
 
         /// <summary>
@@ -326,19 +330,21 @@ namespace Aurora.Modules
                 }
             }
             //Only send 10 packets at a time
-            DirPeopleReplyData[] data = new DirPeopleReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
+            DirPeopleReplyData[] data = new DirPeopleReplyData[Math.Min(10, ReturnValues.Count)];
 
             int endCount = ReturnValues.Count;
-            for (int i = 0; i < 10 || i < endCount; i++)
+            for (int i = 0; i < Math.Min(10, endCount); i++)
             {
                 data[i] = ReturnValues[0];
                 ReturnValues.RemoveAt(0);
-                if (i % 10 == 0)
+                if (i % 10 == 0 && i != 0)
                 {
                     remoteClient.SendDirPeopleReply(queryID, data);
-                    data = new DirPeopleReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
+                    data = new DirPeopleReplyData[Math.Min(10, ReturnValues.Count)];
                 }
             }
+            if (data.Length != 0)
+                remoteClient.SendDirPeopleReply(queryID, data);
         }
 
         public void DirEventsQuery(IClientAPI remoteClient, UUID queryID,
@@ -347,19 +353,21 @@ namespace Aurora.Modules
             List<DirEventsReplyData> ReturnValues = new List<DirEventsReplyData>(directoryService.FindEvents(queryText, queryFlags.ToString(), queryStart));
 
             //Split into sets of 10 packets
-            DirEventsReplyData[] data = new DirEventsReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
+            DirEventsReplyData[] data = new DirEventsReplyData[Math.Min(10, ReturnValues.Count)];
 
             int endCount = ReturnValues.Count;
-            for (int i = 0; i < 10 || i < endCount; i++)
+            for (int i = 0; i < Math.Min(10, endCount); i++)
             {
                 data[i] = ReturnValues[0];
                 ReturnValues.RemoveAt(0);
-                if (i % 10 == 0)
+                if (i % 10 == 0 && i != 0)
                 {
                     remoteClient.SendDirEventsReply(queryID, data);
-                    data = new DirEventsReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
+                    data = new DirEventsReplyData[Math.Min(10, ReturnValues.Count)];
                 }
             }
+            if(data.Length != 0)
+                remoteClient.SendDirEventsReply(queryID, data);
         }
 
         public void DirClassifiedQuery(IClientAPI remoteClient, UUID queryID,
@@ -369,19 +377,21 @@ namespace Aurora.Modules
             List<DirClassifiedReplyData> ReturnValues = new List<DirClassifiedReplyData>(directoryService.FindClassifieds(queryText, category.ToString(), queryFlags.ToString(), queryStart));
 
             //Split into sets of 10 packets
-            DirClassifiedReplyData[] data = new DirClassifiedReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
+            DirClassifiedReplyData[] data = new DirClassifiedReplyData[Math.Min(10, ReturnValues.Count)];
 
             int endCount = ReturnValues.Count;
-            for (int i = 0; i < 10 || i < endCount; i++)
+            for (int i = 0; i < 10 || i < Math.Min(10, endCount); i++)
             {
                 data[i] = ReturnValues[0];
                 ReturnValues.RemoveAt(0);
-                if (i % 10 == 0)
+                if (i % 10 == 0 && i != 0)
                 {
                     remoteClient.SendDirClassifiedReply(queryID, data);
-                    data = new DirClassifiedReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
+                    data = new DirClassifiedReplyData[Math.Min(10, ReturnValues.Count)];
                 }
             }
+            if (data.Length != 0)
+                remoteClient.SendDirClassifiedReply(queryID, data);
         }
 
         /// <summary>
