@@ -337,6 +337,11 @@ namespace HttpServer
                 LogWriter.Write(this, LogPrio.Debug, "Failed to end receive : NullRef: " + err.Message);
                 Disconnect(SocketError.NoRecovery);
             }
+            catch (Exception err)
+            {
+                LogWriter.Write(this, LogPrio.Debug, "Failed to end receive : Exception: " + err.ToString());
+                Disconnect(SocketError.NoRecovery);
+            }
         }
 
         private void OnRequestCompleted(object source, EventArgs args)
