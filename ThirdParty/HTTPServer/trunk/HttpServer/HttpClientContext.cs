@@ -294,7 +294,7 @@ namespace HttpServer
                     offset = oldOffset;
 
                 // copy unused bytes to the beginning of the array
-                if (offset > 0 && _bytesLeft != offset)
+                if (offset > 0 && _bytesLeft != offset && _bytesLeft - offset > 0)
 					Buffer.BlockCopy(_buffer, offset, _buffer, 0, _bytesLeft - offset);
 
                 _bytesLeft -= offset;

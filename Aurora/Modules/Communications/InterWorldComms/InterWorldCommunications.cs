@@ -725,18 +725,6 @@ namespace Aurora.Modules
         }
 
         /// <summary>
-        /// Attempt to find a certificate for the given Session Hash
-        /// </summary>
-        /// <param name="SessionHash"></param>
-        /// <returns></returns>
-        public static IWCCertificate GetCertificateBySessionHash(string SessionHash)
-        {
-            IWCCertificate cert = null;
-            m_certificates.TryGetValue(SessionHash, out cert);
-            return cert;
-        }
-
-        /// <summary>
         /// Remove a certificate
         /// </summary>
         /// <param name="cert"></param>
