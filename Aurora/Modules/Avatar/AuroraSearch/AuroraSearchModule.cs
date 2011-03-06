@@ -179,39 +179,22 @@ namespace Aurora.Modules
                                       string queryText, int queryFlags, int category, string simName,
                                       int queryStart)
         {
-            DirPlacesReplyData[] ReturnValues = directoryService.FindLand(queryText, category.ToString(), queryStart, (uint)queryFlags);
+            List<DirPlacesReplyData> ReturnValues = new List<DirPlacesReplyData>(directoryService.FindLand(queryText, category.ToString(), queryStart, (uint)queryFlags));
             
             //Only send 10 at a time so that we don't kill the client with too big of a packet
-            if (ReturnValues.Length > 10)
-            {
-                DirPlacesReplyData[] data = new DirPlacesReplyData[10];
+            DirPlacesReplyData[] data = new DirPlacesReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
 
-                int i = 0;
-                foreach (DirPlacesReplyData d in ReturnValues)
+            int endCount = ReturnValues.Count;
+            for (int i = 0; i < 10 || i < endCount; i++)
+            {
+                data[i] = ReturnValues[0];
+                ReturnValues.RemoveAt(0);
+                if (i % 10 == 0)
                 {
-                    data[i] = d;
-                    i++;
-                    if (i == 10)
-                    {
-                        //Rebuild the packets every 10 places
-                        remoteClient.SendDirPlacesReply(queryID, data);
-                        i = 0;
-                        if (ReturnValues.Length - i < 10)
-                        {
-                            data = new DirPlacesReplyData[ReturnValues.Length - i];
-                        }
-                        else
-                        {
-                            data = new DirPlacesReplyData[10];
-                        }
-                    }
-                }
-                //Send all the remaining packets
-                if(data.Length != 0)
                     remoteClient.SendDirPlacesReply(queryID, data);
+                    data = new DirPlacesReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
+                }
             }
-            else //Send all then if it is less than 10
-                remoteClient.SendDirPlacesReply(queryID, ReturnValues);
         }
 
         public void DirPopularQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags)
@@ -235,34 +218,21 @@ namespace Aurora.Modules
                                  uint queryFlags, uint searchType, int price, int area,
                                  int queryStart)
         {
-            DirLandReplyData[] ReturnValues = directoryService.FindLandForSale(searchType.ToString(), price.ToString(), area.ToString(), queryStart, queryFlags);
+            List<DirLandReplyData> ReturnValues = new List<DirLandReplyData>(directoryService.FindLandForSale(searchType.ToString(), price.ToString(), area.ToString(), queryStart, queryFlags));
             //Send only 10 at a time
-            if (ReturnValues.Length > 10)
+            DirLandReplyData[] data = new DirLandReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
+
+            int endCount = ReturnValues.Count;
+            for (int i = 0; i < 10 || i < endCount; i++)
             {
-                DirLandReplyData[] data = new DirLandReplyData[10];
-                
-                int i = 0;
-                foreach (DirLandReplyData d in ReturnValues)
+                data[i] = ReturnValues[0];
+                ReturnValues.RemoveAt(0);
+                if (i % 10 == 0)
                 {
-                    data[i] = d;
-                    i++;
-                    if (i == 10)
-                    {
-                        //Rebuild every 10 packets
-                        remoteClient.SendDirLandReply(queryID, data);
-                        i = 0;
-                        if (ReturnValues.Length - i < 10)
-                            data = new DirLandReplyData[ReturnValues.Length - i];
-                        else
-                            data = new DirLandReplyData[10];
-                    }
-                }
-                //Send the remaining
-                if(data.Length != 0)
                     remoteClient.SendDirLandReply(queryID, data);
+                    data = new DirLandReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
+                }
             }
-            else //Send all the rest
-                remoteClient.SendDirLandReply(queryID, ReturnValues);
         }
 
         /// <summary>
@@ -296,159 +266,122 @@ namespace Aurora.Modules
         {
             //Find the user accounts
             List<UserAccount> accounts = m_Scenes[0].UserAccountService.GetUserAccounts(m_Scenes[0].RegionInfo.ScopeID, queryText);
-            DirPeopleReplyData[] data =
-                    new DirPeopleReplyData[accounts.Count];
+            List<DirPeopleReplyData> ReturnValues =
+                    new List<DirPeopleReplyData>();
 
-            int i = 0;
             foreach (UserAccount item in accounts)
             {
                 //This is really bad, we should not be searching for all of these people again in the Profile service
                 IUserProfileInfo UserProfile = ProfileFrontend.GetUserProfile(item.PrincipalID);
                 if (UserProfile == null)
                 {
-                    data[i] = new DirPeopleReplyData();
-                    data[i].agentID = item.PrincipalID;
-                    data[i].firstName = item.FirstName;
-                    data[i].lastName = item.LastName;
+                    DirPeopleReplyData person = new DirPeopleReplyData();
+                    person.agentID = item.PrincipalID;
+                    person.firstName = item.FirstName;
+                    person.lastName = item.LastName;
                     if (GroupsModule == null)
-                        data[i].group = "";
+                        person.group = "";
                     else
                     {
-                        data[i].group = "";
+                        person.group = "";
                         GroupMembershipData[] memberships = GroupsModule.GetMembershipData(item.PrincipalID);
                         foreach (GroupMembershipData membership in memberships)
                         {
                             if (membership.Active)
-                                data[i].group = membership.GroupName;
+                                person.group = membership.GroupName;
                         }
                     }
                     //Then we have to pull the GUI to see if the user is online or not
                     UserInfo Pinfo = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(item.PrincipalID.ToString());
                     if (Pinfo != null && Pinfo.IsOnline) //If it is null, they are offline
-                        data[i].online = true;
-                    data[i].reputation = 0;
-                    i++;
+                        person.online = true;
+                    person.reputation = 0;
+                    ReturnValues.Add(person);
                 }
                 else if (UserProfile.AllowPublish) //Check whether they want to be in search or not
                 {
-                    data[i] = new DirPeopleReplyData();
-                    data[i].agentID = item.PrincipalID;
-                    data[i].firstName = item.FirstName;
-                    data[i].lastName = item.LastName;
+                    DirPeopleReplyData person = new DirPeopleReplyData();
+                    person.agentID = item.PrincipalID;
+                    person.firstName = item.FirstName;
+                    person.lastName = item.LastName;
                     if (GroupsModule == null)
-                        data[i].group = "";
+                        person.group = "";
                     else
                     {
-                        data[i].group = "";
+                        person.group = "";
                         //Check what group they have set
                         GroupMembershipData[] memberships = GroupsModule.GetMembershipData(item.PrincipalID);
                         foreach (GroupMembershipData membership in memberships)
                         {
                             if (membership.Active)
-                                data[i].group = membership.GroupName;
+                                person.group = membership.GroupName;
                         }
                     }
                     //Then we have to pull the GUI to see if the user is online or not
                     UserInfo Pinfo = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(item.PrincipalID.ToString());
                     if (Pinfo != null && Pinfo.IsOnline)
-                        data[i].online = true;
-                    data[i].reputation = 0;
-                    i++;
+                        person.online = true;
+                    person.reputation = 0;
+                    ReturnValues.Add(person);
                 }
             }
             //Only send 10 packets at a time
-            if (data.Length > 10)
+            DirPeopleReplyData[] data = new DirPeopleReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
+
+            int endCount = ReturnValues.Count;
+            for (int i = 0; i < 10 || i < endCount; i++)
             {
-                DirPeopleReplyData[] retvals = new DirPeopleReplyData[10];
-                i = 0;
-                foreach (DirPeopleReplyData d in data)
+                data[i] = ReturnValues[0];
+                ReturnValues.RemoveAt(0);
+                if (i % 10 == 0)
                 {
-                    retvals[i] = d;
-                    i++;
-                    if (i == 10)
-                    {
-                        remoteClient.SendDirPeopleReply(queryID, retvals);
-                        i = 0;
-                        if (data.Length - i < 10)
-                            retvals = new DirPeopleReplyData[data.Length - i];
-                        else
-                            retvals = new DirPeopleReplyData[10];
-                    }
+                    remoteClient.SendDirPeopleReply(queryID, data);
+                    data = new DirPeopleReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
                 }
-                //Send the remaining
-                if(retvals.Length != 0)
-                    remoteClient.SendDirPeopleReply(queryID, retvals);
             }
-            else //Send all if under 10
-                remoteClient.SendDirPeopleReply(queryID, data);
-            
         }
 
         public void DirEventsQuery(IClientAPI remoteClient, UUID queryID,
                                    string queryText, uint queryFlags, int queryStart)
         {
-            DirEventsReplyData[] ReturnValues = directoryService.FindEvents(queryText, queryFlags.ToString(), queryStart);
+            List<DirEventsReplyData> ReturnValues = new List<DirEventsReplyData>(directoryService.FindEvents(queryText, queryFlags.ToString(), queryStart));
 
             //Split into sets of 10 packets
-            if (ReturnValues.Length > 10)
-            {
-                DirEventsReplyData[] data = new DirEventsReplyData[10];
-                int i = 0;
+            DirEventsReplyData[] data = new DirEventsReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
 
-                foreach (DirEventsReplyData d in ReturnValues)
+            int endCount = ReturnValues.Count;
+            for (int i = 0; i < 10 || i < endCount; i++)
+            {
+                data[i] = ReturnValues[0];
+                ReturnValues.RemoveAt(0);
+                if (i % 10 == 0)
                 {
-                    data[i] = d;
-                    i++;
-                    if (i == 10)
-                    {
-                        remoteClient.SendDirEventsReply(queryID, data);
-                        i = 0;
-                        if (data.Length - i < 10)
-                            data = new DirEventsReplyData[data.Length - i];
-                        else
-                            data = new DirEventsReplyData[10];
-                    }
-                }
-                //Send the remaining packets
-                if(data.Length != 0)
                     remoteClient.SendDirEventsReply(queryID, data);
+                    data = new DirEventsReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
+                }
             }
-            else //Send the remaining as they are under 10
-                remoteClient.SendDirEventsReply(queryID, ReturnValues);
         }
 
         public void DirClassifiedQuery(IClientAPI remoteClient, UUID queryID,
                                        string queryText, uint queryFlags, uint category,
                                        int queryStart)
         {
-            DirClassifiedReplyData[] ReturnValues = directoryService.FindClassifieds(queryText, category.ToString(), queryFlags.ToString(), queryStart);
-            
-            //Split into sets of 10 packets
-            if (ReturnValues.Length > 10)
-            {
-                DirClassifiedReplyData[] data = new DirClassifiedReplyData[10];
-                int i = 0;
+            List<DirClassifiedReplyData> ReturnValues = new List<DirClassifiedReplyData>(directoryService.FindClassifieds(queryText, category.ToString(), queryFlags.ToString(), queryStart));
 
-                foreach (DirClassifiedReplyData d in ReturnValues)
+            //Split into sets of 10 packets
+            DirClassifiedReplyData[] data = new DirClassifiedReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
+
+            int endCount = ReturnValues.Count;
+            for (int i = 0; i < 10 || i < endCount; i++)
+            {
+                data[i] = ReturnValues[0];
+                ReturnValues.RemoveAt(0);
+                if (i % 10 == 0)
                 {
-                    data[i] = d;
-                    i++;
-                    if (i == 10)
-                    {
-                        remoteClient.SendDirClassifiedReply(queryID, data);
-                        i = 0;
-                        if (data.Length - i < 10)
-                            data = new DirClassifiedReplyData[data.Length - i];
-                        else
-                            data = new DirClassifiedReplyData[10];
-                    }
-                }
-                //Send the remaining packets
-                if (data.Length != 0)
                     remoteClient.SendDirClassifiedReply(queryID, data);
+                    data = new DirClassifiedReplyData[10 < ReturnValues.Count ? 10 : ReturnValues.Count];
+                }
             }
-            else //Send the remaining as they are under 10
-                remoteClient.SendDirClassifiedReply(queryID, ReturnValues);
         }
 
         /// <summary>
