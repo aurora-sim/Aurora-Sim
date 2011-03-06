@@ -446,14 +446,14 @@ namespace Aurora.Modules
                 {
                     if (telehub.SpawnPos.Count == 0)
                     {
-                        newPosition = new Vector3(telehub.TelehubLocX, telehub.TelehubLocY, telehub.TelehubLocZ);
+                        Position = new Vector3(telehub.TelehubLocX, telehub.TelehubLocY, telehub.TelehubLocZ);
                     }
                     else
                     {
                         int LastTelehubNum = 0;
                         if (!LastTelehub.TryGetValue(scene.RegionInfo.RegionID, out LastTelehubNum))
                             LastTelehubNum = 0;
-                        newPosition = telehub.SpawnPos[LastTelehubNum] + new Vector3(telehub.TelehubLocX, telehub.TelehubLocY, telehub.TelehubLocZ);
+                        Position = telehub.SpawnPos[LastTelehubNum] + new Vector3(telehub.TelehubLocX, telehub.TelehubLocY, telehub.TelehubLocZ);
                         LastTelehubNum++;
                         if (LastTelehubNum == telehub.SpawnPos.Count)
                             LastTelehubNum = 0;
