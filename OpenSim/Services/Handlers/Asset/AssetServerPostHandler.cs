@@ -47,11 +47,15 @@ namespace OpenSim.Services
         // private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IAssetService m_AssetService;
+        protected ulong m_regionHandle;
+        protected IRegistryCore m_registry;
 
-        public AssetServerPostHandler(IAssetService service, string url) :
+        public AssetServerPostHandler(IAssetService service, string url, ulong regionHandle, IRegistryCore registry) :
             base("POST", url)
         {
             m_AssetService = service;
+            m_regionHandle = regionHandle;
+            m_registry = registry;
         }
 
         public override byte[] Handle(string path, Stream request,
@@ -60,6 +64,11 @@ namespace OpenSim.Services
             XmlSerializer xs = new XmlSerializer(typeof (AssetBase));
             AssetBase asset = (AssetBase) xs.Deserialize(request);
 
+            IGridRegistrationService urlModule =
+                            m_registry.RequestModuleInterface<IGridRegistrationService>();
+            if (urlModule != null)
+                if (!urlModule.CheckThreatLevel("", m_regionHandle, "Asset_Update", ThreatLevel.Full))
+                    return new byte[0];
             string[] p = SplitParams(path);
             if (p.Length > 1)
             {

@@ -54,12 +54,14 @@ namespace OpenSim.Services
 
         private IAgentInfoService m_AgentInfoService;
         private IRegistryCore m_registry;
+        private ulong m_regionHandle;
 
-        public AgentInfoServerPostHandler(string url, IRegistryCore registry, IAgentInfoService service) :
+        public AgentInfoServerPostHandler(string url, IRegistryCore registry, IAgentInfoService service, ulong regionHandle) :
                 base("POST", url)
         {
             m_AgentInfoService = service;
             m_registry = registry;
+            m_regionHandle = regionHandle;
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -74,17 +76,34 @@ namespace OpenSim.Services
 
             try
             {
+                IGridRegistrationService urlModule =
+                            m_registry.RequestModuleInterface<IGridRegistrationService>();
                 OSDMap map = WebUtils.GetOSDMap(body);
                 if (map != null)
                 {
                     if (map.ContainsKey("Method"))
                     {
                         if (map["Method"] == "GetUserInfo")
+                        {
+                            if (urlModule != null)
+                                if (!urlModule.CheckThreatLevel("", m_regionHandle, map["Method"], ThreatLevel.None))
+                                    return FailureResult();
                             return GetUserInfo(map);
+                        }
                         if (map["Method"] == "GetUserInfos")
+                        {
+                            if (urlModule != null)
+                                if (!urlModule.CheckThreatLevel("", m_regionHandle, map["Method"], ThreatLevel.Low))
+                                    return FailureResult();
                             return GetUserInfos(map);
+                        }
                         if (map["Method"] == "GetAgentsLocations")
+                        {
+                            if (urlModule != null)
+                                if (!urlModule.CheckThreatLevel("", m_regionHandle, map["Method"], ThreatLevel.Low))
+                                    return FailureResult();
                             return GetAgentsLocations(map);
+                        }
                     }
                 }
             }

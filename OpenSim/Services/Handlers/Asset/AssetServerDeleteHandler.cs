@@ -48,12 +48,16 @@ namespace OpenSim.Services
 
         private IAssetService m_AssetService;
         protected bool m_allowDelete;
+        protected ulong m_regionHandle;
+        protected IRegistryCore m_registry;
 
-        public AssetServerDeleteHandler(IAssetService service, bool allowDelete, string url) :
+        public AssetServerDeleteHandler(IAssetService service, bool allowDelete, string url, ulong regionHandle, IRegistryCore registry) :
             base("DELETE", url)
         {
             m_AssetService = service;
             m_allowDelete = allowDelete;
+            m_regionHandle = regionHandle;
+            m_registry = registry;
         }
 
         public override byte[] Handle(string path, Stream request,
@@ -63,6 +67,11 @@ namespace OpenSim.Services
 
             string[] p = SplitParams(path);
 
+            IGridRegistrationService urlModule =
+                            m_registry.RequestModuleInterface<IGridRegistrationService>();
+            if (urlModule != null)
+                if (!urlModule.CheckThreatLevel("", m_regionHandle, "Asset_Delete", ThreatLevel.Full))
+                    return new byte[0];
             if (p.Length > 0 && m_allowDelete)
             {
                 result = m_AssetService.Delete(p[0]);

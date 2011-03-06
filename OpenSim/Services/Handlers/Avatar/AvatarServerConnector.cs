@@ -68,7 +68,7 @@ namespace OpenSim.Services
                 IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
                 m_port = server.Port;
 
-                server.AddStreamHandler(new AvatarServerPostHandler(url, registry.RequestModuleInterface<IAvatarService>()));
+                server.AddStreamHandler(new AvatarServerPostHandler(url, registry.RequestModuleInterface<IAvatarService>(), 0 , registry));
             }
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
@@ -94,7 +94,7 @@ namespace OpenSim.Services
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
             m_port = server.Port;
             
-            server.AddStreamHandler(new AvatarServerPostHandler(url, m_registry.RequestModuleInterface<IAvatarService>()));
+            server.AddStreamHandler(new AvatarServerPostHandler(url, m_registry.RequestModuleInterface<IAvatarService>(), RegionHandle, m_registry));
         }
 
         public string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
@@ -103,7 +103,7 @@ namespace OpenSim.Services
             m_port = server.Port;
             string url = "/avatar" + UUID.Random();
 
-            server.AddStreamHandler(new AvatarServerPostHandler(url, m_registry.RequestModuleInterface<IAvatarService>()));
+            server.AddStreamHandler(new AvatarServerPostHandler(url, m_registry.RequestModuleInterface<IAvatarService>(), RegionHandle, m_registry));
 
             return url;
         }

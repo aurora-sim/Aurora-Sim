@@ -50,11 +50,15 @@ namespace OpenSim.Services
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IAvatarService m_AvatarService;
+        protected ulong m_regionHandle;
+        protected IRegistryCore m_registry;
 
-        public AvatarServerPostHandler(string url, IAvatarService service) :
+        public AvatarServerPostHandler(string url, IAvatarService service, ulong regionHandle, IRegistryCore registry) :
             base("POST", url)
         {
             m_AvatarService = service;
+            m_regionHandle = regionHandle;
+            m_registry = registry;
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -77,19 +81,39 @@ namespace OpenSim.Services
 
                 string method = request["METHOD"].ToString();
 
+                IGridRegistrationService urlModule =
+                            m_registry.RequestModuleInterface<IGridRegistrationService>();
                 switch (method)
                 {
                     case "getavatar":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult();
                         return GetAvatar(request);
                     case "setavatar":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.High))
+                                return FailureResult();
                         return SetAvatar(request);
                     case "resetavatar":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.High))
+                                return FailureResult();
                         return ResetAvatar(request);
                     case "setitems":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return SetItems(request);
                     case "removeitems":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return RemoveItems(request);
                     case "cachewearabledata":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
                         return CacheWearableData(request);
                 }
                 m_log.DebugFormat("[AVATAR HANDLER]: unknown method request: {0}", method);
@@ -100,7 +124,6 @@ namespace OpenSim.Services
             }
 
             return FailureResult();
-
         }
 
         byte[] GetAvatar(Dictionary<string, object> request)

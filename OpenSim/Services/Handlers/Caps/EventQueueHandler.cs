@@ -51,7 +51,7 @@ namespace OpenSim.Services
                 m_port = server.Port;
 
                 server.AddStreamHandler(new EQMEventPoster(url, registry.RequestModuleInterface<IEventQueueService>(),
-                registry.RequestModuleInterface<ICapsService>(), 0));
+                registry.RequestModuleInterface<ICapsService>(), 0, m_registry));
             }
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
@@ -80,7 +80,7 @@ namespace OpenSim.Services
             m_port = server.Port;
 
             server.AddStreamHandler(new EQMEventPoster(url, m_registry.RequestModuleInterface<IEventQueueService>(),
-                    m_registry.RequestModuleInterface<ICapsService>(), RegionHandle));
+                    m_registry.RequestModuleInterface<ICapsService>(), RegionHandle, m_registry));
         }
 
         public string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
@@ -91,7 +91,7 @@ namespace OpenSim.Services
             m_port = server.Port;
 
             server.AddStreamHandler(new EQMEventPoster(url, m_registry.RequestModuleInterface<IEventQueueService>(),
-                    m_registry.RequestModuleInterface<ICapsService>(), RegionHandle));
+                    m_registry.RequestModuleInterface<ICapsService>(), RegionHandle, m_registry));
             return url;
         }
 
@@ -105,13 +105,15 @@ namespace OpenSim.Services
         private IEventQueueService m_eventQueueService;
         private ICapsService m_capsService;
         private ulong m_ourRegionHandle;
+        protected IRegistryCore m_registry;
 
-        public EQMEventPoster(string url, IEventQueueService handler, ICapsService capsService, ulong handle) :
+        public EQMEventPoster(string url, IEventQueueService handler, ICapsService capsService, ulong handle, IRegistryCore registry) :
             base("POST", url)
         {
             m_eventQueueService = handler;
             m_capsService = capsService;
             m_ourRegionHandle = handle;
+            m_registry = registry;
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -122,6 +124,12 @@ namespace OpenSim.Services
             sr.Close();
             body = body.Trim();
 
+            IGridRegistrationService urlModule =
+                            m_registry.RequestModuleInterface<IGridRegistrationService>();
+            if (urlModule != null)
+                if (!urlModule.CheckThreatLevel("", m_ourRegionHandle, "EQM_Post", ThreatLevel.None))
+                    return new byte[0];
+            
             OSDMap request = WebUtils.GetOSDMap(body);
             if (request == null)
                 return null;

@@ -67,9 +67,9 @@ namespace OpenSim.Services
                 string url = "/assets";
 
                 IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService>();
-                server.AddStreamHandler(new AssetServerGetHandler(m_AssetService, url));
-                server.AddStreamHandler(new AssetServerPostHandler(m_AssetService, url));
-                server.AddStreamHandler(new AssetServerDeleteHandler(m_AssetService, m_allowDelete, url));
+                server.AddStreamHandler(new AssetServerGetHandler(m_AssetService, url, 0, registry));
+                server.AddStreamHandler(new AssetServerPostHandler(m_AssetService, url, 0, registry));
+                server.AddStreamHandler(new AssetServerDeleteHandler(m_AssetService, m_allowDelete, url, 0, registry));
             }
 
             IConfig serverConfig = config.Configs[m_ConfigName];
@@ -100,9 +100,9 @@ namespace OpenSim.Services
             m_port = server.Port;
             
             IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService>();
-            server.AddStreamHandler(new AssetServerGetHandler(m_AssetService, url));
-            server.AddStreamHandler(new AssetServerPostHandler(m_AssetService, url));
-            server.AddStreamHandler(new AssetServerDeleteHandler(m_AssetService, m_allowDelete, url));
+            server.AddStreamHandler(new AssetServerGetHandler(m_AssetService, url, RegionHandle, m_registry));
+            server.AddStreamHandler(new AssetServerPostHandler(m_AssetService, url, RegionHandle, m_registry));
+            server.AddStreamHandler(new AssetServerDeleteHandler(m_AssetService, m_allowDelete, url, RegionHandle, m_registry));
         }
 
         public string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
@@ -112,9 +112,9 @@ namespace OpenSim.Services
             string url = "/assets" + UUID.Random();
 
             IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService>();
-            server.AddStreamHandler(new AssetServerGetHandler(m_AssetService, url));
-            server.AddStreamHandler(new AssetServerPostHandler(m_AssetService, url));
-            server.AddStreamHandler(new AssetServerDeleteHandler(m_AssetService, m_allowDelete, url));
+            server.AddStreamHandler(new AssetServerGetHandler(m_AssetService, url, RegionHandle, m_registry));
+            server.AddStreamHandler(new AssetServerPostHandler(m_AssetService, url, RegionHandle, m_registry));
+            server.AddStreamHandler(new AssetServerDeleteHandler(m_AssetService, m_allowDelete, url, RegionHandle, m_registry));
 
             return url;
         }
