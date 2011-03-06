@@ -67,7 +67,7 @@ namespace OpenSim.Services
                 IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
                 m_port = server.Port;
 
-                AgentInfoServerPostHandler handler = new AgentInfoServerPostHandler(url, registry, registry.RequestModuleInterface<IAgentInfoService>(), 0);
+                AgentInfoServerPostHandler handler = new AgentInfoServerPostHandler(url, registry, registry.RequestModuleInterface<IAgentInfoService>().InnerService, 0);
                 server.AddStreamHandler(handler);
             }
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
@@ -89,7 +89,7 @@ namespace OpenSim.Services
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
             m_port = server.Port;
 
-            AgentInfoServerPostHandler handler = new AgentInfoServerPostHandler(url, m_registry, m_registry.RequestModuleInterface<IAgentInfoService>(), RegionHandle);
+            AgentInfoServerPostHandler handler = new AgentInfoServerPostHandler(url, m_registry, m_registry.RequestModuleInterface<IAgentInfoService>().InnerService, RegionHandle);
             server.AddStreamHandler(handler);
         }
 
@@ -100,7 +100,7 @@ namespace OpenSim.Services
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
             m_port = server.Port;
 
-            AgentInfoServerPostHandler handler = new AgentInfoServerPostHandler(url, m_registry, m_registry.RequestModuleInterface<IAgentInfoService>(), RegionHandle);
+            AgentInfoServerPostHandler handler = new AgentInfoServerPostHandler(url, m_registry, m_registry.RequestModuleInterface<IAgentInfoService>().InnerService, RegionHandle);
             server.AddStreamHandler(handler);
 
             return url;

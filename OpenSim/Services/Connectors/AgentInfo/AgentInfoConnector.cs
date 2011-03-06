@@ -10,7 +10,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Simulation.Base;
 
-namespace OpenSim.Services.Connectors.AgentInfo
+namespace OpenSim.Services.Connectors
 {
     public class AgentInfoConnector : IAgentInfoService, IService
     {
@@ -24,12 +24,12 @@ namespace OpenSim.Services.Connectors.AgentInfo
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            m_registry = registry;
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AgentInfoHandler", "") != Name)
                 return;
 
             registry.RegisterModuleInterface<IAgentInfoService>(this);
-            m_registry = registry;
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -48,6 +48,11 @@ namespace OpenSim.Services.Connectors.AgentInfo
         #endregion
 
         #region IAgentInfoService Members
+
+        public IAgentInfoService InnerService
+        {
+            get { return this; }
+        }
 
         public UserInfo GetUserInfo(string userID)
         {
@@ -79,6 +84,7 @@ namespace OpenSim.Services.Connectors.AgentInfo
         public UserInfo[] GetUserInfos(string[] userIDs)
         {
             List<string> urls = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AgentInfoServerURI");
+            List<UserInfo> retVal = new List<UserInfo>();
             foreach (string url in urls)
             {
                 OSDMap request = new OSDMap();
@@ -95,22 +101,21 @@ namespace OpenSim.Services.Connectors.AgentInfo
                 {
                     OSDMap innerresult = (OSDMap)r;
                     OSDArray resultArray = (OSDArray)innerresult["Result"];
-                    List<UserInfo> retVal = new List<UserInfo>();
                     foreach (OSD o in resultArray)
                     {
                         UserInfo info = new UserInfo();
                         info.FromOSD((OSDMap)o);
                         retVal.Add(info);
                     }
-                    return retVal.ToArray();
                 }
             }
-            return null;
+            return retVal.ToArray();
         }
 
         public string[] GetAgentsLocations(string[] userIDs)
         {
             List<string> urls = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AgentInfoServerURI");
+            List<string> retVal = new List<string>();
             foreach (string url in urls)
             {
                 OSDMap request = new OSDMap();
@@ -127,15 +132,13 @@ namespace OpenSim.Services.Connectors.AgentInfo
                 {
                     OSDMap innerresult = (OSDMap)r;
                     OSDArray resultArray = (OSDArray)innerresult["Result"];
-                    List<string> retVal = new List<string>();
                     foreach (OSD o in resultArray)
                     {
                         retVal.Add(o.AsString());
                     }
-                    return retVal.ToArray();
                 }
             }
-            return null;
+            return retVal.ToArray();
         }
 
         public bool SetHomePosition(string userID, UUID homeID, Vector3 homePosition, Vector3 homeLookAt)

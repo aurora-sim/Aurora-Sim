@@ -39,7 +39,7 @@ using Aurora.Framework;
 using Aurora.Simulation.Base;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
-namespace OpenSim.Services.PresenceService
+namespace OpenSim.Services
 {
     public class AgentInfoService : IService, IAgentInfoService
     {
@@ -54,12 +54,12 @@ namespace OpenSim.Services.PresenceService
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            m_registry = registry;
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AgentInfoHandler", "") != Name)
                 return;
 
             registry.RegisterModuleInterface<IAgentInfoService>(this);
-            m_registry = registry;
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -79,6 +79,11 @@ namespace OpenSim.Services.PresenceService
         #endregion
 
         #region IAgentInfoService Members
+
+        public IAgentInfoService InnerService
+        {
+            get { return this; }
+        }
 
         public UserInfo GetUserInfo(string userID)
         {
