@@ -44,11 +44,8 @@ namespace Aurora.Services.DataService
         /// <summary>
         /// Adds a new telehub in the region. Replaces an old one automatically.
         /// </summary>
-        /// <param name="regionID"></param>
-        /// <param name="position">Telehub position</param>
-        /// <param name="regionPosX">Region Position in meters</param>
-        /// <param name="regionPosY">Region Position in meters</param>
-        public void AddTelehub(Telehub telehub, UUID SessionID)
+        /// <param name="telehub"></param>
+        public void AddTelehub(Telehub telehub)
         {
             //Look for a telehub first.
             if (FindTelehub(new UUID(telehub.RegionID)) != null)
@@ -100,7 +97,7 @@ namespace Aurora.Services.DataService
         /// Removes the telehub if it exists.
         /// </summary>
         /// <param name="regionID"></param>
-        public void RemoveTelehub(UUID regionID, UUID SessionID)
+        public void RemoveTelehub(UUID regionID)
         {
             //Look for a telehub first.
             Vector3 oldPos = Vector3.Zero;

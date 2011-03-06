@@ -13,13 +13,13 @@ namespace Aurora.Framework
         /// Adds a telehub for the region
         /// </summary>
         /// <param name="telehub"></param>
-        void AddTelehub(Telehub telehub, UUID SessionID);
+        void AddTelehub(Telehub telehub);
 
         /// <summary>
         /// Removes the telehub for the region
         /// </summary>
         /// <param name="regionID"></param>
-        void RemoveTelehub(UUID regionID, UUID SessionID);
+        void RemoveTelehub(UUID regionID);
 
         /// <summary>
         /// Finds the telehub for the region

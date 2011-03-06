@@ -222,7 +222,7 @@ namespace Aurora.Modules
                         return;
                     //Remove the one we sent at X
                     telehub.SpawnPos.RemoveAt(int.Parse(Parameters[1]));
-                    RegionConnector.AddTelehub(telehub, Sp.Scene.RegionInfo.GridSecureSessionID);
+                    RegionConnector.AddTelehub(telehub);
                     SendTelehubInfo(client);
                 }
                 if (parameter1 == "spawnpoint add")
@@ -240,12 +240,12 @@ namespace Aurora.Modules
                     if (telehub.TelehubLocX == 0 && telehub.TelehubLocY == 0)
                         return; //No spawns without a telehub
                     telehub.SpawnPos.Add(part.AbsolutePosition - pos); //Spawns are offsets
-                    RegionConnector.AddTelehub(telehub, client.Scene.RegionInfo.GridSecureSessionID);
+                    RegionConnector.AddTelehub(telehub);
                     SendTelehubInfo(client);
                 }
                 if (parameter1 == "delete")
                 {
-                    RegionConnector.RemoveTelehub(client.Scene.RegionInfo.RegionID, Sp.Scene.RegionInfo.GridSecureSessionID);
+                    RegionConnector.RemoveTelehub(client.Scene.RegionInfo.RegionID);
                     SendTelehubInfo(client);
                 }
                 if (parameter1 == "connect")
@@ -267,7 +267,7 @@ namespace Aurora.Modules
                     telehub.TelehubRotZ = part.ParentGroup.Rotation.Z;
                     telehub.ObjectUUID = part.UUID;
                     telehub.Name = part.Name;
-                    RegionConnector.AddTelehub(telehub, Sp.Scene.RegionInfo.GridSecureSessionID);
+                    RegionConnector.AddTelehub(telehub);
                     SendTelehubInfo(client);
                 }
 

@@ -678,17 +678,12 @@ namespace OpenSim.Services
         private byte[] RemoveTelehub(Dictionary<string, object> request)
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
-            UUID regionID = UUID.Zero;
-            if (request.ContainsKey("REGIONID"))
-                UUID.TryParse(request["REGIONID"].ToString(), out regionID);
-            else
-                m_log.WarnFormat("[AuroraDataServerPostHandler]: no regionID in request to remove telehub");
 
-            UUID SessionID = UUID.Parse(request["SESSIONID"].ToString());
-
-            GridRegion r = m_GridService.GetRegionByUUID(UUID.Zero, regionID);
-            if(r != null && r.SessionID == SessionID)
-                TelehubConnector.RemoveTelehub(regionID, SessionID);
+            int RegionX, RegionY;
+            Util.UlongToInts(m_regionHandle, out RegionX, out RegionY);
+            GridRegion r = m_GridService.GetRegionByPosition(UUID.Zero, RegionX, RegionY);
+            if(r != null)
+                TelehubConnector.RemoveTelehub(r.RegionID);
             result["result"] = "Successful";
 
             string xmlString = WebUtils.BuildXmlResponse(result);
@@ -700,11 +695,15 @@ namespace OpenSim.Services
         {
             Telehub telehub = new Telehub();
             telehub.FromKVP(request);
-            UUID SessionID = UUID.Parse(request["SESSIONID"].ToString());
 
-            GridRegion r = m_GridService.GetRegionByUUID(UUID.Zero, telehub.RegionID);
-            if (r != null && r.SessionID == SessionID)
-                TelehubConnector.AddTelehub(telehub, SessionID);
+            int RegionX, RegionY;
+            Util.UlongToInts(m_regionHandle, out RegionX, out RegionY);
+            GridRegion r = m_GridService.GetRegionByPosition(UUID.Zero, RegionX, RegionY);
+            if (r != null)
+            {
+                telehub.RegionID = r.RegionID;
+                TelehubConnector.AddTelehub(telehub);
+            }
 
             return SuccessResult();
         }

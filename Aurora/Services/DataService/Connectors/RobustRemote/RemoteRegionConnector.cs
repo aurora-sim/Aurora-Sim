@@ -44,11 +44,9 @@ namespace Aurora.Services.DataService
 
         #region IGridConnector Members
 
-        public void AddTelehub(Telehub telehub, UUID SessionID)
+        public void AddTelehub(Telehub telehub)
         {
             Dictionary<string, object> sendData = telehub.ToKeyValuePairs();
-
-            sendData["SESSIONID"] = SessionID.ToString();
             sendData["METHOD"] = "addtelehub";
 
             string reqString = WebUtils.BuildQueryString(sendData);
@@ -69,12 +67,9 @@ namespace Aurora.Services.DataService
             }
         }
 
-        public void RemoveTelehub(UUID regionID, UUID SessionID)
+        public void RemoveTelehub(UUID regionID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
-
-            sendData["REGIONID"] = regionID.ToString();
-            sendData["SESSIONID"] = SessionID.ToString();
             sendData["METHOD"] = "removetelehub";
 
             string reqString = WebUtils.BuildQueryString(sendData);

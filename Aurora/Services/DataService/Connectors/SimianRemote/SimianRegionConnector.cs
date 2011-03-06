@@ -47,15 +47,15 @@ namespace Aurora.Services.DataService
 
         #region IRegionConnector Members
 
-        public void AddTelehub(Telehub telehub, UUID SessionID)
+        public void AddTelehub(Telehub telehub)
         {
             foreach (string m_ServerURI in m_ServerURIs)
             {
-                SimianUtils.AddGeneric(telehub.RegionID, "RegionTelehub", SessionID.ToString(), telehub.ToOSD(), m_ServerURI);
+                SimianUtils.AddGeneric(telehub.RegionID, "RegionTelehub", UUID.Zero.ToString(), telehub.ToOSD(), m_ServerURI);
             }
         }
 
-        public void RemoveTelehub(UUID regionID, UUID SessionID)
+        public void RemoveTelehub(UUID regionID)
         {
             foreach (string m_ServerURI in m_ServerURIs)
             {
