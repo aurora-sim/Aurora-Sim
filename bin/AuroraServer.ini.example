@@ -27,6 +27,12 @@
     ;; Note: 0 disables this check
     ;; Default is 0
     MaxRegionSize = 0;
+
+    ;; Should registration of new regions (existing regions can still connector) be allowed currently?
+    AllowNewRegistrations = true
+    
+    ;; Should any registrations be allowed currently?
+    DisableRegistrations = false
     
 [NeighborService]
     

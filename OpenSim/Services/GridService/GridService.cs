@@ -48,7 +48,6 @@ namespace OpenSim.Services.GridService
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private bool m_DeleteOnUnregister = true;
         private static GridService m_RootInstance = null;
         protected IConfigSource m_config;
         protected IRegionData m_Database = null;
@@ -56,7 +55,10 @@ namespace OpenSim.Services.GridService
         protected IRegistryCore m_registryCore;
 
         protected IAuthenticationService m_AuthenticationService = null;
+        private bool m_DeleteOnUnregister = true;
         protected bool m_AllowDuplicateNames = false;
+        protected bool m_AllowNewRegistrations = true;
+        protected bool m_DisableRegistrations = false;
         protected bool m_UseSessionID = true;
         protected int m_maxRegionSize = 0;
 
@@ -86,10 +88,12 @@ namespace OpenSim.Services.GridService
             IConfig gridConfig = config.Configs["GridService"];
             if (gridConfig != null)
             {
-                m_DeleteOnUnregister = gridConfig.GetBoolean("DeleteOnUnregister", true);
-                m_maxRegionSize = gridConfig.GetInt("MaxRegionSize", 0);
-                m_DeleteOnUnregister = gridConfig.GetBoolean("DeleteOnUnregister", true);
-                m_UseSessionID = !gridConfig.GetBoolean("DisableSessionID", false);
+                m_DisableRegistrations = gridConfig.GetBoolean("DisableRegistrations", m_DisableRegistrations);
+                m_AllowNewRegistrations = gridConfig.GetBoolean("AllowNewRegistrations", m_AllowNewRegistrations);
+                m_DeleteOnUnregister = gridConfig.GetBoolean("DeleteOnUnregister", m_DeleteOnUnregister);
+                m_maxRegionSize = gridConfig.GetInt("MaxRegionSize", m_maxRegionSize);
+                m_DeleteOnUnregister = gridConfig.GetBoolean("DeleteOnUnregister", m_DeleteOnUnregister);
+                m_UseSessionID = !gridConfig.GetBoolean("DisableSessionID", !m_UseSessionID);
                 m_AllowDuplicateNames = gridConfig.GetBoolean("AllowDuplicateNames", m_AllowDuplicateNames);
             }
 
@@ -137,6 +141,9 @@ namespace OpenSim.Services.GridService
         public string RegisterRegion(GridRegion regionInfos, UUID oldSessionID, out UUID SessionID)
         {
             SessionID = UUID.Zero;
+            if (m_DisableRegistrations)
+                return "Registrations are disabled.";
+
             UUID NeedToDeletePreviousRegion = UUID.Zero;
 
             IConfig gridConfig = m_config.Configs["GridService"];
@@ -155,18 +162,25 @@ namespace OpenSim.Services.GridService
 
             GridRegion region = regions.Count > 0 ? regions[0] : null;
 
+            if (!m_AllowNewRegistrations && region == null)
+            {
+                m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register but registrations are disabled.",
+                    regionInfos.RegionName);
+                return "Registrations are disabled.";
+            }
+
             if (m_maxRegionSize != 0 && (regionInfos.RegionSizeX > m_maxRegionSize || regionInfos.RegionSizeY > m_maxRegionSize))
             {
                 //Too big... kick it out
                 m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register with too large of a size {1},{2}.",
-                    regionInfos.RegionID, regionInfos.RegionSizeX, regionInfos.RegionSizeY);
+                    regionInfos.RegionName, regionInfos.RegionSizeX, regionInfos.RegionSizeY);
                 return "Region overlaps another region";
             }
 
             if ((region != null) && (region.RegionID != regionInfos.RegionID))
             {
                 m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register in coordinates {1}, {2} which are already in use in scope {3}.",
-                    regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY, regionInfos.ScopeID);
+                    regionInfos.RegionName, regionInfos.RegionLocX, regionInfos.RegionLocY, regionInfos.ScopeID);
                 return "Region overlaps another region";
             }
 
@@ -276,7 +290,7 @@ namespace OpenSim.Services.GridService
                 //If we already have a session, we need to check it
                 if (m_UseSessionID && region.SessionID != oldSessionID)
                 {
-                    m_log.Warn("[GRID SERVICE]: Region called register, but the sessionID they provided is wrong!");
+                    m_log.WarnFormat("[GRID SERVICE]: Region {0} called register, but the sessionID they provided is wrong!", region.RegionName);
                     return "Wrong Session ID";
                 }
             }
@@ -299,8 +313,8 @@ namespace OpenSim.Services.GridService
                     //Fire the event so that other modules notice
                     m_simulationBase.EventManager.FireGenericEventHandler("RegionRegistered", regionInfos);
 
-                    m_log.DebugFormat("[GRID SERVICE]: Region {0} ({1}) registered successfully at {2}-{3}",
-                         regionInfos.RegionName, regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY);
+                    m_log.DebugFormat("[GRID SERVICE]: Region {0} registered successfully at {1}-{2}",
+                         regionInfos.RegionName, regionInfos.RegionLocX, regionInfos.RegionLocY);
                     return String.Empty;
                 }
             }
