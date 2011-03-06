@@ -17,6 +17,7 @@ namespace Aurora.Modules
     {
         protected GridService m_localService;
         protected GridServicesConnector m_remoteService;
+        protected IRegistryCore m_registry;
         #region IService Members
 
         public string Name
@@ -35,6 +36,7 @@ namespace Aurora.Modules
             if (handlerConfig.GetString("GridHandler", "") != Name)
                 return;
 
+            m_registry = registry;
             m_localService = new GridService();
             m_localService.Configure(config, registry);
             m_remoteService = new GridServicesConnector();
@@ -74,6 +76,7 @@ namespace Aurora.Modules
             if (r == null)
             {
                 r = m_remoteService.GetRegionByUUID(scopeID, regionID);
+                UpdateGridRegionForIWC(ref r);
             }
             return r;
         }
@@ -84,6 +87,7 @@ namespace Aurora.Modules
             if (r == null)
             {
                 r = m_remoteService.GetRegionByPosition(scopeID, x, y);
+                UpdateGridRegionForIWC(ref r);
             }
             return r;
         }
@@ -94,6 +98,7 @@ namespace Aurora.Modules
             if (r == null)
             {
                 r = m_remoteService.GetRegionByName(scopeID, regionName);
+                UpdateGridRegionForIWC(ref r);
             }
             return r;
         }
@@ -101,14 +106,18 @@ namespace Aurora.Modules
         public List<GridRegion> GetRegionsByName(UUID scopeID, string name, int maxNumber)
         {
             List<GridRegion> r = m_localService.GetRegionsByName(scopeID, name, maxNumber);
-            r.AddRange(m_remoteService.GetRegionsByName(scopeID, name, maxNumber));
+            List<GridRegion> remoteRegions = m_remoteService.GetRegionsByName(scopeID, name, maxNumber);
+            UpdateGridRegionsForIWC(ref remoteRegions);
+            r.AddRange(remoteRegions);
             return r;
         }
 
         public List<GridRegion> GetRegionRange(UUID scopeID, int xmin, int xmax, int ymin, int ymax)
         {
             List<GridRegion> r = m_localService.GetRegionRange(scopeID, xmin, xmax, ymin, ymax);
-            r.AddRange(m_remoteService.GetRegionRange(scopeID, xmin, xmax, ymin, ymax));
+            List<GridRegion> remoteRegions = m_remoteService.GetRegionRange(scopeID, xmin, xmax, ymin, ymax);
+            UpdateGridRegionsForIWC(ref remoteRegions);
+            r.AddRange(remoteRegions);
             return r;
         }
 
@@ -155,6 +164,27 @@ namespace Aurora.Modules
         public void SetRegionUnsafe(UUID RegionID)
         {
             m_localService.SetRegionUnsafe(RegionID);
+        }
+
+        private void UpdateGridRegionsForIWC(ref List<GridRegion> rs)
+        {
+            for(int i = 0; i < rs.Count; i++)
+            {
+                GridRegion r = rs[i];
+                UpdateGridRegionForIWC(ref r);
+                rs[i] = r;
+            }
+        }
+
+        private GridRegion UpdateGridRegionForIWC(ref GridRegion r)
+        {
+            InterWorldCommunications comms = m_registry.RequestModuleInterface<InterWorldCommunications>();
+            r.Flags |= (int)Aurora.Framework.RegionFlags.Foreign;
+            if (r.GenericMap["GridUrl"] == "")
+                r.GenericMap["ThreatLevel"] = comms.m_untrustedConnectionsDefaultTrust.ToString();
+            else
+                r.GenericMap["ThreatLevel"] = comms.GetThreatLevelForUrl(r.GenericMap["GridUrl"]).ToString();
+            return r;
         }
 
         #endregion

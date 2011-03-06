@@ -49,7 +49,6 @@ namespace Aurora.Framework
 
         List<GridRegion> GetDefaultRegions(UUID scopeID);
         List<GridRegion> GetFallbackRegions(UUID scopeID, int x, int y);
-        List<GridRegion> GetHyperlinks(UUID scopeID);
         List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y);
     }
 
@@ -68,6 +67,7 @@ namespace Aurora.Framework
         Hyperlink = 512, // Record represents a HG link
         Hidden = 1024, //Hides the sim except for those on the access list
         Safe = 2048, //Safe to login agents to
-        Prelude = 4096 //Starting region that you can only go to once
+        Prelude = 4096, //Starting region that you can only go to once
+        Foreign = 8192 //Region is not in this grid
     }
 }

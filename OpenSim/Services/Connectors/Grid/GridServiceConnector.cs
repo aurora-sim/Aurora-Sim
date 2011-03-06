@@ -250,7 +250,10 @@ namespace OpenSim.Services.Connectors
                         if ((replyData != null) && (replyData.ContainsKey("result") && replyData["result"] != null))
                         {
                             if (replyData["result"] is Dictionary<string, object>)
+                            {
                                 rinfo = new GridRegion((Dictionary<string, object>)replyData["result"]);
+                                rinfo.GenericMap["URL"] = m_ServerURI;
+                            }
                             //else
                             //    m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByUUID {0}, {1} received null response",
                             //        scopeID, regionID);
@@ -299,7 +302,10 @@ namespace OpenSim.Services.Connectors
                         if ((replyData != null) && (replyData["result"] != null))
                         {
                             if (replyData["result"] is Dictionary<string, object>)
+                            {
                                 rinfo = new GridRegion((Dictionary<string, object>)replyData["result"]);
+                                rinfo.GenericMap["URL"] = m_ServerURI;
+                            }
                             //else
                             //    m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition {0}, {1}-{2} received no region",
                             //        scopeID, x, y);
@@ -346,7 +352,10 @@ namespace OpenSim.Services.Connectors
                         if ((replyData != null) && (replyData["result"] != null))
                         {
                             if (replyData["result"] is Dictionary<string, object>)
+                            {
                                 rinfo = new GridRegion((Dictionary<string, object>)replyData["result"]);
+                                rinfo.GenericMap["URL"] = m_ServerURI;
+                            }
                         }
                         else
                             m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition {0}, {1} received null response",
@@ -396,6 +405,7 @@ namespace OpenSim.Services.Connectors
                                 if (r is Dictionary<string, object>)
                                 {
                                     GridRegion rinfo = new GridRegion((Dictionary<string, object>)r);
+                                    rinfo.GenericMap["URL"] = m_ServerURI;
                                     rinfos.Add(rinfo);
                                 }
                             }
@@ -452,6 +462,7 @@ namespace OpenSim.Services.Connectors
                                 if (r is Dictionary<string, object>)
                                 {
                                     GridRegion rinfo = new GridRegion((Dictionary<string, object>)r);
+                                    rinfo.GenericMap["URL"] = m_ServerURI;
                                     rinfos.Add(rinfo);
                                 }
                             }

@@ -196,11 +196,6 @@ namespace Aurora.Services.DataService
             return regions;
         }
 
-        public List<GridRegion> GetHyperlinks(UUID scopeID)
-        {
-            return Get((int)RegionFlags.Hyperlink, scopeID);
-        }
-
         public List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y)
         {
             List<GridRegion> Regions = Get((int)RegionFlags.Safe, scopeID);

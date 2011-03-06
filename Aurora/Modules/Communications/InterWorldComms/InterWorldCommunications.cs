@@ -48,7 +48,7 @@ namespace Aurora.Modules
         /// <summary>
         /// Untrusted connections automatically get this trust level
         /// </summary>
-        public TrustLevel m_untrustedConnectionsDefaultTrust = TrustLevel.Low;
+        public ThreatLevel m_untrustedConnectionsDefaultTrust = ThreatLevel.Low;
         /// <summary>
         /// All connections that we have to other hosts
         /// (Before sending the initial connection requests, 
@@ -229,7 +229,7 @@ namespace Aurora.Modules
 
             //Add the certificate now
             CertificateVerification.AddCertificate(con);
-            con.TrustLevel = (TrustLevel)Enum.Parse(typeof(TrustLevel), trustLevel);
+            con.ThreatLevel = (ThreatLevel)Enum.Parse(typeof(ThreatLevel), trustLevel);
 
             TryAddConnection(con);
         }
@@ -258,7 +258,7 @@ namespace Aurora.Modules
                 m_log.Info("Url: " + Connections[i].URL);
                 m_log.Info("User Name: " + Connections[i].UserName);
                 m_log.Info("Password: " + Connections[i].Password);
-                m_log.Info("TrustLevel: " + Connections[i].TrustLevel);
+                m_log.Info("Trust Level: " + Connections[i].ThreatLevel);
                 m_log.Info("Valid Until: " + Connections[i].ValidUntil);
                 m_log.Info("Active: " + Connections[i].Active);
                 m_log.Info("-------------");
@@ -278,8 +278,9 @@ namespace Aurora.Modules
             {
                 m_Enabled = m_config.GetBoolean("Enabled", false);
                 m_allowUntrustedConnections = m_config.GetBoolean("AllowUntrustedConnections", m_allowUntrustedConnections);
-                m_untrustedConnectionsDefaultTrust = (TrustLevel)Enum.Parse(typeof(TrustLevel), m_config.GetString("UntrustedConnectionsDefaultTrust", m_untrustedConnectionsDefaultTrust.ToString()));
+                m_untrustedConnectionsDefaultTrust = (ThreatLevel)Enum.Parse(typeof(ThreatLevel), m_config.GetString("UntrustedConnectionsDefaultTrust", m_untrustedConnectionsDefaultTrust.ToString()));
                 registry.RegisterModuleInterface<ICommunicationService>(this);
+                registry.RegisterModuleInterface<InterWorldCommunications>(this);
                 m_registry = registry;
             }
         }
@@ -312,6 +313,14 @@ namespace Aurora.Modules
 
         #region ICommunicationService
 
+        public ThreatLevel GetThreatLevelForUrl(string URL)
+        {
+            IWCCertificate cert = CertificateVerification.GetCertificateByUrl(URL);
+            if (cert != null)
+                return cert.ThreatLevel;
+            return m_untrustedConnectionsDefaultTrust;
+        }
+
         public GridRegion GetRegionForGrid(string regionName, string Url)
         {
             IWCCertificate c = FindConnectionByURL(Url);
@@ -327,7 +336,7 @@ namespace Aurora.Modules
                 //Build the certificate
                 c.ValidUntil = DateTime.Now.AddDays(1); //One day for now...
 
-                c.TrustLevel = m_untrustedConnectionsDefaultTrust; //Least amount of our trust for them
+                c.ThreatLevel = m_untrustedConnectionsDefaultTrust; //Least amount of our trust for them
                 //Be user friendly, add the http:// if needed as well as the final /
                 Url = (Url.StartsWith("http://") || Url.StartsWith("https://")) ? Url : "http://" + Url;
                 Url = Url.EndsWith("/") ? Url + "iwcconnection" : Url + "/iwcconnection";
@@ -485,7 +494,7 @@ namespace Aurora.Modules
                     return FailureResult(); //We don't allow them
 
                 //Give them the default untrusted connection level
-                Certificate.TrustLevel = IWC.m_untrustedConnectionsDefaultTrust;
+                Certificate.ThreatLevel = IWC.m_untrustedConnectionsDefaultTrust;
             }
 
             //Update them in the database so that they can connect again later
@@ -583,18 +592,6 @@ namespace Aurora.Modules
     #region Connector classes
 
     /// <summary>
-    /// The trust level enum
-    /// Tells how much we trust another host
-    /// </summary>
-    public enum TrustLevel : int
-    {
-        Full = 4,
-        High = 3,
-        Medium = 2,
-        Low = 1
-    }
-
-    /// <summary>
     /// The base Certificate class
     /// This deals with saving info about other hosts so that we can contact them
     /// </summary>
@@ -613,7 +610,7 @@ namespace Aurora.Modules
         /// <summary>
         /// Our TrustLevel of the host (target)
         /// </summary>
-        public TrustLevel TrustLevel;
+        public ThreatLevel ThreatLevel;
         /// <summary>
         /// The (base, unsecure) Url of the host (target) we are connecting to
         /// </summary>
@@ -645,8 +642,8 @@ namespace Aurora.Modules
         {
             ValidUntil = map["ValidUntil"].AsDate();
             SecureUrls = (OSDMap)map["SecureUrls"];
-            if(map.ContainsKey("TrustLevel"))
-                TrustLevel = (TrustLevel)map["TrustLevel"].AsInteger();
+            if (map.ContainsKey("ThreatLevel"))
+                ThreatLevel = (ThreatLevel)map["ThreatLevel"].AsInteger();
             UserName = map["UserName"].AsString();
             Password = map["Password"].AsString();
             URL = map["URL"].AsString();
@@ -660,7 +657,7 @@ namespace Aurora.Modules
             map.Add("UserName", UserName);
             map.Add("Password", Password);
             if(Secure)
-                map.Add("TrustLevel", (int)TrustLevel);
+                map.Add("ThreatLevel", (int)ThreatLevel);
             map.Add("URL", URL);
             return map;
         }
@@ -737,6 +734,16 @@ namespace Aurora.Modules
         {
             if (m_certificates.ContainsKey(userName))
                 return m_certificates[userName];
+            return null;
+        }
+
+        public static IWCCertificate GetCertificateByUrl(string url)
+        {
+            foreach (IWCCertificate cert in m_certificates.Values)
+            {
+                if (cert.URL == url)
+                    return cert;
+            }
             return null;
         }
     }

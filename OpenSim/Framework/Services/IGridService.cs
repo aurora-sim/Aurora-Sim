@@ -617,6 +617,10 @@ namespace OpenSim.Services.Interfaces
         bool CheckThreatLevel(string SessionID, ulong RegionHandle, string function, ThreatLevel defaultThreatLevel);
     }
 
+    /// <summary>
+    /// The threat level enum
+    /// Tells how much we trust another host
+    /// </summary>
     public enum ThreatLevel
     {
         None = 1,
