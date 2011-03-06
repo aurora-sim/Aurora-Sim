@@ -56,7 +56,7 @@ namespace Aurora.Services.DataService
                 List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                    SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI,
                         reqString);
                 }
@@ -79,7 +79,7 @@ namespace Aurora.Services.DataService
                 List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                    SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI,
                         reqString);
                 }
@@ -113,11 +113,15 @@ namespace Aurora.Services.DataService
 
                         if (replyData != null)
                         {
-                            if (replyData.Count != 0)
+                            if (!replyData.ContainsKey("Result") || replyData.ContainsKey("Result") && replyData["Result"].ToString() != "Failure")
                             {
-                                Telehub t = new Telehub();
-                                t.FromKVP(replyData);
-                                return t;
+                                if (replyData.Count != 0)
+                                {
+                                    Telehub t = new Telehub();
+                                    t.FromKVP(replyData);
+                                    if(t.RegionID != UUID.Zero)
+                                        return t;
+                                }
                             }
                         }
                         else

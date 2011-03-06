@@ -156,21 +156,13 @@ namespace OpenSim.Services.GridService
             Permissions.Add(ThreatLevel.Full, fullPermissions);
         }
 
-        protected ThreatLevel FindThreatLevelForFunction(string function, ThreatLevel defaultThreatLevel, ulong RegionHandle)
+        protected ThreatLevel FindThreatLevelForFunction(string function, ThreatLevel defaultThreatLevel)
         {
-            GridRegion region = FindRegion(RegionHandle);
-            if (region == null)
-                return ThreatLevel.None;
-            string rThreat = region.GenericMap["ThreatLevel"].AsString();
-            ThreatLevel regionThreatLevel = m_defaultRegionThreatLevel;
-            if (rThreat != "")
-                regionThreatLevel = (ThreatLevel)Enum.Parse(typeof(ThreatLevel), rThreat);
-
             string permission = m_permissionConfig.GetString(function, "");
             if (permission == "")
-                return FindMoreRestrictiveThreatLevel(defaultThreatLevel, regionThreatLevel);
+                return defaultThreatLevel;
             ThreatLevel permissionThreatLevel = (ThreatLevel)Enum.Parse(typeof(ThreatLevel), permission);
-            return FindMoreRestrictiveThreatLevel(permissionThreatLevel, regionThreatLevel);
+            return FindMoreRestrictiveThreatLevel(permissionThreatLevel, defaultThreatLevel);
         }
 
         protected ThreatLevel FindMoreRestrictiveThreatLevel(ThreatLevel a, ThreatLevel b)
@@ -285,9 +277,26 @@ namespace OpenSim.Services.GridService
                     RemoveUrlsForClient(SessionID, RegionHandle);
                     return false;
                 }
-                //Find the permission set by function name in the config if it exists
-                PermissionSet permissions = FindPermissionsForThreatLevel(FindThreatLevelForFunction(function, defaultThreatLevel, RegionHandle));
-                return permissions.CheckPermission(function, RegionHandle);
+                //First find the threat level that this setting has to have do be able to run
+                ThreatLevel functionThreatLevel = FindThreatLevelForFunction(function, defaultThreatLevel);
+                //Now find the permission for that threat level
+                PermissionSet permissions = FindPermissionsForThreatLevel(functionThreatLevel);
+                //If this permission doesn't have that setting, return false
+                if (!permissions.CheckPermission(function, RegionHandle))
+                    return false;
+                else
+                {
+                    //else, check it against the threat level that the region has
+                    GridRegion region = FindRegion(RegionHandle);
+                    if (region == null)
+                        return false;
+                    string rThreat = region.GenericMap["ThreatLevel"].AsString();
+                    ThreatLevel regionThreatLevel = m_defaultRegionThreatLevel;
+                    if (rThreat != "")
+                        regionThreatLevel = (ThreatLevel)Enum.Parse(typeof(ThreatLevel), rThreat);
+                    //Return whether the region threat level is higher than the function threat level
+                    return functionThreatLevel <= regionThreatLevel;
+                }
             }
             return false;
         }

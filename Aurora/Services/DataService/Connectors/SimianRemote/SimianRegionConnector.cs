@@ -59,7 +59,7 @@ namespace Aurora.Services.DataService
         {
             foreach (string m_ServerURI in m_ServerURIs)
             {
-                SimianUtils.RemoveGenericEntry(regionID, "RegionTelehub", SessionID.ToString(), m_ServerURI);
+                SimianUtils.RemoveGenericEntry(regionID, "RegionTelehub", UUID.Zero.ToString(), m_ServerURI);
             }
         }
 
