@@ -225,7 +225,8 @@ namespace Aurora.Modules
                     }
                     catch(Exception ex)
                     {
-                        m_log.Warn("[BackupModule]: Exception attempting to load object from the database, " + ex.ToString());
+                        m_log.WarnFormat("[BackupModule]: Exception attempting to load object from the database, {0}, removing...", ex.ToString());
+                        m_scene.SimulationDataService.RemoveObject(group.UUID, m_scene.RegionInfo.RegionID);
                     }
                 }
                 LoadingPrims = false;

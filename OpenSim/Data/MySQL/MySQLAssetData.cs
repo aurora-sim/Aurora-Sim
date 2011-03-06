@@ -124,7 +124,11 @@ namespace OpenSim.Data.MySQL
                                 if (dbReader.Read())
                                 {
                                     asset = new AssetBase(assetID, (string)dbReader["name"], (sbyte)dbReader["assetType"], dbReader["CreatorID"].ToString());
-                                    asset.Data = (byte[])dbReader["data"];
+
+                                    if (dbReader["Data"].GetType() != typeof(DBNull))
+                                        asset.Data = (byte[])dbReader["data"];
+                                    else
+                                        asset.Data = new byte[0];
                                     asset.Description = (string)dbReader["description"];
 
                                     string local = dbReader["local"].ToString();

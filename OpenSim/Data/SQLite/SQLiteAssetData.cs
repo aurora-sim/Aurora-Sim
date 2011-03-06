@@ -233,7 +233,10 @@ namespace OpenSim.Data.SQLite
             asset.Local = Convert.ToBoolean(row["Local"]);
             asset.Temporary = Convert.ToBoolean(row["Temporary"]);
             asset.Flags = (AssetFlags)Convert.ToInt32(row["asset_flags"]);
-            asset.Data = (byte[])row["Data"];
+            if (row["Data"].GetType() != typeof(DBNull))
+                asset.Data = (byte[])row["Data"];
+            else
+                asset.Data = new byte[0];
             return asset;
         }
 
