@@ -441,82 +441,76 @@ namespace Aurora.Modules
             //Move them to the nearest landing point
             if (!ES.AllowDirectTeleport)
             {
-                Telehub telehub = RegionConnector.FindTelehub(scene.RegionInfo.RegionID);
-                if (telehub != null)
+                if (!scene.Permissions.IsGod(userID))
                 {
-                    if (telehub.SpawnPos.Count == 0)
+                    Telehub telehub = RegionConnector.FindTelehub(scene.RegionInfo.RegionID);
+                    if (telehub != null)
                     {
-                        Position = new Vector3(telehub.TelehubLocX, telehub.TelehubLocY, telehub.TelehubLocZ);
-                    }
-                    else
-                    {
-                        int LastTelehubNum = 0;
-                        if (!LastTelehub.TryGetValue(scene.RegionInfo.RegionID, out LastTelehubNum))
-                            LastTelehubNum = 0;
-                        Position = telehub.SpawnPos[LastTelehubNum] + new Vector3(telehub.TelehubLocX, telehub.TelehubLocY, telehub.TelehubLocZ);
-                        LastTelehubNum++;
-                        if (LastTelehubNum == telehub.SpawnPos.Count)
-                            LastTelehubNum = 0;
-                        LastTelehub[scene.RegionInfo.RegionID] = LastTelehubNum;
-                    }
-                }
-                else
-                {
-                    reason = "Teleport has been blocked for this region.";
-                    return false;
-                }
-            }
-            else
-            {
-                //If they are owner, they don't have to have permissions checked
-                if (!scene.Permissions.GenericParcelPermission(userID, ILO, (ulong)GroupPowers.None))
-                {
-                    if (ILO.LandData.LandingType == 2) //Blocked, force this person off this land
-                    {
-                        //Find a new parcel for them
-                        List<ILandObject> Parcels = parcelManagement.ParcelsNearPoint(Position);
-                        if (Parcels.Count == 0)
+                        if (telehub.SpawnPos.Count == 0)
                         {
-                            ScenePresence SP;
-                            scene.TryGetScenePresence(userID, out SP);
-                            newPosition = parcelManagement.GetNearestRegionEdgePosition(SP);
+                            Position = new Vector3(telehub.TelehubLocX, telehub.TelehubLocY, telehub.TelehubLocZ);
                         }
                         else
                         {
-                            bool found = false;
-                            //We need to check here as well for bans, can't toss someone into a parcel they are banned from
-                            foreach (ILandObject Parcel in Parcels)
+                            int LastTelehubNum = 0;
+                            if (!LastTelehub.TryGetValue(scene.RegionInfo.RegionID, out LastTelehubNum))
+                                LastTelehubNum = 0;
+                            Position = telehub.SpawnPos[LastTelehubNum] + new Vector3(telehub.TelehubLocX, telehub.TelehubLocY, telehub.TelehubLocZ);
+                            LastTelehubNum++;
+                            if (LastTelehubNum == telehub.SpawnPos.Count)
+                                LastTelehubNum = 0;
+                            LastTelehub[scene.RegionInfo.RegionID] = LastTelehubNum;
+                        }
+                    }
+                }
+            }
+            if (!scene.Permissions.GenericParcelPermission(userID, ILO, (ulong)GroupPowers.None))
+            {
+                if (ILO.LandData.LandingType == 2) //Blocked, force this person off this land
+                {
+                    //Find a new parcel for them
+                    List<ILandObject> Parcels = parcelManagement.ParcelsNearPoint(Position);
+                    if (Parcels.Count == 0)
+                    {
+                        ScenePresence SP;
+                        scene.TryGetScenePresence(userID, out SP);
+                        newPosition = parcelManagement.GetNearestRegionEdgePosition(SP);
+                    }
+                    else
+                    {
+                        bool found = false;
+                        //We need to check here as well for bans, can't toss someone into a parcel they are banned from
+                        foreach (ILandObject Parcel in Parcels)
+                        {
+                            if (!Parcel.IsBannedFromLand(userID))
                             {
-                                if (!Parcel.IsBannedFromLand(userID))
-                                {
-                                    //Now we have to check their userloc
-                                    if (ILO.LandData.LandingType == 2)
-                                        continue; //Blocked, check next one
-                                    else if (ILO.LandData.LandingType == 1) //Use their landing spot
-                                        newPosition = Parcel.LandData.UserLocation;
-                                    else //They allow for anywhere, so dump them in the center at the ground
-                                        newPosition = parcelManagement.GetParcelCenterAtGround(Parcel);
-                                    found = true;
-                                }
+                                //Now we have to check their userloc
+                                if (ILO.LandData.LandingType == 2)
+                                    continue; //Blocked, check next one
+                                else if (ILO.LandData.LandingType == 1) //Use their landing spot
+                                    newPosition = Parcel.LandData.UserLocation;
+                                else //They allow for anywhere, so dump them in the center at the ground
+                                    newPosition = parcelManagement.GetParcelCenterAtGround(Parcel);
+                                found = true;
                             }
-                            if (!found) //Dump them at the edge
+                        }
+                        if (!found) //Dump them at the edge
+                        {
+                            if (Sp != null)
+                                newPosition = parcelManagement.GetNearestRegionEdgePosition(Sp);
+                            else
                             {
-                                if (Sp != null)
-                                    newPosition = parcelManagement.GetNearestRegionEdgePosition(Sp);
-                                else
-                                {
-                                    reason = "Banned from this parcel.";
-                                    return true;
-                                }
+                                reason = "Banned from this parcel.";
+                                return true;
                             }
                         }
                     }
-                    else if (ILO.LandData.LandingType == 1) //Move to tp spot
-                        if (ILO.LandData.UserLocation != Vector3.Zero)
-                            newPosition = ILO.LandData.UserLocation;
-                        else // Dump them at the nearest region corner since they havn't set a landing point
-                            newPosition = parcelManagement.GetNearestRegionEdgePosition(Sp);
                 }
+                else if (ILO.LandData.LandingType == 1) //Move to tp spot
+                    if (ILO.LandData.UserLocation != Vector3.Zero)
+                        newPosition = ILO.LandData.UserLocation;
+                    else // Dump them at the nearest region corner since they havn't set a landing point
+                        newPosition = parcelManagement.GetNearestRegionEdgePosition(Sp);
             }
 
             //We assume that our own region isn't null....
