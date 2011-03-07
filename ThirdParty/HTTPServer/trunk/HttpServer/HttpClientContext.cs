@@ -23,7 +23,6 @@ namespace HttpServer
         private readonly IHttpRequestParser _parser;
         private readonly int _bufferSize;
         private IHttpRequest _currentRequest;
-        private readonly Socket _sock;
 
         public bool Available = true;
         private bool _endWhenDone = false;
