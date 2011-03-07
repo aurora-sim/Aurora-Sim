@@ -41,6 +41,11 @@ namespace OpenSim.Framework.Servers.HttpServer
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
         /// <summary>
+        /// Setting this to false for now... it seems to contribute to the HTTP server freaking out and crashing
+        /// </summary>
+        private static bool m_useAsync = false;
+
+        /// <summary>
         /// Perform an asynchronous REST request.
         /// </summary>
         /// <param name="verb">GET or POST</param>
@@ -193,6 +198,12 @@ namespace OpenSim.Framework.Servers.HttpServer
 
         public static void MakeRequest(string verb, string requestUrl, string obj)
         {
+            //Read option notes above
+            if (!m_useAsync)
+            {
+                SynchronousRestFormsRequester.MakeRequest(verb, requestUrl, obj);
+                return;
+            }
             WebRequest request = WebRequest.Create(requestUrl);
             request.Method = verb;
             string respstring = String.Empty;
