@@ -317,57 +317,82 @@ namespace OpenSim.Framework
                     continue;
                 }
 
+                if (input[idx].EndsWith("}"))
+                {
+                    input[idx] = input[idx].Remove(input[idx].Length - 1, 1);
+                    level--;
+                }
+
+                if (input[idx].StartsWith("{"))
+                {
+                    input[idx] = input[idx].Remove(0, 1);
+                    level++;
+                }
+
                 switch (level)
                 {
-                case 0:
-                    words = input[idx].Split(' '); // Linden text ver
-                    // Notecards are created *really* empty. Treat that as "no text" (just like after saving an empty notecard)
-                    if (words.Length < 3)
-                        return output;
+                    case 0:
+                        words = input[idx].Split(' '); // Linden text ver
+                        // Notecards are created *really* empty. Treat that as "no text" (just like after saving an empty notecard)
+                        if (words.Length < 3)
+                            return output;
 
-                    int version = int.Parse(words[3]);
-                    if (version != 2)
-                        return output;
-                    break;
-                case 1:
-                    words = input[idx].Split(' ');
-                    if (words[0] == "LLEmbeddedItems")
-                        break;
-                    if (words[0] == "Text")
-                    {
-                        int len = int.Parse(words[2]);
-                        idx++;
-
-                        int count = -1;
-
-                        while (count < len)
-                        {
-                            // int l = input[idx].Length;
-                            string ln = input[idx];
-
-                            int need = len-count-1;
-                            if (ln.Length > need)
-                                ln = ln.Substring(0, need);
-
-//                            m_log.DebugFormat("[PARSE NOTECARD]: Adding line {0}", ln);
-                            output.Add(ln);
-                            count += ln.Length + 1;
-                            idx++;
-                        }
-
-                        return output;
-                    }
-                    break;
-                case 2:
-                    words = input[idx].Split(' '); // count
-                    if (words[0] == "count")
-                    {
-                        int c = int.Parse(words[1]);
-                        if (c > 0)
+                        int version = int.Parse(words[3]);
+                        if (version != 2)
                             return output;
                         break;
-                    }
-                    break;
+                    case 1:
+                        words = input[idx].Split(' ');
+                        if (words[0] == "LLEmbeddedItems")
+                            break;
+                        if (words[0] == "Text")
+                        {
+                            int len = int.Parse(words[2]);
+                            idx++;
+
+                            int count = -1;
+
+                            while (count < len)
+                            {
+                                // int l = input[idx].Length;
+                                string ln = input[idx];
+                                int stringLength = ln.Length;
+
+                                int need = len - count - 1;
+                                if (ln.Length > need)
+                                    ln = ln.Substring(0, need);
+
+                                if (ln.EndsWith("}"))
+                                {
+                                    ln = ln.Remove(ln.Length - 1, 1);
+                                    level--;
+                                }
+
+                                if (ln.StartsWith("{"))
+                                {
+                                    ln = ln.Remove(0, 1);
+                                    level++;
+                                }
+
+                                //                            m_log.DebugFormat("[PARSE NOTECARD]: Adding line {0}", ln);
+                                output.Add(ln);
+                                count += stringLength + 1;
+                                idx++;
+                            }
+
+                            return output;
+                        }
+                        break;
+                    case 2:
+                        words = input[idx].Split(' '); // count
+                        if (words[0] == "count")
+                        {
+                            int c = int.Parse(words[1]);
+                            if (c > 0)
+                                return output;
+                            break;
+                        }
+                        break;
                 }
                 idx++;
             }
