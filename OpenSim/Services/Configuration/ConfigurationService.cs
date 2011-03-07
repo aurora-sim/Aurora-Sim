@@ -133,6 +133,14 @@ namespace OpenSim.Services.ConfigurationService
                     continue;
                 if (!m_autoConfig.ContainsKey(kvp.Key))
                     m_autoConfig[kvp.Key] = kvp.Value;
+                else
+                {
+                    string url = kvp.Value.AsString();
+                    //Check to see whether the base URLs are the same (removes the UUID at the end)
+                    url = url.Remove(url.Length - 36, 36);
+                    if(!m_autoConfig[kvp.Key].AsString().Contains(url))
+                        m_autoConfig[kvp.Key] = m_autoConfig[kvp.Key] + "," + kvp.Value;
+                }
             }
             m_allConfigs[key] = urls;
         }
