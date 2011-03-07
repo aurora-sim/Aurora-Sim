@@ -2183,7 +2183,6 @@ namespace OpenSim.Region.Framework.Scenes
                 // or flexible
                 if (!isPhantom && !IsAttachment && !(Shape.PathCurve == (byte) Extrusion.Flexible))
                 {
-  
                     Vector3 tmp = GetWorldPosition();
                     Quaternion qtmp = GetWorldRotation();
                     PhysActor = m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPrimShape(

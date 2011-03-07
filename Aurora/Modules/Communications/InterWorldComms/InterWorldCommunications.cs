@@ -34,6 +34,10 @@ namespace Aurora.Modules
         /// </summary>
         protected IConfig m_config;
         /// <summary>
+        /// The config source
+        /// </summary>
+        protected IConfigSource m_source;
+        /// <summary>
         /// The registry where we can get services
         /// </summary>
         protected IRegistryCore m_registry;
@@ -121,18 +125,65 @@ namespace Aurora.Modules
 
         public void TryAddConnection(IWCCertificate c)
         {
+            c = BuildSecureUrlsForConnection(c);
             IWCCertificate cert = OutgoingPublicComms.QueryRemoteHost(c);
             if (cert != null)
             {
+                ParseIWCCertificateForURLs(c);
                 c = cert;
-                IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
-                //Give the Urls to the config service
-                configService.AddNewUrls(cert.UserName, cert.SecureUrls);
-                AddConnection(c);
-                c.Active = true;
             }
             else
                 c.Active = false;
+        }
+
+        public void ParseIWCCertificateForURLs(IWCCertificate c)
+        {
+            IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
+            //Give the Urls to the config service
+            configService.AddNewUrls(c.UserName, c.SecureUrls);
+            AddConnection(c);
+            c.Active = true;
+        }
+
+        /// <summary>
+        /// Create secure Urls that only us and the sim that called us know of
+        /// This Urls is used to add/remove agents and other information from the other sim
+        /// </summary>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public IWCCertificate BuildSecureUrlsForConnection(IWCCertificate c)
+        {
+            IGridRegistrationService gridRegistration = Registry.RequestModuleInterface<IGridRegistrationService>();
+            if (gridRegistration != null)
+            {
+                IGridService gridService = Registry.RequestModuleInterface<IGridService>();
+                if (gridService != null)
+                {
+                    GridRegion r = gridService.GetRegionByName(UUID.Zero, c.UserName + "_Link");
+                    if (r == null)
+                    {
+                        uint rX = (uint)Util.RandomClass.Next(10000, 1000000);
+                        uint rY = (uint)Util.RandomClass.Next(10000, 1000000);
+                        ulong regionhandle = Utils.UIntsToLong(rX, rY);
+
+                        r = new GridRegion();
+                        r.RegionID = UUID.Random();
+                        r.RegionHandle = regionhandle;
+                        IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0);
+                        r.ExternalHostName = server.HostName;
+                        r.InternalEndPoint = new IPEndPoint(IPAddress.Any, (int)server.Port);
+                        r.Flags = (int)Aurora.Framework.RegionFlags.Foreign;
+                        r.RegionName = c.UserName + "_Link";
+                        r.RegionType = "Link";
+
+                        UUID SessionID;
+                        gridService.RegisterRegion(r, UUID.Zero, out SessionID);
+                    }
+                    //Give the basic Urls that we have
+                    c.SecureUrls = gridRegistration.GetUrlForRegisteringClient(c.UserName, r.RegionHandle);
+                }
+            }
+            return c;
         }
 
         #endregion
@@ -273,6 +324,7 @@ namespace Aurora.Modules
 
         public void Initialize(IConfigSource source, IRegistryCore registry)
         {
+            m_source = source;
             m_config = source.Configs["AuroraInterWorldConnectors"];
             if (m_config != null)
             {
@@ -500,16 +552,10 @@ namespace Aurora.Modules
             //Update them in the database so that they can connect again later
             CertificateVerification.AddCertificate(Certificate);
 
-            IWCCertificate ourConnectionToThem = IWC.FindConnectionByUserName(Certificate.UserName);
-            if (ourConnectionToThem != null)
-            {
-                //Verify that our connection is ok with them as well
-                //Tenitively set to active so that we don't get a loop
-                ourConnectionToThem.Active = true;
-                Util.FireAndForget(QueryOtherHost, ourConnectionToThem);
-            }
-
-            BuildSecureUrlsForConnection(Certificate);
+            //Read the URLs they sent to us
+            IWC.ParseIWCCertificateForURLs(Certificate);
+            //Now send them back some URLs as well
+            IWC.BuildSecureUrlsForConnection(Certificate);
 
             OSDMap result = Certificate.ToOSD(false);
             result["Result"] = "Successful";
@@ -517,12 +563,6 @@ namespace Aurora.Modules
             m_log.WarnFormat("[IWC]: {0} successfully connected to us.", Certificate.URL);
 
             return Return(result);
-        }
-
-        private void QueryOtherHost(object o)
-        {
-            IWCCertificate ourConnectionToThem = (IWCCertificate)o;
-            IWC.TryAddConnection(ourConnectionToThem);
         }
 
         /// <summary>
@@ -544,24 +584,6 @@ namespace Aurora.Modules
             CertificateVerification.RemoveCertificate(Certificate);
 
             return SuccessfulResult();
-        }
-
-        /// <summary>
-        /// Create secure Urls that only us and the sim that called us know of
-        /// This Urls is used to add/remove agents and other information from the other sim
-        /// </summary>
-        /// <param name="c"></param>
-        /// <returns></returns>
-        private IWCCertificate BuildSecureUrlsForConnection(IWCCertificate c)
-        {
-            IConfigurationService service = IWC.Registry.RequestModuleInterface<IConfigurationService>();
-            IGridRegistrationService gridRegistration = IWC.Registry.RequestModuleInterface<IGridRegistrationService>();
-            if (gridRegistration != null)
-            {
-                //Give the basic Urls that we have
-                c.SecureUrls = gridRegistration.GetUrlForRegisteringClient(c.UserName, 0);
-            }
-            return c;
         }
 
         #region Misc
