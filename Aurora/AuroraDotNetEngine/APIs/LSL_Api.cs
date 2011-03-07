@@ -3893,7 +3893,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             msg.fromAgentID = new Guid(m_host.UUID.ToString());
             msg.toAgentID = new Guid(user); 
             msg.imSessionID = new Guid(friendTransactionID.ToString()); // This is the item we're mucking with here
-            msg.timestamp = (uint)Util.UnixTimeSinceEpoch();
             msg.fromAgentName = m_host.Name;
             
             // Cap the message length at 1024.

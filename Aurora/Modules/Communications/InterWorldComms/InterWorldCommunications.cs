@@ -574,6 +574,7 @@ namespace Aurora.Modules
                 ourCert.Password = "";
                 ourCert.ThreatLevel = Certificate.ThreatLevel;
                 ourCert.Active = true;
+                ourCert.ValidUntil = DateTime.Now.AddDays(1);
             }
 
             //Update them in the database so that they can connect again later

@@ -55,6 +55,7 @@ namespace OpenSim.Framework
         public GridInstantMessage()
         {
             binaryBucket = new byte[0];
+            timestamp = (uint)Util.UnixTimeSinceEpoch();
         }
 
         public GridInstantMessage(IScene scene, UUID _fromAgentID,

@@ -1102,7 +1102,7 @@ namespace Aurora.Modules
                     im.binaryBucket = OpenMetaverse.Utils.StringToBytes(session.Name);
                     im.RegionID = Guid.Empty;
                     im.ParentEstateID = 0;
-                    im.timestamp = 0;
+                    //im.timestamp = 0;
                     m_TransferModule.SendInstantMessage(im);
                 }
                 else
