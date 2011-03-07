@@ -515,7 +515,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
     }
-    /*public class TestSceneViewer
+    public class TestSceneViewer
     {
          #region Declares
 
@@ -527,13 +527,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// Param 1 - LocalID of the object, Param 2 - The last version when this was added to the list
         /// </summary>
         protected Dictionary<uint, int> m_removeNextUpdateOf = new Dictionary<uint, int>();
-        protected Dictionary<UUID /* UserID*/, uint> m_removeUpdateOf = new Dictionary<UUID, uint>();
+        protected List<uint> m_removeUpdateOf = new List<uint>();
         protected bool m_SentInitialObjects = false;
         protected volatile bool m_inUse = false;
-        protected volatile Dictionary<UUID /* UserID*/, UUID /* PartID*/> m_objectsInView = new Dictionary<UUID, UUID>();
+        protected volatile Dictionary<UUID /* UserID*/, List<UUID> /* PartID*/> m_objectsInView = new Dictionary<UUID, List<UUID>>();
         protected Prioritizer m_prioritizer;
         private readonly Mutex _versionAllocateMutex = new Mutex(false);
         protected int m_lastVersion = 0;
+        private Scene m_scene;
 
         public Prioritizer Prioritizer
         {
@@ -546,8 +547,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         public TestSceneViewer()
         {
-            m_prioritizer = new Prioritizer(presence.Scene);
-            m_partsUpdateQueue = new PriorityQueue<EntityUpdate, double>(presence.Scene.Entities.Count > 1000 ? presence.Scene.Entities.Count : 1000);
+            //m_prioritizer = new Prioritizer(presence.Scene);
+            //m_partsUpdateQueue = new PriorityQueue<EntityUpdate, double>(presence.Scene.Entities.Count > 1000 ? presence.Scene.Entities.Count : 1000);
         }
 
         #endregion
@@ -568,14 +569,14 @@ namespace OpenSim.Region.Framework.Scenes
                 //Check for culling here, as it is per client!
                 if (!CheckForCulling(client, part.ParentGroup))
                      continue;
-                double priority = m_prioritizer.GetUpdatePriority(client, part.ParentGroup);
+                double priority = m_prioritizer.GetUpdatePriority(client.ControllingClient, part.ParentGroup);
                 PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double>();
                 item.Priority = priority;
                 item.Value = update;
                 m_partsUpdateQueue.Enqueue(item);
 
                 //Remove it so that we send the update later
-                RemoveObjectInViewForClient(client.UUID, partID);
+                RemoveObjectInViewForClient(part.UUID);
             }
         }
 
@@ -618,19 +619,16 @@ namespace OpenSim.Region.Framework.Scenes
                 m_removeUpdateOf.Add(part.LocalId);
             }
                 //Make it check when the user comes around to it again
-                foreach(ScenePresence client in m_scene.ScenePresences)
-            {
-                     RemoveObjectInViewForClient(client.UUID, partID);
-                }
+                     RemoveObjectInViewForClient(part.UUID);
         }
 
-       private void RemoveObjectInViewForClient(UUID userID, UUID partID)
+       private void RemoveObjectInViewForClient(UUID partID)
        {
-            lock(m_objectsInView)
+            /*lock(m_objectsInView)
             {
                   if(m_objectsInView.ContainsKey(userID))
                        m_objectsInView[userID].Remove(partID);
-            }
+            }*/
        }
 
         /// <summary>
@@ -645,10 +643,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_removeNextUpdateOf.Add(part.LocalId, GetVersion());
             }
                 //Make it check when the user comes around to it again
-                foreach(ScenePresence client in m_scene.ScenePresences)
-            {
-                     RemoveObjectInViewForClient(client.UUID, partID);
-                }
+                     RemoveObjectInViewForClient(part.UUID);
         }
 
         #endregion
@@ -677,16 +672,16 @@ namespace OpenSim.Region.Framework.Scenes
                 if (entity is SceneObjectGroup) //Only objects
                 {
                     //Check to see if they are in range
-                    if (CheckForCulling(entity))
+                    if (CheckForCulling(client, entity))
                     {
                         //Check if we already have sent them an update
-                        if (!m_objectsInView.Contains(entity.UUID))
+                        /*if (!m_objectsInView.Contains(entity.UUID))
                         {
                             //Update the list
                             m_objectsInView.Add(entity.UUID);
                             //Send the update
                             SendUpdate(PrimUpdateFlags.FullUpdate, (SceneObjectGroup)entity); //New object, send full
-                        }
+                        }*/
                     }
                 }
             }
@@ -728,7 +723,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="groupPosition"></param>
         /// <param name="groupSize"></param>
         /// <returns></returns>
-        private bool CheckCullingAgainstPosition(Vector3 checkPosition, Vector3 groupPosition, Vector3 groupHalfSizeRotated, int DrawDistance)
+        private bool CheckCullingAgainstPosition(Vector3 checkPosition, Vector3 groupPosition, Vector3 groupHalfSizeRotated, float DrawDistance)
         {
             //First just check against the position 
             // not good prims can be huge and also distance calls sqrt and that takes more time than all the rest of this code
@@ -785,7 +780,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if (e != null && e is SceneObjectGroup)
                         {
                             //Check for culling here!
-                            if (!CheckForCulling(e))
+                            if (!CheckForCulling(client, e))
                                 continue;
 
                             //Get the correct priority and add to the queue
@@ -984,5 +979,5 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         #endregion
-    }*/
+    }
 }
