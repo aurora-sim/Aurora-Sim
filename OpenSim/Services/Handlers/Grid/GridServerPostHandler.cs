@@ -683,7 +683,7 @@ namespace OpenSim.Services
             Util.UlongToInts(m_regionHandle, out RegionX, out RegionY);
             GridRegion r = m_GridService.GetRegionByPosition(UUID.Zero, RegionX, RegionY);
             if(r != null)
-                TelehubConnector.RemoveTelehub(r.RegionID);
+                TelehubConnector.RemoveTelehub(r.RegionID, 0);
             result["result"] = "Successful";
 
             string xmlString = WebUtils.BuildXmlResponse(result);
@@ -702,7 +702,7 @@ namespace OpenSim.Services
             if (r != null)
             {
                 telehub.RegionID = r.RegionID;
-                TelehubConnector.AddTelehub(telehub);
+                TelehubConnector.AddTelehub(telehub, 0);
             }
 
             return SuccessResult();
@@ -714,7 +714,7 @@ namespace OpenSim.Services
             UUID.TryParse(request["REGIONID"].ToString(), out regionID);
 
             Dictionary<string, object> result = new Dictionary<string, object>();
-            Telehub telehub = TelehubConnector.FindTelehub(regionID);
+            Telehub telehub = TelehubConnector.FindTelehub(regionID, 0);
             if (telehub != null)
                 result = telehub.ToKeyValuePairs();
             string xmlString = WebUtils.BuildXmlResponse(result);

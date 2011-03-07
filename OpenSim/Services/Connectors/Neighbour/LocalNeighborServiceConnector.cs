@@ -256,12 +256,12 @@ namespace OpenSim.Services.Connectors
         /// <returns></returns>
         private List<GridRegion> FindNewNeighbors(GridRegion region)
         {
-            int startX = (int)(region.RegionLocX - RegionViewSize);
-            int startY = (int)(region.RegionLocY - RegionViewSize);
+            int startX = (int)(region.RegionLocX - (RegionViewSize * Constants.RegionSize));
+            int startY = (int)(region.RegionLocY - (RegionViewSize * Constants.RegionSize));
 
             //-1 so that we don't get size (256) + viewsize (256) and get a region two 256 blocks over
-            int endX = ((int)region.RegionLocX + RegionViewSize + (int)region.RegionSizeX - 1);
-            int endY = ((int)region.RegionLocY + RegionViewSize + (int)region.RegionSizeY - 1);
+            int endX = ((int)region.RegionLocX + (RegionViewSize * Constants.RegionSize) + (int)region.RegionSizeX - 1);
+            int endY = ((int)region.RegionLocY + (RegionViewSize * Constants.RegionSize) + (int)region.RegionSizeY - 1);
 
             List<GridRegion> neighbors = m_gridService.GetRegionRange(region.ScopeID, startX, endX, startY, endY);
             //If we arn't supposed to close local regions, add all of the scene ones if they are not already there

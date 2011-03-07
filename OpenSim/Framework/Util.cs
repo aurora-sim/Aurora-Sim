@@ -1702,5 +1702,10 @@ namespace OpenSim.Framework
             x = (int)xx;
             y = (int)yy;
         }
+
+        public static ulong IntsToUlong(int x, int y)
+        {
+            return Utils.UIntsToLong((uint)x, (uint)y);
+        }
     }
 }

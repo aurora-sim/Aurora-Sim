@@ -265,6 +265,8 @@ namespace Aurora.Modules
             }
             con = new IWCCertificate();
             con.URL = Url;
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0);
+            con.FromURL = server.HostName + ":" + server.Port + "/iwcconnection";
             string timeUntilExpires = MainConsole.Instance.CmdPrompt("Time until the connection expires (ends, in days)");
             string trustLevel = MainConsole.Instance.CmdPrompt("Trust level of this connection");
             int timeInDays = int.Parse(timeUntilExpires);
@@ -351,7 +353,13 @@ namespace Aurora.Modules
                 //Make our connection strings.
                 Connections = BuildConnections();
 
-                ContactOtherServers();
+                try
+                {
+                    ContactOtherServers();
+                }
+                catch
+                {
+                }
 
                 AddConsoleCommands();
             }
@@ -393,6 +401,8 @@ namespace Aurora.Modules
                 Url = (Url.StartsWith("http://") || Url.StartsWith("https://")) ? Url : "http://" + Url;
                 Url = Url.EndsWith("/") ? Url + "iwcconnection" : Url + "/iwcconnection";
                 c.URL = Url;
+                IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0);
+                c.FromURL = server.HostName + ":" + server.Port + "/iwcconnection";
                 c.UserName = UUID.Random().ToString();
 
                 //Add the certificate now
@@ -549,11 +559,29 @@ namespace Aurora.Modules
                 Certificate.ThreatLevel = IWC.m_untrustedConnectionsDefaultTrust;
             }
 
+            IWCCertificate ourCert = CertificateVerification.GetCertificateByUrl(Certificate.FromURL);
+            if (ourCert != null)
+            {
+                if (ourCert.UserName != Certificate.UserName || ourCert.Password != Certificate.Password)
+                    return FailureResult();
+            }
+            else
+            {
+                ourCert = new IWCCertificate();
+                ourCert.URL = Certificate.FromURL;
+                ourCert.FromURL = Certificate.URL;
+                ourCert.UserName = UUID.Random().ToString();
+                ourCert.Password = "";
+                ourCert.ThreatLevel = Certificate.ThreatLevel;
+                ourCert.Active = true;
+            }
+
             //Update them in the database so that they can connect again later
-            CertificateVerification.AddCertificate(Certificate);
+            CertificateVerification.AddCertificate(ourCert);
 
             //Read the URLs they sent to us
-            IWC.ParseIWCCertificateForURLs(Certificate);
+            IWC.ParseIWCCertificateForURLs(ourCert);
+
             //Now send them back some URLs as well
             IWC.BuildSecureUrlsForConnection(Certificate);
 
@@ -638,6 +666,10 @@ namespace Aurora.Modules
         /// </summary>
         public string URL;
         /// <summary>
+        /// The (base, unsecure) Url of us (connector) we are connecting to
+        /// </summary>
+        public string FromURL;
+        /// <summary>
         /// Whether this connection is currently active and able to be used
         /// </summary>
         public bool Active = true;
@@ -669,6 +701,7 @@ namespace Aurora.Modules
             UserName = map["UserName"].AsString();
             Password = map["Password"].AsString();
             URL = map["URL"].AsString();
+            FromURL = map["FromURL"].AsString();
         }
 
         public OSDMap ToOSD(bool Secure)
@@ -681,6 +714,7 @@ namespace Aurora.Modules
             if(Secure)
                 map.Add("ThreatLevel", (int)ThreatLevel);
             map.Add("URL", URL);
+            map.Add("FromURL", FromURL);
             return map;
         }
 

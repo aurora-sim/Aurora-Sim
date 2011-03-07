@@ -134,7 +134,8 @@ namespace Aurora.Services.DataService
                 if (data.LastSeen > (Util.UnixTimeSinceEpoch() + (1000 * 6)))
                     data.Access |= (int)SimAccess.Down;
 
-                regionData.Add(data);
+                if(!regionData.Contains(data))
+                    regionData.Add(data);
             }
 
             return regionData;

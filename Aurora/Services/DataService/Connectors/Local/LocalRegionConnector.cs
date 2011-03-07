@@ -45,10 +45,10 @@ namespace Aurora.Services.DataService
         /// Adds a new telehub in the region. Replaces an old one automatically.
         /// </summary>
         /// <param name="telehub"></param>
-        public void AddTelehub(Telehub telehub)
+        public void AddTelehub(Telehub telehub, ulong regionhandle)
         {
             //Look for a telehub first.
-            if (FindTelehub(new UUID(telehub.RegionID)) != null)
+            if (FindTelehub(new UUID(telehub.RegionID), 0) != null)
             {
                 //Found one, time to update it.
                 GD.Update("telehubs", new object[] {
@@ -97,11 +97,11 @@ namespace Aurora.Services.DataService
         /// Removes the telehub if it exists.
         /// </summary>
         /// <param name="regionID"></param>
-        public void RemoveTelehub(UUID regionID)
+        public void RemoveTelehub(UUID regionID, ulong regionHandle)
         {
             //Look for a telehub first.
             Vector3 oldPos = Vector3.Zero;
-            if (FindTelehub(regionID) != null)
+            if (FindTelehub(regionID, 0) != null)
             {
                 GD.Delete("telehubs", new string[] { "RegionID" }, new object[] { regionID });
             }
@@ -113,7 +113,7 @@ namespace Aurora.Services.DataService
         /// <param name="regionID">Region ID</param>
         /// <param name="position">The position of the telehub</param>
         /// <returns></returns>
-        public Telehub FindTelehub(UUID regionID)
+        public Telehub FindTelehub(UUID regionID, ulong regionHandle)
         {
             Telehub telehub = new Telehub();
             List<string> telehubposition = GD.Query("RegionID", regionID, "telehubs", "RegionLocX,RegionLocY,TelehubLocX,TelehubLocY,TelehubLocZ,TelehubRotX,TelehubRotY,TelehubRotZ,Spawns,ObjectUUID,Name");

@@ -428,7 +428,7 @@ namespace Aurora.Modules
 
                 int tc = Environment.TickCount;
                 //Find the telehub
-                Telehub telehub = GF.FindTelehub(GR.RegionID);
+                Telehub telehub = GF.FindTelehub(GR.RegionID, GR.RegionHandle);
                 if (telehub != null)
                 {
                     mapitem = new mapItemReply();

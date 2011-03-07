@@ -44,7 +44,7 @@ namespace Aurora.Services.DataService
 
         #region IGridConnector Members
 
-        public void AddTelehub(Telehub telehub)
+        public void AddTelehub(Telehub telehub, ulong RegionHandle)
         {
             Dictionary<string, object> sendData = telehub.ToKeyValuePairs();
             sendData["METHOD"] = "addtelehub";
@@ -53,7 +53,7 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(RegionHandle.ToString(), "GridServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     SynchronousRestFormsRequester.MakeRequest("POST",
@@ -67,7 +67,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        public void RemoveTelehub(UUID regionID)
+        public void RemoveTelehub(UUID regionID, ulong regionHandle)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
             sendData["METHOD"] = "removetelehub";
@@ -76,7 +76,7 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(regionHandle.ToString(), "GridServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     SynchronousRestFormsRequester.MakeRequest("POST",
@@ -90,7 +90,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        public Telehub FindTelehub(UUID regionID)
+        public Telehub FindTelehub(UUID regionID, ulong regionHandle)
         {
             Dictionary<string, object> sendData = new Dictionary<string,object>();
 
@@ -101,7 +101,7 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(regionHandle.ToString(), "GridServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",

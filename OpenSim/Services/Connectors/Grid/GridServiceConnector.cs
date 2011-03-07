@@ -652,61 +652,7 @@ namespace OpenSim.Services.Connectors
             return rinfos;
         }
 
-		public List<GridRegion> GetHyperlinks(UUID scopeID)
-        {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
-
-            sendData["SCOPEID"] = scopeID.ToString();
-
-            sendData["METHOD"] = "get_hyperlinks";
-
-            List<GridRegion> rinfos = new List<GridRegion>();
-            string reply = string.Empty;
-            try
-            {
-                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
-                foreach (string m_ServerURI in serverURIs)
-                {
-                    reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI,
-                            WebUtils.BuildQueryString(sendData));
-
-                    //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
-                }
-            }
-            catch (Exception e)
-            {
-                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
-                return rinfos;
-            }
-
-            if (reply != string.Empty)
-            {
-                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                if (replyData != null)
-                {
-                    Dictionary<string, object>.ValueCollection rinfosList = replyData.Values;
-                    foreach (object r in rinfosList)
-                    {
-                        if (r is Dictionary<string, object>)
-                        {
-                            GridRegion rinfo = new GridRegion((Dictionary<string, object>)r);
-                            rinfos.Add(rinfo);
-                        }
-                    }
-                }
-                else
-                    m_log.DebugFormat("[GRID CONNECTOR]: GetHyperlinks {0} received null response",
-                        scopeID);
-            }
-            else
-                m_log.DebugFormat("[GRID CONNECTOR]: GetHyperlinks received null reply");
-
-            return rinfos;
-        }
-
-        public virtual int GetRegionFlags(UUID scopeID, UUID regionID)
+		public virtual int GetRegionFlags(UUID scopeID, UUID regionID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 

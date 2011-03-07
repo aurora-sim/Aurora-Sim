@@ -360,7 +360,11 @@ namespace OpenSim.Services.Interfaces
 
         public ulong RegionHandle
         {
-            get { return Utils.UIntsToLong((uint)RegionLocX, (uint)RegionLocY); }
+            get { return Util.IntsToUlong(RegionLocX, RegionLocY); }
+            set
+            {
+                Util.UlongToInts(value, out m_regionLocX, out m_regionLocY);
+            }
         }
 
         public Dictionary<string, object> ToKeyValuePairs()

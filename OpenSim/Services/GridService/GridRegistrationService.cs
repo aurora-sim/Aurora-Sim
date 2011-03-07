@@ -157,6 +157,21 @@ namespace OpenSim.Services.GridService
 
         public OSDMap GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
         {
+            GridRegistrationURLs urls = m_genericsConnector.GetGeneric<GridRegistrationURLs>(UUID.Zero,
+                "GridRegistrationUrls", RegionHandle.ToString(), new GridRegistrationURLs());
+            OSDMap retVal = new OSDMap();
+            if (urls != null)
+            {
+                urls.Expiration = DateTime.Now.AddHours(m_timeBeforeTimeout);
+                urls.SessionID = SessionID;
+                urls.RegionHandle = RegionHandle;
+                foreach (KeyValuePair<string, OSD> module in urls.URLS)
+                {
+                    //Build the URL
+                    retVal[module.Key] = m_loadBalancer.GetHost() + ":" + m_modules[module.Key].Port + module.Value.AsString();
+                }
+                return retVal;
+            }
             OSDMap databaseSave = new OSDMap();
             //Get the URLs from all the modules that have registered with us
             foreach (IGridRegistrationUrlModule module in m_modules.Values)
@@ -164,7 +179,6 @@ namespace OpenSim.Services.GridService
                 //Build the URL
                 databaseSave[module.UrlName] = module.GetUrlForRegisteringClient(SessionID, RegionHandle);
             }
-            OSDMap retVal = new OSDMap();
             foreach (KeyValuePair<string, OSD> module in databaseSave)
             {
                 //Build the URL
@@ -172,7 +186,7 @@ namespace OpenSim.Services.GridService
             }
 
             //Save into the database so that we can rebuild later if the server goes offline
-            GridRegistrationURLs urls = new GridRegistrationURLs();
+            urls = new GridRegistrationURLs();
             urls.URLS = databaseSave;
             urls.RegionHandle = RegionHandle;
             urls.SessionID = SessionID;

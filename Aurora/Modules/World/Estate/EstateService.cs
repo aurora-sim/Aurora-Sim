@@ -217,12 +217,12 @@ namespace Aurora.Modules
             {
                 if (parameter1 == "spawnpoint remove")
                 {
-                    Telehub telehub = RegionConnector.FindTelehub(client.Scene.RegionInfo.RegionID);
+                    Telehub telehub = RegionConnector.FindTelehub(client.Scene.RegionInfo.RegionID, client.Scene.RegionInfo.RegionHandle);
                     if (telehub == null)
                         return;
                     //Remove the one we sent at X
                     telehub.SpawnPos.RemoveAt(int.Parse(Parameters[1]));
-                    RegionConnector.AddTelehub(telehub);
+                    RegionConnector.AddTelehub(telehub, client.Scene.RegionInfo.RegionHandle);
                     SendTelehubInfo(client);
                 }
                 if (parameter1 == "spawnpoint add")
@@ -230,7 +230,7 @@ namespace Aurora.Modules
                     SceneObjectPart part = Sp.Scene.GetSceneObjectPart(uint.Parse(Parameters[1]));
                     if (part == null)
                         return;
-                    Telehub telehub = RegionConnector.FindTelehub(client.Scene.RegionInfo.RegionID);
+                    Telehub telehub = RegionConnector.FindTelehub(client.Scene.RegionInfo.RegionID, client.Scene.RegionInfo.RegionHandle);
                     if (telehub == null)
                         return;
                     telehub.RegionLocX = client.Scene.RegionInfo.RegionLocX;
@@ -240,12 +240,12 @@ namespace Aurora.Modules
                     if (telehub.TelehubLocX == 0 && telehub.TelehubLocY == 0)
                         return; //No spawns without a telehub
                     telehub.SpawnPos.Add(part.AbsolutePosition - pos); //Spawns are offsets
-                    RegionConnector.AddTelehub(telehub);
+                    RegionConnector.AddTelehub(telehub, client.Scene.RegionInfo.RegionHandle);
                     SendTelehubInfo(client);
                 }
                 if (parameter1 == "delete")
                 {
-                    RegionConnector.RemoveTelehub(client.Scene.RegionInfo.RegionID);
+                    RegionConnector.RemoveTelehub(client.Scene.RegionInfo.RegionID, client.Scene.RegionInfo.RegionHandle);
                     SendTelehubInfo(client);
                 }
                 if (parameter1 == "connect")
@@ -253,7 +253,7 @@ namespace Aurora.Modules
                     SceneObjectPart part = Sp.Scene.GetSceneObjectPart(uint.Parse(Parameters[1]));
                     if (part == null)
                         return;
-                    Telehub telehub = RegionConnector.FindTelehub(client.Scene.RegionInfo.RegionID);
+                    Telehub telehub = RegionConnector.FindTelehub(client.Scene.RegionInfo.RegionID, client.Scene.RegionInfo.RegionHandle);
                     if (telehub == null)
                         telehub = new Telehub();
                     telehub.RegionLocX = client.Scene.RegionInfo.RegionLocX;
@@ -267,7 +267,7 @@ namespace Aurora.Modules
                     telehub.TelehubRotZ = part.ParentGroup.Rotation.Z;
                     telehub.ObjectUUID = part.UUID;
                     telehub.Name = part.Name;
-                    RegionConnector.AddTelehub(telehub);
+                    RegionConnector.AddTelehub(telehub, client.Scene.RegionInfo.RegionHandle);
                     SendTelehubInfo(client);
                 }
 
@@ -280,7 +280,7 @@ namespace Aurora.Modules
         {
             if (RegionConnector != null)
             {
-                Telehub telehub = RegionConnector.FindTelehub(client.Scene.RegionInfo.RegionID);
+                Telehub telehub = RegionConnector.FindTelehub(client.Scene.RegionInfo.RegionID, client.Scene.RegionInfo.RegionHandle);
                 if (telehub == null)
                 {
                     client.SendTelehubInfo(Vector3.Zero, Quaternion.Identity, new List<Vector3>(), UUID.Zero, "");
@@ -443,7 +443,7 @@ namespace Aurora.Modules
             {
                 if (!scene.Permissions.IsGod(userID))
                 {
-                    Telehub telehub = RegionConnector.FindTelehub(scene.RegionInfo.RegionID);
+                    Telehub telehub = RegionConnector.FindTelehub(scene.RegionInfo.RegionID, scene.RegionInfo.RegionHandle);
                     if (telehub != null)
                     {
                         if (telehub.SpawnPos.Count == 0)

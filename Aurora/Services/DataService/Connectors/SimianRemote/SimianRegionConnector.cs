@@ -47,7 +47,7 @@ namespace Aurora.Services.DataService
 
         #region IRegionConnector Members
 
-        public void AddTelehub(Telehub telehub)
+        public void AddTelehub(Telehub telehub, ulong RegionHandle)
         {
             foreach (string m_ServerURI in m_ServerURIs)
             {
@@ -55,7 +55,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        public void RemoveTelehub(UUID regionID)
+        public void RemoveTelehub(UUID regionID, ulong regionHandle)
         {
             foreach (string m_ServerURI in m_ServerURIs)
             {
@@ -63,7 +63,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        public Telehub FindTelehub(UUID regionID)
+        public Telehub FindTelehub(UUID regionID, ulong Regionhandle)
         {
             foreach (string m_ServerURI in m_ServerURIs)
             {
