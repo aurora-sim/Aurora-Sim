@@ -49,6 +49,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         protected List<Scene> m_Scenes = new List<Scene>();
         
         public event UndeliveredMessage OnUndeliveredMessage;
+        private MessageResultNotification m_result = delegate(bool success) { };
         public virtual void Initialise(IConfigSource config)
         {
             IConfig cnf = config.Configs["Messaging"];
@@ -116,8 +117,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
         public virtual void SendInstantMessage(GridInstantMessage im)
         {
-            MessageResultNotification result = delegate(bool success) {};
-            SendInstantMessage(im, result);
+            SendInstantMessage(im, m_result);
         }
 
         public virtual void SendInstantMessages(GridInstantMessage im, List<UUID> AgentsToSendTo)
@@ -492,7 +492,6 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 Queries.Add(agentID.ToString());
             }
 
-
             //Ask for the user new style first
             string[] AgentLocations = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetAgentsLocations(Queries.ToArray());
             //If this is false, this doesn't exist on the presence server and we use the legacy way
@@ -504,7 +503,8 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     if (AgentLocations[i] == "NotOnline")
                     {
                         IMUsersCache.Remove(users[i]);
-                        m_log.Debug("[GRID INSTANT MESSAGE]: Unable to deliver an instant message to " + users[i]);
+                        m_log.Debug("[GRID INSTANT MESSAGE]: Unable to deliver an instant message to " + users[i] + ", user was not online");
+                        HandleUndeliveredMessage(im, m_result);
                         continue;
                     }
                     else
@@ -513,7 +513,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             }
             else
             {
-                m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
+                m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message, no users found.");
                 return;
             }
 
@@ -532,6 +532,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                             //Remove them so we keep testing against the db
                             IMUsersCache.Remove(kvp.Key);
                         }
+                        HandleUndeliveredMessage(im, m_result);
                     }
                     else
                     {
@@ -546,6 +547,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                         //Remove them so we keep testing against the db
                         IMUsersCache.Remove(kvp.Key);
                     }
+                    HandleUndeliveredMessage(im, m_result);
                 }
             }
         }
@@ -639,7 +641,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                         IMUsersCache.Remove(toAgentID);
                     }
                     m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message as the region could not be found");
-                    result(false);
+                    HandleUndeliveredMessage(im, result);
                     return;
                 }
                 else
@@ -658,7 +660,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     IMUsersCache.Remove(toAgentID);
                 }
                 m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message as the region could not be found");
-                result(false);
+                HandleUndeliveredMessage(im, result);
             }
         }
 
