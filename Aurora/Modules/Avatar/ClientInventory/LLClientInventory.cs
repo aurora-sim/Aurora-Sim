@@ -557,11 +557,11 @@ namespace OpenSim.Region.Framework.Scenes
                 ScenePresence presence;
                 if (m_scene.TryGetScenePresence(remoteClient.AgentId, out presence))
                 {
-                    if (m_scene.Permissions.CanTakeLandmark(remoteClient.AgentId))
-                    {
-                        byte[] data = null;
+                    byte[] data = null;
 
-                        if (invType == (sbyte)InventoryType.Landmark && presence != null)
+                    if (invType == (sbyte)InventoryType.Landmark && presence != null)
+                    {
+                        if (m_scene.Permissions.CanTakeLandmark(remoteClient.AgentId))
                         {
                             Vector3 pos = presence.AbsolutePosition;
                             string strdata = String.Format(
@@ -571,21 +571,29 @@ namespace OpenSim.Region.Framework.Scenes
                                 presence.Scene.RegionInfo.RegionHandle);
                             data = Encoding.ASCII.GetBytes(strdata);
                         }
-                        if (invType == (sbyte)InventoryType.LSL)
+                        else
                         {
-                            data = Encoding.ASCII.GetBytes(DefaultLSLScript);
+                            remoteClient.SendAlertMessage("You cannot create a landmark here.");
                         }
-
-                        AssetBase asset = new AssetBase(UUID.Random(), name, assetType,
-                            remoteClient.AgentId.ToString());
-                        asset.Data = data;
-                        asset.Description = description;
-                        m_scene.AssetService.Store(asset);
-
-                        CreateNewInventoryItem(
-                            remoteClient, remoteClient.AgentId.ToString(), folderID, name, 0, callbackID, asset, invType,
-                            (uint)PermissionMask.All, (uint)PermissionMask.All, 0, nextOwnerMask, 0, creationDate);
                     }
+                    if (invType == (sbyte)InventoryType.LSL)
+                    {
+                        data = Encoding.ASCII.GetBytes(DefaultLSLScript);
+                    }
+                    if (invType == (sbyte)InventoryType.Notecard)
+                    {
+                        data = Encoding.ASCII.GetBytes(" ");
+                    }
+
+                    AssetBase asset = new AssetBase(UUID.Random(), name, assetType,
+                        remoteClient.AgentId.ToString());
+                    asset.Data = data;
+                    asset.Description = description;
+                    m_scene.AssetService.Store(asset);
+
+                    CreateNewInventoryItem(
+                        remoteClient, remoteClient.AgentId.ToString(), folderID, name, 0, callbackID, asset, invType,
+                        (uint)PermissionMask.All, (uint)PermissionMask.All, 0, nextOwnerMask, 0, creationDate);
                 }
                 else
                 {
