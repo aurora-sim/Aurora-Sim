@@ -212,7 +212,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                         ScenePresence sp = null;
                         if (scene.TryGetScenePresence(UUID.Parse(user), out sp))
                         {
-                            sp.ControllingClient.Kick(value);
+                            sp.ControllingClient.Kick(value == "" ? "The Aurora Grid Manager kicked you out." : value);
                             scene.IncomingCloseAgent(sp.UUID);
                         }
                     }

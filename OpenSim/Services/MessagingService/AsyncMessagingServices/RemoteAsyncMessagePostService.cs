@@ -55,17 +55,24 @@ namespace OpenSim.Services.MessagingService
             //If it is an async message request, make sure that the request is valid and check it
             if (message["Method"] == "AsyncMessageRequest")
             {
-                OSDMap response = new OSDMap();
-                OSDArray array = new OSDArray();
-                if (m_regionMessages.ContainsKey(message["RegionHandle"].AsULong()))
+                try
                 {
-                    foreach (OSDMap asyncMess in m_regionMessages[message["RegionHandle"].AsULong()])
+                    OSDMap response = new OSDMap();
+                    OSDArray array = new OSDArray();
+                    if (m_regionMessages.ContainsKey(message["RegionHandle"].AsULong()))
                     {
-                        array.Add(asyncMess);
+                        foreach (OSDMap asyncMess in m_regionMessages[message["RegionHandle"].AsULong()])
+                        {
+                            array.Add(asyncMess);
+                        }
+                        m_regionMessages.Remove(message["RegionHandle"].AsULong());
                     }
+                    response["Messages"] = array;
+                    return response;
                 }
-                response["Messages"] = array;
-                return response;
+                catch
+                {
+                }
             }
             return null;
         }

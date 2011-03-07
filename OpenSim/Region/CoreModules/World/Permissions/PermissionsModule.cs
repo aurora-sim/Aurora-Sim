@@ -110,13 +110,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         {
             PermissionsConfig = config.Configs["Permissions"];
 
-            string permissionModules = PermissionsConfig.GetString("Modules", "DefaultPermissionsModule");
-
-            List<string> modules = new List<string>(permissionModules.Split(','));
-
-            if (!modules.Contains("DefaultPermissionsModule"))
-                return;
-
             m_allowGridGods = PermissionsConfig.GetBoolean("allow_grid_gods", m_allowGridGods);
             m_bypassPermissions = !PermissionsConfig.GetBoolean("serverside_object_permissions", m_bypassPermissions);
             m_propagatePermissions = PermissionsConfig.GetBoolean("propagate_permissions", m_propagatePermissions);
@@ -129,6 +122,13 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 = ParseUserSetConfigSetting(PermissionsConfig, "allowed_script_creators", m_allowedScriptCreators);
             m_allowedScriptEditors
                 = ParseUserSetConfigSetting(PermissionsConfig, "allowed_script_editors", m_allowedScriptEditors);
+
+            string permissionModules = PermissionsConfig.GetString("Modules", "DefaultPermissionsModule");
+
+            List<string> modules = new List<string>(permissionModules.Split(','));
+
+            if (!modules.Contains("DefaultPermissionsModule"))
+                return;
         }
 
         public void AddRegion(Scene scene)

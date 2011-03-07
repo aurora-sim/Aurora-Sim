@@ -84,12 +84,17 @@ namespace OpenSim.Services.MessagingService
                 OSDMap retval = WebUtils.PostToService(host, message);
                 //Clean it up
                 retval = CreateWebResponse(retval);
-                if (retval["Messages"].Type == OSDType.Array)
+                OSD response = retval["Response"];
+                if (response is OSDMap)
                 {
-                    OSDArray messages = (OSDArray)retval["Messages"];
-                    foreach (OSD asyncMessage in messages)
+                    retval = (OSDMap)response;
+                    if (retval["Messages"].Type == OSDType.Array)
                     {
-                        service.FireMessageReceived((OSDMap)asyncMessage);
+                        OSDArray messages = (OSDArray)retval["Messages"];
+                        foreach (OSD asyncMessage in messages)
+                        {
+                            service.FireMessageReceived((OSDMap)asyncMessage);
+                        }
                     }
                 }
             }

@@ -113,7 +113,8 @@ namespace OpenSim.Services.MessagingService
         private byte[] ReturnResult(OSDMap map)
         {
             UTF8Encoding encoding = new UTF8Encoding();
-            return encoding.GetBytes(OSDParser.SerializeJsonString(map));
+            string m = OSDParser.SerializeJsonString(map);
+            return encoding.GetBytes(m);
         }
     }
 }
