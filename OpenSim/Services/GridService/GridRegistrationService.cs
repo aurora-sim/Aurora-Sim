@@ -96,13 +96,13 @@ namespace OpenSim.Services.GridService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
+            m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            LoadFromDatabase();
         }
 
         public void FinishedStartup()
         {
-            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
-            m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            LoadFromDatabase();
         }
         
         /// <summary>

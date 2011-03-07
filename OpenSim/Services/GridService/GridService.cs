@@ -126,14 +126,14 @@ namespace OpenSim.Services.GridService
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
             m_simulationBase = registry.RequestModuleInterface<ISimulationBase>();
             m_registryCore = registry;
-        }
-
-        public void FinishedStartup()
-        {
             m_Database = Aurora.DataManager.DataManager.RequestPlugin<IRegionData>();
 
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");
+        }
+
+        public void FinishedStartup()
+        {
         }
 
         #region IGridService

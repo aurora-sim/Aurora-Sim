@@ -171,6 +171,10 @@ namespace Aurora.Modules
                         r.RegionHandle = regionhandle;
                         IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0);
                         r.ExternalHostName = server.HostName;
+                        if (r.ExternalHostName.StartsWith("http://"))
+                            r.ExternalHostName = r.ExternalHostName.Remove(0, 7);
+                        else if (r.ExternalHostName.StartsWith("https://"))
+                            r.ExternalHostName = r.ExternalHostName.Remove(0, 8);
                         r.InternalEndPoint = new IPEndPoint(IPAddress.Any, (int)server.Port);
                         r.Flags = (int)Aurora.Framework.RegionFlags.Foreign;
                         r.RegionName = c.UserName + "_Link";
@@ -341,9 +345,12 @@ namespace Aurora.Modules
 
         public void Start(IConfigSource source, IRegistryCore registry)
         {
+        }
+
+        public void FinishedStartup()
+        {
             if (m_Enabled)
             {
-                registry.RegisterModuleInterface<InterWorldCommunications>(this);
                 //Set up the public connection
                 MainServer.Instance.AddStreamHandler(new IWCIncomingConnections(this));
 
@@ -363,10 +370,6 @@ namespace Aurora.Modules
 
                 AddConsoleCommands();
             }
-        }
-
-        public void FinishedStartup()
-        {
         }
 
         #endregion
