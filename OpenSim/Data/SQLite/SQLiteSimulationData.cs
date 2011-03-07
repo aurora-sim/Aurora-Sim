@@ -894,13 +894,17 @@ namespace OpenSim.Data.SQLite
                                 terrain = new double[RegionSizeX, RegionSizeY];
                                 terrain.Initialize();
 
-                                int i = 0;
-                                for (int x = 0; x < RegionSizeX; x++)
+                                using (MemoryStream mstr = new MemoryStream(heightmap))
                                 {
-                                    for (int y = 0; y < RegionSizeY; y++)
+                                    using (BinaryReader br = new BinaryReader(mstr))
                                     {
-                                        terrain[x, y] = BitConverter.ToDouble(heightmap, i);
-                                        i += sizeof(double);
+                                        for (int x = 0; x < RegionSizeX; x++)
+                                        {
+                                            for (int y = 0; y < RegionSizeY; y++)
+                                            {
+                                                terrain[x, y] = br.ReadDouble();
+                                            }
+                                        }
                                     }
                                 }
                                 for (int x = 0; x < RegionSizeX; x++)
