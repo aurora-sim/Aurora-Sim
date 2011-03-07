@@ -1881,7 +1881,6 @@ namespace OpenSim.Framework.Servers.HttpServer
 
         public void Write(object source, LogPrio priority, string message)
         {
-            /*
             switch (priority)
             {
                 case LogPrio.Trace:
@@ -1905,7 +1904,6 @@ namespace OpenSim.Framework.Servers.HttpServer
                 default:
                     break;
             }
-            */
 
             return;
         }

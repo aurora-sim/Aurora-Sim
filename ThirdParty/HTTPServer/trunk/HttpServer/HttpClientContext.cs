@@ -298,7 +298,7 @@ namespace HttpServer
 					Buffer.BlockCopy(_buffer, offset, _buffer, 0, _bytesLeft - offset);
 
                 _bytesLeft -= offset;
-                if (_bytesLeft > 0 && Stream != null && Stream.CanRead)
+                if (_bytesLeft >= 0 && Stream != null && Stream.CanRead)
 					Stream.BeginRead(_buffer, _bytesLeft, _buffer.Length - _bytesLeft, OnReceive, null);
 				else
 				{
@@ -329,7 +329,7 @@ namespace HttpServer
             }
             catch (ObjectDisposedException err)
             {
-                LogWriter.Write(this, LogPrio.Debug, "Failed to end receive : " + err.Message);
+                LogWriter.Write(this, LogPrio.Warning, "Failed to end receive : " + err.Message);
                 Disconnect(SocketError.NotSocket);
             }
             catch (NullReferenceException err)
@@ -339,7 +339,7 @@ namespace HttpServer
             }
             catch (Exception err)
             {
-                LogWriter.Write(this, LogPrio.Debug, "Failed to end receive : Exception: " + err.ToString());
+                LogWriter.Write(this, LogPrio.Warning, "Failed to end receive : Exception: " + err.ToString());
                 Disconnect(SocketError.NoRecovery);
             }
         }
@@ -361,11 +361,16 @@ namespace HttpServer
                     _currentRequest.Body.Seek(0, SeekOrigin.Begin);
                     RequestReceived(this, new RequestEventArgs(_currentRequest));
                 }
+                else
+                {
+                    LogWriter.Write(this, LogPrio.Warning, "Failed to complete receive, request was null or could not be read.");
+                    Disconnect(SocketError.SocketError);
+                }
                 _currentRequest.Clear();
             }
             catch(Exception err)
             {
-                LogWriter.Write(this, LogPrio.Debug, "Failed to complete receive : Exception: " + err.ToString());
+                LogWriter.Write(this, LogPrio.Warning, "Failed to complete receive : Exception: " + err.ToString());
                 Disconnect(SocketError.NoRecovery);
             }
         }

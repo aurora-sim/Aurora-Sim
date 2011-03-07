@@ -87,7 +87,10 @@ namespace OpenSim.Services.GridService
             m_registry = registry;
             m_simulationBase = registry.RequestModuleInterface<ISimulationBase>();
 
-            m_loadBalancer.SetUrls(config.Configs["Configuration"].GetString("HostNames", "http://localhost").Split(','));
+            IConfig ConfigurationConfig = config.Configs["Configuration"];
+
+            if(ConfigurationConfig != null)
+                m_loadBalancer.SetUrls(ConfigurationConfig.GetString("HostNames", "http://localhost").Split(','));
 
             m_permissionConfig = config.Configs["RegionPermissions"];
             if (m_permissionConfig != null)
