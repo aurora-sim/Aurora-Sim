@@ -660,21 +660,17 @@ namespace OpenSim.Region.Framework.Scenes
         ///  the client all of the objects that have just entered their FOV in their draw distance.
         /// </summary>
         /// <param name="remote_client"></param>
-        private void SignificantClientMovement(IClientAPI remote_client)
+        private void SignificantClientMovement(ScenePresence client)
         {
-            if (!m_presence.Scene.CheckForObjectCulling)
-                return;
-
-            //Only check our presence
-            if (remote_client.AgentId != m_presence.UUID)
+            if (!client.Scene.CheckForObjectCulling)
                 return;
 
             //If the draw distance is 0, the client has gotten messed up or something and we can't do this...
-            if(m_presence.DrawDistance == 0)
+            if(client.DrawDistance == 0)
                 return;
 
             //This checks to see if we need to send more updates to the avatar since they last moved
-            EntityBase[] Entities = m_presence.Scene.Entities.GetEntities();
+            EntityBase[] Entities = client.Scene.Entities.GetEntities();
 
             foreach (EntityBase entity in Entities)
             {
