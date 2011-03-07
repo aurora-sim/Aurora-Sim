@@ -1765,19 +1765,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         float h1;
                         float h2;
 
+                        float invterrainscale = 1.0f / Constants.TerrainCompression;
+
                         iy *= m_region.RegionSizeX;
 
                         if ((dx + dy) <= 1.0f)
-                        {
-                            h0 = ((float)TerrainHeightFieldHeights[heightFieldGeom][iy + ix]) / Constants.TerrainCompression;
+                            {
+                            h0 = ((float)TerrainHeightFieldHeights[heightFieldGeom][iy + ix]) * invterrainscale;
 
                             if (dx > 0)
-                                h1 = (((float)TerrainHeightFieldHeights[heightFieldGeom][iy + ix + 1]) / Constants.TerrainCompression - h0) * dx;
+                                h1 = (((float)TerrainHeightFieldHeights[heightFieldGeom][iy + ix + 1]) * invterrainscale - h0) * dx;
                             else
                                 h1 = 0;
 
                             if (dy > 0)
-                                h2 = (((float)TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix]) / Constants.TerrainCompression - h0) * dy;
+                                h2 = (((float)TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix]) * invterrainscale - h0) * dy;
                             else
                                 h2 = 0;
 
@@ -1785,15 +1787,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                         else
                         {
-                            h0 = ((float)TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix + 1]) / Constants.TerrainCompression;
+                        h0 = ((float)TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix + 1]) * invterrainscale;
 
                             if (dx > 0)
-                                h1 = (((float)TerrainHeightFieldHeights[heightFieldGeom][iy + ix + 1]) / Constants.TerrainCompression - h0) * (1 - dy);
+                                h1 = (((float)TerrainHeightFieldHeights[heightFieldGeom][iy + ix + 1]) * invterrainscale - h0) * (1 - dy);
                             else
                                 h1 = 0;
 
                             if (dy > 0)
-                                h2 = (((float)TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix]) / Constants.TerrainCompression - h0) * (1 - dx);
+                                h2 = (((float)TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix]) * invterrainscale - h0) * (1 - dx);
                             else
                                 h2 = 0;
 

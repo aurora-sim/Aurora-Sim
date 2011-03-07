@@ -206,22 +206,23 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private static TerrainPatch.Header PrescanPatch(short[] heightmap, int patchX, int patchY, int RegionSizeX, int RegionSizeY)
         {
             TerrainPatch.Header header = new TerrainPatch.Header();
-            float zmax = -99999999.0f;
-            float zmin = 99999999.0f;
+            short zmax = -32767;
+            short zmin = 32767;
+            float iscale = 1.0f / Constants.TerrainCompression;
 
 //            int sqrt = (int)Math.Sqrt(heightmap.Length);
             for (int j = RegionSizeX * patchY * Constants.TerrainPatchSize; j < RegionSizeX * ((patchY >= (RegionSizeY / Constants.TerrainPatchSize) ? (RegionSizeY - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchY) + 1) * Constants.TerrainPatchSize; j += RegionSizeX)
             {
                 for (int i = patchX * Constants.TerrainPatchSize; i < ((patchX >= (RegionSizeX / Constants.TerrainPatchSize) ? (RegionSizeX - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchX) + 1) * Constants.TerrainPatchSize; i++)
                 {
-                    float val = ((float)heightmap[j + i]) / Constants.TerrainCompression;
+                    short val = heightmap[j + i];
                     if (val > zmax) zmax = val;
                     if (val < zmin) zmin = val;
                 }
             }
 
-            header.DCOffset = zmin;
-            header.Range = (int)((zmax - zmin) + 1.0f);
+            header.DCOffset = ((float)zmin) * iscale;
+            header.Range = (int)(((float)(zmax - zmin)) * iscale + 1.0f);
 
             return header;
         }
@@ -770,11 +771,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             int k = 0;
 
+            premult /= Constants.TerrainCompression; // put here short to float factor
+
             for (int j = patchY * Constants.TerrainPatchSize; j < ((patchY >= (RegionSizeY / Constants.TerrainPatchSize) ? (RegionSizeY - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchY) + 1) * Constants.TerrainPatchSize; j++)
             {
                 for (int i = patchX * Constants.TerrainPatchSize; i < ((patchX >= (RegionSizeX / Constants.TerrainPatchSize) ? (RegionSizeX - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchX) + 1) * Constants.TerrainPatchSize; i++)
                 {
-                    block[k++] = (((float)heightmap[j * RegionSizeX + i]) / Constants.TerrainCompression) * premult - sub;
+                block[k++] = ((float)heightmap[j * RegionSizeX + i]) * premult  - sub;
                 }
             }
 
