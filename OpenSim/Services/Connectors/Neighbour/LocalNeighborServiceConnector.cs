@@ -151,8 +151,7 @@ namespace OpenSim.Services.Connectors
                 if (!m_informedRegions.Contains(thisSceneInfo))
                 {
                     //Now check to see whether the incoming region should be a neighbor of this Scene
-                    if (!IsOutsideView(s.RegionInfo.RegionLocX, incomingRegion.RegionLocX,
-                        s.RegionInfo.RegionLocY, incomingRegion.RegionLocY))
+                    if (m_KnownNeighbors[incomingRegion.RegionID].Contains(thisSceneInfo))
                     {
                         //Fix this regions neighbors now that it has a new one
                         if(m_KnownNeighbors.ContainsKey(s.RegionInfo.RegionID))

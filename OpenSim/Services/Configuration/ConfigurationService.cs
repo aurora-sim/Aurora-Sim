@@ -127,20 +127,12 @@ namespace OpenSim.Services.ConfigurationService
 
         public virtual void AddNewUrls(string key, OSDMap urls)
         {
-            if (key == "Default")
+            foreach (KeyValuePair<string, OSD> kvp in urls)
             {
-                foreach (KeyValuePair<string, OSD> kvp in urls)
-                {
-                    if (kvp.Value == "")
-                        continue;
-                    if (!m_autoConfig.ContainsKey(kvp.Key))
-                        m_autoConfig[kvp.Key] = kvp.Value;
-                    else
-                    {
-                        //Combine with ',' seperating
-                        m_autoConfig[kvp.Key] = m_autoConfig[kvp.Key].AsString() + "," + kvp.Value.AsString();
-                    }
-                }
+                if (kvp.Value == "")
+                    continue;
+                if (!m_autoConfig.ContainsKey(kvp.Key))
+                    m_autoConfig[kvp.Key] = kvp.Value;
             }
             m_allConfigs[key] = urls;
         }

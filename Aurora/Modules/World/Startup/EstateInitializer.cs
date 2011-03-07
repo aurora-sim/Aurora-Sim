@@ -197,10 +197,12 @@ namespace OpenSim.Region.CoreModules
                     {
                         MainConsole.Instance.CmdPrompt("Press enter to try again.");
                         if (EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID, out ES) && ES == null)
+                        {
                             ES = CreateEstateInfo(scene);
+                            break;
+                        }
                         else if (ES != null)
-                            continue;
-                        break;
+                            break;
                     }
                 }
                 //Get the password from the database now that we have either created a new estate and saved it, joined a new estate, or just reloaded
