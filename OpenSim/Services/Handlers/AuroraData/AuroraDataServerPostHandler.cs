@@ -1469,10 +1469,13 @@ namespace OpenSim.Services
             List<int> EstateIDs = EstateConnector.GetEstates(search);
             Dictionary<string, object> estateresult = new Dictionary<string, object>();
             int i = 0;
-            foreach (int estateID in EstateIDs)
+            if(EstateIDs != null)
             {
-                estateresult.Add(ConvertDecString(i), estateID);
-                i++;
+                foreach (int estateID in EstateIDs)
+                {
+                    estateresult.Add(ConvertDecString(i), estateID);
+                    i++;
+                }
             }
             result["result"] = estateresult;
 
