@@ -577,12 +577,19 @@ namespace Aurora.Modules
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
             if (UPI == null)
                 return;
-            UPI.Interests.WantToMask = wantmask;
-            UPI.Interests.WantToText = wanttext;
-            UPI.Interests.CanDoMask = skillsmask;
-            UPI.Interests.CanDoText = skillstext;
-            UPI.Interests.Languages = languages;
-            ProfileFrontend.UpdateUserProfile(UPI);
+            if (UPI.Interests.WantToMask != wantmask ||
+                UPI.Interests.WantToText != wanttext ||
+                UPI.Interests.CanDoMask != skillsmask ||
+                UPI.Interests.CanDoText != skillstext ||
+                UPI.Interests.Languages != languages)
+            {
+                UPI.Interests.WantToMask = wantmask;
+                UPI.Interests.WantToText = wanttext;
+                UPI.Interests.CanDoMask = skillsmask;
+                UPI.Interests.CanDoText = skillstext;
+                UPI.Interests.Languages = languages;
+                ProfileFrontend.UpdateUserProfile(UPI);
+            }
         }
 
         #endregion
@@ -640,16 +647,24 @@ namespace Aurora.Modules
             if (UPI == null)
                 return;
 
-            UPI.PrincipalID = remoteClient.AgentId;
-            UPI.Image = ImageID;
-            UPI.FirstLifeImage = FLImageID;
-            UPI.AboutText = AboutText;
-            UPI.FirstLifeAboutText = FLAboutText;
-            UPI.WebURL = WebProfileURL;
+            if (UPI.Image != ImageID ||
+                UPI.FirstLifeImage != FLImageID ||
+                 UPI.AboutText != AboutText ||
+                 UPI.FirstLifeAboutText != FLAboutText ||
+                 UPI.WebURL != WebProfileURL ||
+                 UPI.AllowPublish != allowpublish ||
+                 UPI.MaturePublish != maturepublish)
+            {
+                UPI.Image = ImageID;
+                UPI.FirstLifeImage = FLImageID;
+                UPI.AboutText = AboutText;
+                UPI.FirstLifeAboutText = FLAboutText;
+                UPI.WebURL = WebProfileURL;
 
-            UPI.AllowPublish = allowpublish;
-            UPI.MaturePublish = maturepublish;
-            ProfileFrontend.UpdateUserProfile(UPI);
+                UPI.AllowPublish = allowpublish;
+                UPI.MaturePublish = maturepublish;
+                ProfileFrontend.UpdateUserProfile(UPI);
+            }
             SendProfile(remoteClient, UPI, remoteClient.AgentId, 16);
         }
 
