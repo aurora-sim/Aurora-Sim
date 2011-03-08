@@ -475,7 +475,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                     if (sp.UserLevel > 0)
                         return true;
                 }
-                UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, sp.UUID);
+                UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, user);
                 if (account != null)
                 {
                     if (account.UserLevel > 0)
