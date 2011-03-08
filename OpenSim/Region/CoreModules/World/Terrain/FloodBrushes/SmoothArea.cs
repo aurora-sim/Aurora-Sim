@@ -27,6 +27,7 @@
 
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenMetaverse;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
 {
@@ -34,19 +35,19 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
     {
         #region ITerrainFloodEffect Members
 
-        public void FloodEffect(ITerrainChannel map, bool[,] fillArea, float strength)
+        public void FloodEffect(ITerrainChannel map, UUID userID, float north,
+            float west, float south, float east, float strength)
         {
             float area = strength;
             float step = strength / 4;
 
-            int x, y;
-            for (x = 0; x < map.Width; x++)
+            for (int x = (int)west; x < (int)east; x++)
             {
-                for (y = 0; y < map.Height; y++)
+                for (int y = (int)south; y < (int)north; y++)
                 {
-                    if (!fillArea[x, y])
+                    if (((Scene)map.Scene).Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
                         continue;
-
+                    
                     float average = 0;
                     int avgsteps = 0;
 

@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenMetaverse;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 {
@@ -37,7 +38,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
         #region ITerrainPaintableEffect Members
 
 
-        public void PaintEffect(ITerrainChannel map, bool[,] mask, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<Scene> scene)
+        public void PaintEffect(ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<Scene> scene)
         {
             int x;
             int xFrom = (int)(rx - BrushSize + 0.5);
@@ -62,7 +63,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                 int y;
                 for (y = yFrom; y < yTo; y++)
                 {
-                    if (!mask[x, y])
+                    if (((Scene)map.Scene).Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
                         continue;
 
                     // Calculate a cos-sphere and add it to the heighmap

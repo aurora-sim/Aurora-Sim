@@ -27,11 +27,14 @@
 
 using System;
 using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes;
+using OpenMetaverse;
 
 namespace OpenSim.Region.CoreModules.World.Terrain
 {
     public interface ITerrainFloodEffect
     {
-        void FloodEffect(ITerrainChannel map, Boolean[,] fillArea, float strength);
+        void FloodEffect(ITerrainChannel map, UUID userID, float north,
+            float west, float south, float east, float strength);
     }
 }

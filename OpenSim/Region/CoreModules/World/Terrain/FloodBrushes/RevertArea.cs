@@ -26,6 +26,8 @@
  */
 
 using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes;
+using OpenMetaverse;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
 {
@@ -46,18 +48,16 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
         /// <param name="map">the current heightmap</param>
         /// <param name="fillArea">array indicating which sections of the map are to be reverted</param>
         /// <param name="strength">unused</param>
-        public void FloodEffect(ITerrainChannel map, bool[,] fillArea, float strength)
+        public void FloodEffect(ITerrainChannel map, UUID userID, float north,
+            float west, float south, float east, float strength)
         {
-            int x;
-            for (x = 0; x < map.Width; x++)
+           for (int x = (int)west; x < (int)east; x++)
             {
-                int y;
-                for (y = 0; y < map.Height; y++)
+                for (int y = (int)south; y < (int)north; y++)
                 {
-                    if (fillArea[x, y])
-                    {
-                        map[x, y] = m_module.TerrainRevertMap[x, y];
-                    }
+                    if (((Scene)map.Scene).Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
+                        continue;
+                    map[x, y] = m_module.TerrainRevertMap[x, y];
                 }
             }
         }

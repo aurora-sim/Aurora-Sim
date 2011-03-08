@@ -28,11 +28,12 @@
 using System.Collections.Generic;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenMetaverse;
 
 namespace OpenSim.Region.CoreModules.World.Terrain
 {
     public interface ITerrainPaintableEffect
     {
-        void PaintEffect(ITerrainChannel map, bool[,] allowMask, float x, float y, float z, float strength, float duration, float BrushSize, List<Scene> scene);
+        void PaintEffect(ITerrainChannel map, UUID userID, float x, float y, float z, float strength, float duration, float BrushSize, List<Scene> scene);
     }
 }

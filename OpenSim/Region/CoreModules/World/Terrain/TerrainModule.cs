@@ -1300,46 +1300,18 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                             float north, float west, float south, float east, UUID agentId, float BrushSize)
         {
             bool god = m_scene.Permissions.IsGod(user);
-            bool allowed = false;
             bool isWater = ((action & 512) == 512); //512 means its modifying water
+            ITerrainChannel channel = isWater ? m_waterChannel : m_channel;
             if (north == south && east == west)
             {
                 if (m_painteffects.ContainsKey((StandardTerrainEffects) action))
                 {
-                    bool[,] allowMask = new bool[m_channel.Width,m_channel.Height];
-                    allowMask.Initialize();
-                    int n = (int)BrushSize;
-
-                    int zx = (int) (west + 0.5);
-                    int zy = (int) (north + 0.5);
-
-                    int dx;
-                    for (dx=-n; dx<=n; dx++)
-                    {
-                        int dy;
-                        for (dy=-n; dy<=n; dy++)
-                        {
-                            int x = zx + dx;
-                            int y = zy + dy;
-                            if (x>=0 && y>=0 && x<m_channel.Width && y<m_channel.Height)
-                            {
-                                if (m_scene.Permissions.CanTerraformLand(agentId, new Vector3(x,y,0)))
-                                {
-                                    allowMask[x, y] = true;
-                                    allowed = true;
-                                }
-                            }
-                        }
-                    }
-                    if (allowed)
-                    {
-                        StoreUndoState();
+                    StoreUndoState();
                         m_painteffects[(StandardTerrainEffects) action].PaintEffect(
-                            m_channel, allowMask, west, south, height, size, seconds, BrushSize, m_scenes);
+                            channel, user, west, south, height, size, seconds, BrushSize, m_scenes);
                         
                         //revert changes outside estate limits
                         CheckForTerrainUpdates(!god, false, false);
-                    }
                 }
                 else
                 {
@@ -1348,40 +1320,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
             else
             {
-                if (m_floodeffects.ContainsKey((StandardTerrainEffects) action))
+                if (m_floodeffects.ContainsKey((StandardTerrainEffects)action))
                 {
-                    bool[,] fillArea = new bool[m_channel.Width,m_channel.Height];
-                    fillArea.Initialize();
+                    StoreUndoState();
+                    m_floodeffects[(StandardTerrainEffects)action].FloodEffect(
+                        channel, user, north, west, south, east, size);
 
-                    int x;
-                    for (x = 0; x < m_channel.Width; x++)
-                    {
-                        int y;
-                        for (y = 0; y < m_channel.Height; y++)
-                        {
-                            if (x < east && x > west)
-                            {
-                                if (y < north && y > south)
-                                {
-                                    if (m_scene.Permissions.CanTerraformLand(agentId, new Vector3(x,y,0)))
-                                    {
-                                        fillArea[x, y] = true;
-                                        allowed = true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    if (allowed)
-                    {
-                        StoreUndoState();
-                        m_floodeffects[(StandardTerrainEffects) action].FloodEffect(
-                            m_channel, fillArea, size);
-
-                        //revert changes outside estate limits
-                        CheckForTerrainUpdates(!god, false, false);
-                    }
+                    //revert changes outside estate limits
+                    CheckForTerrainUpdates(!god, false, false);
                 }
                 else
                 {

@@ -28,6 +28,7 @@
 using System.Collections.Generic;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenMetaverse;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 {
@@ -35,7 +36,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
     {
         #region ITerrainPaintableEffect Members
 
-        public void PaintEffect(ITerrainChannel map, bool[,] mask, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<Scene> scenes)
+        public void PaintEffect(ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<Scene> scenes)
         {
             if(BrushSize > 6) //If it gets too high, it will start roughening at an ever increasing rate when held down
                 BrushSize = 6;
@@ -50,7 +51,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
             {
                 for (y = 0; y < map.Height; y++)
                 {
-                    if (!mask[x, y])
+                    if (((Scene)map.Scene).Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
                         continue;
 
                     float z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) / (strength);

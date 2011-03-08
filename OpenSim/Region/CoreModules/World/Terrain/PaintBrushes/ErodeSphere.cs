@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenMetaverse;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 {
@@ -152,7 +153,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 
         #region ITerrainPaintableEffect Members
 
-        public void PaintEffect(ITerrainChannel map, bool[,] mask, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<Scene> scene)
+        public void PaintEffect(ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<Scene> scene)
         {
             strength = TerrainUtil.MetersToSphericalStrength(strength);
 
@@ -175,13 +176,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                 {
                     for (y = 0; y < water.Height; y++)
                     {
-                        if (mask[(int)rx + x, (int)ry + y])
-                        {
-                            const float solConst = (1 / rounds);
-                            float sedDelta = water[x, y] * solConst;
-                            map[(int)rx + x, (int)ry + y] -= sedDelta;
-                            sediment[x, y] += sedDelta;
-                        }
+                        const float solConst = (1 / rounds);
+                        float sedDelta = water[x, y] * solConst;
+                        map[(int)rx + x, (int)ry + y] -= sedDelta;
+                        sediment[x, y] += sedDelta;
                     }
                 }
 
@@ -297,11 +295,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                         float sedimentDeposit = sediment[x, y] - waterCapacity;
                         if (sedimentDeposit > 0)
                         {
-                            if (mask[(int)rx + x, (int)ry + y])
-                            {
-                                sediment[x, y] -= sedimentDeposit;
-                                map[(int)rx + x, (int)ry + y] += sedimentDeposit;
-                            }
+                            if (((Scene)map.Scene).Permissions.CanTerraformLand(userID, new Vector3(rx + x, ry + y, 0)))
+                                continue;
+                            sediment[x, y] -= sedimentDeposit;
+                            map[(int)rx + x, (int)ry + y] += sedimentDeposit;
                         }
                     }
                 }
@@ -309,9 +306,15 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 
             // Deposit any remainder (should be minimal)
             for (x = 0; x < water.Width; x++)
+            {
                 for (y = 0; y < water.Height; y++)
-                    if (mask[(int)rx + x, (int)ry + y] && sediment[x, y] > 0)
+                {
+                    if (((Scene)map.Scene).Permissions.CanTerraformLand(userID, new Vector3(rx + x, ry + y, 0)))
+                        continue;
+                    if (sediment[x, y] > 0)
                         map[(int)rx + x, (int)ry + y] += sediment[x, y];
+                }
+            }
         }
 
         #endregion
