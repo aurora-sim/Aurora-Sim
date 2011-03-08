@@ -112,22 +112,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                 }
 
                 // First check that this is the sim owner
-                if (m_scene.Permissions.IsGod(agentID))
+                if (m_scene.Permissions.IsGod(sp.UUID))
                 {
-                    // Next we check for spoofing.....
-                    UUID testSessionID = sp.ControllingClient.SessionId;
-                    if (sessionID == testSessionID)
-                    {
-                        if (sessionID == controllingClient.SessionId)
-                        {
-                            sp.GodLevel = sp.UserLevel;
-                            if (sp.GodLevel == 0)
-                                sp.GodLevel = 255;
+                    sp.GodLevel = sp.UserLevel;
+                    if (sp.GodLevel == 0)
+                        sp.GodLevel = 255;
 
-                            m_log.Info("[GODS]: God level set for " + sp.Name + ", level " + sp.GodLevel.ToString());
-                            sp.ControllingClient.SendAdminResponse(token, (uint)sp.GodLevel);
-                        }
-                    }
+                    m_log.Info("[GODS]: God level set for " + sp.Name + ", level " + sp.GodLevel.ToString());
+                    sp.ControllingClient.SendAdminResponse(token, (uint)sp.GodLevel);
                 }
                 else
                 {

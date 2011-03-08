@@ -461,21 +461,24 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 return true;
 
             ScenePresence sp = m_scene.GetScenePresence(user);
-            if (m_ParcelOwnerIsGod && m_parcelManagement != null && sp != null && 
-                m_parcelManagement.GetLandObject(sp.AbsolutePosition.X, sp.AbsolutePosition.Y).LandData.OwnerID == user)
-                return true;
+            if (m_ParcelOwnerIsGod && m_parcelManagement != null && sp != null)
+            {
+                ILandObject landObject = m_parcelManagement.GetLandObject(sp.AbsolutePosition.X, sp.AbsolutePosition.Y);
+                if (landObject != null && landObject.LandData.OwnerID == user)
+                    return true;
+            }
 
             if (m_allowGridGods)
             {
                 if (sp != null)
                 {
-                    if (sp.UserLevel >= 200)
+                    if (sp.UserLevel > 0)
                         return true;
                 }
-                UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, user);
+                UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, sp.UUID);
                 if (account != null)
                 {
-                    if (account.UserLevel >= 200)
+                    if (account.UserLevel > 0)
                         return true;
                 }
             }
