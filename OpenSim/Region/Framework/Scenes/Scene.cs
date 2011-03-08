@@ -784,7 +784,7 @@ namespace OpenSim.Region.Framework.Scenes
                     syncPoster.Post(SyncMessageHelper.DisableSimulator(presence.UUID, RegionInfo.RegionHandle), RegionInfo.RegionHandle);
                 }
                 //Kill the client's connection to this sim...
-                presence.ControllingClient.Stop();
+                //presence.ControllingClient.Stop();
 
                 return RetVal;
             }

@@ -546,6 +546,22 @@ namespace OpenSim.Services.MessagingService
         {
             Util.FireAndForget(delegate(object o)
             {
+                //Sleep for 5 seconds to give the agents a chance to cross and get everything right
+                Thread.Sleep(5000);
+                //Now do a sanity check on the avatar
+                IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
+                if(clientCaps == null)
+                    return;
+                IRegionClientCapsService rootRegionCaps = clientCaps.GetRootCapsService();
+                if (rootRegionCaps == null)
+                    return;
+                IRegionClientCapsService ourRegionCaps = clientCaps.GetCapsService(destination.RegionHandle);
+                if (ourRegionCaps == null)
+                    return;
+                //If they handles arn't the same, the agent moved, and we can't be sure that we should close these agents
+                if (rootRegionCaps.RegionHandle != ourRegionCaps.RegionHandle)
+                    return;
+
                 INeighborService service = m_registry.RequestModuleInterface<INeighborService>();
                 if (service != null)
                 {
