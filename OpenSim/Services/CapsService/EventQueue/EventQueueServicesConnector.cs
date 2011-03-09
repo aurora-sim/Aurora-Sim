@@ -121,14 +121,17 @@ namespace OpenSim.Services.CapsService
                 {
                     if (async)
                     {
-                        AsynchronousRestObjectRequester.MakeRequest("POST", serverURI + "/CAPS/EQMPOSTER",
+                        /*AsynchronousRestObjectRequester.MakeRequest("POST", serverURI + "/CAPS/EQMPOSTER",
                             OSDParser.SerializeJsonString(request),
                             delegate(string resp)
                             {
                                 return RequestHandler(resp, events, avatarID, regionHandle);
                             });
 
-                        return true;
+                        return true;*/
+                        string resp = SynchronousRestFormsRequester.MakeRequest("POST", serverURI + "/CAPS/EQMPOSTER",
+                            OSDParser.SerializeJsonString(request));
+                        return RequestHandler(resp, events, avatarID, regionHandle);
                     }
                     else
                     {
