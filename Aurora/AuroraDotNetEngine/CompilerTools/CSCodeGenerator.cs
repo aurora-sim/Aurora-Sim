@@ -2322,7 +2322,10 @@ default
             tmpstr += GenerateNode((SYMBOL)ws.kids.Pop());
             tmpstr += GenerateLine(")");
 
+            //Forces all functions to use MoveNext() instead of .Current, as it never changes otherwise, and the loop runs infinitely
+            m_isInEnumeratedDeclaration = true;
             retstr += DumpFunc(marc) + tmpstr.ToString();
+            m_isInEnumeratedDeclaration  = false; //End above
 
             if (IsParentEnumerable)
             {
