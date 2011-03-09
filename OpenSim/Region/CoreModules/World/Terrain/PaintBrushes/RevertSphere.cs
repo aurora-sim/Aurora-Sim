@@ -49,29 +49,39 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                 return;
             strength = TerrainUtil.MetersToSphericalStrength(BrushSize);
             duration = 0.03f; //MCP Should be read from ini file
- 
+
             if (duration > 1.0)
                 duration = 1;
             if (duration < 0)
                 return;
 
-            int x;
-            for (x = 0; x < map.Width; x++)
+            int n = (int)(BrushSize + 0.5f);
+            int zx = (int)(rx + 0.5);
+            int zy = (int)(ry + 0.5);
+
+            int dx;
+            for (dx = -n; dx <= n; dx++)
             {
-                int y;
-                for (y = 0; y < map.Height; y++)
+                int dy;
+                for (dy = -n; dy <= n; dy++)
                 {
-                    if (!((Scene)map.Scene).Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
-                        continue;
-
-                    // Calculate a sphere and add it to the heighmap
-                    float z = 0;
-                    if (duration < 4.0)
-                        z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) * duration * 0.25f;
-
-                    if (z > 0.0)
+                    int x = zx + dx;
+                    int y = zy + dy;
+                    if (x >= 0 && y >= 0 && x < map.Width && y < map.Height)
                     {
-                        map[x, y] = (map[x, y] * (1 - z)) + (m_module.TerrainRevertMap[x, y] * z);
+                        if (!((Scene)map.Scene).Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
+                            continue;
+
+                        // Calculate a sphere and add it to the heighmap
+                        float z = 0;
+                        if (duration < 4.0)
+                            z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) * duration * 0.25f;
+
+                        if (z > 0.0)
+                        {
+                            float s = strength * 0.025f;
+                            map[x, y] = (map[x, y] * (1 - s)) + (m_module.TerrainRevertMap[x, y] * s);
+                        }
                     }
                 }
             }

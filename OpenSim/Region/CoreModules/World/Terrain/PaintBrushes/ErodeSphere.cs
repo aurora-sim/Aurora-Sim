@@ -161,13 +161,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
             // Using one 'rain' round for this, so skipping a useless loop
             // Will need to adapt back in for the Flood brush
 
-            ITerrainChannel water = new TerrainChannel((int)BrushSize, (int)BrushSize, null);
-            ITerrainChannel sediment = new TerrainChannel((int)BrushSize, (int)BrushSize, null);
+            ITerrainChannel water = new TerrainChannel(map.Width, map.Height, null);
+            ITerrainChannel sediment = new TerrainChannel(map.Width, map.Height, null);
 
             // Fill with rain
-            for (x = 0; x < BrushSize; x++)
-                for (y = 0; y < BrushSize; y++)
-                    water[x, y] = (float)Math.Max(0, TerrainUtil.SphericalFactor(rx+x, ry+y, rx, ry, strength) * rainHeight * duration);
+            for (x = 0; x < water.Width; x++)
+                for (y = 0; y < water.Height; y++)
+                    water[x, y] = (float)Math.Max(0.0, TerrainUtil.SphericalFactor(x, y, rx, ry, strength) * rainHeight * duration);
 
             for (int i = 0; i < rounds; i++)
             {
@@ -176,9 +176,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                 {
                     for (y = 0; y < water.Height; y++)
                     {
-                        const float solConst = (1 / rounds);
+                        const float solConst = (1.0f / rounds);
                         float sedDelta = water[x, y] * solConst;
-                        map[(int)rx + x, (int)ry + y] -= sedDelta;
+                        map[x, y] -= sedDelta;
                         sediment[x, y] += sedDelta;
                     }
                 }
@@ -194,8 +194,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                         // Step 1. Calculate average of neighbours
 
                         int neighbours = 0;
-                        float altitudeTotal = 0;
-                        float altitudeMe = map[(int)rx + x, (int)ry + y] + water[x, y];
+                        float altitudeTotal = 0.0f;
+                        float altitudeMe = map[x, y] + water[x, y];
 
                         const int NEIGHBOUR_ME = 4;
                         const int NEIGHBOUR_MAX = 9;
@@ -266,7 +266,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                                     continue;
 
                                 // Calculate how much water we can move
-                                float waterMin = (float)Math.Min(water[x, y], altitudeDelta);
+                                float waterMin = Math.Min(water[x, y], altitudeDelta);
                                 float waterDelta = waterMin * ((water[coords[0], coords[1]] + map[coords[0], coords[1]])
                                                                 / altitudeTotal);
 
@@ -288,17 +288,15 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                 {
                     for (y = 0; y < water.Height; y++)
                     {
-                        water[x, y] *= 1 - (rainHeight / rounds);
+                        water[x, y] *= 1.0f - (rainHeight / rounds);
 
                         float waterCapacity = waterSaturation * water[x, y];
 
                         float sedimentDeposit = sediment[x, y] - waterCapacity;
                         if (sedimentDeposit > 0)
                         {
-                            if (!((Scene)map.Scene).Permissions.CanTerraformLand(userID, new Vector3(rx + x, ry + y, 0)))
-                                continue;
                             sediment[x, y] -= sedimentDeposit;
-                            map[(int)rx + x, (int)ry + y] += sedimentDeposit;
+                            map[x, y] += sedimentDeposit;
                         }
                     }
                 }

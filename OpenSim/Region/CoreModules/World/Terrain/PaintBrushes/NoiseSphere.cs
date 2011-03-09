@@ -37,46 +37,57 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
     {
         #region ITerrainPaintableEffect Members
 
-        public void PaintEffect(ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<Scene> scene)
+        public void PaintEffect(ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<Scene> scenes)
         {
+            int n = (int)(BrushSize + 0.5f);
+            if (BrushSize > 6) //If it gets too high, it will start roughening at an ever increasing rate when held down
+                BrushSize = 6;
             strength = TerrainUtil.MetersToSphericalStrength(BrushSize);
 
-            int x;
+            float area = BrushSize;
+            float step = BrushSize / 4;
+            duration *= 0.01f; //MCP Should be read from ini file
 
-            int xFrom = (int)(rx - BrushSize + 0.5);
-            int xTo = (int)(rx + BrushSize + 0.5) + 1;
-            int yFrom = (int)(ry - BrushSize + 0.5);
-            int yTo = (int)(ry + BrushSize + 0.5) + 1;
+            int zx = (int)(rx + 0.5);
+            int zy = (int)(ry + 0.5);
 
-            if (xFrom < 0)
-                xFrom = 0;
+            float average = 0;
+            int avgsteps = 0;
 
-            if (yFrom < 0)
-                yFrom = 0;
-
-            if (xTo > map.Width)
-                xTo = map.Width;
-
-            if (yTo > map.Height)
-                yTo = map.Height;
-
-            for (x = xFrom; x < xTo; x++)
+            float nn;
+            for (nn = 0 - area; nn < area; nn += step)
             {
-                int y;
-                for (y = yFrom; y < yTo; y++)
+                float l;
+                for (l = 0 - area; l < area; l += step)
                 {
-                    if (!((Scene)map.Scene).Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
-                        continue;
+                    avgsteps++;
+                    average += TerrainUtil.GetBilinearInterpolate(rx + nn, ry + l, map, scenes);
+                }
+            }
+            int dx;
+            for (dx = -n; dx <= n; dx++)
+            {
+                int dy;
+                for (dy = -n; dy <= n; dy++)
+                {
+                    int x = zx + dx;
+                    int y = zy + dy;
+                    if (x >= 0 && y >= 0 && x < map.Width && y < map.Height)
+                    {
+                        if (!((Scene)map.Scene).Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
+                            continue;
 
-                    // Calculate a sphere and add it to the heighmap
-                    float z = strength;
-                    z *= z;
-                    z -= ((x - rx) * (x - rx)) + ((y - ry) * (y - ry));
+                        float z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) / (strength);
+                        if (z > 0) // add in non-zero amount
+                        {
+                            float da = z;
+                            float a = (map[x, y] - (average / avgsteps));
+                            float newz = map[x, y] + (a * duration);
 
-                    float noise = TerrainUtil.PerlinNoise2D(x / map.Scene.RegionInfo.RegionSizeX, y / map.Scene.RegionInfo.RegionSizeY, 8, 1);
-
-                    if (z > 0.0)
-                        map[x, y] += noise * z * duration;
+                            if (newz > 0.0)
+                                map[x, y] = newz;
+                        }
+                    }
                 }
             }
         }
