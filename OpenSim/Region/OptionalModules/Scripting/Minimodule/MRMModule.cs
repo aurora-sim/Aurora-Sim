@@ -186,7 +186,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
         /// * Internet
         /// * Everything
         /// </remarks>
-        public static AppDomain CreateRestrictedDomain(string permissionSetName, string appDomainName)
+        public AppDomain CreateRestrictedDomain(string permissionSetName, string appDomainName, AppDomainSetup ads)
         {
             if (permissionSetName == null)
                 throw new ArgumentNullException("permissionSetName");
@@ -194,13 +194,37 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
                 throw new ArgumentOutOfRangeException("permissionSetName", permissionSetName,
                                                       "Cannot have an empty permission set name");
 
-            // Default to all code getting nothing
+            // Default to all code getting everything
+            PermissionSet setIntersection = new PermissionSet(PermissionState.Unrestricted);
+            AppDomain restrictedDomain = null;
+
+#if NET_4_0
+            SecurityZone zone = SecurityZone.Internet;
+            try
+            {
+                zone = (SecurityZone)Enum.Parse(typeof(SecurityZone), permissionSetName);
+            }
+            catch
+            {
+                zone = SecurityZone.Internet;
+            }
+
+            Evidence ev = new Evidence();
+            ev.AddHostEvidence(new Zone(zone));
+            setIntersection = SecurityManager.GetStandardSandbox(ev);
+            setIntersection.AddPermission(new System.Net.SocketPermission(PermissionState.Unrestricted));
+            setIntersection.AddPermission(new System.Net.WebPermission(PermissionState.Unrestricted));
+            setIntersection.AddPermission(new System.Security.Permissions.SecurityPermission(PermissionState.Unrestricted));
+            StrongName fullTrustAssembly = typeof(AppDomainManager).Assembly.Evidence.GetHostEvidence<StrongName>();
+
+            // create an AppDomain where this policy will be in effect
+            restrictedDomain = AppDomain.CreateDomain(appDomainName, null, ads, setIntersection, fullTrustAssembly);
+#else
+
             PolicyStatement emptyPolicy = new PolicyStatement(new PermissionSet(PermissionState.None));
             UnionCodeGroup policyRoot = new UnionCodeGroup(new AllMembershipCondition(), emptyPolicy);
 
             bool foundName = false;
-            PermissionSet setIntersection = new PermissionSet(PermissionState.Unrestricted);
-
             // iterate over each policy level
             IEnumerator levelEnumerator = SecurityManager.PolicyHierarchy();
             while (levelEnumerator.MoveNext())
@@ -232,6 +256,10 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
 
             // if no named permission sets were found, return an empty set,
             // otherwise return the set that was found
+            setIntersection.AddPermission(new System.Net.SocketPermission(PermissionState.Unrestricted));
+            setIntersection.AddPermission(new System.Net.WebPermission(PermissionState.Unrestricted));
+            setIntersection.AddPermission(new System.Security.Permissions.SecurityPermission(PermissionState.Unrestricted));
+
             PolicyStatement permissions = new PolicyStatement(setIntersection);
             policyRoot.AddChild(new UnionCodeGroup(new AllMembershipCondition(), permissions));
 
@@ -240,13 +268,12 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             appDomainLevel.RootCodeGroup = policyRoot;
 
             // create an AppDomain where this policy will be in effect
-            string domainName = appDomainName;
-            AppDomain restrictedDomain = AppDomain.CreateDomain(domainName);
+            restrictedDomain = AppDomain.CreateDomain(appDomainName, null, ads);
             restrictedDomain.SetAppDomainPolicy(appDomainLevel);
+#endif
 
             return restrictedDomain;
         }
-
 
         void EventManager_OnRezScript(SceneObjectPart part, UUID itemID, string script, int startParam, bool postOnRez, int stateSource)
         {
@@ -268,8 +295,15 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
                                    m_config.GetString("SandboxLevel", "Internet") + "-level security.");
 
                         string domainName = UUID.Random().ToString();
+                        AppDomainSetup ads = new AppDomainSetup();
+                        ads.ApplicationBase = AppDomain.CurrentDomain.BaseDirectory;
+                        ads.DisallowBindingRedirects = true;
+                        ads.DisallowCodeDownload = true;
+                        ads.LoaderOptimization = LoaderOptimization.MultiDomainHost;
+                        ads.ShadowCopyFiles = "false"; // Disable shadowing
+                        ads.ConfigurationFile = AppDomain.CurrentDomain.SetupInformation.ConfigurationFile;
                         target = CreateRestrictedDomain(m_config.GetString("SandboxLevel", "Internet"),
-                                                                  domainName);
+                                                                  domainName, ads);
                     }
                     else
                     {

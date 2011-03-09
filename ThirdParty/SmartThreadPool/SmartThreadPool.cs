@@ -205,10 +205,14 @@ namespace Amib.Threading
         /// </summary>
         private bool _isDisposed = false;
 
+#pragma warning disable 67
+
         /// <summary>
         /// Event to send that the thread pool is idle
         /// </summary>
         private event EventHandler _stpIdle;
+        
+#pragma warning restore 67
 
         /// <summary>
         /// On idle event

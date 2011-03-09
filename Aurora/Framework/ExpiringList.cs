@@ -371,7 +371,7 @@ namespace Aurora.Framework
                     return;
                 try
                 {
-                    Lazy<List<object>> expiredItems = new Lazy<List<object>>();
+                    OpenMetaverse.Lazy<List<object>> expiredItems = new OpenMetaverse.Lazy<List<object>>();
 
                     foreach (TimedCacheKey<TKey> timedKey in timedStorage)
                     {

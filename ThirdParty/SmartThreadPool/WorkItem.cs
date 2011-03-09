@@ -124,6 +124,8 @@ namespace Amib.Threading.Internal
         /// </summary>
         private WorkItemInfo _workItemInfo;
 
+#pragma warning disable 67
+
         /// <summary>
         /// Called when the WorkItem starts
         /// </summary>
@@ -133,6 +135,8 @@ namespace Amib.Threading.Internal
         /// Called when the WorkItem completes
         /// </summary>
         private event WorkItemStateCallback _workItemCompletedEvent;
+
+#pragma warning restore 67
 
         /// <summary>
         /// A reference to an object that indicates whatever the 

@@ -24,8 +24,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-//#define NET_4_0
-//Uncomment the above to try .net 4.0 parts
 
 using System;
 using System.Collections;
@@ -218,10 +216,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 throw new ArgumentOutOfRangeException("permissionSetName", permissionSetName,
                                                       "Cannot have an empty permission set name");
 
-            // Default to all code getting nothing
-            PolicyStatement emptyPolicy = new PolicyStatement(new PermissionSet(PermissionState.None));
-            UnionCodeGroup policyRoot = new UnionCodeGroup(new AllMembershipCondition(), emptyPolicy);
-
+            // Default to all code getting everything
             PermissionSet setIntersection = new PermissionSet(PermissionState.Unrestricted);
             AppDomain restrictedDomain = null;
 
@@ -247,6 +242,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             // create an AppDomain where this policy will be in effect
             restrictedDomain = AppDomain.CreateDomain(appDomainName, null, ads, setIntersection, fullTrustAssembly);
 #else
+
+            PolicyStatement emptyPolicy = new PolicyStatement(new PermissionSet(PermissionState.None));
+            UnionCodeGroup policyRoot = new UnionCodeGroup(new AllMembershipCondition(), emptyPolicy);
 
             bool foundName = false;
             // iterate over each policy level

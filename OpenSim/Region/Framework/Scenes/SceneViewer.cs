@@ -534,7 +534,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected Prioritizer m_prioritizer;
         private readonly Mutex _versionAllocateMutex = new Mutex(false);
         protected int m_lastVersion = 0;
-        private Scene m_scene;
+        //private Scene m_scene;
 
         public Prioritizer Prioritizer
         {
@@ -564,7 +564,7 @@ namespace OpenSim.Region.Framework.Scenes
             EntityUpdate update = new EntityUpdate(part, UpdateFlags);
             //Fix the version with the newest locked m_version
             FixVersion(update);
-            foreach(ScenePresence client in m_scene.ScenePresences)
+            /*foreach(ScenePresence client in m_scene.ScenePresences)
             {
                 //Check for culling here, as it is per client!
                 if (!CheckForCulling(client, part.ParentGroup))
@@ -577,7 +577,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 //Remove it so that we send the update later
                 RemoveObjectInViewForClient(part.UUID);
-            }
+            }*/
         }
 
         /// <summary>
@@ -770,7 +770,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_SentInitialObjects = true;
                 //If they are not in this region, we check to make sure that we allow seeing into neighbors
-                if (!client.IsChildAgent || (client.Scene.RegionInfo.SeeIntoThisSimFromNeighbor))
+                /*if (!client.IsChildAgent || (client.Scene.RegionInfo.SeeIntoThisSimFromNeighbor))
                 {
                     EntityBase[] entities = m_scene.Entities.GetEntities();
                     //Use the PriorityQueue so that we can send them in the correct order
@@ -788,7 +788,7 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                     }
                     entities = null;
-                }
+                }*/
             }
 
             #endregion
