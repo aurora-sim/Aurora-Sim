@@ -221,14 +221,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             AppDomain restrictedDomain = null;
 
 #if NET_4_0
-            SecurityZone zone = SecurityZone.Internet;
+            SecurityZone zone = SecurityZone.MyComputer;
             try
             {
                 zone = (SecurityZone)Enum.Parse(typeof(SecurityZone), permissionSetName);
             }
             catch
             {
-                zone = SecurityZone.Internet;
+                zone = SecurityZone.MyComputer;
             }
 
             Evidence ev = new Evidence();
@@ -237,10 +237,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             setIntersection.AddPermission(new System.Net.SocketPermission(PermissionState.Unrestricted));
             setIntersection.AddPermission(new System.Net.WebPermission(PermissionState.Unrestricted));
             setIntersection.AddPermission(new System.Security.Permissions.SecurityPermission(PermissionState.Unrestricted));
-            StrongName fullTrustAssembly = typeof(AppDomainManager).Assembly.Evidence.GetHostEvidence<StrongName>();
-
+            
             // create an AppDomain where this policy will be in effect
-            restrictedDomain = AppDomain.CreateDomain(appDomainName, null, ads, setIntersection, fullTrustAssembly);
+            restrictedDomain = AppDomain.CreateDomain(appDomainName, ev, ads, setIntersection, null);
 #else
 
             PolicyStatement emptyPolicy = new PolicyStatement(new PermissionSet(PermissionState.None));

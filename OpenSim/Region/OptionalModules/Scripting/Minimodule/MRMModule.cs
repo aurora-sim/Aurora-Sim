@@ -199,14 +199,14 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             AppDomain restrictedDomain = null;
 
 #if NET_4_0
-            SecurityZone zone = SecurityZone.Internet;
+            SecurityZone zone = SecurityZone.MyComputer;
             try
             {
                 zone = (SecurityZone)Enum.Parse(typeof(SecurityZone), permissionSetName);
             }
             catch
             {
-                zone = SecurityZone.Internet;
+                zone = SecurityZone.MyComputer;
             }
 
             Evidence ev = new Evidence();

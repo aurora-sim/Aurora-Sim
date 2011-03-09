@@ -65,7 +65,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
             {
                 for (y = yFrom; y < yTo; y++)
                 {
-                    if (((Scene)map.Scene).Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
+                    if (!((Scene)map.Scene).Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
                         continue;
 
                     float z;
