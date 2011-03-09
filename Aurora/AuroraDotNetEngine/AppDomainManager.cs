@@ -24,6 +24,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+//#define NET_4_0
+//Uncomment the above to try .net 4.0 parts
 
 using System;
 using System.Collections;
@@ -174,13 +176,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ads.ShadowCopyFiles = "false"; // Disable shadowing
             ads.ConfigurationFile = AppDomain.CurrentDomain.SetupInformation.ConfigurationFile;
 
-            AppDomain AD = CreateRestrictedDomain(m_PermissionLevel, 
-                "ScriptAppDomain_" + AppDomainNameCount,ads);
+            AppDomain AD = CreateRestrictedDomain(m_PermissionLevel,
+                "ScriptAppDomain_" + AppDomainNameCount, ads);
 
             AD.AssemblyResolve += m_scriptEngine.AssemblyResolver.OnAssemblyResolve;
 
-            //AD.Load(AssemblyName.GetAssemblyName(
-            //            "OpenSim.Region.ScriptEngine.Shared.dll"));
             // Return the new AppDomain
             return AD;
         }
@@ -222,9 +222,33 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             PolicyStatement emptyPolicy = new PolicyStatement(new PermissionSet(PermissionState.None));
             UnionCodeGroup policyRoot = new UnionCodeGroup(new AllMembershipCondition(), emptyPolicy);
 
-            bool foundName = false;
             PermissionSet setIntersection = new PermissionSet(PermissionState.Unrestricted);
+            AppDomain restrictedDomain = null;
 
+#if NET_4_0
+            SecurityZone zone = SecurityZone.Internet;
+            try
+            {
+                zone = (SecurityZone)Enum.Parse(typeof(SecurityZone), permissionSetName);
+            }
+            catch
+            {
+                zone = SecurityZone.Internet;
+            }
+
+            Evidence ev = new Evidence();
+            ev.AddHostEvidence(new Zone(zone));
+            setIntersection = SecurityManager.GetStandardSandbox(ev);
+            setIntersection.AddPermission(new System.Net.SocketPermission(PermissionState.Unrestricted));
+            setIntersection.AddPermission(new System.Net.WebPermission(PermissionState.Unrestricted));
+            setIntersection.AddPermission(new System.Security.Permissions.SecurityPermission(PermissionState.Unrestricted));
+            StrongName fullTrustAssembly = typeof(AppDomainManager).Assembly.Evidence.GetHostEvidence<StrongName>();
+
+            // create an AppDomain where this policy will be in effect
+            restrictedDomain = AppDomain.CreateDomain(appDomainName, null, ads, setIntersection, fullTrustAssembly);
+#else
+
+            bool foundName = false;
             // iterate over each policy level
             IEnumerator levelEnumerator = SecurityManager.PolicyHierarchy();
             while (levelEnumerator.MoveNext())
@@ -259,7 +283,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             setIntersection.AddPermission(new System.Net.SocketPermission(PermissionState.Unrestricted));
             setIntersection.AddPermission(new System.Net.WebPermission(PermissionState.Unrestricted));
             setIntersection.AddPermission(new System.Security.Permissions.SecurityPermission(PermissionState.Unrestricted));
-            
+
             PolicyStatement permissions = new PolicyStatement(setIntersection);
             policyRoot.AddChild(new UnionCodeGroup(new AllMembershipCondition(), permissions));
 
@@ -268,9 +292,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             appDomainLevel.RootCodeGroup = policyRoot;
 
             // create an AppDomain where this policy will be in effect
-            string domainName = appDomainName;
-            AppDomain restrictedDomain = AppDomain.CreateDomain(domainName, null, ads);
+            restrictedDomain = AppDomain.CreateDomain(appDomainName, null, ads);
             restrictedDomain.SetAppDomainPolicy(appDomainLevel);
+#endif
 
             return restrictedDomain;
         }
