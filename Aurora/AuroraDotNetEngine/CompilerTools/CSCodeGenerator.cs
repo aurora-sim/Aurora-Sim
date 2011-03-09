@@ -131,6 +131,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private Parser p = null;
         private Random random = new Random();
         private bool IsaGlobalVar = false;
+
+        private bool m_isInEnumeratedDeclaration = false;
+
         private class GlobalVar
         {
             public string Type;
@@ -162,9 +165,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// </summary>
         private Dictionary<string, IScriptApi> m_apiFunctions = new Dictionary<string, IScriptApi>();
         private Compiler m_compiler;
-        private bool m_isInEnumeratedDeclaration = false;
 
         private bool FuncCntr = false;
+
+        
 
         /// <summary>
         /// Creates an 'empty' CSCodeGenerator instance.
@@ -2376,10 +2380,13 @@ default
             bool marc = FuncCallsMarc();
 
             //Forces all functions to use MoveNext() instead of .Current, as it never changes otherwise, and the loop runs infinitely
+
             m_isInEnumeratedDeclaration = true;
+
             tmpstr += GenerateIndented("while (", dws);
             tmpstr += GenerateNode((SYMBOL)dws.kids.Pop());
-            tmpstr += GenerateLine(");");z
+            tmpstr += GenerateLine(");");
+
             m_isInEnumeratedDeclaration  = false; //End above
 
             retstr += DumpFunc(marc) + tmpstr.ToString();
