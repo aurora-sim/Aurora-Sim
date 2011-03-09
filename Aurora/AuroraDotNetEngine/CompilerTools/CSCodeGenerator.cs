@@ -162,6 +162,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// </summary>
         private Dictionary<string, IScriptApi> m_apiFunctions = new Dictionary<string, IScriptApi>();
         private Compiler m_compiler;
+        private bool m_isInEnumeratedDeclaration = false;
 
         private bool FuncCntr = false;
 
@@ -2371,9 +2372,12 @@ default
 
             bool marc = FuncCallsMarc();
 
+            //Forces all functions to use MoveNext() instead of .Current, as it never changes otherwise, and the loop runs infinitely
+            m_isInEnumeratedDeclaration = true;
             tmpstr += GenerateIndented("while (", dws);
             tmpstr += GenerateNode((SYMBOL)dws.kids.Pop());
-            tmpstr += GenerateLine(");");
+            tmpstr += GenerateLine(");");z
+            m_isInEnumeratedDeclaration  = false; //End above
 
             retstr += DumpFunc(marc) + tmpstr.ToString();
 
@@ -2703,6 +2707,27 @@ default
             }
             else if (isEnumerable)
             {
+                if(m_isInEnumeratedDeclaration && NeedRetVal) //Got to have a retVal for do/while
+                {
+                     //This is for things like the do/while statement, where a function is in the while() part and can't be dumped in front of the do/while
+                     //Function calls are added to the DumpFunc command, and will be dumped safely before the statement that occurs here, so we don't have to deal with the issues behind having { and } in this area.
+                     Mname = RandomString(10, true);
+                     string Exname = RandomString(10, true);
+                     List<string> fCalls = new List<string>();
+                     fCalls.Add(Generate("string " + Exname + " =  \"\";"));
+                     fCalls.Add(Generate("IEnumerator " + Mname + " = "));
+                     fCalls.Add(Generate(String.Format("{0}(", CheckName(fc.Id)), fc));
+                     fCalls.Add(tempString);
+                     fCalls.Add(Generate(");"));
+
+                     if (NeedRetVal && rettype != "void")
+                     {
+                         retstr += " (" + rettype + ") " + Mname + ".MoveNext()";
+                     }
+                     FuncCalls.AddRange(fCalls);
+                }
+                else
+                {
                 //Function calls are added to the DumpFunc command, and will be dumped safely before the statement that occurs here, so we don't have to deal with the issues behind having { and } in this area.
                 Mname = RandomString(10, true);
                 string Exname = RandomString(10, true);
@@ -2733,6 +2758,7 @@ default
                     retstr += " (" + rettype + ") " + Mname + ".Current";
                 }
                 FuncCalls.AddRange(fCalls);
+                }
             }
             else
             {
