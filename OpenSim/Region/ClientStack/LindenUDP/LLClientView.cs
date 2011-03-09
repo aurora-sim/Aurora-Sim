@@ -488,7 +488,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void Stop()
         {
             DisableSimulatorPacket disable = (DisableSimulatorPacket)PacketPool.Instance.GetPacket(PacketType.DisableSimulator);
-            OutPacket(disable, ThrottleOutPacketType.Count);
+            OutPacket(disable, ThrottleOutPacketType.OutBand);
         }
 
         /// <summary>
@@ -502,7 +502,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             // Send the STOP packet
             DisableSimulatorPacket disable = (DisableSimulatorPacket)PacketPool.Instance.GetPacket(PacketType.DisableSimulator);
-            OutPacket(disable, ThrottleOutPacketType.Count);
+            OutPacket(disable, ThrottleOutPacketType.OutBand);
 
             IsActive = false;
 
