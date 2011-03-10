@@ -340,15 +340,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                     }
                     else
                     {
-
-                        float Z = Math.Abs(m_SP.Velocity.Z);
-                        if (coldata[localid].PenetrationDepth >= 0.05f)
-                            Health -= coldata[localid].PenetrationDepth * Z;
+                        float Z = m_SP.Velocity.Length () / 20;
+                        if (coldata[localid].PenetrationDepth >= 0.05f && Math.Abs(m_SP.Velocity.X) < 1 && Math.Abs(m_SP.Velocity.Y) < 1)
+                        {
+                            Z = Math.Min (Z, 1.5f);
+                            float damage = Math.Min (coldata[localid].PenetrationDepth, 15f);
+                            Health -= damage * Z;
+                        }
                     }
-
-                    //Regenerate health (this is approx 1 sec)
-                    if ((int)(Health + 0.0625) <= m_combatModule.MaximumHealth)
-                        Health += 0.0625f;
 
                     if (Health > m_combatModule.MaximumHealth)
                         Health = m_combatModule.MaximumHealth;
@@ -360,6 +359,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                     }
                     //m_log.Debug("[AVATAR]: Collision with localid: " + localid.ToString() + " at depth: " + coldata[localid].ToString());
                 }
+
+                //Regenerate health (this is approx 1 sec)
+                if ((int)(Health + 0.0625) <= m_combatModule.MaximumHealth)
+                    Health += 0.0625f;
+
                 if (starthealth != Health)
                 {
                     m_SP.ControllingClient.SendHealth(Health);

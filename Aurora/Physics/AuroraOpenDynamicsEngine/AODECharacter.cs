@@ -946,7 +946,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_iscollidingGround = true;
                 flying = false; // ground the avatar
                 ContactPoint point = new ContactPoint();
-                point.PenetrationDepth = 0.0f;
+                point.PenetrationDepth = vel.Z;
                 point.Position = Position;
                 point.SurfaceNormal = Vector3.Zero;
 
