@@ -507,7 +507,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                     // Set the resent flag
                     outgoingPacket.Buffer.Data[0] = (byte)(outgoingPacket.Buffer.Data[0] | Helpers.MSG_RESENT);
-                    outgoingPacket.Category = ThrottleOutPacketType.Resend;
+
+// resend in its original category
+//                    outgoingPacket.Category = ThrottleOutPacketType.Resend;
 
                     // Bump up the resend count on this packet
                     Interlocked.Increment(ref outgoingPacket.ResendCount);
@@ -585,6 +587,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                     // Add this packet to the list of ACK responses we are waiting on from the server
                     udpClient.NeedAcks.Add(outgoingPacket);
+                    Interlocked.Add(ref udpClient.UnackedBytes, outgoingPacket.Buffer.DataLength);
                 }
             }
 
@@ -592,8 +595,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             // Stats tracking
             Interlocked.Increment(ref udpClient.PacketsSent);
-            if (isReliable)
-                Interlocked.Add(ref udpClient.UnackedBytes, outgoingPacket.Buffer.DataLength);
+//            if (isReliable)
+//                Interlocked.Add(ref udpClient.UnackedBytes, outgoingPacket.Buffer.DataLength);
 
             // Put the UDP payload on the wire
 //            AsyncBeginSend(buffer);
