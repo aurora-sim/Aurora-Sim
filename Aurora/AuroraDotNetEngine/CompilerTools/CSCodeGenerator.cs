@@ -140,8 +140,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             public string Value;
         }
         private HashSet<string> DTFunctions = new HashSet<string>();
-//        public Dictionary<string, string> IenFunctions = new Dictionary<string, string>();
+        //        public Dictionary<string, string> IenFunctions = new Dictionary<string, string>();
         public Dictionary<string, string> LocalMethods = new Dictionary<string, string>();
+        public Dictionary<string, ObjectList> LocalMethodArguements = new Dictionary<string, ObjectList>();
         private Dictionary<string, GlobalVar> GlobalVariables = new Dictionary<string, GlobalVar>();
 
         /// <summary>
@@ -160,6 +161,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// </summary>
         private Dictionary<string, VarRename> VariablesToRename = new Dictionary<string, VarRename>();
         private List<string> FuncCalls = new List<string>();
+        private List<string> MethodsToAdd = new List<string>();
         /// <summary>
         /// Param 1 - the API function name, Param 2 - the API name
         /// </summary>
@@ -249,8 +251,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             #endregion
 
-            //m_SLCompatabilityMode = compatMode;
-            //            p = new LSLSyntax(new yyLSLSyntax(), new ErrorHandler(true));
             ResetCounters();
             m_compiler = compiler;
 
@@ -306,6 +306,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             FuncCalls.Clear();
             FuncCntr = false;
             IsaGlobalVar = false;
+            MethodsToAdd.Clear();
+            LocalMethodArguements.Clear();
         }
 
         private string CreateCompilerScript(string ScriptClass)
@@ -328,6 +330,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             compiledScript += "{\n";
 
             compiledScript += ScriptClass;
+            foreach(string method in MethodsToAdd)
+            {
+                compiledScript += method;
+            }
 
             compiledScript += "}\n"; // Close Class
 
@@ -384,7 +390,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 return "Error parsing the script. " + message;
             }
 
-            m_astRoot = codeTransformer.Transform(LocalMethods);
+            m_astRoot = codeTransformer.Transform(LocalMethods, LocalMethodArguements);
             OriginalScript = script;
             string returnstring = "";
 
@@ -2612,7 +2618,7 @@ default
             string Mname = "";
             bool isEnumerable = false;
             string tempString = "";
-
+            
             //int NeedCloseParent = 0;
 
             foreach (SYMBOL kid in fc.kids)
@@ -2720,20 +2726,50 @@ default
                 if(m_isInEnumeratedDeclaration && NeedRetVal) //Got to have a retVal for do/while
                 {
                      //This is for things like the do/while statement, where a function is in the while() part and can't be dumped in front of the do/while
-                     //Function calls are added to the DumpFunc command, and will be dumped safely before the statement that occurs here, so we don't have to deal with the issues behind having { and } in this area.
-                     Mname = RandomString(10, true);
-                     string Exname = RandomString(10, true);
-                     List<string> fCalls = new List<string>();
-                     fCalls.Add(Generate("string " + Exname + " =  \"\";"));
-                     fCalls.Add(Generate("IEnumerator " + Mname + " = "));
-                     fCalls.Add(Generate(String.Format("{0}(", CheckName(fc.Id)), fc));
-                     fCalls.Add(tempString);
-                     fCalls.Add(Generate(");"));
-
-                     if (NeedRetVal && rettype != "void")
+                     string MethodName = RandomString(10, true);
+                     string typeDefs = "";
+                     ObjectList arguements = null;
+                     if(LocalMethodArguements.TryGetValue(fc.Id, out arguements))
                      {
-                         retstr += " (" + rettype + ") " + Mname + ".MoveNext()";
+                         // print the state arguments, if any
+                         foreach (SYMBOL kid in arguements)
+                         {
+                            if(kid is ArgumentDeclarationList)
+                            {
+                                ArgumentDeclarationList ADL = (ArgumentDeclarationList)kid;
+                                typeDefs += (GenerateArgumentDeclarationList(ADL)) + ",";
+                             }
+                         }
                      }
+                     if(typeDefs.Length != 0)
+                         typeDefs = typeDefs.Remove(typeDefs.Length - 1);
+
+                     string newMethod = string.Format("private {0} {1}({2}, out bool ahwowuerogng)", rettype, MethodName, typeDefs);
+                     newMethod += (Generate("{"));
+                     newMethod += (Generate("ahwowuerogng = true;"));
+                     Mname = RandomString(10, true);
+                     newMethod += (Generate("IEnumerator " + Mname + " = "));
+                     newMethod += (Generate(String.Format("{0}(", CheckName(fc.Id)), fc));
+                     newMethod += (tempString);
+                     newMethod += (Generate(");"));
+
+                     newMethod += (Generate(" try {"));
+                     newMethod += (Generate(Mname + ".MoveNext();"));
+                     newMethod += (Generate("  if(" + Mname + ".Current != null)"));
+                     newMethod += (Generate("   return (" + rettype + ")" + Mname + ".Current;"));
+                     newMethod += (Generate("  }")); //End of try
+                     newMethod += (Generate(" catch(Exception ex) "));
+                     newMethod += (Generate("  {"));
+                     newMethod += (Generate("  }")); //End of catch
+                     newMethod += (Generate("ahwowuerogng = true;"));
+                     newMethod += (Generate("return default(" + rettype + ");")); //End while
+                     newMethod += "}";
+                     MethodsToAdd.Add(newMethod);
+
+                     List<string> fCalls = new List<string>();
+                     string boolname = RandomString(10, true);
+                     fCalls.Add(Generate("bool " + boolname + " = true;"));
+                     retstr += MethodName + "(" + tempString + ", out " + boolname + ")";
                      FuncCalls.AddRange(fCalls);
                 }
                 else

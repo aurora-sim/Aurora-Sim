@@ -64,13 +64,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <returns>The root node of the transformed AST</returns>
         public SYMBOL Transform()
             {
-            return Transform(null);
+            return Transform(null, null);
             }
 
-        public SYMBOL Transform(Dictionary<string, string> GlobalMethods)
+        public SYMBOL Transform(Dictionary<string, string> GlobalMethods, Dictionary<string, ObjectList> MethodArguements)
             {
             foreach (SYMBOL s in m_astRoot.kids)
-                TransformNode(s, GlobalMethods);
+                TransformNode(s, GlobalMethods, MethodArguements);
 
             return m_astRoot;
             }
@@ -80,7 +80,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// node, then all it's children.
         /// </summary>
         /// <param name="s">The current node to transform.</param>
-        private void TransformNode(SYMBOL s, Dictionary<string, string> GlobalMethods)
+        private void TransformNode(SYMBOL s, Dictionary<string, string> GlobalMethods, Dictionary<string, ObjectList> MethodArguements)
         {
             // make sure to put type lower in the inheritance hierarchy first
             // ie: since IdentConstant and StringConstant inherit from Constant,
@@ -102,7 +102,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 {
                     ((GlobalFunctionDefinition)s).ReturnType = m_datatypeLSL2OpenSim[((GlobalFunctionDefinition)s).ReturnType];
                     if (GlobalMethods != null)
+                    {
                         GlobalMethods.Add(((GlobalFunctionDefinition)s).Name, ((GlobalFunctionDefinition)s).ReturnType);
+                        MethodArguements.Add(((GlobalFunctionDefinition)s).Name, ((GlobalFunctionDefinition)s).kids);
+                    }
                 }
             }
 
@@ -123,7 +126,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     if (!(s is Assignment || s is ArgumentDeclarationList) && s.kids[i] is Declaration)
                         AddImplicitInitialization(s, i);
 
-                    TransformNode((SYMBOL)s.kids[i], null);
+                    TransformNode((SYMBOL)s.kids[i], null, null);
                 }
             }
         }
