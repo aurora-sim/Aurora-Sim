@@ -363,6 +363,7 @@ namespace OpenSim.Framework
             }
 
             if (Environment.OSVersion.Platform == PlatformID.Win32NT &&
+                Environment.Version.Major < 4 &&
                 Environment.Version.Build < 50727) //.net 3.5
             {
                 reason = ".NET versions before 3.5 lack components that are used by Aurora";

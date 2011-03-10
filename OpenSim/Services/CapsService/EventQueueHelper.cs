@@ -79,8 +79,8 @@ namespace OpenSim.Services.CapsService
             llsdSimInfo.Add("Handle", new OSDBinary(ulongToByteArray(handle)));
             llsdSimInfo.Add("IP", new OSDBinary(IPAddress));
             llsdSimInfo.Add("Port", new OSDInteger(Port));
-            llsdSimInfo.Add("RegionSizeX", new OSDInteger(RegionSizeX));
-            llsdSimInfo.Add("RegionSizeY", new OSDInteger(RegionSizeY));
+            llsdSimInfo.Add("RegionSizeX", OSD.FromUInteger((uint)RegionSizeX));
+            llsdSimInfo.Add("RegionSizeY", OSD.FromUInteger((uint)RegionSizeY));
 
             OSDArray arr = new OSDArray(1);
             arr.Add(llsdSimInfo);
@@ -131,8 +131,8 @@ namespace OpenSim.Services.CapsService
             regionDataMap.Add("SimIP", OSD.FromBinary(newRegionExternalEndPoint.Address.GetAddressBytes()));
             regionDataMap.Add("SimPort", OSD.FromInteger(newRegionExternalEndPoint.Port));
 
-            regionDataMap.Add("RegionSizeX", OSD.FromInteger(RegionSizeX));
-            regionDataMap.Add("RegionSizeY", OSD.FromInteger(RegionSizeY));
+            regionDataMap.Add("RegionSizeX", OSD.FromUInteger((uint)RegionSizeX));
+            regionDataMap.Add("RegionSizeY", OSD.FromUInteger((uint)RegionSizeY));
 
             OSDArray regionDataArr = new OSDArray(1);
             regionDataArr.Add(regionDataMap);
@@ -158,9 +158,9 @@ namespace OpenSim.Services.CapsService
             info.Add("SimIP", OSD.FromBinary(regionExternalEndPoint.Address.GetAddressBytes()));
             info.Add("SimPort", OSD.FromInteger(regionExternalEndPoint.Port));
             info.Add("TeleportFlags", OSD.FromBinary(uintToByteArray(teleportFlags)));
-
-            info.Add("RegionSizeX", OSD.FromInteger(RegionSizeX));
-            info.Add("RegionSizeY", OSD.FromInteger(RegionSizeY));
+            
+            info.Add("RegionSizeX", OSD.FromUInteger((uint)RegionSizeX));
+            info.Add("RegionSizeY", OSD.FromUInteger((uint)RegionSizeY));
 
             OSDArray infoArr = new OSDArray();
             infoArr.Add(info);

@@ -311,6 +311,9 @@ namespace Aurora.Simulation.Base
             int tickstart = Util.EnvironmentTickCount();
             int tickdata = 0;
 
+            if(url == "")
+                return ErrorResponseMap("No URL given.");
+
             try
             {
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
