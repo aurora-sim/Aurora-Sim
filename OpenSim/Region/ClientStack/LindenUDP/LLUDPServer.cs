@@ -587,6 +587,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                     // Add this packet to the list of ACK responses we are waiting on from the server
                     udpClient.NeedAcks.Add(outgoingPacket);
+                    Interlocked.Add(ref udpClient.UnackedBytes, outgoingPacket.Buffer.DataLength);
                 }
             }
 

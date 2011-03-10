@@ -168,8 +168,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             m_packets.Remove(pendingRemove.SequenceNumber);
 
                             // Update stats
-                            if(ackedPacket.ResendCount >0)
-                                System.Threading.Interlocked.Add(ref ackedPacket.Client.UnackedBytes, -ackedPacket.Buffer.DataLength);
+                            System.Threading.Interlocked.Add(ref ackedPacket.Client.UnackedBytes, -ackedPacket.Buffer.DataLength);
 
                             if (!pendingRemove.FromResend)
                             {

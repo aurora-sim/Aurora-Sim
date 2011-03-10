@@ -141,7 +141,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         const float AVATAR_INFO_STATE_PERCENTAGE = 0.2f;
         const int MAXPERCLIENTRATE = 625000;
         const int MINPERCLIENTRATE = 6250;
-        const int STARTPERCLIENTRATE = 62500;
+        const int STARTPERCLIENTRATE = 25000;
 
         private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -222,7 +222,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>Caches packed throttle information</summary>
         private byte[] m_packedThrottles;
 
-        private int m_defaultRTO = 3000;
+        private int m_defaultRTO = 1000;
         private int m_maxRTO = 60000;
 
 //        private int m_lastthrottleCategoryChecked = 0;
@@ -413,6 +413,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             TotalRateMin = (int)((float)total * 0.1);
             if (TotalRateMin < MINPERCLIENTRATE)
                 TotalRateMin = MINPERCLIENTRATE;
+            total = TotalRateMin; // let it grow slowlly
 
             //m_log.WarnFormat("[LLUDPCLIENT]: {0} is setting throttles. Resend={1}, Land={2}, Wind={3}, Cloud={4}, Task={5}, Texture={6}, Asset={7}, State={8}, AvatarInfo={9}, TaskFull={10}, Total={11}",
             //    AgentID, resend, land, wind, cloud, task, texture, asset, state, avatarinfo, task + state + avatarinfo, total);
