@@ -152,10 +152,10 @@ namespace Aurora.Services.DataService
                 ((words.Length == 1) ? 
                     " or LastName like '%" + words[0]
                     : " and LastName like '%" + words[1])
-                     + "%')", m_realm, "*");
+                     + "%')", m_realm, " PrincipalID, ScopeID, FirstName, LastName, Email, ServiceURLs, Created, UserLevel, UserFlags, UserTitle, IFNULL(Name,concat(FirstName,' ',LastName)) as Name ");
 
             ParseQuery(retVal, ref data);
-
+            
             return data.ToArray();
         }
     }
