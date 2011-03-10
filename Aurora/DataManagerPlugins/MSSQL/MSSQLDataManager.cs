@@ -558,6 +558,21 @@ namespace Aurora.DataManager.MSSQL
             return "";
         }
 
+        public override string IsNull(string Field, string defaultValue)
+        {
+            return "ISNULL(" + Field + "," + defaultValue + ")";
+        }
+
+        public override string ConCat(string[] toConcat)
+        {
+            string returnValue = "";
+            foreach (string s in toConcat)
+            {
+                returnValue += s + " + ";
+            }
+            return returnValue.Substring(0, returnValue.Length - 3);
+        }
+
         public override bool DeleteByTime(string table, string key)
         {
             SqlConnection dbcon = GetLockedConnection();

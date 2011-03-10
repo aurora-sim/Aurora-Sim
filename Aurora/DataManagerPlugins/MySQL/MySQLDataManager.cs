@@ -643,6 +643,21 @@ namespace Aurora.DataManager.MySQL
             return "date_add(now(), interval " + time.ToString() + " minute)";
         }
 
+        public override string IsNull(string Field, string defaultValue)
+        {
+            return "IFNULL(" + Field + "," + defaultValue + ")";
+        }
+
+        public override string ConCat(string[] toConcat)
+        {
+            string returnValue = "concat(";
+            foreach (string s in toConcat)
+            {
+                returnValue += s + ",";
+            }
+            return returnValue.Substring(0, returnValue.Length - 1) + ")";
+        }
+
         public override bool Delete(string table, string whereclause)
         {
             MySqlConnection dbcon = GetLockedConnection();

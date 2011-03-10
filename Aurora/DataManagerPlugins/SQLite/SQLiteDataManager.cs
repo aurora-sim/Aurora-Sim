@@ -442,6 +442,21 @@ namespace Aurora.DataManager.SQLite
             return "datetime('now', 'localtime', '+" + time.ToString() + " minutes')";
         }
 
+        public override string IsNull(string Field, string defaultValue)
+        {
+            return "IFNULL(" + Field + "," + defaultValue + ")";
+        }
+
+        public override string ConCat(string[] toConcat)
+        {
+            string returnValue = "";
+            foreach (string s in toConcat)
+            {
+                returnValue += s + " || ";
+            }
+            return returnValue.Substring(0, returnValue.Length - 4);
+        }
+
         public override bool Insert(string table, object[] values, string updateKey, object updateValue)
         {
             var cmd = new SqliteCommand();

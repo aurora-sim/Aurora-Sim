@@ -152,7 +152,7 @@ namespace Aurora.Services.DataService
                 ((words.Length == 1) ? 
                     " or LastName like '%" + words[0]
                     : " and LastName like '%" + words[1])
-                     + "%')", m_realm, " PrincipalID, ScopeID, FirstName, LastName, Email, ServiceURLs, Created, UserLevel, UserFlags, UserTitle, IFNULL(Name,concat(FirstName,' ',LastName)) as Name ");
+                     + "%')", m_realm, " PrincipalID, ScopeID, FirstName, LastName, Email, ServiceURLs, Created, UserLevel, UserFlags, UserTitle, " + GD.IsNull("Name", GD.ConCat(new string[] { "FirstName", "' '", "LastName" })) + " as Name ");
 
             ParseQuery(retVal, ref data);
             
