@@ -207,6 +207,21 @@ namespace Aurora.Framework
         /// </summary>
         /// <returns></returns>
         IGenericData Copy();
+
+        /// <summary>
+        /// Returns alternative value if field is null
+        /// </summary>
+        /// <param name="Field"></param>
+        /// <param name="defaultValue"></param>
+        /// <returns></returns>
+        string IsNull(string Field, string defaultValue);
+
+        /// <summary>
+        /// in the sql the strings will return joined fields
+        /// </summary>
+        /// <param name="toConCat"></param>
+        /// <returns></returns>
+        string ConCat(string[] toConCat);
     }
 
     public interface IAuroraDataPlugin : IPlugin

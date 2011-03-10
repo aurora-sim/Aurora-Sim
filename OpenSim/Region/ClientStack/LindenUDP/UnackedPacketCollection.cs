@@ -111,7 +111,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (m_packets.Count > 0)
             {
                 int now = Environment.TickCount & Int32.MaxValue;
-
+                int i = 0;
                 foreach (OutgoingPacket packet in m_packets.Values)
                 {
                     // TickCount of zero means a packet is in the resend queue 
@@ -129,6 +129,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         packet.TickCount = 0;
 
                         expiredPackets.Add(packet);
+                        if (i++ > 50)  // limit number of packets loop
+                            break;
                     }
                 }
             }
