@@ -2315,5 +2315,76 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             return date.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ");
         }
+
+        public void osCauseDamage (string avatar, double damage)
+        {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.High, "osCauseDamage", m_host, "OSSL");
+
+            UUID avatarId = new UUID (avatar);
+            Vector3 pos = m_host.GetWorldPosition ();
+
+            ScenePresence presence = World.GetScenePresence (avatarId);
+            if (presence != null)
+            {
+                IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule> ();
+                if (parcelManagement != null)
+                {
+                    LandData land = parcelManagement.GetLandObject (pos.X, pos.Y).LandData;
+                    if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
+                    {
+                        ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence> ();
+                        cp.IncurDamage (m_host.LocalId, damage, m_host.OwnerID);
+                    }
+                }
+            }
+        }
+
+        public void osCauseDamage (string avatar, double damage, string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
+        {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.High, "osCauseDamage", m_host, "OSSL");
+
+            UUID avatarId = new UUID (avatar);
+            Vector3 pos = m_host.GetWorldPosition ();
+
+            ScenePresence presence = World.GetScenePresence (avatarId);
+            if (presence != null)
+            {
+                IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule> ();
+                if (parcelManagement != null)
+                {
+                    LandData land = parcelManagement.GetLandObject (pos.X, pos.Y).LandData;
+                    if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
+                    {
+                        ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence> ();
+                        cp.IncurDamage (m_host.LocalId, damage, regionName, new Vector3 ((float)position.x, (float)position.y, (float)position.z),
+                                new Vector3 ((float)lookat.x, (float)lookat.y, (float)lookat.z), m_host.OwnerID);
+
+                    }
+                }
+            }
+        }
+
+        public void osCauseHealing (string avatar, double healing)
+        {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.High, "osCauseHealing", m_host, "OSSL");
+
+
+            UUID avatarId = new UUID (avatar);
+            ScenePresence presence = World.GetScenePresence (avatarId);
+            if (presence != null)
+            {
+                Vector3 pos = m_host.GetWorldPosition ();
+                IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule> ();
+                if (parcelManagement != null)
+                {
+                    LandData land = parcelManagement.GetLandObject (pos.X, pos.Y).LandData;
+                    if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
+                    {
+                        ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence> ();
+                        cp.IncurHealing (healing, m_host.OwnerID);
+                    }
+                }
+            }
+        }
     }
 }

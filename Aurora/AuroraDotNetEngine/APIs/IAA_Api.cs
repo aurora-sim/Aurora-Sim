@@ -84,12 +84,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 
         string aaAvatarFullName2Key(string username);
 
-        void osCauseDamage(string avatar, double damage, string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
-
-        void osCauseHealing(string avatar, double healing);
-
-        void osCauseDamage(string avatar, double damage);
-
         void aaSetCenterOfGravity(LSL_Types.Vector3 position);
 
         void aaRaiseError(string message);

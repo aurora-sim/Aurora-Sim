@@ -196,7 +196,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Object externalJointRequestsLock = new Object();
         private readonly Dictionary<String, PhysicsJoint> SOPName_to_activeJoint = new Dictionary<String, PhysicsJoint>();
         private readonly Dictionary<String, PhysicsJoint> SOPName_to_pendingJoint = new Dictionary<String, PhysicsJoint>();
-        private readonly DoubleDictionary<Vector3, IntPtr, IntPtr> RegionTerrain = new DoubleDictionary<Vector3, IntPtr, IntPtr>();
+        public IntPtr RegionTerrain;
         private readonly Dictionary<IntPtr, short[]> TerrainHeightFieldHeights = new Dictionary<IntPtr, short[]>();
         private readonly Dictionary<IntPtr, float[]> TerrainHeightFieldlimits = new Dictionary<IntPtr, float[]>();
         private readonly Dictionary<UUID, short[]> WaterHeightFieldHeights = new Dictionary<UUID, short[]>();
@@ -1629,11 +1629,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 // megas thing
             int offsetX = ((int)(pos.X / m_region.RegionSizeX)) * m_region.RegionSizeX;
             int offsetY = ((int)(pos.Y / m_region.RegionSizeY)) * m_region.RegionSizeY;
-            IntPtr heightFieldGeom = IntPtr.Zero;
-
-            if (!RegionTerrain.TryGetValue(new Vector3(offsetX, offsetY, 0), out heightFieldGeom))
-                return false;
-            if (heightFieldGeom == IntPtr.Zero)
+            if (RegionTerrain == IntPtr.Zero)
                 return false;
 
             pos.X -= offsetX;
@@ -1650,9 +1646,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             int minx, maxx, miny, maxy;
 
-            if (aabb.MaxZ < TerrainHeightFieldlimits[heightFieldGeom][0])
+            if (aabb.MaxZ < TerrainHeightFieldlimits[RegionTerrain][0])
                 return true;
-            if (aabb.MinZ > TerrainHeightFieldlimits[heightFieldGeom][1])
+            if (aabb.MinZ > TerrainHeightFieldlimits[RegionTerrain][1])
                 return false;
 
             minx = (int)(aabb.MinX - offsetX);
@@ -1682,13 +1678,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                 for (i = centerx; i < maxx; i++ )
                     {
-                    if (TerrainHeightFieldHeights[heightFieldGeom][j + i] >= minh)
+                        if (TerrainHeightFieldHeights[RegionTerrain][j + i] >= minh)
                         return true;
                     }
                 i = minx;
                 while(i < centerx) 
                     {
-                    if (TerrainHeightFieldHeights[heightFieldGeom][j + i] >= minh)
+                        if (TerrainHeightFieldHeights[RegionTerrain][j + i] >= minh)
                         return true;
                     i++;
                     }
@@ -1699,7 +1695,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                 for (i = minx; i < maxx; i++ )
                     {
-                    if (TerrainHeightFieldHeights[heightFieldGeom][j + i] >= minh)
+                        if (TerrainHeightFieldHeights[RegionTerrain][j + i] >= minh)
                         return true;
                     }
                 j += Region.RegionSizeX;
@@ -1710,97 +1706,93 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
 
         // Recovered for use by fly height. Kitto Flora
-        public float GetTerrainHeightAtXY(float x, float y)
+        public float GetTerrainHeightAtXY (float x, float y)
         {
             int offsetX = ((int)(x / m_region.RegionSizeX)) * m_region.RegionSizeX;
             int offsetY = ((int)(y / m_region.RegionSizeY)) * m_region.RegionSizeY;
-            IntPtr heightFieldGeom = IntPtr.Zero;
 
-            if (RegionTerrain.TryGetValue(new Vector3(offsetX, offsetY, 0), out heightFieldGeom))
+            if (RegionTerrain != IntPtr.Zero)
             {
-                if (heightFieldGeom != IntPtr.Zero)
+                if (TerrainHeightFieldHeights.ContainsKey (RegionTerrain))
                 {
-                    if (TerrainHeightFieldHeights.ContainsKey(heightFieldGeom))
+
+
+                    //int index;
+                    x = x - offsetX;
+                    y = y - offsetY;
+
+                    // warning this code assumes terrain grid as 1m size
+
+                    if (x < 0)
+                        x = 0;
+                    if (y < 0)
+                        y = 0;
+
+                    int ix;
+                    int iy;
+                    float dx;
+                    float dy;
+
+                    if (x < m_region.RegionSizeX - 1)
                     {
+                        ix = (int)x;
+                        dx = x - (float)ix;
+                    }
+                    else
+                    {
+                        ix = (int)m_region.RegionSizeX - 1;
+                        dx = 0;
+                    }
+                    if (y < m_region.RegionSizeY - 1)
+                    {
+                        iy = (int)y;
+                        dy = y - (float)iy;
+                    }
+                    else
+                    {
+                        iy = (int)m_region.RegionSizeY - 1;
+                        dy = 0;
+                    }
 
+                    float h0;
+                    float h1;
+                    float h2;
 
-                        //int index;
-                        x = x - offsetX;
-                        y = y - offsetY;
+                    float invterrainscale = 1.0f / Constants.TerrainCompression;
 
-                        // warning this code assumes terrain grid as 1m size
+                    iy *= m_region.RegionSizeX;
 
-                        if (x < 0)
-                            x = 0;
-                        if (y < 0)
-                            y = 0;
+                    if ((dx + dy) <= 1.0f)
+                    {
+                        h0 = ((float)TerrainHeightFieldHeights[RegionTerrain][iy + ix]) * invterrainscale;
 
-                        int ix;
-                        int iy;
-                        float dx;
-                        float dy;
-
-                        if (x < m_region.RegionSizeX - 1)
-                        {
-                            ix = (int)x;
-                            dx = x - (float)ix;
-                        }
+                        if (dx > 0)
+                            h1 = (((float)TerrainHeightFieldHeights[RegionTerrain][iy + ix + 1]) * invterrainscale - h0) * dx;
                         else
-                        {
-                            ix = (int)m_region.RegionSizeX - 1;
-                            dx = 0;
-                        }
-                        if (y < m_region.RegionSizeY - 1)
-                        {
-                            iy = (int)y;
-                            dy = y - (float)iy;
-                        }
+                            h1 = 0;
+
+                        if (dy > 0)
+                            h2 = (((float)TerrainHeightFieldHeights[RegionTerrain][iy + m_region.RegionSizeX + ix]) * invterrainscale - h0) * dy;
                         else
-                        {
-                            iy = (int)m_region.RegionSizeY - 1;
-                            dy = 0;
-                        }
+                            h2 = 0;
 
-                        float h0;
-                        float h1;
-                        float h2;
+                        return h0 + h1 + h2;
+                    }
+                    else
+                    {
+                        h0 = ((float)TerrainHeightFieldHeights[RegionTerrain][iy + m_region.RegionSizeX + ix + 1]) * invterrainscale;
 
-                        float invterrainscale = 1.0f / Constants.TerrainCompression;
-
-                        iy *= m_region.RegionSizeX;
-
-                        if ((dx + dy) <= 1.0f)
-                            {
-                            h0 = ((float)TerrainHeightFieldHeights[heightFieldGeom][iy + ix]) * invterrainscale;
-
-                            if (dx > 0)
-                                h1 = (((float)TerrainHeightFieldHeights[heightFieldGeom][iy + ix + 1]) * invterrainscale - h0) * dx;
-                            else
-                                h1 = 0;
-
-                            if (dy > 0)
-                                h2 = (((float)TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix]) * invterrainscale - h0) * dy;
-                            else
-                                h2 = 0;
-
-                            return h0 + h1 + h2;
-                        }
+                        if (dx > 0)
+                            h1 = (((float)TerrainHeightFieldHeights[RegionTerrain][iy + ix + 1]) * invterrainscale - h0) * (1 - dy);
                         else
-                        {
-                        h0 = ((float)TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix + 1]) * invterrainscale;
+                            h1 = 0;
 
-                            if (dx > 0)
-                                h1 = (((float)TerrainHeightFieldHeights[heightFieldGeom][iy + ix + 1]) * invterrainscale - h0) * (1 - dy);
-                            else
-                                h1 = 0;
+                        if (dy > 0)
+                            h2 = (((float)TerrainHeightFieldHeights[RegionTerrain][iy + m_region.RegionSizeX + ix]) * invterrainscale - h0) * (1 - dx);
+                        else
+                            h2 = 0;
 
-                            if (dy > 0)
-                                h2 = (((float)TerrainHeightFieldHeights[heightFieldGeom][iy + m_region.RegionSizeX + ix]) * invterrainscale - h0) * (1 - dx);
-                            else
-                                h2 = 0;
-
-                            return h0 + h1 + h2;
-                        }
+                        return h0 + h1 + h2;
                     }
                 }
             }
@@ -3719,24 +3711,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 */
         #endregion
 
-        public override void SetTerrain(short[] heightMap)
+        public override void SetTerrain (short[] heightMap)
         {
-            if (m_worldOffset != Vector3.Zero && m_parentScene != null)
-            {
-                if (m_parentScene is AuroraODEPhysicsScene)
-                {
-                    ((AuroraODEPhysicsScene)m_parentScene).SetTerrain(heightMap, m_worldOffset);
-                }
-            }
-            else
-            {
-                SetTerrain(heightMap, m_worldOffset);
-            }
-        }
-
-        public void SetTerrain(short[] heightMap, Vector3 pOffset)
-            {
-                short[] _heightmap = new short[((m_region.RegionSizeX + 3) * (m_region.RegionSizeY + 3))];
+            short[] _heightmap = new short[((m_region.RegionSizeX + 3) * (m_region.RegionSizeY + 3))];
 
             int heightmapWidth = m_region.RegionSizeX + 2;
             int heightmapHeight = m_region.RegionSizeY + 2;
@@ -3748,14 +3725,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             float hfmax = -2000;
 
             for (int x = 0; x < heightmapWidthSamples; x++)
-                {
+            {
                 for (int y = 0; y < heightmapHeightSamples; y++)
-                    {
+                {
                     //Some notes on this part
                     //xx and yy are used for the original heightmap, as we are offsetting the new one by 1
                     // so we subtract one so that we can put the heightmap in correctly
-                    int xx = Util.Clip(x - 1, 0, m_region.RegionSizeX - 1);
-                    int yy = Util.Clip(y - 1, 0, m_region.RegionSizeY - 1);
+                    int xx = Util.Clip (x - 1, 0, m_region.RegionSizeX - 1);
+                    int yy = Util.Clip (y - 1, 0, m_region.RegionSizeY - 1);
 
                     short val = heightMap[yy * m_region.RegionSizeX + xx];
                     //ODE is evil... flip x and y
@@ -3763,85 +3740,77 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     hfmin = (val < hfmin) ? val : hfmin;
                     hfmax = (val > hfmax) ? val : hfmax;
-                    }
                 }
+            }
 
             lock (OdeLock)
+            {
+                if (RegionTerrain != IntPtr.Zero)
                 {
-                IntPtr GroundGeom = IntPtr.Zero;
-                if (RegionTerrain.TryGetValue(pOffset, out GroundGeom))
-                    {
-                    if (GroundGeom != IntPtr.Zero)
-                        {
-                        d.SpaceRemove(space, GroundGeom);
-                        d.GeomDestroy(GroundGeom);
-                        }
-                    RegionTerrain.Remove(pOffset);
-                    TerrainHeightFieldHeights.Remove(GroundGeom);
-                    TerrainHeightFieldlimits.Remove(GroundGeom);
+                    d.SpaceRemove (space, RegionTerrain);
+                    d.GeomDestroy (RegionTerrain);
+                }
+                TerrainHeightFieldHeights.Remove (RegionTerrain);
+                TerrainHeightFieldlimits.Remove (RegionTerrain);
 
-                    actor_name_map.Remove(GroundGeom);
-                    geom_name_map.Remove(GroundGeom);
-                    }
+                actor_name_map.Remove (RegionTerrain);
+                geom_name_map.Remove (RegionTerrain);
 
                 const float scale = (1f / (float)Constants.TerrainCompression);
                 const float offset = 0.0f;
                 float thickness = (float)hfmin;
                 const int wrap = 0;
 
-                IntPtr HeightmapData = d.GeomHeightfieldDataCreate();
+                IntPtr HeightmapData = d.GeomHeightfieldDataCreate ();
                 //                d.GeomHeightfieldDataBuildDouble(HeightmapData, _heightmap, 1, heightmapWidth, heightmapHeight,
                 //                                                 heightmapWidthSamples, heightmapHeightSamples, scale,
-                d.GeomHeightfieldDataBuildShort(HeightmapData, _heightmap, 1, heightmapHeight, heightmapWidth,
+                d.GeomHeightfieldDataBuildShort (HeightmapData, _heightmap, 1, heightmapHeight, heightmapWidth,
                                                  heightmapHeightSamples, heightmapWidthSamples, scale,
                                                  offset, thickness, wrap);
 
-//                d.GeomHeightfieldDataSetBounds(HeightmapData, (float)hfmin - 1.0f, (float)hfmax + 1.0f);
-                d.GeomHeightfieldDataSetBounds(HeightmapData, hfmin, (float)hfmax + 1.0f);
-                GroundGeom = d.CreateHeightfield(space, HeightmapData, 1);
+                //                d.GeomHeightfieldDataSetBounds(HeightmapData, (float)hfmin - 1.0f, (float)hfmax + 1.0f);
+                d.GeomHeightfieldDataSetBounds (HeightmapData, hfmin, (float)hfmax + 1.0f);
+                RegionTerrain = d.CreateHeightfield (space, HeightmapData, 1);
 
-                if (GroundGeom != IntPtr.Zero)
-                    {
-                    d.GeomSetCategoryBits(GroundGeom, (int)(CollisionCategories.Land));
-                    d.GeomSetCollideBits(GroundGeom, (int)(CollisionCategories.Space));
-                    }
+                if (RegionTerrain != IntPtr.Zero)
+                {
+                    d.GeomSetCategoryBits (RegionTerrain, (int)(CollisionCategories.Land));
+                    d.GeomSetCollideBits (RegionTerrain, (int)(CollisionCategories.Space));
+                }
 
-                geom_name_map[GroundGeom] = "Terrain";
+                geom_name_map[RegionTerrain] = "Terrain";
 
-                NullPhysicsActor terrainActor = new NullPhysicsActor()
+                NullPhysicsActor terrainActor = new NullPhysicsActor ()
                 {
                     PhysicsActorType = (int)ActorTypes.Ground
                 };
 
-                actor_name_map[GroundGeom] = terrainActor;
+                actor_name_map[RegionTerrain] = terrainActor;
 
-                d.Matrix3 R = new d.Matrix3();
+                d.Matrix3 R = new d.Matrix3 ();
 
-                Quaternion q1 = Quaternion.CreateFromAxisAngle(new Vector3(1, 0, 0), 1.5707f);
-                Quaternion q2 = Quaternion.CreateFromAxisAngle(new Vector3(0, 1, 0), 1.5707f);
+                Quaternion q1 = Quaternion.CreateFromAxisAngle (new Vector3 (1, 0, 0), 1.5707f);
+                Quaternion q2 = Quaternion.CreateFromAxisAngle (new Vector3 (0, 1, 0), 1.5707f);
 
                 q1 = q1 * q2;
 
                 Vector3 v3;
                 float angle;
-                q1.GetAxisAngle(out v3, out angle);
+                q1.GetAxisAngle (out v3, out angle);
 
-                d.RFromAxisAndAngle(out R, v3.X, v3.Y, v3.Z, angle);
+                d.RFromAxisAndAngle (out R, v3.X, v3.Y, v3.Z, angle);
 
-                d.GeomSetRotation(GroundGeom, ref R);
-                d.GeomSetPosition(GroundGeom, (pOffset.X + (m_region.RegionSizeX * 0.5f)), (pOffset.Y + (m_region.RegionSizeY * 0.5f)), 0);
-                RegionTerrain.Remove(pOffset);
-                RegionTerrain.Add(pOffset, GroundGeom, GroundGeom);
-//                TerrainHeightFieldHeights.Add(GroundGeom, _heightmap);
+                d.GeomSetRotation (RegionTerrain, ref R);
+                d.GeomSetPosition (RegionTerrain, (m_region.RegionSizeX * 0.5f), (m_region.RegionSizeY * 0.5f), 0);
 
                 float[] heighlimits = new float[2];
                 heighlimits[0] = hfmin;
                 heighlimits[1] = hfmax;
 
-                TerrainHeightFieldHeights.Add(GroundGeom, heightMap);
-                TerrainHeightFieldlimits.Add(GroundGeom, heighlimits);
-                }
+                TerrainHeightFieldHeights.Add (RegionTerrain, heightMap);
+                TerrainHeightFieldlimits.Add (RegionTerrain, heighlimits);
             }
+        }
 
         public override void DeleteTerrain()
         {
@@ -3859,62 +3828,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override void UnCombine(PhysicsScene pScene)
         {
-            IntPtr localGround = IntPtr.Zero;
-            //            float[] localHeightfield;
-            bool proceed = false;
-            List<IntPtr> geomDestroyList = new List<IntPtr>();
-
-            lock (OdeLock)
-            {
-                if (RegionTerrain.TryGetValue(Vector3.Zero, out localGround))
-                {
-                    foreach (IntPtr geom in TerrainHeightFieldHeights.Keys)
-                    {
-                        if (geom == localGround)
-                        {
-                            //                            localHeightfield = TerrainHeightFieldHeights[geom];
-                            proceed = true;
-                        }
-                        else
-                        {
-                            geomDestroyList.Add(geom);
-                        }
-                    }
-
-                    if (proceed)
-                    {
-                        m_worldOffset = Vector3.Zero;
-                        WorldExtents = new Vector2(m_region.RegionSizeX, m_region.RegionSizeY);
-                        m_parentScene = null;
-
-                        foreach (IntPtr g in geomDestroyList)
-                        {
-                            // removingHeightField needs to be done or the garbage collector will
-                            // collect the terrain data before we tell ODE to destroy it causing 
-                            // memory corruption
-                            if (TerrainHeightFieldHeights.ContainsKey(g))
-                            {
-                                //                                float[] removingHeightField = TerrainHeightFieldHeights[g];
-                                TerrainHeightFieldHeights.Remove(g);
-
-                                if (RegionTerrain.ContainsKey(g))
-                                {
-                                    RegionTerrain.Remove(g);
-                                }
-
-                                d.GeomDestroy(g);
-                                //removingHeightField = new float[0];
-                            }
-                        }
-
-                    }
-                    else
-                    {
-                        m_log.Warn("[PHYSICS]: Couldn't proceed with UnCombine.  Region has inconsistant data.");
-
-                    }
-                }
-            }
         }
 
         public override void SetWaterLevel(short[] map)

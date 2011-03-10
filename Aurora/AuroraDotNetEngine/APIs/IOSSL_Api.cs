@@ -173,6 +173,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         LSL_String osUnixTimeToTimestamp(long time);
         DateTime osTeleportOwner(string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
         DateTime osTeleportOwner(int regionX, int regionY, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
-        DateTime osTeleportOwner(LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
+        DateTime osTeleportOwner (LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
+
+        void osCauseDamage (string avatar, double damage, string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
+
+        void osCauseHealing (string avatar, double healing);
+
+        void osCauseDamage (string avatar, double damage);
     }
 }

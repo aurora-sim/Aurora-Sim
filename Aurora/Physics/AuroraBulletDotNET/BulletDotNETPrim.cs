@@ -292,6 +292,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
         public override uint LocalID
         {
+            get { return m_localID; }
             set
             {
                 //m_log.Info("[PHYSICS]: Setting TrackerID: " + value);

@@ -280,9 +280,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override uint LocalID
         {
-            set {
+            get { return m_localID; }
+            set
+            {
                 //m_log.Info("[PHYSICS]: Setting TrackerID: " + value);
-                m_localID = value; }
+                m_localID = value;
+            }
         }
 
         public override bool Grabbed

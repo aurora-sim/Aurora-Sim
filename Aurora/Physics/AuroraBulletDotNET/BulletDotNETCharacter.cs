@@ -289,6 +289,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
         public override uint LocalID
         {
+            get { return m_localID; }
             set { m_localID = value; }
         }
 
