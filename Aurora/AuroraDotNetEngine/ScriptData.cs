@@ -181,22 +181,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 if (Script != null)
                     {
-                    /*
-                                        //Save the state
-                                        ScriptDataSQLSerializer.SaveState(this, m_ScriptEngine);
-                                        //Fire this directly so its not closed before its fired
-                                        SetEventParams("state_exit", new DetectParams[0]);
+                        /*
+                        //Fire this directly so its not closed before its fired
+                        SetEventParams("state_exit", new DetectParams[0]);
 
-                                        m_ScriptEngine.MaintenanceThread.ProcessQIS(new QueueItemStruct()
-                                        {
-                                            ID = this,
-                                            CurrentlyAt = null,
-                                            functionName = "state_exit",
-                                            param = new object[0],
-                                            llDetectParams = new DetectParams[0],
-                                            VersionID = VersionID
-                                        });
-                     */
+                        m_ScriptEngine.MaintenanceThread.ProcessQIS(new QueueItemStruct()
+                        {
+                            ID = this,
+                            CurrentlyAt = null,
+                            functionName = "state_exit",
+                            param = new object[0],
+                            llDetectParams = new DetectParams[0],
+                            VersionID = VersionID
+                        });
+     */
 // dont think we should fire state_exit here
 //                    m_ScriptEngine.MaintenanceThread.DoAndWaitEventSch(this, "state_exit",
 //                        new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0]);

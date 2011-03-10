@@ -94,116 +94,14 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
 
         public void Initialise(IConfigSource config)
         {
-            m_Config = config.Configs["FreeSwitchVoice"];
-
-            if (m_Config == null)
-            {
-                m_log.Info("[FreeSwitchVoice] no config found, plugin disabled");
+            IConfig voiceconfig = config.Configs["Voice"];
+            if (voiceconfig == null)
                 return;
-            }
-
-            if (!m_Config.GetBoolean("Enabled", false))
-            {
-                //m_log.Info("[FreeSwitchVoice] plugin disabled by configuration");
+            string voiceModule = "FreeSwitchVoice";
+            if (voiceconfig.GetString ("Module", voiceModule) != voiceModule)
                 return;
-            }
 
-            try
-            {
-                string serviceDll = m_Config.GetString("LocalServiceModule",
-                        String.Empty);
-
-                if (serviceDll == String.Empty)
-                {
-                    m_log.Error("[FreeSwitchVoice]: No LocalServiceModule named in section FreeSwitchVoice");
-                    return;
-                }
-
-                //Object[] args = new Object[0];
-                //m_FreeswitchService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IFreeswitchService>(serviceDll, args);
-                //m_FreeswitchService.Initialize(config, new RegistryCore());
-
-                string jsonConfig = m_FreeswitchService.GetJsonConfig();
-                m_log.Debug("[FreeSwitchVoice]: Configuration string: " + jsonConfig);
-                OSDMap map = (OSDMap)OSDParser.DeserializeJson(jsonConfig);
-
-                m_freeSwitchAPIPrefix = map["APIPrefix"].AsString();
-                m_freeSwitchRealm = map["Realm"].AsString();
-                m_freeSwitchSIPProxy = map["SIPProxy"].AsString();
-                m_freeSwitchAttemptUseSTUN = map["AttemptUseSTUN"].AsBoolean();
-                m_freeSwitchEchoServer = map["EchoServer"].AsString();
-                m_freeSwitchEchoPort = map["EchoPort"].AsInteger();
-                m_freeSwitchDefaultWellKnownIP = map["DefaultWellKnownIP"].AsString();
-                m_freeSwitchDefaultTimeout = map["DefaultTimeout"].AsInteger();
-                m_freeSwitchUrlResetPassword = String.Empty;
-                m_freeSwitchContext = map["Context"].AsString();
-
-                if (String.IsNullOrEmpty(m_freeSwitchRealm) ||
-                    String.IsNullOrEmpty(m_freeSwitchAPIPrefix))
-                {
-                    m_log.Error("[FreeSwitchVoice] plugin mis-configured");
-                    m_log.Info("[FreeSwitchVoice] plugin disabled: incomplete configuration");
-                    return;
-                }
-
-                // set up http request handlers for
-                // - prelogin: viv_get_prelogin.php
-                // - signin: viv_signin.php
-                // - buddies: viv_buddy.php
-                // - ???: viv_watcher.php
-                // - signout: viv_signout.php
-                MainServer.Instance.AddHTTPHandler(String.Format("{0}/viv_get_prelogin.php", m_freeSwitchAPIPrefix),
-                                                     FreeSwitchSLVoiceGetPreloginHTTPHandler);
-
-                MainServer.Instance.AddHTTPHandler(String.Format("{0}/freeswitch-config", m_freeSwitchAPIPrefix), FreeSwitchConfigHTTPHandler);
-
-                // RestStreamHandler h = new
-                // RestStreamHandler("GET",
-                // String.Format("{0}/viv_get_prelogin.php", m_freeSwitchAPIPrefix), FreeSwitchSLVoiceGetPreloginHTTPHandler);
-                //  MainServer.Instance.AddStreamHandler(h);
-
-
-
-                MainServer.Instance.AddHTTPHandler(String.Format("{0}/viv_signin.php", m_freeSwitchAPIPrefix),
-                                 FreeSwitchSLVoiceSigninHTTPHandler);
-
-                MainServer.Instance.AddHTTPHandler(String.Format("{0}/viv_buddy.php", m_freeSwitchAPIPrefix),
-                                 FreeSwitchSLVoiceBuddyHTTPHandler);
-
-                m_log.InfoFormat("[FreeSwitchVoice] using FreeSwitch server {0}", m_freeSwitchRealm);
-
-                m_Enabled = true;
-
-                m_log.Info("[FreeSwitchVoice] plugin enabled");
-            }
-            catch (Exception e)
-            {
-                m_log.ErrorFormat("[FreeSwitchVoice] plugin initialization failed: {0}", e.Message);
-                m_log.DebugFormat("[FreeSwitchVoice] plugin initialization failed: {0}", e.ToString());
-                return;
-            }
-
-            // This here is a region module trying to make a global setting.
-            // Not really a good idea but it's Windows only, so I can't test.
-            try
-            {
-                ServicePointManager.ServerCertificateValidationCallback += CustomCertificateValidation;
-            }
-            catch (NotImplementedException)
-            {
-                try
-                {
-#pragma warning disable 0612, 0618
-                    // Mono does not implement the ServicePointManager.ServerCertificateValidationCallback yet!  Don't remove this!
-                    ServicePointManager.CertificatePolicy = new MonoCert();
-#pragma warning restore 0612, 0618
-                }
-                catch (Exception)
-                {
-                    // COmmented multiline spam log message
-                    //m_log.Error("[FreeSwitchVoice]: Certificate validation handler change not supported.  You may get ssl certificate validation errors teleporting from your region to some SSL regions.");
-                }
-            }
+            m_Enabled = true;
         }
 
         public void PostInitialise()
@@ -222,6 +120,89 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
             if (m_Enabled)
             {
                 m_FreeswitchService = scene.RequestModuleInterface<IFreeswitchService>();
+
+                try
+                {
+                    string jsonConfig = m_FreeswitchService.GetJsonConfig ();
+                    m_log.Debug ("[FreeSwitchVoice]: Configuration string: " + jsonConfig);
+                    OSDMap map = (OSDMap)OSDParser.DeserializeJson (jsonConfig);
+
+                    m_freeSwitchAPIPrefix = map["APIPrefix"].AsString ();
+                    m_freeSwitchRealm = map["Realm"].AsString ();
+                    m_freeSwitchSIPProxy = map["SIPProxy"].AsString ();
+                    m_freeSwitchAttemptUseSTUN = map["AttemptUseSTUN"].AsBoolean ();
+                    m_freeSwitchEchoServer = map["EchoServer"].AsString ();
+                    m_freeSwitchEchoPort = map["EchoPort"].AsInteger ();
+                    m_freeSwitchDefaultWellKnownIP = map["DefaultWellKnownIP"].AsString ();
+                    m_freeSwitchDefaultTimeout = map["DefaultTimeout"].AsInteger ();
+                    m_freeSwitchUrlResetPassword = String.Empty;
+                    m_freeSwitchContext = map["Context"].AsString ();
+
+                    if (String.IsNullOrEmpty (m_freeSwitchRealm) ||
+                        String.IsNullOrEmpty (m_freeSwitchAPIPrefix))
+                    {
+                        m_log.Error ("[FreeSwitchVoice] plugin mis-configured");
+                        m_log.Info ("[FreeSwitchVoice] plugin disabled: incomplete configuration");
+                        return;
+                    }
+
+                    // set up http request handlers for
+                    // - prelogin: viv_get_prelogin.php
+                    // - signin: viv_signin.php
+                    // - buddies: viv_buddy.php
+                    // - ???: viv_watcher.php
+                    // - signout: viv_signout.php
+                    MainServer.Instance.AddHTTPHandler (String.Format ("{0}/viv_get_prelogin.php", m_freeSwitchAPIPrefix),
+                                                         FreeSwitchSLVoiceGetPreloginHTTPHandler);
+
+                    MainServer.Instance.AddHTTPHandler (String.Format ("{0}/freeswitch-config", m_freeSwitchAPIPrefix), FreeSwitchConfigHTTPHandler);
+
+                    // RestStreamHandler h = new
+                    // RestStreamHandler("GET",
+                    // String.Format("{0}/viv_get_prelogin.php", m_freeSwitchAPIPrefix), FreeSwitchSLVoiceGetPreloginHTTPHandler);
+                    //  MainServer.Instance.AddStreamHandler(h);
+
+
+
+                    MainServer.Instance.AddHTTPHandler (String.Format ("{0}/viv_signin.php", m_freeSwitchAPIPrefix),
+                                     FreeSwitchSLVoiceSigninHTTPHandler);
+
+                    MainServer.Instance.AddHTTPHandler (String.Format ("{0}/viv_buddy.php", m_freeSwitchAPIPrefix),
+                                     FreeSwitchSLVoiceBuddyHTTPHandler);
+
+                    m_log.InfoFormat ("[FreeSwitchVoice] using FreeSwitch server {0}", m_freeSwitchRealm);
+
+                    m_log.Info ("[FreeSwitchVoice] plugin enabled");
+                }
+                catch (Exception e)
+                {
+                    m_log.ErrorFormat ("[FreeSwitchVoice] plugin initialization failed: {0}", e.Message);
+                    m_log.DebugFormat ("[FreeSwitchVoice] plugin initialization failed: {0}", e.ToString ());
+                    return;
+                }
+
+                // This here is a region module trying to make a global setting.
+                // Not really a good idea but it's Windows only, so I can't test.
+                try
+                {
+                    ServicePointManager.ServerCertificateValidationCallback += CustomCertificateValidation;
+                }
+                catch (NotImplementedException)
+                {
+                    try
+                    {
+#pragma warning disable 0612, 0618
+                        // Mono does not implement the ServicePointManager.ServerCertificateValidationCallback yet!  Don't remove this!
+                        ServicePointManager.CertificatePolicy = new MonoCert ();
+#pragma warning restore 0612, 0618
+                    }
+                    catch (Exception)
+                    {
+                        // COmmented multiline spam log message
+                        //m_log.Error("[FreeSwitchVoice]: Certificate validation handler change not supported.  You may get ssl certificate validation errors teleporting from your region to some SSL regions.");
+                    }
+                }
+
                 // we need to capture scene in an anonymous method
                 // here as we need it later in the callbacks
                 scene.EventManager.OnRegisterCaps += delegate(UUID agentID, IHttpServer server)
