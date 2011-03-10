@@ -14,8 +14,8 @@ using OpenSim.Region.Framework.Scenes;
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     public class ScriptProtectionModule
-	{
-		#region Declares
+    {
+        #region Declares
 
         private IConfig m_config;
         private bool allowHTMLLinking = true;
@@ -54,8 +54,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 		}
         
 		#endregion
-		
-		#region ThreatLevels
+        
+        #region ThreatLevels
 		
 		public ThreatLevel GetThreatLevel()
 		{
@@ -205,39 +205,44 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void AddPreviouslyCompiled(string source, ScriptData ID)
-            {
-//            string key = source.Length.ToString() + source.GetHashCode().ToString();
+        public void AddPreviouslyCompiled (string source, ScriptData ID)
+        {
+            //string key = source.Length.ToString() + source.GetHashCode().ToString();
+            string key = Util.Md5Hash (source);
             lock (PreviouslyCompiled)
+            {
+                if (!PreviouslyCompiled.ContainsKey (key))
                 {
-
-                if (!PreviouslyCompiled.ContainsKey(source))
-                    {
-                    PreviouslyCompiled.Add(source, ID.AssemblyName);
-                    }
+                    //PreviouslyCompiled.Add (source, ID.AssemblyName);
+                    PreviouslyCompiled.Add (key, ID.AssemblyName);
                 }
             }
+        }
 
-        public void RemovePreviouslyCompiled(string source)
-            {
-//            string key = source.Length.ToString() + source.GetHashCode().ToString();
+        public void RemovePreviouslyCompiled (string source)
+        {
+            //string key = source.Length.ToString() + source.GetHashCode().ToString();
+            string key = Util.Md5Hash (source);
             lock (PreviouslyCompiled)
+            {
+                if (PreviouslyCompiled.ContainsKey (key))
                 {
-                if (PreviouslyCompiled.ContainsKey(source))
-                    {
-                    PreviouslyCompiled.Remove(source);
-                    }
+                    PreviouslyCompiled.Remove (key);
+                    //PreviouslyCompiled.Remove (source);
                 }
             }
+        }
 
-        public string TryGetPreviouslyCompiledScript(string source)
-            {
-//            string key = source.Length.ToString() + source.GetHashCode().ToString();
+        public string TryGetPreviouslyCompiledScript (string source)
+        {
+            //string key = source.Length.ToString() + source.GetHashCode().ToString();
+            string key = Util.Md5Hash (source);
             string assemblyName = "";
-            PreviouslyCompiled.TryGetValue(source,out assemblyName);
+            PreviouslyCompiled.TryGetValue (key, out assemblyName);
+            //PreviouslyCompiled.TryGetValue (source, out assemblyName);
 
             return assemblyName;
-            }
+        }
         
         public ScriptData GetScript(UUID primID, UUID itemID)
         {

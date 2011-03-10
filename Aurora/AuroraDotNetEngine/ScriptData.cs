@@ -485,7 +485,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void Start(bool reupload)
         {
             DateTime StartTime = DateTime.Now.ToUniversalTime();
-            string stmp="";
+            string savedStateAssemblyName="";
 
             //Clear out the removing of events for this script.
             VersionID++;
@@ -539,20 +539,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             // Attempt to find a state save to load from
             
-
             if (!reupload && Loading && ScriptFrontend != null) //Only get state saves on rezzing or region start up, in both cases, we will have the cached state as we loaded all states when the region started. 
-                LastStateSave = ScriptFrontend.GetStateSave(ItemID, UserInventoryItemID, true);
+                LastStateSave = ScriptFrontend.GetStateSave(ItemID, UserInventoryItemID);
 
             if(LastStateSave != null)
-                stmp = Path.Combine(m_ScriptEngine.ScriptEnginesPath, Path.Combine(
+                savedStateAssemblyName = Path.Combine(m_ScriptEngine.ScriptEnginesPath, Path.Combine(
                     LastStateSave.AssemblyName.ToString().Substring(0, 3),
                     LastStateSave.AssemblyName));
             //If the saved state exists, if it isn't a reupload (something changed), and if the assembly exists, load the state save
             if (!reupload && Loading && LastStateSave != null
-                && File.Exists(stmp))
+                && File.Exists(savedStateAssemblyName))
             {
                 //Retrive the previous assembly
-                AssemblyName = stmp;
+                AssemblyName = savedStateAssemblyName;
             }
             else
             {

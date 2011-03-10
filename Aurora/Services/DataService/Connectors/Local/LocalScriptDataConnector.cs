@@ -11,10 +11,9 @@ using Nini.Config;
 namespace Aurora.Services.DataService
 {
     public class LocalScriptDataConnector : IScriptDataConnector
-	{
+    {
         private IGenericData GD = null;
-        private Dictionary<UUID, StateSave> m_cachedStateSaves = new Dictionary<UUID, StateSave>();
-
+        
         public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("IScriptDataConnector", "LocalConnector") == "LocalConnector")
@@ -39,23 +38,6 @@ namespace Aurora.Services.DataService
         {
         }
 
-        public void CacheStateSaves()
-        {
-            /*List<string> Query = GD.Query("", "", "auroradotnetstatesaves", "*");
-
-            //Save this, as the query count changes over time
-            int count = Query.Count;
-            for (int i = 0; i < count; i += 11)
-            {
-                StateSave s = new StateSave();
-                s = BuildStateSave(Query);
-                m_cachedStateSaves[s.ItemID] = s;
-                if(s.UserInventoryID != UUID.Zero)
-                    m_cachedStateSaves[s.UserInventoryID] = s;
-                Query.RemoveRange(0, 11);
-            }*/
-        }
-
         /// <summary>
         /// Get the last state save the script has
         /// </summary>
@@ -63,20 +45,9 @@ namespace Aurora.Services.DataService
         /// <param name="UserInventoryItemID"></param>
         /// <param name="onlyCached)"></param>
         /// <returns></returns>
-        public StateSave GetStateSave(UUID itemID, UUID UserInventoryItemID, bool onlyCached)
+        public StateSave GetStateSave(UUID itemID, UUID UserInventoryItemID)
         {
             StateSave StateSave = new StateSave();
-            //Check the caches
-            /*if (m_cachedStateSaves.TryGetValue(itemID, out StateSave))
-                return StateSave;
-            else if (UserInventoryItemID != UUID.Zero &&
-                m_cachedStateSaves.TryGetValue(UserInventoryItemID, out StateSave))
-                return StateSave;
-            else if (onlyCached)
-                return null;
-            else
-                StateSave = new StateSave();*/
-
 
             try
             {
@@ -98,7 +69,7 @@ namespace Aurora.Services.DataService
             {
                 return null;
             }
-		}
+        }
 
         private StateSave BuildStateSave(List<string> StateSaveRetVals)
         {
@@ -160,11 +131,8 @@ namespace Aurora.Services.DataService
         /// Save the current script state.
         /// </summary>
         /// <param name="state"></param>
-		public void SaveStateSave(StateSave state)
+        public void SaveStateSave(StateSave state)
         {
-            /*m_cachedStateSaves[state.ItemID] = state;
-            if(state.UserInventoryID != UUID.Zero) //Too many scripts have this and is dangerous to pull from this
-                m_cachedStateSaves[state.UserInventoryID] = state;*/
             List<string> Keys = new List<string>();
             Keys.Add("State");
             Keys.Add("ItemID");
@@ -191,7 +159,7 @@ namespace Aurora.Services.DataService
             Insert.Add(state.Disabled ? 1 : 0);
             Insert.Add(state.UserInventoryID);
             GD.Replace("auroradotnetstatesaves", Keys.ToArray(), Insert.ToArray());
-		}
+        }
 
         /// <summary>
         /// Delete the state saves for the given InventoryItem

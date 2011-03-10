@@ -281,10 +281,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 MaintenanceThread = new MaintenanceThread(this);
 
                 FindDefaultLSLScript();
-
-                IScriptDataConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IScriptDataConnector>();
-                if (connector != null)
-                    connector.CacheStateSaves();
             }
 
             scene.EventManager.OnStartupComplete += EventManager_OnStartupComplete;
