@@ -333,6 +333,8 @@ namespace Aurora.Modules
 
             protected void EventManager_OnFrame()
             {
+                if (m_presence == null)
+                    return; //We can't deregister ourselves... our reference is lost... so just hope we stop getting called soon
                 if (!m_presence.IsChildAgent && m_module.UseSelectionParticles && SendEffectPackets > 7)
                 {
                     SendViewerEffects();
