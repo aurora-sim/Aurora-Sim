@@ -594,8 +594,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             // Stats tracking
             Interlocked.Increment(ref udpClient.PacketsSent);
-            if (isReliable)
-                Interlocked.Add(ref udpClient.UnackedBytes, outgoingPacket.Buffer.DataLength);
+//            if (isReliable)
+//                Interlocked.Add(ref udpClient.UnackedBytes, outgoingPacket.Buffer.DataLength);
 
             // Put the UDP payload on the wire
 //            AsyncBeginSend(buffer);
