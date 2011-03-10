@@ -969,9 +969,22 @@ namespace Aurora.Modules
             {
                 Mapasset.Data = mapdata;
                 m_scene.AssetService.Store(Mapasset);
+                RegenerateMaptile(Mapasset.ID, Mapasset.Data);
+            }
+            else if(Terrainasset != null)
+                RegenerateMaptile(Terrainasset.ID, Terrainasset.Data);
+
+            if (Terrainasset != null)
+            {
+                 Terrainasset.Data = null;
+                 Terrainasset = null;
+            }
+            if (Mapasset != null)
+            {
+                 Mapasset.Data = null;
+                 Mapasset = null;
             }
 
-            RegenerateMaptile(Mapasset.ID, Mapasset.Data);
             //Update the grid map
             IGridRegisterModule gridRegModule = m_scene.RequestModuleInterface<IGridRegisterModule>();
             if(gridRegModule != null)

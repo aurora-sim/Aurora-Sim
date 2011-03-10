@@ -142,15 +142,13 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             terrainRenderer.Initialise(m_scene, m_config);
 
             mapBMP = null;
-            terrainBMP = new Bitmap(m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            terrainBMP = new Bitmap(Constants.RegionSize, Constants.RegionSize, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             terrainBMP = terrainRenderer.TerrainToBitmap(terrainBMP);
 
-            mapBMP = terrainBMP;
-
-            if (drawPrimVolume)
+            if (drawPrimVolume && terrainBMP != null)
             {
-                if (mapBMP != null) //If something goes seriously wrong, this DOES happen
-                    mapBMP = DrawObjectVolume(m_scene, mapBMP);
+                mapBMP = new Bitmap(terrainBMP);
+                mapBMP = DrawObjectVolume(m_scene, mapBMP);
             }
 
             if(m_mapping != null)
@@ -164,10 +162,16 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             Bitmap terrainBMP, mapBMP;
             CreateMapTile(out terrainBMP, out mapBMP);
 
-            if(mapBMP != null)
-                map = OpenJPEG.EncodeFromImage(mapBMP, true);
-            if(terrainBMP != null)
+            if (terrainBMP != null)
+            {
                 terrain = OpenJPEG.EncodeFromImage(terrainBMP, true);
+                terrainBMP.Dispose();
+            }
+            if (mapBMP != null)
+            {
+                map = OpenJPEG.EncodeFromImage(mapBMP, true);
+                mapBMP.Dispose();
+            }
         }
 
         #endregion
@@ -470,7 +474,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                         Vector3 Location = new Vector3(part.AbsolutePosition.X - (part.Scale.X / 2),
                                             (256 - (part.AbsolutePosition.Y + (part.Scale.Y / 2))),
                                             0);
-                                        Location = Location * part.GetWorldRotation();
+                                        Location.X /= m_scene.RegionInfo.RegionSizeX / Constants.RegionSize;
+                                        Location.Y /= m_scene.RegionInfo.RegionSizeY / Constants.RegionSize;
+                                        Location = Location * part.GetWorldRotation ();
                                         ds.rect = new Rectangle((int)Location.X, (int)Location.Y, (int)Math.Abs(part.Shape.Scale.X), (int)Math.Abs(part.Shape.Scale.Y));
                                     }
                                     else //if (mapdot.RootPart.Shape.ProfileShape == ProfileShape.Square)
@@ -535,8 +541,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         //g.FillRectangle(rectDrawStruct.brush , rectDrawStruct.rect);
                     }
                 }
-
-                g.Dispose();
             } // lock entities objs
 
             //m_log.Info("[MAPTILE]: Generating Maptile Step 2: Done in " + (Environment.TickCount - tc) + " ms");
@@ -630,7 +634,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             returnpt.X = (int)point3d.X;//(int)((topos.x - point3d.x) / z * d);
             returnpt.Y = (int)((m_scene.RegionInfo.RegionSizeY - 1) - point3d.Y);//(int)(255 - (((topos.y - point3d.y) / z * d)));
-
+            returnpt.X /= m_scene.RegionInfo.RegionSizeX / Constants.RegionSize;
+            returnpt.Y /= m_scene.RegionInfo.RegionSizeY / Constants.RegionSize;
             return returnpt;
         }
 

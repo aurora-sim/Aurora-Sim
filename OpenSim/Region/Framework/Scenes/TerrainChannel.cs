@@ -83,9 +83,9 @@ namespace OpenSim.Region.Framework.Scenes
             m_scene = scene;
             m_map = import;
             m_Width = m_scene.RegionInfo.RegionSizeX;
-            taint = new bool[Width, Height];
-            if ((Width != scene.RegionInfo.RegionSizeX ||
-                Height != scene.RegionInfo.RegionSizeY) &&
+            taint = new bool[m_Width, m_Width];
+            if ((m_Width != scene.RegionInfo.RegionSizeX ||
+                m_Width != scene.RegionInfo.RegionSizeY) &&
                 (scene.RegionInfo.RegionSizeX != int.MaxValue) && //Child regions of a mega-region
                 (scene.RegionInfo.RegionSizeY != int.MaxValue))
             {
@@ -147,8 +147,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                if (x >= 0 && x < Width && y >= 0 && y < Height)
-                    return ((float)m_map[y * Width + x]) / Constants.TerrainCompression;
+                if (x >= 0 && x < m_Width && y >= 0 && y < m_Width)
+                    return ((float)m_map[y * m_Width + x]) / Constants.TerrainCompression;
                 else
                     return 0;
             }
@@ -160,10 +160,10 @@ namespace OpenSim.Region.Framework.Scenes
                 if (value * Constants.TerrainCompression < short.MinValue)
                     value = short.MinValue;
 
-                if (m_map[y * Width + x] != value * Constants.TerrainCompression)
+                if (m_map[y * m_Width + x] != value * Constants.TerrainCompression)
                 {
                     taint[x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize] = true;
-                    m_map[y * Width + x] = (short)(value * Constants.TerrainCompression);
+                    m_map[y * m_Width + x] = (short)(value * Constants.TerrainCompression);
                 }
             }
         }
@@ -198,23 +198,23 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (x < 0)
                 x = 0;
-            if (x >= Width)
-                x = Width - 1;
+            if (x >= m_Width)
+                x = m_Width - 1;
             if (y < 0)
                 y = 0;
-            if (y >= Height)
-                y = Height - 1;
+            if (y >= m_Width)
+                y = m_Width - 1;
 
             Vector3 p0 = new Vector3(x, y, (float)this[x, y]);
             Vector3 p1 = new Vector3(p0);
             Vector3 p2 = new Vector3(p0);
 
             p1.X += 1.0f;
-            if (p1.X < Width)
+            if (p1.X < m_Width)
                 p1.Z = (float)this[(int)p1.X, (int)p1.Y];
 
             p2.Y += 1.0f;
-            if (p2.Y < Height)
+            if (p2.Y < m_Width)
                 p2.Z = (float)this[(int)p2.X, (int)p2.Y];
 
             Vector3 v0 = new Vector3(p1.X - p0.X, p1.Y - p0.Y, p1.Z - p0.Z);

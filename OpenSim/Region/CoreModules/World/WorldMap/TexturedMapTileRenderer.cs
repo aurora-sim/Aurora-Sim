@@ -80,11 +80,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         // (for info about algorithm, see http://en.wikipedia.org/wiki/HSL_and_HSV)
         public Color toColor()
         {
-            if (s < 0f) m_log.Debug("S < 0: " + s);
-            else if (s > 1f) m_log.Debug("S > 1: " + s);
-            if (v < 0f) m_log.Debug("V < 0: " + v);
-            else if (v > 1f) m_log.Debug("V > 1: " + v);
-
             float f = h / 60f;
             int sector = (int)f % 6;
             f = f - (int)f;
@@ -285,9 +280,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         // as a slope is rendered at that place. So average 4 neighbour values to emulate that.
         private float getHeight(ITerrainChannel hm, int x, int y) {
             if (x < (m_scene.RegionInfo.RegionSizeX - 1) && y < (m_scene.RegionInfo.RegionSizeY - 1))
-                return (float)(hm[x, y] * .444 + (hm[x + 1, y] + hm[x, y + 1]) * .222 + hm[x + 1, y +1] * .112);
+                return (float)(hm[x, y] * .444f + (hm[x + 1, y] + hm[x, y + 1]) * .222f + hm[x + 1, y +1] * .112f);
             else
-                return hm[x, y];
+                return 0;
         }
         #endregion
 
@@ -326,20 +321,15 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             float waterHeight = (float)settings.WaterHeight;
 
             ITerrainChannel heightmap = m_scene.RequestModuleInterface<ITerrainChannel>();
-            
-            for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
+            int sizeRatio = m_scene.RegionInfo.RegionSizeX / Constants.RegionSize;
+            for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y += sizeRatio)
             {
                 float rowRatio = y / (m_scene.RegionInfo.RegionSizeY - 1); // 0 - 1, for interpolation
-                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
+                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x += sizeRatio)
                 {
                     float columnRatio = x / (m_scene.RegionInfo.RegionSizeX - 1); // 0 - 1, for interpolation
 
-                    // Y flip the cordinates for the bitmap: hf origin is lower left, bm origin is upper left
-                    int yr = (m_scene.RegionInfo.RegionSizeY - 1) - y;
-
-                    float heightvalue = getHeight(heightmap, x, y);
-                    if (Single.IsInfinity(heightvalue) || Single.IsNaN(heightvalue))
-                        heightvalue = 0;
+                    float heightvalue = getHeight (heightmap, x, y);
 
                     if (heightvalue > waterHeight)
                     {
@@ -350,9 +340,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         //float smallNoise = (float)TerrainUtil.InterpolatedNoise(x + 33, y + 43) * .5f + .5f;
                         //float hmod = heightvalue + smallNoise * 3f + S(S(bigNoise)) * 10f;
                         float hmod =
-                            heightvalue +
-                            TerrainUtil.InterpolatedNoise(x + 33, y + 43) * 1.5f + 1.5f + // 0 - 3
-                            S(S(TerrainUtil.InterpolatedNoise(x / 8, y / 8) * .5f + .5f)) * 10f; // 0 - 10
+                            heightvalue; // 0 - 10
 
                         // find the low/high values for this point (interpolated bilinearily)
                         // (and remember, x=0,y=0 is SW)
@@ -381,55 +369,18 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                             // first, rescale h to 0.0 - 1.0
                             hmod = (hmod - low) / (high - low);
                             // now we have to split: 0.00 => color1, 0.33 => color2, 0.67 => color3, 1.00 => color4
-                            if (hmod < 1f / 3f) hsv = interpolateHSV(ref hsv1, ref hsv2, hmod * 3f);
-                            else if (hmod < 2f / 3f) hsv = interpolateHSV(ref hsv2, ref hsv3, (hmod * 3f) - 1f);
-                            else hsv = interpolateHSV(ref hsv3, ref hsv4, (hmod * 3f) - 2f);
-                        }
-
-                        // Shade the terrain for shadows
-                        if (x < (m_scene.RegionInfo.RegionSizeX - 1) && y < (m_scene.RegionInfo.RegionSizeY - 1))
-                        {
-                            float hfvaluecompare = getHeight(heightmap, x + 1, y + 1); // light from north-east => look at land height there
-                            if (Single.IsInfinity(hfvaluecompare) || Single.IsNaN(hfvaluecompare))
-                                hfvaluecompare = 0f;
-
-                            float hfdiff = heightvalue - hfvaluecompare;  // => positive if NE is lower, negative if here is lower
-                            hfdiff *= 0.06f; // some random factor so "it looks good"
-                            if (hfdiff > 0.02f)
-                            {
-                                float highlightfactor = 0.18f;
-                                // NE is lower than here
-                                // We have to desaturate and lighten the land at the same time
-                                hsv.s = (hsv.s - (hfdiff * highlightfactor) > 0f) ? hsv.s - (hfdiff * highlightfactor) : 0f;
-                                hsv.v = (hsv.v + (hfdiff * highlightfactor) < 1f) ? hsv.v + (hfdiff * highlightfactor) : 1f;
-                            }
-                            else if (hfdiff < -0.02f)
-                            {
-                                // here is lower than NE:
-                                // We have to desaturate and blacken the land at the same time
-                                hsv.s = (hsv.s + hfdiff > 0f) ? hsv.s + hfdiff : 0f;
-                                hsv.v = (hsv.v + hfdiff > 0f) ? hsv.v + hfdiff : 0f;
-                            }
+                            if (hmod < 1f / 3f) hsv = interpolateHSV (ref hsv1, ref hsv2, hmod * 3f);
+                            else if (hmod < 2f / 3f) hsv = interpolateHSV (ref hsv2, ref hsv3, (hmod * 3f) - 1f);
+                            else hsv = interpolateHSV (ref hsv3, ref hsv4, (hmod * 3f) - 2f);
                         }
                         //get the data from the original image
-                        Color hsvColor = hsv.toColor();
-                        unsafeBMP.SetPixel(x, ((m_scene.RegionInfo.RegionSizeY - 1) - y), hsvColor);
+                        Color hsvColor = hsv.toColor ();
+                        unsafeBMP.SetPixel (x / sizeRatio, ((m_scene.RegionInfo.RegionSizeY - 1) - y) / sizeRatio, hsvColor);
                     }
                     else
                     {
                         // We're under the water level with the terrain, so paint water instead of land
-
-                        heightvalue = waterHeight - heightvalue;
-                        if (Single.IsInfinity(heightvalue) || Single.IsNaN(heightvalue))
-                            heightvalue = 0f;
-                        else if (heightvalue > 19f)
-                            heightvalue = 19f;
-                        else if (heightvalue < 0f)
-                            heightvalue = 0f;
-
-                        heightvalue = 100f - (heightvalue * 100f) / 19f;  // 0 - 19 => 100 - 0
-
-                        unsafeBMP.SetPixel(x, ((m_scene.RegionInfo.RegionSizeY - 1) - y), WATER_COLOR);
+                        unsafeBMP.SetPixel (x / sizeRatio, ((m_scene.RegionInfo.RegionSizeY - 1) - y) / sizeRatio, WATER_COLOR);
                     }
                 }
             }
@@ -437,7 +388,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 m_mapping.Clear();
             unsafeBMP.UnlockBitmap();
             //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Done in " + (Environment.TickCount - tc) + " ms");
-            return mapbmp;
+            return unsafeBMP.Bitmap();
         }
     }
 }
