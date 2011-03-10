@@ -45,7 +45,7 @@ namespace OpenSim.Services.Connectors
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private List<string> m_ServerURIs = new List<string>();
+        private IRegistryCore m_registry;
 
         #region IAbuseReports
 
@@ -53,6 +53,7 @@ namespace OpenSim.Services.Connectors
         {
             try
             {
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     Dictionary<string, object> ar = abuse_report.ToKeyValuePairs();
@@ -76,6 +77,7 @@ namespace OpenSim.Services.Connectors
                 Dictionary<string, object> send = new Dictionary<string, object>();
                 send.Add("Password", Password);
                 send.Add("METHOD", "GetAbuseReport");
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 return new AbuseReport(WebUtils.ParseXmlResponse(SynchronousRestFormsRequester.MakeRequest("POST",
                     m_ServerURIs[0] + "/abusereport",
                     WebUtils.BuildQueryString(send))));
@@ -96,6 +98,7 @@ namespace OpenSim.Services.Connectors
                 send.Add("count", count);
                 send.Add("filter", filter);
                 send.Add("METHOD", "GetAbuseReports");
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 Dictionary<string, object> ars = WebUtils.ParseXmlResponse(SynchronousRestFormsRequester.MakeRequest("POST",
                     m_ServerURIs[0] + "/abusereport",
                     WebUtils.BuildQueryString(send)));
@@ -119,7 +122,7 @@ namespace OpenSim.Services.Connectors
                 Dictionary<string, object> send = report.ToKeyValuePairs();
                 send.Add("Password", Password);
                 send.Add("METHOD", "AddAbuseReport");
-
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                     m_ServerURIs[0] + "/abusereport",
                     WebUtils.BuildQueryString(send));
@@ -149,12 +152,13 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("AbuseReportHandler", "") != Name)
                 return;
 
-            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AbuseReportURI");
+            m_registry = registry;
             registry.RegisterModuleInterface<IAbuseReports>(this);
         }
 
         public void FinishedStartup()
         {
+
         }
 
         #endregion
