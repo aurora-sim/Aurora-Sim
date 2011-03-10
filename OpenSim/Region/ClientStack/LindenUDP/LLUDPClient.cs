@@ -779,7 +779,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             int rto = (int)(SRTT + Math.Max(m_udpServer.TickCountResolution, K * RTTVAR));
 
             // Clamp the retransmission timeout to manageable values
-            rto = Utils.Clamp(RTO, m_defaultRTO, m_maxRTO);
+            rto = Utils.Clamp(rto, m_defaultRTO, m_maxRTO);
 
             RTO = rto;
 
