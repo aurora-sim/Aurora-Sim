@@ -507,7 +507,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                     // Set the resent flag
                     outgoingPacket.Buffer.Data[0] = (byte)(outgoingPacket.Buffer.Data[0] | Helpers.MSG_RESENT);
-                    outgoingPacket.Category = ThrottleOutPacketType.Resend;
+
+// resend in its original category
+//                    outgoingPacket.Category = ThrottleOutPacketType.Resend;
 
                     // Bump up the resend count on this packet
                     Interlocked.Increment(ref outgoingPacket.ResendCount);
