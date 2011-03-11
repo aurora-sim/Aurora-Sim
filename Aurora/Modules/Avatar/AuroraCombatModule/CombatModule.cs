@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using Nini.Config;
+using OpenSim.Framework;
 using OpenSim.Region.Physics.Manager;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -55,6 +56,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
         public List<UUID> PrimCombatServers = new List<UUID>();
         public bool ForceRequireCombatPermission = true;
         public bool DisallowTeleportingForCombatants = true;
+        public Scene m_scene;
 
         public void Initialise(IConfigSource source)
         {
@@ -76,11 +78,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
         {
             if (m_enabled)
             {
+                m_scene = scene;
                 scene.RegisterModuleInterface<ICombatModule>(this);
                 scene.EventManager.OnNewPresence += NewPresence;
                 scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringParcel;
                 scene.Permissions.OnAllowedOutgoingLocalTeleport += AllowedTeleports;
                 scene.Permissions.OnAllowedOutgoingRemoteTeleport += AllowedTeleports;
+                scene.EventManager.OnLandObjectAdded += OnLandObjectAdded;
             }
         }
 
@@ -92,6 +96,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 scene.EventManager.OnAvatarEnteringNewParcel -= AvatarEnteringParcel;
                 scene.Permissions.OnAllowedOutgoingLocalTeleport -= AllowedTeleports;
                 scene.Permissions.OnAllowedOutgoingRemoteTeleport -= AllowedTeleports;
+                scene.EventManager.OnLandObjectAdded -= OnLandObjectAdded;
             }
         }
 
@@ -253,6 +258,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 
                 SP.OnAddPhysics += new ScenePresence.AddPhysics(SP_OnAddPhysics);
                 SP.OnRemovePhysics += new ScenePresence.RemovePhysics(SP_OnRemovePhysics);
+
+                System.Timers.Timer t = new System.Timers.Timer ();
+                //Use this to fix the avatars health
+                t.Interval = 1000; // 1 sec
+                t.Enabled = true;
+                t.Elapsed += new System.Timers.ElapsedEventHandler (fixAvatarHealth_Elapsed);
             }
 
             public void SP_OnRemovePhysics()
@@ -359,10 +370,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                     }
                     //m_log.Debug("[AVATAR]: Collision with localid: " + localid.ToString() + " at depth: " + coldata[localid].ToString());
                 }
-
-                //Regenerate health (this is approx 1 sec)
-                if ((int)(Health + 0.0625) <= m_combatModule.MaximumHealth)
-                    Health += 0.0625f;
 
                 if (starthealth != Health)
                 {
@@ -476,6 +483,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                             transferModule.TeleportHome(m_SP.UUID, m_SP.ControllingClient);
                     }
                 }
+            }
+
+            void fixAvatarHealth_Elapsed (object sender, System.Timers.ElapsedEventArgs e)
+            {
+                //Regenerate health a bit every second
+                if ((int)(Health + 0.0625) <= m_combatModule.MaximumHealth)
+                    Health += 0.0625f;
             }
 
             void t_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -777,18 +791,29 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             }
         }
 
-        private void AvatarEnteringParcel(ScenePresence avatar, int localLandID, UUID regionID)
+        void OnLandObjectAdded (LandData newParcel)
         {
+            //If a new land object is added or updated, we need to redo the check for the avatars invulnerability
+            m_scene.ForEachScenePresence (delegate (ScenePresence sp)
+            {
+                AvatarEnteringParcel (sp, 0, sp.Scene.RegionInfo.RegionID);
+            });
+        }
+
+        private void AvatarEnteringParcel (ScenePresence avatar, int localLandID, UUID regionID)
+        {
+            ILandObject obj = null;
+            IParcelManagementModule parcelManagement = avatar.Scene.RequestModuleInterface<IParcelManagementModule> ();
+            if (parcelManagement != null)
+            {
+                obj = parcelManagement.GetLandObject (avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y);
+            }
+            if (obj == null)
+                return;
+
             try
             {
-                ILandObject obj = null;
-                IParcelManagementModule parcelManagement = avatar.Scene.RequestModuleInterface<IParcelManagementModule>();
-                if (parcelManagement != null)
-                {
-                    obj = parcelManagement.GetLandObject(avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y);
-                }
-                if(obj == null)
-                    return;
+                
                 if ((obj.LandData.Flags & (uint)ParcelFlags.AllowDamage) != 0)
                 {
                     ICombatPresence CP = avatar.RequestModuleInterface<ICombatPresence>();
