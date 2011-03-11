@@ -113,6 +113,21 @@ namespace OpenSim.Region.Framework.Scenes
         public UUID m_lastParcelUUID = UUID.Zero;
         public bool m_inTransit = false;
 
+        [XmlIgnore]
+        private Vector3 m_grpOOBsize; // the size of a bounding box oriented as prim, is future will consider cutted prims, meshs etc
+        [XmlIgnore]
+        private Vector3 m_grpOOBoffset; // the position center of the bounding box relative to it's Position
+        [XmlIgnore]
+        private float m_grpBSphereRadiusSQ; // the square of the radius of a sphere containing the oob
+
+
+        [XmlIgnore]
+        public Vector3 OOBsize { get { return m_grpOOBsize; } } // the size of a bounding box oriented as prim, is future will consider cutted prims, meshs etc
+        [XmlIgnore]
+        public Vector3 OOBoffset { get { return m_grpOOBoffset; } } // the position center of the bounding box relative to it's Position
+        [XmlIgnore]
+        private float BSphereRadiusSQ { get { return m_grpBSphereRadiusSQ; } } // the square of the radius of a sphere containing the oob
+
         public override bool HasGroupChanged
         {
             get { return m_hasGroupChanged; }

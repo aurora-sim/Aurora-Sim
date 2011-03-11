@@ -478,7 +478,23 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         [XmlIgnore]
-        private bool m_IsSelected=false;
+        private bool m_IsSelected = false;
+
+        [XmlIgnore]
+        private Vector3 m_partOOBsize; // the size of a bounding box oriented as prim, is future will consider cutted prims, meshs etc
+        [XmlIgnore]
+        private Vector3 m_partOOBoffset; // the position center of the bounding box relative to it's Position
+        [XmlIgnore]
+        private float m_partBSphereRadiusSQ; // the square of the radius of a sphere containing the oob
+
+
+        [XmlIgnore]
+        public Vector3 OOBsize { get { return m_partOOBsize; } } // the size of a bounding box oriented as prim, is future will consider cutted prims, meshs etc
+        [XmlIgnore]
+        public Vector3 OOBoffset { get { return m_partOOBoffset; } } // the position center of the bounding box relative to it's Position
+        [XmlIgnore]
+        private float BSphereRadiusSQ { get { return m_partBSphereRadiusSQ; } } // the square of the radius of a sphere containing the oob
+      
 
         private int m_savedAttachmentPoint;
         public int SavedAttachmentPoint
