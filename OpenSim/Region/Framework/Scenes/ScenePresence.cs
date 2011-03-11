@@ -2340,15 +2340,22 @@ namespace OpenSim.Region.Framework.Scenes
             // This value only affects how often agent positions are sent to neighbor regions
             // for things such as distance-based update prioritization
 
-            if (Util.GetDistanceTo(AbsolutePosition, posLastSignificantMove) > SIGNIFICANT_MOVEMENT)
+        //            if (Util.GetDistanceTo(AbsolutePosition, posLastSignificantMove) > SIGNIFICANT_MOVEMENT)
+            if (Vector3.DistanceSquared(AbsolutePosition, posLastSignificantMove) > SIGNIFICANT_MOVEMENT * SIGNIFICANT_MOVEMENT)
             {
                 posLastSignificantMove = AbsolutePosition;
                 m_scene.EventManager.TriggerSignificantClientMovement(m_controllingClient);
             }
 
             // Minimum Draw distance is 64 meters, the Radius of the draw distance sphere is 32m
-            if (Util.GetDistanceTo(AbsolutePosition, m_lastChildAgentUpdatePosition) >= m_sceneViewer.Prioritizer.ChildReprioritizationDistance ||
-                Util.GetDistanceTo(CameraPosition, m_lastChildAgentUpdateCamPosition) >= m_sceneViewer.Prioritizer.ChildReprioritizationDistance)
+            double  tmpsq = m_sceneViewer.Prioritizer.ChildReprioritizationDistance;
+            tmpsq *= tmpsq;
+            float vel = Velocity.LengthSquared();
+            float v1 = Vector3.DistanceSquared(AbsolutePosition, m_lastChildAgentUpdatePosition);
+            float v2 = Vector3.DistanceSquared(CameraPosition, m_lastChildAgentUpdateCamPosition);
+            if (vel < 4.0f && (Vector3.DistanceSquared(AbsolutePosition, m_lastChildAgentUpdatePosition) >= tmpsq ||
+                Vector3.DistanceSquared(CameraPosition, m_lastChildAgentUpdateCamPosition) >= tmpsq)) 
+                 
             {
                 m_lastChildAgentUpdatePosition = AbsolutePosition;
                 m_lastChildAgentUpdateCamPosition = CameraPosition;
