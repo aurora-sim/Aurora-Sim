@@ -32,6 +32,8 @@ namespace OpenSim.Services
         private MuteInfoHandler MuteHandler = new MuteInfoHandler();
         private DirectoryInfoHandler DirectoryHandler = new DirectoryInfoHandler();
         private GroupsServiceHandler GroupsHandler = new GroupsServiceHandler();
+        private AbuseReportsHandler AbuseHandler = new AbuseReportsHandler();
+        
         protected ulong m_regionHandle;
         protected IRegistryCore m_registry;
 
@@ -381,6 +383,14 @@ namespace OpenSim.Services
                                 return FailureResult();
                         return GroupsHandler.GetGroupInvites(request);
                     #endregion
+                    #region Abuse Reports
+                    case "AddAbuseReport":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult();
+                        return AbuseHandler.AddAbuseReport(request);
+                    #endregion
+
                 }
                 m_log.DebugFormat("[AuroraDataServerPostHandler]: unknown method {0} request {1}", method.Length, method);
             }
@@ -2009,6 +2019,87 @@ namespace OpenSim.Services
         public TelehubInfoHandler()
         {
             GridConnector = DataManager.RequestPlugin<IRegionConnector>("IRegionConnectorLocal");
+        }
+
+        private byte[] SuccessResult()
+        {
+            XmlDocument doc = new XmlDocument();
+
+            XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
+                    "", "");
+
+            doc.AppendChild(xmlnode);
+
+            XmlElement rootElement = doc.CreateElement("", "ServerResponse",
+                    "");
+
+            doc.AppendChild(rootElement);
+
+            XmlElement result = doc.CreateElement("", "Result", "");
+            result.AppendChild(doc.CreateTextNode("Success"));
+
+            rootElement.AppendChild(result);
+
+            return DocToBytes(doc);
+        }
+
+        private byte[] DocToBytes(XmlDocument doc)
+        {
+            MemoryStream ms = new MemoryStream();
+            XmlTextWriter xw = new XmlTextWriter(ms, null);
+            xw.Formatting = Formatting.Indented;
+            doc.WriteTo(xw);
+            xw.Flush();
+
+            return ms.ToArray();
+        }
+    }
+
+    public class AbuseReportsHandler
+    {
+        public byte[] AddAbuseReport(Dictionary<string, object> request)
+        {
+            IAbuseReportsConnector m_AbuseReportsService = DataManager.RequestPlugin<IAbuseReportsConnector>("IAbuseReportsConnectorLocal");
+
+            AbuseReport ar = new AbuseReport(request);
+            m_AbuseReportsService.AddAbuseReport(ar);
+            //m_log.DebugFormat("[ABUSEREPORTS HANDLER]: neighbours for region {0}: {1}", regionID, rinfos.Count);
+
+            return SuccessResult();
+        }
+
+        public byte[] UpdateAbuseReport(Dictionary<string, object> request)
+        {
+            AbuseReport ar = new AbuseReport(request);
+            IAbuseReportsConnector m_AbuseReportsService = DataManager.RequestPlugin<IAbuseReportsConnector>("IAbuseReportsConnectorLocal");
+            m_AbuseReportsService.UpdateAbuseReport(ar, request["Password"].ToString());
+            //m_log.DebugFormat("[ABUSEREPORTS HANDLER]: neighbours for region {0}: {1}", regionID, rinfos.Count);
+
+            return SuccessResult();
+        }
+
+        public byte[] GetAbuseReport(Dictionary<string, object> request)
+        {
+            IAbuseReportsConnector m_AbuseReportsService = DataManager.RequestPlugin<IAbuseReportsConnector>("IAbuseReportsConnectorLocal");
+            string xmlString = WebUtils.BuildXmlResponse(
+                m_AbuseReportsService.GetAbuseReport(int.Parse(request["Number"].ToString()), request["Password"].ToString()).ToKeyValuePairs());
+            //m_log.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        public byte[] GetAbuseReports(Dictionary<string, object> request)
+        {
+            IAbuseReportsConnector m_AbuseReportsService = DataManager.RequestPlugin<IAbuseReportsConnector>("IAbuseReportsConnectorLocal");
+            List<AbuseReport> ars = m_AbuseReportsService.GetAbuseReports(int.Parse(request["start"].ToString()), int.Parse(request["count"].ToString()), request["filter"].ToString());
+            Dictionary<string, object> returnvalue = new Dictionary<string, object>();
+            foreach (AbuseReport ar in ars)
+                returnvalue.Add(ar.Number.ToString(), ar);
+
+            string xmlString = WebUtils.BuildXmlResponse(returnvalue);
+            //m_log.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
         private byte[] SuccessResult()
