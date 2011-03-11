@@ -2351,8 +2351,6 @@ namespace OpenSim.Region.Framework.Scenes
             double  tmpsq = m_sceneViewer.Prioritizer.ChildReprioritizationDistance;
             tmpsq *= tmpsq;
             float vel = Velocity.LengthSquared();
-            float v1 = Vector3.DistanceSquared(AbsolutePosition, m_lastChildAgentUpdatePosition);
-            float v2 = Vector3.DistanceSquared(CameraPosition, m_lastChildAgentUpdateCamPosition);
             if (vel < 4.0f && (Vector3.DistanceSquared(AbsolutePosition, m_lastChildAgentUpdatePosition) >= tmpsq ||
                 Vector3.DistanceSquared(CameraPosition, m_lastChildAgentUpdateCamPosition) >= tmpsq)) 
                  
