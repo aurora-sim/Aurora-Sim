@@ -500,6 +500,7 @@ namespace OpenSim.Region.Framework.Scenes
         public SceneObjectGroup(SceneObjectPart part, Scene scene) :this(scene)
         {
             SetRootPart(part);
+            part.Scale = part.Shape.Scale; // temporary hack to update oobb
         }
         public SceneObjectGroup(SceneObjectPart part, Scene scene, bool AddToScene)
             : this(scene)
