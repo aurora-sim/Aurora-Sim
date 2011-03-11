@@ -199,10 +199,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             else
             {
-                PrimUpdatesPerCallback = 100;
-                TextureSendLimit = 20;
+                
+                
                 ClientTimeOut = 60;
             }
+
+            // hardcode for now
+
+            PrimUpdatesPerCallback = 50;
+            TextureSendLimit = 10;
 
             #region BinaryStats
             config = configSource.Configs["Statistics.Binary"];

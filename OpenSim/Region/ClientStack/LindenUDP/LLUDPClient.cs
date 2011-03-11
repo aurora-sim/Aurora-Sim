@@ -63,6 +63,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
         public OpenSim.Framework.LocklessQueue<object>[] queues;
         public int[] promotioncntr;
+        public int count;
         public int promotionratemask;
         public int nlevels;
 
@@ -86,6 +87,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 return false;
 
             queues[prio].Enqueue(o); // store it in its level
+            Interlocked.Increment(ref count);
 
             Interlocked.Increment(ref promotioncntr[prio]);
 
@@ -118,6 +120,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     if (o is OutgoingPacket)
                         {
                         pack = (OutgoingPacket)o;
+                        Interlocked.Decrement(ref count);
                         return true;
                         }
                     // else  do call to a funtion that will return the packet or whatever
@@ -601,18 +604,23 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                 }
 
+            if (m_outbox.count < 100)
+                {
+                emptyCategories = (ThrottleOutPacketTypeFlags)0xffff;
+                BeginFireQueueEmpty(emptyCategories);
+                }
+/*
             if (emptyCategories != 0)
                 BeginFireQueueEmpty(emptyCategories);
             else
                 {
                 int i = MapCatsToPriority[(int)ThrottleOutPacketType.Texture]; // hack to keep textures flowing for now
-                if (m_outbox.queues[i].Count < 2)
+                if (m_outbox.queues[i].Count < 30)
                     {
                     emptyCategories |= ThrottleOutPacketTypeFlags.Texture;
-                    BeginFireQueueEmpty(emptyCategories);
                     }
                 }
-
+*/
 
             //m_log.Info("[LLUDPCLIENT]: Queues: " + queueDebugOutput); // Serious debug business
             return packetSent;

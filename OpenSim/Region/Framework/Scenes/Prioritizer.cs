@@ -152,6 +152,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Adjust priority so that root prims are sent to the viewer first.  This is especially important for 
             // attachments acting as huds, since current viewers fail to display hud child prims if their updates
             // arrive before the root one.
+/*
             if (entity is SceneObjectPart)
             {
                 SceneObjectPart sop = ((SceneObjectPart)entity);
@@ -160,6 +161,7 @@ namespace OpenSim.Region.Framework.Scenes
                     SceneObjectGroup grp = sop.ParentGroup;
                     priority -= (grp.BSphereRadiusSQ + 0.5f);
                     }
+ */
 /*
                 if (sop.IsRoot)
                 {
@@ -171,10 +173,12 @@ namespace OpenSim.Region.Framework.Scenes
                     if (priority <= double.MaxValue - m_childPrimAdjustmentFactor)
                         priority += m_childPrimAdjustmentFactor;
                 }
- */
+ 
             }
+ */
             return priority;
         }
+
         private double GetPriorityByOOBDistance(IClientAPI client, ISceneEntity entity)
             {
             ScenePresence presence = m_scene.GetScenePresence(client.AgentId);
@@ -218,7 +222,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (distsq < 0)
                     distsq = 0;
 
-                return distsq;
+                return -distsq;
                 }
 
             return double.NaN;
