@@ -190,13 +190,6 @@
         <Match path="Serialization" pattern="*.cs" recurse="true"/>
         <Match path="Services" pattern="*.cs" recurse="true"/>
         <Match path="Servers" pattern="*.cs" recurse="true"/>
-        <!-- on temporary suspension -->
-        <Exclude pattern="OSHttpHandler\.cs"/>
-        <Exclude pattern="OSHttpHttpHandler\.cs"/>
-        <Exclude pattern="OSHttpRequestPump\.cs"/>
-        <Exclude pattern="OSHttpRequestQueue\.cs"/>
-        <Exclude pattern="OSHttpServer.*\.cs"/>
-        <Exclude pattern="OSHttpXmlRpcHandler.*\.cs"/>
       </Files>
     </Project>
 
