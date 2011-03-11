@@ -143,7 +143,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             } // the position center of the bounding box relative to it's Position
         [XmlIgnore]
-        private float BSphereRadiusSQ
+        public float BSphereRadiusSQ
             {
             get
                 {

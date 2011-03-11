@@ -92,7 +92,7 @@ namespace OpenSim.Region.Framework.Scenes
             //Fix the version with the newest locked m_version
             FixVersion(update);
             PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double>();
-            item.Priority = priority;
+            item.Priority = - priority;
             item.Value = update;
             m_partsUpdateQueue.Enqueue(item);
 

@@ -509,7 +509,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         // the square of the radius of a sphere containing the oobb
         [XmlIgnore]
-        private float BSphereRadiusSQ
+        public float BSphereRadiusSQ
             {
             get
                 {              
@@ -1556,6 +1556,7 @@ namespace OpenSim.Region.Framework.Scenes
                                     actor.Size = m_shape.Scale;
                                     m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
                                     // here whould be a nice spot to ask physics about OOB
+                                    // nahh better on the get
                                 }
                             }
                         }
