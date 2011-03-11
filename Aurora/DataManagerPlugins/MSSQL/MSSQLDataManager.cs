@@ -733,6 +733,8 @@ namespace Aurora.DataManager.MSSQL
                     return "VARCHAR(2)";
                 case ColumnTypes.String16:
                     return "VARCHAR(16)";
+                case ColumnTypes.String32:
+                    return "VARCHAR(32)";
                 case ColumnTypes.String36:
                     return "VARCHAR(36)";
                 case ColumnTypes.String45:
@@ -858,6 +860,8 @@ namespace Aurora.DataManager.MSSQL
                     return ColumnTypes.String2;
                 case "varchar(16)":
                     return ColumnTypes.String16;
+                case "varchar(32)":
+                    return ColumnTypes.String32;
                 case "varchar(36)":
                     return ColumnTypes.String36;
                 case "varchar(45)":

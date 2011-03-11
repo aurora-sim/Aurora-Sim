@@ -30,6 +30,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 using OpenSim.Framework;
+using Aurora.Framework;
 
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -357,5 +358,14 @@ namespace OpenSim.Services.Interfaces
 
             return appearance;
         }
+    }
+
+    public interface IAvatarData : IAuroraDataPlugin
+    {
+        AvatarData Get (string field, string val);
+        bool Store (UUID PrincipalID, AvatarData data);
+        bool Delete (UUID principalID, string name);
+        bool Delete (string field, string val);
+        bool SetItems (UUID principalID, string[] names, string[] values);
     }
 }

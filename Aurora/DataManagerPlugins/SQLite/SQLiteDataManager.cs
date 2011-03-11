@@ -593,9 +593,13 @@ namespace Aurora.DataManager.SQLite
             Dictionary<string, ColumnDefinition> sameColumns = new Dictionary<string, ColumnDefinition>();
             foreach (ColumnDefinition column in oldColumns)
             {
-                if (columns.Contains(column))
+                foreach (ColumnDefinition innercolumn in columns)
                 {
-                    sameColumns.Add(column.Name, column);
+                    if (innercolumn.Name == column.Name)
+                    {
+                        sameColumns.Add (column.Name, column);
+                        break;
+                    }
                 }
             }
 
@@ -715,6 +719,8 @@ namespace Aurora.DataManager.SQLite
                     return "VARCHAR(2)";
                 case ColumnTypes.String16:
                     return "VARCHAR(16)";
+                case ColumnTypes.String32:
+                    return "VARCHAR(32)";
                 case ColumnTypes.String36:
                     return "VARCHAR(36)";
                 case ColumnTypes.String45:
@@ -791,6 +797,8 @@ namespace Aurora.DataManager.SQLite
                     return ColumnTypes.String2;
                 case "varchar(16)":
                     return ColumnTypes.String16;
+                case "varchar(32)":
+                    return ColumnTypes.String32;
                 case "varchar(36)":
                     return ColumnTypes.String36;
                 case "varchar(45)":
@@ -832,9 +840,11 @@ namespace Aurora.DataManager.SQLite
 
         public override void ForceRenameTable(string oldTableName, string newTableName)
         {
-            var cmd = new SqliteCommand();
-            cmd.CommandText = string.Format("ALTER TABLE {0} RENAME TO {1}", oldTableName, newTableName);
-            ExecuteNonQuery(cmd);
+            var cmd = new SqliteCommand ();
+            cmd.CommandText = string.Format ("ALTER TABLE {0} RENAME TO {1}", oldTableName, newTableName +"_renametemp");
+            ExecuteNonQuery (cmd);
+            cmd.CommandText = string.Format ("ALTER TABLE {0} RENAME TO {1}", newTableName + "_renametemp", newTableName);
+            ExecuteNonQuery (cmd);
             CloseReaderCommand(cmd);
         }
 
