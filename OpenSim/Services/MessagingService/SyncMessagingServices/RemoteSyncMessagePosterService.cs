@@ -79,7 +79,14 @@ namespace OpenSim.Services.MessagingService
         {
             if (request == null)
                 return null;
-            return (OSDMap)OSDParser.DeserializeJson(request["_RawResult"]);
+            try
+            {
+                return (OSDMap)OSDParser.DeserializeJson (request["_RawResult"]);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         #endregion
