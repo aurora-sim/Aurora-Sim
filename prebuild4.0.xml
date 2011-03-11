@@ -89,65 +89,6 @@
       </Options>
     </Configuration>
 
-    <Project frameworkVersion="v4_0" name="OpenSim.Framework.Servers.HttpServer" path="OpenSim/Framework/Servers/HttpServer" type="Library">
-      <Configuration name="Debug" platform="x86">
-        <Options>
-          <OutputPath>../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="x86">
-        <Options>
-          <OutputPath>../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Debug" platform="x64">
-        <Options>
-          <OutputPath>../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="x64">
-        <Options>
-          <OutputPath>../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Debug" platform="AnyCPU">
-        <Options>
-          <OutputPath>../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="AnyCPU">
-        <Options>
-          <OutputPath>../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Xml"/>
-      <Reference name="System.Web"/>
-
-      <Reference name="HttpServer_OpenSim" path="../../../../bin/"/>
-      <Reference name="log4net" path="../../../../bin/"/>
-      <Reference name="OpenMetaverse" path="../../../../bin/"/>
-      <Reference name="OpenMetaverse.StructuredData" path="../../../../bin/"/>
-      <Reference name="OpenMetaverseTypes" path="../../../../bin/"/>
-      <Reference name="XMLRPC" path="../../../../bin/"/>
-
-      <Files>
-        <Match pattern="*.cs" recurse="true">
-          <Exclude pattern="Tests"/>
-
-          <!-- on temporary suspension -->
-          <Exclude pattern="OSHttpHandler\.cs"/>
-          <Exclude pattern="OSHttpHttpHandler\.cs"/>
-          <Exclude pattern="OSHttpRequestPump\.cs"/>
-          <Exclude pattern="OSHttpRequestQueue\.cs"/>
-          <Exclude pattern="OSHttpServer.*\.cs"/>
-          <Exclude pattern="OSHttpXmlRpcHandler.*\.cs"/>
-        </Match>
-      </Files>
-    </Project>
-
     <Project frameworkVersion="v4_0" name="SmartThreadPool" path="ThirdParty/SmartThreadPool" type="Library">
       <Configuration name="Debug" platform="x86">
         <Options>
@@ -231,9 +172,9 @@
       <Reference name="System.Web"/>
       <Reference name="System.Xml"/>
       
-      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="SmartThreadPool"/>
 
+      <Reference name="HttpServer_OpenSim" path="../../../../bin/"/>
       <Reference name="log4net" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
@@ -248,6 +189,14 @@
         <Match path="Configuration" pattern="*.cs" recurse="true"/>
         <Match path="Serialization" pattern="*.cs" recurse="true"/>
         <Match path="Services" pattern="*.cs" recurse="true"/>
+        <Match path="Servers" pattern="*.cs" recurse="true"/>
+        <!-- on temporary suspension -->
+        <Exclude pattern="OSHttpHandler\.cs"/>
+        <Exclude pattern="OSHttpHttpHandler\.cs"/>
+        <Exclude pattern="OSHttpRequestPump\.cs"/>
+        <Exclude pattern="OSHttpRequestQueue\.cs"/>
+        <Exclude pattern="OSHttpServer.*\.cs"/>
+        <Exclude pattern="OSHttpXmlRpcHandler.*\.cs"/>
       </Files>
     </Project>
 
@@ -292,7 +241,6 @@
       <Reference name="System.Xml"/>
       
       <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
 
       <Reference name="log4net" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
@@ -547,7 +495,6 @@
       <Reference name="Aurora.Simulation.Base"/>
       <Reference name="OpenSim.Data"/>
       <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="SmartThreadPool"/>
 
@@ -612,7 +559,6 @@
       
       <Reference name="OpenSim.Data"/>
       <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Region.Framework"/>
 
       <Reference name="DotNetOpenId" path="../../bin/"/>
@@ -890,7 +836,6 @@
       <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Simulation.Base"/>
       <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
 
       <Reference name="C5" path="../../../bin/"/>
       <Reference name="log4net" path="../../../bin/"/>
@@ -955,7 +900,6 @@
       <Reference name="Aurora.Simulation.Base"/>
       <Reference name="OpenSim.Data"/>
       <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="OpenSim.Services"/>
@@ -1023,7 +967,6 @@
       <Reference name="Aurora.Simulation.Base"/>
       <Reference name="OpenSim.Data"/>
       <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
@@ -1230,7 +1173,6 @@
       <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Simulation.Base"/>
       <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
 
       <Reference name="log4net" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
@@ -1283,7 +1225,6 @@
       <Reference name="Aurora.Framework"/>
       <Reference name="OpenSim.Data"/>
       <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       
       <Reference name="log4net" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
@@ -1340,7 +1281,6 @@
       <Reference name="Aurora.Services.DataService"/>
       <Reference name="Aurora.Simulation.Base"/>
       <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="OpenSim.Region.Framework"/>
 
@@ -1616,7 +1556,6 @@
       <Reference name="Aurora.Framework"/>
       <Reference name="OpenSim.Data"/>
       <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
@@ -1684,7 +1623,6 @@
       <Reference name="OpenSim.CoreApplicationPlugins"/>
       <Reference name="OpenSim.Data"/>
       <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>

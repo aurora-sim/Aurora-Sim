@@ -201,7 +201,10 @@ namespace OpenSim.Framework.Servers.HttpServer
             //Read option notes above
             if (!m_useAsync)
             {
-                SynchronousRestFormsRequester.MakeRequest(verb, requestUrl, obj);
+                Util.FireAndForget (delegate (object o)
+                {
+                    SynchronousRestFormsRequester.MakeRequest (verb, requestUrl, obj);
+                });
                 return;
             }
             WebRequest request = WebRequest.Create(requestUrl);
