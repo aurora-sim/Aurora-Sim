@@ -333,6 +333,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private int m_cachedTextureSerial;
         private PriorityQueue<EntityUpdate, double> m_entityUpdates;
+        private OpenSim.Framework.LocklessQueue<object> m_UpdatesQueue = new OpenSim.Framework.LocklessQueue<object>();
         private Prioritizer m_prioritizer;
         private bool m_disableFacelights = false;
 
@@ -3559,7 +3560,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// Generate one of the object update packets based on PrimUpdateFlags
         /// and broadcast the packet to clients
         /// </summary>
-        public void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags)
+        public void intSendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags)
             {
 
             if (entity is ScenePresence)
@@ -3800,13 +3801,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
             }
 
-        public void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags, double priority)
+        public void doSendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags)
 
             {
             if (entity is ScenePresence)
                 SendAvatarUpdate(entity, updateFlags);
             else
-                SendPrimUpdate(entity, updateFlags);
+                intSendPrimUpdate(entity, updateFlags);
 /*
             PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double>();
             item.Priority = priority;
@@ -3815,6 +3816,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_entityUpdates.Enqueue(item);
  */
         }
+
 
         public void SendAvatarUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags)
             {
@@ -4051,6 +4053,40 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 OutPacket(packet, ThrottleOutPacketType.AvatarInfo, true);
                 }
             }
+
+        public void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags,double prio)
+            {
+            SendPrimUpdate(entity, updateFlags);
+            }
+
+        public void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags)
+            {
+            object[] o = new object[]{ entity, updateFlags };
+            m_UpdatesQueue.Enqueue(o);
+            }
+/*
+            if (entity is ScenePresence)
+                SendAvatarUpdate(entity, updateFlags);
+            else
+                SendPrimUpdate(entity, updateFlags);
+ 
+            }
+*/
+        public void DequeueUpdates(int nupdates)
+            {
+            object o;
+            while (m_UpdatesQueue.Dequeue(out o) && nupdates-- > 0)
+                {
+                ISceneEntity entity = (ISceneEntity)((object[])o)[0];
+                PrimUpdateFlags updateFlags = (PrimUpdateFlags)((object[])o)[1];
+                if (entity is ScenePresence)
+                    SendAvatarUpdate(entity, updateFlags);
+                else
+                    intSendPrimUpdate(entity, updateFlags);
+                }
+            }
+
+
 
 
         public void QueueDelayedUpdate(PriorityQueueItem<EntityUpdate, double> it)
@@ -4330,8 +4366,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             m_log.Info("[CLIENT]: Flushing prim updates for " + m_firstName + " " + m_lastName);
 
-            while (m_entityUpdates.Count > 0)
-                ProcessEntityUpdates(-1);
+//            while (m_entityUpdates.Count > 0)
+//                ProcessEntityUpdates(-1);
+            while (m_UpdatesQueue.Count > 0)
+                DequeueUpdates(10);
         }
 
         #endregion Primitive Packet/Data Sending Methods
@@ -4340,7 +4378,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             if ((categories & ThrottleOutPacketTypeFlags.Task) != 0)
             {
-                ProcessEntityUpdates(m_udpServer.PrimUpdatesPerCallback);
+//                ProcessEntityUpdates(m_udpServer.PrimUpdatesPerCallback);
+                DequeueUpdates(m_udpServer.PrimUpdatesPerCallback);
             }
 
             if ((categories & ThrottleOutPacketTypeFlags.Texture) != 0)
