@@ -4079,7 +4079,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void DequeueUpdates(int nupdates)
             {
             object o;
-            while (m_UpdatesQueue.Dequeue(out o) && nupdates-- > 0)
+            while (m_UpdatesQueue.Dequeue(out o))
                 {
                 ISceneEntity entity = (ISceneEntity)((object[])o)[0];
                 PrimUpdateFlags updateFlags = (PrimUpdateFlags)((object[])o)[1];
@@ -4087,11 +4087,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     SendAvatarUpdate(entity, updateFlags);
                 else
                     intSendPrimUpdate(entity, updateFlags);
+                if (--nupdates <= 0)
+                    break;
                 }
             }
-
-
-
 
         public void QueueDelayedUpdate(PriorityQueueItem<EntityUpdate, double> it)
                 {

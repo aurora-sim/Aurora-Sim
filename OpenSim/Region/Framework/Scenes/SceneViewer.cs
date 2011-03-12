@@ -254,8 +254,18 @@ namespace OpenSim.Region.Framework.Scenes
                 Vector3 pos = m_presence.CameraPosition;
                 float distsq = Vector3.DistanceSquared(pos, m_lastUpdatePos);
                 distsq += 0.2f * m_presence.Velocity.LengthSquared();
-                if (lastDrawDistance <= m_presence.DrawDistance && distsq < MINVIEWDSTEPSQ)
+                if (lastDrawDistance == m_presence.DrawDistance && distsq < MINVIEWDSTEPSQ)
                     return;
+
+                if (
+                    lastDrawDistance > m_presence.Scene.RegionInfo.RegionSizeX &&
+                    lastDrawDistance > m_presence.Scene.RegionInfo.RegionSizeY
+                    )
+                    {
+                    lastDrawDistance = m_presence.DrawDistance;
+                    lastGrpsInView.Clear();
+                    return;
+                    }
 
                 lock (m_delayedUpdates)
                     {
@@ -428,6 +438,14 @@ namespace OpenSim.Region.Framework.Scenes
                         m_queueing = true;
                         }
                     double minp = calcMinPrio();
+                    bool doculling = m_presence.Scene.CheckForObjectCulling;
+
+                    if (doculling &&
+                        m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeX &&
+                        m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeY
+                        )
+                        doculling = false;
+
 
                     EntityBase[] entities = m_presence.Scene.Entities.GetEntities();
                     PriorityQueue<EntityUpdate, double> m_entsqueue = new PriorityQueue<EntityUpdate, double>(entities.Length);
@@ -444,14 +462,13 @@ namespace OpenSim.Region.Framework.Scenes
                             double priority = m_prioritizer.GetUpdatePriority(m_presence.ControllingClient, e);
 
                             //Check for culling here!
-                            if (m_presence.Scene.CheckForObjectCulling)
+                            if (doculling)
                                 {
                                 // priority is negative of distance
                                 if (priority < minp)
                                     continue; // if 2 far ignore
-                                }
-
-                            lastGrpsInView.Add((SceneObjectGroup)e);
+                                lastGrpsInView.Add((SceneObjectGroup)e);
+                                }                          
 
                             EntityUpdate update = new EntityUpdate(e, PrimUpdateFlags.FullUpdate);
                             PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double>();
@@ -463,7 +480,6 @@ namespace OpenSim.Region.Framework.Scenes
                     entities = null;
                     // send them 
                     SendQueued(m_entsqueue);
-                    m_entsqueue.Clear();
                     }
                 }
 
@@ -478,12 +494,9 @@ namespace OpenSim.Region.Framework.Scenes
         private void SendQueued(PriorityQueue<EntityUpdate, double> m_entsqueue)
             {
             PriorityQueueItem<EntityUpdate, double> up;
-            bool cont = true;
-            while (cont)
+            
+            while (m_entsqueue.TryDequeue(out up))
                 {
-                cont = m_entsqueue.TryDequeue(out up);
-                if (!cont)
-                    break;
                 //Make sure not send deleted or null objects
 
                 SceneObjectGroup ent = (SceneObjectGroup)up.Value.Entity;
@@ -506,17 +519,9 @@ namespace OpenSim.Region.Framework.Scenes
                             &&
                             ent.RootPart.OwnerID != m_presence.UUID)
                         continue;
-                    SendUpdate(up.Value.Flags, ent);
                     }
-                else
-                    {
-                    List<SceneObjectPart> parts = ent.ChildrenList;
-                    foreach (SceneObjectPart part in parts)
-                        {
-                        SendUpdate(part, m_presence.GenerateClientFlags(part), up.Value.Flags);
-                        }
-                    }
-                }
+                SendUpdate(up.Value.Flags, ent);
+                 }
             m_entsqueue.Clear();
 
             // send things that arrived meanwhile
