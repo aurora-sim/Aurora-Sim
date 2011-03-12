@@ -32,6 +32,8 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
+using Mischel.Collections;
+
 
 
 namespace Aurora.BotManager
@@ -282,6 +284,10 @@ namespace Aurora.BotManager
         public void Reset()
         {
         }
+
+        public void QueueDelayedUpdate(PriorityQueueItem<EntityUpdate, double> it)
+            {
+            }
 
         public IPAddress EndPoint
         {

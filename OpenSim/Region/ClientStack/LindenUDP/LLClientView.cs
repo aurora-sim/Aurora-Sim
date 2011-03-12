@@ -4050,19 +4050,26 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 OutPacket(packet, ThrottleOutPacketType.AvatarInfo, true);
                 }
+            }
 
-            /*
-            double priority = m_prioritizer.GetUpdatePriority(this, entity);
-            PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate,double>();
-            item.Priority = priority;
-            item.Value = new EntityUpdate(entity, updateFlags);
-            lock (m_entityUpdates.SyncRoot)
-                m_entityUpdates.Enqueue(item);
-             */
+
+        public void QueueDelayedUpdate(PriorityQueueItem<EntityUpdate, double> it)
+                {
+                PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate,double>();             
+                item.Priority = it.Priority;
+                item.Value = it.Value;
+                lock (m_entityUpdates.SyncRoot)
+                    m_entityUpdates.Enqueue(item);
             }
 
         private void ProcessEntityUpdates(int maxUpdates)
         {
+        lock (m_entityUpdates.SyncRoot)
+            {
+            if (m_entityUpdates.Count == 0)
+                return;
+            }
+
             OpenSim.Framework.Lazy<List<ObjectUpdatePacket.ObjectDataBlock>> objectUpdateBlocks = new OpenSim.Framework.Lazy<List<ObjectUpdatePacket.ObjectDataBlock>>();
             OpenSim.Framework.Lazy<List<ObjectUpdateCompressedPacket.ObjectDataBlock>> compressedUpdateBlocks = new OpenSim.Framework.Lazy<List<ObjectUpdateCompressedPacket.ObjectDataBlock>>();
             OpenSim.Framework.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>> terseUpdateBlocks = new OpenSim.Framework.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>>();

@@ -74,7 +74,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_presence = presence;
             m_presence.Scene.EventManager.OnSignificantClientMovement += SignificantClientMovement;
             m_prioritizer = new Prioritizer(presence.Scene);
-            m_partsUpdateQueue = new PriorityQueue<EntityUpdate, double>(presence.Scene.Entities.Count > 1000 ? presence.Scene.Entities.Count : 1000);
+            m_partsUpdateQueue = new PriorityQueue<EntityUpdate, double>(presence.Scene.Entities.Count > 1000 ? presence.Scene.Entities.Count + 1000 : 1000);
         }
 
         #endregion
@@ -86,7 +86,21 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="part"></param>
         public void QueuePartForUpdate(SceneObjectPart part, PrimUpdateFlags UpdateFlags)
-        {
+            {
+/*            EntityUpdate update = new EntityUpdate(part, UpdateFlags);
+            bool ignore;
+            lock (m_partsUpdateQueue)
+                {
+                ignore = m_partsUpdateQueue.Contains(update);
+                }
+            if (ignore)
+                return;
+*/
+            double priority = m_prioritizer.GetUpdatePriority(m_presence.ControllingClient, part.ParentGroup);
+
+            SendUpdate(part, m_presence.GenerateClientFlags(part), UpdateFlags);
+
+            /*
             double priority = m_prioritizer.GetUpdatePriority(m_presence.ControllingClient, part.ParentGroup);
             EntityUpdate update = new EntityUpdate(part, UpdateFlags);
             //Fix the version with the newest locked m_version
@@ -99,6 +113,7 @@ namespace OpenSim.Region.Framework.Scenes
             //Make it check when the user comes around to it again
             if (m_objectsInView.Contains(part.UUID))
                 m_objectsInView.Remove(part.UUID);
+             */
         }
 
         /// <summary>
@@ -284,7 +299,7 @@ namespace OpenSim.Region.Framework.Scenes
         ///  NOTE: This does add the updates to the LLUDPClient queue, it does NOT have prioritization built in before this method!
         /// </summary>
         public void SendPrimUpdates()
-        {
+            {
             if (m_inUse)
                 return;
             m_inUse = true;
@@ -295,118 +310,227 @@ namespace OpenSim.Region.Framework.Scenes
 
             ///If we havn't started processing this client yet, we need to send them ALL the prims that we have in this Scene (and deal with culling as well...)
             if (!m_SentInitialObjects)
-            {
+                {
                 m_SentInitialObjects = true;
                 //If they are not in this region, we check to make sure that we allow seeing into neighbors
                 if (!m_presence.IsChildAgent || (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor))
-                {
+                    {
                     EntityBase[] entities = m_presence.Scene.Entities.GetEntities();
                     //Use the PriorityQueue so that we can send them in the correct order
-                    PriorityQueue<EntityUpdate, double> entityUpdates = new PriorityQueue<EntityUpdate, double>(entities.Length);
+                    //                    PriorityQueue<EntityUpdate, double> entityUpdates = new PriorityQueue<EntityUpdate, double>(entities.Length);
 
                     foreach (EntityBase e in entities)
-                    {
-                        if (e != null && e is SceneObjectGroup)
                         {
+                        if (e != null && e is SceneObjectGroup)
+                            {
+                            if (e.IsDeleted)
+                                continue;
+
+                            double priority = m_prioritizer.GetUpdatePriority(m_presence.ControllingClient, e);
+
                             //Check for culling here!
                             if (!CheckForCulling(e))
                                 continue;
 
-                            //Get the correct priority and add to the queue
-                            SendUpdate(PrimUpdateFlags.FullUpdate, (SceneObjectGroup)e);
+                            List<SceneObjectPart> parts = ((SceneObjectGroup)e).ChildrenList;
+                            foreach (SceneObjectPart part in parts)
+                                {
+                                // Attachment handling. Attachments are 'special' and we have to send the full group update when we send updates
+                                if (part.ParentGroup.RootPart.Shape.PCode == 9 && part.ParentGroup.RootPart.Shape.State != 0)
+                                    {
+                                    if (part != part.ParentGroup.RootPart)
+                                        continue;
+
+                                    //Check to make sure this attachment is not a hud. Attachments that are huds are 
+                                    //   ONLY sent to the owner, noone else!
+                                    if (
+                                        (
+                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDBottom ||
+                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDBottomLeft ||
+                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDBottomRight ||
+                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDCenter ||
+                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDCenter2 ||
+                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDTop ||
+                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDTopLeft ||
+                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDTopRight
+                                        )
+                                        &&
+                                        part.OwnerID != m_presence.UUID)
+                                        continue;
+                                    }
+
+                                EntityUpdate update = new EntityUpdate((ISceneEntity)part, PrimUpdateFlags.FullUpdate);
+                                PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double>();
+                                item.Value = update;
+                                item.Priority = priority;
+
+                                if (part == part.ParentGroup.RootPart)
+                                    item.Priority += 1.0;
+
+                                m_presence.ControllingClient.QueueDelayedUpdate(item);
+                                }
+
+
+                            /*
+                                                    double priority = m_prioritizer.GetUpdatePriority(m_presence.ControllingClient, e);
+                                                    EntityUpdate update = new EntityUpdate(e, PrimUpdateFlags.FullUpdate);
+                                                    //Fix the version with the newest locked m_version
+                                                    FixVersion(update);
+                                                    PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double>();
+                                                    item.Priority = priority;
+                                                    item.Value = update;
+                                                    lock(m_partsUpdateQueue)
+                                                        {
+                                                        m_partsUpdateQueue.Enqueue(item);
+                                                        }
+                                                        //Get the correct priority and add to the queue                               
+                                                    //                            SendUpdate(PrimUpdateFlags.FullUpdate, (SceneObjectGroup)e);
+                             */
+                            }
                         }
-                    }
                     entities = null;
+                    }
                 }
-            }
 
             #endregion
 
             #region Update loop that sends objects that have been recently added to the queue
 
             //Pull the parts out into a list first so that we don't lock the queue for too long
-            Dictionary<UUID, List<EntityUpdate>> m_parentUpdates = new Dictionary<UUID, List<EntityUpdate>>();
-            lock (m_partsUpdateQueue)
-            {
-                lock (m_removeNextUpdateOf)
-                {
-                    PriorityQueueItem<EntityUpdate, double> update;
-                    while (m_partsUpdateQueue.TryDequeue(out update))
-                    {
-                        if (update.Value == null)
-                            continue;
-                        //Make sure not to send deleted or null objects
-                        if (((SceneObjectPart)update.Value.Entity).ParentGroup == null || ((SceneObjectPart)update.Value.Entity).ParentGroup.IsDeleted)
-                            continue;
-
-                        //Make sure we are not supposed to remove it
-                        if (m_removeNextUpdateOf.ContainsKey(update.Value.Entity.LocalId))
+            /*            Dictionary<UUID, List<EntityUpdate>> m_parentUpdates = new Dictionary<UUID, List<EntityUpdate>>();
+            //            lock (m_partsUpdateQueue)
                         {
-                            if (update.Value.Version > m_removeNextUpdateOf[update.Value.Entity.LocalId])
+            //                lock (m_removeNextUpdateOf)
                             {
-                                //This update is newer, let it go on by
+                                PriorityQueueItem<EntityUpdate, double> update;
+                                bool cont=true;
+                                while (cont)                       
+                                    {
+                                    lock (m_partsUpdateQueue)
+                                        {
+                                        cont = m_partsUpdateQueue.TryDequeue(out update);
+                                        }
+                                    if (!cont)
+                                        break;
+
+                                    if (update.Value == null)
+                                        continue;
+                                    //Make sure not to send deleted or null objects
+                                    SceneObjectGroup ent;
+                                    if (update.Value.Entity is SceneObjectPart)
+                                        ent = ((SceneObjectPart)update.Value.Entity).ParentGroup;
+                                    else if (update.Value.Entity is SceneObjectGroup)
+                                        ent = (SceneObjectGroup)update.Value.Entity;
+                                    else
+                                        continue;
+                        
+                                    if (ent == null || ent.IsDeleted)
+                                            continue;
+                                    //Make sure we are not supposed to remove it
+
+                                    if (m_removeNextUpdateOf.ContainsKey(ent.LocalId))
+                                    {
+                                    if (update.Value.Version > m_removeNextUpdateOf[ent.LocalId])
+                                        {
+                                            //This update is newer, let it go on by
+                                        }
+                                        else //Not newer, should be removed Note: if this is the same version, its the update we were supposed to remove... so we do NOT do >= above
+                                            continue;
+                                    }
+
+                                    //Make sure we are not supposed to remove it
+                                    if (m_removeUpdateOf.Contains(ent.LocalId))
+                                        continue;
+
+                                    if (!m_parentUpdates.ContainsKey(ent.UUID))
+                                        m_parentUpdates.Add(ent.UUID, new List<EntityUpdate>());
+
+                                    m_parentUpdates[ent.UUID].Add(update.Value);
+
+                                    List<SceneObjectPart> parts = ent.ChildrenList;
+                                    foreach (SceneObjectPart part in parts)
+                                        {
+                                        if (!CheckForCulling(part.ParentGroup))
+                                            continue;
+
+                                        // Attachment handling. Attachments are 'special' and we have to send the full group update when we send updates
+                                        if (part.ParentGroup.RootPart.Shape.PCode == 9 && part.ParentGroup.RootPart.Shape.State != 0)
+                                            {
+                                            if (part != part.ParentGroup.RootPart)
+                                                continue;
+
+                                            //Check to make sure this attachment is not a hud. Attachments that are huds are 
+                                            //   ONLY sent to the owner, noone else!
+                                            if (
+                                                (
+                                                part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDBottom ||
+                                                part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDBottomLeft ||
+                                                part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDBottomRight ||
+                                                part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDCenter ||
+                                                part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDCenter2 ||
+                                                part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDTop ||
+                                                part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDTopLeft ||
+                                                part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDTopRight
+                                                )
+                                                &&
+                                                part.OwnerID != m_presence.UUID)
+                                                continue;
+
+                                            SendUpdate(update.Value.Flags, part.ParentGroup);
+                                            continue;
+                                            }
+                                        SendUpdate(part,
+                                        m_presence.GenerateClientFlags(part), update.Value.Flags);
+                                        }
+                                m_removeNextUpdateOf.Clear();
                             }
-                            else //Not newer, should be removed Note: if this is the same version, its the update we were supposed to remove... so we do NOT do >= above
-                                continue;
                         }
 
-                        //Make sure we are not supposed to remove it
-                        if (m_removeUpdateOf.Contains(update.Value.Entity.LocalId))
-                            continue;
+                        //Now loop through the list and send the updates
+                        foreach (UUID ParentID in m_parentUpdates.Keys)
+                        {
+                            //Sort by LinkID
+            //                m_parentUpdates[ParentID].Sort(linkSetSorter);
+                            foreach (EntityUpdate update in m_parentUpdates[ParentID])
+                            {
+                                SceneObjectPart part = ((SceneObjectGroup)update.Entity).RootPart;
+                                //Check for culling here!
+                                if (!CheckForCulling(part.ParentGroup))
+                                    continue;
 
-                        if (!m_parentUpdates.ContainsKey(((SceneObjectPart)update.Value.Entity).ParentGroup.UUID))
-                            m_parentUpdates.Add(((SceneObjectPart)update.Value.Entity).ParentGroup.UUID, new List<EntityUpdate>());
+                                // Attachment handling. Attachments are 'special' and we have to send the full group update when we send updates
+                                if (part.ParentGroup.RootPart.Shape.PCode == 9 && part.ParentGroup.RootPart.Shape.State != 0)
+                                {
+                                    if (part != part.ParentGroup.RootPart)
+                                        continue;
 
-                        m_parentUpdates[((SceneObjectPart)update.Value.Entity).ParentGroup.UUID].Add(update.Value);
-                    }
-                    m_removeNextUpdateOf.Clear();
-                }
-            }
+                                    //Check to make sure this attachment is not a hud. Attachments that are huds are 
+                                    //   ONLY sent to the owner, noone else!
+                                    if (
+                                        (
+                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDBottom ||
+                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDBottomLeft ||
+                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDBottomRight ||
+                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDCenter ||
+                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDCenter2 ||
+                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDTop ||
+                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDTopLeft ||
+                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDTopRight
+                                        )
+                                        && 
+                                        part.OwnerID != m_presence.UUID)
+                                        continue;
 
-            //Now loop through the list and send the updates
-            foreach (UUID ParentID in m_parentUpdates.Keys)
-            {
-                //Sort by LinkID
-                m_parentUpdates[ParentID].Sort(linkSetSorter);
-                foreach (EntityUpdate update in m_parentUpdates[ParentID])
-                {
-                    SceneObjectPart part = ((SceneObjectPart)update.Entity);
-                    //Check for culling here!
-                    if (!CheckForCulling(part.ParentGroup))
-                        continue;
+                                    SendUpdate(update.Flags, part.ParentGroup);
+                                    continue;
+                                }
 
-                    // Attachment handling. Attachments are 'special' and we have to send the full group update when we send updates
-                    if (part.ParentGroup.RootPart.Shape.PCode == 9 && part.ParentGroup.RootPart.Shape.State != 0)
-                    {
-                        if (part != part.ParentGroup.RootPart)
-                            continue;
+                                SendUpdate(part,
+                                        m_presence.GenerateClientFlags(part), update.Flags);
+                            }
 
-                        //Check to make sure this attachment is not a hud. Attachments that are huds are 
-                        //   ONLY sent to the owner, noone else!
-                        if (
-                            (
-                            part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDBottom ||
-                            part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDBottomLeft ||
-                            part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDBottomRight ||
-                            part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDCenter ||
-                            part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDCenter2 ||
-                            part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDTop ||
-                            part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDTopLeft ||
-                            part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDTopRight
-                            )
-                            && 
-                            part.OwnerID != m_presence.UUID)
-                            continue;
-
-                        SendUpdate(update.Flags, part.ParentGroup);
-                        continue;
-                    }
-
-                    SendUpdate(part,
-                            m_presence.GenerateClientFlags(part), update.Flags);
-                }
-            }
-
+                        }
+            */
             #endregion
 
             //Add the time to the stats tracker
@@ -415,7 +539,7 @@ namespace OpenSim.Region.Framework.Scenes
                 reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(AgentMS));
 
             m_inUse = false;
-        }
+            }
         
         /// <summary>
         /// Sorts a list of Parts by Link Number so they end up in the correct order
@@ -505,12 +629,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void Reset()
         {
+            /*
             m_inUse = false;
             m_updatesNeedReprioritization = false;
             m_SentInitialObjects = false;
             m_removeNextUpdateOf.Clear();
             m_removeUpdateOf.Clear();
             m_objectsInView.Clear();
+             */
         }
 
         #endregion

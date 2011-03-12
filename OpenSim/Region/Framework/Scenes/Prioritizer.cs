@@ -113,6 +113,10 @@ namespace OpenSim.Region.Framework.Scenes
 
             try
             {
+
+                priority = GetPriorityByOOBDistance(client, entity);
+
+/*
                 switch (UpdatePrioritizationScheme)
                 {
                     case UpdatePrioritizationSchemes.Time:
@@ -133,6 +137,7 @@ namespace OpenSim.Region.Framework.Scenes
                     default:
                         throw new InvalidOperationException("UpdatePrioritizationScheme not defined.");
                 }
+ */
             }
             catch (Exception ex)
             {
@@ -147,10 +152,17 @@ namespace OpenSim.Region.Framework.Scenes
             // Adjust priority so that root prims are sent to the viewer first.  This is especially important for 
             // attachments acting as huds, since current viewers fail to display hud child prims if their updates
             // arrive before the root one.
+/*
             if (entity is SceneObjectPart)
             {
                 SceneObjectPart sop = ((SceneObjectPart)entity);
-
+                if (sop.IsRoot)
+                    {
+                    SceneObjectGroup grp = sop.ParentGroup;
+                    priority -= (grp.BSphereRadiusSQ + 0.5f);
+                    }
+ */
+/*
                 if (sop.IsRoot)
                 {
                     if (priority >= double.MinValue + m_childPrimAdjustmentFactor)
@@ -161,10 +173,60 @@ namespace OpenSim.Region.Framework.Scenes
                     if (priority <= double.MaxValue - m_childPrimAdjustmentFactor)
                         priority += m_childPrimAdjustmentFactor;
                 }
+ 
             }
-
+ */
             return priority;
         }
+
+        private double GetPriorityByOOBDistance(IClientAPI client, ISceneEntity entity)
+            {
+            ScenePresence presence = m_scene.GetScenePresence(client.AgentId);
+            if (presence != null)
+                {
+                // If this is an update for our own avatar give it the highest priority
+                if (presence == entity)
+                    return 0.0;
+
+                // Use the camera position for local agents and avatar position for remote agents
+                Vector3 presencePos = (presence.IsChildAgent) ?
+                    presence.AbsolutePosition :
+                    presence.CameraPosition;
+
+                // Use group position for child prims
+                Vector3 entityPos;
+                float oobSQ;
+                if (entity is SceneObjectPart)
+                    {
+                    // Can't use Scene.GetGroupByPrim() here, since the entity may have been delete from the scene
+                    // before its scheduled update was triggered
+                    //entityPos = m_scene.GetGroupByPrim(entity.LocalId).AbsolutePosition;
+                    SceneObjectPart p = (SceneObjectPart)entity;
+                    entityPos = p.ParentGroup.AbsolutePosition + p.OOBoffset;
+                    oobSQ = p.ParentGroup.BSphereRadiusSQ;
+                    }
+                else if (entity is SceneObjectGroup)
+                    {
+                    SceneObjectGroup p = (SceneObjectGroup)entity;
+                    entityPos = p.AbsolutePosition + p.OOBoffset;
+                    oobSQ = p.BSphereRadiusSQ;
+                    }
+                else
+                    {
+                    entityPos = entity.AbsolutePosition;
+                    oobSQ = 0;
+                    }
+
+                float distsq = Vector3.DistanceSquared(presencePos, entityPos);
+                distsq -= oobSQ;
+                if (distsq < 0)
+                    distsq = 0;
+
+                return -distsq;
+                }
+
+            return double.NaN;
+            }
 
         private double GetPriorityByTime()
         {

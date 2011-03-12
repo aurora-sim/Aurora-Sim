@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.Net;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using Mischel.Collections;
 
 namespace OpenSim.Framework
 {
@@ -1188,6 +1189,7 @@ namespace OpenSim.Framework
         void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags);
         void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags, double priority);
         void FlushPrimUpdates();
+        void QueueDelayedUpdate(PriorityQueueItem<EntityUpdate, double> it);
 
         void SendInventoryFolderDetails(UUID ownerID, UUID folderID, List<InventoryItemBase> items,
                                         List<InventoryFolderBase> folders, int version, bool fetchFolders,

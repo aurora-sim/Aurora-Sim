@@ -478,7 +478,45 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         [XmlIgnore]
-        private bool m_IsSelected=false;
+        private bool m_IsSelected = false;
+
+        [XmlIgnore]
+        private Vector3 m_partOOBsize; // the size of a bounding box oriented as prim, is future will consider cutted prims, meshs etc
+        [XmlIgnore]
+        private Vector3 m_partOOBoffset; // the position center of the bounding box relative to it's Position
+        [XmlIgnore]
+        private float m_partBSphereRadiusSQ; // the square of the radius of a sphere containing the oob
+
+        // the size of a bounding box oriented as the prim, is future will consider cutted prims, meshs etc
+        [XmlIgnore]
+        public Vector3 OOBsize
+            {
+            get {
+                return m_partOOBsize;
+                }              
+            }
+
+        // the position center of the bounding box relative to it's Position
+        // on complex forms this will not be zero
+        [XmlIgnore]
+        public Vector3 OOBoffset
+            {
+            get
+                {
+                return m_partOOBoffset;
+                }
+            } 
+
+        // the square of the radius of a sphere containing the oobb
+        [XmlIgnore]
+        public float BSphereRadiusSQ
+            {
+            get
+                {              
+                return m_partBSphereRadiusSQ;
+                }
+            }
+      
 
         private int m_savedAttachmentPoint;
         public int SavedAttachmentPoint
@@ -778,6 +816,21 @@ namespace OpenSim.Region.Framework.Scenes
             Velocity = Vector3.Zero;
             AngularVelocity = Vector3.Zero;
             Acceleration = Vector3.Zero;
+
+// use the basic box for now
+            m_partOOBoffset = Vector3.Zero;
+
+            m_partOOBsize.X = shape.Scale.X * 0.5f;
+            m_partOOBsize.Y = shape.Scale.Y * 0.5f;
+            m_partOOBsize.Z = shape.Scale.Z * 0.5f;
+
+            m_partBSphereRadiusSQ = m_partOOBsize.X;
+            if (m_partBSphereRadiusSQ < m_partOOBsize.Y)
+                m_partBSphereRadiusSQ = m_partOOBsize.Y;
+            if (m_partBSphereRadiusSQ < m_partOOBsize.Z)
+                m_partBSphereRadiusSQ = m_partOOBsize.Z;
+
+            m_partBSphereRadiusSQ *= m_partBSphereRadiusSQ; // square it for faster compare with squared distances
 
             // Prims currently only contain a single folder (Contents).  From looking at the Second Life protocol,
             // this appears to have the same UUID (!) as the prim.  If this isn't the case, one can't drag items from
@@ -1461,12 +1514,38 @@ namespace OpenSim.Region.Framework.Scenes
                     ParentGroup.HasGroupChanged = true;
                 if (m_shape != null)
                 {
+                // use basic box dimensions for oobb for now  this should be below: hack to make this work on load from databases
+                m_partOOBsize.X = value.X * 0.5f;
+                m_partOOBsize.Y = value.Y * 0.5f;
+                m_partOOBsize.Z = value.Z * 0.5f;
+
+                m_partBSphereRadiusSQ = m_partOOBsize.X;
+                if (m_partBSphereRadiusSQ < m_partOOBsize.Y)
+                    m_partBSphereRadiusSQ = m_partOOBsize.Y;
+                if (m_partBSphereRadiusSQ < m_partOOBsize.Z)
+                    m_partBSphereRadiusSQ = m_partOOBsize.Z;
+
+                m_partBSphereRadiusSQ *= m_partBSphereRadiusSQ; // square it for faster compare with squared distances
+
                     if (m_shape.Scale != value)
                     {
                         StoreUndoState();
 
                         m_shape.Scale = value;
+                        /*
+                                                // use basic box dimensions for oob for now
+                                                m_partOOBsize.X = value.X * 0.5f;
+                                                m_partOOBsize.Y = value.Y * 0.5f;
+                                                m_partOOBsize.Z = value.Z * 0.5f;
 
+                                                m_partBSphereRadiusSQ = m_partOOBsize.X;
+                                                if (m_partBSphereRadiusSQ < m_partOOBsize.Y)
+                                                    m_partBSphereRadiusSQ = m_partOOBsize.Y;
+                                                if (m_partBSphereRadiusSQ < m_partOOBsize.Z)
+                                                    m_partBSphereRadiusSQ = m_partOOBsize.Z;
+
+                                                m_partBSphereRadiusSQ *= m_partBSphereRadiusSQ; // square it for faster compare with squared distances
+                        */
                         PhysicsActor actor = PhysActor;
                         if (actor != null && m_parentGroup != null)
                         {
@@ -1476,6 +1555,8 @@ namespace OpenSim.Region.Framework.Scenes
                                 {
                                     actor.Size = m_shape.Scale;
                                     m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
+                                    // here whould be a nice spot to ask physics about OOB
+                                    // nahh better on the get
                                 }
                             }
                         }
@@ -2348,6 +2429,9 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectPart dupe = (SceneObjectPart)MemberwiseClone();
             dupe.m_parentGroup = parent;
             dupe.m_shape = m_shape.Copy();
+            dupe.m_partOOBsize = m_partOOBsize;
+            dupe.m_partOOBoffset = m_partOOBoffset;
+            dupe.m_partBSphereRadiusSQ = m_partBSphereRadiusSQ;
             dupe.m_regionHandle = m_regionHandle;
 
             //memberwiseclone means it also clones the physics actor reference
