@@ -22,8 +22,9 @@ namespace Aurora.DataManager
         public abstract List<string> QueryFullData(string whereClause, string table, string wantedValue);
         public abstract IDataReader QueryDataFull(string whereClause, string table, string wantedValue);
         public abstract IDataReader QueryData(string whereClause, string table, string wantedValue);
-        public abstract List<string> Query(string keyRow, object keyValue, string table, string wantedValue);
-        public abstract List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue);
+        public abstract List<string> Query (string keyRow, object keyValue, string table, string wantedValue);
+        public abstract List<string> Query (string[] keyRow, object[] keyValue, string table, string wantedValue);
+        public abstract Dictionary<string, List<string>> QueryNames (string[] keyRow, object[] keyValue, string table, string wantedValue);
         public abstract bool Insert(string table, object[] values);
         public abstract bool Insert(string table, string[] keys, object[] values);
         public abstract IDataReader QueryReader(string keyRow, object keyValue, string table, string wantedValue);

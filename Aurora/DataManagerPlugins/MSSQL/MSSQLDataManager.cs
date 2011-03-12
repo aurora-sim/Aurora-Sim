@@ -354,6 +354,62 @@ namespace Aurora.DataManager.MSSQL
             }
         }
 
+        public override Dictionary<string, List<string>> QueryNames (string[] keyRow, object[] keyValue, string table, string wantedValue)
+        {
+            SqlConnection dbcon = GetLockedConnection ();
+            IDbCommand result;
+            IDataReader reader;
+            Dictionary<string, List<string>> RetVal = new Dictionary<string, List<string>> ();
+            string query = String.Format ("select {0} from {1} where ",
+                                      wantedValue, table);
+            int i = 0;
+            foreach (object value in keyValue)
+            {
+                query += String.Format ("{0} = '{1}' and ", keyRow[i], value);
+                i++;
+            }
+            query = query.Remove (query.Length - 5);
+
+
+            using (result = Query (query, new Dictionary<string, object> (), dbcon))
+            {
+                using (reader = result.ExecuteReader ())
+                {
+                    try
+                    {
+                        while (reader.Read ())
+                        {
+                            for (i = 0; i < reader.FieldCount; i++)
+                            {
+                                Type r = reader[i].GetType ();
+                                if (r == typeof (DBNull))
+                                    AddValueToList (ref RetVal, reader.GetName (i), null);
+                                else
+                                    AddValueToList (ref RetVal, reader.GetName (i), reader[i].ToString ());
+                            }
+                        }
+                        return RetVal;
+                    }
+                    finally
+                    {
+                        reader.Close ();
+                        reader.Dispose ();
+                        result.Cancel ();
+                        result.Dispose ();
+                        CloseDatabase (dbcon);
+                    }
+                }
+            }
+        }
+
+        private void AddValueToList (ref Dictionary<string, List<string>> dic, string key, string value)
+        {
+            if (!dic.ContainsKey (key))
+                dic.Add (key, new List<string> ());
+
+            dic[key].Add (value);
+        }
+
         public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
         {
             SqlConnection dbcon = GetLockedConnection();
@@ -741,6 +797,8 @@ namespace Aurora.DataManager.MSSQL
                     return "VARCHAR(45)";
                 case ColumnTypes.String64:
                     return "VARCHAR(64)";
+                case ColumnTypes.String128:
+                    return "VARCHAR(128)";
                 case ColumnTypes.String50:
                     return "VARCHAR(50)";
                 case ColumnTypes.String100:
@@ -868,6 +926,8 @@ namespace Aurora.DataManager.MSSQL
                     return ColumnTypes.String45;
                 case "varchar(64)":
                     return ColumnTypes.String64;
+                case "varchar(128)":
+                    return ColumnTypes.String128;
                 case "varchar(50)":
                     return ColumnTypes.String50;
                 case "varchar(100)":

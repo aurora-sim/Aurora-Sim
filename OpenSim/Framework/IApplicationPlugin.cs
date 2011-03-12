@@ -107,12 +107,18 @@ namespace Aurora.Framework
         /// <summary>
         /// select 'wantedValue' from 'table' where 'keyRow' = 'keyValue' 'Order'
         /// </summary>
-        List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
+        List<string> Query (string keyRow, object keyValue, string table, string wantedValue, string Order);
 
         /// <summary>
         /// select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
         /// </summary>
-        List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue);
+        List<string> Query (string[] keyRow, object[] keyValue, string table, string wantedValue);
+
+        /// <summary>
+        /// select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
+        /// This gives the row names as well as the values
+        /// </summary>
+        Dictionary<string, List<string>> QueryNames (string[] keyRow, object[] keyValue, string table, string wantedValue);
 
         /// <summary>
         /// select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'

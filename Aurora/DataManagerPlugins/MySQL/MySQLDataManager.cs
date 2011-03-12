@@ -312,38 +312,38 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
-        public override List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue)
+        public override List<string> Query (string[] keyRow, object[] keyValue, string table, string wantedValue)
         {
-            MySqlConnection dbcon = GetLockedConnection();
+            MySqlConnection dbcon = GetLockedConnection ();
             IDbCommand result;
             IDataReader reader;
-            List<string> RetVal = new List<string>();
-            string query = String.Format("select {0} from {1} where ",
+            List<string> RetVal = new List<string> ();
+            string query = String.Format ("select {0} from {1} where ",
                                       wantedValue, table);
             int i = 0;
             foreach (object value in keyValue)
             {
-                query += String.Format("{0} = '{1}' and ", keyRow[i], value);
+                query += String.Format ("{0} = '{1}' and ", keyRow[i], value);
                 i++;
             }
-            query = query.Remove(query.Length - 5);
-            
-            
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            query = query.Remove (query.Length - 5);
+
+
+            using (result = Query (query, new Dictionary<string, object> (), dbcon))
             {
-                using (reader = result.ExecuteReader())
+                using (reader = result.ExecuteReader ())
                 {
                     try
                     {
-                        while (reader.Read())
+                        while (reader.Read ())
                         {
                             for (i = 0; i < reader.FieldCount; i++)
                             {
-                                Type r = reader[i].GetType();
-                                if (r == typeof(DBNull))
-                                    RetVal.Add(null);
+                                Type r = reader[i].GetType ();
+                                if (r == typeof (DBNull))
+                                    RetVal.Add (null);
                                 else
-                                    RetVal.Add(reader.GetString(i));
+                                    RetVal.Add (reader.GetString (i));
                             }
                         }
                         return RetVal;
@@ -356,14 +356,76 @@ namespace Aurora.DataManager.MySQL
                     {
                         if (reader != null)
                         {
-                            reader.Close();
-                            reader.Dispose();
+                            reader.Close ();
+                            reader.Dispose ();
                         }
-                        result.Dispose();
-                        CloseDatabase(dbcon);
+                        result.Dispose ();
+                        CloseDatabase (dbcon);
                     }
                 }
             }
+        }
+
+        public override Dictionary<string, List<string>> QueryNames (string[] keyRow, object[] keyValue, string table, string wantedValue)
+        {
+            MySqlConnection dbcon = GetLockedConnection ();
+            IDbCommand result;
+            IDataReader reader;
+            Dictionary<string, List<string>> RetVal = new Dictionary<string, List<string>> ();
+            string query = String.Format ("select {0} from {1} where ",
+                                      wantedValue, table);
+            int i = 0;
+            foreach (object value in keyValue)
+            {
+                query += String.Format ("{0} = '{1}' and ", keyRow[i], value);
+                i++;
+            }
+            query = query.Remove (query.Length - 5);
+
+
+            using (result = Query (query, new Dictionary<string, object> (), dbcon))
+            {
+                using (reader = result.ExecuteReader ())
+                {
+                    try
+                    {
+                        while (reader.Read ())
+                        {
+                            for (i = 0; i < reader.FieldCount; i++)
+                            {
+                                Type r = reader[i].GetType ();
+                                if (r == typeof (DBNull))
+                                    AddValueToList (ref RetVal, reader.GetName (i), null);
+                                else
+                                    AddValueToList (ref RetVal, reader.GetName (i), reader[i].ToString ());
+                            }
+                        }
+                        return RetVal;
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                    finally
+                    {
+                        if (reader != null)
+                        {
+                            reader.Close ();
+                            reader.Dispose ();
+                        }
+                        result.Dispose ();
+                        CloseDatabase (dbcon);
+                    }
+                }
+            }
+        }
+
+        private void AddValueToList (ref Dictionary<string, List<string>> dic, string key, string value)
+        {
+            if (!dic.ContainsKey (key))
+                dic.Add (key, new List<string> ());
+
+            dic[key].Add (value);
         }
 
         public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
@@ -865,10 +927,12 @@ namespace Aurora.DataManager.MySQL
                     return "VARCHAR(36)";
                 case ColumnTypes.String45:
                     return "VARCHAR(45)";
-                case ColumnTypes.String64:
-                    return "VARCHAR(64)";
                 case ColumnTypes.String50:
                     return "VARCHAR(50)";
+                case ColumnTypes.String64:
+                    return "VARCHAR(64)";
+                case ColumnTypes.String128:
+                    return "VARCHAR(128)";
                 case ColumnTypes.String100:
                     return "VARCHAR(100)";
                 case ColumnTypes.String255:
@@ -1020,10 +1084,12 @@ namespace Aurora.DataManager.MySQL
                     return ColumnTypes.String36;
                 case "varchar(45)":
                     return ColumnTypes.String45;
-                case "varchar(64)":
-                    return ColumnTypes.String64;
                 case "varchar(50)":
                     return ColumnTypes.String50;
+                case "varchar(64)":
+                    return ColumnTypes.String64;
+                case "varchar(128)":
+                    return ColumnTypes.String128;
                 case "varchar(100)":
                     return ColumnTypes.String100;
                 case "varchar(255)":
@@ -1044,12 +1110,24 @@ namespace Aurora.DataManager.MySQL
                     return ColumnTypes.Blob;
                 case "longblob":
                     return ColumnTypes.LongBlob;
+                case "smallint(6)":
+                    return ColumnTypes.Integer11;
+                case "int(10)":
+                    return ColumnTypes.Integer11;
+                case "tinyint(4)":
+                    return ColumnTypes.Integer11;
             }
-            if (tStr.StartsWith("varchar"))
+            if (tStr.StartsWith ("varchar"))
             {
                 //... Someone was editing the database
                 // Swallow the exception... but set it to the highest setting so we don't break anything
                 return ColumnTypes.String8196;
+            }
+            if (tStr.StartsWith ("int"))
+            {
+                //... Someone was editing the database
+                // Swallow the exception... but set it to the highest setting so we don't break anything
+                return ColumnTypes.Integer11;
             }
             throw new Exception("You've discovered some type in MySQL that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType. Type: " + tStr);
         }

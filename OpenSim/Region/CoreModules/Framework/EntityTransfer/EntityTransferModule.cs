@@ -443,7 +443,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             if (uinfo != null)
             {
-                GridRegion regionInfo = GetScene(client.Scene.RegionInfo.RegionID).GridService.GetRegionByUUID(UUID.Zero, uinfo.HomeRegionID);
+                GridRegion regionInfo = client.Scene.GridService.GetRegionByUUID(UUID.Zero, uinfo.HomeRegionID);
                 if (regionInfo == null)
                 {
                     // can't find the Home region: Tell viewer and abort
@@ -460,7 +460,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             else
             {
                 //Default region time...
-                List<GridRegion> Regions = GetScene(client.Scene.RegionInfo.RegionID).GridService.GetDefaultRegions(UUID.Zero);
+                List<GridRegion> Regions = client.Scene.GridService.GetDefaultRegions(UUID.Zero);
                 if (Regions.Count != 0)
                 {
                     m_log.DebugFormat("[ENTITY TRANSFER MODULE]: User's home region was not found, using {0} {1} ({2}-{3})",
@@ -907,22 +907,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     return scene;
             }
             return null;
-        }
-
-        /// <summary>
-        /// This is pretty much guaranteed to return a Scene
-        ///   as it will return the first scene if it cannot find the scene
-        /// </summary>
-        /// <param name="RegionID"></param>
-        /// <returns></returns>
-        public Scene TryGetScene(UUID RegionID)
-        {
-            foreach (Scene scene in m_scenes)
-            {
-                if (scene.RegionInfo.RegionID == RegionID)
-                    return scene;
-            }
-            return m_scenes[0];
         }
 
         #endregion

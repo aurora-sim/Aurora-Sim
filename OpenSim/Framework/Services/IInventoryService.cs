@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework;
 using OpenSim.Framework;
 using OpenMetaverse;
 
@@ -185,5 +186,21 @@ namespace OpenSim.Services.Interfaces
         /// <returns>The permissions or 0 if no such asset is found in 
         /// the user's inventory</returns>
         int GetAssetPermissions(UUID userID, UUID assetID);
+    }
+
+    public interface IInventoryData : IAuroraDataPlugin
+    {
+        InventoryFolderBase[] GetFolders (string[] fields, string[] vals);
+        InventoryItemBase[] GetItems (string[] fields, string[] vals);
+
+        bool StoreFolder (InventoryFolderBase folder);
+        bool StoreItem (InventoryItemBase item);
+
+        bool DeleteFolders (string field, string val);
+        bool DeleteItems (string field, string val);
+
+        bool MoveItem (string id, string newParent);
+        InventoryItemBase[] GetActiveGestures (UUID principalID);
+        int GetAssetPermissions (UUID principalID, UUID assetID);
     }
 }

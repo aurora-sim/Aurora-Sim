@@ -488,10 +488,14 @@ namespace OpenSim.Services.Connectors
             return int.Parse(ret["RESULT"].ToString());
         }
 
-
+        /// <summary>
+        /// Does the user have an inventory?
+        /// </summary>
+        /// <param name="principalID"></param>
+        /// <returns></returns>
         public virtual bool HasInventoryForUser(UUID principalID)
         {
-            return false;
+            return GetRootFolder (principalID) != null;
         }
 
         // Helpers
