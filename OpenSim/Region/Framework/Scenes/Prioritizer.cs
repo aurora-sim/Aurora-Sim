@@ -202,13 +202,13 @@ namespace OpenSim.Region.Framework.Scenes
                     // before its scheduled update was triggered
                     //entityPos = m_scene.GetGroupByPrim(entity.LocalId).AbsolutePosition;
                     SceneObjectPart p = (SceneObjectPart)entity;
-                    entityPos = p.ParentGroup.AbsolutePosition + p.OOBoffset;
+                    entityPos = p.ParentGroup.AbsolutePosition + p.OOBoffset * p.ParentGroup.GroupRotation;
                     oobSQ = p.ParentGroup.BSphereRadiusSQ;
                     }
                 else if (entity is SceneObjectGroup)
                     {
                     SceneObjectGroup p = (SceneObjectGroup)entity;
-                    entityPos = p.AbsolutePosition + p.OOBoffset;
+                    entityPos = p.AbsolutePosition + p.OOBoffset * p.GroupRotation;
                     oobSQ = p.BSphereRadiusSQ;
                     }
                 else
