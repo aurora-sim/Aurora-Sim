@@ -419,19 +419,20 @@ namespace Aurora.Simulation.Base
         /// </summary>
         public virtual void RegisterConsoleCommands()
         {
-            m_console.Commands.AddCommand("region", false, "quit", "quit", "Quit the application", HandleQuit);
+            m_console.Commands.AddCommand ("quit", "quit", "Quit the application", HandleQuit);
 
-            m_console.Commands.AddCommand("region", false, "shutdown", "shutdown", "Quit the application", HandleQuit);
+            m_console.Commands.AddCommand ("shutdown", "shutdown", "Quit the application", HandleQuit);
 
-            m_console.Commands.AddCommand("region", false, "set log level", "set log level <level>", "Set the console logging level", HandleLogLevel);
+            m_console.Commands.AddCommand ("set log level", "set log level [level]", "Set the console logging level", HandleLogLevel);
 
-            m_console.Commands.AddCommand("region", false, "show", "show", "Shows information about this simulator", HandleShow);
+            m_console.Commands.AddCommand ("show info", "show info", "Show server information (e.g. startup path)", HandleShowInfo);
+            m_console.Commands.AddCommand ("show version", "show version", "Show server version", HandleShowVersion);
 
-            m_console.Commands.AddCommand("region", false, "reload config", "reload config", "Reloads .ini file configuration", HandleConfigRefresh);
+            m_console.Commands.AddCommand ("reload config", "reload config", "Reloads .ini file configuration", HandleConfigRefresh);
 
-            m_console.Commands.AddCommand("region", false, "set timer script interval", "set timer script interval", "Set the interval for the timer script (in minutes).", HandleTimerScriptTime);
+            m_console.Commands.AddCommand ("set timer script interval", "set timer script interval", "Set the interval for the timer script (in minutes).", HandleTimerScriptTime);
 
-            m_console.Commands.AddCommand("region", false, "force GC", "force GC", "Forces garbage collection.", HandleForceGC);
+            m_console.Commands.AddCommand ("force GC", "force GC", "Forces garbage collection.", HandleForceGC);
         }
 
         private void HandleQuit(string module, string[] args)
@@ -521,42 +522,17 @@ namespace Aurora.Simulation.Base
             m_log.Info ("Finished reloading configuration.");
         }
 
-        /// <summary>
-        /// Many commands list objects for debugging.  Some of the types are listed  here
-        /// </summary>
-        /// <param name="mod"></param>
-        /// <param name="cmd"></param>
-        public virtual void HandleShow(string mod, string[] cmd)
+        public virtual void HandleShowInfo (string mod, string[] cmd)
         {
-            if (cmd.Length == 1)
-            {
-                m_log.Warn("Incorrect number of parameters!");
-                return;
-            }
-            List<string> args = new List<string>(cmd);
-            args.RemoveAt(0);
-            string[] showParams = args.ToArray();
-            switch (showParams[0])
-            {
-                case "help":
-                    m_log.Info ("set log level [level] - Change the console logging level only.  For example, off or debug.");
-                    m_log.Info ("show info - Show server information (e.g. startup path).");
-                    m_log.Info ("show threads - List tracked threads");
-                    m_log.Info ("show uptime - Show server startup time and uptime.");
-                    m_log.Info ("show version - Show server version.");
-                    break;
+            m_log.Info ("Version: " + m_version);
+            m_log.Info ("Startup directory: " + Environment.CurrentDirectory);
+        }
 
-                case "info":
-                    m_log.Info("Version: " + m_version);
-                    m_log.Info("Startup directory: " + Environment.CurrentDirectory);
-                    break;
-
-                case "version":
-                    m_log.Info(
-                        String.Format(
-                            "Version: {0} (interface version {1})", m_version, VersionInfo.MajorInterfaceVersion));
-                    break;
-            }
+        public virtual void HandleShowVersion (string mod, string[] cmd)
+        {
+            m_log.Info (
+                String.Format (
+                    "Version: {0} (interface version {1})", m_version, VersionInfo.MajorInterfaceVersion));
         }
 
         #endregion

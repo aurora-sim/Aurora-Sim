@@ -233,9 +233,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Register the console commands
             if (FirstStartup)
             {
-                MainConsole.Instance.Commands.AddCommand(this.Name, true, "ADNE", "ADNE", "Subcommands for Aurora DotNet Engine", AuroraDotNetConsoleCommands);
-                MainConsole.Instance.Commands.AddCommand(this.Name, true, "help ADNE", "help ADNE", "Brings up the help for ADNE", AuroraDotNetConsoleHelp);
-
+                MainConsole.Instance.Commands.AddCommand ("ADNE restart", "ADNE restart", "Restarts all scripts and clears all script caches", AuroraDotNetRestart);
+                MainConsole.Instance.Commands.AddCommand ("ADNE stop", "ADNE stop", "Stops all scripts", AuroraDotNetStop);
+                MainConsole.Instance.Commands.AddCommand ("ADNE stats", "ADNE stats", "Tells stats about the script engine", AuroraDotNetStats);
+                MainConsole.Instance.Commands.AddCommand ("ADNE disable", "ADNE disable", "Disables the script engine temperarily", AuroraDotNetDisable);
+                MainConsole.Instance.Commands.AddCommand ("ADNE enable", "ADNE enable", "Reenables the script engine", AuroraDotNetEnable);
+                
                 // Create all objects we'll be using
                 ScriptProtection = new ScriptProtectionModule(Config);
 
@@ -389,95 +392,75 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        protected void AuroraDotNetConsoleHelp(string module, string[] cmdparams)
+        protected void AuroraDotNetRestart (string module, string[] cmdparams)
         {
-            m_log.Info("Aurora DotNet Commands : \n" +
-                " ADNE restart - Restarts all scripts and clears all script caches \n" +
-                " ADNE stop - Stops all scripts \n" +
-                " ADNE stats - Tells stats about the script engine \n" +
-                " ADNE disable - Disables the script engine temperarily \n" +
-                " ADNE enable - Reenables the script engine");
+            string go = MainConsole.Instance.CmdPrompt ("Are you sure you want to restart all scripts? (This also wipes the script state saves database, which could cause loss of information in your scripts)", "no");
+            if (go.Equals ("yes", StringComparison.CurrentCultureIgnoreCase))
+            {
+                //Delete all assemblies
+                Compiler.RecreateDirectory ();
+                ScriptData[] scripts = ScriptProtection.GetAllScripts ();
+                ScriptProtection.Reset (true);
+                IScriptDataConnector con = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IScriptDataConnector> ();
+                foreach (ScriptData ID in scripts)
+                {
+                    try
+                    {
+                        //Remove the state save
+                        con.DeleteStateSave (ID.ItemID);
+                        ID.Start (false);
+                        //Reset this every time so that we don't reuse any compiled scripts
+                        ScriptProtection.Reset (false);
+                    }
+                    catch (Exception) { }
+                }
+                m_log.Warn ("[ADNE]: All scripts have been restarted.");
+            }
+            else
+            {
+                m_log.Info ("Not restarting all scripts");
+            }
         }
 
-        protected void AuroraDotNetConsoleCommands(string module, string[] cmdparams)
+        protected void AuroraDotNetStop (string module, string[] cmdparams)
         {
-            if (cmdparams.Length == 1)
+            string go = MainConsole.Instance.CmdPrompt ("Are you sure you want to stop all scripts?", "no");
+            if (go.Contains ("yes") || go.Contains ("Yes"))
             {
-                AuroraDotNetConsoleHelp(module, cmdparams);
-                return;
+                StopAllScripts ();
+                m_log.Warn ("[ADNE]: All scripts have been stopped.");
             }
-            if (cmdparams[1] == "restart")
+            else
             {
-                string go = MainConsole.Instance.CmdPrompt("Are you sure you want to restart all scripts? (This also wipes the script state saves database, which could cause loss of information in your scripts)", "no");
-                if (go.Equals("yes", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    //Delete all assemblies
-                    Compiler.RecreateDirectory();
-                    ScriptData[] scripts = ScriptProtection.GetAllScripts();
-                    ScriptProtection.Reset(true);
-                    IScriptDataConnector con = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IScriptDataConnector>();
-                    foreach (ScriptData ID in scripts)
-                    {
-                        try
-                        {
-                            //Remove the state save
-                            con.DeleteStateSave(ID.ItemID);
-                            ID.Start(false);
-                            //Reset this every time so that we don't reuse any compiled scripts
-                            ScriptProtection.Reset(false);
-                        }
-                        catch (Exception) { }
-                    }
-                    m_log.Warn("[ADNE]: All scripts have been restarted.");
-                }
-                else
-                {
-                    m_log.Info("Not restarting all scripts");
-                }
+                m_log.Info ("Not restarting all scripts");
             }
-            else if (cmdparams[1] == "stop")
-            {
-                string go = MainConsole.Instance.CmdPrompt("Are you sure you want to stop all scripts?", "no");
-                if (go.Contains("yes") || go.Contains("Yes"))
-                {
-                    StopAllScripts();
-                    m_log.Warn("[ADNE]: All scripts have been stopped.");
-                }
-                else
-                {
-                    m_log.Info("Not restarting all scripts");
-                }
-            }
-            else if (cmdparams[1] == "stats")
-            {
+        }
 
-                m_log.Info("Aurora DotNet Script Engine Stats:"
+        protected void AuroraDotNetStats (string module, string[] cmdparams)
+        {
+            m_log.Info ("Aurora DotNet Script Engine Stats:"
                     + "\nNumber of scripts compiled: " + Compiler.ScriptCompileCounter
-                    + "\nMax allowed threat level: " + ScriptProtection.GetThreatLevel().ToString()
-                    + "\nNumber of scripts running now: " + ScriptProtection.GetAllScripts().Length
+                    + "\nMax allowed threat level: " + ScriptProtection.GetThreatLevel ().ToString ()
+                    + "\nNumber of scripts running now: " + ScriptProtection.GetAllScripts ().Length
                     + "\nNumber of app domains: " + AppDomainManager.NumberOfAppDomains
                     + "\nPermission level of app domains: " + AppDomainManager.PermissionLevel
-                    + "\nNumber Engine threads/sleeping: " + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.threadpool.nthreads).ToString()
-                    + "/" + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.threadpool.nSleepingthreads).ToString()
-                    + "\nNumber Script threads: " + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.Scriptthreadpool.nthreads).ToString()
-                    + "/" + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.Scriptthreadpool.nSleepingthreads).ToString());
+                    + "\nNumber Engine threads/sleeping: " + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.threadpool.nthreads).ToString ()
+                    + "/" + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.threadpool.nSleepingthreads).ToString ()
+                    + "\nNumber Script threads: " + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.Scriptthreadpool.nthreads).ToString ()
+                    + "/" + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.Scriptthreadpool.nSleepingthreads).ToString ());
+        }
 
-            }
-            else if (cmdparams[1] == "disable")
-            {
-                ConsoleDisabled = true;
-                m_log.Warn("[ADNE]: ADNE has been disabled.");
-            }
-            else if (cmdparams[1] == "enable")
-            {
-                ConsoleDisabled = false;
-                MaintenanceThread.Started = true;
-                m_log.Warn("[ADNE]: ADNE has been enabled.");
-            }
-            else if (cmdparams[1] == "help")
-            {
-                AuroraDotNetConsoleHelp(module, cmdparams);
-            }
+        protected void AuroraDotNetDisable (string module, string[] cmdparams)
+        {
+            ConsoleDisabled = true;
+            m_log.Warn ("[ADNE]: ADNE has been disabled.");
+        }
+
+        protected void AuroraDotNetEnable(string module, string[] cmdparams)
+        {
+            ConsoleDisabled = false;
+            MaintenanceThread.Started = true;
+            m_log.Warn("[ADNE]: ADNE has been enabled.");
         }
 
         public void StopAllScripts()

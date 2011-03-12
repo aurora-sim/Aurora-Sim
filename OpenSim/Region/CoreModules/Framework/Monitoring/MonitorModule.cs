@@ -742,45 +742,27 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             }
         }
 
-        /// <summary>
-        /// Many commands list objects for debugging.  Some of the types are listed  here
-        /// </summary>
-        /// <param name="mod"></param>
-        /// <param name="cmd"></param>
-        protected void HandleShow(string mod, string[] cmd)
+        protected void HandleShowThreads (string mod, string[] cmd)
         {
-            if (cmd.Length == 1)
-            {
-                m_log.Warn("Incorrect number of parameters!");
-                return;
-            }
-            List<string> args = new List<string>(cmd);
-            args.RemoveAt(0);
-            string[] showParams = args.ToArray();
-            switch (showParams[0])
-            {
-                case "help":
-                    m_log.Info ("show queues [full] - Without the 'full' option, only users actually on the region are shown."
-                                                    + "  With the 'full' option child agents of users in neighbouring regions are also shown.");
-                    m_log.Info ("show stats - Show statistical information for this server");
-                    break;
+            m_log.Info (GetThreadsReport ());
+        }
 
-                case "queues":
-                    m_log.Info(GetQueuesReport(showParams));
-                    break;
+        protected void HandleShowUptime (string mod, string[] cmd)
+        {
+            m_log.Info (GetUptimeReport ());
+        }
 
-                case "stats":
-                    DebugMonitorsInCurrentRegion(mod, cmd);
-                    break;
+        protected void HandleShowStats (string mod, string[] cmd)
+        {
+            DebugMonitorsInCurrentRegion(mod, cmd);
+        }
 
-                case "threads":
-                    m_log.Info(GetThreadsReport());
-                    break;
-
-                case "uptime":
-                    m_log.Info(GetUptimeReport());
-                    break;
-            }
+        protected void HandleShowQueues (string mod, string[] cmd)
+        {
+            List<string> args = new List<string> (cmd);
+            args.RemoveAt (0);
+            string[] showParams = args.ToArray ();
+            m_log.Info (GetQueuesReport (showParams));
         }
 
         /// <summary>
@@ -968,11 +950,12 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             Timer PeriodicDiagnosticsTimer = new Timer(60 * 60 * 1000); // One hour
             PeriodicDiagnosticsTimer.Elapsed += LogDiagnostics;
             PeriodicDiagnosticsTimer.Enabled = true;
-            PeriodicDiagnosticsTimer.Start();
-
-            MainConsole.Instance.Commands.AddCommand("region", false, "show", "show",
-                "Shows information about this simulator", HandleShow);
-
+            PeriodicDiagnosticsTimer.Start ();
+            MainConsole.Instance.Commands.AddCommand ("show threads", "show threads", "List tracked threads", HandleShowThreads);
+            MainConsole.Instance.Commands.AddCommand ("show uptime", "show uptime", "Show server startup time and uptime", HandleShowUptime);
+            MainConsole.Instance.Commands.AddCommand ("show queues", "show queues [full]", "Shows the queues for the given agent (if full is given as a parameter, child agents are displayed as well)", HandleShowQueues);
+            MainConsole.Instance.Commands.AddCommand ("show stats", "show stats", "Show statistical information for this server", HandleShowStats);
+            
             MainConsole.Instance.Commands.AddCommand("Stats", false, "stats report",
                                "stats report",
                                "Returns a variety of statistics about the current region and/or simulator",

@@ -776,21 +776,22 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void AddConsoleCommands()
         {
-            MainConsole.Instance.Commands.AddCommand("region", false, "show", "show", "Shows information about this simulator", HandleShow);
+            MainConsole.Instance.Commands.AddCommand ("show users", "show users [full]", "Shows users in the given region (if full is added, child agents are shown as well)", HandleShowUsers);
+            MainConsole.Instance.Commands.AddCommand ("show regions", "show regions", "Show information about all regions in this instance", HandleShowRegions);
+            MainConsole.Instance.Commands.AddCommand ("show maturity", "show maturity", "Show all region's maturity levels", HandleShowMaturity);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "force update", "force update", "Force the update of all objects on clients", HandleForceUpdate);
+            MainConsole.Instance.Commands.AddCommand ("region", false, "force update", "force update", "Force the update of all objects on clients", HandleForceUpdate);
 
             MainConsole.Instance.Commands.AddCommand("region", false, "debug packet", "debug packet [level]", "Turn on packet debugging", Debug);
-
             MainConsole.Instance.Commands.AddCommand("region", false, "debug scene", "debug scene [scripting] [collisions] [physics]", "Turn on scene debugging", Debug);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "change region", "change region <region name>", "Change current console region", ChangeSelectedRegion);
+            MainConsole.Instance.Commands.AddCommand("region", false, "change region", "change region [region name]", "Change current console region", ChangeSelectedRegion);
 
             MainConsole.Instance.Commands.AddCommand("region", false, "load xml2", "load xml2", "Load a region's data from XML2 format", LoadXml2);
 
             MainConsole.Instance.Commands.AddCommand("region", false, "save xml2", "save xml2", "Save a region's data in XML2 format", SaveXml2);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "load oar", "load oar [--merge] [--skip-assets] <oar name>", "Load a region's data from OAR archive.  --merge will merge the oar with the existing scene.  --skip-assets will load the oar but ignore the assets it contains", LoadOar);
+            MainConsole.Instance.Commands.AddCommand("region", false, "load oar", "load oar [--merge] [--skip-assets] [oar name]", "Load a region's data from OAR archive.  --merge will merge the oar with the existing scene.  --skip-assets will load the oar but ignore the assets it contains", LoadOar);
 
             MainConsole.Instance.Commands.AddCommand("region", false, "save oar", "save oar [-v|--version=N] [<OAR path>]", "Save a region's data to an OAR archive", "-v|--version=N generates scene objects as per older versions of the serialization (e.g. -v=0)" + Environment.NewLine
                                            + "The OAR path must be a filesystem path."
@@ -1106,106 +1107,74 @@ namespace OpenSim.Region.Framework.Scenes
             );
         }
 
-        /// <summary>
-        /// Many commands list objects for debugging.  Some of the types are listed  here
-        /// </summary>
-        /// <param name="mod"></param>
-        /// <param name="cmd"></param>
-        public void HandleShow(string mod, string[] cmd)
+        public void HandleShowUsers (string mod, string[] cmd)
         {
-            if (cmd.Length == 1)
+            List<string> args = new List<string> (cmd);
+            args.RemoveAt (0);
+            string[] showParams = args.ToArray ();
+            
+            IList agents;
+            if (showParams.Length > 1 && showParams[1] == "full")
             {
-                m_log.Warn("Incorrect number of parameters!");
-                return;
+                agents = GetCurrentScenePresences ();
             }
-            List<string> args = new List<string>(cmd);
-            args.RemoveAt(0);
-            string[] showParams = args.ToArray();
-            switch (showParams[0])
+            else
             {
-                case "help":
-                    m_log.Info ("show assets - Show asset information");
-                    m_log.Info ("show connections - Show connection data");
-                    m_log.Info ("show users - Show all users connected");
-                    m_log.Info ("show users [full] - Without the 'full' option, only users actually on the region are shown."
-                                                    + "  With the 'full' option child agents of users in neighbouring regions are also shown.");
-                    m_log.Info ("show regions - Show all regions");
-                    m_log.Info ("show maturity - Show region maturity levels");
-                    break;
-                case "assets":
-                    m_log.Info ("Not implemented.");
-                    break;
-
-                case "users":
-                    IList agents;
-                    if (showParams.Length > 1 && showParams[1] == "full")
-                    {
-                        agents = GetCurrentScenePresences();
-                    }
-                    else
-                    {
-                        agents = GetCurrentSceneAvatars();
-                    }
-
-                    m_log.Info (String.Format ("\nAgents connected: {0}\n", agents.Count));
-
-                    m_log.Info (String.Format ("{0,-16}{1,-16}{2,-37}{3,-11}{4,-16}{5,-30}", "Firstname", "Lastname", "Agent ID", "Root/Child", "Region", "Position"));
-
-                    foreach (ScenePresence presence in agents)
-                    {
-                        RegionInfo regionInfo = presence.Scene.RegionInfo;
-                        string regionName;
-
-                        if (regionInfo == null)
-                        {
-                            regionName = "Unresolvable";
-                        }
-                        else
-                        {
-                            regionName = regionInfo.RegionName;
-                        }
-
-                        m_log.Info (String.Format ("{0,-16}{1,-16}{2,-37}{3,-11}{4,-16}{5,-30}", presence.Firstname, presence.Lastname, presence.UUID, presence.IsChildAgent ? "Child" : "Root", regionName, presence.AbsolutePosition.ToString ()));
-                    }
-
-                    m_log.Info (String.Empty);
-                    m_log.Info (String.Empty);
-                    break;
-
-                case "connections":
-                    System.Text.StringBuilder connections = new System.Text.StringBuilder("Connections:\n");
-                    ForEachScene(delegate(Scene scene) { scene.ForEachClient(delegate(IClientAPI client) { connections.AppendFormat("{0}: {1} ({2}) from {3} on circuit {4}\n", scene.RegionInfo.RegionName, client.Name, client.AgentId, client.RemoteEndPoint, client.CircuitCode); }); });
-
-                    m_log.Info (connections.ToString ());
-                    break;
-
-                case "regions":
-                    ForEachScene(delegate(Scene scene) 
-                    {
-                        m_log.Info (scene.ToString ());
-                    });
-                    break;
-
-                case "maturity":
-                    ForEachCurrentScene(delegate(Scene scene)
-                    {
-                        string rating = "";
-                        if (scene.RegionInfo.RegionSettings.Maturity == 1)
-                        {
-                            rating = "Mature";
-                        }
-                        else if (scene.RegionInfo.RegionSettings.Maturity == 2)
-                        {
-                            rating = "Adult";
-                        }
-                        else
-                        {
-                            rating = "PG";
-                        }
-                        m_log.Info (String.Format ("Region Name: {0}, Region Rating {1}", scene.RegionInfo.RegionName, rating));
-                    });
-                    break;
+                agents = GetCurrentSceneAvatars ();
             }
+
+            m_log.Info (String.Format ("\nAgents connected: {0}\n", agents.Count));
+
+            m_log.Info (String.Format ("{0,-16}{1,-16}{2,-37}{3,-11}{4,-16}{5,-30}", "Firstname", "Lastname", "Agent ID", "Root/Child", "Region", "Position"));
+
+            foreach (ScenePresence presence in agents)
+            {
+                RegionInfo regionInfo = presence.Scene.RegionInfo;
+                string regionName;
+
+                if (regionInfo == null)
+                {
+                    regionName = "Unresolvable";
+                }
+                else
+                {
+                    regionName = regionInfo.RegionName;
+                }
+
+                m_log.Info (String.Format ("{0,-16}{1,-16}{2,-37}{3,-11}{4,-16}{5,-30}", presence.Firstname, presence.Lastname, presence.UUID, presence.IsChildAgent ? "Child" : "Root", regionName, presence.AbsolutePosition.ToString ()));
+            }
+
+            m_log.Info (String.Empty);
+            m_log.Info (String.Empty);
+        }
+
+        public void HandleShowRegions (string mod, string[] cmd)
+        {
+            ForEachScene (delegate (Scene scene)
+            {
+                m_log.Info (scene.ToString ());
+            });
+        }
+
+        public void HandleShowMaturity (string mod, string[] cmd)
+        {
+            ForEachCurrentScene (delegate (Scene scene)
+            {
+                string rating = "";
+                if (scene.RegionInfo.RegionSettings.Maturity == 1)
+                {
+                    rating = "Mature";
+                }
+                else if (scene.RegionInfo.RegionSettings.Maturity == 2)
+                {
+                    rating = "Adult";
+                }
+                else
+                {
+                    rating = "PG";
+                }
+                m_log.Info (String.Format ("Region Name: {0}, Region Rating {1}", scene.RegionInfo.RegionName, rating));
+            });
         }
 
         public void SendCommandToPluginModules(string[] cmdparams)
