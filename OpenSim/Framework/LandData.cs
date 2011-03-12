@@ -860,8 +860,9 @@ namespace OpenSim.Framework
             ObscureMedia = map["ObscureMedia"].AsBoolean();
             ObscureMusic = map["ObscureMusic"].AsBoolean();
             MediaLoopSet = (float)map["MediaLoopSet"].AsReal();
-            MediaAutoScale = (byte)map["MediaAutoScale"].AsInteger();
-            MediaURL = map["MediaURL"].AsString();
+            MediaAutoScale = (byte)map["MediaAutoScale"].AsInteger ();
+            MediaURL = map["MediaURL"].AsString ();
+            MusicURL = map["MusicURL"].AsString ();
             Bitmap = map["Bitmap"].AsBinary();
             Category = (ParcelCategory)map["Category"].AsInteger();
             ClaimDate = map["ClaimDate"].AsInteger();
