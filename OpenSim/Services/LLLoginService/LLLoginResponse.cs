@@ -1068,12 +1068,12 @@ namespace OpenSim.Services.LLLoginService
             }
         }
     }
-    /*public class LLLoginResponse : OpenSim.Services.Interfaces.LoginResponse
+    /*public class TestLLLoginResponse : OpenSim.Services.Interfaces.LoginResponse
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IConfigSource m_source;
 
-        public LLLoginResponse(IConfigSource source)
+        public TestLLLoginResponse(IConfigSource source)
         {
             m_source = source;
         }
@@ -1086,23 +1086,11 @@ namespace OpenSim.Services.LLLoginService
             {
                 Hashtable responseData = new Hashtable();
 
-                loginFlagsHash = new Hashtable();
-                loginFlagsHash["daylight_savings"] = DST;
-                loginFlagsHash["stipend_since_login"] = StipendSinceLogin;
-                loginFlagsHash["gendered"] = Gendered;
-                loginFlagsHash["ever_logged_in"] = EverLoggedIn;
-                loginFlags.Add(loginFlagsHash);
-
                 responseData["first_name"] = Firstname;
                 responseData["last_name"] = Lastname;
                 responseData["agent_access"] = agentAccess;
                 responseData["agent_access_max"] = agentAccessMax;
                 responseData["udp_blacklist"] = udpBlackList;
-
-                globalTextures.Add(globalTexturesHash);
-
-                uiConfigHash["allow_first_life"] = allowFirstLife;
-                uiConfig.Add(uiConfigHash);
 
                 responseData["sim_port"] = (Int32) SimPort;
                 responseData["sim_ip"] = SimAddress;
@@ -1123,11 +1111,8 @@ namespace OpenSim.Services.LLLoginService
                 responseData["ui-config"] = uiConfig;
                 responseData["export"] = m_allowExportPermission ? "flag" : "";
 
-                if (agentInventory != null)
-                {
-                    responseData["inventory-skeleton"] = agentInventory;
-                    responseData["inventory-root"] = inventoryRoot;
-                }
+                responseData["inventory-skeleton"] = agentInventory;
+                responseData["inventory-root"] = inventoryRoot;
                 responseData["inventory-skel-lib"] = inventoryLibrary;
                 responseData["inventory-lib-root"] = inventoryLibRoot;
                 responseData["gestures"] = activeGestures;

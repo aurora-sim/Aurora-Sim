@@ -25,8 +25,9 @@ namespace Aurora.Modules.World.SimConsole
 
         private List<Scene> m_scenes = new List<Scene>();
         private bool m_enabled = false;
-        private Dictionary<UUID, Access> m_authorizedParticipants = new Dictionary<UUID, Access>();
-        private DoubleValueDictionary<string, string, Access> m_userKeys = new DoubleValueDictionary<string, string, Access>();
+        private Dictionary<UUID, Access> m_authorizedParticipants = new Dictionary<UUID, Access> ();
+        private Dictionary<string, Access> m_userKeys = new Dictionary<string, Access> ();
+        private Dictionary<UUID, LogLevel> m_userLogLevel = new Dictionary<UUID, LogLevel> ();
 
         #region Enums
 
@@ -36,6 +37,15 @@ namespace Aurora.Modules.World.SimConsole
             Read,
             Write,
             None
+        }
+
+        private enum LogLevel
+        {
+            error,
+            warn,
+            info,
+            debug,
+            all
         }
 
         #endregion
@@ -54,11 +64,11 @@ namespace Aurora.Modules.World.SimConsole
                     return;
                 string User = config.GetString("Users", "");
                 string[] Users = User.Split('|');
-                for (int i = 0; i < Users.Length; i+=3)
+                for (int i = 0; i < Users.Length; i += 2)
                 {
                     if (!m_userKeys.ContainsKey(Users[i]))
                     {
-                        m_userKeys.Add(Users[i], Users[i+1], (Access)Enum.Parse(typeof(Access), Users[i + 2]));
+                        m_userKeys.Add(Users[i], (Access)Enum.Parse(typeof(Access), Users[i + 1]));
                     }
                 }
             }
@@ -142,8 +152,7 @@ namespace Aurora.Modules.World.SimConsole
             string response = "Finished.";
 
             //Is a god, or they authenticated to the server and have write access
-            if ((SP.Scene.Permissions.CanRunConsoleCommand(SP.UUID) ||
-                AuthenticateUser(SP.UUID, message)) && CanWrite(SP.UUID))
+            if (AuthenticateUser(SP, message) && CanWrite(SP.UUID))
             {
                 MainConsole.Instance.RunCommand(message);
                 responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(OSD.FromString(response));
@@ -173,8 +182,7 @@ namespace Aurora.Modules.World.SimConsole
             string message = rm.AsString ();
 
             //Is a god, or they authenticated to the server and have write access
-            if ((SP.Scene.Permissions.CanRunConsoleCommand(SP.UUID) ||
-                AuthenticateUser (SP.UUID, message)) && CanWrite (SP.UUID))
+            if (AuthenticateUser (SP, message) && CanWrite (SP.UUID))
             {
                 FireConsole (message);
                 responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString ("");
@@ -187,9 +195,12 @@ namespace Aurora.Modules.World.SimConsole
             return responsedata;
         }
 
-        private void FireConsole (object message)
+        private void FireConsole (string message)
         {
-            MainConsole.Instance.RunCommand ((string)message);
+            Util.FireAndForget (delegate (object o)
+            {
+                MainConsole.Instance.RunCommand ((string)message);
+            });
         }
 
         #endregion
@@ -216,46 +227,80 @@ namespace Aurora.Modules.World.SimConsole
             return false;
         }
 
-        private bool AuthenticateUser(UUID AgentID, string message)
+        private bool AuthenticateUser(ScenePresence sp, string message)
         {
-            if (m_authorizedParticipants.ContainsKey(AgentID))
+            if (m_authorizedParticipants.ContainsKey(sp.UUID))
             {
-                return true;
+                return ParseMessage (sp, message, false);
             }
             else
             {
-                if (message.Contains("User:"))
+                if (m_userKeys.ContainsKey (sp.Name))
                 {
-                    //The expected auth line looks like : "User:<NAME>/Password:<PASS>"
-                    string[] splits = message.Split('/');
-                    string username, password;
-                    if (splits.Length != 2)
-                        return false;
-                    username = splits[0].Remove(0, 5);
-                    password = splits[1].Remove(0, 9);
-                    if (m_userKeys.ContainsKey(username))
-                    {
-                        if (m_userKeys[username, ""] == password)
-                        {
-                            m_authorizedParticipants.Add(AgentID, m_userKeys[username]);
-                            return true;
-                        }
-                    }
+                    m_userLogLevel.Add (sp.UUID, LogLevel.info);
+                    m_authorizedParticipants.Add (sp.UUID, m_userKeys[sp.Name]);
+                    return ParseMessage (sp, message, true);
                 }
             }
             return false;
         }
 
+        private bool ParseMessage (ScenePresence sp, string message, bool firstLogin)
+        {
+            if (firstLogin)
+            {
+                SendConsoleEventEQM (sp.UUID, "Welcome to the console, type /help for more information about viewer console commands");
+            }
+            else if (message.StartsWith ("/logout"))
+            {
+                m_authorizedParticipants.Remove (sp.UUID);
+                SendConsoleEventEQM (sp.UUID, "Log out successful.");
+                return false; //Don't execute the message anymore
+            }
+            else if (message.StartsWith ("/set log level"))
+            {
+                string[] words = message.Split (' ');
+                if (words.Length == 4)
+                {
+                    m_userLogLevel[sp.UUID] = (LogLevel)Enum.Parse(typeof(LogLevel), words[3].ToLower());
+                    SendConsoleEventEQM (sp.UUID, "Set log level successful.");
+                }
+                else
+                    SendConsoleEventEQM (sp.UUID, "Set log level failed, please use a valid log level.");
+                return false; //Don't execute the message anymore
+            }
+            else if (message.StartsWith ("/help"))
+            {
+                SendConsoleEventEQM (sp.UUID, "/logout - logout of the console.");
+                SendConsoleEventEQM (sp.UUID, "/set log level - shows only certain messages to the viewer console.");
+                SendConsoleEventEQM (sp.UUID, "/help - show this message again.");
+                return false; //Don't execute the message anymore
+            }
+            return true;
+        }
+
         #endregion
 
-        public void IncomingLogWrite(string text)
+        public void IncomingLogWrite(string level, string text)
         {
             foreach (KeyValuePair<UUID, Access> kvp in m_authorizedParticipants)
             {
                 if (kvp.Value == Access.ReadWrite || kvp.Value == Access.Read)
                 {
-                    //Send the EQM with the message to all people who have read access
-                    SendConsoleEventEQM(kvp.Key, text);
+                    LogLevel logLevel = LogLevel.all;
+                    try
+                    {
+                        logLevel = (LogLevel)Enum.Parse (typeof (LogLevel), level);
+                    }
+                    catch
+                    {
+                        logLevel = LogLevel.all;
+                    }
+                    if (m_userLogLevel[kvp.Key] >= logLevel)
+                    {
+                        //Send the EQM with the message to all people who have read access
+                        SendConsoleEventEQM (kvp.Key, text);
+                    }
                 }
             }
         }

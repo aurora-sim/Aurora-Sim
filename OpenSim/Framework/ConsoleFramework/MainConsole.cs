@@ -30,7 +30,7 @@ namespace OpenSim.Framework
     public class MainConsole
     {
         private static ICommandConsole instance;
-        public delegate void IncomingLogWrite(string text);
+        public delegate void IncomingLogWrite (string level, string text);
         public static event IncomingLogWrite OnIncomingLogWrite;
 
         public static ICommandConsole Instance
@@ -39,10 +39,10 @@ namespace OpenSim.Framework
             set { instance = value; }
         }
 
-        public static void TriggerLog(string text)
+        public static void TriggerLog (string level, string text)
         {
             if (OnIncomingLogWrite != null)
-                OnIncomingLogWrite(text);
+                OnIncomingLogWrite (level, text);
         }
     }
 }
