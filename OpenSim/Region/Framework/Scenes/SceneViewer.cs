@@ -53,12 +53,14 @@ namespace OpenSim.Region.Framework.Scenes
         protected Dictionary<uint, int> m_removeNextUpdateOf = new Dictionary<uint, int>();
         protected List<uint> m_removeUpdateOf = new List<uint>();
         protected bool m_SentInitialObjects = false;
+        protected volatile bool m_queueing =false;
         protected volatile bool m_inUse = false;
         protected volatile bool m_updatesNeedReprioritization = false;
         protected volatile List<UUID> m_objectsInView = new List<UUID>();
         protected Prioritizer m_prioritizer;
         private readonly Mutex _versionAllocateMutex = new Mutex(false);
         protected int m_lastVersion = 0;
+        private Queue<object> m_delayedUpdates = new Queue<object>();
 
         public Prioritizer Prioritizer
         {
@@ -97,7 +99,17 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
 */
             double priority = m_prioritizer.GetUpdatePriority(m_presence.ControllingClient, part.ParentGroup);
+// check vis
 
+            lock (m_delayedUpdates)
+                {
+                if (m_queueing)
+                    {
+                    object[] o = new object[] { part, UpdateFlags };
+                    m_delayedUpdates.Enqueue(o);
+                    return;
+                    }
+                }
             SendUpdate(part, m_presence.GenerateClientFlags(part), UpdateFlags);
 
             /*
@@ -311,13 +323,19 @@ namespace OpenSim.Region.Framework.Scenes
             ///If we havn't started processing this client yet, we need to send them ALL the prims that we have in this Scene (and deal with culling as well...)
             if (!m_SentInitialObjects)
                 {
+                lock (m_delayedUpdates)
+                    {
+                    m_queueing = true;
+                    }
                 m_SentInitialObjects = true;
                 //If they are not in this region, we check to make sure that we allow seeing into neighbors
                 if (!m_presence.IsChildAgent || (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor))
                     {
+                    m_queueing = true;
                     EntityBase[] entities = m_presence.Scene.Entities.GetEntities();
-                    //Use the PriorityQueue so that we can send them in the correct order
-                    //                    PriorityQueue<EntityUpdate, double> entityUpdates = new PriorityQueue<EntityUpdate, double>(entities.Length);
+                    PriorityQueue<EntityUpdate, double> m_entsqueue = new PriorityQueue<EntityUpdate, double>(entities.Length);
+
+                    // build a prioritized list of things we need to send
 
                     foreach (EntityBase e in entities)
                         {
@@ -332,72 +350,96 @@ namespace OpenSim.Region.Framework.Scenes
                             if (!CheckForCulling(e))
                                 continue;
 
-                            List<SceneObjectPart> parts = ((SceneObjectGroup)e).ChildrenList;
-                            foreach (SceneObjectPart part in parts)
-                                {
-                                // Attachment handling. Attachments are 'special' and we have to send the full group update when we send updates
-                                if (part.ParentGroup.RootPart.Shape.PCode == 9 && part.ParentGroup.RootPart.Shape.State != 0)
-                                    {
-                                    if (part != part.ParentGroup.RootPart)
-                                        continue;
+                            if (e is IScenePresence)
+                                priority += 1;
 
-                                    //Check to make sure this attachment is not a hud. Attachments that are huds are 
-                                    //   ONLY sent to the owner, noone else!
-                                    if (
-                                        (
-                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDBottom ||
-                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDBottomLeft ||
-                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDBottomRight ||
-                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDCenter ||
-                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDCenter2 ||
-                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDTop ||
-                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDTopLeft ||
-                                        part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDTopRight
-                                        )
-                                        &&
-                                        part.OwnerID != m_presence.UUID)
-                                        continue;
-                                    }
-
-                                EntityUpdate update = new EntityUpdate((ISceneEntity)part, PrimUpdateFlags.FullUpdate);
-                                PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double>();
-                                item.Value = update;
-                                item.Priority = priority;
-
-                                if (part == part.ParentGroup.RootPart)
-                                    item.Priority += 1.0;
-
-                                m_presence.ControllingClient.QueueDelayedUpdate(item);
-                                }
-
-
-                            /*
-                                                    double priority = m_prioritizer.GetUpdatePriority(m_presence.ControllingClient, e);
-                                                    EntityUpdate update = new EntityUpdate(e, PrimUpdateFlags.FullUpdate);
-                                                    //Fix the version with the newest locked m_version
-                                                    FixVersion(update);
-                                                    PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double>();
-                                                    item.Priority = priority;
-                                                    item.Value = update;
-                                                    lock(m_partsUpdateQueue)
-                                                        {
-                                                        m_partsUpdateQueue.Enqueue(item);
-                                                        }
-                                                        //Get the correct priority and add to the queue                               
-                                                    //                            SendUpdate(PrimUpdateFlags.FullUpdate, (SceneObjectGroup)e);
-                             */
+                            EntityUpdate update = new EntityUpdate(e, PrimUpdateFlags.FullUpdate);
+                            PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double>();
+                            item.Value = update;
+                            item.Priority = priority;
+                            m_entsqueue.Enqueue(item);
                             }
                         }
                     entities = null;
+                    // send them 
+
+                    PriorityQueueItem<EntityUpdate, double> up;
+                    bool cont = true;
+                    while (cont)
+                        {
+                        cont = m_entsqueue.TryDequeue(out up);
+                        if (!cont)
+                            break;
+
+                        //Make sure not send deleted or null objects
+                        
+                        SceneObjectGroup ent =(SceneObjectGroup)up.Value.Entity;
+
+
+                        if (ent == null || ent.IsDeleted)
+                            continue;
+
+                        if (ent.RootPart.Shape.PCode == 9 && ent.RootPart.Shape.State != 0)
+                            {
+                            byte state = ent.RootPart.Shape.State;
+                            if ((
+                                    state == (byte)AttachmentPoint.HUDBottom ||
+                                    state == (byte)AttachmentPoint.HUDBottomLeft ||
+                                    state == (byte)AttachmentPoint.HUDBottomRight ||
+                                    state == (byte)AttachmentPoint.HUDCenter ||
+                                    state == (byte)AttachmentPoint.HUDCenter2 ||
+                                    state == (byte)AttachmentPoint.HUDTop ||
+                                    state == (byte)AttachmentPoint.HUDTopLeft ||
+                                    state == (byte)AttachmentPoint.HUDTopRight
+                                    )
+                                    &&
+                                    ent.RootPart.OwnerID != m_presence.UUID)
+                                continue;
+                            SendUpdate(up.Value.Flags, ent);
+                            }
+                        else
+                            {
+                            List<SceneObjectPart> parts = ent.ChildrenList;
+                            foreach (SceneObjectPart part in parts)
+                                {
+                                SendUpdate(part, m_presence.GenerateClientFlags(part), up.Value.Flags);
+                                }
+                            }
+                        }
+                    m_entsqueue.Clear();
+
+                    // send things that arrived meanwhile
+                    lock (m_delayedUpdates)
+                        {
+                        object o;
+                        while (m_delayedUpdates.Count>0)
+                            {
+                            o = m_delayedUpdates.Dequeue();
+                            if (o == null)
+                                break;
+                            SceneObjectPart p = (SceneObjectPart)((object[])o)[0];
+                            PrimUpdateFlags updateFlags = (PrimUpdateFlags)((object[])o)[1];
+                            SendUpdate(p, m_presence.GenerateClientFlags(p), updateFlags);
+                            }
+                        m_queueing = false;
+                        }
                     }
+                //Add the time to the stats tracker
                 }
 
-            #endregion
+            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_presence.Scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_presence.Scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
+            if (reporter != null)
+                reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(AgentMS));
 
+            m_inUse = false;
+            }
+                
+            #endregion
+/*
             #region Update loop that sends objects that have been recently added to the queue
 
             //Pull the parts out into a list first so that we don't lock the queue for too long
-            /*            Dictionary<UUID, List<EntityUpdate>> m_parentUpdates = new Dictionary<UUID, List<EntityUpdate>>();
+//            Dictionary<UUID, List<EntityUpdate>> m_parentUpdates = new Dictionary<UUID, List<EntityUpdate>>();
             //            lock (m_partsUpdateQueue)
                         {
             //                lock (m_removeNextUpdateOf)
@@ -530,7 +572,7 @@ namespace OpenSim.Region.Framework.Scenes
                             }
 
                         }
-            */
+           
             #endregion
 
             //Add the time to the stats tracker
@@ -540,7 +582,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_inUse = false;
             }
-        
+*/
         /// <summary>
         /// Sorts a list of Parts by Link Number so they end up in the correct order
         /// </summary>
