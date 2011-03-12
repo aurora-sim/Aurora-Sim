@@ -33,6 +33,7 @@ using System.Text;
 using System.Threading;
 using log4net;
 using Nini.Config;
+using log4net.Core;
 
 namespace OpenSim.Framework
 {
@@ -43,7 +44,7 @@ namespace OpenSim.Framework
         string DefaultPrompt { get; set; }
         void LockOutput();
         void UnlockOutput();
-        void Output(string text, string level);
+        void Output (string text, Level level);
         void Output(string text);
         string CmdPrompt(string p);
         string CmdPrompt(string p, string def);

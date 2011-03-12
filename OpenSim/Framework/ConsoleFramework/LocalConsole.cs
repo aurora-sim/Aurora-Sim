@@ -34,6 +34,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using log4net;
 using Nini.Config;
+using log4net.Core;
 
 namespace OpenSim.Framework
 {
@@ -45,7 +46,6 @@ namespace OpenSim.Framework
 //        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         // private readonly object m_syncRoot = new object();
-        private const string LOGLEVEL_NONE = "(none)";
 
         private int y = -1;
         private int cp = 0;
@@ -298,59 +298,11 @@ namespace OpenSim.Framework
             }
         }
 
-        private void WriteLocalText(string text, string level)
+        private void WriteLocalText (string text, Level level)
         {
             MainConsole.TriggerLog (level, text);
             string logtext = "";
-            if (level == "AppendTimeStamp")
-            {
-                text = DateTime.Now.ToLongTimeString() + " - " + text;
-            }
-            if (level == "noTimeStamp" && text != "")
-            {
-                logtext = text;
-                System.Console.Write(logtext);
-            }
-            else if (level == "None" && text != "") //No color or flowers or whisles, just basic writing plus the DT must be added manually
-            {
-                logtext = DateTime.Now.ToLongTimeString() + " - " + text;
-                System.Console.Write(logtext);
-            }
-            else if (level == LOGLEVEL_NONE && text != "")
-            {
-                logtext = DateTime.Now.ToLongTimeString() + " - " + text;
-                System.Console.Write(logtext);
-            }
-			else if (level == "Notice")
-            {
-                logtext = DateTime.Now.ToLongTimeString() + " - ";
-                WriteColorText(ConsoleColor.Gray, logtext);
-                string[] Split = text.Split(new string[]{" - "}, StringSplitOptions.RemoveEmptyEntries);
-                if (Split.Length != 0)
-                {
-                    int i = 0;
-                    foreach (string Rest in Split)
-                    {
-                        if (i != 0)
-                        {
-                            WriteColorText(ConsoleColor.Magenta, Rest);
-                            logtext += Rest;
-                        }
-                        else
-                        {
-                            WriteColorText(ConsoleColor.Gray, Rest + " - ");
-                            logtext += Rest + " - ";
-                        }
-                        i++;
-                    }
-                }
-                else
-                {
-                    WriteColorText(ConsoleColor.Magenta, text);
-                    logtext += text;
-                }
-            }
-            else if (text != "")
+            if (text != "")
             {
                 int CurrentLine = 0;
                 string[] Lines = text.Split(new char[2]{'\n', '\r'}, StringSplitOptions.RemoveEmptyEntries);
@@ -375,10 +327,12 @@ namespace OpenSim.Framework
                         System.Console.Write("]:");
                     }
 
-                    if (level == "error")
-                        WriteColorText(ConsoleColor.Red, outText);
-                    else if (level == "warn")
-                        WriteColorText(ConsoleColor.Yellow, outText);
+                    if (level == Level.Error)
+                        WriteColorText (ConsoleColor.Red, outText);
+                    else if (level == Level.Warn)
+                        WriteColorText (ConsoleColor.Yellow, outText);
+                    else if (level == Level.Alert)
+                        WriteColorText (ConsoleColor.Magenta, outText);
                     else
                         WriteColorText(ConsoleColor.Gray, outText);
 
@@ -396,10 +350,10 @@ namespace OpenSim.Framework
 
         public override void Output(string text)
         {
-            Output(text, LOGLEVEL_NONE);
+            Output(text, Level.Debug);
         }
 
-        public override void Output(string text, string level)
+        public override void Output(string text, Level level)
         {
             lock (cmdline)
             {
@@ -505,6 +459,21 @@ namespace OpenSim.Framework
                             System.Console.Write("{0}{1}", prompt, cmdline + " ");
                         else
                             System.Console.Write("{0}", prompt);
+
+                        break;
+                    case ConsoleKey.Delete:
+                        if (cp == cmdline.Length || cp < 0)
+                            break;
+                        cmdline.Remove (cp, 1);
+                        cp--;
+
+                        SetCursorLeft (0);
+                        y = SetCursorTop (y);
+
+                        if (echo) //This space makes the last line part disappear
+                            System.Console.Write ("{0}{1}", prompt, cmdline + " ");
+                        else
+                            System.Console.Write ("{0}", prompt);
 
                         break;
                     case ConsoleKey.End:

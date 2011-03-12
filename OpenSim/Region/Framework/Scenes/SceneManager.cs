@@ -34,6 +34,7 @@ using System.Reflection;
 using System.Text;
 using OpenMetaverse;
 using log4net;
+using log4net.Core;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Physics.Manager;
@@ -918,8 +919,8 @@ namespace OpenSim.Region.Framework.Scenes
                 switch (cmdparams[0].ToLower())
                 {
                     case "help":
-                        MainConsole.Instance.Output("modules list - List modules", "noTimeStamp");
-                        MainConsole.Instance.Output("modules unload - Unload a module", "noTimeStamp");
+                        m_log.Info("modules list - List modules");
+                        m_log.Info ("modules unload - Unload a module");
                         break;
                     case "list":
                         foreach (IRegionModuleBase irm in controller.AllModules)

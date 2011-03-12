@@ -229,20 +229,20 @@ namespace Aurora.Modules
 
         protected virtual void DumpStatsToConsole(Scene scene, PhysicsStats stats)
         {
-            MainConsole.Instance.Output("------  Physics Stats for region " + scene.RegionInfo.RegionName + "  ------", "Normal");
-            MainConsole.Instance.Output("   All stats are in milliseconds spent per second.", "Normal");
-            MainConsole.Instance.Output("   These are in the order they are run in the PhysicsScene.", "Normal");
-            MainConsole.Instance.Output(" PhysicsTaintTime: " + stats.StatPhysicsTaintTime, "Normal");
-            MainConsole.Instance.Output(" PhysicsMoveTime: " + stats.StatPhysicsMoveTime, "Normal");
-            MainConsole.Instance.Output(" FindContactsTime: " + stats.StatFindContactsTime, "Normal");
-            MainConsole.Instance.Output(" ContactLoopTime: " + stats.StatContactLoopTime, "Normal");
-            MainConsole.Instance.Output(" CollisionAccountingTime: " + stats.StatCollisionAccountingTime, "Normal");
-            MainConsole.Instance.Output(" CollisionOptimizedTime: " + stats.StatCollisionOptimizedTime, "Normal");
-            MainConsole.Instance.Output(" SendCollisionsTime: " + stats.StatSendCollisionsTime, "Normal");
-            MainConsole.Instance.Output(" AvatarUpdatePosAndVelocity: " + stats.StatAvatarUpdatePosAndVelocity, "Normal");
-            MainConsole.Instance.Output(" PrimUpdatePosAndVelocity: " + stats.StatPrimUpdatePosAndVelocity, "Normal");
-            MainConsole.Instance.Output(" UnlockedArea: " + stats.StatUnlockedArea, "Normal");
-            MainConsole.Instance.Output("", "Normal");
+            m_log.Info("------  Physics Stats for region " + scene.RegionInfo.RegionName + "  ------");
+            m_log.Info ("   All stats are in milliseconds spent per second.");
+            m_log.Info ("   These are in the order they are run in the PhysicsScene.");
+            m_log.Info (" PhysicsTaintTime: " + stats.StatPhysicsTaintTime);
+            m_log.Info (" PhysicsMoveTime: " + stats.StatPhysicsMoveTime);
+            m_log.Info (" FindContactsTime: " + stats.StatFindContactsTime);
+            m_log.Info (" ContactLoopTime: " + stats.StatContactLoopTime);
+            m_log.Info (" CollisionAccountingTime: " + stats.StatCollisionAccountingTime);
+            m_log.Info (" CollisionOptimizedTime: " + stats.StatCollisionOptimizedTime);
+            m_log.Info (" SendCollisionsTime: " + stats.StatSendCollisionsTime);
+            m_log.Info (" AvatarUpdatePosAndVelocity: " + stats.StatAvatarUpdatePosAndVelocity);
+            m_log.Info (" PrimUpdatePosAndVelocity: " + stats.StatPrimUpdatePosAndVelocity);
+            m_log.Info (" UnlockedArea: " + stats.StatUnlockedArea);
+            m_log.Info ("");
         }
 
         protected virtual void PhysicsStatsHeartbeat(object sender, ElapsedEventArgs e)

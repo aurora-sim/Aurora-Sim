@@ -36,6 +36,7 @@ using System.Threading;
 using System.Text.RegularExpressions;
 using Nini.Config;
 using log4net;
+using log4net.Core;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenSim;
@@ -75,7 +76,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
     [Serializable]
     public class LSL_Api : MarshalByRefObject, ILSL_Api, IScriptApi
     {
-        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected IScriptModulePlugin m_ScriptEngine;
         protected SceneObjectPart m_host;
         protected uint m_localID;
@@ -4851,7 +4852,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 byte[] objBytes = agentItem.ID.GetBytes();
                 Array.Copy(objBytes, 0, bucket, 1, 16);
 
-                MainConsole.Instance.Output("Giving inventory to " + destId + " from " + m_host.Name, "None");
+                m_log.Debug("Giving inventory to " + destId + " from " + m_host.Name);
                 GridInstantMessage msg = new GridInstantMessage(World,
                         m_host.UUID, m_host.Name+", an object owned by "+
                         resolveName(m_host.OwnerID)+",", destId,

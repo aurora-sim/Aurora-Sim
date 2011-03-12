@@ -12,6 +12,8 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Nini.Config;
 using Aurora.Framework;
+using log4net;
+using log4net.Core;
 
 namespace Aurora.Modules.World.SimConsole
 {
@@ -27,7 +29,7 @@ namespace Aurora.Modules.World.SimConsole
         private bool m_enabled = false;
         private Dictionary<UUID, Access> m_authorizedParticipants = new Dictionary<UUID, Access> ();
         private Dictionary<string, Access> m_userKeys = new Dictionary<string, Access> ();
-        private Dictionary<UUID, LogLevel> m_userLogLevel = new Dictionary<UUID, LogLevel> ();
+        private Dictionary<UUID, Level> m_userLogLevel = new Dictionary<UUID,  Level> ();
 
         #region Enums
 
@@ -37,15 +39,6 @@ namespace Aurora.Modules.World.SimConsole
             Read,
             Write,
             None
-        }
-
-        private enum LogLevel
-        {
-            error,
-            warn,
-            info,
-            debug,
-            all
         }
 
         #endregion
@@ -189,7 +182,6 @@ namespace Aurora.Modules.World.SimConsole
             }
             else
             {
-                SendConsoleEventEQM (SP.UUID, "You have failed to log into the console, please authenticate with \"User:<NAME>/Password:<PASS>\".");
                 responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString ("");
             }
             return responsedata;
@@ -237,7 +229,7 @@ namespace Aurora.Modules.World.SimConsole
             {
                 if (m_userKeys.ContainsKey (sp.Name))
                 {
-                    m_userLogLevel.Add (sp.UUID, LogLevel.info);
+                    m_userLogLevel.Add (sp.UUID, Level.Info);
                     m_authorizedParticipants.Add (sp.UUID, m_userKeys[sp.Name]);
                     return ParseMessage (sp, message, true);
                 }
@@ -262,7 +254,7 @@ namespace Aurora.Modules.World.SimConsole
                 string[] words = message.Split (' ');
                 if (words.Length == 4)
                 {
-                    m_userLogLevel[sp.UUID] = (LogLevel)Enum.Parse(typeof(LogLevel), words[3].ToLower());
+                    m_userLogLevel[sp.UUID] = (Level)Enum.Parse(typeof(Level), words[3]);
                     SendConsoleEventEQM (sp.UUID, "Set log level successful.");
                 }
                 else
@@ -281,22 +273,13 @@ namespace Aurora.Modules.World.SimConsole
 
         #endregion
 
-        public void IncomingLogWrite(string level, string text)
+        public void IncomingLogWrite(Level level, string text)
         {
             foreach (KeyValuePair<UUID, Access> kvp in m_authorizedParticipants)
             {
                 if (kvp.Value == Access.ReadWrite || kvp.Value == Access.Read)
                 {
-                    LogLevel logLevel = LogLevel.all;
-                    try
-                    {
-                        logLevel = (LogLevel)Enum.Parse (typeof (LogLevel), level);
-                    }
-                    catch
-                    {
-                        logLevel = LogLevel.all;
-                    }
-                    if (m_userLogLevel[kvp.Key] >= logLevel)
+                    if (m_userLogLevel[kvp.Key] >= level)
                     {
                         //Send the EQM with the message to all people who have read access
                         SendConsoleEventEQM (kvp.Key, text);

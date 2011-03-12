@@ -61,7 +61,7 @@ namespace OpenSim.Framework
                     else if (le.Level == Level.Warn)
                         level = "warn";
 
-                    m_console.Output(loggingMessage, level);
+                    m_console.Output(loggingMessage, le.Level);
                 }
                 else
                 {

@@ -3,22 +3,26 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Drawing;
-using System.Text;
+using System.Reflection;
 using System.Security.Cryptography;
+using System.Text;
 using System.Xml;
 using OpenMetaverse.StructuredData;
 using Nwc.XmlRpc;
 using System.Windows.Forms;
 using OpenSim.Framework;
+using log4net;
+using log4net.Core;
 
 namespace Aurora.Framework
 {
     public static class Utilities
     {
+        private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
         /// <summary>
         /// Get the URL to the release notes for the current version of Aurora
         /// </summary>
@@ -487,7 +491,7 @@ namespace Aurora.Framework
             WebClient webClient = new WebClient();
             try
             {
-                MainConsole.Instance.Output("Downloading new file from " + downloadLink + " now into file " + filename + ".", "WARN");
+                m_log.Warn("Downloading new file from " + downloadLink + " now into file " + filename + ".");
                 webClient.DownloadFile(downloadLink, filename);
             }
             catch (Exception)

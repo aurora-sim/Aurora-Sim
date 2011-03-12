@@ -24,13 +24,14 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+using log4net.Core;
 
 namespace OpenSim.Framework
 {
     public class MainConsole
     {
         private static ICommandConsole instance;
-        public delegate void IncomingLogWrite (string level, string text);
+        public delegate void IncomingLogWrite (Level level, string text);
         public static event IncomingLogWrite OnIncomingLogWrite;
 
         public static ICommandConsole Instance
@@ -39,7 +40,7 @@ namespace OpenSim.Framework
             set { instance = value; }
         }
 
-        public static void TriggerLog (string level, string text)
+        public static void TriggerLog (Level level, string text)
         {
             if (OnIncomingLogWrite != null)
                 OnIncomingLogWrite (level, text);

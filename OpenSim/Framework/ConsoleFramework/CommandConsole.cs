@@ -34,6 +34,7 @@ using System.Text;
 using System.Threading;
 using log4net;
 using Nini.Config;
+using log4net.Core;
 
 namespace OpenSim.Framework
 {
@@ -597,7 +598,7 @@ namespace OpenSim.Framework
             List<string> help = m_Commands.GetHelp(cmd);
 
             foreach (string s in help)
-                Output(s, "noTimeStamp");
+                Output(s, Level.Severe);
         }
 
         /// <summary>
@@ -743,7 +744,7 @@ namespace OpenSim.Framework
             return ReadLine(p + ": ", false, false);
         }
 
-        public virtual void Output(string text, string level)
+        public virtual void Output(string text, Level level)
         {
             Output(text);
         }

@@ -29,6 +29,8 @@ using System;
 using System.Threading;
 using System.Collections.Generic;
 using System.Text;
+using log4net;
+using log4net.Core;
 
 namespace OpenSim.Framework
 {
@@ -39,13 +41,10 @@ namespace OpenSim.Framework
     /// </summary>
     public class MockConsole : CommandConsole
     {
-        //public MockConsole(string defaultPrompt) : base()
-        //{
-        //}
         public override void Output(string text)
         {
         }
-        public override void Output(string text, string level)
+        public override void Output(string text, Level level)
         {
         }
 

@@ -37,6 +37,7 @@ using OpenMetaverse;
 using Nini.Config;
 using OpenSim.Framework.Servers.HttpServer;
 using log4net;
+using log4net.Core;
 
 namespace OpenSim.Framework
 {
@@ -104,7 +105,7 @@ namespace OpenSim.Framework
             m_Server.AddHTTPHandler("/SessionCommand/", HandleHttpSessionCommand);
         }
 
-        public override void Output(string text, string level)
+        public override void Output(string text, Level level)
         {
             lock (m_Scrollback)
             {
@@ -119,7 +120,7 @@ namespace OpenSim.Framework
 
         public override void Output(string text)
         {
-            Output(text, "normal");
+            Output(text, Level.Info);
         }
 
         public override string ReadLine(string p, bool isCommand, bool e)

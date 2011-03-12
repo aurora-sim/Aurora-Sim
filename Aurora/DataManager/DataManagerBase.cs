@@ -1,14 +1,18 @@
 using System;
 using System.Data;
 using System.Collections.Generic;
+using System.Reflection;
 using Aurora.Framework;
 using OpenSim.Framework;
 using OpenMetaverse;
+using log4net;
+using log4net.Core;
 
 namespace Aurora.DataManager
 {
     public abstract class DataManagerBase : IDataConnector
     {
+        private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
         private const string VERSION_TABLE_NAME = "aurora_migrator_version";
         private const string COLUMN_NAME = "name";
         private const string COLUMN_VERSION = "version";
@@ -114,7 +118,7 @@ namespace Aurora.DataManager
         {
             if (!TableExists(tableName))
             {
-                MainConsole.Instance.Output("[DataMigrator]: Issue finding table " + tableName + " when verifing tables exist!", "Warn");
+                m_log.Warn("[DataMigrator]: Issue finding table " + tableName + " when verifing tables exist!");
                 return false;
             }
 
@@ -139,7 +143,7 @@ namespace Aurora.DataManager
                         if (GetColumnTypeStringSymbol(thisDef.Type) == GetColumnTypeStringSymbol(columnDefinition.Type))
                             continue; //They are the same type, let them go on through
                     }
-                    MainConsole.Instance.Output("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name + " when verifing tables exist", "Debug");
+                    m_log.Warn("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name + " when verifing tables exist");
                     return false;
                 }
             }
@@ -162,7 +166,7 @@ namespace Aurora.DataManager
                         if (GetColumnTypeStringSymbol(thisDef.Type) == GetColumnTypeStringSymbol(columnDefinition.Type))
                             continue; //They are the same type, let them go on through
                     }
-                    MainConsole.Instance.Output("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name + " when verifing tables exist", "Debug");
+                    m_log.Debug("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name + " when verifing tables exist");
                     return false;
                 }
             }
