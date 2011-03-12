@@ -348,7 +348,7 @@ namespace Aurora.Modules
             }
 
             //Check that we are not underground as well
-            float posZLimit = scene.RequestModuleInterface<ITerrainChannel>()[(int)Position.X, (int)Position.Y];
+            float posZLimit = scene.RequestModuleInterface<ITerrainChannel>()[(int)Position.X, (int)Position.Y] + (float)1.25;
 
             if (posZLimit >= (Position.Z) && !(Single.IsInfinity(posZLimit) || Single.IsNaN(posZLimit)))
             {
