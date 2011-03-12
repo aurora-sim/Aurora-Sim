@@ -172,14 +172,17 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                             {
                                 if (p.UUID != godID)
                                 {
-                                    m_scene.IncomingCloseAgent(p.UUID);
+                                    IEntityTransferModule transferModule = m_scene.RequestModuleInterface<IEntityTransferModule> ();
+                                    if (transferModule != null)
+                                        transferModule.IncomingCloseAgent (m_scene, p.UUID);
                                 }
                             }
                         }
                         else
                         {
-                            sp.ControllingClient.Kick(Utils.BytesToString(reason));
-                            m_scene.IncomingCloseAgent(sp.UUID);
+                            IEntityTransferModule transferModule = m_scene.RequestModuleInterface<IEntityTransferModule> ();
+                            if (transferModule != null)
+                                transferModule.IncomingCloseAgent (m_scene, sp.UUID);
                         }
                     }
                     else if (kickflags == 1)

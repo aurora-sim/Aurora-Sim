@@ -107,7 +107,9 @@ namespace Aurora.Modules
                 SP.ControllingClient.Kick("\nThe Aurora manager banned and kicked you out.\n");
             
             // kick client...
-            SP.Scene.IncomingCloseAgent(SP.UUID);
+            IEntityTransferModule transferModule = SP.Scene.RequestModuleInterface<IEntityTransferModule> ();
+            if (transferModule != null)
+                transferModule.IncomingCloseAgent (SP.Scene, SP.UUID);
         }
 
         protected void SetRegionInfoOption(string module, string[] cmdparams)

@@ -213,7 +213,9 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                         if (scene.TryGetScenePresence(UUID.Parse(user), out sp))
                         {
                             sp.ControllingClient.Kick(value == "" ? "The Aurora Grid Manager kicked you out." : value);
-                            scene.IncomingCloseAgent(sp.UUID);
+                            IEntityTransferModule transferModule = scene.RequestModuleInterface<IEntityTransferModule> ();
+                            if (transferModule != null)
+                                transferModule.IncomingCloseAgent (scene, sp.UUID);
                         }
                     }
                 }

@@ -36,6 +36,7 @@ using log4net;
 using Nini.Config;
 using OpenMetaverse.Packets;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
 using Aurora.Framework;
@@ -960,7 +961,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (m_scene.TryGetClient(udpClient.AgentID, out client))
             {
                 client.IsLoggingOut = true;
-                m_scene.IncomingCloseAgent(udpClient.AgentID);
+                IEntityTransferModule transferModule = m_scene.RequestModuleInterface<IEntityTransferModule> ();
+                if (transferModule != null)
+                    transferModule.IncomingCloseAgent (m_scene, udpClient.AgentID);
             }
         }
 

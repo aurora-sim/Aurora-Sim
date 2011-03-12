@@ -129,10 +129,12 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
             lock (m_avatars)
             {
-                if (m_avatars.ContainsKey(agentID))
+                if (m_avatars.ContainsKey (agentID))
                 {
-                    scene.IncomingCloseAgent(agentID);
-                    m_avatars.Remove(agentID);
+                    IEntityTransferModule transferModule = scene.RequestModuleInterface<IEntityTransferModule> ();
+                    if (transferModule != null)
+                        transferModule.IncomingCloseAgent (scene, agentID);
+                    m_avatars.Remove (agentID);
                 }
             }
         }

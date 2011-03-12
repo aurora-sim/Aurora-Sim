@@ -57,5 +57,15 @@ namespace OpenSim.Region.Framework.Interfaces
         bool IncomingCreateObject(UUID regionID, UUID userID, UUID itemID);
 
         bool IncomingCreateObject(UUID regionID, ISceneObject sog);
+
+        bool NewUserConnection (Scene scene, AgentCircuitData agent, uint teleportFlags, out string reason);
+
+        bool IncomingChildAgentDataUpdate (Scene scene, AgentData cAgentData);
+
+        bool IncomingChildAgentDataUpdate (Scene scene, AgentPosition cAgentData);
+
+        bool IncomingRetrieveRootAgent (Scene scene, UUID id, out IAgentData agent);
+
+        bool IncomingCloseAgent (Scene scene, UUID agentID);
     }
 }

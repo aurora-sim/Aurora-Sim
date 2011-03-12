@@ -97,12 +97,16 @@ namespace Aurora.Modules
                             if (BannedViewers.Contains(viewerMap["name"].ToString()))
                             {
                                 client.Kick("You cannot use " + viewerMap["name"] + " in this sim.");
-                                ((Scene)client.Scene).IncomingCloseAgent(client.AgentId);
+                                IEntityTransferModule transferModule = client.Scene.RequestModuleInterface<IEntityTransferModule> ();
+                                if (transferModule != null)
+                                    transferModule.IncomingCloseAgent (((Scene)client.Scene), client.AgentId);
                             }
                             else if (m_banEvilViewersByDefault && viewerMap.ContainsKey("evil") && (viewerMap["evil"].AsBoolean() == true))
                             {
                                 client.Kick("You cannot use " + viewerMap["name"] + " in this sim.");
-                                ((Scene)client.Scene).IncomingCloseAgent(client.AgentId);
+                                IEntityTransferModule transferModule = client.Scene.RequestModuleInterface<IEntityTransferModule> ();
+                                if (transferModule != null)
+                                    transferModule.IncomingCloseAgent (((Scene)client.Scene), client.AgentId);
                             }
                         }
                     }

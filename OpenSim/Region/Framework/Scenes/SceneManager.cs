@@ -840,7 +840,9 @@ namespace OpenSim.Region.Framework.Scenes
                             presence.ControllingClient.Kick("\nThe Aurora manager kicked you out.\n");
 
                         // ...and close on our side
-                        presence.Scene.IncomingCloseAgent(presence.UUID);
+                        IEntityTransferModule transferModule = presence.Scene.RequestModuleInterface<IEntityTransferModule> ();
+                        if(transferModule != null)
+                            transferModule.IncomingCloseAgent (presence.Scene, presence.UUID);
                     }
                 }
             }
@@ -863,7 +865,9 @@ namespace OpenSim.Region.Framework.Scenes
                         presence.ControllingClient.Kick("\nThe Aurora manager kicked you out.\n");
 
                     // ...and close on our side
-                    presence.Scene.IncomingCloseAgent(presence.UUID);
+                    IEntityTransferModule transferModule = presence.Scene.RequestModuleInterface<IEntityTransferModule> ();
+                    if (transferModule != null)
+                        transferModule.IncomingCloseAgent (presence.Scene, presence.UUID);
                 }
             }
             MainConsole.Instance.Output("");

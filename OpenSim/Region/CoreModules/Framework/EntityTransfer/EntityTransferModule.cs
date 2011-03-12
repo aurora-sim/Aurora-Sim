@@ -54,7 +54,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected bool m_Enabled = false;
-        protected List<Scene> m_scenes = new List<Scene>();
+        protected List<Scene> m_scenes = new List<Scene> ();
+        private Dictionary<Scene, Dictionary<UUID, AgentData>> m_incomingChildAgentData = new Dictionary<Scene, Dictionary<UUID, AgentData>> ();
         
         #endregion
 
@@ -97,7 +98,26 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             scene.RegisterModuleInterface<IEntityTransferModule>(this);
             scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnNewPresence += new EventManager.OnNewPresenceDelegate (EventManager_OnNewPresence);
             scene.EventManager.OnClosingClient += OnClosingClient;
+        }
+
+        void EventManager_OnNewPresence (ScenePresence sp)
+        {
+            lock (m_incomingChildAgentData)
+            {
+                Dictionary<UUID, AgentData> childAgentUpdates;
+                if (m_incomingChildAgentData.TryGetValue (sp.Scene, out childAgentUpdates))
+                {
+                    if (childAgentUpdates.ContainsKey (sp.UUID))
+                    {
+                        //Found info, update the agent then remove it
+                        sp.ChildAgentDataUpdate (childAgentUpdates[sp.UUID]);
+                        childAgentUpdates.Remove (sp.UUID);
+                        m_incomingChildAgentData[sp.Scene] = childAgentUpdates;
+                    }
+                }
+            }   
         }
 
         public virtual void Close()
@@ -112,6 +132,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             scene.UnregisterModuleInterface<IEntityTransferModule>(this);
             scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnNewPresence -= EventManager_OnNewPresence;
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
@@ -907,6 +928,220 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     return scene;
             }
             return null;
+        }
+
+        #endregion
+
+        #region RegionComms
+
+        /// <summary>
+        /// Do the work necessary to initiate a new user connection for a particular scene.
+        /// At the moment, this consists of setting up the caps infrastructure
+        /// The return bool should allow for connections to be refused, but as not all calling paths
+        /// take proper notice of it let, we allowed banned users in still.
+        /// </summary>
+        /// <param name="agent">CircuitData of the agent who is connecting</param>
+        /// <param name="reason">Outputs the reason for the false response on this string,
+        /// If the agent was accepted, this will be the Caps SEED for the region</param>
+        /// <param name="requirePresenceLookup">True for normal presence. False for NPC
+        /// or other applications where a full grid/Hypergrid presence may not be required.</param>
+        /// <returns>True if the region accepts this agent.  False if it does not.  False will 
+        /// also return a reason.</returns>
+        public bool NewUserConnection (Scene scene, AgentCircuitData agent, uint teleportFlags, out string reason)
+        {
+            bool vialogin = ((teleportFlags & (uint)TeleportFlags.ViaLogin) != 0);
+            reason = String.Empty;
+
+            // Don't disable this log message - it's too helpful
+            m_log.DebugFormat (
+                "[ConnectionBegin]: Region {0} told of incoming {1} agent {2} (circuit code {3}, teleportflags {4})",
+                scene.RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
+                agent.circuitcode, teleportFlags);
+
+            if (!AuthorizeUser (scene, agent, out reason))
+            {
+                OSDMap map = new OSDMap ();
+                map["Reason"] = reason;
+                map["Success"] = false;
+                reason = OSDParser.SerializeJsonString (map);
+                return false;
+            }
+
+            ScenePresence sp = scene.GetScenePresence (agent.AgentID);
+
+            if (sp != null && !sp.IsChildAgent)
+            {
+                // We have a zombie from a crashed session. 
+                // Or the same user is trying to be root twice here, won't work.
+                // Kill it.
+                m_log.InfoFormat ("[Scene]: Zombie scene presence detected for {0} in {1}", agent.AgentID, scene.RegionInfo.RegionName);
+                scene.RemoveAgent (sp);
+                sp = null;
+            }
+
+            //Add possible Urls for the given agent
+            IConfigurationService configService = scene.RequestModuleInterface<IConfigurationService> ();
+            if (configService != null && agent.OtherInformation.ContainsKey ("UserUrls"))
+            {
+                configService.AddNewUser (agent.AgentID.ToString (), (OSDMap)agent.OtherInformation["UserUrls"]);
+            }
+
+            OSDMap responseMap = new OSDMap ();
+            responseMap["CapsUrls"] = scene.EventManager.TriggerOnRegisterCaps (agent.AgentID);
+
+            // In all cases, add or update the circuit data with the new agent circuit data and teleport flags
+            agent.teleportFlags = teleportFlags;
+
+            //Add the circuit at the end
+            scene.AuthenticateHandler.AddNewCircuit (agent.circuitcode, agent);
+
+            OSDMap eventMap = responseMap;
+            responseMap["Agent"] = agent.PackAgentCircuitData ();
+
+            scene.AuroraEventManager.FireGenericEventHandler ("NewUserConnection", eventMap);
+
+            m_log.InfoFormat (
+                "[ConnectionBegin]: Region {0} authenticated and authorized incoming {1} agent {2} (circuit code {3})",
+                scene.RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
+                agent.circuitcode);
+
+            responseMap["Success"] = true;
+            reason = OSDParser.SerializeJsonString (responseMap);
+            return true;
+        }
+
+        /// <summary>
+        /// Verify if the user can connect to this region.  Checks the banlist and ensures that the region is set for public access
+        /// </summary>
+        /// <param name="agent">The circuit data for the agent</param>
+        /// <param name="reason">outputs the reason to this string</param>
+        /// <returns>True if the region accepts this agent.  False if it does not.  False will 
+        /// also return a reason.</returns>
+        protected bool AuthorizeUser (Scene scene, AgentCircuitData agent, out string reason)
+        {
+            reason = String.Empty;
+
+            IAuthorizationService AuthorizationService = scene.RequestModuleInterface<IAuthorizationService> ();
+            if (AuthorizationService != null)
+            {
+                GridRegion ourRegion = new GridRegion (scene.RegionInfo);
+                if (!AuthorizationService.IsAuthorizedForRegion (ourRegion, agent, !agent.child, out reason))
+                {
+                    m_log.WarnFormat ("[ConnectionBegin]: Denied access to {0} at {1} because the user does not have access to the region, reason: {2}",
+                                     agent.AgentID, scene.RegionInfo.RegionName, reason);
+                    reason = String.Format ("You do not have access to the region {0}, reason: {1}", scene.RegionInfo.RegionName, reason);
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// We've got an update about an agent that sees into this region, 
+        /// send it to ScenePresence for processing  It's the full data.
+        /// </summary>
+        /// <param name="cAgentData">Agent that contains all of the relevant things about an agent.
+        /// Appearance, animations, position, etc.</param>
+        /// <returns>true if we handled it.</returns>
+        public virtual bool IncomingChildAgentDataUpdate (Scene scene, AgentData cAgentData)
+        {
+            //m_log.DebugFormat(
+            //    "[SCENE]: Incoming child agent update for {0} in {1}", cAgentData.AgentID, RegionInfo.RegionName);
+
+            //No null updates!
+            if (cAgentData == null)
+                return false;
+
+            // We have to wait until the viewer contacts this region after receiving EAC.
+            // That calls AddNewClient, which finally creates the ScenePresence and then this gets set up
+            // So if the client isn't here yet, save the update for them when they get into the region fully
+            ScenePresence SP = scene.GetScenePresence (cAgentData.AgentID);
+            if (SP != null)
+                SP.ChildAgentDataUpdate (cAgentData);
+            else
+                lock (m_incomingChildAgentData)
+                {
+                    if (!m_incomingChildAgentData.ContainsKey (scene))
+                        m_incomingChildAgentData.Add (scene, new Dictionary<UUID, AgentData> ());
+                    m_incomingChildAgentData[scene][cAgentData.AgentID] = cAgentData;
+                }
+            return true;
+        }
+
+        /// <summary>
+        /// We've got an update about an agent that sees into this region, 
+        /// send it to ScenePresence for processing  It's only positional data
+        /// </summary>
+        /// <param name="cAgentData">AgentPosition that contains agent positional data so we can know what to send</param>
+        /// <returns>true if we handled it.</returns>
+        public virtual bool IncomingChildAgentDataUpdate (Scene scene, AgentPosition cAgentData)
+        {
+            //m_log.Debug(" XXX Scene IncomingChildAgentDataUpdate POSITION in " + RegionInfo.RegionName);
+            ScenePresence presence = scene.GetScenePresence (cAgentData.AgentID);
+            if (presence != null)
+            {
+                // I can't imagine *yet* why we would get an update if the agent is a root agent..
+                // however to avoid a race condition crossing borders..
+                if (presence.IsChildAgent)
+                {
+                    uint rRegionX = 0;
+                    uint rRegionY = 0;
+                    //In meters
+                    Utils.LongToUInts (cAgentData.RegionHandle, out rRegionX, out rRegionY);
+                    //In meters
+                    int tRegionX = scene.RegionInfo.RegionLocX;
+                    int tRegionY = scene.RegionInfo.RegionLocY;
+                    //Send Data to ScenePresence
+                    presence.ChildAgentDataUpdate (cAgentData, tRegionX, tRegionY, (int)rRegionX, (int)rRegionY);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        public virtual bool IncomingRetrieveRootAgent (Scene scene, UUID id, out IAgentData agent)
+        {
+            agent = null;
+            ScenePresence sp = scene.GetScenePresence (id);
+            if ((sp != null) && (!sp.IsChildAgent))
+            {
+                sp.IsChildAgent = true;
+                AgentData data = new AgentData ();
+                sp.CopyTo (data);
+                agent = data;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Tell a single agent to disconnect from the region.
+        /// </summary>
+        /// <param name="regionHandle"></param>
+        /// <param name="agentID"></param>
+        public bool IncomingCloseAgent (Scene scene, UUID agentID)
+        {
+            //m_log.DebugFormat("[SCENE]: Processing incoming close agent for {0}", agentID);
+
+            ScenePresence presence = scene.GetScenePresence (agentID);
+            if (presence != null)
+            {
+                bool RetVal = scene.RemoveAgent (presence);
+
+                ISyncMessagePosterService syncPoster = scene.RequestModuleInterface<ISyncMessagePosterService> ();
+                if (syncPoster != null)
+                {
+                    //Tell the grid that we are logged out
+                    syncPoster.Post (SyncMessageHelper.DisableSimulator (presence.UUID, scene.RegionInfo.RegionHandle), scene.RegionInfo.RegionHandle);
+                }
+
+                return RetVal;
+            }
+            return false;
         }
 
         #endregion

@@ -2184,7 +2184,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         sp.ControllingClient.Kick(alert);
 
                         // ...and close on our side
-                        sp.Scene.IncomingCloseAgent(sp.UUID);
+                        IEntityTransferModule transferModule = sp.Scene.RequestModuleInterface<IEntityTransferModule> ();
+                        if (transferModule != null)
+                            transferModule.IncomingCloseAgent (sp.Scene, sp.UUID);
                     }
                 });
             }

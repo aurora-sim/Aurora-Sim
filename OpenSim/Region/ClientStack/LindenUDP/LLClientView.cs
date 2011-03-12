@@ -9956,7 +9956,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         if (client == null)
                             return true;
                         client.Kick("The Aurora Manager has kicked you");
-                        m_scene.IncomingCloseAgent(Prey);
+                        IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule> ();
+                        if (transferModule != null)
+                            transferModule.IncomingCloseAgent (((Scene)Scene), Prey);
                     }
                     return true;
                 case "telehub":
