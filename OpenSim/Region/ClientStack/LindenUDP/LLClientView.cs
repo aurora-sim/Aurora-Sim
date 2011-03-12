@@ -4061,6 +4061,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags)
             {
+
+            if(entity is ScenePresence)
+                SendAvatarUpdate(entity, updateFlags); // don't queue avatars info
+
             object[] o = new object[]{ entity, updateFlags };
             m_UpdatesQueue.Enqueue(o);
             }
