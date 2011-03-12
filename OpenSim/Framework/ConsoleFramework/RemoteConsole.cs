@@ -85,7 +85,7 @@ namespace OpenSim.Framework
             else
                 return;
 
-            baseOpenSim.ApplicationRegistry.RegisterModuleInterface<ICommandConsole>(this);
+            baseOpenSim.ApplicationRegistry.RegisterModuleInterface<ICommandConsole> (this);
 
             if (m_consolePort == 0)
                 SetServer(MainServer.Instance);
@@ -247,8 +247,6 @@ namespace OpenSim.Framework
             prompt.AppendChild(xmldoc.CreateTextNode(DefaultPrompt));
 
             rootElement.AppendChild(prompt);
-
-            rootElement.AppendChild(MainConsole.Instance.Commands.GetXml(xmldoc));
 
             reply["str_response_string"] = xmldoc.InnerXml;
             reply["int_response_code"] = 200;

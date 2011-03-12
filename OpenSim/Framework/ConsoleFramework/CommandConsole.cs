@@ -38,9 +38,286 @@ using log4net.Core;
 
 namespace OpenSim.Framework
 {
+    public class Commands
+    {
+        private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
+        
+        /// <summary>
+        /// Encapsulates a command that can be invoked from the console
+        /// </summary>
+        private class CommandInfo
+        {
+            /// <summary>
+            /// The command for this commandinfo
+            /// </summary>
+            public string command;
+            
+            /// <summary>
+            /// The help info for how to use this command
+            /// </summary>
+            public string commandHelp;
+
+            /// <summary>
+            /// Any info about this command
+            /// </summary>
+            public string info;
+
+            /// <value>
+            /// The method to invoke for this command
+            /// </value>
+            public List<CommandDelegate> fn;
+        }
+
+        private class CommandSet
+        {
+            private Dictionary<string, CommandInfo> commands = new Dictionary<string, CommandInfo> ();
+            private Dictionary<string, CommandSet> commandsets = new Dictionary<string, CommandSet> ();
+            private string ourPath = "";
+            public string Path = "";
+            
+            public void Initialize (string path)
+            {
+                ourPath = path;
+                string[] paths = path.Split (' ');
+                if (paths.Length != 0)
+                    Path = paths[paths.Length - 1];
+            }
+
+            public void AddCommand (CommandInfo info)
+            {
+                //If our path is "", we can't replace, otherwise we just get ""
+                string innerPath = info.command;
+                if (ourPath != "")
+                    innerPath = info.command.Replace (ourPath, "");
+                if (innerPath.StartsWith (" "))
+                    innerPath = innerPath.Remove (0, 1);
+                string[] commandPath = innerPath.Split (new string[1]{" "}, StringSplitOptions.RemoveEmptyEntries);
+                if (commandPath.Length == 1)
+                {
+                    //Only one command after our path, its ours
+                    commands[info.command] = info;
+                }
+                else
+                {
+                    //Its down the tree somewhere
+                    CommandSet downTheTree;
+                    if (!commandsets.TryGetValue (commandPath[0], out downTheTree))
+                    {
+                        //Need to add it to the tree then
+                        downTheTree = new CommandSet ();
+                        downTheTree.Initialize ((ourPath == "" ? "" : ourPath + " ") + commandPath[0]);
+                        commandsets.Add (commandPath[0], downTheTree);
+                    }
+                    downTheTree.AddCommand (info);
+                }
+            }
+
+            public string[] ExecuteCommand (string[] command)
+            {
+                string innerPath = string.Join (" ", command);
+                if (ourPath != "")
+                    innerPath = innerPath.Replace (ourPath, "");
+                if (innerPath.StartsWith (" "))
+                    innerPath = innerPath.Remove (0, 1);
+                string[] commandPath = innerPath.Split (new string[1] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                if (commandPath.Length == 1)
+                {
+                    //Only one command after our path, its ours
+                    if (commands.ContainsKey (commandPath[0]))
+                    {
+                        foreach (CommandDelegate fn in commands[commandPath[0]].fn)
+                        {
+                            if (fn != null)
+                                fn ("", command);
+                        }
+                    }
+                    if (commandPath[0] == "help")
+                    {
+                        List<string> help = GetHelp ();
+
+                        foreach (string s in help)
+                            MainConsole.Instance.Output (s, Level.Severe);
+                    }
+                }
+                else
+                {
+                    //Its down the tree somewhere
+                    CommandSet downTheTree;
+                    if (commandsets.TryGetValue (commandPath[0], out downTheTree))
+                    {
+                        downTheTree.ExecuteCommand (commandPath);
+                    }
+                }
+                
+                return new string[0];
+            }
+
+            public List<string> GetHelp ()
+            {
+                List<string> help = new List<string> ();
+                foreach (CommandSet set in commandsets.Values)
+                {
+                    help.Add (string.Format ("-- Set {0}", set.Path));
+                }
+                foreach (CommandInfo command in commands.Values)
+                {
+                    help.Add (string.Format ("-- {0} <{1}>: {2}", command.command, command.commandHelp, command.info));
+                }
+                return help;
+            }
+
+        }
+
+        /// <value>
+        /// Commands organized by keyword in a tree
+        /// </value>
+        private CommandSet tree = new CommandSet();
+
+        /// <summary>
+        /// Get help for the given help string
+        /// </summary>
+        /// <param name="helpParts">Parsed parts of the help string.  If empty then general help is returned.</param>
+        /// <returns></returns>
+        public List<string> GetHelp (string[] cmd)
+        {
+            List<string> help = new List<string> ();
+            List<string> helpParts = new List<string> (cmd);
+
+            // Remove initial help keyword
+            helpParts.RemoveAt (0);
+
+            help.AddRange (CollectHelp (helpParts));
+
+            return help;
+        }
+
+        /// <summary>
+        /// See if we can find the requested command in order to display longer help
+        /// </summary>
+        /// <param name="helpParts"></param>
+        /// <returns></returns>
+        private List<string> CollectHelp (List<string> helpParts)
+        {
+            return tree.GetHelp ();
+        }
+
+        /// <summary>
+        /// Add a command to those which can be invoked from the console.
+        /// </summary>
+        /// <param name="command">The string that will make the command execute</param>
+        /// <param name="commandHelp">The message that will show the user how to use the command</param>
+        /// <param name="info">Any information about how the command works or what it does</param>
+        /// <param name="fn"></param>
+        public void AddCommand (string command, string commandHelp, string infomessage, CommandDelegate fn)
+        {
+            CommandInfo info = new CommandInfo ();
+            info.command = command;
+            info.commandHelp = commandHelp;
+            info.info = infomessage;
+            info.fn = new List<CommandDelegate> ();
+            info.fn.Add (fn);
+            tree.AddCommand (info);
+        }
+
+        public void AddCommand (string module, bool shared, string command,
+                string help, string longhelp, CommandDelegate fn)
+        {
+            AddCommand (command, help, longhelp, fn);
+        }
+
+        /// <summary>
+        /// Add a command to those which can be invoked from the console.
+        /// </summary>
+        /// <param name="module"></param>
+        /// <param name="command"></param>
+        /// <param name="help"></param>
+        /// <param name="longhelp"></param>
+        /// <param name="descriptivehelp"></param>
+        /// <param name="fn"></param>
+        public void AddCommand (string module, bool shared, string command,
+                string help, string longhelp, string descriptivehelp,
+                CommandDelegate fn)
+        {
+            AddCommand (command, help, longhelp, fn);
+        }
+
+        public string[] FindNextOption (string[] cmd, bool term)
+        {
+            /*Dictionary<string, object> current = tree;
+
+            int remaining = cmd.Length;
+
+            foreach (string s in cmd)
+            {
+                remaining--;
+
+                List<string> found = new List<string> ();
+
+                foreach (string opt in current.Keys)
+                {
+                    if (remaining > 0 && opt == s)
+                    {
+                        found.Clear ();
+                        found.Add (opt);
+                        break;
+                    }
+                    if (opt.StartsWith (s))
+                    {
+                        found.Add (opt);
+                    }
+                }
+
+                if (found.Count == 1 && (remaining != 0 || term))
+                {
+                    current = (Dictionary<string, object>)current[found[0]];
+                }
+                else if (found.Count > 0)
+                {
+                    return found.ToArray ();
+                }
+                else
+                {
+                    break;
+                    //                    return new string[] {"<cr>"};
+                }
+            }
+
+            if (current.Count > 1)
+            {
+                List<string> choices = new List<string> ();
+
+                bool addcr = false;
+                foreach (string s in current.Keys)
+                {
+                    if (s == String.Empty)
+                    {
+                        CommandInfo ci = (CommandInfo)current[String.Empty];
+                        if (ci.fn.Count != 0)
+                            addcr = true;
+                    }
+                    else
+                        choices.Add (s);
+                }
+                if (addcr)
+                    choices.Add ("<cr>");
+                return choices.ToArray ();
+            }
+
+            if (current.ContainsKey (String.Empty))
+                return new string[] { "Command help: " + ((CommandInfo)current[String.Empty]).commandHelp };
+
+            return new string[] { new List<string> (current.Keys)[0] };*/
+            return new string[0];
+        }
+
+        public string[] Resolve (string[] cmd)
+        {
+            return tree.ExecuteCommand (cmd);
+        }
+    }
     public delegate void CommandDelegate(string module, string[] cmd);
 
-    public class Commands
+    /*public class Commands
     {
         private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
         /// <summary>
@@ -389,156 +666,7 @@ namespace OpenSim.Framework
             
             return new string[0];
         }
-
-        public XmlElement GetXml(XmlDocument doc)
-        {
-            CommandInfo help = (CommandInfo)((Dictionary<string, object>)tree["help"])[String.Empty];
-            ((Dictionary<string, object>)tree["help"]).Remove(string.Empty);
-            if (((Dictionary<string, object>)tree["help"]).Count == 0)
-                tree.Remove("help");
-
-            CommandInfo quit = (CommandInfo)((Dictionary<string, object>)tree["quit"])[String.Empty];
-            ((Dictionary<string, object>)tree["quit"]).Remove(string.Empty);
-            if (((Dictionary<string, object>)tree["quit"]).Count == 0)
-                tree.Remove("quit");
-
-            XmlElement root = doc.CreateElement("", "HelpTree", "");
-
-            ProcessTreeLevel(tree, root, doc);
-
-            if (!tree.ContainsKey("help"))
-                tree["help"] = (object) new Dictionary<string, object>();
-            ((Dictionary<string, object>)tree["help"])[String.Empty] = help;
-
-            if (!tree.ContainsKey("quit"))
-                tree["quit"] = (object) new Dictionary<string, object>();
-            ((Dictionary<string, object>)tree["quit"])[String.Empty] = quit;
-
-            return root;
-        }
-
-        private void ProcessTreeLevel(Dictionary<string, object> level, XmlElement xml, XmlDocument doc)
-        {
-            foreach (KeyValuePair<string, object> kvp in level)
-            {
-                if (kvp.Value is Dictionary<string, Object>)
-                {
-                    XmlElement next = doc.CreateElement("", "Level", "");
-                    next.SetAttribute("Name", kvp.Key);
-
-                    xml.AppendChild(next);
-
-                    ProcessTreeLevel((Dictionary<string, object>)kvp.Value, next, doc);
-                }
-                else
-                {
-                    CommandInfo c = (CommandInfo)kvp.Value;
-
-                    XmlElement cmd = doc.CreateElement("", "Command", "");
-
-                    XmlElement e;
-
-                    e = doc.CreateElement("", "Module", "");
-                    cmd.AppendChild(e);
-                    e.AppendChild(doc.CreateTextNode(c.module));
-
-                    e = doc.CreateElement("", "Shared", "");
-                    cmd.AppendChild(e);
-                    e.AppendChild(doc.CreateTextNode(c.shared.ToString()));
-
-                    e = doc.CreateElement("", "HelpText", "");
-                    cmd.AppendChild(e);
-                    e.AppendChild(doc.CreateTextNode(c.help_text));
-
-                    e = doc.CreateElement("", "LongHelp", "");
-                    cmd.AppendChild(e);
-                    e.AppendChild(doc.CreateTextNode(c.long_help));
-
-                    e = doc.CreateElement("", "Description", "");
-                    cmd.AppendChild(e);
-                    e.AppendChild(doc.CreateTextNode(c.descriptive_help));
-
-                    xml.AppendChild(cmd);
-                }
-            }
-        }
-
-        public void FromXml(XmlElement root, CommandDelegate fn)
-        {
-            CommandInfo help = (CommandInfo)((Dictionary<string, object>)tree["help"])[String.Empty];
-            ((Dictionary<string, object>)tree["help"]).Remove(string.Empty);
-            if (((Dictionary<string, object>)tree["help"]).Count == 0)
-                tree.Remove("help");
-
-            CommandInfo quit = (CommandInfo)((Dictionary<string, object>)tree["quit"])[String.Empty];
-            ((Dictionary<string, object>)tree["quit"]).Remove(string.Empty);
-            if (((Dictionary<string, object>)tree["quit"]).Count == 0)
-                tree.Remove("quit");
-
-            tree.Clear();
-
-            ReadTreeLevel(tree, root, fn);
-
-            if (!tree.ContainsKey("help"))
-                tree["help"] = (object) new Dictionary<string, object>();
-            ((Dictionary<string, object>)tree["help"])[String.Empty] = help;
-
-            if (!tree.ContainsKey("quit"))
-                tree["quit"] = (object) new Dictionary<string, object>();
-            ((Dictionary<string, object>)tree["quit"])[String.Empty] = quit;
-        }
-
-        private void ReadTreeLevel(Dictionary<string, object> level, XmlNode node, CommandDelegate fn)
-        {
-            Dictionary<string, object> next;
-            string name;
-
-            XmlNodeList nodeL = node.ChildNodes;
-            XmlNodeList cmdL;
-            CommandInfo c;
-
-            foreach (XmlNode part in nodeL)
-            {
-                switch (part.Name)
-                {
-                case "Level":
-                    name = ((XmlElement)part).GetAttribute("Name");
-                    next = new Dictionary<string, object>();
-                    level[name] = next;
-                    ReadTreeLevel(next, part, fn);
-                    break;
-                case "Command":
-                    cmdL = part.ChildNodes;
-                    c = new CommandInfo();
-                    foreach (XmlNode cmdPart in cmdL)
-                    {
-                        switch (cmdPart.Name)
-                        {
-                        case "Module":
-                            c.module = cmdPart.InnerText;
-                            break;
-                        case "Shared":
-                            c.shared = Convert.ToBoolean(cmdPart.InnerText);
-                            break;
-                        case "HelpText":
-                            c.help_text = cmdPart.InnerText;
-                            break;
-                        case "LongHelp":
-                            c.long_help = cmdPart.InnerText;
-                            break;
-                        case "Description":
-                            c.descriptive_help = cmdPart.InnerText;
-                            break;
-                        }
-                    }
-                    c.fn = new List<CommandDelegate>();
-                    c.fn.Add(fn);
-                    level[String.Empty] = c;
-                    break;
-                }
-            }
-        }
-    }
+    }*/
 
     public class Parser
     {
@@ -784,7 +912,7 @@ namespace OpenSim.Framework
             get { return "CommandConsole"; }
         }
 
-        public Commands m_Commands = new Commands();
+        public Commands m_Commands = new Commands ();
 
         public Commands Commands
         {
