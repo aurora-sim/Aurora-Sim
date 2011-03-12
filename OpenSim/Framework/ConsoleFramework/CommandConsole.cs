@@ -178,7 +178,7 @@ namespace OpenSim.Framework
                 }
                 foreach (CommandInfo command in commands.Values)
                 {
-                    help.Add (string.Format ("-- {0}  <{1}>:   {2}", command.command, command.commandHelp, command.info));
+                    help.Add (string.Format ("-- {0}  [{1}]:   {2}", command.command, command.commandHelp, command.info));
                 }
                 return help;
             }

@@ -309,38 +309,60 @@ namespace OpenSim.Framework
                 //This exists so that we don't have issues with multiline stuff, since something is messed up with the Regex
                 foreach (string line in Lines)
                 {
-                    string regex = @"^(?<Front>.*?)\[(?<Category>[^\]]+)\]:?(?<End>.*)";
-
-                    Regex RE = new Regex(regex, RegexOptions.Multiline);
-                    MatchCollection matches = RE.Matches(line);
-
-                    string outText = line;
-
-                    if (matches.Count == 1)
+                    string[] split = line.Split (new string[2] { "[", "]" }, StringSplitOptions.None);
+                    int currentPos = 0;
+                    int boxNum = 0;
+                    foreach (string s in split)
                     {
-                        outText = matches[0].Groups["End"].Value;
-                        System.Console.Write(matches[0].Groups["Front"].Value);
-
-                        System.Console.Write("[");
-                        WriteColorText(DeriveColor(matches[0].Groups["Category"].Value),
-                                matches[0].Groups["Category"].Value);
-                        System.Console.Write("]:");
+                        char currentchar = line[currentPos];
+                        char nextchar = line[currentPos + 1];
+                        if (line[currentPos] == '[')
+                        {
+                            if (level == Level.Error)
+                                WriteColorText (ConsoleColor.Red, "[");
+                            else if (level == Level.Warn)
+                                WriteColorText (ConsoleColor.Yellow, "[");
+                            else if (level == Level.Alert)
+                                WriteColorText (ConsoleColor.Magenta, "[");
+                            else
+                                WriteColorText (ConsoleColor.Gray, "[");
+                            boxNum++;
+                            currentPos++;
+                        }
+                        else if (line[currentPos] == ']')
+                        {
+                            if (level == Level.Error)
+                                WriteColorText (ConsoleColor.Red, "]");
+                            else if (level == Level.Warn)
+                                WriteColorText (ConsoleColor.Yellow, "]");
+                            else if (level == Level.Alert)
+                                WriteColorText (ConsoleColor.Magenta, "]");
+                            else
+                                WriteColorText (ConsoleColor.Gray, "]");
+                            boxNum--;
+                            currentPos++;
+                        }
+                        if (boxNum == 0)
+                        {
+                            if (level == Level.Error)
+                                WriteColorText (ConsoleColor.Red, s);
+                            else if (level == Level.Warn)
+                                WriteColorText (ConsoleColor.Yellow, s);
+                            else if (level == Level.Alert)
+                                WriteColorText (ConsoleColor.Magenta, s);
+                            else
+                                WriteColorText (ConsoleColor.Gray, s);
+                        }
+                        else //We're in a box
+                            WriteColorText (DeriveColor (s), s);
+                        currentPos += s.Length; //Include the extra 1 for the [ or ]
                     }
-
-                    if (level == Level.Error)
-                        WriteColorText (ConsoleColor.Red, outText);
-                    else if (level == Level.Warn)
-                        WriteColorText (ConsoleColor.Yellow, outText);
-                    else if (level == Level.Alert)
-                        WriteColorText (ConsoleColor.Magenta, outText);
-                    else
-                        WriteColorText(ConsoleColor.Gray, outText);
-
+                    
                     CurrentLine++;
                     if (Lines.Length - CurrentLine != 0)
                         System.Console.WriteLine();
 
-                    logtext += outText;
+                    logtext += line;
                 }
             }
             Log(logtext);
