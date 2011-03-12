@@ -92,8 +92,8 @@ namespace OpenSim.Framework
             else
                 SetServer(baseOpenSim.GetHttpServer(m_consolePort));
 
-            m_Commands.AddCommand("console", false, "help", "help [<command>]",
-                    "Get general command list or more detailed help on a specific command", base.Help);
+            m_Commands.AddCommand("help", "help",
+                    "Get a general command list", base.Help);
         }
 
         public void SetServer(IHttpServer server)

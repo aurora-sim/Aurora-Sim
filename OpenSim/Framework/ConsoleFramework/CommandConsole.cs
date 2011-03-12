@@ -131,7 +131,7 @@ namespace OpenSim.Framework
                                 fn ("", command);
                         }
                     }
-                    if (commandPath[0] == "help")
+                    else if (commandPath[0] == "help")
                     {
                         List<string> help = GetHelp ();
 
@@ -155,9 +155,21 @@ namespace OpenSim.Framework
             public List<string> GetHelp ()
             {
                 List<string> help = new List<string> ();
+                if (commandsets.Count != 0)
+                {
+                    help.Add ("");
+                    help.Add ("------- Help Sets (type the name and help to get more info about that set) -------");
+                    help.Add ("");
+                }
                 foreach (CommandSet set in commandsets.Values)
                 {
-                    help.Add (string.Format ("-- Set {0}", set.Path));
+                    help.Add (string.Format ("-- Help Set: {0}", set.Path));
+                }
+                if (help.Count != 0)
+                {
+                    help.Add ("");
+                    help.Add ("------- Help options -------");
+                    help.Add ("");
                 }
                 foreach (CommandInfo command in commands.Values)
                 {
@@ -717,9 +729,9 @@ namespace OpenSim.Framework
                 return;
 
             baseOpenSim.ApplicationRegistry.RegisterModuleInterface<ICommandConsole>(this);
-            
-            m_Commands.AddCommand("console", false, "help", "help [<command>]", 
-                    "Get general command list or more detailed help on a specific command", Help);
+
+            m_Commands.AddCommand ("help", "help",
+                    "Get a general command list", Help);
         }
 
         public void Help(string module, string[] cmd)

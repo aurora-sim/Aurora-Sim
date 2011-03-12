@@ -297,8 +297,6 @@ namespace OpenSim.Region.CoreModules
         {
             m_scene = scene;
             // This one enables the ability to type just "sun" without any parameters
-            MainConsole.Instance.Commands.AddCommand(this.Name, false,
-                 "sun", "sun", "Usage: sun [param] [value] - Get or Update Sun module paramater", HandleSunConsoleCommand);
             foreach (KeyValuePair<string, string> kvp in GetParamList())
             {
                 MainConsole.Instance.Commands.AddCommand(this.Name, false,

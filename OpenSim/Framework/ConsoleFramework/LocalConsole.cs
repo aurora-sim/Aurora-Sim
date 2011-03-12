@@ -83,8 +83,8 @@ namespace OpenSim.Framework
 
             baseOpenSim.ApplicationRegistry.RegisterModuleInterface<ICommandConsole>(this);
 
-            m_Commands.AddCommand("console", false, "help", "help [<command>]",
-                    "Get general command list or more detailed help on a specific command", base.Help);
+            m_Commands.AddCommand ("help", "help",
+                    "Get a general command list", base.Help);
         }
 
         private static ConsoleColor DeriveColor(string input)

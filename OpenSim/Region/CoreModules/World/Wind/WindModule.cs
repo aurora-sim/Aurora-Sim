@@ -121,10 +121,6 @@ namespace OpenSim.Region.CoreModules
                     m_log.ErrorFormat("[WIND] Defaulting to no wind.");
                 }
 
-                // This one enables the ability to type just the base command without any parameters
-                MainConsole.Instance.Commands.AddCommand(this.Name, false,
-                    "wind", "wind", "Usage: wind <plugin> <param> [value] - Get or Update Wind paramaters", HandleConsoleCommand);
-
                 // Get a list of the parameters for each plugin
                 foreach (IWindModelPlugin windPlugin in m_availableWindPlugins.Values)
                 {

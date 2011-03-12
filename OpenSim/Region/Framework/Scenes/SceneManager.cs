@@ -780,9 +780,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             MainConsole.Instance.Commands.AddCommand("region", false, "force update", "force update", "Force the update of all objects on clients", HandleForceUpdate);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "debug packet", "debug packet <level>", "Turn on packet debugging", Debug);
+            MainConsole.Instance.Commands.AddCommand("region", false, "debug packet", "debug packet [level]", "Turn on packet debugging", Debug);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "debug scene", "debug scene <cripting> <collisions> <physics>", "Turn on scene debugging", Debug);
+            MainConsole.Instance.Commands.AddCommand("region", false, "debug scene", "debug scene [scripting] [collisions] [physics]", "Turn on scene debugging", Debug);
 
             MainConsole.Instance.Commands.AddCommand("region", false, "change region", "change region <region name>", "Change current console region", ChangeSelectedRegion);
 
@@ -796,21 +796,23 @@ namespace OpenSim.Region.Framework.Scenes
                                            + "The OAR path must be a filesystem path."
                                            + "  If this is not given then the oar is saved to region.oar in the current directory.", SaveOar);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "kick user", "kick user <first> <last> [message]", "Kick a user off the simulator", KickUserCommand);
+            MainConsole.Instance.Commands.AddCommand("region", false, "kick user", "kick user [first] [last] [message]", "Kick a user off the simulator", KickUserCommand);
 
             MainConsole.Instance.Commands.AddCommand("region", false, "reset region", "reset region", "Reset region to the default terrain, wipe all prims, etc.", RunCommand);
 
             MainConsole.Instance.Commands.AddCommand("region", false, "restart-instance", "restart-instance", "Restarts the instance (as if you closed and re-opened Aurora)", RunCommand);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "command-script", "command-script <script>", "Run a command script from file", RunCommand);
+            MainConsole.Instance.Commands.AddCommand("region", false, "command-script", "command-script [script]", "Run a command script from file", RunCommand);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "remove-region", "remove-region <name>", "Remove a region from this simulator", RunCommand);
+            MainConsole.Instance.Commands.AddCommand("region", false, "remove-region", "remove-region [name]", "Remove a region from this simulator", RunCommand);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "delete-region", "delete-region <name>", "Delete a region from disk", RunCommand);
+            MainConsole.Instance.Commands.AddCommand("region", false, "delete-region", "delete-region [name]", "Delete a region from disk", RunCommand);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "modules", "modules help", "Info about simulator modules", HandleModules);
+            MainConsole.Instance.Commands.AddCommand ("modules list", "modules list", "Lists all simulator modules", HandleModulesList);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "kill uuid", "kill uuid <UUID>", "Kill an object by UUID", KillUUID);
+            MainConsole.Instance.Commands.AddCommand ("modules unload", "modules unload [module]", "Unload the given simulator module", HandleModulesUnload);
+
+            MainConsole.Instance.Commands.AddCommand ("region", false, "kill uuid", "kill uuid [UUID]", "Kill an object by UUID", KillUUID);
         }
 
         /// <summary>
@@ -907,49 +909,48 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="module"></param>
         /// <param name="cmd"></param>
-        private void HandleModules(string module, string[] cmd)
+        private void HandleModulesUnload(string module, string[] cmd)
         {
-            List<string> args = new List<string>(cmd);
-            args.RemoveAt(0);
-            string[] cmdparams = args.ToArray();
+            List<string> args = new List<string> (cmd);
+            args.RemoveAt (0);
+            string[] cmdparams = args.ToArray ();
 
-            IRegionModulesController controller = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<IRegionModulesController>();
-            if (cmdparams.Length > 0)
+            IRegionModulesController controller = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<IRegionModulesController> ();
+            if (cmdparams.Length > 1)
             {
-                switch (cmdparams[0].ToLower())
+                foreach (IRegionModuleBase irm in controller.AllModules)
                 {
-                    case "help":
-                        m_log.Info("modules list - List modules");
-                        m_log.Info ("modules unload - Unload a module");
-                        break;
-                    case "list":
-                        foreach (IRegionModuleBase irm in controller.AllModules)
-                        {
-                            if (irm is ISharedRegionModule)
-                                m_log.Info (String.Format ("Shared region module: {0}", irm.Name));
-                            else if (irm is INonSharedRegionModule)
-                                m_log.Info (String.Format ("Nonshared region module: {0}", irm.Name));
-                            else
-                                m_log.Info(String.Format("Unknown type " + irm.GetType().ToString() + " region module: {0}", irm.Name));
-                        }
-
-                        break;
-                    case "unload":
-                        if (cmdparams.Length > 1)
-                        {
-                            foreach (IRegionModuleBase irm in controller.AllModules)
-                            {
-                                if (irm.Name.ToLower() == cmdparams[1].ToLower())
-                                {
-                                    m_log.Info (String.Format ("Unloading module: {0}", irm.Name));
-                                    foreach (Scene scene in Scenes)
-                                        irm.RemoveRegion(scene);
-                                    irm.Close();
-                                }
-                            }
-                        }
-                        break;
+                    if (irm.Name.ToLower () == cmdparams[1].ToLower ())
+                    {
+                        m_log.Info (String.Format ("Unloading module: {0}", irm.Name));
+                        foreach (Scene scene in Scenes)
+                            irm.RemoveRegion (scene);
+                        irm.Close ();
+                    }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Load, Unload, and list Region modules in use
+        /// </summary>
+        /// <param name="module"></param>
+        /// <param name="cmd"></param>
+        private void HandleModulesList (string module, string[] cmd)
+        {
+            List<string> args = new List<string> (cmd);
+            args.RemoveAt (0);
+            string[] cmdparams = args.ToArray ();
+
+            IRegionModulesController controller = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<IRegionModulesController> ();
+            foreach (IRegionModuleBase irm in controller.AllModules)
+            {
+                if (irm is ISharedRegionModule)
+                    m_log.Info (String.Format ("Shared region module: {0}", irm.Name));
+                else if (irm is INonSharedRegionModule)
+                    m_log.Info (String.Format ("Nonshared region module: {0}", irm.Name));
+                else
+                    m_log.Info (String.Format ("Unknown type " + irm.GetType ().ToString () + " region module: {0}", irm.Name));
             }
         }
 
