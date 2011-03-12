@@ -13,14 +13,12 @@ using Nini.Config;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework;
-using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework.Capabilities;
 
 using OpenMetaverse;
 using Aurora.DataManager;
 using Aurora.Framework;
-using Aurora.Services.DataService;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse.Imaging;
 

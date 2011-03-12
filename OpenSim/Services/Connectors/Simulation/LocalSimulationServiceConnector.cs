@@ -115,7 +115,7 @@ namespace OpenSim.Services.Connectors.Simulation
                         UpdateAgent(destination, data);
                     IEntityTransferModule transferModule = s.RequestModuleInterface<IEntityTransferModule> ();
                     if (transferModule != null)
-                        transferModule.NewUserConnection (s, aCircuit, teleportFlags, out reason);
+                        return transferModule.NewUserConnection (s, aCircuit, teleportFlags, out reason);
                 }
             }
 
@@ -193,7 +193,7 @@ namespace OpenSim.Services.Connectors.Simulation
                     //m_log.Debug("[LOCAL COMMS]: Found region to SendCloseAgent");
                     IEntityTransferModule transferModule = s.RequestModuleInterface<IEntityTransferModule> ();
                     if (transferModule != null)
-                        transferModule.IncomingCloseAgent (s, id);
+                        return transferModule.IncomingCloseAgent (s, id);
                 }
             }
             m_log.Debug("[LOCAL SIMULATION COMMS]: region not found in CloseAgent");
