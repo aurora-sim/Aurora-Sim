@@ -57,9 +57,21 @@ namespace OpenSim.Framework
 
         IConfigSource Config { get; }
 
+        void Initialize (RegionInfo regionInfo);
+        void Initialize (RegionInfo regionInfo, AgentCircuitManager authen);
+        void StartHeartbeat ();
+        void Close ();
+
         void AddNewClient(IClientAPI client);
 
         bool TryGetScenePresence(UUID agentID, out IScenePresence scenePresence);
+
+        float BaseSimFPS { get; }
+        float BaseSimPhysFPS { get; }
+
+        bool ShuttingDown { get; }
+        object SyncRoot { get; }
+        float TimeDilation { get; }
 
         #region Services
 

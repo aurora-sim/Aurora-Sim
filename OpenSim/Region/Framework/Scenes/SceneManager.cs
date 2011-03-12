@@ -580,7 +580,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             regionInfo.InternalEndPoint.Port = (int)port;
 
-            Scene scene = new Scene(regionInfo, circuitManager, this);
+            Scene scene = new Scene ();
+            scene.AddModuleInterfaces (m_OpenSimBase.ApplicationRegistry.GetInterfaces ());
+            scene.Initialize (regionInfo, circuitManager);
 
             StartModules(scene);
 
@@ -725,7 +727,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void StartModules(Scene scene)
         {
-            scene.AddModuleInterfaces(m_OpenSimBase.ApplicationRegistry.GetInterfaces());
             foreach (ISharedRegionStartupModule module in m_startupPlugins)
             {
                 module.Initialise(scene, m_config, m_OpenSimBase);

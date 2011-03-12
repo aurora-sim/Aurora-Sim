@@ -272,17 +272,17 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Constructors
 
-        public Scene(RegionInfo regInfo)
+        public void Initialize (RegionInfo regionInfo)
         {
-            m_regInfo = regInfo;
+            m_regInfo = regionInfo;
         }
 
-        public Scene(RegionInfo regInfo, AgentCircuitManager authen, SceneManager manager)
-            : this(regInfo)
+        public void Initialize (RegionInfo regionInfo, AgentCircuitManager authen)
         {
-            m_sceneManager = manager;
+            Initialize (regionInfo);
+            m_sceneManager = RequestModuleInterface<SceneManager>();
 
-            m_config = manager.ConfigSource;
+            m_config = m_sceneManager.ConfigSource;
             m_authenticateHandler = authen;
 
             m_AuroraEventManager = new AuroraEventManager();

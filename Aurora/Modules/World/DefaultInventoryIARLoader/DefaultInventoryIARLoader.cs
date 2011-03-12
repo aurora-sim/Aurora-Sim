@@ -82,7 +82,8 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
                 m_MockScene = (Scene)m_registry;
             else
             {
-                m_MockScene = new Scene(regInfo);
+                m_MockScene = new Scene();
+                m_MockScene.Initialize (regInfo);
                 m_MockScene.AddModuleInterfaces(m_registry.GetInterfaces());
             }
 
