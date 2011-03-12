@@ -50,6 +50,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Vector3 m_lastVelocity;
         private Vector3 _target_velocity;
         private Vector3 _acceleration;
+//        private Quaternion _orientation;
+//        private Quaternion _lastorientation;
         private Vector3 m_rotationalVelocity;
         //private Vector3 m_lastRotationalVelocity;
 
@@ -139,6 +141,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_uuid = UUID.Random();
 
             m_taintRotation = rotation;
+//            _orientation = rotation;
+//            _lastorientation = rotation;
+
             if (pos.IsFinite())
             {
                 if (pos.Z > 9999999f || pos.Z <-90f)
@@ -1402,19 +1407,33 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 const float POSITION_TOLERANCE = 0.05f;
                 bool needSendUpdate = false;
 
+               
                    
                 //Check to see whether we need to trigger the significant movement method in the presence
  // avas don't rotate for now                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
-                if (!VelIsZero &&
-                    (!Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
-                    !Position.ApproxEquals(m_lastPosition, POSITION_TOLERANCE)))
+            // but simulator does not process rotation changes
+                if (//!VelIsZero &&
+ //                   (!Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
+                    (
+                    (Math.Abs(Velocity.X - m_lastVelocity.X) > VELOCITY_TOLERANCE) ||
+                    (Math.Abs(Velocity.Y - m_lastVelocity.Y) > VELOCITY_TOLERANCE) ||
+                    (Math.Abs(Velocity.Z - m_lastVelocity.Z) > VELOCITY_TOLERANCE) ||
+                    (Math.Abs(_position.X - m_lastPosition.X) > POSITION_TOLERANCE) ||
+                    (Math.Abs(_position.Y - m_lastPosition.Y) > POSITION_TOLERANCE) ||
+                    (Math.Abs(_position.Z - m_lastPosition.Z) > POSITION_TOLERANCE)// ||
+//                    (Math.Abs(_lastorientation.X - _orientation.X) > 0.001) ||
+//                    (Math.Abs(_lastorientation.Y - _orientation.Y) > 0.001) ||
+//                    (Math.Abs(_lastorientation.Z - _orientation.Z) > 0.001) ||
+//                    (Math.Abs(_lastorientation.W - _orientation.W) > 0.001)
+                    ))
                     {
                             // Update the "last" values
                             needSendUpdate = true;
                             m_ZeroUpdateSent = false;
-                            m_lastPosition = Position;
+                            m_lastPosition = _position;
                         //                        m_lastRotationalVelocity = RotationalVelocity;
                             m_lastVelocity = Velocity;
+//                            _lastorientation = Orientation;
 //                        base.RequestPhysicsterseUpdate();
 //                        base.TriggerSignificantMovement();
                      }
@@ -1752,6 +1771,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     _position.Z = m_taintPosition.Z;
                 }
             }
+
+            //_orientation = m_taintRotation; // just keep in sync with rest of simutator
 
         }
 
