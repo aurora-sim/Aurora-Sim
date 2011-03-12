@@ -1294,17 +1294,17 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
             MainConsole.Instance.Commands.AddCommand(this.Name, false,
                                "set terrain texture",
-                               "set terrain texture <number> <uuid> [<x>] [<y>]",
-                               "Sets the terrain <number> to <uuid>, if <x> or <y> are specified, it will only " +
-                               "set it on regions with a matching coordinate. Specify -1 in <x> or <y> to wildcard" +
+                               "set terrain texture [number] [uuid] [x] [y]",
+                               "Sets the terrain [number] to [uuid], if [x] or [y] are specified, it will only " +
+                               "set it on regions with a matching coordinate. Specify -1 in [x] or [y] to wildcard" +
                                " that coordinate.",
                                consoleSetTerrainTexture);
 
             MainConsole.Instance.Commands.AddCommand(this.Name, false,
                                "set terrain heights",
-                               "set terrain heights <corner> <min> <max> [<x>] [<y>]",
-                               "Sets the terrain texture heights on corner #<corner> to <min>/<max>, if <x> or <y> are specified, it will only " +
-                               "set it on regions with a matching coordinate. Specify -1 in <x> or <y> to wildcard" +
+                               "set terrain heights [corner] [min] [max] [x] [y]",
+                               "Sets the terrain texture heights on corner #[corner] to [min]/[max], if [x] or [y] are specified, it will only " +
+                               "set it on regions with a matching coordinate. Specify -1 in [x] or [y] to wildcard" +
                                " that coordinate. Corner # SW = 0, NW = 1, SE = 2, NE = 3.",
                                consoleSetTerrainHeights);
         }

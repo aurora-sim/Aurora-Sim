@@ -74,9 +74,11 @@ namespace OpenSim.Framework
             private Dictionary<string, CommandSet> commandsets = new Dictionary<string, CommandSet> ();
             private string ourPath = "";
             public string Path = "";
+            private bool m_allowSubSets = true;
             
-            public void Initialize (string path)
+            public void Initialize (string path, bool allowSubSets)
             {
+                m_allowSubSets = allowSubSets;
                 ourPath = path;
                 string[] paths = path.Split (' ');
                 if (paths.Length != 0)
@@ -92,7 +94,7 @@ namespace OpenSim.Framework
                 if (innerPath.StartsWith (" "))
                     innerPath = innerPath.Remove (0, 1);
                 string[] commandPath = innerPath.Split (new string[1]{" "}, StringSplitOptions.RemoveEmptyEntries);
-                if (commandPath.Length == 1)
+                if (commandPath.Length == 1 || !m_allowSubSets)
                 {
                     //Only one command after our path, its ours
                     commands[info.command] = info;
@@ -105,7 +107,7 @@ namespace OpenSim.Framework
                     {
                         //Need to add it to the tree then
                         downTheTree = new CommandSet ();
-                        downTheTree.Initialize ((ourPath == "" ? "" : ourPath + " ") + commandPath[0]);
+                        downTheTree.Initialize ((ourPath == "" ? "" : ourPath + " ") + commandPath[0], false);
                         commandsets.Add (commandPath[0], downTheTree);
                     }
                     downTheTree.AddCommand (info);
@@ -114,38 +116,41 @@ namespace OpenSim.Framework
 
             public string[] ExecuteCommand (string[] command)
             {
-                string innerPath = string.Join (" ", command);
-                if (ourPath != "")
-                    innerPath = innerPath.Replace (ourPath, "");
-                if (innerPath.StartsWith (" "))
-                    innerPath = innerPath.Remove (0, 1);
-                string[] commandPath = innerPath.Split (new string[1] { " " }, StringSplitOptions.RemoveEmptyEntries);
-                if (commandPath.Length == 1)
+                if (command.Length != 0)
                 {
-                    //Only one command after our path, its ours
-                    if (commands.ContainsKey (commandPath[0]))
+                    string innerPath = string.Join (" ", command);
+                    if (ourPath != "")
+                        innerPath = innerPath.Replace (ourPath, "");
+                    if (innerPath.StartsWith (" "))
+                        innerPath = innerPath.Remove (0, 1);
+                    string[] commandPath = innerPath.Split (new string[1] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                    if (commandPath.Length == 1 || !m_allowSubSets)
                     {
-                        foreach (CommandDelegate fn in commands[commandPath[0]].fn)
+                        //Only one command after our path, its ours
+                        if (commands.ContainsKey (commandPath[0]))
                         {
-                            if (fn != null)
-                                fn ("", command);
+                            foreach (CommandDelegate fn in commands[commandPath[0]].fn)
+                            {
+                                if (fn != null)
+                                    fn ("", command);
+                            }
+                        }
+                        else if (commandPath[0] == "help")
+                        {
+                            List<string> help = GetHelp ();
+
+                            foreach (string s in help)
+                                MainConsole.Instance.Output (s, Level.Severe);
                         }
                     }
-                    else if (commandPath[0] == "help")
+                    else
                     {
-                        List<string> help = GetHelp ();
-
-                        foreach (string s in help)
-                            MainConsole.Instance.Output (s, Level.Severe);
-                    }
-                }
-                else
-                {
-                    //Its down the tree somewhere
-                    CommandSet downTheTree;
-                    if (commandsets.TryGetValue (commandPath[0], out downTheTree))
-                    {
-                        downTheTree.ExecuteCommand (commandPath);
+                        //Its down the tree somewhere
+                        CommandSet downTheTree;
+                        if (commandsets.TryGetValue (commandPath[0], out downTheTree))
+                        {
+                            downTheTree.ExecuteCommand (commandPath);
+                        }
                     }
                 }
                 
@@ -173,7 +178,7 @@ namespace OpenSim.Framework
                 }
                 foreach (CommandInfo command in commands.Values)
                 {
-                    help.Add (string.Format ("-- {0} <{1}>: {2}", command.command, command.commandHelp, command.info));
+                    help.Add (string.Format ("-- {0}  <{1}>:   {2}", command.command, command.commandHelp, command.info));
                 }
                 return help;
             }

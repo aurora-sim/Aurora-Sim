@@ -105,14 +105,14 @@ namespace OpenSim.Services.GridService
                 {
                     MainConsole.Instance.Commands.AddCommand("grid", true,
                             "show region",
-                            "show region <Region name>",
+                            "show region [Region name]",
                             "Show details on a region",
                             String.Empty,
                             HandleShowRegion);
 
                     MainConsole.Instance.Commands.AddCommand("grid", true,
                             "set region flags",
-                            "set region flags <Region name> <flags>",
+                            "set region flags [Region name] [flags]",
                             "Set database flags for region",
                             String.Empty,
                             HandleSetFlags);

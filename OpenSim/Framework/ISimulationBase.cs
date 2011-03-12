@@ -50,7 +50,6 @@ namespace OpenSim.Framework
         AuroraEventManager EventManager { get; }
         string Version { get; }
         void RunStartupCommands();
-        void HandleShow(string mod, string[] cmd);
         void RunCommandScript(string p);
 
         /// <summary>

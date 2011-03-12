@@ -155,29 +155,29 @@ namespace Aurora.Modules
                 m_log.Warn("Not enough parameters!");
                 return;
             }
-            if (cmdparams[2] == "AddEstateBan")
+            if (cmdparams[2] == "AddEstateBan".ToLower())
             {
                 EstateBan EB = new EstateBan();
                 EB.BannedUserID = m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID;
                 scene.RegionInfo.EstateSettings.AddBan(EB);
             }
-            if (cmdparams[2] == "AddEstateManager")
+            if (cmdparams[2] == "AddEstateManager".ToLower ())
             {
                 scene.RegionInfo.EstateSettings.AddEstateManager(m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
             }
-            if (cmdparams[2] == "AddEstateAccess")
+            if (cmdparams[2] == "AddEstateAccess".ToLower ())
             {
                 scene.RegionInfo.EstateSettings.AddEstateUser(m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
             }
-            if (cmdparams[2] == "RemoveEstateBan")
+            if (cmdparams[2] == "RemoveEstateBan".ToLower ())
             {
                 scene.RegionInfo.EstateSettings.RemoveBan(m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
             }
-            if (cmdparams[2] == "RemoveEstateManager")
+            if (cmdparams[2] == "RemoveEstateManager".ToLower ())
             {
                 scene.RegionInfo.EstateSettings.RemoveEstateManager(m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
             }
-            if (cmdparams[2] == "RemoveEstateAccess")
+            if (cmdparams[2] == "RemoveEstateAccess".ToLower ())
             {
                 scene.RegionInfo.EstateSettings.RemoveEstateUser(m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
             }
@@ -862,9 +862,23 @@ namespace Aurora.Modules
             scene.Permissions.OnAllowedIncomingTeleport += OnAllowedIncomingTeleport;
             scene.EventManager.OnClosingClient += OnClosingClient;
 
-            MainConsole.Instance.Commands.AddCommand(this.Name, true,
-                "set regionsetting", "set regionsetting", "Sets a region setting for the given region. Valid params: Maturity - 0(PG),1(Mature),2(Adult); AddEstateBan,RemoveEstateBan,AddEstateManager,RemoveEstateManager - First name, Last name", SetRegionInfoOption);
-            MainConsole.Instance.Commands.AddCommand(this.Name, true,
+            MainConsole.Instance.Commands.AddCommand (this.Name, true,
+                "set regionsetting maturity", "set regionsetting maturity [value]", "Sets a region's maturity - 0(PG),1(Mature),2(Adult)", SetRegionInfoOption);
+            MainConsole.Instance.Commands.AddCommand (this.Name, true,
+                "set regionsetting addestateban", "set regionsetting addestateban [first] [last]", "Add a user to the estate ban list", SetRegionInfoOption);
+            MainConsole.Instance.Commands.AddCommand (this.Name, true,
+                "set regionsetting removeestateban", "set regionsetting removeestateban [first] [last]", "Remove a user from the estate ban list", SetRegionInfoOption);
+            MainConsole.Instance.Commands.AddCommand (this.Name, true,
+                "set regionsetting addestatemanager", "set regionsetting addestatemanager [first] [last]", "Add a user to the estate manager list", SetRegionInfoOption);
+            MainConsole.Instance.Commands.AddCommand (this.Name, true,
+                "set regionsetting removeestatemanager", "set regionsetting removeestatemanager [first] [last]", "Remove a user from the estate manager list", SetRegionInfoOption);
+            MainConsole.Instance.Commands.AddCommand (this.Name, true,
+                "set regionsetting addestateaccess", "set regionsetting addestateaccess [first] [last]", "Add a user to the estate access list", SetRegionInfoOption);
+            MainConsole.Instance.Commands.AddCommand (this.Name, true,
+                "set regionsetting removeestateaccess", "set regionsetting removeestateaccess [first] [last]", "Remove a user from the estate access list", SetRegionInfoOption);
+            
+            
+            MainConsole.Instance.Commands.AddCommand (this.Name, true,
                 "ban user", "ban user", "Bans a user from the current estate", BanUser);
             MainConsole.Instance.Commands.AddCommand("access", true,
                     "login enable",
