@@ -14,9 +14,9 @@ namespace Aurora.Framework
             if (Dictionary.ContainsKey(key))
                 throw new ArgumentException("Key is already in the dictionary");
 
-            List<object> Values = new List<object>();
-            Values[0] = value1;
-            Values[1] = value2;
+            List<object> Values = new List<object>(2);
+            Values.Add(value1);
+            Values.Add(value2);
             Dictionary.Add(key, Values);
         }
 

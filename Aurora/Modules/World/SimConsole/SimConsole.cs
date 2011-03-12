@@ -106,13 +106,20 @@ namespace Aurora.Modules.World.SimConsole
 
         public OSDMap OnRegisterCaps(UUID agentID, IHttpServer server)
         {
-            OSDMap retVal = new OSDMap();
-            retVal["SimConsole"] = CapsUtil.CreateCAPS("SimConsole", "");
-
+            OSDMap retVal = new OSDMap ();
+            retVal["SimConsole"] = CapsUtil.CreateCAPS ("SimConsole", "");
+            retVal["SimConsoleAsync"] = CapsUtil.CreateCAPS ("SimConsoleAsync", "");
+            
+            //This message is depriated, but we still have it around for now, feel free to remove sometime in the future
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["SimConsole"],
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
                                                           return SimConsoleResponder(m_dhttpMethod, agentID);
+                                                      }));
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["SimConsoleAsync"],
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return SimConsoleAsyncResponder(m_dhttpMethod, agentID);
                                                       }));
             return retVal;
         }
@@ -147,6 +154,42 @@ namespace Aurora.Modules.World.SimConsole
                 responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(OSD.FromString(response));
             }
             return responsedata;
+        }
+
+        private Hashtable SimConsoleAsyncResponder (Hashtable m_dhttpMethod, UUID agentID)
+        {
+            Hashtable responsedata = new Hashtable ();
+            responsedata["int_response_code"] = 200; //501; //410; //404;
+            responsedata["content_type"] = "text/plain";
+            responsedata["keepalive"] = false;
+            responsedata["str_response_string"] = "";
+
+            ScenePresence SP = findScene (agentID).GetScenePresence (agentID);
+            if (SP == null)
+                return responsedata; //They don't exist
+
+            OSD rm = OSDParser.DeserializeLLSDXml ((string)m_dhttpMethod["requestbody"]);
+
+            string message = rm.AsString ();
+
+            //Is a god, or they authenticated to the server and have write access
+            if ((SP.Scene.Permissions.CanRunConsoleCommand(SP.UUID) ||
+                AuthenticateUser (SP.UUID, message)) && CanWrite (SP.UUID))
+            {
+                FireConsole (message);
+                responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString ("");
+            }
+            else
+            {
+                SendConsoleEventEQM (SP.UUID, "You have failed to log into the console, please authenticate with \"User:<NAME>/Password:<PASS>\".");
+                responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString ("");
+            }
+            return responsedata;
+        }
+
+        private void FireConsole (object message)
+        {
+            MainConsole.Instance.RunCommand ((string)message);
         }
 
         #endregion
@@ -217,12 +260,19 @@ namespace Aurora.Modules.World.SimConsole
             }
         }
 
+        /// <summary>
+        /// Send a console message to the viewer
+        /// </summary>
+        /// <param name="AgentID"></param>
+        /// <param name="text"></param>
         private void SendConsoleEventEQM(UUID AgentID, string text)
         {
-            OSDString t = (OSDString)OSD.FromString(text);
-            IEventQueueService eq = findScene(AgentID).RequestModuleInterface<IEventQueueService>();
+            OSDMap item = new OSDMap ();
+            item.Add ("body", text);
+            item.Add ("message", OSD.FromString ("SimConsoleResponse"));
+            IEventQueueService eq = m_scenes[0].RequestModuleInterface<IEventQueueService> ();
             if (eq != null)
-                eq.Enqueue(t, AgentID, findScene(AgentID).RegionInfo.RegionHandle);
+                eq.Enqueue (item, AgentID, findScene(AgentID).RegionInfo.RegionHandle);
         }
 
         private Scene findScene(UUID agentID)

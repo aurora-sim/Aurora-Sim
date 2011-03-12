@@ -300,6 +300,7 @@ namespace OpenSim.Framework
 
         private void WriteLocalText(string text, string level)
         {
+            MainConsole.TriggerLog (text);
             string logtext = "";
             if (level == "AppendTimeStamp")
             {
