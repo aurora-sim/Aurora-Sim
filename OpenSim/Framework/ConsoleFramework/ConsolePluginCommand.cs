@@ -120,14 +120,6 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Shows help information on the console's Notice method
-        /// </summary>
-        public void ShowHelp(ICommandConsole console)
-        {
-            console.Output(String.Join(" ", m_cmdText) + " - " + m_helpText + "\n");
-        }
-
-        /// <summary>
         /// return true if the ShowHelp(..) method might be helpfull
         /// </summary>
         public bool IsHelpfull(string cmdWithParams)

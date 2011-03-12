@@ -234,7 +234,7 @@ namespace OpenSim.Services.AssetService
         {
             if (args.Length < 3)
             {
-                MainConsole.Instance.Output("Syntax: show digest <ID>");
+                m_log.Info ("Syntax: show digest <ID>");
                 return;
             }
 
@@ -242,17 +242,17 @@ namespace OpenSim.Services.AssetService
 
             if (asset == null || asset.Data.Length == 0)
             {
-                MainConsole.Instance.Output("Asset not found");
+                m_log.Info ("Asset not found");
                 return;
             }
 
             int i;
 
-            MainConsole.Instance.Output(String.Format("Name: {0}", asset.Name));
-            MainConsole.Instance.Output(String.Format("Description: {0}", asset.Description));
-            MainConsole.Instance.Output(String.Format("Type: {0}", asset.Type));
-            MainConsole.Instance.Output(String.Format("Content-type: {0}", asset.Metadata.ContentType));
-            MainConsole.Instance.Output(String.Format("Flags: {0}", asset.Metadata.Flags.ToString()));
+            m_log.Info (String.Format ("Name: {0}", asset.Name));
+            m_log.Info (String.Format ("Description: {0}", asset.Description));
+            m_log.Info (String.Format ("Type: {0}", asset.Type));
+            m_log.Info (String.Format ("Content-type: {0}", asset.Metadata.ContentType));
+            m_log.Info (String.Format ("Flags: {0}", asset.Metadata.Flags.ToString ()));
 
             for (i = 0 ; i < 5 ; i++)
             {
@@ -267,7 +267,7 @@ namespace OpenSim.Services.AssetService
                 Array.Copy(asset.Data, off, line, 0, len);
 
                 string text = BitConverter.ToString(line);
-                MainConsole.Instance.Output(String.Format("{0:x4}: {1}", off, text));
+                m_log.Info (String.Format ("{0:x4}: {1}", off, text));
             }
         }
 
@@ -275,7 +275,7 @@ namespace OpenSim.Services.AssetService
         {
             if (args.Length < 3)
             {
-                MainConsole.Instance.Output("Syntax: delete asset <ID>");
+                m_log.Info ("Syntax: delete asset <ID>");
                 return;
             }
 
@@ -283,13 +283,13 @@ namespace OpenSim.Services.AssetService
 
             if (asset == null || asset.Data.Length == 0)
             {
-                MainConsole.Instance.Output("Asset not found");
+                m_log.Info ("Asset not found");
                 return;
             }
 
             Delete(args[2]);
 
-            MainConsole.Instance.Output("Asset deleted");
+            m_log.Info ("Asset deleted");
         }
     }
 }

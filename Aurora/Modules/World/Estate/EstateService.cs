@@ -48,7 +48,7 @@ namespace Aurora.Modules
         {
             if (cmd.Length < 2)
             {
-                MainConsole.Instance.Output("Syntax: login enable|disable|status");
+                m_log.Info ("Syntax: login enable|disable|status");
                 return;
             }
 
@@ -68,7 +68,7 @@ namespace Aurora.Modules
                     m_log.Warn("Logins are " + (LoginsDisabled ? "dis" : "en") + "abled.");
                     break;
                 default:
-                    MainConsole.Instance.Output("Syntax: login enable|disable|status");
+                    m_log.Info ("Syntax: login enable|disable|status");
                     break;
             }
         }

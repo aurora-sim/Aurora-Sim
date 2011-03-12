@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using OpenSim.Framework;
 using Aurora.Simulation.Base;
@@ -10,12 +11,15 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using log4net;
 
 namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 {
     public class GridWideMessageModule : IService
     {
         #region Declares
+
+        private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
 
         protected IRegistryCore m_registry;
 
@@ -86,7 +90,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             UserAccount account = userService.GetUserAccount(UUID.Zero, user.Split(' ')[0], user.Split(' ')[1]);
             if (account == null)
             {
-                MainConsole.Instance.Output("User does not exist.");
+                m_log.Info ("User does not exist.");
                 return;
             }
             IClientCapsService client = capsService.GetClientCapsService(account.PrincipalID);
@@ -97,11 +101,11 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 {
                     //Send the message to the client
                     messagePost.Post(regionClient.RegionHandle, BuildRequest("GridWideMessage", message, regionClient.AgentID.ToString()));
-                    MainConsole.Instance.Output("Message sent.");
+                    m_log.Info ("Message sent.");
                     return;
                 }
             }
-            MainConsole.Instance.Output("Could not find user to send message to.");
+            m_log.Info("Could not find user to send message to.");
         }
 
         protected void KickUserMessage(string module, string[] cmd)
@@ -119,7 +123,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             UserAccount account = userService.GetUserAccount(UUID.Zero, user);
             if (account == null)
             {
-                MainConsole.Instance.Output("User does not exist.");
+                m_log.Info ("User does not exist.");
                 return;
             }
             IClientCapsService client = capsService.GetClientCapsService(account.PrincipalID);
@@ -133,11 +137,11 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing>();
                     if (agentProcessor != null)
                         agentProcessor.LogoutAgent(regionClient);
-                    MainConsole.Instance.Output("User Kicked sent.");
+                    m_log.Info ("User Kicked sent.");
                     return;
                 }
             }
-            MainConsole.Instance.Output("Could not find user to send message to.");
+            m_log.Info ("Could not find user to send message to.");
         }
 
         private string CombineParams(string[] commandParams, int pos)

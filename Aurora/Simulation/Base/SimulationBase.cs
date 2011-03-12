@@ -242,7 +242,7 @@ namespace Aurora.Simulation.Base
                 // If there is no threshold set then the threshold is effectively everything.
                 if (null == m_consoleAppender.Threshold)
                     m_consoleAppender.Threshold = Level.All;
-                m_console.Output(String.Format("[Console]: Console log level is {0}", m_consoleAppender.Threshold));
+                m_log.Fatal (String.Format ("[Console]: Console log level is {0}", m_consoleAppender.Threshold));
             }
 
             IConfig startupConfig = m_config.Configs["Startup"];
@@ -443,7 +443,7 @@ namespace Aurora.Simulation.Base
         {
             if (null == m_consoleAppender)
             {
-                m_console.Output("No appender named Console found (see the log4net config file for this executable)!");
+                m_log.Fatal ("No appender named Console found (see the log4net config file for this executable)!");
                 return;
             }
 
@@ -455,12 +455,12 @@ namespace Aurora.Simulation.Base
             if (consoleLevel != null)
                 m_consoleAppender.Threshold = consoleLevel;
             else
-                m_console.Output((
+                m_log.Fatal ((
                     String.Format(
                         "{0} is not a valid logging level.  Valid logging levels are ALL, DEBUG, INFO, WARN, ERROR, FATAL, OFF",
                         rawLevel)));
 
-            m_console.Output(String.Format("Console log level is {0}", m_consoleAppender.Threshold));
+            m_log.Fatal (String.Format ("Console log level is {0}", m_consoleAppender.Threshold));
         }
 
         /// <summary>
@@ -518,7 +518,7 @@ namespace Aurora.Simulation.Base
             {
                 plugin.ReloadConfiguration(m_config);
             }
-            MainConsole.Instance.Output("Finished reloading configuration.");
+            m_log.Info ("Finished reloading configuration.");
         }
 
         /// <summary>
@@ -539,22 +539,22 @@ namespace Aurora.Simulation.Base
             switch (showParams[0])
             {
                 case "help":
-                    MainConsole.Instance.Output("set log level [level] - Change the console logging level only.  For example, off or debug.");
-                    MainConsole.Instance.Output("show info - Show server information (e.g. startup path).");
-                    MainConsole.Instance.Output("show threads - List tracked threads");
-                    MainConsole.Instance.Output("show uptime - Show server startup time and uptime.");
-                    MainConsole.Instance.Output("show version - Show server version.");
+                    m_log.Info ("set log level [level] - Change the console logging level only.  For example, off or debug.");
+                    m_log.Info ("show info - Show server information (e.g. startup path).");
+                    m_log.Info ("show threads - List tracked threads");
+                    m_log.Info ("show uptime - Show server startup time and uptime.");
+                    m_log.Info ("show version - Show server version.");
                     break;
 
                 case "info":
-                    m_console.Output(("Version: " + m_version));
-                    m_console.Output(("Startup directory: " + Environment.CurrentDirectory));
+                    m_log.Info("Version: " + m_version);
+                    m_log.Info("Startup directory: " + Environment.CurrentDirectory);
                     break;
 
                 case "version":
-                    m_console.Output((
+                    m_log.Info(
                         String.Format(
-                            "Version: {0} (interface version {1})", m_version, VersionInfo.MajorInterfaceVersion)));
+                            "Version: {0} (interface version {1})", m_version, VersionInfo.MajorInterfaceVersion));
                     break;
             }
         }

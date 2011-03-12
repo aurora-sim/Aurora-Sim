@@ -178,11 +178,11 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
             if (name == String.Empty || source.Configs.Count == 0)
             {
-                MainConsole.Instance.Output("=====================================\n");
-                MainConsole.Instance.Output("We are now going to ask a couple of questions about your region.\n");
-                MainConsole.Instance.Output("You can press 'enter' without typing anything to use the default\n");
-                MainConsole.Instance.Output("the default is displayed between [ ] brackets.\n");
-                MainConsole.Instance.Output("=====================================\n");
+                m_log.Info ("=====================================\n");
+                m_log.Info ("We are now going to ask a couple of questions about your region.\n");
+                m_log.Info ("You can press 'enter' without typing anything to use the default\n");
+                m_log.Info ("the default is displayed between [ ] brackets.\n");
+                m_log.Info ("=====================================\n");
             }
 
             bool NeedsUpdate = false;
@@ -388,7 +388,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         {
             if (cmd.Length < 4)
             {
-                MainConsole.Instance.Output("Usage: create region <region name> <region_file.ini>");
+                m_log.Info ("Usage: create region <region name> <region_file.ini>");
                 return;
             }
             else if (cmd[3].EndsWith(".ini"))
@@ -405,7 +405,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             }
             else
             {
-                MainConsole.Instance.Output("Usage: create region <region name> <region_file.ini>");
+                m_log.Info ("Usage: create region <region name> <region_file.ini>");
                 return;
             }
         }

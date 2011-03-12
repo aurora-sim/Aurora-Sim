@@ -710,7 +710,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             foreach (MonitorRegistry registry in m_registry.Values)
             {
                 m_log.Info("[Stats] " + registry.Report());
-                MainConsole.Instance.Output("");
+                m_log.Info ("");
             }
         }
 
@@ -726,13 +726,13 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             {
                 //Dump the all instance one first
                 m_log.Info("[Stats] " + m_registry[""].Report());
-                MainConsole.Instance.Output("");
+                m_log.Info ("");
 
                 //Then dump for each scene
                 manager.ForEachCurrentScene(delegate(Scene scene)
                 {
                     m_log.Info("[Stats] " + m_registry[scene.RegionInfo.RegionID.ToString()].Report());
-                    MainConsole.Instance.Output("");
+                    m_log.Info ("");
                 });
             }
             else
@@ -760,9 +760,9 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             switch (showParams[0])
             {
                 case "help":
-                    MainConsole.Instance.Output("show queues [full] - Without the 'full' option, only users actually on the region are shown."
+                    m_log.Info ("show queues [full] - Without the 'full' option, only users actually on the region are shown."
                                                     + "  With the 'full' option child agents of users in neighbouring regions are also shown.");
-                    MainConsole.Instance.Output("show stats - Show statistical information for this server");
+                    m_log.Info ("show stats - Show statistical information for this server");
                     break;
 
                 case "queues":

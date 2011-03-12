@@ -241,8 +241,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
             }
             else
             {
-                MainConsole.Instance.Output(
-                    "Usage: alert \"message\" | alert general <message> | alert <first> <last> <message>");
+                m_log.Info ("Usage: alert \"message\" | alert general <message> | alert <first> <last> <message>");
                 return;
             }
                 

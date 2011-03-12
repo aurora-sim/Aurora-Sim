@@ -303,7 +303,7 @@ namespace OpenSim.Services.Connectors
         {
             if (args.Length != 4)
             {
-                MainConsole.Instance.Output("Syntax: dump asset <id> <file>");
+                m_log.Info ("Syntax: dump asset <id> <file>");
                 return;
             }
 
@@ -311,13 +311,13 @@ namespace OpenSim.Services.Connectors
 
             if (!UUID.TryParse(args[2], out assetID))
             {
-                MainConsole.Instance.Output("Invalid asset ID");
+                m_log.Info ("Invalid asset ID");
                 return;
             }
 
             if (m_Cache == null)
             {
-                MainConsole.Instance.Output("Instance uses no cache");
+                m_log.Info ("Instance uses no cache");
                 return;
             }
 
@@ -325,7 +325,7 @@ namespace OpenSim.Services.Connectors
 
             if (asset == null)
             {
-                MainConsole.Instance.Output("Asset not found in cache");
+                m_log.Info ("Asset not found in cache");
                 return;
             }
 

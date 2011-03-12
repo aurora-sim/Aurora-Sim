@@ -274,7 +274,7 @@ namespace OpenSim.Region.CoreModules.World.Region
                         return;
                     }
                 }
-                MainConsole.Instance.Output("Error: restart region <mode> <name> <time> ...");
+                m_log.Info ("Error: restart region <mode> <name> <time> ...");
                 return;
             }
         }

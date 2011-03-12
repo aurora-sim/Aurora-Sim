@@ -42,6 +42,7 @@ namespace OpenSim.Framework
 
     public class Commands
     {
+        private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
         /// <summary>
         /// Encapsulates a command that can be invoked from the console
         /// </summary>
@@ -381,7 +382,7 @@ namespace OpenSim.Framework
                 }
                 catch(Exception ex)
                 {
-                    MainConsole.Instance.Output("Issue executing command: " + ex.ToString());
+                    m_log.Warn("Issue executing command: " + ex.ToString());
                 }
                 return result;
             }

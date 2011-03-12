@@ -2,17 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using OpenMetaverse;
 using Aurora.DataManager;
 using Aurora.Framework;
 using OpenSim.Framework;
 using Nini.Config;
+using log4net;
 
 namespace Aurora.Services.DataService
 {
     public class LocalParcelServiceConnector : IParcelServiceConnector
     {
+        private static readonly ILog m_log
+            = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
         private IGenericData GD = null;
 
         public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
@@ -127,7 +131,7 @@ namespace Aurora.Services.DataService
             catch(Exception ex)
             {
                 AllLandObjects = new List<LandData>();
-                MainConsole.Instance.Output("[ParcelService]: Failed to load parcels, " + ex.ToString());
+                m_log.Info ("[ParcelService]: Failed to load parcels, " + ex.ToString ());
             }
             for (int i = 0; i < AllLandObjects.Count; i++)
             {

@@ -550,27 +550,27 @@ namespace OpenSim.Services.GridService
         {
             if (cmd.Length != 3)
             {
-                MainConsole.Instance.Output("Syntax: show region <region name>");
+                m_log.Info ("Syntax: show region <region name>");
                 return;
             }
             List<GridRegion> regions = m_Database.Get(cmd[2], UUID.Zero);
             if (regions == null || regions.Count < 1)
             {
-                MainConsole.Instance.Output("Region not found");
+                m_log.Info ("Region not found");
                 return;
             }
 
             foreach (GridRegion r in regions)
             {
-                MainConsole.Instance.Output("-------------------------------------------------------------------------------");
+                m_log.Info ("-------------------------------------------------------------------------------");
                 RegionFlags flags = (RegionFlags)Convert.ToInt32(r.Flags);
-                MainConsole.Instance.Output("Region Name: " + r.RegionName);
-                MainConsole.Instance.Output("Region UUID: " + r.RegionID);
-                MainConsole.Instance.Output("Region Location: " + String.Format("{0},{1}", r.RegionLocX, r.RegionLocY));
-                MainConsole.Instance.Output("Region URI: " + r.ServerURI);
-                MainConsole.Instance.Output("Region Owner: " + r.EstateOwner);
-                MainConsole.Instance.Output("Region Flags: " + flags);
-                MainConsole.Instance.Output("-------------------------------------------------------------------------------");
+                m_log.Info ("Region Name: " + r.RegionName);
+                m_log.Info ("Region UUID: " + r.RegionID);
+                m_log.Info ("Region Location: " + String.Format ("{0},{1}", r.RegionLocX, r.RegionLocY));
+                m_log.Info ("Region URI: " + r.ServerURI);
+                m_log.Info ("Region Owner: " + r.EstateOwner);
+                m_log.Info ("Region Flags: " + flags);
+                m_log.Info ("-------------------------------------------------------------------------------");
             }
             return;
         }
@@ -605,7 +605,7 @@ namespace OpenSim.Services.GridService
                 }
                 catch (Exception)
                 {
-                    MainConsole.Instance.Output("Error in flag specification: " + p);
+                    m_log.Info ("Error in flag specification: " + p);
                 }
             }
 
@@ -616,14 +616,14 @@ namespace OpenSim.Services.GridService
         {
             if (cmd.Length < 5)
             {
-                MainConsole.Instance.Output("Syntax: set region flags <region name> <flags>");
+                m_log.Info ("Syntax: set region flags <region name> <flags>");
                 return;
             }
 
             List<GridRegion> regions = m_Database.Get(cmd[3], UUID.Zero);
             if (regions == null || regions.Count < 1)
             {
-                MainConsole.Instance.Output("Region not found");
+                m_log.Info ("Region not found");
                 return;
             }
 
@@ -634,7 +634,7 @@ namespace OpenSim.Services.GridService
                 r.Flags = flags;
                 RegionFlags f = (RegionFlags)flags;
 
-                MainConsole.Instance.Output(String.Format("Set region {0} to {1}", r.RegionName, f));
+                m_log.Info (String.Format ("Set region {0} to {1}", r.RegionName, f));
                 m_Database.Store(r);
             }
         }
