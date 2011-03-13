@@ -139,7 +139,7 @@ namespace OpenSim.Framework
                                     if (fn != null)
                                         fn ("", command);
                                 }
-                                break;
+                                return new string[0];
                             }
                             else if (commandPath[0] == "help")
                             {
@@ -147,7 +147,38 @@ namespace OpenSim.Framework
 
                                 foreach (string s in help)
                                     MainConsole.Instance.Output (s, Level.Severe);
-                                break;
+                                return new string[0];
+                            }
+                            else
+                            {
+                                foreach (KeyValuePair<string, CommandInfo> cmd in commands)
+                                {
+                                    //See whether the command is the same length first
+                                    string[] cmdSplit = cmd.Key.Split (' ');
+                                    if (cmdSplit.Length == command.Length)
+                                    {
+                                        bool same = true;
+                                        //Now go through each param and see whether they match up
+                                        for (int k = 0; k < command.Length; k++)
+                                        {
+                                            if (!cmdSplit[k].StartsWith (command[k]))
+                                            {
+                                                same = false;
+                                                break;
+                                            }
+                                        }
+                                        //They do, execute it
+                                        if (same)
+                                        {
+                                            foreach (CommandDelegate fn in cmd.Value.fn)
+                                            {
+                                                if (fn != null)
+                                                    fn ("", command);
+                                            }
+                                            return new string[0];
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -157,7 +188,19 @@ namespace OpenSim.Framework
                         CommandSet downTheTree;
                         if (commandsets.TryGetValue (commandPath[0], out downTheTree))
                         {
-                            downTheTree.ExecuteCommand (commandPath);
+                            return downTheTree.ExecuteCommand (commandPath);
+                        }
+                        else
+                        {
+                            //See if this is part of a word, and if it is part of a word, execute it
+                            foreach (KeyValuePair<string, CommandSet> cmd in commandsets)
+                            {
+                                //If it starts with it, execute it (eg. q for quit)
+                                if (cmd.Key.StartsWith (commandPath[0]))
+                                {
+                                    return cmd.Value.ExecuteCommand (commandPath);
+                                }
+                            }
                         }
                     }
                 }
