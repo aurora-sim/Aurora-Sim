@@ -955,7 +955,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 point.Position = Position;
                 point.SurfaceNormal = Vector3.Zero;
 
-                this.AddCollisionEvent (_parent_scene.actor_name_map[_parent_scene.RegionTerrain].LocalID, point);
+                //0 is the ground localID
+                this.AddCollisionEvent (0, point);
             }
             else
                 m_iscollidingGround = false;

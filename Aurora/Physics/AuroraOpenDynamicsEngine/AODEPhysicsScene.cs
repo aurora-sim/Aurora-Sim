@@ -197,7 +197,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private readonly Dictionary<String, PhysicsJoint> SOPName_to_activeJoint = new Dictionary<String, PhysicsJoint>();
         private readonly Dictionary<String, PhysicsJoint> SOPName_to_pendingJoint = new Dictionary<String, PhysicsJoint>();
         public IntPtr RegionTerrain;
-        private readonly Dictionary<IntPtr, short[]> TerrainHeightFieldHeights = new Dictionary<IntPtr, short[]>();
+        private readonly Dictionary<IntPtr, short[]> TerrainHeightFieldHeights = new Dictionary<IntPtr, short[]> ();
+        private readonly Dictionary<IntPtr, short[]> ODETerrainHeightFieldHeights = new Dictionary<IntPtr, short[]> ();
         private readonly Dictionary<IntPtr, float[]> TerrainHeightFieldlimits = new Dictionary<IntPtr, float[]>();
         private readonly Dictionary<UUID, short[]> WaterHeightFieldHeights = new Dictionary<UUID, short[]>();
         public bool m_EnableAutoConfig = true;
@@ -3713,7 +3714,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override void SetTerrain (short[] heightMap)
         {
-            short[] _heightmap = new short[((m_region.RegionSizeX + 3) * (m_region.RegionSizeY + 3))];
+            short[] _heightmap;
+            if(!ODETerrainHeightFieldHeights.TryGetValue(RegionTerrain, out _heightmap))
+                _heightmap = new short[((m_region.RegionSizeX + 3) * (m_region.RegionSizeY + 3))];
 
             int heightmapWidth = m_region.RegionSizeX + 2;
             int heightmapHeight = m_region.RegionSizeY + 2;
@@ -3751,6 +3754,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.GeomDestroy (RegionTerrain);
                 }
                 TerrainHeightFieldHeights.Remove (RegionTerrain);
+                ODETerrainHeightFieldHeights.Remove (RegionTerrain);
                 TerrainHeightFieldlimits.Remove (RegionTerrain);
 
                 actor_name_map.Remove (RegionTerrain);
@@ -3762,13 +3766,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 const int wrap = 0;
 
                 IntPtr HeightmapData = d.GeomHeightfieldDataCreate ();
-                //                d.GeomHeightfieldDataBuildDouble(HeightmapData, _heightmap, 1, heightmapWidth, heightmapHeight,
-                //                                                 heightmapWidthSamples, heightmapHeightSamples, scale,
-                d.GeomHeightfieldDataBuildShort (HeightmapData, _heightmap, 1, heightmapHeight, heightmapWidth,
+                d.GeomHeightfieldDataBuildShort (HeightmapData, _heightmap, 0, heightmapHeight, heightmapWidth,
                                                  heightmapHeightSamples, heightmapWidthSamples, scale,
                                                  offset, thickness, wrap);
 
-                //                d.GeomHeightfieldDataSetBounds(HeightmapData, (float)hfmin - 1.0f, (float)hfmax + 1.0f);
                 d.GeomHeightfieldDataSetBounds (HeightmapData, hfmin, (float)hfmax + 1.0f);
                 RegionTerrain = d.CreateHeightfield (space, HeightmapData, 1);
 
@@ -3808,6 +3809,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 heighlimits[1] = hfmax;
 
                 TerrainHeightFieldHeights.Add (RegionTerrain, heightMap);
+                ODETerrainHeightFieldHeights.Add (RegionTerrain, _heightmap);
                 TerrainHeightFieldlimits.Add (RegionTerrain, heighlimits);
             }
         }
