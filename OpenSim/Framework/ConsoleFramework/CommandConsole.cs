@@ -126,21 +126,29 @@ namespace OpenSim.Framework
                     string[] commandPath = innerPath.Split (new string[1] { " " }, StringSplitOptions.RemoveEmptyEntries);
                     if (commandPath.Length == 1 || !m_allowSubSets)
                     {
-                        //Only one command after our path, its ours
-                        if (commands.ContainsKey (commandPath[0]))
+                        for (int i = 1; i < command.Length; i++)
                         {
-                            foreach (CommandDelegate fn in commands[commandPath[0]].fn)
+                            string[] comm = new string[i];
+                            Array.Copy (command, comm, i);
+                            string com = string.Join (" ", comm);
+                            //Only one command after our path, its ours
+                            if (commands.ContainsKey (com))
                             {
-                                if (fn != null)
-                                    fn ("", command);
+                                foreach (CommandDelegate fn in commands[com].fn)
+                                {
+                                    if (fn != null)
+                                        fn ("", command);
+                                }
+                                break;
                             }
-                        }
-                        else if (commandPath[0] == "help")
-                        {
-                            List<string> help = GetHelp ();
+                            else if (commandPath[0] == "help")
+                            {
+                                List<string> help = GetHelp ();
 
-                            foreach (string s in help)
-                                MainConsole.Instance.Output (s, Level.Severe);
+                                foreach (string s in help)
+                                    MainConsole.Instance.Output (s, Level.Severe);
+                                break;
+                            }
                         }
                     }
                     else
