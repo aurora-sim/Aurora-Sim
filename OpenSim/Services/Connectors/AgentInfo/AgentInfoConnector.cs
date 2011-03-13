@@ -70,11 +70,13 @@ namespace OpenSim.Services.Connectors
                     {
                         OSDMap innerresult = (OSDMap)r;
                         UserInfo info = new UserInfo();
+                        if(innerresult["Result"].AsString() == "null")
+                            return null;
                         info.FromOSD((OSDMap)innerresult["Result"]);
                         return info;
                     }
                 }
-                catch
+                catch(Exception)
                 {
                 }
             }

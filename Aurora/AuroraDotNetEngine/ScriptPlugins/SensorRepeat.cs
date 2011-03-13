@@ -276,24 +276,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             List<EntityBase> Entities;
             List<SensedEntity> sensedEntities = new List<SensedEntity>();
 
+            SceneObjectPart SensePoint = ts.host;
+
+            Vector3 fromRegionPos = SensePoint.AbsolutePosition;
+
             // If this is an object sense by key try to get it directly
             // rather than getting a list to scan through
             if (ts.keyID != UUID.Zero)
             {
                 EntityBase e = null;
-                ts.host.ParentGroup.Scene.Entities.TryGetValue(ts.keyID, out e);
+                ts.host.ParentGroup.Scene.Entities.TryGetValue (ts.keyID, out e);
                 if (e == null)
                     return sensedEntities;
-                Entities = new List<EntityBase>();
-                Entities.Add(e);
+                Entities = new List<EntityBase> ();
+                Entities.Add (e);
             }
             else
             {
-                Entities = new List<EntityBase>(ts.host.ParentGroup.Scene.Entities.GetEntities());
+                Entities = new List<EntityBase> (ts.host.ParentGroup.Scene.Entities.GetEntities (fromRegionPos, (float)ts.range));
             }
-            SceneObjectPart SensePoint = ts.host;
-
-            Vector3 fromRegionPos = SensePoint.AbsolutePosition;
 
             // pre define some things to avoid repeated definitions in the loop body
             Vector3 toRegionPos;

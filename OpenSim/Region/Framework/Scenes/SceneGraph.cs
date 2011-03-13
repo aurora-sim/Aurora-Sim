@@ -440,7 +440,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Primitive Ray Tracing
             float closestDistance = 280f;
             EntityIntersection result = new EntityIntersection();
-            EntityBase[] EntityList = Entities.GetEntities();
+            EntityBase[] EntityList = Entities.GetEntities (hray.Origin, closestDistance);
             foreach (EntityBase ent in EntityList)
             {
                 if (ent is SceneObjectGroup)

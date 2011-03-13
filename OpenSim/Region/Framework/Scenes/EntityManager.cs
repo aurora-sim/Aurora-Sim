@@ -179,11 +179,22 @@ namespace OpenSim.Region.Framework.Scenes
             return tmp.ToArray();
         }
 
-        public EntityBase[] GetEntities()
+        public EntityBase[] GetEntities ()
         {
-            List<EntityBase> tmp = new List<EntityBase>(m_entities.Count);
-            m_entities.ForEach(delegate(EntityBase entity) { tmp.Add(entity); });
-            return tmp.ToArray();
+            List<EntityBase> tmp = new List<EntityBase> (m_entities.Count);
+            m_entities.ForEach (delegate (EntityBase entity) { tmp.Add (entity); });
+            return tmp.ToArray ();
+        }
+
+        public EntityBase[] GetEntities (Vector3 pos, float radius)
+        {
+            List<EntityBase> tmp = new List<EntityBase> (m_entities.Count);
+            m_entities.ForEach (delegate (EntityBase entity)
+            { 
+                if((entity.AbsolutePosition - pos).LengthSquared() < radius * radius)
+                    tmp.Add (entity); 
+            });
+            return tmp.ToArray ();
         }
 
         public void ForEach(Action<EntityBase> action)
