@@ -69,7 +69,7 @@ namespace Aurora.Services.DataService
                 InventoryFolderBase folder = new InventoryFolderBase ();
                 folder.Name = retVal["folderName"][i];
                 folder.Type = short.Parse (retVal["type"][i]);
-                folder.Version = ushort.Parse (retVal["version"][i]);
+                folder.Version = (ushort)int.Parse (retVal["version"][i]);
                 folder.ID = UUID.Parse (retVal["folderID"][i]);
                 folder.Owner = UUID.Parse (retVal["agentID"][i]);
                 folder.ParentID = UUID.Parse (retVal["parentFolderID"][i]);
