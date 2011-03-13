@@ -488,8 +488,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void Stop()
         {
+            // Send the STOP packet NOW, otherwise it doesn't get out in time
             DisableSimulatorPacket disable = (DisableSimulatorPacket)PacketPool.Instance.GetPacket(PacketType.DisableSimulator);
-            OutPacket(disable, ThrottleOutPacketType.OutBand);
+            OutPacket(disable, ThrottleOutPacketType.Count);
         }
 
         /// <summary>
@@ -501,9 +502,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //    "[CLIENT]: Close has been called for {0} attached to scene {1}",
             //    Name, m_scene.RegionInfo.RegionName);
 
-            // Send the STOP packet
+            // Send the STOP packet NOW, otherwise it doesn't get out in time
             DisableSimulatorPacket disable = (DisableSimulatorPacket)PacketPool.Instance.GetPacket(PacketType.DisableSimulator);
-            OutPacket(disable, ThrottleOutPacketType.OutBand);
+            OutPacket(disable, ThrottleOutPacketType.Count);
 
             IsActive = false;
 
