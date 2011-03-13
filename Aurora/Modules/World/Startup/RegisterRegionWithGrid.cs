@@ -59,7 +59,7 @@ namespace Aurora.Modules
                 {
                     m_timer = new Timer();
                     //Give it an extra minute after making hours into milliseconds
-                    m_timer.Interval = (map["TimeToReRegister"].AsInteger() * 1000 * 60 * 60) - (1000 * 60);
+                    m_timer.Interval = (map["TimeBeforeReRegister"].AsInteger () * 1000 * 60 * 60) - (1000 * 60);
                     m_timer.Elapsed += m_timer_Elapsed;
                     m_timer.Start();
                 }
