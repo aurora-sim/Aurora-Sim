@@ -61,10 +61,11 @@ namespace OpenSim.Framework
         /// <remarks>This category shouldn't ever be extremely saturated with packets.
         ///This is a sub-category of Task</remarks>
         AvatarInfo = 8,
+        OutBand = 9,
         /// <summary>The number of packet categories to throttle on.
         /// If a throttle category is added or removed, this number must also change</summary>
-        OutBand = 9, // this must be the LAST one 
-        Count = 10,
+        Count = 10, // this must be the LAST one 
+        Immediate = 11, // This one is outside of Count and does NOT have a queue, and all packets will be sent immediately
     }
 
     [Flags]
