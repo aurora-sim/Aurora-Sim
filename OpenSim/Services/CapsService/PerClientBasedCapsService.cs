@@ -178,8 +178,11 @@ namespace OpenSim.Services.CapsService
             regionCaps.RemoveClientFromRegion(m_RegionCapsServices[regionHandle]);
 
             //Remove all the CAPS handlers
-            m_RegionCapsServices[regionHandle].Close();
-            m_RegionCapsServices.Remove(regionHandle);
+            if (m_RegionCapsServices.ContainsKey (regionHandle))
+            {
+                m_RegionCapsServices[regionHandle].Close ();
+                m_RegionCapsServices.Remove (regionHandle);
+            }
         }
     }
 }

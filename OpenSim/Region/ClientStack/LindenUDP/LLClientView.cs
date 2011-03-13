@@ -4476,11 +4476,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(notFoundPacket, ThrottleOutPacketType.Texture);
         }
 
-        public void SendShutdownConnectionNotice()
-        {
-            OutPacket(PacketPool.Instance.GetPacket(PacketType.DisableSimulator), ThrottleOutPacketType.OutBand);
-        }
-
         public void SendSimStats(SimStats stats)
         {
             SimStatsPacket pack = new SimStatsPacket();

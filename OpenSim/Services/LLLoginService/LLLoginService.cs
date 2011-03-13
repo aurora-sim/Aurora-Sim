@@ -55,6 +55,10 @@ namespace OpenSim.Services.LLLoginService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static bool Initialized = false;
+        // Global Textures
+        private string sunTexture = "cce0f112-878f-4586-a2e2-a8f104bba271";
+        private string cloudTexture = "dc4b9f0b-d008-45c6-96a4-01dd947ac621";
+        private string moonTexture = "ec4b9f0b-d008-45c6-96a4-01dd947ac621";
 
         protected IUserAccountService m_UserAccountService;
         protected IAgentInfoService m_agentInfoService;
@@ -74,10 +78,7 @@ namespace OpenSim.Services.LLLoginService
         protected string m_WelcomeMessageURL;
         protected bool m_RequireInventory;
         protected int m_MinLoginLevel;
-        protected string m_GatekeeperURL;
         protected bool m_AllowRemoteSetLoginLevel;
-        protected string m_MapTileURL;
-        protected string m_SearchURL;
 
         protected IConfig m_LoginServerConfig;
         protected IConfigSource m_config;
@@ -86,13 +87,10 @@ namespace OpenSim.Services.LLLoginService
         protected string m_TOSLocation = "";
         protected string m_DefaultUserAvatarArchive = "DefaultAvatar.aa";
         protected string m_DefaultHomeRegion = "";
-        protected bool m_AllowFirstLife = true;
-        protected string m_TutorialURL = "";
         protected ArrayList eventCategories = new ArrayList();
         protected ArrayList classifiedCategories = new ArrayList();
         protected GridAvatarArchiver archiver;
         protected List<ILoginModule> LoginModules = new List<ILoginModule>();
-        protected bool allowExportPermission = true;
 
         public int MinLoginLevel
         {
@@ -111,11 +109,16 @@ namespace OpenSim.Services.LLLoginService
             m_DefaultUserAvatarArchive = m_LoginServerConfig.GetString("DefaultAvatarArchiveForNewUser", m_DefaultUserAvatarArchive);
             m_AllowAnonymousLogin = m_LoginServerConfig.GetBoolean("AllowAnonymousLogin", false);
             m_TOSLocation = m_LoginServerConfig.GetString("FileNameOfTOS", "");
-            m_AllowFirstLife = m_LoginServerConfig.GetBoolean("AllowFirstLifeInProfile", true);
-            m_TutorialURL = m_LoginServerConfig.GetString("TutorialURL", m_TutorialURL);
-            ReadEventValues(m_LoginServerConfig);
+            LLLoginResponseRegister.RegisterValue ("AllowFirstLife", m_LoginServerConfig.GetBoolean ("AllowFirstLifeInProfile", true) ? "Y" : "N");
+            LLLoginResponseRegister.RegisterValue ("TutorialURL", m_LoginServerConfig.GetString ("TutorialURL", ""));
+            LLLoginResponseRegister.RegisterValue ("OpenIDURL", m_LoginServerConfig.GetString ("OpenIDURL", ""));
+            LLLoginResponseRegister.RegisterValue ("SnapshotConfigURL", m_LoginServerConfig.GetString ("SnapshotConfigURL", ""));
+            LLLoginResponseRegister.RegisterValue ("MaxAgentGroups", m_LoginServerConfig.GetInt ("MaxAgentGroups", 100));
+            LLLoginResponseRegister.RegisterValue ("HelpURL", m_LoginServerConfig.GetString ("HelpURL", ""));
+            LLLoginResponseRegister.RegisterValue ("VoiceServerType", m_LoginServerConfig.GetString ("VoiceServerType", "vivox"));
+            ReadEventValues (m_LoginServerConfig);
             ReadClassifiedValues(m_LoginServerConfig);
-            allowExportPermission = m_LoginServerConfig.GetBoolean("AllowUseageOfExportPermissions", true);
+            LLLoginResponseRegister.RegisterValue("AllowExportPermission", m_LoginServerConfig.GetBoolean("AllowUseageOfExportPermissions", true));
             
             m_DefaultRegionName = m_LoginServerConfig.GetString("DefaultRegion", String.Empty);
             m_WelcomeMessage = m_LoginServerConfig.GetString("WelcomeMessage", "");
@@ -125,19 +128,23 @@ namespace OpenSim.Services.LLLoginService
                 WebClient client = new WebClient();
                 m_WelcomeMessage = client.DownloadString(m_WelcomeMessageURL);
             }
+            LLLoginResponseRegister.RegisterValue ("Message", m_WelcomeMessage);
             m_RequireInventory = m_LoginServerConfig.GetBoolean("RequireInventory", true);
             m_AllowRemoteSetLoginLevel = m_LoginServerConfig.GetBoolean("AllowRemoteSetLoginLevel", false);
             m_MinLoginLevel = m_LoginServerConfig.GetInt("MinLoginLevel", 0);
-            m_GatekeeperURL = m_LoginServerConfig.GetString("GatekeeperURI", string.Empty);
-            m_MapTileURL = m_LoginServerConfig.GetString("MapTileURL", string.Empty);
-            m_SearchURL = m_LoginServerConfig.GetString("SearchURL", string.Empty);
+            LLLoginResponseRegister.RegisterValue ("MapTileURL", m_LoginServerConfig.GetString ("MapTileURL", string.Empty));
+            LLLoginResponseRegister.RegisterValue ("WebProfileURL", m_LoginServerConfig.GetString ("WebProfileURL", string.Empty));
+            LLLoginResponseRegister.RegisterValue ("SearchURL", m_LoginServerConfig.GetString ("SearchURL", string.Empty));
             // if [LoginService] doesn't have the Search URL, try to get it from [GridInfoService]
-            if (m_SearchURL == string.Empty)
+            if (LLLoginResponseRegister.GetValue("SearchURL") == string.Empty)
             {
                 IConfig gridInfo = config.Configs["GridInfoService"];
-                m_SearchURL = gridInfo.GetString("search", string.Empty);
+                LLLoginResponseRegister.RegisterValue ("SearchURL", gridInfo.GetString("search", string.Empty));
             }
-            registry.RegisterModuleInterface<ILoginService>(this);
+            LLLoginResponseRegister.RegisterValue ("SunTexture", m_LoginServerConfig.GetString ("SunTexture", sunTexture));
+            LLLoginResponseRegister.RegisterValue ("MoonTexture", m_LoginServerConfig.GetString ("MoonTexture", moonTexture));
+            LLLoginResponseRegister.RegisterValue ("CloudTexture", m_LoginServerConfig.GetString ("CloudTexture", cloudTexture));
+            registry.RegisterModuleInterface<ILoginService> (this);
             m_registry = registry;
         }
 
@@ -438,6 +445,7 @@ namespace OpenSim.Services.LLLoginService
             try
             {
                 UserAccount account = m_UserAccountService.GetUserAccount(scopeID, Name);
+                string DisplayName = account.Name;
                 IAgentInfo agent = null;
 
                 IAgentConnector agentData = DataManager.RequestPlugin<IAgentConnector>();
@@ -479,6 +487,8 @@ namespace OpenSim.Services.LLLoginService
                         UPI.IsNewUser = false;
                         profileData.UpdateUserProfile(UPI);
                     }
+                    if(UPI.DisplayName != "")
+                        DisplayName = UPI.DisplayName;
                 }
 
                 //
@@ -692,8 +702,8 @@ namespace OpenSim.Services.LLLoginService
                 }
 
                 LLLoginResponse response = new LLLoginResponse(account, aCircuit, guinfo, destination, inventorySkel, friendsList, m_LibraryService,
-                    where, startLocation, position, lookAt, gestures, m_WelcomeMessage, home, clientIP, MaxMaturity, MaturityRating, m_MapTileURL, m_SearchURL,
-                    m_AllowFirstLife ? "Y" : "N", m_TutorialURL, eventCategories, classifiedCategories, FillOutSeedCap(aCircuit, destination, clientIP, account.PrincipalID), allowExportPermission, m_config);
+                    where, startLocation, position, lookAt, gestures, home, clientIP, MaxMaturity, MaturityRating,
+                    eventCategories, classifiedCategories, FillOutSeedCap (aCircuit, destination, clientIP, account.PrincipalID), m_config, DisplayName);
 
                 m_log.InfoFormat("[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " + destination.RegionName + ", tried to login to " + startLocation + " at " + position.ToString() + ".");
                 return response;

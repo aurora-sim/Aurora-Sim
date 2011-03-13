@@ -142,12 +142,7 @@ namespace OpenSim.Services.LLLoginService
     public class LLLoginResponse : OpenSim.Services.Interfaces.LoginResponse
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static Hashtable globalTexturesHash;
-        // Global Textures
-        private static string sunTexture = "cce0f112-878f-4586-a2e2-a8f104bba271";
-        private static string cloudTexture = "dc4b9f0b-d008-45c6-96a4-01dd947ac621";
-        private static string moonTexture = "ec4b9f0b-d008-45c6-96a4-01dd947ac621";
-
+        
         private Hashtable loginFlagsHash;
         private Hashtable uiConfigHash;
 
@@ -191,37 +186,19 @@ namespace OpenSim.Services.LLLoginService
         // Login
         private string firstname;
         private string lastname;
-
-        // Web map
-        private string mapTileURL;
-
-        private string searchURL;
+        private string displayName;
 
         // Error Flags
         private string errorReason;
         private string errorMessage;
-        private string welcomeMessage;
         private string startLocation;
-        private string allowFirstLife;
         private string home;
         private string seedCapability;
         private string lookAt;
-        private string tutorialURL;
         private string udpBlackList;
-        private bool m_allowExportPermission;
         private IConfigSource m_source;
 
         private BuddyList m_buddyList = null;
-
-        static LLLoginResponse()
-        {
-            // This is being set, but it's not used
-            // not sure why.
-            globalTexturesHash = new Hashtable();
-            globalTexturesHash["sun_texture_id"] = sunTexture;
-            globalTexturesHash["cloud_texture_id"] = cloudTexture;
-            globalTexturesHash["moon_texture_id"] = moonTexture;
-        }
 
         public LLLoginResponse()
         {
@@ -250,9 +227,9 @@ namespace OpenSim.Services.LLLoginService
 
         public LLLoginResponse(UserAccount account, AgentCircuitData aCircuit, OpenSim.Services.Interfaces.UserInfo pinfo,
             GridRegion destination, List<InventoryFolderBase> invSkel, FriendInfo[] friendsList, ILibraryService libService,
-            string where, string startlocation, Vector3 position, Vector3 lookAt, List<InventoryItemBase> gestures, string message,
-            GridRegion home, IPEndPoint clientIP, string AdultMax, string AdultRating, string mapTileURL, string searchURL, string AllowFL, string TutorialURL,
-            ArrayList eventValues, ArrayList classifiedValues, string seedCap, bool allowExportPermission, IConfigSource source)
+            string where, string startlocation, Vector3 position, Vector3 lookAt, List<InventoryItemBase> gestures,
+            GridRegion home, IPEndPoint clientIP, string AdultMax, string AdultRating,
+            ArrayList eventValues, ArrayList classifiedValues, string seedCap, IConfigSource source, string DisplayName)
             : this()
         {
             m_source = source;
@@ -265,21 +242,16 @@ namespace OpenSim.Services.LLLoginService
             CircuitCode = (int)aCircuit.circuitcode;
             Lastname = account.LastName;
             Firstname = account.FirstName;
+            this.DisplayName = DisplayName;
             AgentID = account.PrincipalID;
             SessionID = aCircuit.SessionID;
             SecureSessionID = aCircuit.SecureSessionID;
-            Message = message;
             BuddList = ConvertFriendListItem(friendsList);
             StartLocation = where;
             AgentAccessMax = AdultMax;
             AgentAccess = AdultRating;
-			MapTileURL = mapTileURL;
-            allowFirstLife = AllowFL;
-            m_allowExportPermission = allowExportPermission;
-            tutorialURL = TutorialURL;
             eventCategories = eventValues;
             classifiedCategories = classifiedValues;
-            SearchURL = searchURL;
 
             FillOutHomeData(pinfo, home);
             LookAt = String.Format("[r{0},r{1},r{2}]", lookAt.X, lookAt.Y, lookAt.Z);
@@ -287,6 +259,8 @@ namespace OpenSim.Services.LLLoginService
             FillOutRegionData(destination);
             
         }
+
+        #region FillOutData
 
         private void FillOutInventoryData(List<InventoryFolderBase> invSkel, ILibraryService libService)
         {
@@ -386,12 +360,10 @@ namespace OpenSim.Services.LLLoginService
             agentAccess = "M";
             agentAccessMax = "A";
             startLocation = "last";
-            allowFirstLife = "Y";
             udpBlackList = "EnableSimulator,TeleportFinish,CrossedRegion,OpenCircuit";
 
             ErrorMessage = "You have entered an invalid name/password combination.  Check Caps/lock.";
             ErrorReason = "key";
-            welcomeMessage = "Welcome to Aurora!";
             SessionID = UUID.Random();
             SecureSessionID = UUID.Random();
             AgentID = UUID.Random();
@@ -402,18 +374,18 @@ namespace OpenSim.Services.LLLoginService
             initialOutfit.Add(InitialOutfitHash);
 
             Hashtable TutorialHash = new Hashtable();
-            TutorialHash["tutorial_url"] = tutorialURL;
+            TutorialHash["tutorial_url"] = TutorialURL;
 
-            if (tutorialURL != "")
+            if (TutorialURL != "")
                 TutorialHash["use_tutorial"] = "Y";
             else
                 TutorialHash["use_tutorial"] = "";
             tutorial.Add(TutorialHash);
-
-            mapTileURL = String.Empty;
-            searchURL = String.Empty;
         }
 
+        #endregion
+
+        #region To***
 
         public override Hashtable ToHashtable()
         {
@@ -430,13 +402,13 @@ namespace OpenSim.Services.LLLoginService
 
                 responseData["first_name"] = Firstname;
                 responseData["last_name"] = Lastname;
+                responseData["display_name"] = DisplayName;
                 responseData["agent_access"] = agentAccess;
                 responseData["agent_access_max"] = agentAccessMax;
                 responseData["udp_blacklist"] = udpBlackList;
 
-                globalTextures.Add(globalTexturesHash);
-
-                uiConfigHash["allow_first_life"] = allowFirstLife;
+                if(AllowFirstLife != null)
+                    uiConfigHash["allow_first_life"] = AllowFirstLife;
                 uiConfig.Add(uiConfigHash);
 
                 responseData["sim_port"] = (Int32) SimPort;
@@ -449,14 +421,13 @@ namespace OpenSim.Services.LLLoginService
                 responseData["circuit_code"] = CircuitCode;
                 responseData["seconds_since_epoch"] = (Int32) (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
                 responseData["login-flags"] = loginFlags;
-                responseData["global-textures"] = globalTextures;
                 responseData["seed_capability"] = seedCapability;
 
                 responseData["event_categories"] = eventCategories;
                 responseData["event_notifications"] = new ArrayList(); // TODO: What is this?
                 responseData["classified_categories"] = classifiedCategories;
                 responseData["ui-config"] = uiConfig;
-                responseData["export"] = m_allowExportPermission ? "flag" : "";
+                responseData["export"] = AllowExportPermission ? "flag" : "";
 
                 if (agentInventory != null)
                 {
@@ -472,18 +443,57 @@ namespace OpenSim.Services.LLLoginService
                 responseData["start_location"] = startLocation;
                 responseData["home"] = home;
                 responseData["look_at"] = lookAt;
-                responseData["message"] = welcomeMessage;
+                responseData["message"] = Message;
                 responseData["region_x"] = (Int32)(RegionX);
                 responseData["region_y"] = (Int32)(RegionY);
                 responseData["region_size_x"] = (Int32)(RegionSizeX);
                 responseData["region_size_y"] = (Int32)(RegionSizeY);
 
-                if (searchURL != String.Empty)
-                    responseData["search"] = searchURL;
+                #region Global Textures
 
-                if (mapTileURL != String.Empty)
-                    responseData["map-server-url"] = mapTileURL;
+                Hashtable globalTextures = new Hashtable ();
 
+                globalTextures["sun_texture_id"] = OSD.FromString (SunTexture);
+                globalTextures["cloud_texture_id"] = OSD.FromString (CloudTexture);
+                globalTextures["moon_texture_id"] = OSD.FromString (MoonTexture);
+
+                responseData["global-textures"] = globalTextures;
+
+                #endregion Global Textures
+
+                if (SearchURL != String.Empty)
+                    responseData["search"] = SearchURL;
+                
+                if (MapTileURL != String.Empty)
+                    responseData["map-server-url"] = MapTileURL;
+
+                if (WebProfileURL != String.Empty)
+                    responseData["web_profile_url"] = WebProfileURL;
+
+                if (HelpURL != String.Empty)
+                    responseData["help_url_format"] = HelpURL;
+
+                if (SnapshotConfigURL != String.Empty)
+                    responseData["snapshot_config_url"] = SnapshotConfigURL;
+
+                if (HelpURL != String.Empty)
+                    responseData["help_url_format"] = HelpURL;
+
+                if (OpenIDURL != String.Empty)
+                    responseData["openid_url"] = OpenIDURL;
+
+                if (MaxAgentGroups != 0)
+                    responseData["max-agent-groups"] = MaxAgentGroups;
+                else
+                    responseData["max-agent-groups"] = 100;
+
+                if (VoiceServerType != String.Empty)
+                {
+                    Hashtable voice_config = new Hashtable ();
+                    voice_config["VoiceServerType"] = VoiceServerType;
+                    responseData["voice-config"] = voice_config;
+                }
+                
                 if (m_buddyList != null)
                 {
                     responseData["buddy-list"] = m_buddyList.ToArray();
@@ -552,7 +562,8 @@ namespace OpenSim.Services.LLLoginService
                 OSDMap map = new OSDMap();
 
                 map["first_name"] = OSD.FromString(Firstname);
-                map["last_name"] = OSD.FromString(Lastname);
+                map["last_name"] = OSD.FromString (Lastname);
+                map["display_name"] = OSD.FromString (DisplayName);
                 map["agent_access"] = OSD.FromString(agentAccess);
                 map["agent_access_max"] = OSD.FromString(agentAccessMax);
 
@@ -596,7 +607,8 @@ namespace OpenSim.Services.LLLoginService
                 #region UI Config
 
                 OSDMap uiConfigLLSD = new OSDMap();
-                uiConfigLLSD["allow_first_life"] = OSD.FromString(allowFirstLife);
+                if(AllowFirstLife != null)
+                    uiConfigLLSD["allow_first_life"] = OSD.FromString (AllowFirstLife);
                 map["ui-config"] = WrapOSDMap(uiConfigLLSD);
 
                 #endregion UI Config
@@ -622,15 +634,42 @@ namespace OpenSim.Services.LLLoginService
                 map["seed_capability"] = OSD.FromString(seedCapability);
                 map["home"] = OSD.FromString(home);
                 map["look_at"] = OSD.FromString(lookAt);
-                map["message"] = OSD.FromString(welcomeMessage);
+                map["message"] = OSD.FromString(Message);
                 map["region_x"] = OSD.FromInteger(RegionX);
                 map["region_y"] = OSD.FromInteger(RegionY);
 
-                if (mapTileURL != String.Empty)
-                    map["map-server-url"] = OSD.FromString(mapTileURL);
+                if (MapTileURL != String.Empty)
+                    map["map-server-url"] = OSD.FromString (MapTileURL);
 
-                if (searchURL != String.Empty)
-                    map["search"] = OSD.FromString(searchURL);
+                if (WebProfileURL != String.Empty)
+                    map["web_profile_url"] = WebProfileURL;
+
+                if (HelpURL != String.Empty)
+                    map["help_url_format"] = HelpURL;
+
+                if (SnapshotConfigURL != String.Empty)
+                    map["snapshot_config_url"] = SnapshotConfigURL;
+
+                if (HelpURL != String.Empty)
+                    map["help_url_format"] = HelpURL;
+
+                if (OpenIDURL != String.Empty)
+                    map["openid_url"] = OpenIDURL;
+
+                if (MaxAgentGroups != 0)
+                    map["max-agent-groups"] = MaxAgentGroups;
+                else
+                    map["max-agent-groups"] = 100;
+
+                if (VoiceServerType != String.Empty)
+                {
+                    OSDMap voice_config = new OSDMap ();
+                    voice_config["VoiceServerType"] = OSD.FromString(VoiceServerType);
+                    map["voice-config"] = voice_config;
+                }
+
+                if (SearchURL != String.Empty)
+                    map["search"] = OSD.FromString (SearchURL);
 
                 if (m_buddyList != null)
                 {
@@ -767,6 +806,8 @@ namespace OpenSim.Services.LLLoginService
             }
         }
 
+        #endregion
+
         #region Properties
 
         public string Login
@@ -865,28 +906,16 @@ namespace OpenSim.Services.LLLoginService
             set { regionSizeY = value; }
         }
 
-        public string SunTexture
-        {
-            get { return sunTexture; }
-            set { sunTexture = value; }
-        }
-
-        public string CloudTexture
-        {
-            get { return cloudTexture; }
-            set { cloudTexture = value; }
-        }
-
-        public string MoonTexture
-        {
-            get { return moonTexture; }
-            set { moonTexture = value; }
-        }
-
         public string Firstname
         {
             get { return firstname; }
             set { firstname = value; }
+        }
+
+        public string DisplayName
+        {
+            get { return displayName; }
+            set { displayName = value; }
         }
 
         public string Lastname
@@ -979,26 +1008,84 @@ namespace OpenSim.Services.LLLoginService
             set { home = value; }
         }
 
+        public string SunTexture
+        {
+            get { return (string)LLLoginResponseRegister.GetValue ("SunTexture"); }
+        }
+
+        public string CloudTexture
+        {
+            get { return (string)LLLoginResponseRegister.GetValue ("CloudTexture"); }
+        }
+
+        public string MoonTexture
+        {
+            get { return (string)LLLoginResponseRegister.GetValue ("MoonTexture"); }
+        }
+
+        public string AllowFirstLife
+        {
+            get { return (string)LLLoginResponseRegister.GetValue ("AllowFirstLife"); }
+        }
+
+        public bool AllowExportPermission
+        {
+            get { return (bool)LLLoginResponseRegister.GetValue ("AllowExportPermission"); }
+        }
+
+        public string OpenIDURL
+        {
+            get { return (string)LLLoginResponseRegister.GetValue ("OpenIDURL"); }
+        }
+
+        public string SnapshotConfigURL
+        {
+            get { return (string)LLLoginResponseRegister.GetValue ("SnapshotConfigURL"); }
+        }
+
+        public string HelpURL
+        {
+            get { return (string)LLLoginResponseRegister.GetValue ("HelpURL"); }
+        }
+
+        public int MaxAgentGroups
+        {
+            get { return (int)LLLoginResponseRegister.GetValue ("MaxAgentGroups"); }
+        }
+
+        public string VoiceServerType
+        {
+            get { return (string)LLLoginResponseRegister.GetValue ("VoiceServerType"); }
+        }
+
+        public string TutorialURL
+        {
+            get { return (string)LLLoginResponseRegister.GetValue ("TutorialURL"); }
+        }
+
         public string MapTileURL
         {
-            get { return mapTileURL; }
-            set { mapTileURL = value; }
+            get { return (string)LLLoginResponseRegister.GetValue ("MapTileURL"); }
         }
 
         public string SearchURL
         {
-            get { return searchURL; }
-            set { searchURL = value; }
+            get { return (string)LLLoginResponseRegister.GetValue ("SearchURL"); }
+        }
+
+        public string WebProfileURL
+        {
+            get { return (string)LLLoginResponseRegister.GetValue ("WebProfileURL"); }
         }
 
         public string Message
         {
-            get { return welcomeMessage; }
-            set 
+            get 
             {
-                if (value.Contains("<USERNAME>"))
-                    value = value.Replace("<USERNAME>", firstname + " " + lastname);
-                welcomeMessage = value; 
+                string retVal = (string)LLLoginResponseRegister.GetValue ("Message");
+                if (retVal.Contains ("<USERNAME>"))
+                    retVal = retVal.Replace ("<USERNAME>", firstname + " " + lastname);
+                return retVal;
             }
         }
 
@@ -1068,241 +1155,24 @@ namespace OpenSim.Services.LLLoginService
             }
         }
     }
-    /*public class TestLLLoginResponse : OpenSim.Services.Interfaces.LoginResponse
+
+    /// <summary>
+    /// A generic kvp register so that we can store values for multiple LLLoginResponses
+    /// </summary>
+    public class LLLoginResponseRegister
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IConfigSource m_source;
+        private static Dictionary<string, object> m_values = new Dictionary<string, object> ();
 
-        public TestLLLoginResponse(IConfigSource source)
+        public static void RegisterValue (string key, object value)
         {
-            m_source = source;
+            m_values[key] = value;
         }
 
-        public void RegisterModuleInterface<
-
-        public override Hashtable ToHashtable()
+        public static object GetValue (string key)
         {
-            try
-            {
-                Hashtable responseData = new Hashtable();
-
-                responseData["first_name"] = Firstname;
-                responseData["last_name"] = Lastname;
-                responseData["agent_access"] = agentAccess;
-                responseData["agent_access_max"] = agentAccessMax;
-                responseData["udp_blacklist"] = udpBlackList;
-
-                responseData["sim_port"] = (Int32) SimPort;
-                responseData["sim_ip"] = SimAddress;
-                responseData["http_port"] = (Int32)SimHttpPort;
-
-                responseData["agent_id"] = AgentID.ToString();
-                responseData["session_id"] = SessionID.ToString();
-                responseData["secure_session_id"] = SecureSessionID.ToString();
-                responseData["circuit_code"] = CircuitCode;
-                responseData["seconds_since_epoch"] = (Int32) (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
-                responseData["login-flags"] = loginFlags;
-                responseData["global-textures"] = globalTextures;
-                responseData["seed_capability"] = seedCapability;
-
-                responseData["event_categories"] = eventCategories;
-                responseData["event_notifications"] = new ArrayList(); // TODO: What is this?
-                responseData["classified_categories"] = classifiedCategories;
-                responseData["ui-config"] = uiConfig;
-                responseData["export"] = m_allowExportPermission ? "flag" : "";
-
-                responseData["inventory-skeleton"] = agentInventory;
-                responseData["inventory-root"] = inventoryRoot;
-                responseData["inventory-skel-lib"] = inventoryLibrary;
-                responseData["inventory-lib-root"] = inventoryLibRoot;
-                responseData["gestures"] = activeGestures;
-                responseData["inventory-lib-owner"] = inventoryLibraryOwner;
-                responseData["initial-outfit"] = initialOutfit;
-                responseData["tutorial_setting"] = tutorial;
-                responseData["start_location"] = startLocation;
-                responseData["home"] = home;
-                responseData["look_at"] = lookAt;
-                responseData["message"] = welcomeMessage;
-                responseData["region_x"] = (Int32)(RegionX);
-                responseData["region_y"] = (Int32)(RegionY);
-                responseData["region_size_x"] = (Int32)(RegionSizeX);
-                responseData["region_size_y"] = (Int32)(RegionSizeY);
-
-                if (searchURL != String.Empty)
-                    responseData["search"] = searchURL;
-
-                if (mapTileURL != String.Empty)
-                    responseData["map-server-url"] = mapTileURL;
-
-                if (m_buddyList != null)
-                {
-                    responseData["buddy-list"] = m_buddyList.ToArray();
-                }
-                if (m_source != null)
-                {
-                    // we're mapping GridInfoService keys to 
-                    // the ones expected by known viewers.
-                    // hippo, imprudence, phoenix are known to work
-                    IConfig gridInfo = m_source.Configs["GridInfoService"];
-                    if (gridInfo.GetBoolean("SendGridInfoToViewerOnLogin",false))
-                    {
-                        string tmp;
-                        tmp = gridInfo.GetString("gridname", String.Empty);
-                        if (tmp != String.Empty) responseData["gridname"] = tmp;
-                        tmp = gridInfo.GetString("login", String.Empty);
-                        if (tmp != String.Empty) responseData["loginuri"] = tmp;
-
-                        // alternate keys of the same thing. (note careful not to overwrite responsdata["welcome"]
-                        tmp = gridInfo.GetString("loginpage", String.Empty);
-                        if (tmp != String.Empty) responseData["loginpage"] = tmp;
-                        tmp = gridInfo.GetString("welcome", String.Empty);
-                        if (tmp != String.Empty) responseData["loginpage"] = tmp;
-
-                        // alternate keys of the same thing.
-                        tmp = gridInfo.GetString("economy", String.Empty);
-                        if (tmp != String.Empty) responseData["economy"] = tmp;
-                        tmp = gridInfo.GetString("helperuri", String.Empty);
-                        if (tmp != String.Empty) responseData["helperuri"] = tmp;
-
-                        tmp = gridInfo.GetString("about", String.Empty);
-                        if (tmp != String.Empty) responseData["about"] = tmp;
-                        tmp = gridInfo.GetString("help", String.Empty);
-                        if (tmp != String.Empty) responseData["help"] = tmp;
-                        tmp = gridInfo.GetString("register", String.Empty);
-                        if (tmp != String.Empty) responseData["register"] = tmp;
-                        tmp = gridInfo.GetString("password", String.Empty);
-                        if (tmp != String.Empty) responseData["password"] = tmp;
-                        tmp = gridInfo.GetString("CurrencySymbol", String.Empty);
-                        if (tmp != String.Empty) responseData["currency"] = tmp;
-                        tmp = gridInfo.GetString("RealCurrencySymbol", String.Empty);
-                        if (tmp != String.Empty) responseData["real_currency"] = tmp;
-                        tmp = gridInfo.GetString("DirectoryFee", String.Empty);
-                        if (tmp != String.Empty) responseData["directory_fee"] = tmp;
-                        tmp = gridInfo.GetString("MaxGroups", String.Empty);
-                        if (tmp != String.Empty) responseData["max_groups"] = tmp;
-                    }
-                }
-
-                responseData["login"] = "true";
-
-                return responseData;
-            }
-            catch (Exception e)
-            {
-                m_log.Warn("[CLIENT]: LoginResponse: Error creating Hashtable Response: " + e.Message);
-
-                return LLFailedLoginResponse.InternalError.ToHashtable();
-            }
+            if (m_values.ContainsKey (key))
+                return m_values[key];
+            return null;
         }
-
-        public override OSD ToOSDMap()
-        {
-            try
-            {
-                OSDMap map = new OSDMap();
-
-                map["first_name"] = OSD.FromString(Firstname);
-                map["last_name"] = OSD.FromString(Lastname);
-                map["agent_access"] = OSD.FromString(agentAccess);
-                map["agent_access_max"] = OSD.FromString(agentAccessMax);
-
-                map["sim_port"] = OSD.FromInteger(SimPort);
-                map["sim_ip"] = OSD.FromString(SimAddress);
-
-                map["agent_id"] = OSD.FromUUID(AgentID);
-                map["session_id"] = OSD.FromUUID(SessionID);
-                map["secure_session_id"] = OSD.FromUUID(SecureSessionID);
-                map["circuit_code"] = OSD.FromInteger(CircuitCode);
-                map["seconds_since_epoch"] = OSD.FromInteger((int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds);
-
-                #region Login Flags
-
-                OSDMap loginFlagsLLSD = new OSDMap();
-                loginFlagsLLSD["daylight_savings"] = OSD.FromString(DST);
-                loginFlagsLLSD["stipend_since_login"] = OSD.FromString(StipendSinceLogin);
-                loginFlagsLLSD["gendered"] = OSD.FromString(Gendered);
-                loginFlagsLLSD["ever_logged_in"] = OSD.FromString(EverLoggedIn);
-                map["login-flags"] = WrapOSDMap(loginFlagsLLSD);
-
-                #endregion Login Flags
-
-                #region Global Textures
-
-                OSDMap globalTexturesLLSD = new OSDMap();
-                globalTexturesLLSD["sun_texture_id"] = OSD.FromString(SunTexture);
-                globalTexturesLLSD["cloud_texture_id"] = OSD.FromString(CloudTexture);
-                globalTexturesLLSD["moon_texture_id"] = OSD.FromString(MoonTexture);
-
-                map["global-textures"] = WrapOSDMap(globalTexturesLLSD);
-
-                #endregion Global Textures
-
-                map["seed_capability"] = OSD.FromString(seedCapability);
-
-                map["event_categories"] = ArrayListToOSDArray(eventCategories);
-                //map["event_notifications"] = new OSDArray(); // todo
-                map["classified_categories"] = ArrayListToOSDArray(classifiedCategories);
-
-                #region UI Config
-
-                OSDMap uiConfigLLSD = new OSDMap();
-                uiConfigLLSD["allow_first_life"] = OSD.FromString(allowFirstLife);
-                map["ui-config"] = WrapOSDMap(uiConfigLLSD);
-
-                #endregion UI Config
-
-                #region Inventory
-
-                map["inventory-skeleton"] = ArrayListToOSDArray(agentInventory);
-
-                map["inventory-skel-lib"] = ArrayListToOSDArray(inventoryLibrary);
-                map["inventory-root"] = ArrayListToOSDArray(inventoryRoot); ;
-                map["inventory-lib-root"] = ArrayListToOSDArray(inventoryLibRoot);
-                map["inventory-lib-owner"] = ArrayListToOSDArray(inventoryLibraryOwner);
-
-                #endregion Inventory
-
-                map["gestures"] = ArrayListToOSDArray(activeGestures);
-
-                map["initial-outfit"] = ArrayListToOSDArray(initialOutfit);
-                map["tutorial_setting"] = ArrayListToOSDArray(tutorial);
-                map["start_location"] = OSD.FromString(startLocation);
-                map["udp_blacklist"] = OSD.FromString(udpBlackList);
-
-                map["seed_capability"] = OSD.FromString(seedCapability);
-                map["home"] = OSD.FromString(home);
-                map["look_at"] = OSD.FromString(lookAt);
-                map["message"] = OSD.FromString(welcomeMessage);
-                map["region_x"] = OSD.FromInteger(RegionX);
-                map["region_y"] = OSD.FromInteger(RegionY);
-
-                if (mapTileURL != String.Empty)
-                    map["map-server-url"] = OSD.FromString(mapTileURL);
-
-                if (searchURL != String.Empty)
-                    map["search"] = OSD.FromString(searchURL);
-
-                if (m_buddyList != null)
-                {
-                    map["buddy-list"] = ArrayListToOSDArray(m_buddyList.ToArray());
-                }
-
-                map["login"] = OSD.FromString("true");
-
-                return map;
-            }
-            catch (Exception e)
-            {
-                m_log.Warn("[CLIENT]: LoginResponse: Error creating LLSD Response: " + e.Message);
-
-                return LLFailedLoginResponse.InternalError.ToOSDMap();
-            }
-        }
-        private static OSDArray WrapOSDMap(OSDMap wrapMe)
-        {
-            OSDArray array = new OSDArray();
-            array.Add(wrapMe);
-            return array;
-        }
-    }*/
+    }
 }
