@@ -361,7 +361,7 @@ namespace OpenSim.Services.GridService
             return "";
         }
 
-        public bool DeregisterRegion(UUID regionID, UUID SessionID)
+        public bool DeregisterRegion(ulong regionHandle, UUID regionID, UUID SessionID)
         {
             GridRegion region = m_Database.Get(regionID, UUID.Zero);
             if (region == null)

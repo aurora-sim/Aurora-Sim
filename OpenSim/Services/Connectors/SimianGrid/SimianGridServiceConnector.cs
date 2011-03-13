@@ -177,7 +177,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 return "Region registration for " + regionInfo.RegionName + " failed: " + response["Message"].AsString();
         }
 
-        public bool DeregisterRegion(UUID regionID, UUID SessionID)
+        public bool DeregisterRegion (ulong regionhandle, UUID regionID, UUID SessionID)
         {
             NameValueCollection requestArgs = new NameValueCollection
             {

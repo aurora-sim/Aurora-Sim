@@ -52,7 +52,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="regionID"></param>
         /// <returns></returns>
         /// <exception cref="System.Exception">Thrown if region deregistration failed</exception>
-        bool DeregisterRegion(UUID regionID, UUID SessionID);
+        bool DeregisterRegion(ulong regionhandle, UUID regionID, UUID SessionID);
 
         /// <summary>
         /// Get a specific region by UUID in the given scope

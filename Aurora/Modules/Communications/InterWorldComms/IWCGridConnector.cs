@@ -65,9 +65,9 @@ namespace Aurora.Modules
             return m_localService.RegisterRegion(regionInfos, oldSessionID, out SessionID);
         }
 
-        public bool DeregisterRegion(UUID regionID, UUID SessionID)
+        public bool DeregisterRegion (ulong regionHandle, UUID regionID, UUID SessionID)
         {
-            return m_localService.DeregisterRegion(regionID, SessionID);
+            return m_localService.DeregisterRegion(regionHandle, regionID, SessionID);
         }
 
         public GridRegion GetRegionByUUID(UUID scopeID, UUID regionID)

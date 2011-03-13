@@ -186,7 +186,7 @@ namespace OpenSim.Services.Connectors
             return "Error communicating with grid service";
         }
 
-        public virtual bool DeregisterRegion(UUID regionID, UUID SessionID)
+        public virtual bool DeregisterRegion (ulong regionhandle, UUID regionID, UUID SessionID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -197,7 +197,7 @@ namespace OpenSim.Services.Connectors
 
             try
             {
-                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(regionhandle.ToString(), "GridServerURI");
                 foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",

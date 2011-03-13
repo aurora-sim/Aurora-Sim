@@ -110,7 +110,7 @@ namespace Aurora.Modules
 
             //Deregister from the grid server
             IGridService GridService = scene.RequestModuleInterface<IGridService>();
-            if (!GridService.DeregisterRegion(scene.RegionInfo.RegionID, scene.RegionInfo.GridSecureSessionID))
+            if (!GridService.DeregisterRegion(scene.RegionInfo.RegionHandle, scene.RegionInfo.RegionID, scene.RegionInfo.GridSecureSessionID))
                 m_log.WarnFormat("[RegisterRegionWithGrid]: Deregister from grid failed for region {0}", scene.RegionInfo.RegionName);
         }
 
