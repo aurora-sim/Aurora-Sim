@@ -205,11 +205,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             short zmin = 32767;
             float iscale = 1.0f / Constants.TerrainCompression;
 
-            for (int i = 0; i < heightmap.Length; i++)
+            for (int j = patchY * 16; j < (patchY + 1) * 16; j++)
             {
-                short val = heightmap[i];
-                if (val > zmax) zmax = val;
-                if (val < zmin) zmin = val;
+                for (int i = patchX * 16; i < (patchX + 1) * 16; i++)
+                {
+                    short val = heightmap[j * RegionSizeX + i];
+                    if (val > zmax) zmax = val;
+                    if (val < zmin) zmin = val;
+                }
             }
 
             header.DCOffset = ((float)zmin) * iscale;

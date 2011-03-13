@@ -336,13 +336,20 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
 
             List<int> xs = new List<int>();
-            List<int> ys = new List<int>();
-            for (int x = 0; x <
-                    m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize; x++) //Make sure that we don't send past what viewers like
+            List<int> ys = new List<int> ();
+            int startX = (((int)(presence.AbsolutePosition.X - presence.DrawDistance)) / Constants.TerrainPatchSize) - 1;
+            int startY = (((int)(presence.AbsolutePosition.Y - presence.DrawDistance)) / Constants.TerrainPatchSize) - 1;
+            int endX = (((int)(presence.AbsolutePosition.X + presence.DrawDistance)) / Constants.TerrainPatchSize) + 1;
+            int endY = (((int)(presence.AbsolutePosition.Y + presence.DrawDistance)) / Constants.TerrainPatchSize) + 1;
+            for (int x = startX; x <
+                    endX; x++)
             {
-                for (int y = 0; y <
-                    m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize; y++) //Make sure that we don't send past what viewers like
+                for (int y = startY; y <
+                    endY; y++) 
                 {
+                    if(x < 0 || y < 0 || x > m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize ||
+                        y > m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize)
+                        continue;
                     //Need to make sure we don't send the same ones over and over
                     if (!m_terrainPatchesSent[presence.UUID][x, y])
                     {
