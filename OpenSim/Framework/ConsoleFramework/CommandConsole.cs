@@ -126,7 +126,7 @@ namespace OpenSim.Framework
                     string[] commandPath = innerPath.Split (new string[1] { " " }, StringSplitOptions.RemoveEmptyEntries);
                     if (commandPath.Length == 1 || !m_allowSubSets)
                     {
-                        for (int i = 1; i < command.Length; i++)
+                        for (int i = 1; i <= command.Length; i++)
                         {
                             string[] comm = new string[i];
                             Array.Copy (command, comm, i);

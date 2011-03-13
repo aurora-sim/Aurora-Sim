@@ -74,9 +74,6 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_prioritizer; }
         }
 
-        
-
-
         #endregion
 
         #region Constructor

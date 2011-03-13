@@ -185,16 +185,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             float zmax = -99999999.0f;
             float zmin = 99999999.0f;
 
-//            for (int j = 0; j < Constants.TerrainPatchSize; j++)
-            {
-            //                for (int i = 0; i < Constants.TerrainPatchSize; i++)
             for (int i = 0; i < Constants.TerrainPatchSize * Constants.TerrainPatchSize; i++)
-                {
-                //float val = patch[j * Constants.TerrainPatchSize + i];
-                    float val = patch[i];
-                    if (val > zmax) zmax = val;
-                    if (val < zmin) zmin = val;
-                }
+            {
+                float val = patch[i];
+                if (val > zmax) zmax = val;
+                if (val < zmin) zmin = val;
             }
 
             header.DCOffset = zmin;
@@ -210,15 +205,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             short zmin = 32767;
             float iscale = 1.0f / Constants.TerrainCompression;
 
-//            int sqrt = (int)Math.Sqrt(heightmap.Length);
-            for (int j = RegionSizeX * patchY * Constants.TerrainPatchSize; j < RegionSizeX * ((patchY >= (RegionSizeY / Constants.TerrainPatchSize) ? (RegionSizeY - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchY) + 1) * Constants.TerrainPatchSize; j += RegionSizeX)
+            for (int i = 0; i < heightmap.Length; i++)
             {
-                for (int i = patchX * Constants.TerrainPatchSize; i < ((patchX >= (RegionSizeX / Constants.TerrainPatchSize) ? (RegionSizeX - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchX) + 1) * Constants.TerrainPatchSize; i++)
-                {
-                    short val = heightmap[j + i];
-                    if (val > zmax) zmax = val;
-                    if (val < zmin) zmin = val;
-                }
+                short val = heightmap[i];
+                if (val > zmax) zmax = val;
+                if (val < zmin) zmin = val;
             }
 
             header.DCOffset = ((float)zmin) * iscale;
@@ -260,7 +251,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     uint minWbits = ((uint)wbits >> 1);
                     int wbitsMaxValue;
         */
-        // gool is to determ minimum number of bits to use so all data fits
+        // goal is to determ minimum number of bits to use so all data fits
         /*
                     wbits = (int)minWbits;
                     wbitsMaxValue = (1 << wbits);
@@ -311,7 +302,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             output.PackBits(header.QuantWBits, 8);
             output.PackFloat(header.DCOffset);
             output.PackBits(header.Range, 16);
-//            if (RegionSizeX != Constants.RegionSize)
             if (RegionSizeX > Constants.RegionSize || RegionSizeY > Constants.RegionSize)
                 output.PackBits(header.PatchIDs, 32);
             else
