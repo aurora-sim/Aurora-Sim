@@ -508,24 +508,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if (category >= 0 && category < m_packetOutboxes.Length )  
             {
-/*
-                OpenSim.Framework.LocklessQueue<OutgoingPacket> queue = m_packetOutboxes[category];
-
-                TokenBucket bucket = m_throttleCategories[category];
-
-                if (!forceQueue && bucket.RemoveTokens(packet.Buffer.DataLength))
-                {
-                    // Enough tokens were removed from the bucket, the packet will not be queued
-                    return false;
-                }
-                else
-
-                {
-                    // Force queue specified or not enough tokens in the bucket, queue this packet
-                    queue.Enqueue(packet);
-                    return true;
-                }
- */
+                //All packets are enqueued, except those that don't have a queue
                 prio = MapCatsToPriority[category];
                 m_outbox.Enqueue(prio, (object)packet);
                 return true;
@@ -577,7 +560,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     {
                     // A packet was pulled off the queue. See if we have
                     // enough tokens in the bucket to send it out
-                    if (m_throttle.RemoveTokens(packet.Buffer.DataLength) || packet.Category == ThrottleOutPacketType.OutBand)
+                        if (packet.Category == ThrottleOutPacketType.OutBand || m_throttle.RemoveTokens (packet.Buffer.DataLength))
                         {
                         // Send the packet
                         m_udpServer.SendPacketFinal(packet);
