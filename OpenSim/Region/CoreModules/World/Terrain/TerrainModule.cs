@@ -347,8 +347,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 for (int y = startY; y <
                     endY; y++) 
                 {
-                    if(x < 0 || y < 0 || x > m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize ||
-                        y > m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize)
+                    if(x < 0 || y < 0 || x >= m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize ||
+                        y >= m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize)
                         continue;
                     //Need to make sure we don't send the same ones over and over
                     if (!m_terrainPatchesSent[presence.UUID][x, y])
