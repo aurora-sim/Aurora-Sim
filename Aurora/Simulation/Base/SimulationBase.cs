@@ -294,7 +294,17 @@ namespace Aurora.Simulation.Base
                 m_config.Configs["Network"].GetString("HostName", "http://127.0.0.1");
             m_Servers[port] = new BaseHttpServer(port, UsesSSL, sslPort, sslCN, hostName);
 
-            m_Servers[port].Start();
+            try
+            {
+                m_Servers[port].Start ();
+            }
+            catch(Exception ex)
+            {
+                //Remove the server from the list
+                m_Servers.Remove (port);
+                //Then pass the exception upwards
+                throw ex;
+            }
 
             return m_Servers[port];
         }
