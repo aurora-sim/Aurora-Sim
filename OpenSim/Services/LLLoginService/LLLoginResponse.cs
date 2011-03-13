@@ -256,8 +256,10 @@ namespace OpenSim.Services.LLLoginService
             FillOutHomeData(pinfo, home);
             LookAt = String.Format("[r{0},r{1},r{2}]", lookAt.X, lookAt.Y, lookAt.Z);
 
-            FillOutRegionData(destination);
-            
+            FillOutRegionData (destination);
+            login = "true";
+            ErrorMessage = "";
+            ErrorReason = LoginResponseEnum.OK;
         }
 
         #region FillOutData
@@ -363,7 +365,7 @@ namespace OpenSim.Services.LLLoginService
             udpBlackList = "EnableSimulator,TeleportFinish,CrossedRegion,OpenCircuit";
 
             ErrorMessage = "You have entered an invalid name/password combination.  Check Caps/lock.";
-            ErrorReason = "key";
+            ErrorReason = LoginResponseEnum.PasswordIncorrect;
             SessionID = UUID.Random();
             SecureSessionID = UUID.Random();
             AgentID = UUID.Random();
@@ -451,12 +453,12 @@ namespace OpenSim.Services.LLLoginService
 
                 #region Global Textures
 
-                Hashtable globalTextures = new Hashtable ();
-
-                globalTextures["sun_texture_id"] = OSD.FromString (SunTexture);
-                globalTextures["cloud_texture_id"] = OSD.FromString (CloudTexture);
-                globalTextures["moon_texture_id"] = OSD.FromString (MoonTexture);
-
+                ArrayList globalTextures = new ArrayList ();
+                Hashtable globalTexturesHash = new Hashtable ();
+                globalTexturesHash["sun_texture_id"] = SunTexture;
+                globalTexturesHash["cloud_texture_id"] = CloudTexture;
+                globalTexturesHash["moon_texture_id"] = MoonTexture;
+                globalTextures.Add (globalTexturesHash);
                 responseData["global-textures"] = globalTextures;
 
                 #endregion Global Textures
@@ -487,11 +489,14 @@ namespace OpenSim.Services.LLLoginService
                 else
                     responseData["max-agent-groups"] = 100;
 
+                //Makes viewers crash...
                 if (VoiceServerType != String.Empty)
                 {
                     Hashtable voice_config = new Hashtable ();
                     voice_config["VoiceServerType"] = VoiceServerType;
-                    responseData["voice-config"] = voice_config;
+                    ArrayList list = new ArrayList ();
+                    list.Add (voice_config);
+                    responseData["voice-config"] = list;
                 }
                 
                 if (m_buddyList != null)
