@@ -1860,16 +1860,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public override void Update()
         {
-            if (!IsSelected)
-            {
-                lock (m_partsLock)
-                {
-                    foreach (SceneObjectPart part in m_partsList)
-                    {
-                        part.UpdateLookAt();
-                    }
-                }
-            }
         }
 
         /// <summary>

@@ -381,6 +381,14 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
+                Scene s = ParentGroup == null ? (Scene)m_initialScene : ParentGroup.Scene == null ? (Scene)m_initialScene : ParentGroup.Scene;
+                if (s != null)
+                {
+                    if (value)
+                        s.EventManager.OnFrame += UpdateLookAt;
+                    else
+                        s.EventManager.OnFrame -= UpdateLookAt;
+                }
                 SetComponentState("PIDActive", value);
                 if(PhysActor != null)
                     PhysActor.PIDActive = value;
@@ -553,9 +561,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         [XmlIgnore]
         public Quaternion SpinOldOrientation = Quaternion.Identity;
-
-        [XmlIgnore]
-        public Quaternion m_APIDTarget = Quaternion.Identity;
 
         [XmlIgnore]
         public float m_APIDDamp = 0;
@@ -1079,8 +1084,15 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                SetComponentState("APIDTarget", value);
-                m_APIDTarget = value;
+                Scene s = ParentGroup == null ? (Scene)m_initialScene : ParentGroup.Scene == null ? (Scene)m_initialScene : ParentGroup.Scene;
+                if (s != null)
+                {
+                    if (value != Quaternion.Identity)
+                        s.EventManager.OnFrame += UpdateLookAt;
+                    else
+                        s.EventManager.OnFrame -= UpdateLookAt;
+                }
+                SetComponentState ("APIDTarget", value);
             }
         }
 
@@ -5607,7 +5619,7 @@ namespace OpenSim.Region.Framework.Scenes
             Inventory.ApplyNextOwnerPermissions();
         }
 
-        public void UpdateLookAt()
+        private void UpdateLookAt()
         {
             try
             {
