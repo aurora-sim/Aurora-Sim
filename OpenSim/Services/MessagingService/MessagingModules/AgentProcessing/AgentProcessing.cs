@@ -59,10 +59,16 @@ namespace OpenSim.Services.MessagingService
 
             UUID AgentID = message["AgentID"].AsUUID();
             ulong requestingRegion = message["RequestingRegion"].AsULong();
-            IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
+            ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
+            if (capsService == null)
+            {
+                m_log.Info("[AgentProcessing]: Failed OnMessageReceived ICapsService is null");
+                return new OSDMap();
+            }
+            IClientCapsService clientCaps = capsService.GetClientCapsService(AgentID);
 
             IRegionClientCapsService regionCaps = null;
-            if(clientCaps != null)
+            if (clientCaps != null)
                 regionCaps = clientCaps.GetCapsService(requestingRegion);
             if (message["Method"] == "LogoutRegionAgents")
             {
@@ -360,7 +366,7 @@ namespace OpenSim.Services.MessagingService
                 IClientCapsService clientCaps = capsService.GetClientCapsService(AgentID);
 
                 IRegionClientCapsService oldRegionService = clientCaps.GetCapsService(neighbor.RegionHandle);
-                
+
                 //If its disabled, it should be removed, so kill it!
                 if (oldRegionService != null && oldRegionService.Disabled)
                 {
@@ -369,7 +375,7 @@ namespace OpenSim.Services.MessagingService
                 }
 
                 bool newAgent = oldRegionService == null;
-                IRegionClientCapsService otherRegionService = clientCaps.GetOrCreateCapsService(neighbor.RegionHandle, 
+                IRegionClientCapsService otherRegionService = clientCaps.GetOrCreateCapsService(neighbor.RegionHandle,
                     CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath()), circuitData);
 
                 if (!newAgent)
@@ -379,7 +385,7 @@ namespace OpenSim.Services.MessagingService
                     if (agentData != null)
                     {
                         result = SimulationService.UpdateAgent(neighbor, agentData);
-                        if(result)
+                        if (result)
                             oldRegionService.Disabled = false;
                     }
                     reason = "";
@@ -403,7 +409,7 @@ namespace OpenSim.Services.MessagingService
                         OSDMap SimSeedCaps = (OSDMap)responseMap["CapsUrls"];
                         otherRegionService.AddCAPS(SimSeedCaps);
                     }
-                    
+
                     IEventQueueService EQService = m_registry.RequestModuleInterface<IEventQueueService>();
 
                     EQService.EnableSimulator(neighbor.RegionHandle,
@@ -440,7 +446,7 @@ namespace OpenSim.Services.MessagingService
         #region Teleporting
 
         public bool TeleportAgent(GridRegion destination, uint TeleportFlags, int DrawDistance,
-            AgentCircuitData circuit, AgentData agentData, UUID AgentID, ulong requestingRegion, 
+            AgentCircuitData circuit, AgentData agentData, UUID AgentID, ulong requestingRegion,
             out string reason)
         {
             bool result = false;
@@ -554,7 +560,7 @@ namespace OpenSim.Services.MessagingService
                 Thread.Sleep(5000);
                 //Now do a sanity check on the avatar
                 IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
-                if(clientCaps == null)
+                if (clientCaps == null)
                     return;
                 IRegionClientCapsService rootRegionCaps = clientCaps.GetRootCapsService();
                 if (rootRegionCaps == null)
@@ -570,7 +576,7 @@ namespace OpenSim.Services.MessagingService
                 if (service != null)
                 {
                     List<GridRegion> NeighborsOfCurrentRegion = service.GetNeighbors(oldRegion);
-                    if(!NeighborsOfCurrentRegion.Contains(oldRegion))
+                    if (!NeighborsOfCurrentRegion.Contains(oldRegion))
                         NeighborsOfCurrentRegion.Add(oldRegion);
                     List<GridRegion> byebyeRegions = new List<GridRegion>();
 
@@ -624,7 +630,7 @@ namespace OpenSim.Services.MessagingService
         protected bool SetUserInTransit(UUID AgentID)
         {
             IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
-            
+
             if (clientCaps.InTeleport)
             {
                 m_log.Warn("[AgentProcessing]: Got a request to teleport during another teleport for agent " + AgentID + "!");
@@ -646,9 +652,8 @@ namespace OpenSim.Services.MessagingService
                 callWasCanceled = false;
                 return true;
             }
-
             IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
-            
+
             int count = 1000;
             while (!clientCaps.CallbackHasCome && count > 0)
             {
@@ -673,7 +678,6 @@ namespace OpenSim.Services.MessagingService
         {
             if (!m_useCallbacks)
                 return true;
-
             IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
 
             int count = 100;
@@ -771,7 +775,7 @@ namespace OpenSim.Services.MessagingService
                 else
                     reason = "Could not find the SimulationService";
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 m_log.WarnFormat("[AgentProcessing]: Failed to cross an agent into a new region. {0}", ex.ToString());
             }
@@ -817,7 +821,7 @@ namespace OpenSim.Services.MessagingService
 
                     //Also update the service itself
                     regionCaps.LastPosition = agentpos.Position;
-                    
+
                     //Tell all neighbor regions about the new position as well
                     List<GridRegion> ourNeighbors = service.GetNeighbors(regionCaps.Region);
                     foreach (GridRegion region in ourNeighbors)
