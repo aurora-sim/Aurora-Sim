@@ -123,11 +123,6 @@ namespace OpenSim.Region.CoreModules
                 DeleteGroups(objectGroups);
             }
 
-            lock (m_sendToInventoryQueue)
-            {
-                m_sendToInventoryQueue.Enqueue(dtis);
-            }
-
             lock (m_removeFromSimQueue)
             {
                 m_removeFromSimQueue.Enqueue(dtis);
