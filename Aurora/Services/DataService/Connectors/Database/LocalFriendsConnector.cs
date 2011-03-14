@@ -80,8 +80,8 @@ namespace Aurora.Services.DataService
                 values.Add(info.Friend);
                 values.Add(info.PrincipalID);
 
-                query = GD.Query(keys.ToArray(), values.ToArray(), m_realm, "Flags");
-                if (query.Count >= 1) infos[infos.Count - 1].TheirFlags = int.Parse(query[0]);
+                List<string> query2 = GD.Query(keys.ToArray(), values.ToArray(), m_realm, "Flags");
+                if (query2.Count >= 1) infos[infos.Count - 1].TheirFlags = int.Parse(query2[0]);
 
                 keys = new List<string>();
                 values = new List<object>();
