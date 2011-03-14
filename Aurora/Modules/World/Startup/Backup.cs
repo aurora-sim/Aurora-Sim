@@ -391,6 +391,49 @@ namespace Aurora.Modules
                 m_backingup = false;
             }
 
+            public void ResetRegionToStartupDefault ()
+            {
+                m_haveLoadedPrims = false;
+                //Add the loading prims piece just to be safe
+                LoadingPrims = true;
+
+                //We are doing a heavy operation, suspend backup
+                m_backingup = true;
+
+                //Clear the queue so that we don't try to remove the prims twice
+                ClearDeleteFromStorage ();
+
+                List<SceneObjectGroup> groups = new List<SceneObjectGroup> ();
+                lock (m_scene.Entities)
+                {
+                    EntityBase[] entities = m_scene.Entities.GetEntities ();
+                    foreach (EntityBase entity in entities)
+                    {
+                        if (entity is SceneObjectGroup && !((SceneObjectGroup)entity).IsAttachment)
+                        {
+                            List<SceneObjectPart> parts = new List<SceneObjectPart> ();
+                            foreach (SceneObjectGroup group in groups)
+                            {
+                                parts.AddRange (group.ChildrenList);
+                                DeleteSceneObject (group, true, false); //Don't remove from the database
+                            }
+                            m_scene.ForEachScenePresence (delegate (ScenePresence avatar)
+                            {
+                                avatar.ControllingClient.SendKillObject (m_scene.RegionInfo.RegionHandle, parts.ToArray ());
+                            });
+                        } 
+                    }
+                }
+
+                //Clear the queue so that we don't try to remove the prims twice
+                ClearDeleteFromStorage ();
+
+                //All clear, let backup go
+                m_backingup = false;
+
+                LoadingPrims = false;
+            }
+
             /// <summary>
             /// Synchronously delete the objects from the scene.
             /// This does send kill object updates and resets the parcel prim counts.
@@ -406,7 +449,7 @@ namespace Aurora.Modules
                     //if (group.IsAttachment)
                     //    continue;
                     parts.AddRange(group.ChildrenList);
-                    DeleteSceneObject(group, true);
+                    DeleteSceneObject(group, true, true);
                 }
                 m_scene.ForEachScenePresence(delegate(ScenePresence avatar)
                 {
@@ -656,7 +699,8 @@ namespace Aurora.Modules
             /// </summary>
             /// <param name="group">Object Id</param>
             /// <param name="DeleteScripts">Remove the scripts from the ScriptEngine as well</param>
-            protected bool DeleteSceneObject(SceneObjectGroup group, bool DeleteScripts)
+            /// <param name="removeFromDatabase">Remove from the database?</param>
+            protected bool DeleteSceneObject(SceneObjectGroup group, bool DeleteScripts, bool removeFromDatabase)
             {
                 //m_log.DebugFormat("[Backup]: Deleting scene object {0} {1}", group.Name, group.UUID);
 
@@ -697,7 +741,8 @@ namespace Aurora.Modules
 
                 if (m_scene.SceneGraph.DeleteEntity(group))
                 {
-                    DeleteFromStorage(group.UUID);
+                    if(removeFromDatabase)
+                        DeleteFromStorage(group.UUID);
 
                     // We need to keep track of this state in case this group is still queued for backup.
                     group.IsDeleted = true;

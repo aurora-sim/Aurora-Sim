@@ -144,15 +144,28 @@ namespace Aurora.Modules.World.On_Demand
 
         private void SoftShutdown ()
         {
+            //Only shut down one at a time
             if (m_isShuttingDown)
                 return;
             m_isShuttingDown = true;
+
+            //We need to remove all the prims from the region, but not from the database
+            IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule> ();
+            if (backup != null)
+            {
+                //This removes all the prims from the script engine 
+                // and the in memory caches and turns off backup for the region
+                backup.ResetRegionToStartupDefault ();
+            }
+
             GenericShutdown ();
+
             m_isShuttingDown = false;
         }
 
         private void MediumShutdown ()
         {
+            //Only shut down one at a time
             if (m_isShuttingDown)
                 return;
             m_isShuttingDown = true;
@@ -179,6 +192,7 @@ namespace Aurora.Modules.World.On_Demand
         /// </summary>
         private void SoftStartup ()
         {
+            //Only start up one at a time
             if (m_isStartingUp)
                 return;
             m_isStartingUp = true;
@@ -199,10 +213,13 @@ namespace Aurora.Modules.World.On_Demand
         /// </summary>
         private void MediumStartup ()
         {
+            //Only start up one at a time
             if (m_isStartingUp)
                 return;
             m_isStartingUp = true;
+
             GenericStartup ();
+
             m_isStartingUp = false;
         }
 
