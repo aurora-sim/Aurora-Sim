@@ -34,6 +34,9 @@ namespace Aurora.Modules.World.On_Demand
         private Scene m_scene;
         private bool m_enabledForThisScene = false;
         private int m_waitTime = 0;
+        private bool m_isShuttingDown = false;
+        private bool m_isStartingUp = false;
+        private bool m_isRunning = false;
 
         #endregion
 
@@ -94,18 +97,22 @@ namespace Aurora.Modules.World.On_Demand
         {
             if (FunctionName == "NewUserConnection")
             {
-                OSDMap responseMap = (OSDMap)parameters;
-                //Tell the caller that we will have to wait a bit possibly
-                responseMap["WaitTime"] = m_waitTime;
-                if (m_scene.RegionInfo.Startup == StartupType.Medium)
+                if (!m_isRunning)
                 {
-                    m_scene.AuroraEventManager.FireGenericEventHandler ("MediumStartup", m_scene);
-                    MediumStartup ();
-                }
-                else if (m_scene.RegionInfo.Startup == StartupType.Soft)
-                {
-                    m_scene.AuroraEventManager.FireGenericEventHandler ("SoftStartup", m_scene);
-                    SoftStartup ();
+                    m_isRunning = true;
+                    OSDMap responseMap = (OSDMap)parameters;
+                    //Tell the caller that we will have to wait a bit possibly
+                    responseMap["WaitTime"] = m_waitTime;
+                    if (m_scene.RegionInfo.Startup == StartupType.Medium)
+                    {
+                        m_scene.AuroraEventManager.FireGenericEventHandler ("MediumStartup", m_scene);
+                        MediumStartup ();
+                    }
+                    else if (m_scene.RegionInfo.Startup == StartupType.Soft)
+                    {
+                        m_scene.AuroraEventManager.FireGenericEventHandler ("SoftStartup", m_scene);
+                        SoftStartup ();
+                    }
                 }
             }
             return null;
@@ -126,6 +133,7 @@ namespace Aurora.Modules.World.On_Demand
                     m_scene.AuroraEventManager.FireGenericEventHandler ("SoftShutdown", m_scene);
                     SoftShutdown ();
                 }
+                m_isRunning = false;
             }
         }
 
@@ -135,12 +143,20 @@ namespace Aurora.Modules.World.On_Demand
 
         private void SoftShutdown ()
         {
+            if (m_isShuttingDown)
+                return;
+            m_isShuttingDown = true;
             GenericShutdown ();
+            m_isShuttingDown = false;
         }
 
         private void MediumShutdown ()
         {
+            if (m_isShuttingDown)
+                return;
+            m_isShuttingDown = true;
             GenericShutdown ();
+            m_isShuttingDown = false;
         }
 
         /// <summary>
@@ -162,6 +178,9 @@ namespace Aurora.Modules.World.On_Demand
         /// </summary>
         private void SoftStartup ()
         {
+            if (m_isStartingUp)
+                return;
+            m_isStartingUp = true;
             IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule> ();
             if (backup != null)
             {
@@ -169,6 +188,7 @@ namespace Aurora.Modules.World.On_Demand
                 backup.LoadPrimsFromStorage ();
             }
             GenericStartup ();
+            m_isStartingUp = false;
         }
 
         /// <summary>
@@ -178,7 +198,11 @@ namespace Aurora.Modules.World.On_Demand
         /// </summary>
         private void MediumStartup ()
         {
+            if (m_isStartingUp)
+                return;
+            m_isStartingUp = true;
             GenericStartup ();
+            m_isStartingUp = false;
         }
 
         /// <summary>
