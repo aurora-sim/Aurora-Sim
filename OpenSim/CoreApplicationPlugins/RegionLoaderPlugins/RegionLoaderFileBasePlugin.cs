@@ -360,7 +360,9 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
             region.SeeIntoThisSimFromNeighbor = config.GetBoolean("SeeIntoThisSimFromNeighbor", region.SeeIntoThisSimFromNeighbor);
 
-            region.ObjectCapacity = config.GetInt("MaxPrims", region.ObjectCapacity);
+            region.ObjectCapacity = config.GetInt ("MaxPrims", region.ObjectCapacity);
+
+            region.Startup = (StartupType)Enum.Parse(typeof(StartupType), config.GetString ("StartupType", region.Startup.ToString()));
 
 
             // Multi-tenancy

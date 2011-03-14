@@ -39,6 +39,12 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Framework
 {
+    public enum StartupType
+    {
+        Soft = 1,
+        Medium = 2,
+        Normal = 3
+    }
     public class RegionInfo
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -65,6 +71,7 @@ namespace OpenSim.Framework
         public UUID ScopeID = UUID.Zero;
         private UUID m_GridSecureSessionID = UUID.Zero;
         public int NumberStartup = 0;
+        public StartupType Startup = StartupType.Normal;
 
         /// <summary>
         /// The X length (in meters) that the region is
@@ -295,8 +302,10 @@ namespace OpenSim.Framework
             config.Set("TrustBinariesFromForeignSims", TrustBinariesFromForeignSims);
             config.Set("SeeIntoThisSimFromNeighbor", SeeIntoThisSimFromNeighbor);
             config.Set("RegionSizeX", RegionSizeX);
-            config.Set("RegionSizeY", RegionSizeY);
-            config.Set("RegionSizeZ", RegionSizeZ);
+            config.Set ("RegionSizeY", RegionSizeY);
+            config.Set ("RegionSizeZ", RegionSizeZ);
+
+            config.Set ("StartupType", Startup.ToString());
 
             config.Set("NeighborPassword", Password.ToString());
         }
@@ -354,8 +363,9 @@ namespace OpenSim.Framework
                 args["see_into_this_sim_from_neighbor"] = OSD.FromBoolean(SeeIntoThisSimFromNeighbor);
                 args["trust_binaries_from_foreign_sims"] = OSD.FromBoolean(TrustBinariesFromForeignSims);
                 args["allow_script_crossing"] = OSD.FromBoolean(AllowScriptCrossing);
-                args["allow_physical_prims"] = OSD.FromBoolean(AllowPhysicalPrims);
-                args["number_startup"] = OSD.FromInteger(NumberStartup);
+                args["allow_physical_prims"] = OSD.FromBoolean (AllowPhysicalPrims);
+                args["number_startup"] = OSD.FromInteger (NumberStartup);
+                args["startupType"] = OSD.FromInteger ((int)Startup);
             }
             return args;
         }
@@ -426,6 +436,8 @@ namespace OpenSim.Framework
                 AllowPhysicalPrims = args["allow_physical_prims"].AsBoolean();
             if(args.ContainsKey("number_startup"))
                 NumberStartup = args["number_startup"].AsInteger();
+            if (args.ContainsKey ("startupType"))
+                Startup = (StartupType)args["startupType"].AsInteger ();
         }
     }
 }
