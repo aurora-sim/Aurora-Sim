@@ -29,11 +29,15 @@ namespace Aurora.Modules.World.On_Demand
     /// </summary>
     public class OnDemandRegionModule : INonSharedRegionModule
     {
-        #region IRegionModuleBase Members
+        #region Declares
 
         private Scene m_scene;
         private bool m_enabledForThisScene = false;
         private int m_waitTime = 0;
+
+        #endregion
+
+        #region IRegionModuleBase Members
 
         public void Initialise (IConfigSource source)
         {
@@ -44,8 +48,19 @@ namespace Aurora.Modules.World.On_Demand
             if (scene.RegionInfo.Startup != StartupType.Normal)
             {
                 m_enabledForThisScene = true;
+                //Disable the heartbeat for this region
                 scene.ShouldRunHeartbeat = false;
+
+                scene.EventManager.OnRemovePresence += OnRemovePresence;
                 scene.AuroraEventManager.OnGenericEvent += OnGenericEvent;
+
+                if (scene.RegionInfo.Startup == StartupType.Soft)
+                {
+                    //If the region startup is soft, we arn't to load prims until they are needed, so kill it
+                    IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule> ();
+                    if (backup != null)
+                        backup.LoadPrims = false;
+                }
             }
         }
 
@@ -73,7 +88,9 @@ namespace Aurora.Modules.World.On_Demand
 
         #endregion
 
-        object OnGenericEvent (string FunctionName, object parameters)
+        #region Private Events
+
+        private object OnGenericEvent (string FunctionName, object parameters)
         {
             if (FunctionName == "NewUserConnection")
             {
@@ -94,14 +111,61 @@ namespace Aurora.Modules.World.On_Demand
             return null;
         }
 
+        private void OnRemovePresence (ScenePresence presence)
+        {
+            if (m_scene.ScenePresences.Count == 1) //This presence hasn't been removed yet, so we check against one
+            {
+                //If all clients are out of the region, we can close it again
+                if (m_scene.RegionInfo.Startup == StartupType.Medium)
+                {
+                    m_scene.AuroraEventManager.FireGenericEventHandler ("MediumShutdown", m_scene);
+                    MediumShutdown ();
+                }
+                else if (m_scene.RegionInfo.Startup == StartupType.Soft)
+                {
+                    m_scene.AuroraEventManager.FireGenericEventHandler ("SoftShutdown", m_scene);
+                    SoftShutdown ();
+                }
+            }
+        }
+
+        #endregion
+
+        #region Private Shutdown Methods
+
+        private void SoftShutdown ()
+        {
+            GenericShutdown ();
+        }
+
+        private void MediumShutdown ()
+        {
+            GenericShutdown ();
+        }
+
+        /// <summary>
+        /// This shuts down the heartbeats so that everything is dead again
+        /// </summary>
+        private void GenericShutdown ()
+        {
+            //After the next iteration, the threads will kill themselves
+            m_scene.ShouldRunHeartbeat = false;
+        }
+
+        #endregion
+
+        #region Private Startup Methods
+
         /// <summary>
         /// We havn't loaded prims, we need to do this now!
+        /// We also need to kick start the heartbeat, so run it as well
         /// </summary>
         private void SoftStartup ()
         {
             IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule> ();
             if (backup != null)
             {
+                backup.LoadPrims = true;
                 backup.LoadPrimsFromStorage ();
             }
             GenericStartup ();
@@ -125,5 +189,7 @@ namespace Aurora.Modules.World.On_Demand
             m_scene.ShouldRunHeartbeat = true;
             m_scene.StartHeartbeat ();
         }
+
+        #endregion
     }
 }

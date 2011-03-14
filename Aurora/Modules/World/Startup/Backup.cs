@@ -136,6 +136,20 @@ namespace Aurora.Modules
             protected bool m_LoadingPrims = false;
             protected bool m_haveLoadedPrims = false;
             protected bool m_haveLoadedParcels = false;
+            protected bool m_shouldLoadPrims = true;
+            protected bool m_shouldLoadParcels = true;
+
+            public bool LoadParcels
+            {
+                get { return m_shouldLoadParcels; }
+                set { m_shouldLoadParcels = value; }
+            }
+
+            public bool LoadPrims
+            {
+                get { return m_shouldLoadPrims; }
+                set { m_shouldLoadPrims = value; }
+            }
 
             #endregion
 
@@ -185,7 +199,7 @@ namespace Aurora.Modules
             /// </summary>
             public void LoadPrimsFromStorage()
             {
-                if (m_haveLoadedPrims)
+                if (m_haveLoadedPrims || !m_shouldLoadPrims)
                     return;
                 m_haveLoadedPrims = true;
                 LoadingPrims = true;
@@ -243,7 +257,7 @@ namespace Aurora.Modules
             /// </summary>
             public void LoadAllLandObjectsFromStorage()
             {
-                if (m_haveLoadedParcels)
+                if (m_haveLoadedParcels || !m_shouldLoadParcels)
                     return;
                 m_haveLoadedParcels = true;
 

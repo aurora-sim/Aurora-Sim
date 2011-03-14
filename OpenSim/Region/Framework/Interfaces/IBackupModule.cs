@@ -15,6 +15,16 @@ namespace OpenSim.Region.Framework.Interfaces
         bool LoadingPrims { get; set; }
 
         /// <summary>
+        /// Should we load prims for this region?
+        /// </summary>
+        bool LoadPrims { get; set; }
+
+        /// <summary>
+        /// Should we load parcels for this region?
+        /// </summary>
+        bool LoadParcels { get; set; }
+
+        /// <summary>
         /// Loads all parcels from storage (database)
         /// Sets up the parcel interfaces and modules
         /// </summary>
