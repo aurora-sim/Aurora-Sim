@@ -60,10 +60,8 @@ namespace OpenSim.Region.CoreModules
         /// </value>
         public bool Enabled;
 
-        private readonly Queue<DeleteToInventoryHolder> m_sendToInventoryQueue = new Queue<DeleteToInventoryHolder>();
         private readonly Queue<DeleteToInventoryHolder> m_removeFromSimQueue = new Queue<DeleteToInventoryHolder>();
         private bool DeleteLoopInUse = false;
-        private bool SendToInventoryLoopInUse = false;
         private Scene m_scene;
 
         #region INonSharedRegionModule Members
@@ -141,12 +139,6 @@ namespace OpenSim.Region.CoreModules
                 //m_log.Debug("[SCENE]: Starting delete loop");
                 Util.FireAndForget(DoDeleteObject, new Object[] { 0 });
             }
-            if (!SendToInventoryLoopInUse)
-            {
-                SendToInventoryLoopInUse = true;
-                //m_log.Debug("[SCENE]: Starting send to inventory loop");
-                Util.FireAndForget(DoSendToInventory, new Object[] { 0 });
-            }
         }
 
         private void DeleteGroups(List<SceneObjectGroup> objectGroups)
@@ -168,20 +160,6 @@ namespace OpenSim.Region.CoreModules
             {
                 DeleteLoopInUse = false;
                 //m_log.Debug("[SCENE]: Ending delete loop");
-            }
-        }
-
-        public void DoSendToInventory(object o)
-        {
-            if (InventoryDeQueueAndDelete())
-            {
-                //Requeue us if there is some left
-                Util.FireAndForget(DoSendToInventory, new Object[] { 0 });
-            }
-            else
-            {
-                SendToInventoryLoopInUse = false;
-                //m_log.Debug("[SCENE]: Ending send to inventory loop");
             }
         }
 
@@ -209,44 +187,6 @@ namespace OpenSim.Region.CoreModules
                         if (backup != null)
                             backup.DeleteSceneObjects(x.objectGroups.ToArray(), true);
                     }
-                    return true;
-                }
-            }
-            catch (Exception e)
-            {
-                // We can't put the object group details in here since the root part may have disappeared (which is where these sit).
-                // FIXME: This needs to be fixed.
-                m_log.ErrorFormat(
-                    "[SCENE]: Queued sending of scene object to agent {0} {1} failed: {2}",
-                    (x != null ? x.agentId.ToString() : "unavailable"), (x != null ? x.agentId.ToString() : "unavailable"), e.ToString());
-            }
-
-            //m_log.Debug("[SCENE]: No objects left in delete queue.");
-            return false;
-        }
-
-        /// <summary>
-        /// Move the next object in the queue to inventory.  Then delete it properly from the scene.
-        /// </summary>
-        /// <returns></returns>
-        public bool InventoryDeQueueAndDelete()
-        {
-            DeleteToInventoryHolder x = null;
-
-            try
-            {
-                int left = 0;
-                lock (m_sendToInventoryQueue)
-                {
-                    left = m_sendToInventoryQueue.Count;
-                }
-                if (left > 0)
-                {
-                    lock (m_sendToInventoryQueue)
-                    {
-                        x = m_sendToInventoryQueue.Dequeue();
-                    }
-
                     m_log.DebugFormat(
                         "[SCENE]: Sending object to user's inventory, {0} item(s) remaining.", left);
 
@@ -265,7 +205,6 @@ namespace OpenSim.Region.CoreModules
                                 "[ASYNC DELETER]: Exception background sending object: {0}{1}", e.Message, e.StackTrace);
                         }
                     }
-
                     return true;
                 }
             }
@@ -278,7 +217,7 @@ namespace OpenSim.Region.CoreModules
                     (x != null ? x.agentId.ToString() : "unavailable"), (x != null ? x.agentId.ToString() : "unavailable"), e.ToString());
             }
 
-            //m_log.Debug("[SCENE]: No objects left in inventory send queue.");
+            //m_log.Debug("[SCENE]: No objects left in delete queue.");
             return false;
         }
 
