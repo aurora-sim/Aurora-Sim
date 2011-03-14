@@ -110,8 +110,8 @@ namespace OpenSim.Services.Connectors.Simulation
                     }
                     catch
                     {
-                        //Not right... don't return true;
-                        return false;
+                        //Not right... don't return true except for opensim combatibility :/
+                        return true;
                     }
                 }
 

@@ -23,6 +23,7 @@ namespace OpenSim.Services.MessagingService
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected IRegistryCore m_registry;
+        protected bool m_useCallbacks = true;
 
         #endregion
 
@@ -32,6 +33,9 @@ namespace OpenSim.Services.MessagingService
         {
             m_registry = registry;
             m_registry.RegisterModuleInterface<IAgentProcessing>(this);
+            IConfig agentConfig = config.Configs["AgentProcessing"];
+            if (agentConfig != null)
+                m_useCallbacks = agentConfig.GetBoolean ("UseCallbacks", m_useCallbacks);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -637,6 +641,12 @@ namespace OpenSim.Services.MessagingService
 
         protected bool WaitForCallback(UUID AgentID, out bool callWasCanceled)
         {
+            if (!m_useCallbacks)
+            {
+                callWasCanceled = false;
+                return true;
+            }
+
             IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
             
             int count = 1000;
@@ -661,6 +671,9 @@ namespace OpenSim.Services.MessagingService
 
         protected bool WaitForCallback(UUID AgentID)
         {
+            if (!m_useCallbacks)
+                return true;
+
             IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
 
             int count = 100;

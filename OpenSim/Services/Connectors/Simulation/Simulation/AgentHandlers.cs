@@ -112,6 +112,18 @@ namespace OpenSim.Services
             {
                 DoAgentDelete(request, responsedata, agentID, action, regionID);
                 return responsedata;
+            } 
+            else if (method.Equals ("QUERYACCESS"))
+            {
+                responsedata["int_response_code"] = HttpStatusCode.OK;
+
+                OSDMap resp = new OSDMap (2);
+
+                resp["success"] = OSD.FromBoolean (true);
+                resp["reason"] = OSD.FromString ("");
+
+                responsedata["str_response_string"] = OSDParser.SerializeJsonString (resp);
+                return responsedata;
             }
             else
             {

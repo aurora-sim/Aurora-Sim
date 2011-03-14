@@ -1722,7 +1722,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 Dictionary<UUID, int> Groups = new Dictionary<UUID, int>();
                 if (!AgentGroupPowersCache.TryGetValue(AgentID, out Groups))
                     Groups = new Dictionary<UUID, int>();
-                Groups.Add(GroupID, powers);
+                Groups[GroupID] = powers;
                 AgentGroupPowersCache[AgentID] = Groups;
             }
         }

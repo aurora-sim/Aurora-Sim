@@ -28,11 +28,15 @@ namespace OpenSim.Services.CapsService
         private IRegionClientCapsService m_service;
         private IGridService m_gridService;
         private List<MapBlockData> m_mapLayer = new List<MapBlockData>();
+        private bool m_allowCapsMessage = true;
 
         public void RegisterCaps(IRegionClientCapsService service)
         {
             m_service = service;
             m_gridService = service.Registry.RequestModuleInterface<IGridService>();
+            IConfig config = service.ClientCaps.Registry.RequestModuleInterface<ISimulationBase> ().ConfigSource.Configs["MapCaps"];
+            if(config != null)
+                m_allowCapsMessage = config.GetBoolean ("AllowCapsMessage", m_allowCapsMessage);
 
             RestMethod method = delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -77,25 +81,28 @@ namespace OpenSim.Services.CapsService
             OSDArray mapBlocksData = new OSDArray();
 
             List<MapBlockData> mapBlocks = new List<MapBlockData>();
-            if (m_mapLayer != null && m_mapLayer.Count != 0)
+            if (m_allowCapsMessage)
             {
-                mapBlocks = m_mapLayer;
-            }
-            else
-            {
-                List<GridRegion> regions = m_gridService.GetRegionRange(UUID.Zero,
-                        left * (int)Constants.RegionSize,
-                        right * (int)Constants.RegionSize,
-                        bottom * (int)Constants.RegionSize,
-                        top * (int)Constants.RegionSize);
-                foreach (GridRegion r in regions)
+                if (m_mapLayer != null && m_mapLayer.Count != 0)
                 {
-                    if (flags == 0) //Map
-                        mapBlocks.Add(MapBlockFromGridRegion(r));
-                    else
-                        mapBlocks.Add(TerrainBlockFromGridRegion(r));
+                    mapBlocks = m_mapLayer;
                 }
-                m_mapLayer = mapBlocks;
+                else
+                {
+                    List<GridRegion> regions = m_gridService.GetRegionRange (UUID.Zero,
+                            left * (int)Constants.RegionSize,
+                            right * (int)Constants.RegionSize,
+                            bottom * (int)Constants.RegionSize,
+                            top * (int)Constants.RegionSize);
+                    foreach (GridRegion r in regions)
+                    {
+                        if (flags == 0) //Map
+                            mapBlocks.Add (MapBlockFromGridRegion (r));
+                        else
+                            mapBlocks.Add (TerrainBlockFromGridRegion (r));
+                    }
+                    m_mapLayer = mapBlocks;
+                }
             }
             foreach (MapBlockData block in m_mapLayer)
             {
