@@ -393,6 +393,11 @@ namespace Aurora.Modules
 
             public void ResetRegionToStartupDefault ()
             {
+                while (IsBackingUp || m_backupTaintedPrims.Count != 0 || m_secondaryBackupTaintedPrims.Count != 0)
+                {
+                    //Wait until other threads are done with backup before backing up so that we get everything
+                    Thread.Sleep (100);
+                }
                 m_haveLoadedPrims = false;
                 //Add the loading prims piece just to be safe
                 LoadingPrims = true;
@@ -403,7 +408,6 @@ namespace Aurora.Modules
                 //Clear the queue so that we don't try to remove the prims twice
                 ClearDeleteFromStorage ();
 
-                List<SceneObjectGroup> groups = new List<SceneObjectGroup> ();
                 lock (m_scene.Entities)
                 {
                     EntityBase[] entities = m_scene.Entities.GetEntities ();
@@ -412,11 +416,9 @@ namespace Aurora.Modules
                         if (entity is SceneObjectGroup && !((SceneObjectGroup)entity).IsAttachment)
                         {
                             List<SceneObjectPart> parts = new List<SceneObjectPart> ();
-                            foreach (SceneObjectGroup group in groups)
-                            {
-                                parts.AddRange (group.ChildrenList);
-                                DeleteSceneObject (group, true, false); //Don't remove from the database
-                            }
+                            SceneObjectGroup grp = entity as SceneObjectGroup;
+                            parts.AddRange (grp.ChildrenList);
+                            DeleteSceneObject (grp, true, false); //Don't remove from the database
                             m_scene.ForEachScenePresence (delegate (ScenePresence avatar)
                             {
                                 avatar.ControllingClient.SendKillObject (m_scene.RegionInfo.RegionHandle, parts.ToArray ());
