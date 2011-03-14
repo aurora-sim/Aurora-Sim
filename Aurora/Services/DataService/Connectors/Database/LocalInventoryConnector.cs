@@ -127,7 +127,7 @@ namespace Aurora.Services.DataService
                 "flags","inventoryID","avatarID","parentFolderID","inventoryGroupPermissions"}, new object[20]{
                     item.AssetID, item.AssetType, item.Name, item.Description, item.NextPermissions, item.CurrentPermissions,
                     item.InvType, item.CreatorId, item.BasePermissions, item.EveryOnePermissions, item.SalePrice, item.SaleType,
-                    item.CreationDate, item.GroupID, item.GroupOwned, item.Flags, item.ID, item.Owner,
+                    item.CreationDate, item.GroupID, item.GroupOwned ? "1" : "0", item.Flags, item.ID, item.Owner,
                     item.Folder, item.GroupPermissions});
         }
 
