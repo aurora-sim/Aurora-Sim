@@ -42,3 +42,11 @@ ExternalHostName = "SYSTEMIP"
 ;; * Multi-Tenancy. Only set if needed
 ;; *
 ;ScopeID = "00000000-0000-0000-0000-000000000000"
+;;
+;; If you want to enable On-Demand running for this sim (only runs parts of the sim when it is needed),
+;; Choose from the options below.
+;; Soft - Only loads terrain and parcels during startup
+;; Medium - Loads terrain and parcels during startup
+;; Both of the above methods do not run the heartbeat (but do runs scripts!)
+;; Normal - A normal region
+StartupType = Normal

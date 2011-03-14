@@ -431,7 +431,7 @@ namespace OpenSim.Region.Framework.Scenes
         private void Update()
         {
             if (!ShouldRunHeartbeat) //If we arn't supposed to be running, kill ourselves
-                throw new ThreadAbortException();
+                throw new Exception("ThreadAbort");
 
             ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "SimFrameStats");
             ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Total Frame Time");

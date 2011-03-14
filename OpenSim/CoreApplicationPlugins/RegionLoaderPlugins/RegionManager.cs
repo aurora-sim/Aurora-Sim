@@ -93,7 +93,14 @@ namespace Aurora.Modules.RegionLoader
             region.Disabled = DisabledEdit.Checked;
             region.RegionSizeX = int.Parse(CRegionSizeX.Text);
             region.RegionSizeY = int.Parse(CRegionSizeY.Text);
-            region.NumberStartup = int.Parse(CStartNum.Text);
+            if ((region.RegionSizeX % Constants.MinRegionSize) != 0 ||
+                (region.RegionSizeY % Constants.MinRegionSize) != 0)
+            {
+                MessageBox.Show ("You must enter a valid region size (multiple of " + Constants.MinRegionSize + "!");
+                return;
+            }
+            region.NumberStartup = int.Parse (CStartNum.Text);
+            region.Startup = (StartupType)Enum.Parse (typeof (StartupType), CStartupType.Text);
 
             m_connector.UpdateRegionInfo(region);
             if (KillAfterRegionCreation)
@@ -135,8 +142,9 @@ namespace Aurora.Modules.RegionLoader
             textBox3.Text = (region.RegionLocX / Constants.RegionSize).ToString();
             textBox5.Text = (region.RegionLocY / Constants.RegionSize).ToString();
             textBox1.Text = region.RegionName;
-            RegionSizeX.Text = region.RegionSizeX.ToString();
-            RegionSizeY.Text = region.RegionSizeY.ToString();
+            RegionSizeX.Text = region.RegionSizeX.ToString ();
+            RegionSizeY.Text = region.RegionSizeY.ToString ();
+            startupType.Text = region.Startup.ToString ();
         }
 
         private void Update_Click(object sender, EventArgs e)
@@ -184,6 +192,7 @@ namespace Aurora.Modules.RegionLoader
             region.NumberStartup = int.Parse(StartupNumberBox.Text);
             region.RegionSizeX = int.Parse(RegionSizeX.Text);
             region.RegionSizeY = int.Parse(RegionSizeY.Text);
+            region.Startup = (StartupType)Enum.Parse (typeof (StartupType), startupType.Text);
 
             if ((region.RegionSizeX % Constants.MinRegionSize) != 0 || 
                 (region.RegionSizeY % Constants.MinRegionSize) != 0)
@@ -296,6 +305,13 @@ namespace Aurora.Modules.RegionLoader
         private void RSizeYHelp_Click(object sender, EventArgs e)
         {
             MessageBox.Show("This is the size of the region in the Y (height, north to south) direction.");
+        }
+
+        private void startupType_Click (object sender, EventArgs e)
+        {
+            MessageBox.Show (@"This determines the type of startup the region will use. There are three options, 'Soft', 'Medium', and 'Normal'.
+Normal loads your region at startup, while both soft and medium do not. Soft only loads parcels and terrain on startup (not prims), 
+and Medium does the same as Soft, except that it loads the prims as well, neither of these options start the heartbeats immediately though.");
         }
 
         private void Export_Click(object sender, EventArgs e)

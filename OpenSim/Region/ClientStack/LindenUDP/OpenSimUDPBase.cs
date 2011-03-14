@@ -65,11 +65,11 @@ namespace OpenMetaverse
         public bool IsRunning { get { return !m_shutdownFlag; } }
 
         /// <summary>
-        /// Default constructor
+        /// Default initialiser
         /// </summary>
         /// <param name="bindAddress">Local IP address to bind the server to</param>
         /// <param name="port">Port to listening for incoming UDP packets on</param>
-        public OpenSimUDPBase(IPAddress bindAddress, int port)
+        public virtual void Initialise(IPAddress bindAddress, int port)
         {
             m_localBindAddress = bindAddress;
             m_udpPort = port;

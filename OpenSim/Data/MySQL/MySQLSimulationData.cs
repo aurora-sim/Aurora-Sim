@@ -110,6 +110,8 @@ namespace OpenSim.Data.MySQL
 
         public void Dispose() {}
 
+        #region Objects
+
         public void StoreObject(SceneObjectGroup obj, UUID regionUUID)
         {
             uint flags = obj.RootPart.GetEffectiveObjectFlags();
@@ -645,6 +647,55 @@ namespace OpenSim.Data.MySQL
             }
         }
 
+        public void StorePrimInventory (UUID primID, ICollection<TaskInventoryItem> items)
+        {
+            lock (m_dbLock)
+            {
+                RemoveItems (primID);
+
+                using (MySqlConnection dbcon = new MySqlConnection (m_connectionString))
+                {
+                    dbcon.Open ();
+
+                    MySqlCommand cmd = dbcon.CreateCommand ();
+
+                    if (items.Count == 0)
+                        return;
+
+                    cmd.CommandText = "insert into primitems (" +
+                            "invType, assetType, name, " +
+                            "description, creationDate, nextPermissions, " +
+                            "currentPermissions, basePermissions, " +
+                            "everyonePermissions, groupPermissions, " +
+                            "flags, itemID, primID, assetID, " +
+                            "parentFolderID, creatorID, ownerID, " +
+                            "groupID, lastOwnerID) values (?invType, " +
+                            "?assetType, ?name, ?description, " +
+                            "?creationDate, ?nextPermissions, " +
+                            "?currentPermissions, ?basePermissions, " +
+                            "?everyonePermissions, ?groupPermissions, " +
+                            "?flags, ?itemID, ?primID, ?assetID, " +
+                            "?parentFolderID, ?creatorID, ?ownerID, " +
+                            "?groupID, ?lastOwnerID)";
+
+                    foreach (TaskInventoryItem item in items)
+                    {
+                        cmd.Parameters.Clear ();
+
+                        FillItemCommand (cmd, item);
+
+                        ExecuteNonQuery (cmd);
+                    }
+
+                    cmd.Dispose ();
+                }
+            }
+        }
+
+        #endregion
+
+        #region Terrain
+
         public void StoreTerrain(short[] ter, UUID regionID, bool Revert)
         {
             m_log.Info("[REGION DB]: Storing terrain");
@@ -851,6 +902,10 @@ namespace OpenSim.Data.MySQL
             return null;
         }
 
+        #endregion
+
+        #region Land (legacy)
+
         public void RemoveLandObject(UUID RegionID, UUID globalID)
         {
             lock (m_dbLock)
@@ -926,6 +981,58 @@ namespace OpenSim.Data.MySQL
                 }
             }
         }
+
+        public List<LandData> LoadLandObjects (UUID regionUUID)
+        {
+            List<LandData> landData = new List<LandData> ();
+
+            lock (m_dbLock)
+            {
+                using (MySqlConnection dbcon = new MySqlConnection (m_connectionString))
+                {
+                    dbcon.Open ();
+
+                    using (MySqlCommand cmd = dbcon.CreateCommand ())
+                    {
+                        cmd.CommandText = "select * from land where RegionUUID = ?RegionUUID";
+                        cmd.Parameters.AddWithValue ("RegionUUID", regionUUID.ToString ());
+
+                        using (IDataReader reader = ExecuteReader (cmd))
+                        {
+                            while (reader.Read ())
+                            {
+                                LandData newLand = BuildLandData (reader);
+                                landData.Add (newLand);
+                            }
+                        }
+                    }
+
+                    using (MySqlCommand cmd = dbcon.CreateCommand ())
+                    {
+                        foreach (LandData land in landData)
+                        {
+                            cmd.Parameters.Clear ();
+                            cmd.CommandText = "select * from landaccesslist where LandUUID = ?LandUUID";
+                            cmd.Parameters.AddWithValue ("LandUUID", land.GlobalID.ToString ());
+
+                            using (IDataReader reader = ExecuteReader (cmd))
+                            {
+                                while (reader.Read ())
+                                {
+                                    land.ParcelAccessList.Add (BuildLandAccessData (reader));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return landData;
+        }
+
+        #endregion
+
+        #region Region Settings (legacy)
 
         public RegionSettings LoadRegionSettings(UUID regionUUID)
         {
@@ -1017,53 +1124,7 @@ namespace OpenSim.Data.MySQL
             }
         }
 
-        public List<LandData> LoadLandObjects(UUID regionUUID)
-        {
-            List<LandData> landData = new List<LandData>();
-
-            lock (m_dbLock)
-            {
-                using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
-                {
-                    dbcon.Open();
-
-                    using (MySqlCommand cmd = dbcon.CreateCommand())
-                    {
-                        cmd.CommandText = "select * from land where RegionUUID = ?RegionUUID";
-                        cmd.Parameters.AddWithValue("RegionUUID", regionUUID.ToString());
-
-                        using (IDataReader reader = ExecuteReader(cmd))
-                        {
-                            while (reader.Read())
-                            {
-                                LandData newLand = BuildLandData(reader);
-                                landData.Add(newLand);
-                            }
-                        }
-                    }
-
-                    using (MySqlCommand cmd = dbcon.CreateCommand())
-                    {
-                        foreach (LandData land in landData)
-                        {
-                            cmd.Parameters.Clear();
-                            cmd.CommandText = "select * from landaccesslist where LandUUID = ?LandUUID";
-                            cmd.Parameters.AddWithValue("LandUUID", land.GlobalID.ToString());
-
-                            using (IDataReader reader = ExecuteReader(cmd))
-                            {
-                                while (reader.Read())
-                                {
-                                    land.ParcelAccessList.Add(BuildLandAccessData(reader));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            return landData;
-        }
+        #endregion
 
         public void Shutdown()
         {
@@ -2021,51 +2082,6 @@ namespace OpenSim.Data.MySQL
             cmd.Parameters.AddWithValue("ExtraParams", s.ExtraParams);
             cmd.Parameters.AddWithValue("State", s.State);
             cmd.Parameters.AddWithValue("Media", null == s.Media ? null : s.Media.ToXml());
-        }
-
-        public void StorePrimInventory(UUID primID, ICollection<TaskInventoryItem> items)
-        {
-            lock (m_dbLock)
-            {
-                RemoveItems(primID);
-
-                using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
-                {
-                    dbcon.Open();
-
-                    MySqlCommand cmd = dbcon.CreateCommand();
-
-                    if (items.Count == 0)
-                        return;
-
-                    cmd.CommandText = "insert into primitems (" +
-                            "invType, assetType, name, " +
-                            "description, creationDate, nextPermissions, " +
-                            "currentPermissions, basePermissions, " +
-                            "everyonePermissions, groupPermissions, " +
-                            "flags, itemID, primID, assetID, " +
-                            "parentFolderID, creatorID, ownerID, " +
-                            "groupID, lastOwnerID) values (?invType, " +
-                            "?assetType, ?name, ?description, " +
-                            "?creationDate, ?nextPermissions, " +
-                            "?currentPermissions, ?basePermissions, " +
-                            "?everyonePermissions, ?groupPermissions, " +
-                            "?flags, ?itemID, ?primID, ?assetID, " +
-                            "?parentFolderID, ?creatorID, ?ownerID, " +
-                            "?groupID, ?lastOwnerID)";
-
-                    foreach (TaskInventoryItem item in items)
-                    {
-                        cmd.Parameters.Clear();
-
-                        FillItemCommand(cmd, item);
-
-                        ExecuteNonQuery(cmd);
-                    }
-
-                    cmd.Dispose();
-                }
-            }
         }
     }
 }

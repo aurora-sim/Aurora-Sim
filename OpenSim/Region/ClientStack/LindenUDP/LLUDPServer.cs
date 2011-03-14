@@ -57,16 +57,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>The measured resolution of Environment.TickCount</summary>
-        public readonly float TickCountResolution;
+        public float TickCountResolution;
         /// <summary>Number of prim updates to put on the queue each time the 
         /// OnQueueEmpty event is triggered for updates</summary>
-        public readonly int PrimUpdatesPerCallback;
+        public int PrimUpdatesPerCallback;
         /// <summary>Number of texture packets to put on the queue each time the
         /// OnQueueEmpty event is triggered for textures</summary>
-        public readonly int TextureSendLimit;
+        public int TextureSendLimit;
         /// <summary>Number of texture packets to put on the queue each time the
         /// OnQueueEmpty event is triggered for textures</summary>
-        public readonly int ClientTimeOut;
+        public int ClientTimeOut;
 
         /// <summary>Handlers for incoming packets</summary>
         //PacketEventDictionary packetEvents = new PacketEventDictionary();
@@ -123,9 +123,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public Socket Server { get { return null; } }
 
-        public LLUDPServer(IPAddress listenIP, ref uint port, int proxyPortOffsetParm, bool allow_alternate_port, IConfigSource configSource, AgentCircuitManager circuitManager)
-            : base(listenIP, (int)port)
+        public void Initialise (IPAddress _listenIP, ref uint port, int proxyPortOffsetParm, bool allow_alternate_port, IConfigSource configSource, AgentCircuitManager circuitManager)
         {
+            base.Initialise (_listenIP, (int)port);
             #region Environment.TickCount Measurement
 
             // Measure the resolution of Environment.TickCount
@@ -949,7 +949,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (!IsRunning)
                 Thread.CurrentThread.Abort();
             if (!m_scene.ShouldRunHeartbeat)
-                throw new ThreadAbortException();
+                throw new Exception ("ThreadAbort");
             
             // Typecast the function to an Action<IClientAPI> once here to avoid allocating a new
             // Action generic every round
@@ -1052,7 +1052,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (!IsRunning)
                 Thread.CurrentThread.Abort ();
             if (!m_scene.ShouldRunHeartbeat)
-                throw new ThreadAbortException ();
+                throw new Exception ("ThreadAbort");
 
             // Set this culture for the thread that incoming packets are received
             // on to en-US to avoid number parsing issues

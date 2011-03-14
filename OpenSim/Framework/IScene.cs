@@ -58,7 +58,7 @@ namespace OpenSim.Framework
         IConfigSource Config { get; }
 
         void Initialize (RegionInfo regionInfo);
-        void Initialize (RegionInfo regionInfo, AgentCircuitManager authen);
+        void Initialize (RegionInfo regionInfo, AgentCircuitManager authen, IClientNetworkServer clientServer);
         void StartHeartbeat ();
         void Close ();
 
