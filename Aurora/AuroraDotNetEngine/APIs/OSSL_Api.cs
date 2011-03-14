@@ -2272,7 +2272,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return result;
         }
 
-        public LSL_Integer osAddAgentToGroup(LSL_Key AgentID, LSL_Key GroupID, LSL_String RequestedRole)
+        public LSL_Integer osAddAgentToGroup (LSL_Key AgentID, LSL_String GroupName, LSL_String RequestedRole)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osAddAgentToGroup", m_host, "OSSL");
             
@@ -2286,14 +2286,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             UUID roleID = UUID.Zero;
-            List<GroupRolesData> roles = m_groupData.GetGroupRoles(UUID.Zero, UUID.Parse(GroupID.m_string));
+            GroupRecord groupRecord = m_groupData.GetGroupRecord (m_host.OwnerID, UUID.Zero, GroupName.m_string);
+            if (groupRecord == null)
+            {
+                OSSLShoutError ("Could not find the group.");
+                return 0;
+            }
+
+            List<GroupRolesData> roles = m_groupData.GetGroupRoles (m_host.OwnerID, groupRecord.GroupID);
             foreach (GroupRolesData role in roles)
             {
                 if (role.Name == RequestedRole.m_string)
                     roleID = role.RoleID;
             }
 
-            m_groupData.AddAgentToGroup(UUID.Parse(AgentID.m_string), m_host.OwnerID, UUID.Parse(GroupID.m_string), roleID);
+            //It takes care of permission checks in the module
+            m_groupData.AddAgentToGroup (UUID.Parse (AgentID.m_string), m_host.OwnerID, groupRecord.GroupID, roleID);
             return 1;
         }
 
