@@ -538,24 +538,14 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             float[] heightMap = new float[shortheightMap.Length];
             for (int i = 0; i < shortheightMap.Length; i++)
             {
-                heightMap[i] = shortheightMap[i] / 10;
+                heightMap[i] = shortheightMap[i] / Constants.TerrainCompression;
             }
             if (m_terrainShape != null)
                 DeleteTerrain();
 
-            float hfmax = -9000;
-            float hfmin = 90000;
+            float hfmax = 256;
+            float hfmin = 0;
             
-            for (int i = 0; i < heightMap.Length;i++)
-            {
-                if (Single.IsNaN(heightMap[i]) || Single.IsInfinity(heightMap[i]))
-                {
-                    heightMap[i] = 0;
-                }
-
-                hfmin = (heightMap[i] < hfmin) ? heightMap[i] : hfmin;
-                hfmax = (heightMap[i] > hfmax) ? heightMap[i] : hfmax;
-            }
             // store this for later reference.
             // Note, we're storing it  after we check it for anomolies above
             _origheightmap = heightMap;
