@@ -2541,8 +2541,7 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 offset = new Vector3(shiftx, shifty, 0f);
 
             DrawDistance = cAgentData.Far;
-            if (cAgentData.Position != new Vector3(-1f, -1f, -1f)) // UGH!!
-                m_pos = cAgentData.Position + offset;
+            m_pos = cAgentData.Position + offset;
 
             m_CameraCenter = cAgentData.Center + offset;
 

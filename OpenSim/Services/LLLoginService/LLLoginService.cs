@@ -136,7 +136,7 @@ namespace OpenSim.Services.LLLoginService
             LLLoginResponseRegister.RegisterValue ("WebProfileURL", m_LoginServerConfig.GetString ("WebProfileURL", string.Empty));
             LLLoginResponseRegister.RegisterValue ("SearchURL", m_LoginServerConfig.GetString ("SearchURL", string.Empty));
             // if [LoginService] doesn't have the Search URL, try to get it from [GridInfoService]
-            if (LLLoginResponseRegister.GetValue("SearchURL") == string.Empty)
+            if (LLLoginResponseRegister.GetValue("SearchURL").ToString() == string.Empty)
             {
                 IConfig gridInfo = config.Configs["GridInfoService"];
                 LLLoginResponseRegister.RegisterValue ("SearchURL", gridInfo.GetString("search", string.Empty));

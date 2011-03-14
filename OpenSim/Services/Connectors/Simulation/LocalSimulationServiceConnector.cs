@@ -132,16 +132,19 @@ namespace OpenSim.Services.Connectors.Simulation
             if (destination == null)
                 return false;
 
-
+            bool retVal = false;
             foreach (Scene s in m_sceneList)
             {
                 IEntityTransferModule transferModule = s.RequestModuleInterface<IEntityTransferModule> ();
                 if(transferModule != null)
-                    transferModule.IncomingChildAgentDataUpdate (s, cAgentData);
+                    if(retVal)
+                        transferModule.IncomingChildAgentDataUpdate (s, cAgentData);
+                    else
+                        retVal = transferModule.IncomingChildAgentDataUpdate (s, cAgentData);
             }
 
             //            m_log.DebugFormat("[LOCAL COMMS]: Did not find region {0} for ChildAgentUpdate", regionHandle);
-            return true;
+            return retVal;
         }
 
         public bool UpdateAgent(GridRegion destination, AgentPosition cAgentData)
@@ -149,15 +152,19 @@ namespace OpenSim.Services.Connectors.Simulation
             if (destination == null)
                 return false;
 
+            bool retVal = false;
             foreach (Scene s in m_sceneList)
             {
                 //m_log.Debug("[LOCAL COMMS]: Found region to send ChildAgentUpdate");
                 IEntityTransferModule transferModule = s.RequestModuleInterface<IEntityTransferModule> ();
                 if (transferModule != null)
-                    transferModule.IncomingChildAgentDataUpdate (s, cAgentData);
+                    if (retVal)
+                        transferModule.IncomingChildAgentDataUpdate (s, cAgentData);
+                    else
+                        retVal = transferModule.IncomingChildAgentDataUpdate (s, cAgentData);
             }
             //m_log.Debug("[LOCAL COMMS]: region not found for ChildAgentUpdate");
-            return true;
+            return retVal;
         }
 
         public bool RetrieveAgent(GridRegion destination, UUID id, out IAgentData agent)

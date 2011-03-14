@@ -313,8 +313,8 @@ namespace Aurora.Modules
             }
 
             //Make sure that this user is inside the region as well
-            if (Position.X < 0f || Position.Y < 0f || 
-                Position.X > scene.RegionInfo.RegionSizeX || Position.Y > scene.RegionInfo.RegionSizeY)
+            if (Position.X < -2f || Position.Y < -2f || 
+                Position.X > scene.RegionInfo.RegionSizeX+2 || Position.Y > scene.RegionInfo.RegionSizeY+2)
             {
                 m_log.DebugFormat(
                     "[EstateService]: AllowedIncomingTeleport was given an illegal position of {0} for avatar {1}, {2}. Clamping",
