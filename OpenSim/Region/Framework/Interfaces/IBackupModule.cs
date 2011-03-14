@@ -15,6 +15,18 @@ namespace OpenSim.Region.Framework.Interfaces
         bool LoadingPrims { get; set; }
 
         /// <summary>
+        /// Loads all parcels from storage (database)
+        /// Sets up the parcel interfaces and modules
+        /// </summary>
+        void LoadAllLandObjectsFromStorage ();
+
+        /// <summary>
+        /// Loads all prims from storage (database)
+        /// This is normally called during startup, but can be called later if not called during startup
+        /// </summary>
+        void LoadPrimsFromStorage ();
+
+        /// <summary>
         /// Add a backup taint to the prim.
         /// </summary>
         /// <param name="sceneObjectGroup"></param>

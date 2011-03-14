@@ -130,6 +130,7 @@ namespace OpenSim.Region.Framework.Scenes
         public bool m_usePreJump = true;
         public bool m_useSplatAnimation = true;
         public float MaxLowValue = -1000;
+        public bool ShouldRunHeartbeat = true;
 
         #endregion
 
@@ -405,6 +406,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void StartHeartbeat()
         {
+            if (!ShouldRunHeartbeat) //Allow for the heartbeat to not be used
+                return;
+
             //Give it the heartbeat delegate with an infinite timeout
             monitor.StartTrackingThread(0, Update);
             //Then start the thread for it with an infinite loop time and no 

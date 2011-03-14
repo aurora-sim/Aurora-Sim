@@ -138,9 +138,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         public virtual void RegionLoaded(Scene scene)
         {
-            if (!m_Enabled)
-                return;
-
         }
 
 
@@ -995,10 +992,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             //Add the circuit at the end
             scene.AuthenticateHandler.AddNewCircuit (agent.circuitcode, agent);
 
-            OSDMap eventMap = responseMap;
             responseMap["Agent"] = agent.PackAgentCircuitData ();
 
-            scene.AuroraEventManager.FireGenericEventHandler ("NewUserConnection", eventMap);
+            scene.AuroraEventManager.FireGenericEventHandler ("NewUserConnection", responseMap);
 
             m_log.InfoFormat (
                 "[ConnectionBegin]: Region {0} authenticated and authorized incoming {1} agent {2} (circuit code {3})",

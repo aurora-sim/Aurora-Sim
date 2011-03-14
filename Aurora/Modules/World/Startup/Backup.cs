@@ -134,6 +134,8 @@ namespace Aurora.Modules
             protected int m_update_backup = 50; //Trigger backup
             protected DateTime m_lastRanBackupInHeartbeat = DateTime.MinValue;
             protected bool m_LoadingPrims = false;
+            protected bool m_haveLoadedPrims = false;
+            protected bool m_haveLoadedParcels = false;
 
             #endregion
 
@@ -181,8 +183,11 @@ namespace Aurora.Modules
             /// <summary>
             /// Loads the World's objects
             /// </summary>
-            protected void LoadPrimsFromStorage()
+            public void LoadPrimsFromStorage()
             {
+                if (m_haveLoadedPrims)
+                    return;
+                m_haveLoadedPrims = true;
                 LoadingPrims = true;
                 m_log.Info("[BackupModule]: Loading objects from datastore");
 
@@ -236,8 +241,12 @@ namespace Aurora.Modules
             /// <summary>
             /// Loads all Parcel data from the datastore for region identified by regionID
             /// </summary>
-            protected void LoadAllLandObjectsFromStorage()
+            public void LoadAllLandObjectsFromStorage()
             {
+                if (m_haveLoadedParcels)
+                    return;
+                m_haveLoadedParcels = true;
+
                 m_log.Info("[BackupModule]: Loading Land Objects from database... ");
                 IParcelServiceConnector conn = DataManager.DataManager.RequestPlugin<IParcelServiceConnector>();
                 List<LandData> LandObjects = m_scene.SimulationDataService.LoadLandObjects(m_scene.RegionInfo.RegionID);
@@ -258,7 +267,7 @@ namespace Aurora.Modules
                 }
             }
 
-            internal void FinishStartup()
+            public void FinishStartup()
             {
                 //Load the prims from the database now that we are done loading
                 LoadPrimsFromStorage();
