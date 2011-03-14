@@ -79,17 +79,13 @@ namespace Aurora.Services.DataService
                 keys.Add("Friend");
                 values.Add(info.Friend);
                 values.Add(info.PrincipalID);
-            }
-            if (keys.Count != 0)
-            {
+
                 query = GD.Query(keys.ToArray(), values.ToArray(), m_realm, "Flags");
+                if (query.Count >= 1) infos[infos.Count - 1].TheirFlags = int.Parse(query[0]);
 
-                for (int i = 0; i < query.Count; i++)
-                {
-                    infos[i].TheirFlags = int.Parse(query[i]);
-                }
+                keys = new List<string>();
+                values = new List<object>();
             }
-
             return infos.ToArray();
         }
 
