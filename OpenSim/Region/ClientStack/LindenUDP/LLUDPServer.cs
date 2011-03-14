@@ -46,47 +46,10 @@ using TokenBucket = OpenSim.Region.ClientStack.LindenUDP.TokenBucket;
 namespace OpenSim.Region.ClientStack.LindenUDP
 {
     /// <summary>
-    /// A shim around LLUDPServer that implements the IClientNetworkServer interface
-    /// </summary>
-    public sealed class LLUDPServerShim : IClientNetworkServer
-    {
-        LLUDPServer m_udpServer;
-
-        public LLUDPServerShim()
-        {
-        }
-
-        public void Initialise(IPAddress listenIP, ref uint port, int proxyPortOffsetParm, bool allow_alternate_port, IConfigSource configSource, AgentCircuitManager circuitManager)
-        {
-            m_udpServer = new LLUDPServer(listenIP, ref port, proxyPortOffsetParm, allow_alternate_port, configSource, circuitManager);
-        }
-
-        public void Stop()
-        {
-            m_udpServer.Stop();
-        }
-
-        public void AddScene(IScene scene)
-        {
-            m_udpServer.AddScene(scene);
-        }
-
-        public bool HandlesRegion(uint x, uint y)
-        {
-            return m_udpServer.HandlesRegion(x, y);
-        }
-
-        public void Start()
-        {
-            m_udpServer.Start();
-        }
-    }
-
-    /// <summary>
     /// The LLUDP server for a region. This handles incoming and outgoing
     /// packets for all UDP connections to the region
     /// </summary>
-    public class LLUDPServer : OpenSimUDPBase
+    public class LLUDPServer : OpenSimUDPBase, IClientNetworkServer
     {
         /// <summary>Maximum transmission unit, or UDP packet size, for the LLUDP protocol</summary>
         public const int MTU = 1400;
@@ -243,10 +206,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             if (m_scene == null)
                 throw new InvalidOperationException("[LLUDPSERVER]: Cannot LLUDPServer.Start() without an IScene reference");
-
+            if (!m_scene.ShouldRunHeartbeat)
+                return;
             //m_log.Info("[LLUDPSERVER]: Starting the LLUDP server in " + (m_asyncPacketHandling ? "asynchronous" : "synchronous") + " mode");
 
             base.Start(m_recvBufferSize, m_asyncPacketHandling);
+
 
             // Start the packet processing threads
             //Give it the heartbeat delegate with an infinite timeout
@@ -983,7 +948,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             if (!IsRunning)
                 Thread.CurrentThread.Abort();
-
+            if (!m_scene.ShouldRunHeartbeat)
+                throw new ThreadAbortException();
+            
             // Typecast the function to an Action<IClientAPI> once here to avoid allocating a new
             // Action generic every round
             Action<IClientAPI> clientPacketHandler = ClientOutgoingPacketHandler;
@@ -1083,7 +1050,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private void IncomingPacketHandlerLoop()
         {
             if (!IsRunning)
-                Thread.CurrentThread.Abort();
+                Thread.CurrentThread.Abort ();
+            if (!m_scene.ShouldRunHeartbeat)
+                throw new ThreadAbortException ();
 
             // Set this culture for the thread that incoming packets are received
             // on to en-US to avoid number parsing issues

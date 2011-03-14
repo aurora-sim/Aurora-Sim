@@ -59,6 +59,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected readonly ClientManager m_clientManager = new ClientManager();
 
         protected RegionInfo m_regInfo;
+        protected IClientNetworkServer m_clientServer;
 
         protected ThreadMonitor monitor = new ThreadMonitor();
             
@@ -278,9 +279,14 @@ namespace OpenSim.Region.Framework.Scenes
             m_regInfo = regionInfo;
         }
 
-        public void Initialize (RegionInfo regionInfo, AgentCircuitManager authen)
+        public void Initialize (RegionInfo regionInfo, AgentCircuitManager authen, IClientNetworkServer clientServer)
         {
             Initialize (regionInfo);
+
+            //Set up the clientServer
+            m_clientServer = clientServer;
+            clientServer.AddScene (this);
+
             m_sceneManager = RequestModuleInterface<SceneManager>();
 
             m_config = m_sceneManager.ConfigSource;
@@ -409,6 +415,8 @@ namespace OpenSim.Region.Framework.Scenes
             if (!ShouldRunHeartbeat) //Allow for the heartbeat to not be used
                 return;
 
+            m_clientServer.Start ();
+
             //Give it the heartbeat delegate with an infinite timeout
             monitor.StartTrackingThread(0, Update);
             //Then start the thread for it with an infinite loop time and no 
@@ -422,6 +430,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void Update()
         {
+            if (!ShouldRunHeartbeat) //If we arn't supposed to be running, kill ourselves
+                throw new ThreadAbortException();
+
             ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "SimFrameStats");
             ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Total Frame Time");
             ISetMonitor lastFrameMonitor = (ISetMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Last Completed Frame At");

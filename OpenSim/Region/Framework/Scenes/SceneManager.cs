@@ -520,15 +520,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="portadd_flag"></param>
         /// <param name="do_post_init"></param>
         /// <returns></returns>
-        public IClientNetworkServer CreateRegion(RegionInfo regionInfo, out IScene m_scene)
+        public void CreateRegion(RegionInfo regionInfo, out IScene m_scene)
         {
             int port = regionInfo.InternalEndPoint.Port;
 
             // set the initial ports
             regionInfo.HttpPort = MainServer.Instance.Port;
 
-            IClientNetworkServer clientServer = null;
-            Scene scene = SetupScene(regionInfo, m_config, out clientServer);
+            Scene scene = SetupScene(regionInfo, m_config);
 
             m_log.Info("[Modules]: Loading region modules");
             IRegionModulesController controller;
@@ -542,8 +541,6 @@ namespace OpenSim.Region.Framework.Scenes
             //Post init the modules now
             PostInitModules(scene);
 
-            clientServer.Start();
-
             //Start the heartbeats
             scene.StartHeartbeat();
             //Tell the scene that the startup is complete 
@@ -551,8 +548,6 @@ namespace OpenSim.Region.Framework.Scenes
             scene.FinishedStartup("Startup", new List<string>());
 
             m_scene = scene;
-
-            return clientServer;
         }
 
         /// <summary>
@@ -563,7 +558,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="configSource"></param>
         /// <param name="clientServer"> </param>
         /// <returns></returns>
-        protected Scene SetupScene(RegionInfo regionInfo, IConfigSource configSource, out IClientNetworkServer clientServer)
+        protected Scene SetupScene(RegionInfo regionInfo, IConfigSource configSource)
         {
             AgentCircuitManager circuitManager = new AgentCircuitManager();
             IPAddress listenIP = regionInfo.InternalEndPoint.Address;
@@ -574,7 +569,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             string ClientstackDll = m_config.Configs["Startup"].GetString("ClientStackPlugin", "OpenSim.Region.ClientStack.LindenUDP.dll");
 
-            clientServer = AuroraModuleLoader.LoadPlugin<IClientNetworkServer>(ClientstackDll);
+            IClientNetworkServer clientServer = AuroraModuleLoader.LoadPlugin<IClientNetworkServer> (ClientstackDll);
             clientServer.Initialise(
                     listenIP, ref port, 0, regionInfo.m_allow_alternate_ports,
                     m_config, circuitManager);
@@ -583,11 +578,10 @@ namespace OpenSim.Region.Framework.Scenes
 
             Scene scene = new Scene ();
             scene.AddModuleInterfaces (m_OpenSimBase.ApplicationRegistry.GetInterfaces ());
-            scene.Initialize (regionInfo, circuitManager);
+            scene.Initialize (regionInfo, circuitManager, clientServer);
 
             StartModules(scene);
 
-            clientServer.AddScene(scene);
             m_clientServers.Add(clientServer);
 
             //Do this here so that we don't have issues later when startup complete messages start coming in

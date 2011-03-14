@@ -59,28 +59,34 @@ namespace Aurora.Framework
         /// </summary>
         protected internal void Run()
         {
-            while (m_timesToIterate >= 0)
+            try
             {
-                lock (m_lock)
+                while (m_timesToIterate >= 0)
                 {
-                    foreach (InternalHeartbeat intHB in m_heartbeats)
+                    lock (m_lock)
                     {
-                        if (!CallAndWait(intHB.millisecondTimeOut, intHB.heartBeat))
-                            Console.WriteLine("WARNING: Could not run Heartbeat in specified limits!");
+                        foreach (InternalHeartbeat intHB in m_heartbeats)
+                        {
+                            if (!CallAndWait (intHB.millisecondTimeOut, intHB.heartBeat))
+                                Console.WriteLine ("WARNING: Could not run Heartbeat in specified limits!");
+                        }
                     }
-                }
-                //0 is infinite
-                if (m_timesToIterate != 0)
-                {
-                    //Subtract, then see if it is 0, and if it is, it is time to stop
-                    m_timesToIterate--;
-                    if (m_timesToIterate == 0)
+                    //0 is infinite
+                    if (m_timesToIterate != 0)
+                    {
+                        //Subtract, then see if it is 0, and if it is, it is time to stop
+                        m_timesToIterate--;
+                        if (m_timesToIterate == 0)
+                            break;
+                    }
+                    if (m_timesToIterate == -1) //Kill signal
                         break;
+                    if (m_sleepTime != 0)
+                        Thread.Sleep (m_sleepTime);
                 }
-                if (m_timesToIterate == -1) //Kill signal
-                    break;
-                if (m_sleepTime != 0)
-                    Thread.Sleep(m_sleepTime);
+            }
+            catch
+            {
             }
             Thread.CurrentThread.Abort();
         }

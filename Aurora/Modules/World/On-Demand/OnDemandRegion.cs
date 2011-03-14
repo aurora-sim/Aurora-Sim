@@ -33,6 +33,7 @@ namespace Aurora.Modules.World.On_Demand
 
         private Scene m_scene;
         private bool m_enabledForThisScene = false;
+        private int m_waitTime = 0;
 
         public void Initialise (IConfigSource source)
         {
@@ -77,6 +78,8 @@ namespace Aurora.Modules.World.On_Demand
             if (FunctionName == "NewUserConnection")
             {
                 OSDMap responseMap = (OSDMap)parameters;
+                //Tell the caller that we will have to wait a bit possibly
+                responseMap["WaitTime"] = m_waitTime;
                 if (m_scene.RegionInfo.Startup == StartupType.Medium)
                 {
                     m_scene.AuroraEventManager.FireGenericEventHandler ("MediumStartup", m_scene);
