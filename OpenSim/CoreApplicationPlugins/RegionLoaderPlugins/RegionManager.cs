@@ -233,7 +233,8 @@ namespace Aurora.Modules.RegionLoader
             textBox1.Text = region.RegionName;
             RegionSizeX.Text = region.RegionSizeX.ToString();
             RegionSizeY.Text = region.RegionSizeY.ToString();
-            StartupNumberBox.Text = region.NumberStartup.ToString();
+            StartupNumberBox.Text = region.NumberStartup.ToString ();
+            startupType.Text = region.Startup.ToString ();
         }
 
         private void RegionNameHelp_Click(object sender, EventArgs e)
@@ -309,9 +310,13 @@ namespace Aurora.Modules.RegionLoader
 
         private void startupType_Click (object sender, EventArgs e)
         {
-            MessageBox.Show (@"This determines the type of startup the region will use. There are three options, 'Soft', 'Medium', and 'Normal'.
-Normal loads your region at startup, while both soft and medium do not. Soft only loads parcels and terrain on startup (not prims), 
-and Medium does the same as Soft, except that it loads the prims as well, neither of these options start the heartbeats immediately though.");
+            MessageBox.Show (@"This determines the type of startup the region will use. There are a few options:
+'None', 'Soft', 'Medium', and 'Normal'.
+--Normal loads your region at startup, while both soft and medium do not. 
+--None loads only the basics, no terrain, no parcels, no prims.
+--Soft only loads parcels and terrain on startup (not prims). 
+--Medium does the same as Soft, except that it loads the prims as well.
+Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.");
         }
 
         private void Export_Click(object sender, EventArgs e)

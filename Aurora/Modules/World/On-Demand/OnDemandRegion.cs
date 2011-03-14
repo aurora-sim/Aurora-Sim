@@ -51,6 +51,7 @@ namespace Aurora.Modules.World.On_Demand
             if (scene.RegionInfo.Startup != StartupType.Normal)
             {
                 m_enabledForThisScene = true;
+                m_scene = scene;
                 //Disable the heartbeat for this region
                 scene.ShouldRunHeartbeat = false;
 
@@ -60,7 +61,7 @@ namespace Aurora.Modules.World.On_Demand
                 if (scene.RegionInfo.Startup == StartupType.Soft)
                 {
                     //If the region startup is soft, we arn't to load prims until they are needed, so kill it
-                    IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule> ();
+                    IBackupModule backup = scene.RequestModuleInterface<IBackupModule> ();
                     if (backup != null)
                         backup.LoadPrims = false;
                 }

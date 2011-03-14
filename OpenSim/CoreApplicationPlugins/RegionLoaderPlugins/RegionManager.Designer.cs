@@ -52,6 +52,9 @@
             this.label12 = new System.Windows.Forms.Label ();
             this.label14 = new System.Windows.Forms.Label ();
             this.groupBox1 = new System.Windows.Forms.GroupBox ();
+            this.CStartupType = new System.Windows.Forms.TextBox ();
+            this.button18 = new System.Windows.Forms.Button ();
+            this.label37 = new System.Windows.Forms.Label ();
             this.CStartNum = new System.Windows.Forms.TextBox ();
             this.button16 = new System.Windows.Forms.Button ();
             this.label35 = new System.Windows.Forms.Label ();
@@ -141,9 +144,6 @@
             this.textBox11 = new System.Windows.Forms.TextBox ();
             this.label30 = new System.Windows.Forms.Label ();
             this.tabPage2 = new System.Windows.Forms.TabPage ();
-            this.CStartupType = new System.Windows.Forms.TextBox ();
-            this.button18 = new System.Windows.Forms.Button ();
-            this.label37 = new System.Windows.Forms.Label ();
             this.groupBox1.SuspendLayout ();
             this.groupBox2.SuspendLayout ();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit ();
@@ -406,6 +406,33 @@
             this.groupBox1.TabIndex = 27;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Region Info";
+            // 
+            // CStartupType
+            // 
+            this.CStartupType.Location = new System.Drawing.Point (247, 369);
+            this.CStartupType.Name = "CStartupType";
+            this.CStartupType.Size = new System.Drawing.Size (100, 20);
+            this.CStartupType.TabIndex = 62;
+            this.CStartupType.Text = "Normal";
+            // 
+            // button18
+            // 
+            this.button18.Location = new System.Drawing.Point (93, 369);
+            this.button18.Name = "button18";
+            this.button18.Size = new System.Drawing.Size (21, 20);
+            this.button18.TabIndex = 61;
+            this.button18.Text = "?";
+            this.button18.UseVisualStyleBackColor = true;
+            this.button18.Click += new System.EventHandler (this.startupType_Click);
+            // 
+            // label37
+            // 
+            this.label37.AutoSize = true;
+            this.label37.Location = new System.Drawing.Point (6, 373);
+            this.label37.Name = "label37";
+            this.label37.Size = new System.Drawing.Size (68, 13);
+            this.label37.TabIndex = 60;
+            this.label37.Text = "Startup Type";
             // 
             // CStartNum
             // 
@@ -1289,32 +1316,6 @@
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Create new region";
             this.tabPage2.UseVisualStyleBackColor = true;
-            // 
-            // CStartupType
-            // 
-            this.CStartupType.Location = new System.Drawing.Point (247, 369);
-            this.CStartupType.Name = "CStartupType";
-            this.CStartupType.Size = new System.Drawing.Size (100, 20);
-            this.CStartupType.TabIndex = 62;
-            this.CStartupType.Text = "Normal";
-            // 
-            // button18
-            // 
-            this.button18.Location = new System.Drawing.Point (93, 369);
-            this.button18.Name = "button18";
-            this.button18.Size = new System.Drawing.Size (21, 20);
-            this.button18.TabIndex = 61;
-            this.button18.Text = "?";
-            this.button18.UseVisualStyleBackColor = true;
-            // 
-            // label37
-            // 
-            this.label37.AutoSize = true;
-            this.label37.Location = new System.Drawing.Point (6, 373);
-            this.label37.Name = "label37";
-            this.label37.Size = new System.Drawing.Size (68, 13);
-            this.label37.TabIndex = 60;
-            this.label37.Text = "Startup Type";
             // 
             // RegionManager
             // 
