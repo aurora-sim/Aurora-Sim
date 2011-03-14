@@ -191,7 +191,13 @@ namespace Aurora.Modules
                 if (cache == null)
                 {
                     //Something went wrong, delete the file
-                    Directory.Delete(m_filePath + AgentID + ".oc");
+                    try
+                    {
+                        File.Delete (m_filePath + AgentID + ".oc");
+                    }
+                    catch
+                    {
+                    }
                     return;
                 }
                 lock (ObjectCacheAgents)
