@@ -686,22 +686,25 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private void MoveLinear(float pTimestep, AuroraODEPhysicsScene _pParentScene)
         {
-            d.Vector3 pos = d.BodyGetPosition(Body);
+            d.Vector3 pos = d.BodyGetPosition (Body);
             d.Vector3 oldPos = pos;
 
             if (m_lastPositionVector.X != pos.X ||
                 m_lastPositionVector.Y != pos.Y ||
                 m_lastPositionVector.Z != pos.Z)
             {
-                m_lastPositionVector = d.BodyGetPosition(Body);
-                m_lastAngularVelocity = new Vector3((float)d.BodyGetAngularVel(Body).X, (float)d.BodyGetAngularVel(Body).Y, (float)d.BodyGetAngularVel(Body).Z);
+                m_lastPositionVector = d.BodyGetPosition (Body);
+                m_lastAngularVelocity = new Vector3 ((float)d.BodyGetAngularVel (Body).X, (float)d.BodyGetAngularVel (Body).Y, (float)d.BodyGetAngularVel (Body).Z);
             }
-            if (!m_linearMotorDirection.ApproxEquals(Vector3.Zero, 0.01f))  // requested m_linearMotorDirection is significant
+            if (!m_linearMotorDirection.ApproxEquals (Vector3.Zero, 0.01f))  // requested m_linearMotorDirection is significant
             {
+                if (!d.BodyIsEnabled (Body))
+                    d.BodyEnable (Body);
+
                 // add drive to body
-                Vector3 addAmount = (m_linearMotorDirection / (m_linearMotorTimescale / (pTimestep * pTimestep * 5)));
-                addAmount.Z = (m_linearMotorDirection.Z / (m_linearMotorTimescale / (pTimestep * pTimestep)));
-                m_lastLinearVelocityVector += addAmount;
+                Vector3 addAmount = m_linearMotorDirection / (m_linearMotorTimescale / (pTimestep * pTimestep));
+                
+                m_lastLinearVelocityVector += (addAmount * 10);  // lastLinearVelocityVector is the current body velocity vector?
 
                 // This will work temporarily, but we really need to compare speed on an axis
                 // KF: Limit body velocity to applied velocity?
@@ -719,17 +722,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_lastLinearVelocityVector = Vector3.Zero;
             }
             m_linearMotorDirection = Vector3.Zero;
-
             // convert requested object velocity to world-referenced vector
             m_dir = m_lastLinearVelocityVector;
-
-            d.Quaternion rot = d.BodyGetQuaternion(Body);
-            Quaternion rotq = new Quaternion((float)rot.X,
-                (float)rot.Y,
-                (float)rot.Z,
-                (float)rot.W);    // rotq = rotation of object
-
-            m_dir *= rotq;   // apply obj rotation to velocity vector
+            d.Quaternion rot = d.BodyGetQuaternion (Body);
+            Quaternion rotq = new Quaternion (rot.X, rot.Y, rot.Z, rot.W);    // rotq = rotation of object
+            m_dir *= rotq;
 
             // Preserve the current Z velocity
             d.Vector3 vel_now = d.BodyGetLinearVel(Body);
@@ -854,11 +851,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             #region Deflection
 
             //Forward is the prefered direction
-            Vector3 PreferredAxisOfMotion = new Vector3(1, 0, 0);
+            Vector3 PreferredAxisOfMotion = new Vector3 (1 + 1 * (m_linearDeflectionEfficiency / m_linearDeflectionTimescale) * pTimestep * pTimestep * pTimestep, 1, 1);
             PreferredAxisOfMotion *= m_referenceFrame;
 
             //Multiply it so that it scales linearly
-            m_dir *= ((PreferredAxisOfMotion * m_linearDeflectionEfficiency) / (m_linearDeflectionTimescale / pTimestep));
+            m_dir *= PreferredAxisOfMotion;
 
             #endregion
 
@@ -882,13 +879,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_dir += TaintedForce;
             //Uses the square to make bouyancy more effective as in SL, as it seems to effect gravity more the higher the value is
             //This check helps keep things from being pushed into the ground and the consequence of being shoved back out
-            if (Math.Abs(m_dir.Z) > 0.1)
-                m_dir.Z += ((_pParentScene.gravityz * (float)Mass) * ((((1 - m_VehicleBuoyancy) * (1 - m_VehicleBuoyancy))) * pTimestep));
-
-            /*if (m_dir.Z > 10)
-                m_dir.Z = 10;
-            else if (m_dir.Z < -10)
-                m_dir.Z = -10;*/
+            m_dir.Z += ((_pParentScene.gravityz * (float)Mass) * ((((1 - m_VehicleBuoyancy) * (1 - m_VehicleBuoyancy))) * pTimestep));
 
             d.BodySetLinearVel(Body, m_dir.X, m_dir.Y, m_dir.Z);
 
@@ -945,10 +936,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // ramp up to new value
                 //   current velocity  +=                         error                       /    (time to get there / step interval)
                 //                               requested speed            -  last motor speed
-                /*m_angularMotorVelocity.X += (m_angularMotorDirection.X - m_angularMotorVelocity.X) / (m_angularMotorTimescale / (pTimestep * pTimestep * pTimestep * pTimestep * 10));
-                m_angularMotorVelocity.Y += (m_angularMotorDirection.Y - m_angularMotorVelocity.Y) / (m_angularMotorTimescale / (pTimestep * pTimestep * pTimestep * pTimestep * 10));
-                m_angularMotorVelocity.Z += (m_angularMotorDirection.Z - m_angularMotorVelocity.Z) / (m_angularMotorTimescale / (pTimestep * pTimestep * pTimestep * 10));
-*/
                 //Add the mass, if the vehicle is attempting to turn, it does matter how much it weighs
                 m_angularMotorVelocity.X += (m_angularMotorDirection.X - m_angularMotorVelocity.X) * (float)Mass /  (m_angularMotorTimescale / pTimestep);
                 m_angularMotorVelocity.Y += (m_angularMotorDirection.Y - m_angularMotorVelocity.Y) * (float)Mass / (m_angularMotorTimescale / pTimestep);
@@ -1074,15 +1061,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             #region Deflection
 
             //Forward is the prefered direction, but if the reference frame has changed, we need to take this into account as well
-            Vector3 PreferredAxisOfMotion = new Vector3(1, 0, 0);
+            Vector3 PreferredAxisOfMotion = new Vector3 (1 + (1 * (m_angularDeflectionEfficiency / m_angularDeflectionTimescale) * pTimestep * pTimestep * pTimestep), 1, 1);
             PreferredAxisOfMotion *= m_referenceFrame;
 
-            deflection = ((PreferredAxisOfMotion * m_angularDeflectionEfficiency) / (m_angularDeflectionTimescale / pTimestep));
+            //Multiply it so that it scales linearly
+            deflection = PreferredAxisOfMotion;
+
+            //deflection = ((PreferredAxisOfMotion * m_angularDeflectionEfficiency) / (m_angularDeflectionTimescale / pTimestep));
 
             #endregion
 
             // Sum of velocities
-            m_lastAngularVelocity = m_angularMotorVelocity + vertattr + bank + deflection;
+            m_lastAngularVelocity = m_angularMotorVelocity + vertattr + bank;
+            m_lastAngularVelocity *= deflection;
 
             #region Limit Motor Up
             double Zchange = d.BodyGetLinearVel(Body).Z;
@@ -1092,21 +1083,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 Vector3 Change = Vector3.One;
                 //Requires idea of 'up', so use reference frame to rotate it
                 //Add to the X, because that will normally tilt the vehicle downward (if its rotated, it'll be rotated by the ref. frame
-                m_lastAngularVelocity *= (new Vector3((float)Zchange * (pTimestep), 1, 1) *  m_referenceFrame);
-            }
-
-            #endregion
-
-            #region Vertical stabilizer
- 
-            //FLAGGED FOR REEVALUATION
-            if (rot.Y > .01 + m_referenceFrame.Y) //Add the reference frame because this requires the use of the idea of UP
-            {
-                m_lastAngularVelocity.Y -= (m_lastAngularVelocity.Y) * (pTimestep);
-            }
-            if (rot.Y < -.01 + m_referenceFrame.Y)
-            {
-                m_lastAngularVelocity.Y += (m_lastAngularVelocity.Y) * (pTimestep);
+                m_lastAngularVelocity *= (new Vector3(1 - ((float)Zchange * (pTimestep * 10)), 1, 1) *  m_referenceFrame);
             }
 
             #endregion
