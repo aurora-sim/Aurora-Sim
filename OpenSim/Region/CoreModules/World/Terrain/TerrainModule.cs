@@ -327,12 +327,18 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             if (presence == null)
                 return;
 
-            if (!m_terrainPatchesSent.ContainsKey(presence.UUID))
+            bool[,] terrainarray;
+            lock (m_terrainPatchesSent)
+            {
+                m_terrainPatchesSent.TryGetValue(presence.UUID, out terrainarray);
+            }
+            bool fillLater = false;
+            if (terrainarray == null)
             {
                 int xSize = m_scene.RegionInfo.RegionSizeX != int.MaxValue ? m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize : Constants.RegionSize / Constants.TerrainPatchSize;
                 int ySize = m_scene.RegionInfo.RegionSizeX != int.MaxValue ? m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize : Constants.RegionSize / Constants.TerrainPatchSize;
-                m_terrainPatchesSent.Add(presence.UUID, new bool[xSize,
-                    ySize]);
+                terrainarray = new bool[xSize, ySize];
+                fillLater = true;
             }
 
             List<int> xs = new List<int>();
@@ -351,7 +357,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         y >= m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize)
                         continue;
                     //Need to make sure we don't send the same ones over and over
-                    if (!m_terrainPatchesSent[presence.UUID][x, y])
+                    if (!terrainarray[x, y])
                     {
                         //Check which has less distance, camera or avatar position, both have to be done
                         if (Util.DistanceLessThan(presence.AbsolutePosition,
@@ -360,7 +366,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                             new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0), presence.DrawDistance + 35)) //Its not a radius, its a diameter and we add 35 so that it doesn't look like it cuts off
                         {
                             //They can see it, send it ot them
-                            m_terrainPatchesSent[presence.UUID][x, y] = true;
+                            terrainarray[x, y] = true;
                             xs.Add(x);
                             ys.Add(y);
                             //Wait and send them all at once
@@ -377,6 +383,19 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 {
                     //Send all the water patches at once
                     presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), m_waterChannel.GetSerialised(m_scene), TerrainPatch.LayerType.Water);
+                }
+            }
+            if ((xs.Count != 0) || (fillLater))
+            {
+                if (m_terrainPatchesSent.ContainsKey(presence.UUID))
+                {
+                    lock (m_terrainPatchesSent)
+                        m_terrainPatchesSent[presence.UUID] = terrainarray;
+                }
+                else
+                {
+                    lock (m_terrainPatchesSent)
+                        m_terrainPatchesSent.Add(presence.UUID, terrainarray);
                 }
             }
         }
