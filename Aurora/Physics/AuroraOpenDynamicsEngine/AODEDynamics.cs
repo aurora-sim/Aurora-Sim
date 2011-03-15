@@ -812,6 +812,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
 
+            //Do this here, because it shouldn't clear out gravity or the tainted forces (not part of vehicle physics)
             if ((m_flags & (VehicleFlag.NO_X)) != 0)
                 m_dir.X = 0;
             if ((m_flags & (VehicleFlag.NO_Y)) != 0)
@@ -856,7 +857,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             Vector3 PreferredAxisOfMotion = new Vector3(1, 0, 0);
             PreferredAxisOfMotion *= m_referenceFrame;
 
-            //m_dir += ((PreferredAxisOfMotion * m_linearDeflectionEfficiency) / (m_linearDeflectionTimescale / pTimestep));
+            //Multiply it so that it scales linearly
+            m_dir *= ((PreferredAxisOfMotion * m_linearDeflectionEfficiency) / (m_linearDeflectionTimescale / pTimestep));
 
             #endregion
 
@@ -868,7 +870,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 Mass = mass.mass;
                 Mass *= 2;
             }
-
+            //No Setting forces, only velocity! Forces are NOT recommended to be used by the ODE manual
             //d.BodySetForce(Body, _pParentScene.gravityx + TaintedForce.X,
             //    _pParentScene.gravityy + TaintedForce.Y,
             //    (_pParentScene.gravityz * Mass * (1f - m_VehicleBuoyancy)) + TaintedForce.Z);
@@ -881,12 +883,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             //Uses the square to make bouyancy more effective as in SL, as it seems to effect gravity more the higher the value is
             //This check helps keep things from being pushed into the ground and the consequence of being shoved back out
             if (Math.Abs(m_dir.Z) > 0.1)
-                m_dir.Z += ((_pParentScene.gravityz * Mass) * ((((1 - m_VehicleBuoyancy) * (1 - m_VehicleBuoyancy) * (1 - m_VehicleBuoyancy))) * pTimestep));
+                m_dir.Z += ((_pParentScene.gravityz * Mass) * ((((1 - m_VehicleBuoyancy) * (1 - m_VehicleBuoyancy))) * pTimestep));
 
-            if (m_dir.Z > 10)
+            /*if (m_dir.Z > 10)
                 m_dir.Z = 10;
             else if (m_dir.Z < -10)
-                m_dir.Z = -10;
+                m_dir.Z = -10;*/
 
             d.BodySetLinearVel(Body, m_dir.X, m_dir.Y, m_dir.Z);
 
@@ -1106,21 +1108,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 m_lastAngularVelocity.Y += (m_lastAngularVelocity.Y) * (pTimestep);
             }
-
-            #endregion
-
-            #region Drift
-
-            //FLAGGED FOR REEVALUATION
-            //Slide us around a bit
-            lastDrift += m_lastAngularVelocity.Z / (7f / pTimestep);
-
-            if (Math.Abs(lastDrift) < 0.1)
-                lastDrift = 0;
-
-            lastDrift -= lastDrift / (2f / pTimestep);
-
-            m_lastAngularVelocity.Z += lastDrift;
 
             #endregion
 
