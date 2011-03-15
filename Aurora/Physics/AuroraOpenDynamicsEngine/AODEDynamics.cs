@@ -883,7 +883,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             //Uses the square to make bouyancy more effective as in SL, as it seems to effect gravity more the higher the value is
             //This check helps keep things from being pushed into the ground and the consequence of being shoved back out
             if (Math.Abs(m_dir.Z) > 0.1)
-                m_dir.Z += ((_pParentScene.gravityz * Mass) * ((((1 - m_VehicleBuoyancy) * (1 - m_VehicleBuoyancy))) * pTimestep));
+                m_dir.Z += ((_pParentScene.gravityz * (float)Mass) * ((((1 - m_VehicleBuoyancy) * (1 - m_VehicleBuoyancy))) * pTimestep));
 
             /*if (m_dir.Z > 10)
                 m_dir.Z = 10;
@@ -950,9 +950,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_angularMotorVelocity.Z += (m_angularMotorDirection.Z - m_angularMotorVelocity.Z) / (m_angularMotorTimescale / (pTimestep * pTimestep * pTimestep * 10));
 */
                 //Add the mass, if the vehicle is attempting to turn, it does matter how much it weighs
-                m_angularMotorVelocity.X += (m_angularMotorDirection.X - m_angularMotorVelocity.X) * Mass /  (m_angularMotorTimescale / pTimestep);
-                m_angularMotorVelocity.Y += (m_angularMotorDirection.Y - m_angularMotorVelocity.Y) * Mass  /  (m_angularMotorTimescale / pTimestep);
-                m_angularMotorVelocity.Z += (m_angularMotorDirection.Z - m_angularMotorVelocity.Z) * Mass  /  (m_angularMotorTimescale / pTimestep);
+                m_angularMotorVelocity.X += (m_angularMotorDirection.X - m_angularMotorVelocity.X) * (float)Mass /  (m_angularMotorTimescale / pTimestep);
+                m_angularMotorVelocity.Y += (m_angularMotorDirection.Y - m_angularMotorVelocity.Y) * (float)Mass / (m_angularMotorTimescale / pTimestep);
+                m_angularMotorVelocity.Z += (m_angularMotorDirection.Z - m_angularMotorVelocity.Z) * (float)Mass / (m_angularMotorTimescale / pTimestep);
                 m_angularMotorApply--;        // This is done so that if script request rate is less than phys frame rate the expected
                 // velocity may still be acheived.
             }
@@ -1092,7 +1092,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 Vector3 Change = Vector3.One;
                 //Requires idea of 'up', so use reference frame to rotate it
                 //Add to the X, because that will normally tilt the vehicle downward (if its rotated, it'll be rotated by the ref. frame
-                m_lastAngularVelocity *= (new Vector3(Zchange * (pTimestep), 1, 1) *  m_referenceFrame);
+                m_lastAngularVelocity *= (new Vector3((float)Zchange * (pTimestep), 1, 1) *  m_referenceFrame);
             }
 
             #endregion

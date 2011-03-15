@@ -1011,15 +1011,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (SD == null)
                         return;
 
-                    SD.presence = SD.World.GetScenePresence(SD.part.OwnerID);
+                    ScenePresence presence = SD.World.GetScenePresence(SD.part.OwnerID);
 
                     ScriptControllers SC = new ScriptControllers();
-                    if (SD.presence != null)
+                    if (presence != null)
                     {
-                        SC = SD.presence.GetScriptControler(SD.ItemID);
+                        SC = presence.GetScriptControler(SD.ItemID);
                         if ((newItem.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
                         {
-                            SD.presence.UnRegisterControlEventsToScript(SD.part.LocalId, SD.ItemID);
+                            presence.UnRegisterControlEventsToScript(SD.part.LocalId, SD.ItemID);
                         }
                     }
                     object[] Plugins = GetSerializationData(SD.ItemID, SD.part.UUID);
@@ -1044,11 +1044,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     MaintenanceThread.SetEventSchSetIgnoreNew(SD, false);
 
 
-                    if (SD.presence != null && (newItem.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
+                    if (presence != null && (newItem.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
                     {
                         SC.itemID = newItem.ItemID;
                         SC.part = SD.part;
-                        SD.presence.RegisterScriptController(SC);
+                        presence.RegisterScriptController(SC);
                     }
 
                     ScriptProtection.AddNewScript(SD);

@@ -503,7 +503,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             UserInventoryItemID = part.FromUserInventoryItemID;
 
             //Try to find the avatar who started this.
-            presence = World.GetScenePresence(part.OwnerID);
+            ScenePresence presence = World.GetScenePresence(part.OwnerID);
 
             #region HTML Reader
 
