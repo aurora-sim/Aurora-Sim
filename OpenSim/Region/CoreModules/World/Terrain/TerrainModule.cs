@@ -344,11 +344,19 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             List<int> xs = new List<int>();
             List<int> ys = new List<int> ();
             int startX = (((int)(presence.AbsolutePosition.X - presence.DrawDistance)) / Constants.TerrainPatchSize) - 1;
+            startX = Math.Max (startX, 0);
+            startX = Math.Min (startX, m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize);
             int startY = (((int)(presence.AbsolutePosition.Y - presence.DrawDistance)) / Constants.TerrainPatchSize) - 1;
+            startY = Math.Max (startY, 0);
+            startY = Math.Min (startY, m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize);
             int endX = (((int)(presence.AbsolutePosition.X + presence.DrawDistance)) / Constants.TerrainPatchSize) + 1;
+            endX = Math.Max (endX, 0);
+            endX = Math.Min (endX, m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize);
             int endY = (((int)(presence.AbsolutePosition.Y + presence.DrawDistance)) / Constants.TerrainPatchSize) + 1;
+            endY = Math.Max (endY, 0);
+            endY = Math.Min (endY, m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize);
             for (int x = startX; x <
-                    endX; x++)
+                    endX; x++) 
             {
                 for (int y = startY; y <
                     endY; y++) 
@@ -403,7 +411,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// <summary>
         /// Store the terrain in the persistant data store
         /// </summary>
-        public void SaveTerrain()
+        public void SaveTerrain ()
         {
             m_scene.SimulationDataService.StoreTerrain(m_channel.GetSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
         }

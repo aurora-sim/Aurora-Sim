@@ -893,8 +893,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_lastLinearVelocityVector -= m_lastLinearVelocityVector * decayamount;
         } // end MoveLinear()
 
-        private float lastDrift = 0;
-
         private void MoveAngular(float pTimestep, AuroraODEPhysicsScene _pParentScene)
         {
             /*
