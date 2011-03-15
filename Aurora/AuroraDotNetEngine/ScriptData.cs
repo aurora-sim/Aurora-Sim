@@ -143,7 +143,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public UUID UserInventoryItemID;
         public bool PostOnRez;
         public TaskInventoryItem InventoryItem;
-        public ScenePresence presence = null;
         public DetectParams[] LastDetectParams = null;
         public Object[] PluginData = new Object[0];
         private StateSave LastStateSave = null;
@@ -403,6 +402,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void DisplayUserNotification(string message, string stage, bool postScriptCAPSError, bool IsError)
         {
+            ScenePresence presence = World.GetScenePresence(part.OwnerID);
             if (presence != null && (!PostOnRez) && postScriptCAPSError)
                 if (m_ScriptEngine.ChatCompileErrorsToDebugChannel)
                     presence.ControllingClient.SendAgentAlertMessage("Script saved with errors, check debug window!", false);
