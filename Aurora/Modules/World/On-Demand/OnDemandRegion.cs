@@ -32,7 +32,6 @@ namespace Aurora.Modules.World.On_Demand
         #region Declares
 
         private Scene m_scene;
-        private bool m_enabledForThisScene = false;
         private int m_waitTime = 0;
         private bool m_isShuttingDown = false;
         private bool m_isStartingUp = false;
@@ -50,7 +49,6 @@ namespace Aurora.Modules.World.On_Demand
         {
             if (scene.RegionInfo.Startup != StartupType.Normal)
             {
-                m_enabledForThisScene = true;
                 m_scene = scene;
                 //Disable the heartbeat for this region
                 scene.ShouldRunHeartbeat = false;

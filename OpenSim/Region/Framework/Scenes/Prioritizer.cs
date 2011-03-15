@@ -63,14 +63,6 @@ namespace OpenSim.Region.Framework.Scenes
     {
         private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        /// <summary>
-        /// This is added to the priority of all child prims, to make sure that the root prim update is sent to the
-        /// viewer before child prim updates.
-        /// The adjustment is added to child prims and subtracted from root prims, so the gap ends up
-        /// being double.  We do it both ways so that there is a still a priority delta even if the priority is already
-        /// double.MinValue or double.MaxValue.
-        /// </summary>
-        private double m_childPrimAdjustmentFactor = 0.05;
         public UpdatePrioritizationSchemes UpdatePrioritizationScheme = UpdatePrioritizationSchemes.BestAvatarResponsiveness;
 
         private Scene m_scene;
