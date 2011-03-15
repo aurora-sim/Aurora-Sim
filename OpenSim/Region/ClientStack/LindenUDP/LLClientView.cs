@@ -361,6 +361,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         protected LLImageManager m_imageManager;
         protected string m_firstName;
         protected string m_lastName;
+        protected string m_Name;
         protected Thread m_clientThread;
         protected Vector3 m_startpos;
         protected EndPoint m_userEndPoint;
@@ -405,7 +406,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>
         /// Full name of the client (first name and last name)
         /// </summary>
-        public string Name { get { return FirstName + " " + LastName; } }
+        public string Name { get { return m_Name; } }
 
         public uint CircuitCode { get { return m_circuitCode; } }
         public int NextAnimationSequenceNumber { get { return m_animationSequenceNumber; } }
@@ -460,6 +461,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 m_firstName = account.FirstName;
                 m_lastName = account.LastName;
+                m_Name = account.Name;
             }
             m_startpos = sessionInfo.startpos;
 

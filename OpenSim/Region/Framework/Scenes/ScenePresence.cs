@@ -342,6 +342,18 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_lastname; }
         }
 
+        public override string Name
+        {
+            get
+            {
+                return m_name;
+            }
+            set
+            {
+                //No changing of avatar's names!
+            }
+        }
+
         public float DrawDistance
         {
             get { return m_DrawDistance; }
@@ -641,7 +653,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_controllingClient = client;
             m_firstname = m_controllingClient.FirstName;
             m_lastname = m_controllingClient.LastName;
-            m_name = String.Format("{0} {1}", m_firstname, m_lastname);
+            m_name = m_controllingClient.Name;
             m_scene = world;
             m_uuid = client.AgentId;
             m_regionInfo = reginfo;

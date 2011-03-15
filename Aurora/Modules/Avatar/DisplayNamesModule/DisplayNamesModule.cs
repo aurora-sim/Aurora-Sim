@@ -149,8 +149,8 @@ namespace Aurora.Modules
                     if (newDisplayName.ToLower().Contains(BannedUserName.ToLower()))
                     {
                         //Revert the name to the original and send them a warning
-                        m_log.Warn("[DisplayNamesModule]: " + m_avatar.Firstname + " " + m_avatar.Lastname + " attempted to set their display name to a banned name '" + newDisplayName + "'.");
-                        newDisplayName = m_avatar.Firstname + " " + m_avatar.Lastname;
+                        m_log.Warn ("[DisplayNamesModule]: " + m_avatar.Name + " attempted to set their display name to a banned name '" + newDisplayName + "'.");
+                        newDisplayName = m_avatar.Name;
                         m_avatar.ControllingClient.SendAlertMessage("You cannot update your display name to the name chosen, your name has been reverted. This request has been logged.");
                         break; //No more checking
                     }

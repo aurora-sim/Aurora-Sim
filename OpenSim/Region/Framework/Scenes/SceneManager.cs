@@ -830,7 +830,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         RegionInfo regionInfo = presence.Scene.RegionInfo;
 
-                        m_log.Info (String.Format ("Kicking user: {0,-16}{1,-16}{2,-37} in region: {3,-16}", presence.Firstname, presence.Lastname, presence.UUID, regionInfo.RegionName));
+                        m_log.Info (String.Format ("Kicking user: {0,-16}{1,-37} in region: {2,-16}", presence.Name, presence.UUID, regionInfo.RegionName));
 
                         // kick client...
                         if (alert != null)
@@ -1090,9 +1090,8 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         if (!scenePresence.IsChildAgent)
                         {
-                            m_log.DebugFormat("Packet debug for {0} {1} set to {2}",
-                                              scenePresence.Firstname,
-                                              scenePresence.Lastname,
+                            m_log.DebugFormat("Packet debug for {0} set to {1}",
+                                              scenePresence.Name,
                                               newDebug);
 
                             scenePresence.ControllingClient.SetDebugPacketLevel(newDebug);
@@ -1136,7 +1135,7 @@ namespace OpenSim.Region.Framework.Scenes
                     regionName = regionInfo.RegionName;
                 }
 
-                m_log.Info (String.Format ("{0,-16}{1,-16}{2,-37}{3,-11}{4,-16}{5,-30}", presence.Firstname, presence.Lastname, presence.UUID, presence.IsChildAgent ? "Child" : "Root", regionName, presence.AbsolutePosition.ToString ()));
+                m_log.Info (String.Format ("{0,-16}{1,-37}{2,-11}{3,-16}{4,-30}", presence.Name, presence.UUID, presence.IsChildAgent ? "Child" : "Root", regionName, presence.AbsolutePosition.ToString ()));
             }
 
             m_log.Info (String.Empty);

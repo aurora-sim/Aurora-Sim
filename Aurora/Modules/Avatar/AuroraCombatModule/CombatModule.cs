@@ -385,7 +385,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             {
                 string deadAvatarMessage;
                 ScenePresence killingAvatar = null;
-                string killingAvatarMessage = "You fragged " + m_SP.Firstname + " " + m_SP.Lastname;
+                string killingAvatarMessage = "You fragged " + m_SP.Name;
 
                 if (killerObjectLocalID == 0)
                 {

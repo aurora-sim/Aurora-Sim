@@ -380,16 +380,34 @@ namespace OpenSim.Region.Framework.Scenes
 
         /// <summary>
         /// Request the scene presence by name.
+        /// NOTE: Depricated, use the ScenePresence GetScenePresence (string Name) instead!
         /// </summary>
         /// <param name="firstName"></param>
         /// <param name="lastName"></param>
         /// <returns>null if the presence was not found</returns>
-        public ScenePresence GetScenePresence(string firstName, string lastName)
+        public ScenePresence GetScenePresence (string firstName, string lastName)
         {
-            List<ScenePresence> presences = GetScenePresences();
+            List<ScenePresence> presences = GetScenePresences ();
             foreach (ScenePresence presence in presences)
             {
                 if (presence.Firstname == firstName && presence.Lastname == lastName)
+                    return presence;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Request the scene presence by name.
+        /// </summary>
+        /// <param name="firstName"></param>
+        /// <param name="lastName"></param>
+        /// <returns>null if the presence was not found</returns>
+        public ScenePresence GetScenePresence (string Name)
+        {
+            List<ScenePresence> presences = GetScenePresences ();
+            foreach (ScenePresence presence in presences)
+            {
+                if (presence.Name == Name)
                     return presence;
             }
             return null;

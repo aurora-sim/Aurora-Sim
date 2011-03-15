@@ -1947,7 +1947,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (flags == 0)
             {
                 targetAvatar.Frozen = true;
-                targetAvatar.ControllingClient.SendAlertMessage(parcelOwner.Firstname + " " + parcelOwner.Lastname + " has frozen you for 30 seconds.  You cannot move or interact with the world.");
+                targetAvatar.ControllingClient.SendAlertMessage(parcelOwner.Name + " has frozen you for 30 seconds.  You cannot move or interact with the world.");
                 parcelOwner.ControllingClient.SendAlertMessage("Avatar Frozen.");
             }
             else

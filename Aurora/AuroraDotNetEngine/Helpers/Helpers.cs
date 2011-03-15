@@ -201,7 +201,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (presence == null)
                     return;
 
-                Name = presence.Firstname + " " + presence.Lastname;
+                Name = presence.Name;
                 Owner = Key;
 
                 tmp = presence.AbsolutePosition;

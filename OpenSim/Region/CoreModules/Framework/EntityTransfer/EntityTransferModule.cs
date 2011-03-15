@@ -513,7 +513,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         protected ScenePresence CrossAgentToNewRegionAsync(ScenePresence agent, Vector3 pos,
             GridRegion crossingRegion, bool isFlying)
         {
-            m_log.DebugFormat("[EntityTransferModule]: Crossing agent {0} {1} to region {2}", agent.Firstname, agent.Lastname, crossingRegion.RegionName);
+            m_log.DebugFormat("[EntityTransferModule]: Crossing agent {0} to region {1}", agent.Name, crossingRegion.RegionName);
 
             Scene m_scene = agent.Scene;
 

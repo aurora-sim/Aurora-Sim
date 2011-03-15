@@ -11420,7 +11420,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     {
                         if ((LSL_Integer)o == ScriptBaseClass.OBJECT_NAME)
                         {
-                            ret.Add(av.Firstname + " " + av.Lastname);
+                            ret.Add(av.Name);
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_DESC)
                         {
