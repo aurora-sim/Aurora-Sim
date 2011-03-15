@@ -173,7 +173,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Chat
                 {
                     if (enabled && (cs.irc.Enabled) && (cs.irc.Connected) && (cs.ClientReporting)) 
                     {
-                        string clientName = String.Format("{0} {1}", presence.Firstname, presence.Lastname);
+                        string clientName presence.Name;
                         m_log.DebugFormat("[IRC-Region {0}] {1} has left", Region, clientName);
                         cs.irc.PrivMsg(cs.NoticeMessageFormat, cs.irc.Nick, Region, String.Format("{0} has left", clientName));
                     }
@@ -207,7 +207,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Chat
                     clients.Add(client);
                     if (enabled && (cs.irc.Enabled) && (cs.irc.Connected) && (cs.ClientReporting))
                     {
-                        string clientName = String.Format("{0} {1}", presence.Firstname, presence.Lastname);
+                        string clientName = presence.Name;
                         m_log.DebugFormat("[IRC-Region {0}] {1} has arrived", Region, clientName);
                         //Check if this person is excluded from IRC
                         if (!cs.ExcludeList.Contains(clientName.ToLower()))

@@ -643,7 +643,7 @@ namespace OpenSim.Region.Framework.Scenes
             SurfaceTouchEventArgs surfaceArg = null;
             if (surfaceArgs != null && surfaceArgs.Count > 0)
                 surfaceArg = surfaceArgs[0];
-            ISceneEntity childPrim;
+            ISceneChildEntity childPrim;
             SceneObjectPart part;
             if (TryGetPart(localID, out childPrim))
             {
@@ -687,7 +687,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (surfaceArgs != null && surfaceArgs.Count > 0)
                 surfaceArg = surfaceArgs[0];
 
-            ISceneEntity childPrim;
+            ISceneChildEntity childPrim;
             SceneObjectPart part;
 
             if (TryGetPart(objectID, out childPrim))
@@ -730,7 +730,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (surfaceArgs != null && surfaceArgs.Count > 0)
                 surfaceArg = surfaceArgs[0];
 
-            ISceneEntity childPrim;
+            ISceneChildEntity childPrim;
             SceneObjectPart part;
             if (TryGetPart(localID, out childPrim))
             {
@@ -1463,7 +1463,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected internal void UpdateExtraParam(UUID agentID, uint LocalID, ushort type, bool inUse, byte[] data)
         {
-            ISceneEntity part;
+            ISceneChildEntity part;
             if (TryGetPart(LocalID, out part))
             {
                 if (m_parentScene.Permissions.CanEditObject(part.UUID, agentID))
@@ -1480,7 +1480,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="shapeBlock"></param>
         protected internal void UpdatePrimShape(UUID agentID, uint LocalID, UpdateShapeArgs shapeBlock)
         {
-            ISceneEntity part;
+            ISceneChildEntity part;
             if (TryGetPart(LocalID, out part))
             {
                 if (m_parentScene.Permissions.CanEditObject(part.UUID, agentID))
@@ -1911,7 +1911,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        public int linkSetSorter(ISceneEntity a, ISceneEntity b)
+        public int linkSetSorter (ISceneChildEntity a, ISceneChildEntity b)
         {
             return a.LinkNum.CompareTo(b.LinkNum);
         }
@@ -1931,7 +1931,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Insert in terms of link numbers, the new links
             // before the current ones (with the exception of 
             // the root prim. Shuffle the old ones up
-            foreach (ISceneEntity otherPart in grp.ChildrenEntities())
+            foreach (ISceneChildEntity otherPart in grp.ChildrenEntities ())
             {
                 if (otherPart.LinkNum >= linkNum)
                 {
@@ -1969,7 +1969,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="entity"></param>
         /// <param name="part"></param>
         /// <returns></returns>
-        public bool LinkPartToEntity(EntityBase entity, ISceneEntity part)
+        public bool LinkPartToEntity (EntityBase entity, ISceneChildEntity part)
         {
             //Remove the entity so that we can rebuild
             RemoveEntity(entity);
@@ -1986,7 +1986,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="entity"></param>
         /// <param name="part"></param>
         /// <returns></returns>
-        public bool DeLinkPartFromEntity(EntityBase entity, ISceneEntity part)
+        public bool DeLinkPartFromEntity (EntityBase entity, ISceneChildEntity part)
         {
             //Remove the entity so that we can rebuild
             RemoveEntity(entity);
@@ -2044,7 +2044,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="LocalID"></param>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public bool TryGetPart(uint LocalID, out ISceneEntity entity)
+        public bool TryGetPart (uint LocalID, out ISceneChildEntity entity)
         {
             EntityBase parent;
             if (Entities.TryGetValue(LocalID, out parent))
@@ -2062,7 +2062,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="ID"></param>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public bool TryGetPart(UUID ID, out ISceneEntity entity)
+        public bool TryGetPart (UUID ID, out ISceneChildEntity entity)
         {
             EntityBase parent;
             if (Entities.TryGetValue(ID, out parent))
@@ -2107,13 +2107,13 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public bool RestorePrimToScene(EntityBase entity)
         {
-            List<ISceneEntity> children = entity.ChildrenEntities();
+            List<ISceneChildEntity> children = entity.ChildrenEntities ();
             //Sort so that we rebuild in the same order and the root being first
             children.Sort(linkSetSorter);
 
             entity.ClearChildren();
 
-            foreach (ISceneEntity child in children)
+            foreach (ISceneChildEntity child in children)
             {
                 if (((SceneObjectPart)child).PhysActor != null)
                     ((SceneObjectPart)child).PhysActor.LocalID = child.LocalId;
@@ -2194,13 +2194,13 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="entity"></param>
         private void ResetEntityIDs(EntityBase entity)
         {
-            List<ISceneEntity> children = entity.ChildrenEntities();
+            List<ISceneChildEntity> children = entity.ChildrenEntities ();
             //Sort so that we rebuild in the same order and the root being first
             children.Sort(linkSetSorter);
 
             entity.ClearChildren();
 
-            foreach (ISceneEntity child in children)
+            foreach (ISceneChildEntity child in children)
             {
                 child.ResetEntityIDs();
                 entity.AddChild(child, child.LinkNum);

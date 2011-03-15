@@ -702,7 +702,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public int GetActiveScripts(ISceneEntity obj)
+        public int GetActiveScripts (IEntity obj)
         {
             int activeScripts = 0;
             if (obj is ScenePresence)
@@ -734,7 +734,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public int GetTotalScripts(ISceneEntity obj)
+        public int GetTotalScripts (IEntity obj)
         {
             int totalScripts = 0;
             if (obj is ScenePresence)

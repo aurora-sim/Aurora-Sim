@@ -2180,7 +2180,7 @@ namespace Aurora.BotManager
         {
         }
 
-        void IClientAPI.SendKillObject(ulong regionHandle, ISceneEntity[] localIDs)
+        void IClientAPI.SendKillObject (ulong regionHandle, IEntity[] localIDs)
         {
         }
 
@@ -2291,16 +2291,16 @@ namespace Aurora.BotManager
             
         }
 
-        void IClientAPI.SendAvatarDataImmediate(ISceneEntity avatar)
+        void IClientAPI.SendAvatarDataImmediate (IEntity avatar)
         {
             
         }
 
-        void IClientAPI.SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags)
+        void IClientAPI.SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags)
         {
         }
 
-        void IClientAPI.SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags, double priority)
+        void IClientAPI.SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags, double priority)
         {
         }
 
@@ -2549,7 +2549,7 @@ namespace Aurora.BotManager
             
         }
 
-        void IClientAPI.SendObjectPropertiesReply(List<ISceneEntity> part)
+        void IClientAPI.SendObjectPropertiesReply (List<IEntity> part)
         {
             
         }
@@ -2872,7 +2872,7 @@ namespace Aurora.BotManager
             
         }
 
-        void IClientAPI.StopFlying(ISceneEntity presence)
+        void IClientAPI.StopFlying (IEntity presence)
         {
             
         }

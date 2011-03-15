@@ -721,11 +721,11 @@ namespace OpenSim.Framework
 
     public class EntityUpdate
     {
-        public ISceneEntity Entity;
+        public IEntity Entity;
         public PrimUpdateFlags Flags;
         public int Version = 0;
 
-        public EntityUpdate(ISceneEntity entity, PrimUpdateFlags flags)
+        public EntityUpdate (IEntity entity, PrimUpdateFlags flags)
         {
             Entity = entity;
             Flags = flags;
@@ -1118,7 +1118,7 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="regionHandle"></param>
         /// <param name="localID"></param>
-        void SendKillObject(ulong regionHandle, ISceneEntity[] entities);
+        void SendKillObject (ulong regionHandle, IEntity[] entities);
         void SendKillObject(ulong regionHandle, uint[] entities);
 
         void SendAnimations(UUID[] animID, int[] seqs, UUID sourceAgentId, UUID[] objectIDs);
@@ -1185,9 +1185,9 @@ namespace OpenSim.Framework
 
         void SetChildAgentThrottle(byte[] throttle);
 
-        void SendAvatarDataImmediate(ISceneEntity avatar);
-        void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags);
-        void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags, double priority);
+        void SendAvatarDataImmediate (IEntity avatar);
+        void SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags);
+        void SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags, double priority);
         void FlushPrimUpdates();
         void QueueDelayedUpdate(PriorityQueueItem<EntityUpdate, double> it);
 
@@ -1347,7 +1347,7 @@ namespace OpenSim.Framework
                                             uint Category,
                                             UUID LastOwnerID, string ObjectName, string Description);
 
-        void SendObjectPropertiesReply(List<ISceneEntity> part);
+        void SendObjectPropertiesReply (List<IEntity> part);
 
         void SendAgentOffline(UUID[] agentIDs);
 
@@ -1455,7 +1455,7 @@ namespace OpenSim.Framework
 
         void SendTelehubInfo(Vector3 TelehubPos, Quaternion TelehubRot, List<Vector3> SpawnPoint, UUID ObjectID, string Name);
 
-        void StopFlying(ISceneEntity presence);
+        void StopFlying (IEntity presence);
 
         void Reset();
     }

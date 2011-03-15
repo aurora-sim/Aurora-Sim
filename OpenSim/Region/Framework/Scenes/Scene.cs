@@ -609,7 +609,7 @@ namespace OpenSim.Region.Framework.Scenes
                 delegate (IClientAPI client)
                 {
                     //We can safely ignore null reference exceptions.  It means the avatar is dead and cleaned up anyway
-                    try { client.SendKillObject (presence.Scene.RegionInfo.RegionHandle, new ISceneEntity[] { presence }); }
+                    try { client.SendKillObject (presence.Scene.RegionInfo.RegionHandle, new IEntity[] { presence }); }
                     catch (NullReferenceException) { }
                 });
 
@@ -670,7 +670,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public SceneObjectPart GetSceneObjectPart(uint localID)
         {
-            ISceneEntity entity;
+            ISceneChildEntity entity;
             m_sceneGraph.TryGetPart(localID, out entity);
             return entity as SceneObjectPart;
         }
@@ -682,7 +682,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public SceneObjectPart GetSceneObjectPart(UUID ObjectID)
         {
-            ISceneEntity entity;
+            ISceneChildEntity entity;
             m_sceneGraph.TryGetPart(ObjectID, out entity);
             return entity as SceneObjectPart;
         }

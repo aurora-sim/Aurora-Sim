@@ -141,11 +141,11 @@ namespace Aurora.Modules
         protected void SelectPrim(List<uint> primLocalIDs, IClientAPI remoteClient)
         {
             Scene scene = ((Scene)remoteClient.Scene);
-            List<ISceneEntity> EntitiesToUpdate = new List<ISceneEntity>();
+            List<IEntity> EntitiesToUpdate = new List<IEntity> ();
             SceneObjectPart prim = null;
             foreach (uint primLocalID in primLocalIDs)
             {
-                ISceneEntity entity = null;
+                ISceneChildEntity entity = null;
                 if (scene.SceneGraph.TryGetPart(primLocalID, out entity))
                 {
                     if (entity is SceneObjectPart)

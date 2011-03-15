@@ -67,8 +67,8 @@ namespace OpenSim.Region.Framework.Interfaces
 
         bool Disabled { get; set; }
 
-        int GetActiveScripts(ISceneEntity obj);
-        int GetTotalScripts(ISceneEntity obj);
+        int GetActiveScripts (IEntity obj);
+        int GetTotalScripts (IEntity obj);
         int GetActiveScripts();
         int GetScriptEPS();
         Dictionary<uint, float> GetTopScripts(UUID RegionID);

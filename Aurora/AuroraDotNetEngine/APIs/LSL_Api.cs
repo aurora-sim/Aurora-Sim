@@ -325,7 +325,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (linkType < 0 || m_host.ParentGroup == null)
                     return new List<SceneObjectPart>();
-                ISceneEntity target = m_host.ParentGroup.GetLinkNumPart(linkType);
+                IEntity target = m_host.ParentGroup.GetLinkNumPart (linkType);
                 if (target is SceneObjectPart)
                 {
                     if (target == null)
@@ -338,9 +338,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public List<ISceneEntity> GetLinkPartsAndEntities(int linkType)
+        public List<IEntity> GetLinkPartsAndEntities (int linkType)
         {
-            List<ISceneEntity> ret = new List<ISceneEntity>();
+            List<IEntity> ret = new List<IEntity> ();
             ret.Add(m_host);
 
             if (linkType == ScriptBaseClass.LINK_SET)
@@ -348,9 +348,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (m_host.ParentGroup != null)
                 {
                     List<SceneObjectPart> parts = new List<SceneObjectPart>(m_host.ParentGroup.ChildrenList);
-                    return parts.ConvertAll<ISceneEntity>(new Converter<SceneObjectPart, ISceneEntity>(delegate(SceneObjectPart part)
+                    return parts.ConvertAll<IEntity> (new Converter<SceneObjectPart, IEntity> (delegate (SceneObjectPart part)
                         {
-                            return (ISceneEntity)part;
+                            return (IEntity)part;
                         }));
                 }
                 return ret;
@@ -360,7 +360,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (m_host.ParentGroup != null)
                 {
-                    ret = new List<ISceneEntity>();
+                    ret = new List<IEntity> ();
                     ret.Add(m_host.ParentGroup.RootPart);
                     return ret;
                 }
@@ -370,11 +370,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (linkType == ScriptBaseClass.LINK_ALL_OTHERS)
             {
                 if (m_host.ParentGroup == null)
-                    return new List<ISceneEntity>();
+                    return new List<IEntity> ();
                 List<SceneObjectPart> sceneobjectparts = new List<SceneObjectPart>(m_host.ParentGroup.ChildrenList);
-                ret = sceneobjectparts.ConvertAll<ISceneEntity>(new Converter<SceneObjectPart, ISceneEntity>(delegate(SceneObjectPart part)
+                ret = sceneobjectparts.ConvertAll<IEntity> (new Converter<SceneObjectPart, IEntity> (delegate (SceneObjectPart part)
                         {
-                            return (ISceneEntity)part;
+                            return (IEntity)part;
                         }));
                 if (ret.Contains(m_host))
                     ret.Remove(m_host);
@@ -384,11 +384,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (linkType == ScriptBaseClass.LINK_ALL_CHILDREN)
             {
                 if (m_host.ParentGroup == null)
-                    return new List<ISceneEntity>();
+                    return new List<IEntity> ();
                 List<SceneObjectPart> children = new List<SceneObjectPart>(m_host.ParentGroup.ChildrenList);
-                ret = children.ConvertAll<ISceneEntity>(new Converter<SceneObjectPart, ISceneEntity>(delegate(SceneObjectPart part)
+                ret = children.ConvertAll<IEntity> (new Converter<SceneObjectPart, IEntity> (delegate (SceneObjectPart part)
                 {
-                    return (ISceneEntity)part;
+                    return (IEntity)part;
                 }));
                 if (ret.Contains(m_host.ParentGroup.RootPart))
                     ret.Remove(m_host.ParentGroup.RootPart);
@@ -403,11 +403,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             else
             {
                 if (linkType < 0 || m_host.ParentGroup == null)
-                    return new List<ISceneEntity>();
-                ISceneEntity target = m_host.ParentGroup.GetLinkNumPart(linkType);
+                    return new List<IEntity> ();
+                IEntity target = m_host.ParentGroup.GetLinkNumPart (linkType);
                 if (target == null)
-                    return new List<ISceneEntity>();
-                ret = new List<ISceneEntity>();
+                    return new List<IEntity> ();
+                ret = new List<IEntity> ();
                 ret.Add(target);
 
                 return ret;
@@ -4552,31 +4552,31 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if(linknum == ScriptBaseClass.LINK_ROOT)
             {
             }
-            else if(linknum == ScriptBaseClass.LINK_SET ||
+            else if (linknum == ScriptBaseClass.LINK_SET ||
                 ScriptBaseClass.LINK_ALL_OTHERS ||
                 ScriptBaseClass.LINK_ALL_CHILDREN ||
                 ScriptBaseClass.LINK_THIS)
             {
-                    foreach (SceneObjectPart part in parentPrim.ChildrenList)
+                foreach (SceneObjectPart part in parentPrim.ChildrenList)
+                {
+                    if (part.UUID != m_host.UUID)
                     {
-                        if (part.UUID != m_host.UUID)
-                        {
-                            childPrim = part;
-                            break;
-                        }
+                        childPrim = part;
+                        break;
                     }
+                }
             }
             else
             {
-                    ISceneEntity target = m_host.ParentGroup.GetLinkNumPart(linknum);
-                    if (target is SceneObjectPart)
-                    {
-                        childPrim = target as SceneObjectPart;
-                    }
-                    else
-                        return;
-                    if (childPrim.UUID == m_host.UUID)
-                        childPrim = null;
+                IEntity target = m_host.ParentGroup.GetLinkNumPart (linknum);
+                if (target is SceneObjectPart)
+                {
+                    childPrim = target as SceneObjectPart;
+                }
+                else
+                    return;
+                if (childPrim.UUID == m_host.UUID)
+                    childPrim = null;
             }
 
             if (linknum == ScriptBaseClass.LINK_ROOT)
@@ -4639,8 +4639,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llGetLinkKey(int linknum)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            ISceneEntity target = m_host.ParentGroup.GetLinkNumPart(linknum);
+
+            IEntity target = m_host.ParentGroup.GetLinkNumPart (linknum);
             if (target != null)
             {
                 return target.UUID.ToString();
@@ -4696,15 +4696,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     return m_host.Name;
                 else
                 {
-                    ISceneEntity entity = m_host.ParentGroup.GetLinkNumPart(linknum);
+                    IEntity entity = m_host.ParentGroup.GetLinkNumPart (linknum);
                     if (entity != null)
-                        return ((ScenePresence)entity).Name;
+                        return entity.Name;
                     else
                         return UUID.Zero.ToString();
                 }
             }
             // Link set
-            ISceneEntity part = null;
+            IEntity part = null;
             if (m_host.LinkNum == 1) // this is the Root prim
             {
                 if (linknum < 0)
@@ -8076,11 +8076,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetLinkPrimitiveParams(int linknumber, LSL_List rules)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
 
-            List<ISceneEntity> parts = GetLinkPartsAndEntities(linknumber);
 
-            foreach (ISceneEntity part in parts)
+            List<IEntity> parts = GetLinkPartsAndEntities (linknumber);
+
+            foreach (IEntity part in parts)
                 SetPrimParams(part, rules);
         }
 
@@ -8103,7 +8103,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return new LSL_Integer(faces);
         }
 
-        protected void SetPrimParams(ISceneEntity part, LSL_List rules)
+        protected void SetPrimParams (IEntity part, LSL_List rules)
         {
             int idx = 0;
 

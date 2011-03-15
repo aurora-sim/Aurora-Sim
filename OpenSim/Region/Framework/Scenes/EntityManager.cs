@@ -307,7 +307,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public bool TryGetChildPrim(uint childkey, out ISceneEntity child)
+        public bool TryGetChildPrim (uint childkey, out ISceneChildEntity child)
         {
             lock (m_lock)
             {
@@ -325,7 +325,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        internal bool TryGetChildPrim(UUID objectID, out ISceneEntity childPrim)
+        internal bool TryGetChildPrim (UUID objectID, out ISceneChildEntity childPrim)
         {
             lock (m_lock)
             {

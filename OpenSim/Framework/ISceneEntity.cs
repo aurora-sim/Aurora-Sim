@@ -29,14 +29,85 @@ using OpenMetaverse;
 
 namespace OpenSim.Framework
 {
-    public interface ISceneEntity
+    public interface IScenePresence : IEntity
+    {
+        /// <summary>
+        /// UUID of the client
+        /// </summary>
+        UUID UUID { get; set; }
+
+        /// <summary>
+        /// First name of the client
+        /// </summary>
+        string Firstname { get; }
+
+        /// <summary>
+        /// Last name of the client
+        /// </summary>
+        string Lastname { get; }
+
+        /// <summary>
+        /// The actual client base (it sends and recieves packets)
+        /// </summary>
+        IClientAPI ControllingClient { get; }
+
+        /// <summary>
+        /// Is this client really in this region?
+        /// </summary>
+        bool IsChildAgent { get; set; }
+
+        /// <summary>
+        /// The position of this client
+        /// </summary>
+        Vector3 AbsolutePosition { get; set; }
+
+        /// <summary>
+        /// Where this client is looking
+        /// </summary>
+        Vector3 Lookat { get; }
+    }
+
+    public interface ISceneObject : ISceneEntity
+    {
+        /// <summary>
+        /// Returns an XML based document that represents this object
+        /// </summary>
+        /// <returns></returns>
+        string ToXml2 ();
+
+        /// <summary>
+        /// Adds the FromInventoryItemID to the xml
+        /// </summary>
+        /// <returns></returns>
+        string ExtraToXmlString ();
+        void ExtraFromXmlString (string xmlstr);
+
+        /// <summary>
+        /// State snapshots (for script state transfer)
+        /// </summary>
+        /// <returns></returns>
+        string GetStateSnapshot ();
+        void SetState (string xmlstr);
+    }
+
+    public interface ISceneEntity : IEntity
+    {
+        Vector3 GroupScale ();
+        Quaternion GroupRotation { get; }
+    }
+
+    public interface IEntity
     {
         UUID UUID { get; set; }
         uint LocalId { get; set; }
         int LinkNum { get; set; }
         Vector3 AbsolutePosition { get; }
-        void ResetEntityIDs();
-        Vector3 GroupScale();
-        Quaternion GroupRotation { get; }
+        void ResetEntityIDs ();
+        string Name { get; }
+    }
+
+    public interface ISceneChildEntity : IEntity
+    {
+        ISceneEntity ParentEntity { get; }
     }
 }

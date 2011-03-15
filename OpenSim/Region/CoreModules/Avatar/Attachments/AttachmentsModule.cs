@@ -718,7 +718,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         {
             m_scene.ForEachClient(delegate(IClientAPI client)
             {
-                client.SendKillObject(m_scene.RegionInfo.RegionHandle, new ISceneEntity[] { rootPart });
+                client.SendKillObject (m_scene.RegionInfo.RegionHandle, new IEntity[] { rootPart });
             });
         }
 

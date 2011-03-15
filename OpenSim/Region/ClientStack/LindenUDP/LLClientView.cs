@@ -1514,7 +1514,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(pc, ThrottleOutPacketType.OutBand);
         }
 
-        public void SendKillObject(ulong regionHandle, ISceneEntity[] entities)
+        public void SendKillObject(ulong regionHandle, IEntity[] entities)
         {
             if (entities.Length == 0)
                 return; //........... why!
@@ -1525,8 +1525,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             kill.ObjectData = new KillObjectPacket.ObjectDataBlock[entities.Length];
             int i = 0;
             bool brokenUpdate = false;
-            
-            foreach (ISceneEntity entity in entities)
+
+            foreach (IEntity entity in entities)
             {
                 if (entity == null)
                 {
@@ -3492,7 +3492,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>
         /// Send an ObjectUpdate packet with information about an avatar
         /// </summary>
-        public void SendAvatarDataImmediate(ISceneEntity avatar)
+        public void SendAvatarDataImmediate (IEntity avatar)
         {
             ScenePresence presence = avatar as ScenePresence;
             if (presence == null)
@@ -3561,7 +3561,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// Generate one of the object update packets based on PrimUpdateFlags
         /// and broadcast the packet to clients
         /// </summary>
-        public void intSendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags)
+        public void intSendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags)
             {
 
             if (entity is ScenePresence)
@@ -3802,7 +3802,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
             }
 
-        public void doSendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags)
+        public void doSendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags)
 
             {
             if (entity is ScenePresence)
@@ -3819,7 +3819,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         }
 
 
-        public void SendAvatarUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags)
+        public void SendAvatarUpdate (IEntity entity, PrimUpdateFlags updateFlags)
             {
 
             // this needs to be very optimized
@@ -4055,12 +4055,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
             }
 
-        public void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags,double prio)
+        public void SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags, double prio)
             {
             SendPrimUpdate(entity, updateFlags);
             }
 
-        public void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags)
+        public void SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags)
             {
 
             if(entity is ScenePresence)
@@ -4082,7 +4082,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             object o;
             while (m_UpdatesQueue.Dequeue(out o))
                 {
-                ISceneEntity entity = (ISceneEntity)((object[])o)[0];
+                    IEntity entity = (IEntity)((object[])o)[0];
                 PrimUpdateFlags updateFlags = (PrimUpdateFlags)((object[])o)[1];
                 if (entity is ScenePresence)
                     SendAvatarUpdate(entity, updateFlags);
@@ -4522,13 +4522,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(objPropFamilyPack, ThrottleOutPacketType.Task);
         }
 
-        public void SendObjectPropertiesReply(List<ISceneEntity> parts)
+        public void SendObjectPropertiesReply (List<IEntity> parts)
         {
             //ObjectPropertiesPacket proper = (ObjectPropertiesPacket)PacketPool.Instance.GetPacket(PacketType.ObjectProperties);
             // TODO: don't create new blocks if recycling an old packet
 
             List<ObjectPropertiesPacket.ObjectDataBlock> blocks = new List<ObjectPropertiesPacket.ObjectDataBlock>();
-            foreach (ISceneEntity entity in parts)
+            foreach (IEntity entity in parts)
             {
                 if (!(entity is SceneObjectPart))
                     return;
@@ -4982,7 +4982,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         #region Helper Methods
 
-        protected ImprovedTerseObjectUpdatePacket.ObjectDataBlock CreateImprovedTerseBlock(ISceneEntity entity, bool sendTexture)
+        protected ImprovedTerseObjectUpdatePacket.ObjectDataBlock CreateImprovedTerseBlock (IEntity entity, bool sendTexture)
         {
             #region ScenePresence/SOP Handling
 
@@ -12196,7 +12196,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     {
                         // It's a ghost! tell the client to delete it from view.
                         simClient.SendKillObject(Scene.RegionInfo.RegionHandle,
-                                                 new ISceneEntity[]{part});
+                                                 new IEntity[] { part });
                     }
                     else
                     {
@@ -12870,7 +12870,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(dialog, ThrottleOutPacketType.AvatarInfo);
         }
 
-        public void StopFlying(ISceneEntity p)
+        public void StopFlying (IEntity p)
         {
             if (p is ScenePresence)
             {

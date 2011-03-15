@@ -103,7 +103,7 @@ namespace OpenSim.Region.Framework.Scenes
     /// A scene object group is conceptually an object in the scene.  The object is constituted of SceneObjectParts
     /// (often known as prims), one of which is considered the root part.
     /// </summary>
-    public partial class SceneObjectGroup : EntityBase, ISceneObject
+    public partial class SceneObjectGroup : EntityBase, ISceneObject //(ISceneObject implements ISceneEntity and IEntity)
     {
         public DateTime timeFirstChanged;
         public DateTime timeLastChanged;
@@ -336,9 +336,9 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_partsList; }
         }
 
-        public override List<ISceneEntity> ChildrenEntities()
+        public override List<ISceneChildEntity> ChildrenEntities ()
         {
-            List<ISceneEntity> entities = new List<ISceneEntity>();
+            List<ISceneChildEntity> entities = new List<ISceneChildEntity> ();
             lock (m_partsLock)
             {
                 foreach (SceneObjectPart part in m_partsList)
@@ -621,7 +621,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="child"></param>
         /// <returns></returns>
-        public override bool AddChild(ISceneEntity child, int linkNum)
+        public override bool AddChild (ISceneChildEntity child, int linkNum)
         {
             lock (m_partsLock)
             {
@@ -662,7 +662,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="child"></param>
         /// <returns></returns>
-        public override bool LinkChild(ISceneEntity child)
+        public override bool LinkChild (ISceneChildEntity child)
         {
             lock (m_partsLock)
             {
@@ -696,7 +696,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="child"></param>
         /// <returns></returns>
-        public override bool RemoveChild(ISceneEntity child)
+        public override bool RemoveChild (ISceneChildEntity child)
         {
             lock (m_partsLock)
             {
@@ -1961,7 +1961,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="linknum"></param>
         /// <returns>null if no child part with that linknum or child part</returns>
-        public ISceneEntity GetLinkNumPart(int linknum)
+        public IEntity GetLinkNumPart (int linknum)
         {
             if (linknum <= m_parts.Count)
             {
@@ -2001,7 +2001,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="LocalID"></param>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public override bool GetChildPrim(uint LocalID, out ISceneEntity entity)
+        public override bool GetChildPrim (uint LocalID, out ISceneChildEntity entity)
         {
             entity = GetChildPart(LocalID);
             return entity != null;
@@ -2013,7 +2013,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="UUID"></param>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public override bool GetChildPrim(UUID UUID, out ISceneEntity entity)
+        public override bool GetChildPrim (UUID UUID, out ISceneChildEntity entity)
         {
             entity = GetChildPart(UUID);
             return entity != null;
@@ -3503,13 +3503,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         #region ISceneObject
-        
-        public virtual ISceneObject CloneForNewScene(IScene scene)
-        {
-            SceneObjectGroup sog = (SceneObjectGroup)Copy(true);
-            sog.m_isDeleted = false;
-            return sog;
-        }
 
         public virtual string ToXml2()
         {

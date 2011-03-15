@@ -163,9 +163,9 @@ namespace OpenSim.Region.Framework.Scenes
             return (EntityBase) MemberwiseClone();
         }
 
-        public virtual List<ISceneEntity> ChildrenEntities()
+        public virtual List<ISceneChildEntity> ChildrenEntities ()
         {
-            return new List<ISceneEntity>();
+            return new List<ISceneChildEntity> ();
         }
 
         public virtual void ResetEntityIDs()
@@ -184,28 +184,28 @@ namespace OpenSim.Region.Framework.Scenes
         {
         }
 
-        public virtual bool AddChild(ISceneEntity child, int linkNum)
+        public virtual bool AddChild (ISceneChildEntity child, int linkNum)
         {
             return false;
         }
 
-        public virtual bool LinkChild(ISceneEntity child)
+        public virtual bool LinkChild (ISceneChildEntity child)
         {
             return false;
         }
 
-        public virtual bool RemoveChild(ISceneEntity child)
+        public virtual bool RemoveChild (ISceneChildEntity child)
         {
             return false;
         }
 
-        public virtual bool GetChildPrim(uint LocalID, out ISceneEntity entity)
+        public virtual bool GetChildPrim (uint LocalID, out ISceneChildEntity entity)
         {
             entity = null;
             return false;
         }
 
-        public virtual bool GetChildPrim(UUID UUID, out ISceneEntity entity)
+        public virtual bool GetChildPrim (UUID UUID, out ISceneChildEntity entity)
         {
             entity = null;
             return false;

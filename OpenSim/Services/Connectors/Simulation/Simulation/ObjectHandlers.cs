@@ -182,7 +182,7 @@ namespace OpenSim.Services
                 {
                     try
                     {
-                        sog.SetState(stateXmlStr, s);
+                        sog.SetState(stateXmlStr);
                     }
                     catch (Exception ex)
                     {

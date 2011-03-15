@@ -330,17 +330,12 @@ namespace OpenSim.Region.Framework.Scenes
             return xmldoc.InnerXml;
         }
 
-        public void SetState(string objXMLData, IScene ins)
+        public void SetState(string objXMLData)
         {
-            if (!(ins is Scene))
-                return;
-
-            Scene s = (Scene)ins;
-
             if (objXMLData == String.Empty)
                 return;
 
-            IScriptModule scriptModule = s.RequestModuleInterface<IScriptModule>();
+            IScriptModule scriptModule = Scene.RequestModuleInterface<IScriptModule> ();
             
             if (scriptModule == null)
                 return;

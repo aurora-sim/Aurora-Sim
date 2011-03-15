@@ -188,26 +188,17 @@ namespace OpenSim.Region.Framework.Scenes
                 // Use group position for child prims
                 Vector3 entityPos;
                 float oobSQ;
-                if (entity is SceneObjectPart)
-                    {
-                    // Can't use Scene.GetGroupByPrim() here, since the entity may have been delete from the scene
-                    // before its scheduled update was triggered
-                    //entityPos = m_scene.GetGroupByPrim(entity.LocalId).AbsolutePosition;
-                    SceneObjectPart p = (SceneObjectPart)entity;
-                    entityPos = p.ParentGroup.AbsolutePosition + p.OOBoffset * p.ParentGroup.GroupRotation;
-                    oobSQ = p.ParentGroup.BSphereRadiusSQ;
-                    }
-                else if (entity is SceneObjectGroup)
-                    {
+                if (entity is SceneObjectGroup)
+                {
                     SceneObjectGroup p = (SceneObjectGroup)entity;
                     entityPos = p.AbsolutePosition + p.OOBoffset * p.GroupRotation;
                     oobSQ = p.BSphereRadiusSQ;
-                    }
+                }
                 else
-                    {
+                {
                     entityPos = entity.AbsolutePosition;
                     oobSQ = 0;
-                    }
+                }
 
                 float distsq = Vector3.DistanceSquared(presencePos, entityPos);
                 distsq -= oobSQ;
@@ -240,18 +231,7 @@ namespace OpenSim.Region.Framework.Scenes
                     presence.CameraPosition;
 
                 // Use group position for child prims
-                Vector3 entityPos;
-                if (entity is SceneObjectPart)
-                {
-                    // Can't use Scene.GetGroupByPrim() here, since the entity may have been delete from the scene
-                    // before its scheduled update was triggered
-                    //entityPos = m_scene.GetGroupByPrim(entity.LocalId).AbsolutePosition;
-                    entityPos = ((SceneObjectPart)entity).ParentGroup.AbsolutePosition;
-                }
-                else
-                {
-                    entityPos = entity.AbsolutePosition;
-                }
+                Vector3 entityPos = entity.AbsolutePosition;
 
                 return Vector3.DistanceSquared(presencePos, entityPos);
             }
@@ -322,16 +302,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Use group position for child prims
             Vector3 entityPos = entity.AbsolutePosition;
-            if (entity is SceneObjectPart)
-            {
-                SceneObjectGroup group = (entity as SceneObjectPart).ParentGroup;
-                if (group != null)
-                    entityPos = group.AbsolutePosition;
-                else
-                    entityPos = entity.AbsolutePosition;
-            }
-            else
-                entityPos = entity.AbsolutePosition;
 
             ScenePresence presence = m_scene.GetScenePresence(client.AgentId);
 

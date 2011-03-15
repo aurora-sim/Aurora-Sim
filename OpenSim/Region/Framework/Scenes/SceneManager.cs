@@ -853,9 +853,10 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 RegionInfo regionInfo = presence.Scene.RegionInfo;
 
-                if (presence.Firstname.ToLower().StartsWith(cmdparams[2].ToLower()) && presence.Lastname.ToLower().StartsWith(cmdparams[3].ToLower()))
+                string param = string.Join(" ", cmdparams, 2, cmdparams.Length - 3);
+                if (presence.Name.Contains (cmdparams[2].ToLower ()))
                 {
-                    m_log.Info (String.Format ("Kicking user: {0,-16}{1,-16}{2,-37} in region: {3,-16}", presence.Firstname, presence.Lastname, presence.UUID, regionInfo.RegionName));
+                    m_log.Info (String.Format ("Kicking user: {0,-16}{1,-37} in region: {2,-16}", presence.Name, presence.UUID, regionInfo.RegionName));
 
                     // kick client...
                     if (alert != null)

@@ -140,7 +140,10 @@ namespace OpenSim.Region.CoreModules
         {
             m_scene.ForEachScenePresence(delegate(ScenePresence avatar)
             {
-                avatar.ControllingClient.SendKillObject(m_scene.RegionInfo.RegionHandle, objectGroups.ToArray());
+                foreach(SceneObjectGroup grp in objectGroups)
+                {
+                    avatar.ControllingClient.SendKillObject(m_scene.RegionInfo.RegionHandle, grp.ChildrenList.ToArray());
+                }
             });
         }
 

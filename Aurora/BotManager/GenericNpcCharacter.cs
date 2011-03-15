@@ -714,7 +714,7 @@ namespace Aurora.BotManager
         {
         }
 
-        public void SendObjectPropertiesReply(List<ISceneEntity> part)
+        public void SendObjectPropertiesReply (List<IEntity> part)
         {
         }
 
@@ -1156,7 +1156,7 @@ namespace Aurora.BotManager
 
 #pragma warning restore 67
 
-        public void SendKillObject(ulong regionHandle, ISceneEntity[] localIDs)
+        public void SendKillObject (ulong regionHandle, IEntity[] localIDs)
         {
         }
 
@@ -1172,15 +1172,15 @@ namespace Aurora.BotManager
         {
         }
 
-        public void SendAvatarDataImmediate(ISceneEntity avatar)
+        public void SendAvatarDataImmediate (IEntity avatar)
         {
         }
 
-        public void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags)
+        public void SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags)
         {
         }
 
-        public void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags, double priority)
+        public void SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags, double priority)
         {
         }
 
@@ -1232,7 +1232,7 @@ namespace Aurora.BotManager
         {
         }
 
-        public void StopFlying(ISceneEntity presence)
+        public void StopFlying (IEntity presence)
         {
         }
 

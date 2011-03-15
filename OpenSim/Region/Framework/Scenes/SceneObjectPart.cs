@@ -125,7 +125,7 @@ namespace OpenSim.Region.Framework.Scenes
 
     #endregion Enumerations
 
-    public class SceneObjectPart : ISceneEntity
+    public class SceneObjectPart : ISceneChildEntity
     {
         /// <value>
         /// Denote all sides of the prim
@@ -1650,6 +1650,11 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_parentGroup; }
         }
 
+        public ISceneEntity ParentEntity
+        {
+            get { return m_parentGroup; }
+        }
+
         public scriptEvents ScriptEvents
         {
             get { return AggregateScriptEvents; }
@@ -2765,7 +2770,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void GetProperties(IClientAPI client)
         {
-            client.SendObjectPropertiesReply(new List<ISceneEntity>(new ISceneEntity []{ this }));
+            client.SendObjectPropertiesReply (new List<IEntity> (new IEntity[] { this }));
         }
 
         public UUID GetRootPartUUID()

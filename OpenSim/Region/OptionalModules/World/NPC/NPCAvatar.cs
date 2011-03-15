@@ -526,7 +526,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
 
         }
 
-        public virtual void SendKillObject(ulong regionHandle, ISceneEntity[] localID)
+        public virtual void SendKillObject (ulong regionHandle, IEntity[] localID)
         {
         }
 
@@ -660,15 +660,15 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
-        public void SendAvatarDataImmediate(ISceneEntity avatar)
+        public void SendAvatarDataImmediate (IEntity avatar)
         {
         }
 
-        public void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags)
+        public void SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags)
         {
         }
 
-        public void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags, double priority)
+        public void SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags, double priority)
         {
         }
 
@@ -810,7 +810,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
-        public void SendObjectPropertiesReply(List<ISceneEntity> part)
+        public void SendObjectPropertiesReply (List<IEntity> part)
         {
         }
 
@@ -1143,7 +1143,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
-		public void StopFlying(ISceneEntity presence)
+        public void StopFlying (IEntity presence)
         {
         }
 

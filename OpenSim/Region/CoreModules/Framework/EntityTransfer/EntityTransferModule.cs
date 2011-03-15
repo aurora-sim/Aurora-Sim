@@ -320,15 +320,15 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             sp.MakeChildAgent();
         }
 
-        protected void KillEntity(Scene scene, ISceneEntity entity)
+        protected void KillEntity (Scene scene, IEntity entity)
         {
             scene.ForEachClient(delegate(IClientAPI client)
             {
-                client.SendKillObject(scene.RegionInfo.RegionHandle, new ISceneEntity[] { entity });
+                client.SendKillObject (scene.RegionInfo.RegionHandle, new IEntity[] { entity });
             });
         }
 
-        protected void KillEntities(Scene scene, ISceneEntity[] grp)
+        protected void KillEntities (Scene scene, IEntity[] grp)
         {
             scene.ForEachClient(delegate(IClientAPI client)
             {
