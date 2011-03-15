@@ -164,19 +164,22 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!HasGroupChanged) //First change then
                         timeFirstChanged = DateTime.Now;
 
-                    IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
-                    if (backup != null)
+                    if(m_scene != null)
                     {
-                        if (m_scene != null && m_isLoaded && !backup.LoadingPrims) //Do NOT add to backup while still loading prims
+                        IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
+                        if (backup != null)
                         {
-                            backup.AddPrimBackupTaint(this);
+                            if (m_isLoaded && !backup.LoadingPrims) //Do NOT add to backup while still loading prims
+                            {
+                                backup.AddPrimBackupTaint(this);
+                            }
+                            else if (m_scene == null)
+                                m_log.Warn("[SOG]: Scene is null in HasGroupChanged!");
+                            //else if (!m_isLoaded)
+                            //    m_log.Info("[SOG]: Not loaded in HasGroupChanged!");
+                            //else if (!m_scene.LoadingPrims)
+                            //    m_log.Info("[SOG]: Not scene loaded in HasGroupChanged!");
                         }
-                        else if (m_scene == null)
-                            m_log.Warn("[SOG]: Scene is null in HasGroupChanged!");
-                        //else if (!m_isLoaded)
-                        //    m_log.Info("[SOG]: Not loaded in HasGroupChanged!");
-                        //else if (!m_scene.LoadingPrims)
-                        //    m_log.Info("[SOG]: Not scene loaded in HasGroupChanged!");
                     }
                 }
                 m_hasGroupChanged = value;
