@@ -122,7 +122,7 @@ namespace Aurora.Modules
         protected void RequestPrim(uint primLocalID, byte cacheMissType, IClientAPI remoteClient)
         {
             Scene scene = ((Scene)remoteClient.Scene);
-            EntityBase entity;
+            IEntity entity;
             if (scene.Entities.TryGetChildPrimParent(primLocalID, out entity))
             {
                 if (entity is SceneObjectGroup)
@@ -165,7 +165,7 @@ namespace Aurora.Modules
                         }
                     }
                 }
-                EntityBase entitybase;
+                IEntity entitybase;
                 //Check for avies! They arn't prims!
                 if (scene.SceneGraph.TryGetEntity(primLocalID, out entitybase))
                 {

@@ -497,8 +497,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                 m_ParcelCounts[landData.GlobalID] = new ParcelCounts();
             }
 
-            EntityBase[] objlist = m_Scene.Entities.GetEntities();
-            foreach (EntityBase obj in objlist)
+            ISceneEntity[] objlist = m_Scene.Entities.GetEntities ();
+            foreach (ISceneEntity obj in objlist)
             {
                 try
                 {

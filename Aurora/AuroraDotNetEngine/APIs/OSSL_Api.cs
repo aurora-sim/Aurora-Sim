@@ -396,28 +396,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 dm.SendGeneralAlert(msg);
         }
 
-        public void osSetRot(UUID target, Quaternion rotation)
+        public void osSetRot (UUID target, Quaternion rotation)
         {
             // This function has no security. It can be used to destroy
             // arbitrary builds the user would normally have no rights to
             //
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osSetRot", m_host, "OSSL");
+            ScriptProtection.CheckThreatLevel (ThreatLevel.VeryHigh, "osSetRot", m_host, "OSSL");
 
-            
-            if (World.Entities.ContainsKey(target))
+
+            IEntity entity;
+            if (World.Entities.TryGetValue (target, out entity))
             {
-                EntityBase entity;
-                if (World.Entities.TryGetValue(target, out entity))
-                {
-                    if (entity is SceneObjectGroup)
-                        ((SceneObjectGroup)entity).Rotation = rotation;
-                    else if (entity is ScenePresence)
-                        ((ScenePresence)entity).Rotation = rotation;
-                }
+                if (entity is SceneObjectGroup)
+                    ((SceneObjectGroup)entity).Rotation = rotation;
+                else if (entity is ScenePresence)
+                    ((ScenePresence)entity).Rotation = rotation;
             }
             else
             {
-                OSSLError("osSetRot: Invalid target");
+                OSSLError ("osSetRot: Invalid target");
             }
         }
 
@@ -758,10 +755,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             UUID avatarID = (UUID)agent;
 
-            
-            if (World.Entities.ContainsKey((UUID)agent) && World.Entities[avatarID] is ScenePresence)
+            ScenePresence target;
+            if (World.TryGetScenePresence (avatarID, out target))
             {
-                ScenePresence target = (ScenePresence)World.Entities[avatarID];
                 EndPoint ep = target.ControllingClient.GetClientEP();
                 if (ep is IPEndPoint)
                 {
@@ -796,10 +792,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             UUID avatarID = (UUID)avatar;
 
-            
-            if (World.Entities.ContainsKey((UUID)avatar) && World.Entities[avatarID] is ScenePresence)
+
+            ScenePresence target;
+            if (World.TryGetScenePresence (avatarID, out target))
             {
-                ScenePresence target = (ScenePresence)World.Entities[avatarID];
                 if (target != null)
                 {
                     UUID animID=UUID.Zero;
@@ -829,10 +825,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             UUID avatarID = (UUID)avatar;
 
-            
-            if (World.Entities.ContainsKey(avatarID) && World.Entities[avatarID] is ScenePresence)
+
+            ScenePresence target;
+            if (World.TryGetScenePresence (avatarID, out target))
             {
-                ScenePresence target = (ScenePresence)World.Entities[avatarID];
                 if (target != null)
                 {
                     UUID animID=UUID.Zero;

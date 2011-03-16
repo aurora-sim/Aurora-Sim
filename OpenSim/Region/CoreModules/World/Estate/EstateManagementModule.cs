@@ -691,16 +691,13 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 {
                     m_log.Info("[SCENEDEBUG]: Starting all Scripts in Scene");
 
-                    EntityBase[] entities = m_scene.Entities.GetEntities();
-                    foreach (EntityBase ent in entities)
+                    ISceneEntity[] entities = m_scene.Entities.GetEntities ();
+                    foreach (ISceneEntity ent in entities)
                     {
                         if (ent is SceneObjectGroup)
                         {
-                            if (ent is SceneObjectGroup)
-                            {
-                                ((SceneObjectGroup)ent).CreateScriptInstances(0, false, 0, UUID.Zero);
-                                ((SceneObjectGroup)ent).ResumeScripts();
-                            }
+                            ((SceneObjectGroup)ent).CreateScriptInstances (0, false, 0, UUID.Zero);
+                            ((SceneObjectGroup)ent).ResumeScripts ();
                         }
                     }
                 }

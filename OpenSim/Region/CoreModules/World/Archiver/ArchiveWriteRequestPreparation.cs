@@ -102,7 +102,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         {
             Dictionary<UUID, AssetType> assetUuids = new Dictionary<UUID, AssetType>();
 
-            EntityBase[] entities = m_scene.Entities.GetEntities();
+            ISceneEntity[] entities = m_scene.Entities.GetEntities ();
             List<SceneObjectGroup> sceneObjects = new List<SceneObjectGroup>();
 
             /*
@@ -118,7 +118,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             // Filter entities so that we only have scene objects.
             // FIXME: Would be nicer to have this as a proper list in SceneGraph, since lots of methods
             // end up having to do this
-            foreach (EntityBase entity in entities)
+            foreach (ISceneEntity entity in entities)
             {
                 if (entity is SceneObjectGroup)
                 {

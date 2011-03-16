@@ -39,15 +39,15 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
     internal class IObjEnum : System.MarshalByRefObject, IEnumerator<IObject>
     {
         private readonly Scene m_scene;
-        private readonly IEnumerator<EntityBase> m_sogEnum;
+        private readonly IEnumerator<ISceneEntity> m_sogEnum;
         private readonly ISecurityCredential m_security;
-        private readonly List<EntityBase> m_entities;
+        private readonly List<ISceneEntity> m_entities;
 
         public IObjEnum(Scene scene, ISecurityCredential security)
         {
             m_scene = scene;
             m_security = security;
-            m_entities = new List<EntityBase>(m_scene.Entities.GetEntities());
+            m_entities = new List<ISceneEntity> (m_scene.Entities.GetEntities ());
             m_sogEnum = m_entities.GetEnumerator();
         }
 
@@ -156,7 +156,8 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
 
         public bool Contains(IObject item)
         {
-            return m_scene.Entities.ContainsKey(item.GlobalID);
+            OpenSim.Framework.IEntity ent;
+            return m_scene.Entities.TryGetValue(item.GlobalID, out ent);
         }
 
         public void CopyTo(IObject[] array, int arrayIndex)

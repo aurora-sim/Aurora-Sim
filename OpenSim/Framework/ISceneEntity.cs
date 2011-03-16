@@ -33,11 +33,6 @@ namespace OpenSim.Framework
     public interface IScenePresence : IEntity
     {
         /// <summary>
-        /// UUID of the client
-        /// </summary>
-        UUID UUID { get; set; }
-
-        /// <summary>
         /// First name of the client
         /// </summary>
         string Firstname { get; }
@@ -56,11 +51,6 @@ namespace OpenSim.Framework
         /// Is this client really in this region?
         /// </summary>
         bool IsChildAgent { get; set; }
-
-        /// <summary>
-        /// The position of this client
-        /// </summary>
-        Vector3 AbsolutePosition { get; set; }
 
         /// <summary>
         /// Where this client is looking
@@ -93,6 +83,7 @@ namespace OpenSim.Framework
 
     public interface ISceneEntity : IEntity
     {
+        bool IsDeleted { get; set; }
         Vector3 GroupScale ();
         Quaternion GroupRotation { get; }
         List<ISceneChildEntity> ChildrenEntities ();
@@ -106,6 +97,12 @@ namespace OpenSim.Framework
         void ClearUndoState ();
 
         void AttachToScene (IScene m_parentScene);
+
+        ISceneEntity Copy (bool copyPhysicsRepresentation);
+
+        void ForcePersistence ();
+
+        void ApplyPhysics (bool allowPhysicalPrims);
     }
 
     public interface IEntity
@@ -113,7 +110,8 @@ namespace OpenSim.Framework
         UUID UUID { get; set; }
         uint LocalId { get; set; }
         int LinkNum { get; set; }
-        Vector3 AbsolutePosition { get; }
+        Vector3 AbsolutePosition { get; set; }
+        Vector3 Velocity { get; set; }
         void ResetEntityIDs ();
         string Name { get; }
     }

@@ -1643,6 +1643,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return GroupPosition;
 
                 return GetWorldPosition(); }
+            set { }
         }
 
         public SceneObjectGroup ParentGroup

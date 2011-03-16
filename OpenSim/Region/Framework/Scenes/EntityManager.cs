@@ -46,7 +46,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public int Count
         {
-            get { return m_entities.Count; }
+            get { return m_objectEntities.Count + m_presenceEntities.Count; }
         }
 
         public void Add (IEntity entity)
@@ -85,7 +85,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             lock (m_lock)
             {
-                m_entities.Clear();
+                m_objectEntities.Clear ();
+                m_presenceEntities.Clear ();
                 m_child_2_parent_entities.Clear();
             }
         }
@@ -126,51 +127,56 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public EntityBase[] GetAllByType<T>()
+        public IScenePresence[] GetPresences ()
         {
-            List<EntityBase> tmp = new List<EntityBase>();
+            lock (m_presenceEntities)
+            {
+                return new List<IScenePresence> (m_presenceEntities.Values).ToArray ();
+            }
+        }
 
-            m_entities.ForEach(
-                delegate(EntityBase entity)
+        public ISceneEntity[] GetEntities ()
+        {
+            lock (m_objectEntities)
+            {
+                List<ISceneEntity> tmp = new List<ISceneEntity> (m_objectEntities.Count);
+                m_objectEntities.ForEach (delegate (ISceneEntity entity) { tmp.Add (entity); });
+                return tmp.ToArray ();
+            }
+        }
+
+        public ISceneEntity[] GetEntities (Vector3 pos, float radius)
+        {
+            lock (m_objectEntities)
+            {
+                List<ISceneEntity> tmp = new List<ISceneEntity> (m_objectEntities.Count);
+
+                m_objectEntities.ForEach (delegate (ISceneEntity entity)
                 {
-                    if (entity is T)
-                        tmp.Add(entity);
-                }
-            );
-
-            return tmp.ToArray();
-        }
-
-        public EntityBase[] GetEntities ()
-        {
-            List<EntityBase> tmp = new List<EntityBase> (m_entities.Count);
-            m_entities.ForEach (delegate (EntityBase entity) { tmp.Add (entity); });
-            return tmp.ToArray ();
-        }
-
-        public EntityBase[] GetEntities (Vector3 pos, float radius)
-        {
-            List<EntityBase> tmp = new List<EntityBase> (m_entities.Count);
-            m_entities.ForEach (delegate (EntityBase entity)
-            { 
-                if((entity.AbsolutePosition - pos).LengthSquared() < radius * radius)
-                    tmp.Add (entity); 
-            });
-            return tmp.ToArray ();
-        }
-
-        public void ForEach(Action<EntityBase> action)
-        {
-            m_entities.ForEach(action);
+                    if ((entity.AbsolutePosition - pos).LengthSquared () < radius * radius)
+                        tmp.Add (entity);
+                });
+                return tmp.ToArray ();
+            }
         }
 
         public IEntity this[UUID id]
         {
             get
             {
-                EntityBase entity;
-                m_entities.TryGetValue(id, out entity);
-                return entity;
+                ISceneEntity entity;
+                lock (m_objectEntities)
+                {
+                    if (m_objectEntities.TryGetValue (id, out entity))
+                        return entity;
+                }
+                IScenePresence presence;
+                lock (m_presenceEntities)
+                {
+                    if (m_presenceEntities.TryGetValue (id, out presence))
+                        return presence;
+                }
+                return null;
             }
             set
             {
@@ -182,9 +188,13 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                EntityBase entity;
-                m_entities.TryGetValue(localID, out entity);
-                return entity;
+                ISceneEntity entity;
+                lock (m_objectEntities)
+                {
+                    if (m_objectEntities.TryGetValue (localID, out entity))
+                        return entity;
+                }
+                return null;
             }
             set
             {

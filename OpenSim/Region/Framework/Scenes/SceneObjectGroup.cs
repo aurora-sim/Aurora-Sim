@@ -606,7 +606,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Clear all children from this group
         /// </summary>
-        public override void ClearChildren()
+        public void ClearChildren()
         {
             lock (m_partsLock)
             {
@@ -621,7 +621,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="child"></param>
         /// <returns></returns>
-        public override bool AddChild (ISceneChildEntity child, int linkNum)
+        public bool AddChild (ISceneChildEntity child, int linkNum)
         {
             lock (m_partsLock)
             {
@@ -662,7 +662,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="child"></param>
         /// <returns></returns>
-        public override bool LinkChild (ISceneChildEntity child)
+        public bool LinkChild (ISceneChildEntity child)
         {
             lock (m_partsLock)
             {
@@ -696,7 +696,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="child"></param>
         /// <returns></returns>
-        public override bool RemoveChild (ISceneChildEntity child)
+        public bool RemoveChild (ISceneChildEntity child)
         {
             lock (m_partsLock)
             {
@@ -749,9 +749,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// Attach this object to a scene.  It will also now appear to agents.
         /// </summary>
         /// <param name="scene"></param>
-        public override void AttachToScene(Scene scene)
+        public void AttachToScene(IScene scene)
         {
-            m_scene = scene;
+            if(scene is Scene)
+                m_scene = (Scene)scene;
 
             if (m_rootPart.Shape == null)
             {
@@ -1503,7 +1504,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// This does NOT reset any UUIDs, localIDs, or anything, as this is an EXACT copy.
         /// </summary>
         /// <returns></returns>
-        public override EntityBase Copy(bool clonePhys)
+        public ISceneEntity Copy (bool clonePhys)
         {
             SceneObjectGroup dupe = (SceneObjectGroup)MemberwiseClone();
 
@@ -2001,7 +2002,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="LocalID"></param>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public override bool GetChildPrim (uint LocalID, out ISceneChildEntity entity)
+        public bool GetChildPrim (uint LocalID, out ISceneChildEntity entity)
         {
             entity = GetChildPart(LocalID);
             return entity != null;
@@ -2013,7 +2014,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="UUID"></param>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public override bool GetChildPrim (UUID UUID, out ISceneChildEntity entity)
+        public bool GetChildPrim (UUID UUID, out ISceneChildEntity entity)
         {
             entity = GetChildPart(UUID);
             return entity != null;

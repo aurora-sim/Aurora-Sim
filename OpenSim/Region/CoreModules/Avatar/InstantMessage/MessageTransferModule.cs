@@ -128,13 +128,12 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             {
                 for(int i = 0; i < AgentsToSendTo.Count; i++)
                 {
-                    if (scene.Entities.ContainsKey(AgentsToSendTo[i]) &&
-                        scene.Entities[AgentsToSendTo[i]] is ScenePresence)
+                    ScenePresence user;
+                    if (scene.TryGetScenePresence (AgentsToSendTo[i], out user))
                     {
                         // Local message
-                        ScenePresence user = (ScenePresence)scene.Entities[AgentsToSendTo[i]];
-                        user.ControllingClient.SendInstantMessage(im);
-                        RemoveUsers.Add(AgentsToSendTo[i]);
+                        user.ControllingClient.SendInstantMessage (im);
+                        RemoveUsers.Add (AgentsToSendTo[i]);
                     }
                 }
             }
@@ -154,12 +153,10 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             // Try root avatar only first - incorrect now, see below
             foreach (Scene scene in m_Scenes)
             {
-                if (scene.Entities.ContainsKey(toAgentID) &&
-                        scene.Entities[toAgentID] is ScenePresence)
+                ScenePresence user;
+                if (scene.TryGetScenePresence (toAgentID, out user))
                 {
-                    // Local message
-                    ScenePresence user = (ScenePresence)scene.Entities[toAgentID];
-                    user.ControllingClient.SendInstantMessage(im);
+                    user.ControllingClient.SendInstantMessage (im);
                     return;
                 }
             }
@@ -375,12 +372,9 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     // Trigger the Instant message in the scene.
                     foreach (Scene scene in m_Scenes)
                     {
-                        if (scene.Entities.ContainsKey(toAgentID) &&
-                                scene.Entities[toAgentID] is ScenePresence)
+                        ScenePresence user;
+                        if (scene.TryGetScenePresence (toAgentID, out user))
                         {
-                            ScenePresence user =
-                                    (ScenePresence)scene.Entities[toAgentID];
-
                             if (!user.IsChildAgent)
                             {
                                 scene.EventManager.TriggerIncomingInstantMessage(gim);

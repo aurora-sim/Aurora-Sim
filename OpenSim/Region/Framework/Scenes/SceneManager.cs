@@ -888,9 +888,9 @@ namespace OpenSim.Region.Framework.Scenes
             m_log.Info ("Updating all clients");
             ForEachCurrentScene(delegate(Scene scene)
             {
-                EntityBase[] EntityList = scene.Entities.GetEntities();
+                ISceneEntity[] EntityList = scene.Entities.GetEntities ();
 
-                foreach (EntityBase ent in EntityList)
+                foreach (ISceneEntity ent in EntityList)
                 {
                     if (ent is SceneObjectGroup)
                     {

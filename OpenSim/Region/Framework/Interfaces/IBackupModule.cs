@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using OpenMetaverse;
+using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.Framework.Interfaces
@@ -40,7 +41,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// Add a backup taint to the prim.
         /// </summary>
         /// <param name="sceneObjectGroup"></param>
-        void AddPrimBackupTaint(EntityBase sceneObjectGroup);
+        void AddPrimBackupTaint (ISceneEntity sceneObjectGroup);
 
         /// <summary>
         /// This is the new backup processor, it only deals with prims that 

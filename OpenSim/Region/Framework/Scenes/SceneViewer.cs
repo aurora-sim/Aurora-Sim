@@ -276,7 +276,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void DoSignificantClientMovement(object o)
             {
-            EntityBase[] entities = m_presence.Scene.Entities.GetEntities();
+                ISceneEntity[] entities = m_presence.Scene.Entities.GetEntities ();
             PriorityQueue<EntityUpdate, double> m_entsqueue = new PriorityQueue<EntityUpdate, double>(entities.Length);
 
             double newminp = calcMinPrio() - 0.2*m_presence.Velocity.LengthSquared();;
@@ -285,7 +285,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             HashSet<SceneObjectGroup> NewGrpsInView = new HashSet<SceneObjectGroup>();
 
-            foreach (EntityBase e in entities)
+            foreach (ISceneEntity e in entities)
                 {
                 if (e != null && e is SceneObjectGroup)
                     {
@@ -444,12 +444,12 @@ namespace OpenSim.Region.Framework.Scenes
                         doculling = false;
 
 
-                    EntityBase[] entities = m_presence.Scene.Entities.GetEntities();
+                    ISceneEntity[] entities = m_presence.Scene.Entities.GetEntities ();
                     PriorityQueue<EntityUpdate, double> m_entsqueue = new PriorityQueue<EntityUpdate, double>(entities.Length);
 
                     // build a prioritized list of things we need to send
 
-                    foreach (EntityBase e in entities)
+                    foreach (ISceneEntity e in entities)
                         {
                         if (e != null && e is SceneObjectGroup)
                             {
@@ -944,9 +944,9 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
 
             //This checks to see if we need to send more updates to the avatar since they last moved
-            EntityBase[] Entities = client.Scene.Entities.GetEntities();
+            ISceneEntity[] Entities = client.Scene.Entities.GetEntities ();
 
-            foreach (EntityBase entity in Entities)
+            foreach (ISceneEntity entity in Entities)
             {
                 if (entity is SceneObjectGroup) //Only objects
                 {

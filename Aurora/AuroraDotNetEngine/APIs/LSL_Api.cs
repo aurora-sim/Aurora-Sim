@@ -1082,10 +1082,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (SOP != null)
                 return SOP.Name;
 
-            EntityBase SensedObject;
-            World.Entities.TryGetValue(objecUUID, out SensedObject);
-
-            if (SensedObject == null)
+            IEntity SensedObject;
+            if(!World.Entities.TryGetValue(objecUUID, out SensedObject))
             {
                 IGroupsModule groups = World.RequestModuleInterface<IGroupsModule>();
                 if (groups != null)
@@ -3660,7 +3658,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 try
                 {
-                    SceneObjectPart obj = World.GetSceneObjectPart(World.Entities[key].LocalId);
+                    SceneObjectPart obj = World.GetSceneObjectPart(key);
                     if (obj != null)
                         return (double)obj.GetMass();
                     // the object is null so the key is for an avatar

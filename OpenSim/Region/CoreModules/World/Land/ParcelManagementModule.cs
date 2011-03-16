@@ -458,7 +458,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (UseDwell)
                 UseDwell = !ES.BlockDwell;
 
-            EntityBase presenceEntity;
+            IEntity presenceEntity;
             if (m_scene.Entities.TryGetValue(client.AgentId, out presenceEntity) && presenceEntity is ScenePresence)
             {
                 Util.FireAndForget(delegate(object o)

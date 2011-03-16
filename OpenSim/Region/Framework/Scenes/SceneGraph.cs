@@ -458,8 +458,8 @@ namespace OpenSim.Region.Framework.Scenes
             // Primitive Ray Tracing
             float closestDistance = 280f;
             EntityIntersection result = new EntityIntersection();
-            EntityBase[] EntityList = Entities.GetEntities (hray.Origin, closestDistance);
-            foreach (EntityBase ent in EntityList)
+            ISceneEntity[] EntityList = Entities.GetEntities (hray.Origin, closestDistance);
+            foreach (ISceneEntity ent in EntityList)
             {
                 if (ent is SceneObjectGroup)
                 {
@@ -485,13 +485,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="action"></param>
         protected internal void ForEachSOG(Action<SceneObjectGroup> action)
         {
-            EntityBase[] objlist = Entities.GetEntities();
-            foreach (EntityBase obj in objlist)
+            ISceneEntity[] objlist = Entities.GetEntities ();
+            foreach (ISceneEntity obj in objlist)
             {
                 try
                 {
-                    if (obj is SceneObjectGroup)
-                        action(obj as SceneObjectGroup);
+                    action(obj as SceneObjectGroup);
                 }
                 catch (Exception e)
                 {
@@ -1558,7 +1557,7 @@ namespace OpenSim.Region.Framework.Scenes
                 original = (SceneObjectGroup)entity;
                 if (m_parentScene.Permissions.CanDuplicateObject(original.ChildrenList.Count, original.UUID, AgentID, original.AbsolutePosition))
                 {
-                    EntityBase duplicatedEntity = DuplicateEntity(original);
+                    ISceneEntity duplicatedEntity = DuplicateEntity (original);
 
                     duplicatedEntity.AbsolutePosition = duplicatedEntity.AbsolutePosition + offset;
 
@@ -1937,10 +1936,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public EntityBase DuplicateEntity(EntityBase entity)
+        public ISceneEntity DuplicateEntity (ISceneEntity entity)
         {
             //Make an exact copy of the entity
-            EntityBase copiedEntity = entity.Copy(false);
+            ISceneEntity copiedEntity = entity.Copy (false);
             //Add the entity to the scene and back it up
             AddPrimToScene(copiedEntity);
             //Fix physics representation now
@@ -2065,7 +2064,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Get this prim ready to add to the scene
         /// </summary>
         /// <param name="entity"></param>
-        public void PrepPrimForAdditionToScene(EntityBase entity)
+        public void PrepPrimForAdditionToScene (ISceneEntity entity)
         {
             ResetEntityIDs(entity);
         }
@@ -2075,7 +2074,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public bool AddPrimToScene(EntityBase entity)
+        public bool AddPrimToScene (ISceneEntity entity)
         {
             //Reset the entity IDs
             ResetEntityIDs(entity);
@@ -2119,7 +2118,7 @@ namespace OpenSim.Region.Framework.Scenes
         ///  This does not reset IDs so that it is updated correctly in the client
         /// </summary>
         /// <param name="entity"></param>
-        public void DelinkPartToScene(EntityBase entity)
+        public void DelinkPartToScene (ISceneEntity entity)
         {
             //Force the prim to backup now that it has been added
             entity.ForcePersistence();
@@ -2138,7 +2137,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public bool DeleteEntity(EntityBase entity)
+        public bool DeleteEntity(IEntity entity)
         {
             return RemoveEntity(entity);
         }

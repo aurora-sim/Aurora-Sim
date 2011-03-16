@@ -273,7 +273,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         private List<SensedEntity> doObjectSensor(SenseRepeatClass ts)
         {
-            List<EntityBase> Entities;
+            List<ISceneEntity> Entities;
             List<SensedEntity> sensedEntities = new List<SensedEntity>();
 
             SceneObjectPart SensePoint = ts.host;
@@ -284,16 +284,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             // rather than getting a list to scan through
             if (ts.keyID != UUID.Zero)
             {
-                EntityBase e = null;
+                IEntity e = null;
                 ts.host.ParentGroup.Scene.Entities.TryGetValue (ts.keyID, out e);
-                if (e == null)
+                if (e == null || !(e is ISceneEntity))
                     return sensedEntities;
-                Entities = new List<EntityBase> ();
-                Entities.Add (e);
+                Entities = new List<ISceneEntity> ();
+                Entities.Add (e as ISceneEntity);
             }
             else
             {
-                Entities = new List<EntityBase> (ts.host.ParentGroup.Scene.Entities.GetEntities (fromRegionPos, (float)ts.range));
+                Entities = new List<ISceneEntity> (ts.host.ParentGroup.Scene.Entities.GetEntities (fromRegionPos, (float)ts.range));
             }
 
             // pre define some things to avoid repeated definitions in the loop body
@@ -323,7 +323,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
             bool nameSearch = (ts.name != null && ts.name != "");
 
-            foreach (EntityBase ent in Entities)
+            foreach (ISceneEntity ent in Entities)
             {
                 bool keep = true;
 

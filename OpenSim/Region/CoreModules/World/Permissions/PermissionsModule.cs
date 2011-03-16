@@ -666,9 +666,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             bool locked = false;
 
             SceneObjectGroup group;
-            if (!m_scene.Entities.ContainsKey(objId))
+            IEntity entity;
+            if (!m_scene.Entities.TryGetValue(objId, out entity))
             {
-                EntityBase entity;
                 if (!m_scene.Entities.TryGetChildPrimParent(objId, out entity))
                 {
                     return false;
@@ -678,11 +678,11 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             else
             {
                 // If it's not an object, we cant edit it.
-                if ((!(m_scene.Entities[objId] is SceneObjectGroup)))
+                if (!(entity is SceneObjectGroup))
                 {
                     return false;
                 }
-                group = (SceneObjectGroup)m_scene.Entities[objId];
+                group = (SceneObjectGroup)entity;
             }
 
             UUID objectOwner = group.OwnerID;
@@ -1033,7 +1033,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
             if (part == null)
             {
-                EntityBase group;
+                IEntity group;
                 m_scene.Entities.TryGetValue(objectID, out group);
                 if (group == null)
                 {
@@ -1165,7 +1165,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             bool permission = GenericObjectPermission(moverID, objectID, true);
             if (!permission)
             {
-                if (!m_scene.Entities.ContainsKey(objectID))
+                IEntity ent;
+                if (!m_scene.Entities.TryGetValue(objectID, out ent))
                 {
                     return false;
                 }
@@ -1175,13 +1176,13 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 // to also check for SceneObjectPart
 
                 // If it's not an object, we cant edit it.
-                if ((!(m_scene.Entities[objectID] is SceneObjectGroup)))
+                if (!(ent is SceneObjectGroup))
                 {
                     return false;
                 }
 
 
-                SceneObjectGroup task = (SceneObjectGroup)m_scene.Entities[objectID];
+                SceneObjectGroup task = (SceneObjectGroup)ent;
 
 
                 // UUID taskOwner = null;
@@ -1200,18 +1201,19 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             else
             {
                 bool locked = false;
-                if (!m_scene.Entities.ContainsKey(objectID))
+                IEntity ent;
+                if (!m_scene.Entities.TryGetValue(objectID, out ent))
                 {
                     return false;
                 }
 
                 // If it's not an object, we cant edit it.
-                if ((!(m_scene.Entities[objectID] is SceneObjectGroup)))
+                if (!(ent is SceneObjectGroup))
                 {
                     return false;
                 }
 
-                SceneObjectGroup group = (SceneObjectGroup)m_scene.Entities[objectID];
+                SceneObjectGroup group = (SceneObjectGroup)ent;
 
                 UUID objectOwner = group.OwnerID;
                 locked = ((group.RootPart.OwnerMask & PERM_LOCKED) == 0);
@@ -1242,9 +1244,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             {
                 return true;
             }
-
+            IEntity ent;
             //If the object is entering the region, its not here yet and we can't check for it
-            if (!enteringRegion && !m_scene.Entities.ContainsKey(objectID))
+            if (!enteringRegion && !m_scene.Entities.TryGetValue(objectID, out ent))
             {
                 return false;
             }
@@ -1500,18 +1502,19 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             bool permission = GenericObjectPermission(userID, objectID, false);
             if (!permission)
             {
-                if (!m_scene.Entities.ContainsKey(objectID))
+                IEntity ent;
+                if (!m_scene.Entities.TryGetValue (objectID, out ent))
                 {
                     return false;
                 }
 
                 // If it's not an object, we cant edit it.
-                if (!(m_scene.Entities[objectID] is SceneObjectGroup))
+                if (!(ent is SceneObjectGroup))
                 {
                     return false;
                 }
 
-                SceneObjectGroup task = (SceneObjectGroup)m_scene.Entities[objectID];
+                SceneObjectGroup task = (SceneObjectGroup)ent;
                 // UUID taskOwner = null;
                 // Added this because at this point in time it wouldn't be wise for
                 // the administrator object permissions to take effect.

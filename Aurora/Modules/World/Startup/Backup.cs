@@ -299,9 +299,8 @@ namespace Aurora.Modules
                 m_log.Info("[BackupModule]: Starting scripts in " + m_scene.RegionInfo.RegionName);
                 //Set loading prims here to block backup
                 LoadingPrims = true;
-                EntityBase[] entities;
-                entities = m_scene.Entities.GetEntities();
-                foreach (EntityBase group in entities)
+                ISceneEntity[] entities = m_scene.Entities.GetEntities();
+                foreach (ISceneEntity group in entities)
                 {
                     if (group is SceneObjectGroup)
                     {
@@ -371,8 +370,8 @@ namespace Aurora.Modules
                 List<SceneObjectGroup> groups = new List<SceneObjectGroup>();
                 lock (m_scene.Entities)
                 {
-                    EntityBase[] entities = m_scene.Entities.GetEntities();
-                    foreach(EntityBase entity in entities)
+                    ISceneEntity[] entities = m_scene.Entities.GetEntities ();
+                    foreach (ISceneEntity entity in entities)
                     {
                         if(entity is SceneObjectGroup && !((SceneObjectGroup)entity).IsAttachment)
                             groups.Add((SceneObjectGroup)entity);
@@ -410,8 +409,8 @@ namespace Aurora.Modules
 
                 lock (m_scene.Entities)
                 {
-                    EntityBase[] entities = m_scene.Entities.GetEntities ();
-                    foreach (EntityBase entity in entities)
+                    ISceneEntity[] entities = m_scene.Entities.GetEntities ();
+                    foreach (ISceneEntity entity in entities)
                     {
                         if (entity is SceneObjectGroup && !((SceneObjectGroup)entity).IsAttachment)
                         {
@@ -465,7 +464,7 @@ namespace Aurora.Modules
             /// Add a backup taint to the prim
             /// </summary>
             /// <param name="sceneObjectGroup"></param>
-            public void AddPrimBackupTaint(EntityBase sceneObjectGroup)
+            public void AddPrimBackupTaint (ISceneEntity sceneObjectGroup)
             {
                 lock (m_backupTaintedPrims)
                 {
@@ -492,8 +491,8 @@ namespace Aurora.Modules
                 //Add all
                 if (backupAll)
                 {
-                    EntityBase[] entities = m_scene.Entities.GetEntities();
-                    foreach (EntityBase entity in entities)
+                    ISceneEntity[] entities = m_scene.Entities.GetEntities ();
+                    foreach (ISceneEntity entity in entities)
                     {
                         if (entity is SceneObjectGroup)
                             backupPrims.Add(entity as SceneObjectGroup);

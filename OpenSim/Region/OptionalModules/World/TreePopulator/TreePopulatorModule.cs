@@ -394,9 +394,11 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
                 List<SceneObjectGroup> groups = new List<SceneObjectGroup>();
                 foreach (UUID tree in copseIdentity.m_trees)
                 {
-                    if (m_scene.Entities.ContainsKey(tree))
+                    IEntity entity;
+                    if (m_scene.Entities.TryGetValue (tree, out entity))
                     {
-                        groups.Add((SceneObjectGroup)m_scene.Entities[tree]);
+                        if(entity is SceneObjectGroup)
+                            groups.Add ((SceneObjectGroup)entity);
                     }
                 }
                 IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
@@ -593,8 +595,8 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
         {
             m_copse = new List<Copse>();
 
-            EntityBase[] objs = m_scene.Entities.GetEntities();
-            foreach (EntityBase obj in objs)
+            ISceneEntity[] objs = m_scene.Entities.GetEntities ();
+            foreach (ISceneEntity obj in objs)
             {
                 if (obj is SceneObjectGroup)
                 {
@@ -685,9 +687,10 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
                 {
                     foreach (UUID tree in copse.m_trees)
                     {
-                        if (m_scene.Entities.ContainsKey(tree))
+                        IEntity entity;
+                        if (m_scene.Entities.TryGetValue (tree, out entity) && entity is SceneObjectGroup)
                         {
-                            SceneObjectPart s_tree = ((SceneObjectGroup)m_scene.Entities[tree]).RootPart;
+                            SceneObjectPart s_tree = ((SceneObjectGroup)entity).RootPart;
 
                             if (copse.m_trees.Count < copse.m_tree_quantity)
                             {
@@ -721,9 +724,10 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
                     {
                         double killLikelyhood = 0.0;
 
-                        if (m_scene.Entities.ContainsKey(tree))
+                        IEntity entity;
+                        if (m_scene.Entities.TryGetValue (tree, out entity) && entity is SceneObjectGroup)
                         {
-                            SceneObjectPart selectedTree = ((SceneObjectGroup)m_scene.Entities[tree]).RootPart;
+                            SceneObjectPart selectedTree = ((SceneObjectGroup)entity).RootPart;
                             double selectedTreeScale = Math.Sqrt(Math.Pow(selectedTree.Scale.X, 2) +
                                                                  Math.Pow(selectedTree.Scale.Y, 2) +
                                                                  Math.Pow(selectedTree.Scale.Z, 2));

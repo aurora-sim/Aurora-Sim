@@ -34,7 +34,7 @@ using OpenMetaverse;
 
 namespace OpenSim.Region.Framework.Scenes
 {
-    public abstract class EntityBase : ISceneEntity
+    public abstract class EntityBase : IEntity
     {
         protected Scene m_scene;
         /// <summary>
