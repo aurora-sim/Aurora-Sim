@@ -1973,15 +1973,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public bool TryGetPart (uint LocalID, out ISceneChildEntity entity)
         {
-            IEntity obj;
-            if (Entities.TryGetValue(LocalID, out obj))
-            {
-                if(obj is ISceneEntity)
-                    return (obj as ISceneEntity).GetChildPrim(LocalID, out entity);
-            }
-
-            entity = null;
-            return false;
+            return Entities.TryGetChildPrim (LocalID, out entity);
         }
 
         /// <summary>

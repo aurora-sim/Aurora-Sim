@@ -189,7 +189,7 @@ namespace OpenSim.Region.Framework.Scenes
             IScenePresence presence;
             lock (m_presenceEntities)
             {
-                if (!m_presenceEntities.TryGetValue (key, out presence) && checkRecursive)
+                if (!m_presenceEntities.TryGetValue (key, out presence))
                 {
                     lock (m_objectEntities)
                     {
