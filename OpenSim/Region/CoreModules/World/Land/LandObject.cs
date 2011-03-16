@@ -268,11 +268,6 @@ namespace OpenSim.Region.CoreModules.World.Land
                         newData.ObscureMedia = args.ObscureMedia;
                     }
 
-                    if (!m_scene.RegionInfo.RegionSettings.AllowDamage &&
-                        ((args.ParcelFlags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage))
-                        //Vanquish damage as per estate settings!
-                        args.ParcelFlags &= ~(uint)ParcelFlags.AllowDamage;
-
                     if (m_scene.RegionInfo.RegionSettings.BlockFly &&
                         ((args.ParcelFlags & (uint)ParcelFlags.AllowFly) == (uint)ParcelFlags.AllowFly))
                         //Vanquish flying as per estate settings!
@@ -500,7 +495,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 {
                     if (over.LandData.LocalID == LandData.LocalID)
                     {
-                        if (((over.LandData.Flags & (uint)ParcelFlags.AllowDamage) != 0) &&
+                        if (((over.LandData.Flags & (uint)ParcelFlags.AllowDamage) != 0) ||
                             m_scene.RegionInfo.RegionSettings.AllowDamage)
                             avatar.Invulnerable = false;
                         else
