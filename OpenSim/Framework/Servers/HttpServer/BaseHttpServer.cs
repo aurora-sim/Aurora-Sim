@@ -355,6 +355,19 @@ namespace OpenSim.Framework.Servers.HttpServer
         /// <param name="response"></param>
         public virtual void HandleRequest(OSHttpRequest request, OSHttpResponse response)
         {
+            if (request.HttpMethod == String.Empty) // Can't handle empty requests, not wasting a thread
+            {
+                try
+                {
+                    SendHTML500(response);
+                }
+                catch
+                {
+                }
+
+                return;
+            }
+
             string reqnum = "unknown";
             int tickstart = Environment.TickCount;
             string RawUrl = request.RawUrl;
@@ -474,7 +487,7 @@ namespace OpenSim.Framework.Servers.HttpServer
 
                     request.InputStream.Close();
 
-                    // HTTP IN support. The script engine taes it from here
+                    // HTTP IN support. The script engine takes it from here
                     // Nothing to worry about for us.
                     //
                     if (buffer == null)
@@ -588,15 +601,15 @@ namespace OpenSim.Framework.Servers.HttpServer
             {
                 m_log.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw ", e);
             }
-            catch (InvalidOperationException e)
+            catch (Exception e)
             {
-                m_log.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw {0}", e);
+                m_log.ErrorFormat ("[BASE HTTP SERVER]: HandleRequest() threw {0}", e.ToString ());
                 SendHTML500(response);
             }
             finally
             {
                 // Every month or so this will wrap and give bad numbers, not really a problem
-                // since its just for reporting, 200ms limit can be adjusted
+                // since its just for reporting, 500ms limit can be adjusted
                 int tickdiff = Environment.TickCount - tickstart;
                 if (tickdiff > 500)
                     m_log.InfoFormat("[BASE HTTP SERVER]: slow request <{0}> for {1},{3} took {2} ms", reqnum, RawUrl, tickdiff, HTTPMethod);

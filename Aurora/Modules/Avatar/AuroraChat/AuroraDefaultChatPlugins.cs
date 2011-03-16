@@ -453,7 +453,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
                     {
                         IEntityCountModule entityCountModule = scene.RequestModuleInterface<IEntityCountModule>();
                         if (entityCountModule != null)
-                            SP.ControllingClient.SendChatMessage(presence.Name + " has left the region. Total Agents: " + entityCountModule.RootAgents, 1, SP.AbsolutePosition, "System",
+                            SP.ControllingClient.SendChatMessage(presence.Name + " has left the region. Total Agents: " + (entityCountModule.RootAgents - 1), 1, SP.AbsolutePosition, "System",
                                                            UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
                     }
                 }
