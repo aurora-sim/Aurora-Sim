@@ -273,7 +273,7 @@ namespace Aurora.Modules
 		/// Event handler
 		/// </summary>
 		/// <param name="AgentId">AgentID that logged out</param>
-		private void ClientLoggedOut(UUID AgentId, Scene scene)
+		private void ClientLoggedOut(UUID AgentId, IScene scene)
 		{
 			lock (m_rootAgents)
             {

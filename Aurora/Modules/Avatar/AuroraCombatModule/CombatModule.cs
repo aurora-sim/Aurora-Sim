@@ -256,8 +256,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 HasLeftCombat = false;
                 m_Team = "No Team";
 
-                SP.OnAddPhysics += new ScenePresence.AddPhysics(SP_OnAddPhysics);
-                SP.OnRemovePhysics += new ScenePresence.RemovePhysics(SP_OnRemovePhysics);
+                SP.OnAddPhysics += SP_OnAddPhysics;
+                SP.OnRemovePhysics += SP_OnRemovePhysics;
 
                 System.Timers.Timer t = new System.Timers.Timer ();
                 //Use this to fix the avatars health

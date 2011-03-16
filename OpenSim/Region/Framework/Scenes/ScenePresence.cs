@@ -49,6 +49,9 @@ namespace OpenSim.Region.Framework.Scenes
     {
         #region Declares
 
+        public event AddPhysics OnAddPhysics;
+        public event RemovePhysics OnRemovePhysics;
+
         //        ~ScenePresence()
 //        {
 //            m_log.Debug("[ScenePresence] Destructor called");
@@ -845,9 +848,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             Reset();
         }
-
-        public delegate void RemovePhysics();
-        public event RemovePhysics OnRemovePhysics;
 
         /// <summary>
         /// Removes physics plugin scene representation of this agent if it exists.

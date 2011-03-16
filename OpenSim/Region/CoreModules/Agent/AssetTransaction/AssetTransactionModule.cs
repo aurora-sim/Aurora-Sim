@@ -145,7 +145,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             client.OnXferReceive -= HandleXfer;
         }
 
-        private void OnClientClosed(UUID clientID, Scene scene)
+        private void OnClientClosed(UUID clientID, IScene scene)
         {
             IScenePresence SP = scene.GetScenePresence (clientID);
             if(SP != null && !SP.IsChildAgent)

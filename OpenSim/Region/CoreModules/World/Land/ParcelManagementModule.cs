@@ -958,7 +958,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         }
 
         //Like handleEventManagerOnSignificantClientMovement, but for objects for parcel incoming object permissions
-        public void EventManagerOnSignificantObjectMovement(SceneObjectGroup group)
+        public void EventManagerOnSignificantObjectMovement (ISceneEntity group)
         {
             ILandObject over = GetLandObject((int)group.AbsolutePosition.X, (int)group.AbsolutePosition.Y);
             if (over != null)

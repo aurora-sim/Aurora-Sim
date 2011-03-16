@@ -54,6 +54,7 @@ namespace OpenSim.Framework
 
     public interface IScene : IRegistryCore
     {
+        bool m_usePreJump;
         RegionInfo RegionInfo { get; }
 
         IConfigSource Config { get; }
@@ -100,5 +101,9 @@ namespace OpenSim.Framework
         void ForEachScenePresence (Action<IScenePresence> action);
 
         bool m_useSplatAnimation { get; set; }
+
+        ISceneChildEntity GetSceneObjectPart (uint localID);
+
+        ISceneChildEntity GetSceneObjectPart (UUID objectID);
     }
 }

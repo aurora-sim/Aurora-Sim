@@ -32,7 +32,6 @@ using log4net;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Framework.Client;
-using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using OpenMetaverse.StructuredData;
@@ -88,11 +87,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// The child is the part that was actually touched.
         public event ObjectGrabDelegate OnObjectGrab;
-        public delegate void ObjectGrabDelegate(SceneObjectPart part, SceneObjectPart child, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs);
+        public delegate void ObjectGrabDelegate (ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs);
 
         public event ObjectGrabDelegate OnObjectGrabbing;
         public event ObjectDeGrabDelegate OnObjectDeGrab;
-        public delegate void ObjectDeGrabDelegate(SceneObjectPart part, SceneObjectPart child, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs);
+        public delegate void ObjectDeGrabDelegate (ISceneChildEntity part, ISceneChildEntity child, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs);
 
         public event OnPermissionErrorDelegate OnPermissionError;
 
@@ -100,10 +99,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// Fired when a new script is created.
         /// </summary>
         public event NewRezScript OnRezScript;
-        public delegate void NewRezScript(SceneObjectPart part, UUID itemID, string script, int startParam, bool postOnRez, int stateSource);
+        public delegate void NewRezScript (ISceneChildEntity part, UUID itemID, string script, int startParam, bool postOnRez, int stateSource);
 
         public event NewRezScripts OnRezScripts;
-        public delegate void NewRezScripts(SceneObjectPart part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, int stateSource, UUID RezzedFrom);
+        public delegate void NewRezScripts (ISceneChildEntity part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, int stateSource, UUID RezzedFrom);
 
         public delegate void RemoveScript(uint localID, UUID itemID);
         public event RemoveScript OnRemoveScript;
@@ -132,7 +131,7 @@ namespace OpenSim.Region.Framework.Scenes
         public delegate void SignificantClientMovement(IClientAPI remote_client);
         public event SignificantClientMovement OnSignificantClientMovement;
 
-        public delegate void SignificantObjectMovement(SceneObjectGroup group);
+        public delegate void SignificantObjectMovement(ISceneEntity group);
         public event SignificantObjectMovement OnSignificantObjectMovement;
 
         public delegate void IncomingInstantMessage(GridInstantMessage message);
@@ -140,7 +139,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public event IncomingInstantMessage OnUnhandledInstantMessage;
 
-        public delegate void ClientClosed(UUID clientID, Scene scene);
+        public delegate void ClientClosed(UUID clientID, IScene scene);
 
         public event ClientClosed OnClientClosed;
 
@@ -150,13 +149,13 @@ namespace OpenSim.Region.Framework.Scenes
         /// (see http://lslwiki.net/lslwiki/wakka.php?wakka=changed)
         /// </summary>
         public event ScriptChangedEvent OnScriptChangedEvent;
-        public delegate void ScriptChangedEvent(SceneObjectPart part, uint change);
+        public delegate void ScriptChangedEvent (ISceneChildEntity part, uint change);
 
         public event ScriptMovingStartEvent OnScriptMovingStartEvent;
-        public delegate void ScriptMovingStartEvent(SceneObjectPart part);
+        public delegate void ScriptMovingStartEvent (ISceneChildEntity part);
 
         public event ScriptMovingEndEvent OnScriptMovingEndEvent;
-        public delegate void ScriptMovingEndEvent(SceneObjectPart part);
+        public delegate void ScriptMovingEndEvent(ISceneChildEntity part);
 
         public delegate void ScriptControlEvent (ISceneChildEntity part, UUID item, UUID avatarID, uint held, uint changed);
         public event ScriptControlEvent OnScriptControlEvent;
@@ -173,7 +172,7 @@ namespace OpenSim.Region.Framework.Scenes
         public delegate void ScriptNotAtRotTargetEvent(uint localID);
         public event ScriptNotAtRotTargetEvent OnScriptNotAtRotTargetEvent;
 
-        public delegate void ScriptColliding(SceneObjectPart part, ColliderArgs colliders);
+        public delegate void ScriptColliding (ISceneChildEntity part, ColliderArgs colliders);
         public event ScriptColliding OnScriptColliderStart;
         public event ScriptColliding OnScriptColliding;
         public event ScriptColliding OnScriptCollidingEnd;
@@ -207,7 +206,7 @@ namespace OpenSim.Region.Framework.Scenes
         public delegate void EstateToolsSunUpdate(ulong regionHandle, bool FixedTime, bool EstateSun, float LindenHour);
         public event EstateToolsSunUpdate OnEstateToolsSunUpdate;
 
-        public delegate void ObjectBeingRemovedFromScene(SceneObjectGroup obj);
+        public delegate void ObjectBeingRemovedFromScene(ISceneEntity obj);
         public event ObjectBeingRemovedFromScene OnObjectBeingRemovedFromScene;
 
         public event ObjectBeingRemovedFromScene OnObjectBeingAddedToScene;
@@ -349,7 +348,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerOnScriptChangedEvent(SceneObjectPart part, uint change)
+        public void TriggerOnScriptChangedEvent (ISceneChildEntity part, uint change)
         {
             ScriptChangedEvent handlerScriptChangedEvent = OnScriptChangedEvent;
             if (handlerScriptChangedEvent != null)
@@ -370,7 +369,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerOnScriptMovingStartEvent(SceneObjectPart part)
+        public void TriggerOnScriptMovingStartEvent (ISceneChildEntity part)
         {
             ScriptMovingStartEvent handlerScriptMovingStartEvent = OnScriptMovingStartEvent;
             if (handlerScriptMovingStartEvent != null)
@@ -391,7 +390,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerOnScriptMovingEndEvent(SceneObjectPart part)
+        public void TriggerOnScriptMovingEndEvent (ISceneChildEntity part)
         {
             ScriptMovingEndEvent handlerScriptMovingEndEvent = OnScriptMovingEndEvent;
             if (handlerScriptMovingEndEvent != null)
@@ -623,7 +622,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerObjectBeingAddedToScene(SceneObjectGroup obj)
+        public void TriggerObjectBeingAddedToScene(ISceneEntity obj)
         {
             ObjectBeingRemovedFromScene handlerObjectBeingAddedToScene = OnObjectBeingAddedToScene;
             if (handlerObjectBeingAddedToScene != null)
@@ -644,7 +643,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerObjectBeingRemovedFromScene(SceneObjectGroup obj)
+        public void TriggerObjectBeingRemovedFromScene(ISceneEntity obj)
         {
             ObjectBeingRemovedFromScene handlerObjectBeingRemovedFromScene = OnObjectBeingRemovedFromScene;
             if (handlerObjectBeingRemovedFromScene != null)
@@ -665,7 +664,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerObjectGrab(SceneObjectPart part, SceneObjectPart child, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
+        public void TriggerObjectGrab (ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
         {
             ObjectGrabDelegate handlerObjectGrab = OnObjectGrab;
             if (handlerObjectGrab != null)
@@ -686,7 +685,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerObjectGrabbing(SceneObjectPart part, SceneObjectPart child, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
+        public void TriggerObjectGrabbing (ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
         {
             ObjectGrabDelegate handlerObjectGrabbing = OnObjectGrabbing;
             if (handlerObjectGrabbing != null)
@@ -707,7 +706,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerObjectDeGrab(SceneObjectPart part, SceneObjectPart child, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
+        public void TriggerObjectDeGrab (ISceneChildEntity part, ISceneChildEntity child, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
         {
             ObjectDeGrabDelegate handlerObjectDeGrab = OnObjectDeGrab;
             if (handlerObjectDeGrab != null)
@@ -728,7 +727,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerRezScript(SceneObjectPart part, UUID itemID, string script, int startParam, bool postOnRez, int stateSource)
+        public void TriggerRezScript (ISceneChildEntity part, UUID itemID, string script, int startParam, bool postOnRez, int stateSource)
         {
             NewRezScript handlerRezScript = OnRezScript;
             if (handlerRezScript != null)
@@ -749,7 +748,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerRezScripts(SceneObjectPart part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, int stateSource, UUID RezzedFrom)
+        public void TriggerRezScripts (ISceneChildEntity part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, int stateSource, UUID RezzedFrom)
         {
             NewRezScripts handlerRezScripts = OnRezScripts;
             if (handlerRezScripts != null)
@@ -995,7 +994,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerClientClosed(UUID ClientID, Scene scene)
+        public void TriggerClientClosed(UUID ClientID, IScene scene)
         {
             ClientClosed handlerClientClosed = OnClientClosed;
             if (handlerClientClosed != null)
@@ -1279,7 +1278,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerSignificantObjectMovement(SceneObjectGroup group)
+        public void TriggerSignificantObjectMovement(ISceneEntity group)
         {
             SignificantObjectMovement handlerSignificantObjectMovement = OnSignificantObjectMovement;
             if (handlerSignificantObjectMovement != null)
@@ -1496,7 +1495,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerScriptCollidingStart(SceneObjectPart part, ColliderArgs colliders)
+        public void TriggerScriptCollidingStart (ISceneChildEntity part, ColliderArgs colliders)
         {
             ScriptColliding handlerCollidingStart = OnScriptColliderStart;
             if (handlerCollidingStart != null)
@@ -1517,7 +1516,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerScriptColliding(SceneObjectPart part, ColliderArgs colliders)
+        public void TriggerScriptColliding (ISceneChildEntity part, ColliderArgs colliders)
         {
             ScriptColliding handlerColliding = OnScriptColliding;
             if (handlerColliding != null)
@@ -1538,7 +1537,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerScriptCollidingEnd(SceneObjectPart part, ColliderArgs colliders)
+        public void TriggerScriptCollidingEnd (ISceneChildEntity part, ColliderArgs colliders)
         {
             ScriptColliding handlerCollidingEnd = OnScriptCollidingEnd;
             if (handlerCollidingEnd != null)
@@ -1559,7 +1558,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerScriptLandCollidingStart(SceneObjectPart part, ColliderArgs colliders)
+        public void TriggerScriptLandCollidingStart (ISceneChildEntity part, ColliderArgs colliders)
         {
             ScriptColliding handlerLandCollidingStart = OnScriptLandColliderStart;
             if (handlerLandCollidingStart != null)
@@ -1580,7 +1579,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerScriptLandColliding(SceneObjectPart part, ColliderArgs colliders)
+        public void TriggerScriptLandColliding (ISceneChildEntity part, ColliderArgs colliders)
         {
             ScriptColliding handlerLandColliding = OnScriptLandColliding;
             if (handlerLandColliding != null)
@@ -1601,7 +1600,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerScriptLandCollidingEnd(SceneObjectPart part, ColliderArgs colliders)
+        public void TriggerScriptLandCollidingEnd (ISceneChildEntity part, ColliderArgs colliders)
         {
             ScriptColliding handlerLandCollidingEnd = OnScriptLandColliderEnd;
             if (handlerLandCollidingEnd != null)

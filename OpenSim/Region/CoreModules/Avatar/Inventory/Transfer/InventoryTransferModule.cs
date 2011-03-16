@@ -350,7 +350,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             }
         }
 
-        public void ClientLoggedOut(UUID agentID, Scene scene)
+        public void ClientLoggedOut(UUID agentID, IScene scene)
         {
         }
 

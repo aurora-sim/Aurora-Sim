@@ -229,7 +229,7 @@ namespace Aurora.Modules
                 }
                 if (parameter1 == "spawnpoint add")
                 {
-                    SceneObjectPart part = Sp.Scene.GetSceneObjectPart(uint.Parse(Parameters[1]));
+                    ISceneChildEntity part = Sp.Scene.GetSceneObjectPart (uint.Parse (Parameters[1]));
                     if (part == null)
                         return;
                     Telehub telehub = RegionConnector.FindTelehub(client.Scene.RegionInfo.RegionID, client.Scene.RegionInfo.RegionHandle);
@@ -252,7 +252,7 @@ namespace Aurora.Modules
                 }
                 if (parameter1 == "connect")
                 {
-                    SceneObjectPart part = Sp.Scene.GetSceneObjectPart(uint.Parse(Parameters[1]));
+                    ISceneChildEntity part = Sp.Scene.GetSceneObjectPart (uint.Parse (Parameters[1]));
                     if (part == null)
                         return;
                     Telehub telehub = RegionConnector.FindTelehub(client.Scene.RegionInfo.RegionID, client.Scene.RegionInfo.RegionHandle);

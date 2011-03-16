@@ -32,9 +32,12 @@ using OpenMetaverse;
 namespace OpenSim.Framework
 {
     public delegate void AddPhysics ();
+    public delegate void RemovePhysics ();
     public interface IScenePresence : IEntity, IRegistryCore
     {
-        public event AddPhysics OnAddPhysics;
+        event AddPhysics OnAddPhysics;
+
+        event RemovePhysics OnRemovePhysics;
 
         string m_callbackURI;
         /// <summary>
@@ -155,7 +158,7 @@ namespace OpenSim.Framework
 
         void DoMoveToPosition (IScenePresence avatar, string p, List<string> coords);
 
-        uint GenerateClientFlags (SceneObjectPart p);
+        uint GenerateClientFlags (ISceneChildEntity p);
 
         ScriptControllers GetScriptControler (OpenMetaverse.UUID uUID);
 
@@ -223,6 +226,8 @@ namespace OpenSim.Framework
 
     public interface ISceneEntity : IEntity
     {
+        OpenMetaverse.UUID m_lastParcelUUID;
+        Vector3 m_lastSignificantPosition;
         bool IsDeleted { get; set; }
         Vector3 GroupScale ();
         Quaternion GroupRotation { get; }
@@ -243,6 +248,10 @@ namespace OpenSim.Framework
         void ForcePersistence ();
 
         void ApplyPhysics (bool allowPhysicalPrims);
+
+        OpenMetaverse.UUID OwnerID { get; set; }
+
+        void ScheduleGroupTerseUpdate ();
     }
 
     public interface IEntity
@@ -260,6 +269,10 @@ namespace OpenSim.Framework
     {
         ISceneEntity ParentEntity { get; }
         void ResetEntityIDs ();
+
+        PrimFlags Flags { get; set; }
+
+        int UseSoundQueue { get; set; }
     }
 
     public enum PIDHoverType

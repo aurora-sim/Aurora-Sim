@@ -130,11 +130,11 @@ namespace Aurora.Modules
 
         #region Objects
 
-        protected void OnObjectBeingAddedToScene(SceneObjectGroup obj)
+        protected void OnObjectBeingAddedToScene (ISceneEntity obj)
         {
             lock (m_objectsLock)
             {
-                foreach (SceneObjectPart child in obj.ChildrenList)
+                foreach (ISceneChildEntity child in obj.ChildrenEntities ())
                 {
                     bool physicalStatus = (child.Flags & PrimFlags.Physics) == PrimFlags.Physics;
                     if (!m_lastAddedPhysicalStatus.ContainsKey(child.UUID))
@@ -166,11 +166,11 @@ namespace Aurora.Modules
             }
         }
 
-        protected void OnObjectBeingRemovedFromScene(SceneObjectGroup obj)
+        protected void OnObjectBeingRemovedFromScene(ISceneEntity obj)
         {
             lock (m_objectsLock)
             {
-                foreach (SceneObjectPart child in obj.ChildrenList)
+                foreach (ISceneChildEntity child in obj.ChildrenEntities())
                 {
                     bool physicalStatus = (child.Flags & PrimFlags.Physics) == PrimFlags.Physics;
                     if (m_lastAddedPhysicalStatus.ContainsKey(child.UUID))
