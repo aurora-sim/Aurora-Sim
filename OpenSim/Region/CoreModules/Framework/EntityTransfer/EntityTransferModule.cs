@@ -55,7 +55,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         protected bool m_Enabled = false;
         protected List<Scene> m_scenes = new List<Scene> ();
-        private Dictionary<Scene, Dictionary<UUID, AgentData>> m_incomingChildAgentData = new Dictionary<Scene, Dictionary<UUID, AgentData>> ();
+        private Dictionary<IScene, Dictionary<UUID, AgentData>> m_incomingChildAgentData = new Dictionary<IScene, Dictionary<UUID, AgentData>> ();
         
         #endregion
 
@@ -98,11 +98,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             scene.RegisterModuleInterface<IEntityTransferModule>(this);
             scene.EventManager.OnNewClient += OnNewClient;
-            scene.EventManager.OnNewPresence += new EventManager.OnNewPresenceDelegate (EventManager_OnNewPresence);
+            scene.EventManager.OnNewPresence += EventManager_OnNewPresence;
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        void EventManager_OnNewPresence (ScenePresence sp)
+        void EventManager_OnNewPresence (IScenePresence sp)
         {
             lock (m_incomingChildAgentData)
             {

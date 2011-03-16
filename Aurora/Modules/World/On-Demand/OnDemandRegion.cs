@@ -117,7 +117,7 @@ namespace Aurora.Modules.World.On_Demand
             return null;
         }
 
-        private void OnRemovePresence (ScenePresence presence)
+        private void OnRemovePresence (IScenePresence presence)
         {
             if (m_scene.ScenePresences.Length == 1) //This presence hasn't been removed yet, so we check against one
             {

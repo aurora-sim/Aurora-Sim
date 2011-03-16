@@ -460,7 +460,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (m_RegionManagerIsGod && IsEstateManager(user))
                 return true;
 
-            ScenePresence sp = m_scene.GetScenePresence(user);
+            IScenePresence sp = m_scene.GetScenePresence (user);
             if (m_ParcelOwnerIsGod && m_parcelManagement != null && sp != null)
             {
                 ILandObject landObject = m_parcelManagement.GetLandObject(sp.AbsolutePosition.X, sp.AbsolutePosition.Y);
@@ -831,7 +831,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (!m_scene.RegionInfo.EstateSettings.AllowSetHome)
                 return false;
 
-            ScenePresence SP = m_scene.GetScenePresence(userID);
+            IScenePresence SP = m_scene.GetScenePresence (userID);
             if (SP == null)
                 return false;
 
@@ -858,7 +858,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (!m_scene.RegionInfo.EstateSettings.AllowLandmark)
                 return false;
 
-            ScenePresence SP = m_scene.GetScenePresence(userID);
+            IScenePresence SP = m_scene.GetScenePresence (userID);
             if (SP == null)
                 return false;
 
@@ -959,7 +959,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            ScenePresence sp = scene.GetScenePresence(user);
+            IScenePresence sp = scene.GetScenePresence (user);
             IClientAPI client = sp.ControllingClient;
 
             return m_groupsModule.GroupPermissionCheck(user, group, GroupPowers.DeedObject);

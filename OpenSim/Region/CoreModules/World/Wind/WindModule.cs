@@ -407,7 +407,7 @@ namespace OpenSim.Region.CoreModules
             SendWindAllClients();
         }
 
-        public void OnAgentEnteredRegion(ScenePresence avatar)
+        public void OnAgentEnteredRegion (IScenePresence avatar)
         {
             if (m_ready)
             {

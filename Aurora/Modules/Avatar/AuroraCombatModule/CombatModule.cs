@@ -114,7 +114,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             return true;
         }
 
-        void NewPresence(ScenePresence presence)
+        void NewPresence (IScenePresence presence)
         {
             presence.RegisterModuleInterface<ICombatPresence>(new CombatPresence(this, presence, m_config));
         }
@@ -192,7 +192,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 
         private class CombatPresence : ICombatPresence
         {
-            private ScenePresence m_SP;
+            private IScenePresence m_SP;
             private bool FireOnDeadEvent;
             private bool AllowTeamKilling;
             private bool AllowTeams;
@@ -234,7 +234,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 }
             }
 
-            public CombatPresence(AuroraCombatModule module, ScenePresence SP, IConfig m_config)
+            public CombatPresence (AuroraCombatModule module, IScenePresence SP, IConfig m_config)
             {
                 m_SP = SP;
                 m_combatModule = module;
@@ -280,7 +280,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 
             public void PhysicsActor_OnCollisionUpdate(EventArgs e)
             {
-                if (m_SP.m_invulnerable)
+                if (m_SP.Invulnerable)
                     return;
 
                 if (HasLeftCombat)
@@ -301,7 +301,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                     {
                         if (part.ParentGroup.Damage != -1.0f)
                             continue;
-                        ScenePresence otherAvatar = m_SP.Scene.GetScenePresence(part.OwnerID);
+                        IScenePresence otherAvatar = m_SP.Scene.GetScenePresence (part.OwnerID);
                         if (otherAvatar != null) // If the avatar is null, the person is not inworld, and not on a team
                         {
                             if (otherAvatar.RequestModuleInterface<ICombatPresence>().HasLeftCombat)
@@ -384,7 +384,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             public void KillAvatar(uint killerObjectLocalID, bool TeleportAgent)
             {
                 string deadAvatarMessage;
-                ScenePresence killingAvatar = null;
+                IScenePresence killingAvatar = null;
                 string killingAvatarMessage = "You fragged " + m_SP.Name;
 
                 if (killerObjectLocalID == 0)
@@ -398,7 +398,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 else
                 {
                     // Try to get the avatar responsible for the killing
-                    killingAvatar = m_SP.Scene.SceneGraph.GetScenePresence(killerObjectLocalID);
+                    killingAvatar = m_SP.Scene.GetScenePresence(killerObjectLocalID);
                     if (killingAvatar == null)
                     {
                         // Try to get the object which was responsible for the killing
@@ -498,7 +498,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 this.HasLeftCombat = false;
             }
 
-            private void FireDeadAvatarEvent(string KillerName, ScenePresence DeadAv, SceneObjectGroup killer)
+            private void FireDeadAvatarEvent (string KillerName, IScenePresence DeadAv, SceneObjectGroup killer)
             {
                 IScriptModule[] scriptEngines = DeadAv.Scene.RequestModuleInterfaces<IScriptModule>();
                 foreach (IScriptModule m in scriptEngines)
@@ -539,7 +539,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 if (damage < 0)
                     return;
 
-                ScenePresence SP = m_SP.Scene.GetScenePresence(OwnerID);
+                IScenePresence SP = m_SP.Scene.GetScenePresence (OwnerID);
                 if (SP == null)
                     return;
                 ICombatPresence cp = SP.RequestModuleInterface<ICombatPresence>();
@@ -560,7 +560,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 if (damage < 0)
                     return;
 
-                ScenePresence SP = m_SP.Scene.GetScenePresence(OwnerID);
+                IScenePresence SP = m_SP.Scene.GetScenePresence (OwnerID);
                 if (SP == null)
                     return;
                 ICombatPresence cp = SP.RequestModuleInterface<ICombatPresence>();
@@ -588,7 +588,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             {
                 if (healing < 0)
                     return;
-                ScenePresence SP = m_SP.Scene.GetScenePresence(OwnerID);
+                IScenePresence SP = m_SP.Scene.GetScenePresence (OwnerID);
                 if (SP == null)
                     return;
                 ICombatPresence cp = SP.RequestModuleInterface<ICombatPresence>();
@@ -800,7 +800,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             });
         }
 
-        private void AvatarEnteringParcel (ScenePresence avatar, int localLandID, UUID regionID)
+        private void AvatarEnteringParcel (IScenePresence avatar, int localLandID, UUID regionID)
         {
             ILandObject obj = null;
             IParcelManagementModule parcelManagement = avatar.Scene.RequestModuleInterface<IParcelManagementModule> ();

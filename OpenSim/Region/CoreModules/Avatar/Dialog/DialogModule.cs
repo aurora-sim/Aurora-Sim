@@ -118,7 +118,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
         
         public void SendAlertToUser(UUID agentID, string message, bool modal)
         {
-            ScenePresence sp = m_scene.GetScenePresence(agentID);
+            IScenePresence sp = m_scene.GetScenePresence (agentID);
             
             if (sp != null)
                 sp.ControllingClient.SendAgentAlertMessage(message, modal);
@@ -126,7 +126,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
         
         public void SendAlertToUser(string firstName, string lastName, string message, bool modal)
         {
-            ScenePresence presence = m_scene.SceneGraph.GetScenePresence(firstName, lastName);
+            IScenePresence presence = m_scene.SceneGraph.GetScenePresence (firstName, lastName);
             if (presence != null)
                 presence.ControllingClient.SendAgentAlertMessage(message, modal);
         }
@@ -157,7 +157,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
                 ownerLastName = "user)";
             }
 
-            ScenePresence sp = m_scene.GetScenePresence(avatarID);
+            IScenePresence sp = m_scene.GetScenePresence (avatarID);
             if (sp != null)
                 sp.ControllingClient.SendDialog(objectName, objectID, ownerFirstName, ownerLastName, message, textureID, ch, buttonlabels);
         }
@@ -165,7 +165,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
         public void SendUrlToUser(
             UUID avatarID, string objectName, UUID objectID, UUID ownerID, bool groupOwned, string message, string url)
         {
-            ScenePresence sp = m_scene.GetScenePresence(avatarID);
+            IScenePresence sp = m_scene.GetScenePresence (avatarID);
             
             if (sp != null)
                 sp.ControllingClient.SendLoadURL(objectName, objectID, ownerID, groupOwned, message, url);
@@ -186,7 +186,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
                 ownerLastName = "user)";
             }
 
-            ScenePresence sp = m_scene.GetScenePresence(avatarid);
+            IScenePresence sp = m_scene.GetScenePresence (avatarid);
             
             if (sp != null)
                 sp.ControllingClient.SendTextBoxRequest(message, chatChannel, name, ownerFirstName, ownerLastName, objectid);

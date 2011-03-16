@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Nini.Config;
 using OpenMetaverse;
+using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
@@ -98,26 +99,26 @@ namespace Aurora.Modules
 
         #region Agents
 
-        protected void OnMakeChildAgent(ScenePresence presence)
+        protected void OnMakeChildAgent (IScenePresence presence)
         {
             //Switch child agent to root agent
             m_rootAgents--;
             m_childAgents++;
         }
 
-        protected void OnMakeRootAgent(ScenePresence presence)
+        protected void OnMakeRootAgent (IScenePresence presence)
         {
             m_rootAgents++;
             m_childAgents--;
         }
 
-        protected void OnNewPresence(ScenePresence presence)
+        protected void OnNewPresence (IScenePresence presence)
         {
             // Why don't we check for root agents? We don't because it will be added in MakeRootAgent and removed from here
             m_childAgents++;
         }
 
-        void OnRemovePresence(ScenePresence presence)
+        void OnRemovePresence (IScenePresence presence)
         {
             if (presence.IsChildAgent)
                 m_childAgents--;

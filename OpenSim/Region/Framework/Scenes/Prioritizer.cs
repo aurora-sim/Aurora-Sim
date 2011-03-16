@@ -173,7 +173,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private double GetPriorityByOOBDistance(IClientAPI client, ISceneEntity entity)
             {
-            ScenePresence presence = m_scene.GetScenePresence(client.AgentId);
+                IScenePresence presence = m_scene.GetScenePresence (client.AgentId);
             if (presence != null)
                 {
                 // If this is an update for our own avatar give it the highest priority

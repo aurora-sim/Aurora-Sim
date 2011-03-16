@@ -897,7 +897,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         protected virtual bool AddClient(uint circuitCode, UUID agentID, UUID sessionID, IPEndPoint remoteEndPoint, AgentCircuitData sessionInfo)
         {
-            ScenePresence SP;
+            IScenePresence SP;
             if (!m_scene.TryGetScenePresence(agentID, out SP))
             {
                 // Create the LLUDPClient

@@ -100,12 +100,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         #region Client Methods
 
-        protected void MakeRootAgent(ScenePresence presence)
+        protected void MakeRootAgent (IScenePresence presence)
         {
             Util.FireAndForget(delegate(object o) { RezAttachments(presence); });
         }
 
-        protected void MakeChildAgent(ScenePresence presence)
+        protected void MakeChildAgent (IScenePresence presence)
         {
             foreach (AvatarAttachment att in presence.Appearance.GetAttachments())
             {
@@ -135,7 +135,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             client.OnUpdatePrimGroupPosition -= ClientUpdateAttachmentPosition;
         }
 
-        protected void RezAttachments(ScenePresence presence)
+        protected void RezAttachments (IScenePresence presence)
         {
             if (null == presence.Appearance)
             {

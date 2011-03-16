@@ -103,7 +103,7 @@ namespace Aurora.Modules
         /// Tell the client about all other display names in the region as well as send ours to all others
         /// </summary>
         /// <param name="us"></param>
-        void OnMakeRootAgent(ScenePresence us)
+        void OnMakeRootAgent (IScenePresence us)
         {
             if (us.IsChildAgent)
                 return;
@@ -112,7 +112,7 @@ namespace Aurora.Modules
             if (usProfile != null)
                 DisplayNameUpdate(usProfile.DisplayName, usProfile.DisplayName, us, us.UUID);
 
-            foreach (ScenePresence SP in us.Scene.ScenePresences)
+            foreach (IScenePresence SP in us.Scene.GetScenePresences())
             {
                 if (SP.UUID != us.UUID)
                 {
@@ -262,7 +262,7 @@ namespace Aurora.Modules
         /// <param name="oldDisplayName"></param>
         /// <param name="InfoFromAv"></param>
         /// <param name="ToAgentID"></param>
-        public void DisplayNameUpdate(string newDisplayName, string oldDisplayName, ScenePresence InfoFromAv, UUID ToAgentID)
+        public void DisplayNameUpdate (string newDisplayName, string oldDisplayName, IScenePresence InfoFromAv, UUID ToAgentID)
         {
             if (m_eventQueue != null)
             {

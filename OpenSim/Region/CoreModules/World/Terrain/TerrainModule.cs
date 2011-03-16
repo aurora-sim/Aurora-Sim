@@ -253,7 +253,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 if (!m_terrainPatchesSent.ContainsKey(client.AgentId))
                 {
-                    ScenePresence agent = m_scene.GetScenePresence(client.AgentId);
+                    IScenePresence agent = m_scene.GetScenePresence (client.AgentId);
                     if (agent != null && agent.IsChildAgent)
                     {
                         //If the avatar is a child agent, we need to send the terrain data initially
@@ -285,7 +285,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// <param name="RemoteClient">Client to send to</param>
         public void SendLayerData(IClientAPI RemoteClient)
         {
-            ScenePresence presence = m_scene.GetScenePresence(RemoteClient.AgentId);
+            IScenePresence presence = m_scene.GetScenePresence (RemoteClient.AgentId);
             if (!m_sendTerrainUpdatesByViewDistance)
             {
                 //Default way, send the full terrain at once
@@ -303,23 +303,23 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             if (FunctionName == "DrawDistanceChanged" || FunctionName == "SignficantCameraMovement")
             {
-                SendTerrainUpdatesForClient((ScenePresence)parameters);
+                SendTerrainUpdatesForClient ((IScenePresence)parameters);
             }
             return null;
         }
 
         void EventManager_OnSignificantClientMovement(IClientAPI remote_client)
         {
-            ScenePresence presence = m_scene.GetScenePresence(remote_client.AgentId);
+            IScenePresence presence = m_scene.GetScenePresence (remote_client.AgentId);
             SendTerrainUpdatesForClient(presence);
         }
 
-        void OnNewPresence(ScenePresence presence)
+        void OnNewPresence (IScenePresence presence)
         {
             SendTerrainUpdatesForClient(presence);
         }
 
-        protected void SendTerrainUpdatesForClient(ScenePresence presence)
+        protected void SendTerrainUpdatesForClient (IScenePresence presence)
         {
             if (!m_sendTerrainUpdatesByViewDistance)
                 return;
@@ -1218,7 +1218,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             if (shouldTaint || forceSendOfTerrainInfo)
                 QueueTerrainUpdate();
 
-            foreach (ScenePresence presence in m_scene.ScenePresences)
+            foreach (IScenePresence presence in m_scene.ScenePresences)
             {
                 if (!m_sendTerrainUpdatesByViewDistance)
                 {

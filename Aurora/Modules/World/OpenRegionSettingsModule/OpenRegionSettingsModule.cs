@@ -754,7 +754,7 @@ namespace Aurora.Modules
 
         #region Client and Event Queue
 
-        public void OnNewClient(ScenePresence presence)
+        public void OnNewClient (IScenePresence presence)
         {
             OpenRegionInfo(presence);
         }
@@ -767,7 +767,7 @@ namespace Aurora.Modules
             });
         }
 
-        public void OpenRegionInfo(ScenePresence presence)
+        public void OpenRegionInfo (IScenePresence presence)
         {
             OSD item = OpenRegionInfo();
             IEventQueueService eq = presence.Scene.RequestModuleInterface<IEventQueueService>();

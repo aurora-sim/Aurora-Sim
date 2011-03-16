@@ -114,7 +114,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="avatar"></param>
         /// <returns></returns>
-        Vector3 GetNearestRegionEdgePosition(ScenePresence avatar);
+        Vector3 GetNearestRegionEdgePosition (IScenePresence avatar);
 
         /// <summary>
         /// Get the nearest allowed parcel that the given avatarID is allowed in from point (x,y)
@@ -130,7 +130,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="avatar"></param>
         /// <returns></returns>
-        Vector3 GetNearestAllowedPosition(ScenePresence avatar);
+        Vector3 GetNearestAllowedPosition (IScenePresence avatar);
         
         /// <summary>
         /// Get the center of a parcel at ground level

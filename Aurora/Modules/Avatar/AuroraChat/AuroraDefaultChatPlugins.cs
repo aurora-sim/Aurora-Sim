@@ -331,7 +331,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
                     //Add the user to the list of allowed speakers and 'chat' admins
                     if (message[1] == "AddToAuth")
                     {
-                        IScenePresence NewSP;
+                        ScenePresence NewSP;
                         ((Scene)c.Scene).TryGetAvatarByName(message[2], out NewSP);
                         m_authList.Add(NewSP.UUID);
                         chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(scene.RegionInfo.RegionLocX,
@@ -340,7 +340,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
                     if (message[1] == "RemoveFromAuth")
                     {
                         IScenePresence NewSP;
-                        ((Scene)c.Scene).TryGetAvatarByName(message[2], out NewSP);
+                        c.Scene.TryGetAvatarByName(message[2], out NewSP);
                         m_authList.Remove(NewSP.UUID);
                         chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(scene.RegionInfo.RegionLocX,
                                                 scene.RegionInfo.RegionLocY, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, message[2] + " added.", ChatSourceType.System, -1);
@@ -362,8 +362,8 @@ namespace Aurora.Modules.Avatar.AuroraChat
                     //Remove speaking priviledges from an individual
                     if (message[1] == "RevokeSpeakingRights")
                     {
-                        ScenePresence NewSP;
-                        ((Scene)c.Scene).TryGetAvatarByName(message[2], out NewSP);
+                        IScenePresence NewSP;
+                        c.Scene.TryGetAvatarByName(message[2], out NewSP);
                         m_authorizedSpeakers.Remove(NewSP.UUID);
                         chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(scene.RegionInfo.RegionLocX,
                                                 scene.RegionInfo.RegionLocY, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, message[2] + " - revoked.", ChatSourceType.System, -1);
@@ -371,8 +371,8 @@ namespace Aurora.Modules.Avatar.AuroraChat
                     //Allow an individual to speak again
                     if (message[1] == "GiveSpeakingRights")
                     {
-                        ScenePresence NewSP;
-                        ((Scene)c.Scene).TryGetAvatarByName(message[2], out NewSP);
+                        IScenePresence NewSP;
+                        c.Scene.TryGetAvatarByName(message[2], out NewSP);
                         m_authorizedSpeakers.Add(NewSP.UUID);
                         chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(scene.RegionInfo.RegionLocX,
                                                 scene.RegionInfo.RegionLocY, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, message[2] + " - revoked.", ChatSourceType.System, -1);
@@ -396,7 +396,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
 
         public void OnNewClient(IClientAPI client)
         {
-            ScenePresence SP = ((Scene)client.Scene).GetScenePresence(client.AgentId);
+            IScenePresence SP = ((Scene)client.Scene).GetScenePresence (client.AgentId);
             if (!SP.IsChildAgent)
             {
                 //If chat is not blocked for now, add to the not blocked list
@@ -443,7 +443,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
                     m_authorizedSpeakers.Remove(clientID);
             }
 
-            ScenePresence presence = scene.GetScenePresence(clientID);
+            IScenePresence presence = scene.GetScenePresence (clientID);
             //Announce the closing agent if enabled
             if (m_announceClosedAgents)
             {

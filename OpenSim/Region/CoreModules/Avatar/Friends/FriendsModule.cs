@@ -229,7 +229,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             //});
         }
 
-        void OnMakeRootAgent(ScenePresence presence)
+        void OnMakeRootAgent (IScenePresence presence)
         {
             //Only send if they are root!
             Util.FireAndForget(delegate(object o)
@@ -305,7 +305,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             Scene scene = GetClientScene(agentID);
             if (scene != null)
             {
-                ScenePresence presence = scene.GetScenePresence(agentID);
+                IScenePresence presence = scene.GetScenePresence (agentID);
                 if (presence != null)
                     return presence.ControllingClient;
             }
@@ -322,7 +322,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             {
                 foreach (Scene scene in m_Scenes)
                 {
-                    ScenePresence presence = scene.GetScenePresence(agentId);
+                    IScenePresence presence = scene.GetScenePresence (agentId);
                     if (presence != null && !presence.IsChildAgent)
                         return scene;
                 }

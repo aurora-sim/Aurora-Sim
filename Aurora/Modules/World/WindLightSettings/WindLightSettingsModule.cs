@@ -456,7 +456,7 @@ namespace Aurora.Modules
             }
         }
 
-        private void AvatarEnteringNewParcel(ScenePresence SP, int localLandID, UUID regionID)
+        private void AvatarEnteringNewParcel (IScenePresence SP, int localLandID, UUID regionID)
         {
             //Send on new parcel
             SendProfileToClient(SP);

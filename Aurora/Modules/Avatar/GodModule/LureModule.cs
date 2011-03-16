@@ -137,8 +137,8 @@ namespace Aurora.Modules
 			if (!(client.Scene is Scene))
 				return;
 			Scene scene = (Scene)(client.Scene);
-            
-            ScenePresence presence = scene.GetScenePresence(client.AgentId);
+
+            IScenePresence presence = scene.GetScenePresence (client.AgentId);
             UUID dest = Util.BuildFakeParcelID(
 				scene.RegionInfo.RegionHandle,
 				(uint)presence.AbsolutePosition.X,

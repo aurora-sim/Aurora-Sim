@@ -99,7 +99,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
         public void RequestGodlikePowers(
             UUID agentID, UUID sessionID, UUID token, bool godLike, IClientAPI controllingClient)
         {
-            ScenePresence sp = m_scene.GetScenePresence(agentID);
+            IScenePresence sp = m_scene.GetScenePresence (agentID);
 
             if (sp != null)
             {
@@ -144,8 +144,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
         public void KickUser(UUID godID, UUID sessionID, UUID agentID, uint kickflags, byte[] reason)
         {
             UUID kickUserID = ALL_AGENTS;
-            
-            ScenePresence sp = m_scene.GetScenePresence(agentID);
+
+            IScenePresence sp = m_scene.GetScenePresence (agentID);
 
             if (sp != null || agentID == kickUserID)
             {

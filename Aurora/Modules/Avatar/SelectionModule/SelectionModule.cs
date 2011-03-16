@@ -97,12 +97,12 @@ namespace Aurora.Modules
             client.OnViewerEffect -= ProcessViewerEffect;
         }
 
-        protected void EventManager_OnNewPresence(ScenePresence presence)
+        protected void EventManager_OnNewPresence (IScenePresence presence)
         {
             presence.RegisterModuleInterface<PerClientSelectionParticles>(new PerClientSelectionParticles(presence, this));
         }
 
-        protected void EventManager_OnRemovePresence(ScenePresence presence)
+        protected void EventManager_OnRemovePresence (IScenePresence presence)
         {
             PerClientSelectionParticles particles = presence.RequestModuleInterface<PerClientSelectionParticles>();
             if (particles != null)
@@ -288,13 +288,13 @@ namespace Aurora.Modules
         protected class PerClientSelectionParticles
         {
             protected int SendEffectPackets = -1;
-            protected ScenePresence m_presence;
+            protected IScenePresence m_presence;
             protected SelectionModule m_module;
             protected bool m_IsSelecting = false;
             protected SceneObjectPart m_SelectedUUID = null;
             protected byte[] m_EffectColor = new Color4(1, 0.01568628f, 0, 1).GetBytes();
 
-            public PerClientSelectionParticles(ScenePresence presence, SelectionModule mod)
+            public PerClientSelectionParticles (IScenePresence presence, SelectionModule mod)
             {
                 m_presence = presence;
                 m_module = mod;

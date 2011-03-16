@@ -51,7 +51,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public event OnFrameDelegate OnFrame;
 
-        public delegate void ClientMovement(ScenePresence client);
+        public delegate void ClientMovement (IScenePresence client);
 
         public event ClientMovement OnClientMovement;
 
@@ -71,7 +71,7 @@ namespace OpenSim.Region.Framework.Scenes
         public delegate void OnClientLoginDelegate(IClientAPI client);
         public event OnClientLoginDelegate OnClientLogin;
 
-        public delegate void OnNewPresenceDelegate(ScenePresence presence);
+        public delegate void OnNewPresenceDelegate (IScenePresence presence);
 
         public event OnNewPresenceDelegate OnNewPresence;
 
@@ -181,10 +181,10 @@ namespace OpenSim.Region.Framework.Scenes
         public event ScriptColliding OnScriptLandColliding;
         public event ScriptColliding OnScriptLandColliderEnd;
 
-        public delegate void OnMakeChildAgentDelegate(ScenePresence presence);
+        public delegate void OnMakeChildAgentDelegate (IScenePresence presence);
         public event OnMakeChildAgentDelegate OnMakeChildAgent;
 
-        public delegate void OnMakeRootAgentDelegate(ScenePresence presence);
+        public delegate void OnMakeRootAgentDelegate (IScenePresence presence);
         public event OnMakeRootAgentDelegate OnMakeRootAgent;
 
         public delegate void NewInventoryItemUploadComplete(UUID avatarID, UUID assetID, string name, int userlevel);
@@ -412,7 +412,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerOnClientMovement(ScenePresence avatar)
+        public void TriggerOnClientMovement (IScenePresence avatar)
         {
             ClientMovement handlerClientMovement = OnClientMovement;
             if (handlerClientMovement != null)
@@ -581,7 +581,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         }
 
-        public void TriggerOnNewPresence(ScenePresence presence)
+        public void TriggerOnNewPresence (IScenePresence presence)
         {
             OnNewPresenceDelegate handlerNewPresence = OnNewPresence;
             if (handlerNewPresence != null)
@@ -602,7 +602,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerOnRemovePresence(ScenePresence presence)
+        public void TriggerOnRemovePresence (IScenePresence presence)
         {
             OnNewPresenceDelegate handlerRemovePresence = OnRemovePresence;
             if (handlerRemovePresence != null)
@@ -1016,7 +1016,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerOnMakeChildAgent(ScenePresence presence)
+        public void TriggerOnMakeChildAgent (IScenePresence presence)
         {
             OnMakeChildAgentDelegate handlerMakeChildAgent = OnMakeChildAgent;
             if (handlerMakeChildAgent != null)

@@ -168,7 +168,7 @@ namespace Aurora.Modules
                 }
             }
 
-            ScenePresence sp = m_scene.GetScenePresence(avatarID);
+            IScenePresence sp = m_scene.GetScenePresence (avatarID);
             if (sp != null && !sp.IsChildAgent)
                 sp.ControllingClient.SendDialog(objectName, objectID, ownerFirstName, ownerLastName, message, textureID, ch, buttonlabels);
         }
@@ -176,7 +176,7 @@ namespace Aurora.Modules
         public void SendUrlToUser(
             UUID avatarID, string objectName, UUID objectID, UUID ownerID, bool groupOwned, string message, string url)
         {
-            ScenePresence sp = m_scene.GetScenePresence(avatarID);
+            IScenePresence sp = m_scene.GetScenePresence (avatarID);
 
             //If the user is muted, do NOT send them URL boxes
             if (m_muteListModule != null)
@@ -195,7 +195,7 @@ namespace Aurora.Modules
 
         public void SendTextBoxToUser(UUID avatarID, string message, int chatChannel, string name, UUID objectID, UUID ownerID)
         {
-            ScenePresence sp = m_scene.GetScenePresence(avatarID);
+            IScenePresence sp = m_scene.GetScenePresence (avatarID);
 
             if (sp != null && !sp.IsChildAgent)
             {

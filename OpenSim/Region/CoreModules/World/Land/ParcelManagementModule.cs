@@ -932,12 +932,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             CheckEnteringNewParcel(avatar, false);
         }
 
-        void EventManager_OnClientMovement(ScenePresence client)
-        {
-            //This needs sent all the time
-            SendOutNearestBanLine(client.ControllingClient);
-        }
-
         public void EventManagerOnSignificantClientMovement(IClientAPI remote_client)
         {
             IScenePresence clientAvatar = m_scene.GetScenePresence (remote_client.AgentId);

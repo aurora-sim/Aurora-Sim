@@ -110,6 +110,18 @@ namespace OpenSim.Framework
         bool Frozen { get; set; }
 
         int UserLevel { get; set; }
+
+        void Teleport (Vector3 Pos);
+
+        Vector3 lastKnownAllowedPosition { get; set; }
+
+        OpenMetaverse.UUID currentParcelUUID { get; set; }
+
+        bool Invulnerable { get; set; }
+
+        float DrawDistance { get; set; }
+
+        void ChildAgentDataUpdate (AgentData agentData);
     }
 
     public interface ISceneObject : ISceneEntity

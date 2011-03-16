@@ -128,7 +128,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             {
                 for(int i = 0; i < AgentsToSendTo.Count; i++)
                 {
-                    ScenePresence user;
+                    IScenePresence user;
                     if (scene.TryGetScenePresence (AgentsToSendTo[i], out user))
                     {
                         // Local message
@@ -153,7 +153,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             // Try root avatar only first - incorrect now, see below
             foreach (Scene scene in m_Scenes)
             {
-                ScenePresence user;
+                IScenePresence user;
                 if (scene.TryGetScenePresence (toAgentID, out user))
                 {
                     user.ControllingClient.SendInstantMessage (im);
@@ -372,7 +372,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     // Trigger the Instant message in the scene.
                     foreach (Scene scene in m_Scenes)
                     {
-                        ScenePresence user;
+                        IScenePresence user;
                         if (scene.TryGetScenePresence (toAgentID, out user))
                         {
                             if (!user.IsChildAgent)

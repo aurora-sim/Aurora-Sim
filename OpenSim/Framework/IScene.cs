@@ -84,5 +84,13 @@ namespace OpenSim.Framework
         IUserAccountService UserAccountService { get; }
 
         #endregion
+
+        IScenePresence GetScenePresence (UUID uUID);
+
+        void TryGetAvatarByName (string p, out IScenePresence NewSP);
+
+        IEnumerable<IScenePresence> GetScenePresences ();
+
+        IScenePresence GetScenePresence (uint killerObjectLocalID);
     }
 }

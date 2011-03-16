@@ -146,7 +146,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         {
             foreach (Scene s in m_SceneList)
             {
-                ScenePresence presence = s.GetScenePresence(agentID);
+                IScenePresence presence = s.GetScenePresence (agentID);
                 if (presence != null && !presence.IsChildAgent)
                     return s;
             }
@@ -157,7 +157,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         {
             foreach (Scene s in m_SceneList)
             {
-                ScenePresence presence = s.GetScenePresence(agentID);
+                IScenePresence presence = s.GetScenePresence (agentID);
                 if (presence != null && !presence.IsChildAgent)
                     return presence.ControllingClient;
             }

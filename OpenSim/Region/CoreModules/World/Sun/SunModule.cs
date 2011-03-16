@@ -488,7 +488,7 @@ namespace OpenSim.Region.CoreModules
         /// <param name="avatar"></param>
         /// <param name="localLandID"></param>
         /// <param name="regionID"></param>
-        private void AvatarEnteringParcel(ScenePresence avatar, int localLandID, UUID regionID)
+        private void AvatarEnteringParcel (IScenePresence avatar, int localLandID, UUID regionID)
         {
             SunToClient(avatar.ControllingClient);
         }

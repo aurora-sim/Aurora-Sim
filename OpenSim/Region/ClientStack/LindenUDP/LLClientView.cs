@@ -5529,7 +5529,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// </summary>
         public bool ChildAgentStatus()
         {
-            ScenePresence Sp = m_scene.GetScenePresence(AgentId);
+            IScenePresence Sp = m_scene.GetScenePresence (AgentId);
             if (Sp == null || (Sp.IsChildAgent))
                 return true;
             return false;
@@ -7087,7 +7087,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 if (avSetStartLocationRequestPacket.StartLocationData.LocationPos.X == 255.5f
                     || avSetStartLocationRequestPacket.StartLocationData.LocationPos.Y == 255.5f)
                 {
-                    ScenePresence avatar = null;
+                    IScenePresence avatar = null;
                     if (((Scene)m_scene).TryGetScenePresence(AgentId, out avatar))
                     {
                         if (avSetStartLocationRequestPacket.StartLocationData.LocationPos.X == 255.5f)

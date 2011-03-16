@@ -186,8 +186,8 @@ namespace Aurora.Modules
             {
                 //If they are changing estates, we have to ask them for the password to the estate, so send them an llTextBox
                 string Password = "";
-                IWorldComm comm = ((Scene)client.Scene).RequestModuleInterface<IWorldComm>();
-                IDialogModule dialog = ((Scene)client.Scene).RequestModuleInterface<IDialogModule>();
+                IWorldComm comm = client.Scene.RequestModuleInterface<IWorldComm>();
+                IDialogModule dialog = client.Scene.RequestModuleInterface<IDialogModule>();
                 //If the comms module is not null, we send the user a text box on a random channel so that they cannot be tapped into
                 if (comm != null && dialog != null)
                 {
@@ -207,8 +207,8 @@ namespace Aurora.Modules
                         client.SendAgentAlertMessage("Unable to connect to the given estate.", false);
                     else
                     {
-                        ((Scene)client.Scene).RegionInfo.EstateSettings.EstateID = (uint)EstateID;
-                        ((Scene)client.Scene).RegionInfo.EstateSettings.Save();
+                        client.Scene.RegionInfo.EstateSettings.EstateID = (uint)EstateID;
+                        client.Scene.RegionInfo.EstateSettings.Save();
                     }
                 }
             }
@@ -240,12 +240,12 @@ namespace Aurora.Modules
             {
                 //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
                 if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
-                    SaveChangesDatabase(((Scene)client.Scene).RegionInfo);
+                    SaveChangesDatabase(client.Scene.RegionInfo);
                 else
-                    SaveChangesFile(oldRegionName, ((Scene)client.Scene).RegionInfo);
+                    SaveChangesFile(oldRegionName, client.Scene.RegionInfo);
             }
             else
-                SaveChangesFile(oldRegionName, ((Scene)client.Scene).RegionInfo);
+                SaveChangesFile(oldRegionName, client.Scene.RegionInfo);
                 
 
             //Tell the clients to update all references to the new settings
