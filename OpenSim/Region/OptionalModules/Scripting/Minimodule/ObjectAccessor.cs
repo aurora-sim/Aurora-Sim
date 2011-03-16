@@ -156,7 +156,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
 
         public bool Contains(IObject item)
         {
-            return m_scene.Entities.ContainsKey(item.LocalID);
+            return m_scene.Entities.ContainsKey(item.GlobalID);
         }
 
         public void CopyTo(IObject[] array, int arrayIndex)

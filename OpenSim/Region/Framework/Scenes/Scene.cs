@@ -623,7 +623,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             // Remove the avatar from the scene
-            SceneGraph.RemoveScenePresence (presence.UUID);
+            SceneGraph.RemoveScenePresence (presence);
             m_clientManager.Remove (presence.UUID);
 
             AuthenticateHandler.RemoveCircuit (presence.ControllingClient.CircuitCode);

@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Collections.Generic;
 using OpenMetaverse;
 
 namespace OpenSim.Framework
@@ -94,6 +95,17 @@ namespace OpenSim.Framework
     {
         Vector3 GroupScale ();
         Quaternion GroupRotation { get; }
+        List<ISceneChildEntity> ChildrenEntities ();
+        void ClearChildren ();
+        bool AddChild (ISceneChildEntity child, int linkNum);
+        bool LinkChild (ISceneChildEntity child);
+        bool RemoveChild (ISceneChildEntity child);
+        bool GetChildPrim (uint LocalID, out ISceneChildEntity entity);
+        bool GetChildPrim (UUID UUID, out ISceneChildEntity entity);
+
+        void ClearUndoState ();
+
+        void AttachToScene (IScene m_parentScene);
     }
 
     public interface IEntity

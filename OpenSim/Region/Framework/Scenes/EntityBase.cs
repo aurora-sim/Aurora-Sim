@@ -163,11 +163,6 @@ namespace OpenSim.Region.Framework.Scenes
             return (EntityBase) MemberwiseClone();
         }
 
-        public virtual List<ISceneChildEntity> ChildrenEntities ()
-        {
-            return new List<ISceneChildEntity> ();
-        }
-
         public virtual void ResetEntityIDs()
         {
         }
@@ -178,37 +173,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public virtual void ApplyPhysics(bool allowPhysicalPrim)
         {
-        }
-
-        public virtual void ClearChildren()
-        {
-        }
-
-        public virtual bool AddChild (ISceneChildEntity child, int linkNum)
-        {
-            return false;
-        }
-
-        public virtual bool LinkChild (ISceneChildEntity child)
-        {
-            return false;
-        }
-
-        public virtual bool RemoveChild (ISceneChildEntity child)
-        {
-            return false;
-        }
-
-        public virtual bool GetChildPrim (uint LocalID, out ISceneChildEntity entity)
-        {
-            entity = null;
-            return false;
-        }
-
-        public virtual bool GetChildPrim (UUID UUID, out ISceneChildEntity entity)
-        {
-            entity = null;
-            return false;
         }
 
         public virtual void ClearUndoState()

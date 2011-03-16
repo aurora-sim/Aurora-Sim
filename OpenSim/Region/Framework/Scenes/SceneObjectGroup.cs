@@ -336,7 +336,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_partsList; }
         }
 
-        public override List<ISceneChildEntity> ChildrenEntities ()
+        public List<ISceneChildEntity> ChildrenEntities ()
         {
             List<ISceneChildEntity> entities = new List<ISceneChildEntity> ();
             lock (m_partsLock)
