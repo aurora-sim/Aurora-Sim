@@ -2069,7 +2069,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Overridden Methods
 
-        public override void Update()
+        public void Update()
         {
             if (!m_sendingPrimUpdates) // && (sendPrimsLoop & SendPrimsNum) == 0)
             {

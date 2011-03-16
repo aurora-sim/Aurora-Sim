@@ -137,8 +137,19 @@ namespace OpenSim.Region.OptionalModules.World.NPC
 
         public Vector3 Position
         {
-            get { return m_scene.Entities[m_uuid].AbsolutePosition; }
-            set { m_scene.Entities[m_uuid].AbsolutePosition = value; }
+            get
+            {
+                IEntity ent;
+                if (m_scene.Entities.TryGetValue (m_uuid, out ent))
+                    return ent.AbsolutePosition;
+                return Vector3.Zero;
+            }
+            set 
+            {
+                IEntity ent;
+                if(m_scene.Entities.TryGetValue(m_uuid, out ent))
+                    ent.AbsolutePosition = value;
+            }
         }
 
         public bool SendLogoutPacketWhenClosing

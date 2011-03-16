@@ -189,7 +189,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Force all prims in the scene object to persist
         /// </summary>
-        public override void ForcePersistence()
+        public void ForcePersistence()
         {
             //Force normal backup
             HasGroupChanged = true;
@@ -199,7 +199,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Clears all undo states from this group
         /// </summary>
-        public override void ClearUndoState()
+        public void ClearUndoState()
         {
             foreach (SceneObjectPart child in ChildrenList)
             {
@@ -303,7 +303,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public override Quaternion GroupRotation
+        public Quaternion GroupRotation
         {
             get { return m_rootPart.RotationOffset; }
         }
@@ -596,7 +596,7 @@ namespace OpenSim.Region.Framework.Scenes
             return m_rootPart.FromItemID;
         }
 
-        public override bool IsPhysical()
+        public bool IsPhysical()
         {
             return ((RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics);
         }
@@ -822,7 +822,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_ValidgrpOOB = false;
         }
 
-        public override Vector3 GroupScale()
+        public Vector3 GroupScale()
         {
             Vector3 minScale = new Vector3(int.MaxValue, int.MaxValue, int.MaxValue);
             Vector3 maxScale = new Vector3(int.MinValue,int.MinValue,int.MinValue) ;
@@ -1464,7 +1464,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Apply physics to this group
         /// </summary>
         /// <param name="m_physicalPrim"></param>
-        public override void ApplyPhysics(bool m_physicalPrim)
+        public void ApplyPhysics(bool m_physicalPrim)
         {
             m_rootPart.ApplyPhysics(m_rootPart.GetEffectiveObjectFlags(), m_rootPart.VolumeDetectActive, m_physicalPrim);
 
@@ -1569,7 +1569,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Rebuild the physical representation of all the prims.
         /// This is used after copying the prim so that all of the object is readded to the physics scene.
         /// </summary>
-        public override void RebuildPhysicalRepresentation()
+        public void RebuildPhysicalRepresentation()
         {
            
             /*
@@ -1862,7 +1862,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Scheduling
 
-        public override void Update()
+        public void Update()
         {
         }
 

@@ -91,11 +91,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public bool ContainsKey(UUID id)
-        {
-            return m_entities.ContainsKey(id);
-        }
-
         public bool Remove(IEntity entity)
         {
             if (entity == null)
@@ -160,46 +155,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public IEntity this[UUID id]
+        public bool TryGetPresenceValue (UUID key, out IScenePresence presence)
         {
-            get
-            {
-                ISceneEntity entity;
-                lock (m_objectEntities)
-                {
-                    if (m_objectEntities.TryGetValue (id, out entity))
-                        return entity;
-                }
-                IScenePresence presence;
-                lock (m_presenceEntities)
-                {
-                    if (m_presenceEntities.TryGetValue (id, out presence))
-                        return presence;
-                }
-                return null;
-            }
-            set
-            {
-                Add(value);
-            }
-        }
-
-        public IEntity this[uint localID]
-        {
-            get
-            {
-                ISceneEntity entity;
-                lock (m_objectEntities)
-                {
-                    if (m_objectEntities.TryGetValue (localID, out entity))
-                        return entity;
-                }
-                return null;
-            }
-            set
-            {
-                Add(value);
-            }
+            return m_presenceEntities.TryGetValue (key, out presence);
         }
 
         public bool TryGetValue(UUID key, out IEntity obj)

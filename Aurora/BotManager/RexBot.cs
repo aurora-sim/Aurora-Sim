@@ -173,7 +173,7 @@ namespace Aurora.BotManager
 
         public void Initialize()
         {
-            List<ScenePresence> avatars = m_scene.ScenePresences;
+            ScenePresence[] avatars = m_scene.ScenePresences;
             foreach (ScenePresence avatar in avatars)
             {
                 if (avatar.ControllingClient == this)

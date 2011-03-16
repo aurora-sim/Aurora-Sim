@@ -112,12 +112,12 @@ namespace OpenSim.Framework
         int LinkNum { get; set; }
         Vector3 AbsolutePosition { get; set; }
         Vector3 Velocity { get; set; }
-        void ResetEntityIDs ();
         string Name { get; }
     }
 
     public interface ISceneChildEntity : IEntity
     {
         ISceneEntity ParentEntity { get; }
+        void ResetEntityIDs ();
     }
 }

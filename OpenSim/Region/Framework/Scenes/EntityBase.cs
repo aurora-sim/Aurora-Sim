@@ -99,14 +99,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         protected bool m_hasGroupChanged = false;
 
-        /// <summary>
-        /// Force this prim to be added to backup
-        /// </summary>
-        public virtual void ForcePersistence()
-        {
-            HasGroupChanged = true;
-        }
-
         protected Vector3 m_pos;
 
         /// <summary>
@@ -135,62 +127,12 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_localId = value; }
         }
 
-        public virtual bool IsPhysical()
-        {
-            return false;
-        }
-
         /// <summary>
         /// Creates a new Entity (should not occur on it's own)
         /// </summary>
         public EntityBase()
         {
             m_name = "(basic entity)";
-        }
-
-        /// <summary>
-        /// Performs any updates that need to be done at each frame, as opposed to immediately.
-        /// These included scheduled updates and updates that occur due to physics processing.
-        /// </summary>
-        public abstract void Update();
-
-        /// <summary>
-        /// Copies the entity
-        /// </summary>
-        /// <returns></returns>
-        public virtual EntityBase Copy(bool clonePhys)
-        {
-            return (EntityBase) MemberwiseClone();
-        }
-
-        public virtual void ResetEntityIDs()
-        {
-        }
-
-        public virtual void AttachToScene(Scene m_parentScene)
-        {
-        }
-
-        public virtual void ApplyPhysics(bool allowPhysicalPrim)
-        {
-        }
-
-        public virtual void ClearUndoState()
-        {
-        }
-
-        public virtual void RebuildPhysicalRepresentation()
-        {
-        }
-
-        public virtual Vector3 GroupScale()
-        {
-            return Vector3.Zero;
-        }
-
-        public virtual Quaternion GroupRotation
-        {
-            get { return Quaternion.Identity; }
         }
     }
 

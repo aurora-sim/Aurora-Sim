@@ -95,7 +95,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
         {
             get
             {
-                return new SOPObject(m_scene, m_scene.Entities[(uint)index].LocalId, m_security);
+                return new SOPObject(m_scene, (uint)index, m_security);
             }
         }
 
@@ -103,7 +103,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
         {
             get
             {
-                return new SOPObject(m_scene, m_scene.Entities[index].LocalId, m_security);
+                return new SOPObject (m_scene, index, m_security);
             }
         }
 
@@ -111,7 +111,10 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
         {
             get
             {
-                return new SOPObject(m_scene, m_scene.Entities[index].LocalId, m_security);
+                OpenSim.Framework.IEntity ent;
+                if(m_scene.Entities.TryGetValue(index, out ent))
+                    return new SOPObject (m_scene, ent.LocalId, m_security);
+                return null;
             }
         }
 

@@ -165,10 +165,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                                 }
                             );
 
-                            //We have to make sure that the presences are copied out, as incoming close agent does modify the ScenePresence list
-                            ScenePresence[] Presences = new ScenePresence[m_scene.ScenePresences.Count];
-                            m_scene.ScenePresences.CopyTo(Presences, 0);
-                            foreach (ScenePresence p in Presences)
+                            //This does modify this list, but we make a copy of it
+                            foreach (ScenePresence p in m_scene.ScenePresences)
                             {
                                 if (p.UUID != godID)
                                 {

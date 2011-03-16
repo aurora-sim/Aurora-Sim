@@ -269,9 +269,13 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
                     cp.m_frozen = freezeState;
                     foreach (UUID tree in cp.m_trees)
                     {
-                        SceneObjectPart sop = ((SceneObjectGroup)m_scene.Entities[tree]).RootPart;
-                        sop.Name = (freezeState ? sop.Name.Replace("ATPM", "FTPM") : sop.Name.Replace("FTPM", "ATPM"));
-                        sop.ParentGroup.HasGroupChanged = true;
+                        IEntity ent;
+                        if (m_scene.Entities.TryGetValue (tree, out ent) && ent is SceneObjectGroup)
+                        {
+                            SceneObjectPart sop = ((SceneObjectGroup)ent).RootPart;
+                            sop.Name = (freezeState ? sop.Name.Replace ("ATPM", "FTPM") : sop.Name.Replace ("FTPM", "ATPM"));
+                            sop.ParentGroup.HasGroupChanged = true;
+                        }
                     }
 
                     m_log.InfoFormat("[TREES]: Activity for copse {0} is frozen {1}", copsename, freezeState);
@@ -659,9 +663,10 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
                 {
                     foreach (UUID tree in copse.m_trees)
                     {
-                        if (m_scene.Entities.ContainsKey(tree))
+                        IEntity ent;
+                        if (m_scene.Entities.TryGetValue(tree, out ent))
                         {
-                            SceneObjectPart s_tree = ((SceneObjectGroup)m_scene.Entities[tree]).RootPart;
+                            SceneObjectPart s_tree = ((SceneObjectGroup)ent).RootPart;
 
                             if (s_tree.Scale.X < copse.m_maximum_scale.X && s_tree.Scale.Y < copse.m_maximum_scale.Y && s_tree.Scale.Z < copse.m_maximum_scale.Z)
                             {
@@ -736,15 +741,19 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
                             {
                                 if (picktree != tree)
                                 {
-                                    SceneObjectPart pickedTree = ((SceneObjectGroup)m_scene.Entities[picktree]).RootPart;
+                                    IEntity ent;
+                                    if (m_scene.Entities.TryGetValue (tree, out ent) && ent is SceneObjectGroup)
+                                    {
+                                        SceneObjectPart pickedTree = ((SceneObjectGroup)ent).RootPart;
 
-                                    double pickedTreeScale = Math.Sqrt(Math.Pow(pickedTree.Scale.X, 2) +
-                                                                       Math.Pow(pickedTree.Scale.Y, 2) +
-                                                                       Math.Pow(pickedTree.Scale.Z, 2));
+                                        double pickedTreeScale = Math.Sqrt (Math.Pow (pickedTree.Scale.X, 2) +
+                                                                           Math.Pow (pickedTree.Scale.Y, 2) +
+                                                                           Math.Pow (pickedTree.Scale.Z, 2));
 
-                                    double pickedTreeDistance = Vector3.Distance(pickedTree.AbsolutePosition, selectedTree.AbsolutePosition);
+                                        double pickedTreeDistance = Vector3.Distance (pickedTree.AbsolutePosition, selectedTree.AbsolutePosition);
 
-                                    killLikelyhood += (selectedTreeScale / (pickedTreeScale * pickedTreeDistance)) * 0.1;
+                                        killLikelyhood += (selectedTreeScale / (pickedTreeScale * pickedTreeDistance)) * 0.1;
+                                    }
                                 }
                             }
 

@@ -471,7 +471,7 @@ namespace Aurora.Modules
 
             foreach (Scene s in m_scenes)
             {
-                List<ScenePresence> ScenePresences = s.ScenePresences;
+                ScenePresence[] ScenePresences = s.ScenePresences;
                 foreach (ScenePresence presence in ScenePresences)
                 {
                     // don't send stuff to child agents

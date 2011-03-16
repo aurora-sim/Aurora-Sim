@@ -376,12 +376,10 @@ namespace OpenSim.Region.Framework.Scenes
                     avatar.ControllingClient.Kick("The simulator is going down.");
             });
 
-            ScenePresence[] Presences = new ScenePresence[ScenePresences.Count];
-            ScenePresences.CopyTo(Presences, 0);
             IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule> ();
             if (transferModule != null)
             {
-                foreach (ScenePresence avatar in Presences)
+                foreach (ScenePresence avatar in ScenePresences)
                 {
                     transferModule.IncomingCloseAgent (this, avatar.UUID);
                 }
@@ -658,9 +656,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public List<ScenePresence> ScenePresences
+        public ScenePresence[] ScenePresences
         {
-            get { return m_sceneGraph.ScenePresences; }
+            get { return m_sceneGraph.GetScenePresences(); }
         }
 
         /// <summary>
