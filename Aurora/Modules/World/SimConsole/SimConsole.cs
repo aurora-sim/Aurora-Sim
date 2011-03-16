@@ -135,7 +135,7 @@ namespace Aurora.Modules.World.SimConsole
             responsedata["keepalive"] = false;
             responsedata["str_response_string"] = "";
 
-            ScenePresence SP = findScene(agentID).GetScenePresence(agentID);
+            IScenePresence SP = findScene (agentID).GetScenePresence (agentID);
             if (SP == null)
                 return responsedata; //They don't exist
 
@@ -166,7 +166,7 @@ namespace Aurora.Modules.World.SimConsole
             responsedata["keepalive"] = false;
             responsedata["str_response_string"] = "";
 
-            ScenePresence SP = findScene (agentID).GetScenePresence (agentID);
+            IScenePresence SP = findScene (agentID).GetScenePresence (agentID);
             if (SP == null)
                 return responsedata; //They don't exist
 
@@ -219,7 +219,7 @@ namespace Aurora.Modules.World.SimConsole
             return false;
         }
 
-        private bool AuthenticateUser(ScenePresence sp, string message)
+        private bool AuthenticateUser (IScenePresence sp, string message)
         {
             if (m_authorizedParticipants.ContainsKey(sp.UUID))
             {
@@ -237,7 +237,7 @@ namespace Aurora.Modules.World.SimConsole
             return false;
         }
 
-        private bool ParseMessage (ScenePresence sp, string message, bool firstLogin)
+        private bool ParseMessage (IScenePresence sp, string message, bool firstLogin)
         {
             if (firstLogin)
             {
@@ -307,7 +307,7 @@ namespace Aurora.Modules.World.SimConsole
         {
             foreach (Scene scene in m_scenes)
             {
-                ScenePresence SP = scene.GetScenePresence(agentID);
+                IScenePresence SP = scene.GetScenePresence (agentID);
                 if (SP != null && !SP.IsChildAgent)
                     return scene;
             }

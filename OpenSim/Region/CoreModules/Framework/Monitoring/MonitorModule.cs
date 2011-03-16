@@ -609,7 +609,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     m_module.SendStatsResults(simStats);
 
                     //Tell all the scene presences about the new stats
-                    foreach (ScenePresence agent in m_currentScene.ScenePresences)
+                    foreach (IScenePresence agent in m_currentScene.ScenePresences)
                     {
                         if (!agent.IsChildAgent)
                             agent.ControllingClient.SendSimStats(simStats);
@@ -828,7 +828,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                             {
                                 if (client is IStatsCollector)
                                 {
-                                    ScenePresence SP = scene.GetScenePresence(client.AgentId);
+                                    IScenePresence SP = scene.GetScenePresence (client.AgentId);
                                     if (SP == null || (SP.IsChildAgent && !showChildren))
                                         return;
 

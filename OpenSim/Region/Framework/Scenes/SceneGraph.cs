@@ -171,10 +171,10 @@ namespace OpenSim.Region.Framework.Scenes
             coarseLocations = new List<Vector3>();
             avatarUUIDs = new List<UUID>();
 
-            ScenePresence[] presences = GetScenePresences();
+            IScenePresence[] presences = GetScenePresences();
             for (int i = 0; i < Math.Min(presences.Length, maxLocations); i++)
             {
-                ScenePresence sp = presences[i];
+                IScenePresence sp = presences[i];
                 // If this presence is a child agent, we don't want its coarse locations
                 if (sp.IsChildAgent)
                     continue;
@@ -333,23 +333,6 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (ScenePresence presence in presences)
             {
                 if (presence.Firstname == firstName && presence.Lastname == lastName)
-                    return presence;
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Request the scene presence by name.
-        /// </summary>
-        /// <param name="firstName"></param>
-        /// <param name="lastName"></param>
-        /// <returns>null if the presence was not found</returns>
-        public ScenePresence GetScenePresence (string Name)
-        {
-            ScenePresence[] presences = GetScenePresences ();
-            foreach (ScenePresence presence in presences)
-            {
-                if (presence.Name == Name)
                     return presence;
             }
             return null;

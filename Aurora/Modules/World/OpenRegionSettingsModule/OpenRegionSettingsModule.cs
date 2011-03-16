@@ -649,11 +649,11 @@ namespace Aurora.Modules
             responsedata["keepalive"] = false;
             responsedata["str_response_string"] = "";
 
-            ScenePresence SP = m_scene.GetScenePresence(agentID);
+            IScenePresence SP = m_scene.GetScenePresence (agentID);
             if (SP == null)
                 return responsedata; //They don't exist
 
-            if (!SP.Scene.Permissions.CanIssueEstateCommand(SP.UUID, false))
+            if (!((Scene)SP.Scene).Permissions.CanIssueEstateCommand(SP.UUID, false))
                 return responsedata; // No permissions
 
             OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);

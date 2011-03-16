@@ -337,7 +337,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             SendLandUpdateToAvatarsOverMe(true);
             //Send a full update to the client as well
-            ScenePresence SP = m_scene.GetScenePresence(avatarID);
+            IScenePresence SP = m_scene.GetScenePresence (avatarID);
             SendLandUpdateToClient(SP.ControllingClient);
         }
 
@@ -417,7 +417,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 {
                     if ((LandData.Flags & (uint)ParcelFlags.UseAccessGroup) > 0)
                     {
-                        ScenePresence SP = m_scene.GetScenePresence(avatar);
+                        IScenePresence SP = m_scene.GetScenePresence (avatar);
                         if (SP != null && LandData.GroupID == SP.ControllingClient.ActiveGroupId)
                         {
                             //They are a part of the group, let them in

@@ -282,7 +282,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
         public bool OnNewChatMessageFromWorld(OSChatMessage c, out OSChatMessage newc)
         {
             Scene scene = (Scene)c.Scene;
-            ScenePresence SP = scene.GetScenePresence(c.SenderUUID);
+            IScenePresence SP = scene.GetScenePresence (c.SenderUUID);
             if (SP != null)
             {
                 if (!SP.IsChildAgent)
@@ -307,7 +307,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
             {
                 if (!m_useAuth || m_authList.Contains(c.SenderUUID))
                 {
-                    ScenePresence senderSP;
+                    IScenePresence senderSP;
                     ((Scene)c.Scene).TryGetScenePresence(c.SenderUUID, out senderSP);
                     string[] message = c.Message.Split('.');
                     if (message[1] == "SayDistance")
@@ -331,7 +331,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
                     //Add the user to the list of allowed speakers and 'chat' admins
                     if (message[1] == "AddToAuth")
                     {
-                        ScenePresence NewSP;
+                        IScenePresence NewSP;
                         ((Scene)c.Scene).TryGetAvatarByName(message[2], out NewSP);
                         m_authList.Add(NewSP.UUID);
                         chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(scene.RegionInfo.RegionLocX,
@@ -339,7 +339,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
                     }
                     if (message[1] == "RemoveFromAuth")
                     {
-                        ScenePresence NewSP;
+                        IScenePresence NewSP;
                         ((Scene)c.Scene).TryGetAvatarByName(message[2], out NewSP);
                         m_authList.Remove(NewSP.UUID);
                         chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(scene.RegionInfo.RegionLocX,

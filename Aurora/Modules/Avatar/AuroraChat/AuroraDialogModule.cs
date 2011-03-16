@@ -118,7 +118,7 @@ namespace Aurora.Modules
 
         public void SendAlertToUser(UUID agentID, string message, bool modal)
         {
-            ScenePresence sp = m_scene.GetScenePresence(agentID);
+            IScenePresence sp = m_scene.GetScenePresence(agentID);
 
             if (sp != null && !sp.IsChildAgent)
                 sp.ControllingClient.SendAgentAlertMessage(message, modal);
@@ -126,7 +126,7 @@ namespace Aurora.Modules
 
         public void SendAlertToUser(string firstName, string lastName, string message, bool modal)
         {
-            ScenePresence presence = m_scene.SceneGraph.GetScenePresence(firstName, lastName);
+            IScenePresence presence = m_scene.SceneGraph.GetScenePresence(firstName, lastName);
             if (presence != null && !presence.IsChildAgent)
                 presence.ControllingClient.SendAgentAlertMessage(message, modal);
         }

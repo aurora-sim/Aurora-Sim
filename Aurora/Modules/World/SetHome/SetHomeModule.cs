@@ -152,7 +152,7 @@ namespace Aurora.Modules.World.Auction
             if (scene == null)
                 return;
 
-            ScenePresence SP = scene.GetScenePresence(remoteClient.AgentId);
+            IScenePresence SP = scene.GetScenePresence (remoteClient.AgentId);
             IDialogModule module = scene.RequestModuleInterface<IDialogModule>();
 
             if (SP != null)

@@ -254,7 +254,7 @@ namespace Aurora.Modules
 
         private Hashtable ProcessSendUserReportWithScreenshot(Hashtable m_dhttpMethod, UUID capuuid, UUID agentID)
         {
-            ScenePresence SP = findScenePresence(agentID);
+            IScenePresence SP = findScenePresence (agentID);
             string RegionName = (string)m_dhttpMethod["abuse-region-name"];
             UUID AbuserID = UUID.Parse((string)m_dhttpMethod["abuser-id"]);
             byte Category = byte.Parse((string)m_dhttpMethod["category"]);
@@ -275,11 +275,11 @@ namespace Aurora.Modules
 
         #region Helpers
 
-        public ScenePresence findScenePresence(UUID avID)
+        public IScenePresence findScenePresence (UUID avID)
         {
             foreach (Scene s in m_SceneList)
             {
-                ScenePresence SP = s.GetScenePresence(avID);
+                IScenePresence SP = s.GetScenePresence (avID);
                 if (SP != null)
                 {
                     return SP;

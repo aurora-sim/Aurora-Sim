@@ -243,7 +243,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         {
             Vector3 position;
             SceneObjectPart source;
-            ScenePresence avatar;
+            IScenePresence avatar;
 
             if ((source = m_scene.GetSceneObjectPart(id)) != null)
                 position = source.AbsolutePosition;
@@ -261,7 +261,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         {
             Vector3 position;
             SceneObjectPart source;
-            ScenePresence avatar;
+            IScenePresence avatar;
 
             if ((source = m_scene.GetSceneObjectPart(id)) != null)
                 position = source.AbsolutePosition;

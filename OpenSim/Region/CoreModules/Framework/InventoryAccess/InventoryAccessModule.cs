@@ -322,7 +322,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             }
             // Get the user info of the item destination
             //
-            ScenePresence SP = m_scene.GetScenePresence(agentId);
+            IScenePresence SP = m_scene.GetScenePresence (agentId);
             UUID userID = UUID.Zero;
 
             if (action == DeRezAction.Take || action == DeRezAction.AcquireToUserInventory ||
@@ -550,7 +550,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 }
                 else
                 {
-                    ScenePresence notifyUser = m_scene.GetScenePresence(item.Owner);
+                    IScenePresence notifyUser = m_scene.GetScenePresence (item.Owner);
                     if (notifyUser != null)
                     {
                         notifyUser.ControllingClient.SendInventoryItemCreateUpdate(item, 0);

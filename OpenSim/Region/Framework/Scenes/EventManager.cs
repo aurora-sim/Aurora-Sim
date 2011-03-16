@@ -126,7 +126,7 @@ namespace OpenSim.Region.Framework.Scenes
         public delegate void LandObjectRemoved(UUID RegionID, UUID globalID);
         public event LandObjectRemoved OnLandObjectRemoved;
 
-        public delegate void AvatarEnteringNewParcel(ScenePresence avatar, int localLandID, UUID regionID);
+        public delegate void AvatarEnteringNewParcel (IScenePresence avatar, int localLandID, UUID regionID);
         public event AvatarEnteringNewParcel OnAvatarEnteringNewParcel;
 
         public delegate void SignificantClientMovement(IClientAPI remote_client);
@@ -932,7 +932,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerAvatarEnteringNewParcel(ScenePresence avatar, int localLandID, UUID regionID)
+        public void TriggerAvatarEnteringNewParcel (IScenePresence avatar, int localLandID, UUID regionID)
         {
             AvatarEnteringNewParcel handlerAvatarEnteringNewParcel = OnAvatarEnteringNewParcel;
             if (handlerAvatarEnteringNewParcel != null)

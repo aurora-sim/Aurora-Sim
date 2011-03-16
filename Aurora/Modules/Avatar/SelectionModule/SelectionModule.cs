@@ -169,7 +169,7 @@ namespace Aurora.Modules
                 //Check for avies! They arn't prims!
                 if (scene.SceneGraph.TryGetEntity(primLocalID, out entitybase))
                 {
-                    if (entitybase is ScenePresence)
+                    if (entitybase is IScenePresence)
                         continue;
                 }
                 if (entity != null)
@@ -183,7 +183,7 @@ namespace Aurora.Modules
             }
             if (EntitiesToUpdate.Count != 0)
                 remoteClient.SendObjectPropertiesReply(EntitiesToUpdate);
-            ScenePresence SP;
+            IScenePresence SP;
             scene.TryGetScenePresence(remoteClient.AgentId, out SP);
             PerClientSelectionParticles selection = SP.RequestModuleInterface<PerClientSelectionParticles>();
             if (selection != null)
@@ -246,7 +246,7 @@ namespace Aurora.Modules
             Scene scene = ((Scene)remoteClient.Scene);
             // TODO: don't create new blocks if recycling an old packet
             ViewerEffectPacket.EffectBlock[] effectBlockArray = new ViewerEffectPacket.EffectBlock[args.Count];
-            ScenePresence SP;
+            IScenePresence SP;
             scene.TryGetScenePresence(remoteClient.AgentId, out SP);
             for (int i = 0; i < args.Count; i++)
             {
@@ -273,7 +273,7 @@ namespace Aurora.Modules
                     }
                 }
 
-                foreach (ScenePresence client in scene.ScenePresences)
+                foreach (IScenePresence client in scene.ScenePresences)
                 {
                     if (client.ControllingClient.AgentId != remoteClient.AgentId)
                         client.ControllingClient.SendViewerEffect(effectBlockArray);

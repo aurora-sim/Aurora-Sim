@@ -199,7 +199,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID avID;
             if (UUID.TryParse(uuid, out avID))
             {
-                ScenePresence SP = World.GetScenePresence(avID);
+                IScenePresence SP = World.GetScenePresence(avID);
                 if (SP != null)
                 {
                     ICombatPresence CP = SP.RequestModuleInterface<ICombatPresence>();
@@ -222,7 +222,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID avID;
             if (UUID.TryParse(uuid, out avID))
             {
-                ScenePresence SP = World.GetScenePresence(avID);
+                IScenePresence SP = World.GetScenePresence(avID);
                 if (SP != null)
                 {
                     ICombatPresence CP = SP.RequestModuleInterface<ICombatPresence>();
@@ -240,7 +240,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID avID;
             if (UUID.TryParse(uuid, out avID))
             {
-                ScenePresence SP = World.GetScenePresence(avID);
+                IScenePresence SP = World.GetScenePresence(avID);
                 if (SP != null)
                 {
                     ICombatPresence CP = SP.RequestModuleInterface<ICombatPresence>();
@@ -258,7 +258,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID avID;
             if (UUID.TryParse(uuid, out avID))
             {
-                ScenePresence SP = World.GetScenePresence(avID);
+                IScenePresence SP = World.GetScenePresence(avID);
                 if (SP != null)
                 {
                     ICombatPresence cp = SP.RequestModuleInterface<ICombatPresence>();
@@ -274,7 +274,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (UUID.TryParse(uuid, out avID))
             {
                 ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AAGetTeam", m_host, "AA");
-                ScenePresence SP = World.GetScenePresence(avID);
+                IScenePresence SP = World.GetScenePresence(avID);
                 if (SP != null)
                 {
                     ICombatPresence CP = SP.RequestModuleInterface<ICombatPresence>();
@@ -368,7 +368,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID AgentID = UUID.Zero;
             if (UUID.TryParse(ID, out AgentID))
             {
-                ScenePresence SP;
+                IScenePresence SP;
                 if (World.TryGetScenePresence(AgentID, out SP))
                 {
                     ICombatModule module = World.RequestModuleInterface<ICombatModule>();
@@ -391,7 +391,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID AgentID = UUID.Zero;
             if (UUID.TryParse(ID, out AgentID))
             {
-                ScenePresence SP;
+                IScenePresence SP;
                 if (World.TryGetScenePresence(AgentID, out SP))
                 {
                     ICombatModule module = World.RequestModuleInterface<ICombatModule>();
@@ -426,7 +426,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void aaRequestCombatPermission(string ID)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AARequestCombatPermission", m_host, "AA");
-            ScenePresence SP;
+            IScenePresence SP;
             UUID AgentID = UUID.Zero;
             if (UUID.TryParse(ID, out AgentID))
             {
@@ -454,14 +454,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (item.PermsGranter != UUID.Zero)
             {
-                ScenePresence presence = World.GetScenePresence(item.PermsGranter);
+                IScenePresence presence = World.GetScenePresence(item.PermsGranter);
 
                 if (presence != null)
                 {
                     if ((item.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
                     {
                         UUID avatarId = new UUID(vPresenceId);
-                        ScenePresence avatar = World.GetScenePresence(avatarId);
+                        IScenePresence avatar = World.GetScenePresence(avatarId);
                         return avatar.ForceFly;
                     }
                 }
@@ -484,14 +484,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (item.PermsGranter != UUID.Zero)
             {
-                ScenePresence presence = World.GetScenePresence(item.PermsGranter);
+                IScenePresence presence = World.GetScenePresence(item.PermsGranter);
 
                 if (presence != null)
                 {
                     if ((item.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
                     {
                         UUID avatarId = new UUID(vPresenceId);
-                        ScenePresence avatar = World.GetScenePresence(avatarId);
+                        IScenePresence avatar = World.GetScenePresence(avatarId);
                         avatar.ForceFly = vbValue;
                     }
                 }
@@ -513,14 +513,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (item.PermsGranter != UUID.Zero)
             {
-                ScenePresence presence = World.GetScenePresence(item.PermsGranter);
+                IScenePresence presence = World.GetScenePresence(item.PermsGranter);
 
                 if (presence != null)
                 {
                     if ((item.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
                     {
                         UUID avatarId = new UUID(vPresenceId);
-                        ScenePresence avatar = World.GetScenePresence(avatarId);
+                        IScenePresence avatar = World.GetScenePresence(avatarId);
                         return avatar.FlyDisabled;
                     }
                 }
@@ -543,14 +543,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (item.PermsGranter != UUID.Zero)
             {
-                ScenePresence presence = World.GetScenePresence(item.PermsGranter);
+                IScenePresence presence = World.GetScenePresence(item.PermsGranter);
 
                 if (presence != null)
                 {
                     if ((item.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
                     {
                         UUID avatarId = new UUID(vPresenceId);
-                        ScenePresence avatar = World.GetScenePresence(avatarId);
+                        IScenePresence avatar = World.GetScenePresence(avatarId);
                         avatar.FlyDisabled = vbValue;
                     }
                 }
@@ -568,7 +568,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return account.PrincipalID.ToString();
         }
 
-        private void RequestPermissions(ScenePresence presence, int perm)
+        private void RequestPermissions (IScenePresence presence, int perm)
         {
             UUID invItemID = InventorySelf();
 
@@ -576,7 +576,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return; // Not in a prim? How??
 
             string ownerName = "";
-            ScenePresence ownerPresence = World.GetScenePresence(m_host.ParentGroup.RootPart.OwnerID);
+            IScenePresence ownerPresence = World.GetScenePresence (m_host.ParentGroup.RootPart.OwnerID);
             if (ownerPresence == null)
                 ownerName = resolveName(m_host.OwnerID);
             else
@@ -622,7 +622,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AASetCharacterStat", m_host, "AA");
             UUID avatarId = new UUID(UUIDofAv);
-            ScenePresence presence = World.GetScenePresence(avatarId);
+            IScenePresence presence = World.GetScenePresence (avatarId);
             if (presence != null)
             {
                 ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence>();

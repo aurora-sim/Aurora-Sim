@@ -3496,7 +3496,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// </summary>
         public void SendAvatarDataImmediate (IEntity avatar)
         {
-            ScenePresence presence = avatar as ScenePresence;
+            IScenePresence presence = avatar as IScenePresence;
             if (presence == null)
                 return;
 
@@ -3566,10 +3566,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void intSendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags)
             {
 
-            if (entity is ScenePresence)
+                if (entity is IScenePresence)
                 {
-                SendAvatarUpdate(entity, updateFlags);
-                return;
+                    SendAvatarUpdate (entity, updateFlags);
+                    return;
                 }
             // this needs to be very optimized
 
@@ -3698,9 +3698,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                 else if (!canUseImproved && !canUseCompressed)
                     {
-                    if (entity is ScenePresence)
+                        if (entity is IScenePresence)
                         {
-                        objectUpdateBlocks.Value.Add(CreateAvatarUpdateBlock((ScenePresence)entity));
+                            objectUpdateBlocks.Value.Add (CreateAvatarUpdateBlock ((IScenePresence)entity));
                         }
                     else
                         {
@@ -3807,7 +3807,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void doSendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags)
 
             {
-            if (entity is ScenePresence)
+                if (entity is IScenePresence)
                 SendAvatarUpdate(entity, updateFlags);
             else
                 intSendPrimUpdate(entity, updateFlags);
@@ -3951,9 +3951,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                 else if (!canUseImproved && !canUseCompressed)
                     {
-                    if (entity is ScenePresence)
+                        if (entity is IScenePresence)
                         {
-                        objectUpdateBlocks.Value.Add(CreateAvatarUpdateBlock((ScenePresence)entity));
+                            objectUpdateBlocks.Value.Add (CreateAvatarUpdateBlock ((IScenePresence)entity));
                         }
                     else
                         {
@@ -4065,7 +4065,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags)
             {
 
-            if(entity is ScenePresence)
+                if (entity is IScenePresence)
                 SendAvatarUpdate(entity, updateFlags); // don't queue avatars info
 
             object[] o = new object[]{ entity, updateFlags };
@@ -4086,7 +4086,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                     IEntity entity = (IEntity)((object[])o)[0];
                 PrimUpdateFlags updateFlags = (PrimUpdateFlags)((object[])o)[1];
-                if (entity is ScenePresence)
+                if (entity is IScenePresence)
                     SendAvatarUpdate(entity, updateFlags);
                 else
                     intSendPrimUpdate(entity, updateFlags);
@@ -4255,9 +4255,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         }
                         else if (!canUseImproved && !canUseCompressed)
                         {
-                            if (update.Value.Entity is ScenePresence)
+                            if (update.Value.Entity is IScenePresence)
                             {
-                                objectUpdateBlocks.Value.Add(CreateAvatarUpdateBlock((ScenePresence)update.Value.Entity));
+                                objectUpdateBlocks.Value.Add (CreateAvatarUpdateBlock ((IScenePresence)update.Value.Entity));
                             }
                             else
                             {
@@ -4988,7 +4988,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             #region ScenePresence/SOP Handling
 
-            bool avatar = (entity is ScenePresence);
+            bool avatar = (entity is IScenePresence);
             uint localID = entity.LocalId;
             int attachPoint;
             Vector4 collisionPlane;
@@ -4996,9 +4996,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             Quaternion rotation;
             byte[] textureEntry;
 
-            if (entity is ScenePresence)
+            if (entity is IScenePresence)
             {
-                ScenePresence presence = (ScenePresence)entity;
+                IScenePresence presence = (IScenePresence)entity;
 
                 attachPoint = 0;
                 collisionPlane = presence.CollisionPlane;
@@ -5105,7 +5105,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return block;
         }
 
-        protected ObjectUpdatePacket.ObjectDataBlock CreateAvatarUpdateBlock(ScenePresence data)
+        protected ObjectUpdatePacket.ObjectDataBlock CreateAvatarUpdateBlock (IScenePresence data)
         {
             byte[] objectData = new byte[76];
 
@@ -5340,7 +5340,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 if (part.IsAttachment)
                 {
-                    ScenePresence us = m_scene.GetScenePresence(this.AgentId);
+                    IScenePresence us = m_scene.GetScenePresence (this.AgentId);
                     Utils.UIntToBytes(us.LocalId, objectData, i);
                 }
                 else
@@ -12874,9 +12874,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void StopFlying (IEntity p)
         {
-            if (p is ScenePresence)
+            if (p is IScenePresence)
             {
-                ScenePresence presence = p as ScenePresence;
+                IScenePresence presence = p as IScenePresence;
                 // It turns out to get the agent to stop flying, you have to feed it stop flying velocities
                 // There's no explicit message to send the client to tell it to stop flying..   it relies on the
                 // velocity, collision plane and avatar height
@@ -12895,7 +12895,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 // Mind you, that this method doesn't get called if the avatar's velocity magnitude is greater then a
                 // certain amount..   because the LLClient wouldn't land in that situation anyway.
 
-                // why are we still testing for this really old height value default???
                 presence.CollisionPlane = new Vector4(0, 0, 0, pos.Z - presence.Appearance.AvatarHeight/6f);
 
 

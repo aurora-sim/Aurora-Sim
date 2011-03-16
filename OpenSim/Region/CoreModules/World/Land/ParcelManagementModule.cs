@@ -116,7 +116,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         #region ILandChannel Members
 
-        public Vector3 GetNearestAllowedPosition(ScenePresence avatar)
+        public Vector3 GetNearestAllowedPosition (IScenePresence avatar)
         {
             ILandObject nearestParcel = GetNearestAllowedParcel(avatar.UUID, avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y);
 
@@ -239,7 +239,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             return new Vector2(avgx, avgy);
         }
 
-        public Vector3 GetNearestRegionEdgePosition(ScenePresence avatar)
+        public Vector3 GetNearestRegionEdgePosition (IScenePresence avatar)
         {
             float xdistance = avatar.AbsolutePosition.X < m_scene.RegionInfo.RegionSizeX / 2 ? avatar.AbsolutePosition.X : m_scene.RegionInfo.RegionSizeX - avatar.AbsolutePosition.X;
             float ydistance = avatar.AbsolutePosition.Y < m_scene.RegionInfo.RegionSizeY / 2 ? avatar.AbsolutePosition.Y : m_scene.RegionInfo.RegionSizeY - avatar.AbsolutePosition.Y;
@@ -270,7 +270,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
-        private Vector3 GetPositionAtAvatarHeightOrGroundHeight(ScenePresence avatar, float x, float y)
+        private Vector3 GetPositionAtAvatarHeightOrGroundHeight (IScenePresence avatar, float x, float y)
         {
             Vector3 ground = GetPositionAtGround(x, y);
             if (avatar.AbsolutePosition.Z > ground.Z)
@@ -459,7 +459,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 UseDwell = !ES.BlockDwell;
 
             IEntity presenceEntity;
-            if (m_scene.Entities.TryGetValue(client.AgentId, out presenceEntity) && presenceEntity is ScenePresence)
+            if (m_scene.Entities.TryGetValue (client.AgentId, out presenceEntity) && presenceEntity is IScenePresence)
             {
                 Util.FireAndForget(delegate(object o)
                 {
@@ -827,19 +827,19 @@ namespace OpenSim.Region.CoreModules.World.Land
             return parcelsNear;
         }
 
-        public void SendYouAreBannedNotice(ScenePresence avatar)
+        public void SendYouAreBannedNotice (IScenePresence avatar)
         {
             avatar.ControllingClient.SendAlertMessage(
                     "You are not allowed on this parcel because you are banned.");
         }
 
-        public void SendYouAreRestrictedNotice(ScenePresence avatar)
+        public void SendYouAreRestrictedNotice (IScenePresence avatar)
         {
             avatar.ControllingClient.SendAlertMessage(
                     "You are not allowed on this parcel because the land owner has restricted access.");
         }
 
-        public void EventManagerOnAvatarEnteringNewParcel(ScenePresence avatar, int localLandID, UUID regionID)
+        public void EventManagerOnAvatarEnteringNewParcel (IScenePresence avatar, int localLandID, UUID regionID)
         {
             if (m_scene.RegionInfo.RegionID == regionID)
             {
@@ -873,7 +873,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void SendOutNearestBanLine(IClientAPI client)
         {
-            ScenePresence sp = m_scene.GetScenePresence(client.AgentId);
+            IScenePresence sp = m_scene.GetScenePresence (client.AgentId);
             if (sp == null || sp.IsChildAgent)
                 return;
 
@@ -908,7 +908,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 ourLandObject.SendLandProperties(result, false, (int)dataResult, client);
         }
 
-        public void CheckEnteringNewParcel(ScenePresence avatar, bool force)
+        public void CheckEnteringNewParcel (IScenePresence avatar, bool force)
         {
             ILandObject over = GetLandObject((int)avatar.AbsolutePosition.X,
                                              (int)avatar.AbsolutePosition.Y);
@@ -926,8 +926,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                 }
             }
         }
-       
-        private void CheckEnteringNewParcel(ScenePresence avatar)
+
+        private void CheckEnteringNewParcel (IScenePresence avatar)
         {
             CheckEnteringNewParcel(avatar, false);
         }
@@ -940,7 +940,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void EventManagerOnSignificantClientMovement(IClientAPI remote_client)
         {
-            ScenePresence clientAvatar = m_scene.GetScenePresence(remote_client.AgentId);
+            IScenePresence clientAvatar = m_scene.GetScenePresence (remote_client.AgentId);
             if (clientAvatar != null)
             {
                 ILandObject over = GetLandObject((int)clientAvatar.AbsolutePosition.X, (int)clientAvatar.AbsolutePosition.Y);
@@ -1937,8 +1937,8 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void ClientOnParcelFreezeUser(IClientAPI client, UUID parcelowner, uint flags, UUID target)
         {
-            ScenePresence targetAvatar = m_scene.GetScenePresence(target);
-            ScenePresence parcelOwner = m_scene.GetScenePresence(parcelowner);
+            IScenePresence targetAvatar = m_scene.GetScenePresence (target);
+            IScenePresence parcelOwner = m_scene.GetScenePresence (parcelowner);
 
             ILandObject land = GetLandObject(targetAvatar.AbsolutePosition.X, targetAvatar.AbsolutePosition.Y);
             if (!m_scene.Permissions.GenericParcelPermission(client.AgentId, land, (ulong)GroupPowers.LandEjectAndFreeze))
@@ -1960,8 +1960,8 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void ClientOnParcelEjectUser(IClientAPI client, UUID parcelowner, uint flags, UUID target)
         {
-            ScenePresence targetAvatar = m_scene.GetScenePresence(target);
-            ScenePresence parcelOwner = m_scene.GetScenePresence(parcelowner);
+            IScenePresence targetAvatar = m_scene.GetScenePresence (target);
+            IScenePresence parcelOwner = m_scene.GetScenePresence (parcelowner);
 
             ILandObject land = GetLandObject(targetAvatar.AbsolutePosition.X, targetAvatar.AbsolutePosition.Y);
             if (!m_scene.Permissions.GenericParcelPermission(client.AgentId, land, (ulong)GroupPowers.LandEjectAndFreeze))

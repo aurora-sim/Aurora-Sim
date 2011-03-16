@@ -349,7 +349,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         public void DetachSingleAttachmentToInventory(UUID itemID, IClientAPI remoteClient)
         {
-            ScenePresence presence;
+            IScenePresence presence;
             if (m_scene.TryGetScenePresence(remoteClient.AgentId, out presence))
             {
                 presence.Appearance.DetachAttachment(itemID);
@@ -373,7 +373,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
             UUID inventoryID = part.ParentGroup.GetFromItemID();
 
-            ScenePresence presence;
+            IScenePresence presence;
             if (m_scene.TryGetScenePresence(remoteClient.AgentId, out presence))
             {
                 string reason;
@@ -455,7 +455,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         {
             SceneObjectGroup[] attachments = new SceneObjectGroup[0];
 
-            ScenePresence presence = m_scene.GetScenePresence(avatarID);
+            IScenePresence presence = m_scene.GetScenePresence (avatarID);
             if (presence != null)
             {
                 AvatarAttachments attPlugin = presence.RequestModuleInterface<AvatarAttachments>();
@@ -496,7 +496,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         public void ValidateAttachments(UUID avatarID)
         {
             SceneObjectGroup[] attachments = GetAttachmentsForAvatar(avatarID);
-            ScenePresence presence = m_scene.GetScenePresence(avatarID);
+            IScenePresence presence = m_scene.GetScenePresence (avatarID);
             if (presence == null)
                 return;
             if (attachments.Length > 0)
@@ -597,7 +597,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             group.AbsolutePosition = attachPos;
 
             // Remove any previous attachments
-            ScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
+            IScenePresence presence = m_scene.GetScenePresence (remoteClient.AgentId);
             if (presence == null)
                 return;
             UUID itemID = UUID.Zero;
@@ -744,7 +744,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                         group.DetachToInventoryPrep();
                     }
 
-                    ScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
+                    IScenePresence presence = m_scene.GetScenePresence (remoteClient.AgentId);
                     if (presence != null)
                     {
                         AvatarAttachments attModule = presence.RequestModuleInterface<AvatarAttachments>();
@@ -849,9 +849,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         private class AvatarAttachments
         {
             private List<SceneObjectGroup> m_attachments = new List<SceneObjectGroup>();
-            private ScenePresence m_presence;
+            private IScenePresence m_presence;
 
-            public AvatarAttachments(ScenePresence SP)
+            public AvatarAttachments (IScenePresence SP)
             {
                 m_presence = SP;
                 m_presence.RegisterModuleInterface<AvatarAttachments>(this);

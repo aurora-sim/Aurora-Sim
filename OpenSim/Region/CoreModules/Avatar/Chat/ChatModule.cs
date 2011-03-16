@@ -152,7 +152,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
 
         protected OSChatMessage FixPositionOfChatMessage(OSChatMessage c)
         {
-            ScenePresence avatar;
+            IScenePresence avatar;
             Scene scene = (Scene)c.Scene;
             if ((avatar = scene.GetScenePresence(c.Sender.AgentId)) != null)
                 c.Position = avatar.AbsolutePosition;
@@ -210,7 +210,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
                                      scene.RegionInfo.RegionName, c.Sender.AgentId);
                     return;
                 }
-                ScenePresence avatar = (scene as Scene).GetScenePresence(c.Sender.AgentId);
+                IScenePresence avatar = (scene as Scene).GetScenePresence (c.Sender.AgentId);
                 fromPos = avatar.AbsolutePosition;
                 fromName = avatar.Name;
                 fromID = c.Sender.AgentId;
@@ -263,7 +263,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             ChatSourceType sourceType = ChatSourceType.Object;
             if (null != c.Sender)
             {
-                ScenePresence avatar = (c.Scene as Scene).GetScenePresence(c.Sender.AgentId);
+                IScenePresence avatar = (c.Scene as Scene).GetScenePresence (c.Sender.AgentId);
                 fromID = c.Sender.AgentId;
                 fromName = avatar.Name;
                 sourceType = ChatSourceType.Agent;

@@ -162,7 +162,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         /// <param name="checkonly"></param>
         private bool ValidateBakedTextureCache(IClientAPI client, bool checkonly)
         {
-            ScenePresence sp = m_scene.GetScenePresence(client.AgentId);
+            IScenePresence sp = m_scene.GetScenePresence(client.AgentId);
             if (sp == null)
             {
                 m_log.WarnFormat("[AvatarFactory]: SetAppearance unable to find presence for {0}", client.AgentId);

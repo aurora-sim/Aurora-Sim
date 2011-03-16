@@ -306,7 +306,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                         {
                             foreach (Scene s in m_Scenes.Values)
                             {
-                                ScenePresence SP = s.GetScenePresence(part.OwnerID);
+                                IScenePresence SP = s.GetScenePresence (part.OwnerID);
                                 if (SP != null)
                                 {
                                     if (!SP.IsChildAgent)

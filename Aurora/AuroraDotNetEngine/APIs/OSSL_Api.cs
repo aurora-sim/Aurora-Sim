@@ -409,8 +409,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (entity is SceneObjectGroup)
                     ((SceneObjectGroup)entity).Rotation = rotation;
-                else if (entity is ScenePresence)
-                    ((ScenePresence)entity).Rotation = rotation;
+                else if (entity is IScenePresence)
+                    ((IScenePresence)entity).Rotation = rotation;
             }
             else
             {
@@ -623,7 +623,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public DateTime TeleportAgent(UUID agentID, ulong regionHandle, Vector3 position, Vector3 lookAt)
         {
-            ScenePresence presence = World.GetScenePresence(agentID);
+            IScenePresence presence = World.GetScenePresence (agentID);
             if (presence != null)
             {
                 Vector3 tmp = presence.AbsolutePosition;
@@ -755,7 +755,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             UUID avatarID = (UUID)agent;
 
-            ScenePresence target;
+            IScenePresence target;
             if (World.TryGetScenePresence (avatarID, out target))
             {
                 EndPoint ep = target.ControllingClient.GetClientEP();
@@ -2151,8 +2151,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void osSetSpeed(LSL_Key UUID, LSL_Float SpeedModifier)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osSetSpeed", m_host, "OSSL");
-            
-            ScenePresence avatar = World.GetScenePresence(new UUID(UUID));
+
+            IScenePresence avatar = World.GetScenePresence (new UUID (UUID));
             if (avatar != null)
             {
                 if (avatar.UUID != m_host.OwnerID)
@@ -2329,7 +2329,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID avatarId = new UUID (avatar);
             Vector3 pos = m_host.GetWorldPosition ();
 
-            ScenePresence presence = World.GetScenePresence (avatarId);
+            IScenePresence presence = World.GetScenePresence (avatarId);
             if (presence != null)
             {
                 IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule> ();
@@ -2352,7 +2352,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID avatarId = new UUID (avatar);
             Vector3 pos = m_host.GetWorldPosition ();
 
-            ScenePresence presence = World.GetScenePresence (avatarId);
+            IScenePresence presence = World.GetScenePresence (avatarId);
             if (presence != null)
             {
                 IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule> ();
@@ -2376,7 +2376,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
 
             UUID avatarId = new UUID (avatar);
-            ScenePresence presence = World.GetScenePresence (avatarId);
+            IScenePresence presence = World.GetScenePresence (avatarId);
             if (presence != null)
             {
                 Vector3 pos = m_host.GetWorldPosition ();

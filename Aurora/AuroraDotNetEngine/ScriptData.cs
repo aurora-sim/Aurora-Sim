@@ -402,7 +402,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void DisplayUserNotification(string message, string stage, bool postScriptCAPSError, bool IsError)
         {
-            ScenePresence presence = World.GetScenePresence(part.OwnerID);
+            IScenePresence presence = World.GetScenePresence(part.OwnerID);
             if (presence != null && (!PostOnRez) && postScriptCAPSError)
                 if (m_ScriptEngine.ChatCompileErrorsToDebugChannel)
                     presence.ControllingClient.SendAgentAlertMessage("Script saved with errors, check debug window!", false);
@@ -503,7 +503,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             UserInventoryItemID = part.FromUserInventoryItemID;
 
             //Try to find the avatar who started this.
-            ScenePresence presence = World.GetScenePresence(part.OwnerID);
+            IScenePresence presence = World.GetScenePresence(part.OwnerID);
 
             #region HTML Reader
 

@@ -514,7 +514,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                         item.BannedUserID = user;
                         item.EstateID = m_scene.RegionInfo.EstateSettings.EstateID;
                         item.BannedHostAddress = "0.0.0.0";
-                        ScenePresence SP = m_scene.GetScenePresence(user);
+                        IScenePresence SP = m_scene.GetScenePresence (user);
                         item.BannedHostIPMask = (SP != null) ? ((System.Net.IPEndPoint)SP.ControllingClient.GetClientEP()).Address.ToString() : "0.0.0.0";
 
                         m_scene.RegionInfo.EstateSettings.AddBan(item);
@@ -541,7 +541,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                                 //Close them in the sim
                                 IEntityTransferModule transferModule = SP.Scene.RequestModuleInterface<IEntityTransferModule> ();
                                 if (transferModule != null)
-                                    transferModule.IncomingCloseAgent (SP.Scene, SP.UUID);
+                                    transferModule.IncomingCloseAgent ((Scene)SP.Scene, SP.UUID);
                             }
                         }
                     }
@@ -723,7 +723,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
             if (prey != UUID.Zero)
             {
-                ScenePresence s = m_scene.GetScenePresence(prey);
+                IScenePresence s = m_scene.GetScenePresence (prey);
                 if (s != null)
                 {
                     IEntityTransferModule transferModule = m_scene.RequestModuleInterface<IEntityTransferModule>();
@@ -742,7 +742,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             {
                 if (sp.UUID != senderID)
                 {
-                    ScenePresence p = m_scene.GetScenePresence(sp.UUID);
+                    IScenePresence p = m_scene.GetScenePresence (sp.UUID);
                     // make sure they are still there, we could be working down a long list
                     // Also make sure they are actually in the region
                     if (p != null && !p.IsChildAgent)

@@ -268,7 +268,7 @@ namespace Aurora.Modules
         /// <returns></returns>
         protected OSChatMessage FixPositionOfChatMessage(OSChatMessage c)
         {
-            ScenePresence avatar;
+            IScenePresence avatar;
             Scene scene = (Scene)c.Scene;
             if ((avatar = scene.GetScenePresence(c.Sender.AgentId)) != null)
                 c.Position = avatar.AbsolutePosition;
@@ -372,7 +372,7 @@ namespace Aurora.Modules
 
             if (fromAgent)
             {
-                ScenePresence user = scene.GetScenePresence(fromID);
+                IScenePresence user = scene.GetScenePresence (fromID);
                 if (user != null)
                     args.Sender = user.ControllingClient;
             }
@@ -440,7 +440,7 @@ namespace Aurora.Modules
                                              scene.RegionInfo.RegionName, c.Sender.AgentId);
                             return;
                         }
-                        ScenePresence avatar = (scene as Scene).GetScenePresence(c.Sender.AgentId);
+                        IScenePresence avatar = (scene as Scene).GetScenePresence (c.Sender.AgentId);
                         if (avatar != null && message == "")
                         {
                             fromPos = avatar.AbsolutePosition;
@@ -471,8 +471,8 @@ namespace Aurora.Modules
 
             foreach (Scene s in m_scenes)
             {
-                ScenePresence[] ScenePresences = s.ScenePresences;
-                foreach (ScenePresence presence in ScenePresences)
+                IScenePresence[] ScenePresences = s.ScenePresences;
+                foreach (IScenePresence presence in ScenePresences)
                 {
                     // don't send stuff to child agents
                     if (!presence.IsChildAgent)
@@ -529,7 +529,7 @@ namespace Aurora.Modules
             ChatSourceType sourceType = ChatSourceType.Object;
             if (null != c.Sender)
             {
-                ScenePresence avatar = (c.Scene as Scene).GetScenePresence(c.Sender.AgentId);
+                IScenePresence avatar = (c.Scene as Scene).GetScenePresence (c.Sender.AgentId);
                 fromID = c.Sender.AgentId;
                 fromName = avatar.Name;
                 sourceType = ChatSourceType.Agent;
@@ -565,7 +565,7 @@ namespace Aurora.Modules
         }
 
 
-        public virtual void TrySendChatMessage(ScenePresence presence, Vector3 fromPos, Vector3 regionPos,
+        public virtual void TrySendChatMessage (IScenePresence presence, Vector3 fromPos, Vector3 regionPos,
                                                   UUID fromAgentID, string fromName, ChatTypeEnum type,
                                                   string message, ChatSourceType src, float Range)
         {
@@ -788,7 +788,7 @@ namespace Aurora.Modules
 
             UUID sessionid = UUID.Parse(rm["session-id"].AsString());
 
-            ScenePresence SP = findScenePresence(Agent);
+            IScenePresence SP = findScenePresence (Agent);
             IEventQueueService eq = SP.Scene.RequestModuleInterface<IEventQueueService>();
 
             if (method == "start conference")
@@ -953,7 +953,7 @@ namespace Aurora.Modules
         {
             foreach (Scene scene in m_scenes)
             {
-                ScenePresence SP = scene.GetScenePresence(agentID);
+                IScenePresence SP = scene.GetScenePresence (agentID);
                 if (SP != null && !SP.IsChildAgent)
                     return scene;
             }
@@ -965,11 +965,11 @@ namespace Aurora.Modules
         /// </summary>
         /// <param name="avID"></param>
         /// <returns></returns>
-        public ScenePresence findScenePresence(UUID avID)
+        public IScenePresence findScenePresence (UUID avID)
         {
             foreach (Scene s in m_scenes)
             {
-                ScenePresence SP = s.GetScenePresence(avID);
+                IScenePresence SP = s.GetScenePresence (avID);
                 if (SP != null)
                 {
                     return SP;

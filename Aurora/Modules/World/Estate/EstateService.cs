@@ -210,7 +210,7 @@ namespace Aurora.Modules
         {
             if (RegionConnector == null)
                 return;
-            ScenePresence Sp = ((Scene)client.Scene).GetScenePresence(client.AgentId);
+            ScenePresence Sp = ((Scene)client.Scene).GetScenePresence (client.AgentId);
             if (!((Scene)client.Scene).Permissions.CanIssueEstateCommand(client.AgentId, false))
                 return;
 

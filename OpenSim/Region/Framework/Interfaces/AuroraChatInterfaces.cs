@@ -29,7 +29,7 @@ namespace Aurora.Framework
         int ShoutDistance { get; set; }
         int WhisperDistance { get; set; }
         IConfig Config { get; }
-        void TrySendChatMessage(ScenePresence presence, Vector3 fromPos, Vector3 regionPos,
+        void TrySendChatMessage (IScenePresence presence, Vector3 fromPos, Vector3 regionPos,
                                                   UUID fromAgentID, string fromName, ChatTypeEnum type,
                                                   string message, ChatSourceType src, float Range);
         void OnChatFromWorld(Object sender, OSChatMessage c);

@@ -99,7 +99,7 @@ namespace Aurora.Modules
             reader.Close();
             reader.Dispose();
 
-            ScenePresence SP;
+            IScenePresence SP;
             m_scene.TryGetScenePresence(account.PrincipalID, out SP);
             if (SP == null)
                 return; //Bad people!
@@ -227,7 +227,7 @@ namespace Aurora.Modules
                 return;
             }
 
-            ScenePresence SP;
+            IScenePresence SP;
             m_scene.TryGetScenePresence(account.PrincipalID, out SP);
             if (SP == null)
                 return; //Bad people!

@@ -708,7 +708,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (obj is ScenePresence)
             {
                 //Get all the scripts in the attachments and run through the loop
-                IAttachmentsModule attModule = ((ScenePresence)obj).Scene.RequestModuleInterface<IAttachmentsModule>();
+                IAttachmentsModule attModule = (obj as IScenePresence).Scene.RequestModuleInterface<IAttachmentsModule>();
                 if (attModule != null)
                 {
                     SceneObjectGroup[] attachments = attModule.GetAttachmentsForAvatar(obj.UUID);
@@ -737,10 +737,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public int GetTotalScripts (IEntity obj)
         {
             int totalScripts = 0;
-            if (obj is ScenePresence)
+            if (obj is IScenePresence)
             {
                 //Get all the scripts in the attachments
-                IAttachmentsModule attModule = ((ScenePresence)obj).Scene.RequestModuleInterface<IAttachmentsModule>();
+                IAttachmentsModule attModule = ((IScenePresence)obj).Scene.RequestModuleInterface<IAttachmentsModule> ();
                 if (attModule != null)
                 {
                     SceneObjectGroup[] attachments = attModule.GetAttachmentsForAvatar(obj.UUID);

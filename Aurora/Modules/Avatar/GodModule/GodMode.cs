@@ -167,22 +167,22 @@ namespace Aurora.Modules
         public void GodUpdateRegionInfoUpdate(IClientAPI client, float BillableFactor, int PricePerMeter, ulong EstateID, ulong RegionFlags, byte[] SimName, int RedirectX, int RedirectY)
         {
             //Check god perms
-            ScenePresence Sp = ((Scene)client.Scene).GetScenePresence(client.AgentId);
+            IScenePresence Sp = ((Scene)client.Scene).GetScenePresence (client.AgentId);
             if (!((Scene)client.Scene).Permissions.IsGod(client.AgentId))
                 return;
 
             //Update their current region with new information
-            string oldRegionName = ((Scene)client.Scene).RegionInfo.RegionName;
-            ((Scene)client.Scene).RegionInfo.RegionName = Utils.BytesToString(SimName);
+            string oldRegionName = client.Scene.RegionInfo.RegionName;
+            client.Scene.RegionInfo.RegionName = Utils.BytesToString(SimName);
             
             //Set the region loc X and Y
             if(RedirectX != 0)
-                ((Scene)client.Scene).RegionInfo.RegionLocX = RedirectX * (int)Constants.RegionSize;
+                client.Scene.RegionInfo.RegionLocX = RedirectX * (int)Constants.RegionSize;
             if (RedirectY != 0)
-                ((Scene)client.Scene).RegionInfo.RegionLocY = RedirectY * (int)Constants.RegionSize;
+                client.Scene.RegionInfo.RegionLocY = RedirectY * (int)Constants.RegionSize;
 
             //Update the estate ID
-            if (((Scene)client.Scene).RegionInfo.EstateSettings.EstateID != EstateID)
+            if (client.Scene.RegionInfo.EstateSettings.EstateID != EstateID)
             {
                 //If they are changing estates, we have to ask them for the password to the estate, so send them an llTextBox
                 string Password = "";

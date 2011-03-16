@@ -25,12 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using OpenMetaverse;
 
 namespace OpenSim.Framework
 {
-    public interface IScenePresence : IEntity
+    public interface IScenePresence : IEntity, IRegistryCore
     {
         /// <summary>
         /// First name of the client
@@ -48,6 +49,18 @@ namespace OpenSim.Framework
         IClientAPI ControllingClient { get; }
 
         /// <summary>
+        /// The scene this client is in
+        /// </summary>
+        IScene Scene { get; }
+
+        PhysicsActor PhysicsActor { get; set; }
+
+        /// <summary>
+        /// The appearance that this agent has
+        /// </summary>
+        AvatarAppearance Appearance { get; set; }
+
+        /// <summary>
         /// Is this client really in this region?
         /// </summary>
         bool IsChildAgent { get; set; }
@@ -56,6 +69,47 @@ namespace OpenSim.Framework
         /// Where this client is looking
         /// </summary>
         Vector3 Lookat { get; }
+
+        Vector3 CameraPosition { get; set; }
+
+        Quaternion CameraRotation { get; set; }
+
+        /// <summary>
+        /// The offset from an object the avatar may be sitting on
+        /// </summary>
+        Vector3 OffsetPosition { get; set; }
+
+        /// <summary>
+        /// If the avatar is sitting on something, this is the object it is sitting on's UUID
+        /// </summary>
+        UUID ParentID { get; }
+
+        /// <summary>
+        /// Can this entity move?
+        /// </summary>
+        bool AllowMovement { get; set; }
+
+        bool FlyDisabled { get; set; }
+
+        bool ForceFly { get; set; }
+
+        int GodLevel { get; set; }
+
+        bool SetAlwaysRun { get; set; }
+
+        bool IsBusy { get; set; }
+
+        byte State { get; set; }
+
+        uint AgentControlFlags { get; set; }
+
+        float SpeedModifier { get; set; }
+
+        Vector4 CollisionPlane { get; set; }
+
+        bool Frozen { get; set; }
+
+        int UserLevel { get; set; }
     }
 
     public interface ISceneObject : ISceneEntity
@@ -112,6 +166,7 @@ namespace OpenSim.Framework
         int LinkNum { get; set; }
         Vector3 AbsolutePosition { get; set; }
         Vector3 Velocity { get; set; }
+        Quaternion Rotation { get; set; }
         string Name { get; }
     }
 
@@ -119,5 +174,187 @@ namespace OpenSim.Framework
     {
         ISceneEntity ParentEntity { get; }
         void ResetEntityIDs ();
+    }
+
+    public enum PIDHoverType
+    {
+        Ground
+        ,
+        GroundAndWater
+            ,
+        Water
+            , Absolute
+    }
+
+    public delegate void PositionUpdate (Vector3 position);
+    public delegate void VelocityUpdate (Vector3 velocity);
+    public delegate void OrientationUpdate (Quaternion orientation);
+
+    public enum ActorTypes : int
+    {
+        Unknown = 0,
+        Agent = 1,
+        Prim = 2,
+        Ground = 3,
+        Water = 4
+    }
+
+    public abstract class PhysicsActor
+    {
+        public delegate void RequestTerseUpdate ();
+        public delegate void CollisionUpdate (EventArgs e);
+        public delegate void OutOfBounds (Vector3 pos);
+
+        // disable warning: public events
+#pragma warning disable 67
+        public event RequestTerseUpdate OnRequestTerseUpdate;
+        public event RequestTerseUpdate OnSignificantMovement;
+        public event RequestTerseUpdate OnPositionAndVelocityUpdate;
+        public event CollisionUpdate OnCollisionUpdate;
+        public event OutOfBounds OnOutOfBounds;
+#pragma warning restore 67
+
+        public abstract bool Stopped { get; }
+
+        public abstract Vector3 Size { get; set; }
+
+        public abstract PrimitiveBaseShape Shape { set; }
+
+        public abstract uint LocalID { get; set; }
+
+        public abstract bool Grabbed { set; }
+
+        public abstract bool Selected { set; }
+
+        public string SOPName;
+        public string SOPDescription;
+
+        public abstract void CrossingFailure ();
+
+        public abstract void link (PhysicsActor obj);
+
+        public abstract void delink ();
+
+        public abstract void LockAngularMotion (Vector3 axis);
+
+        public virtual void RequestPhysicsterseUpdate ()
+        {
+            // Make a temporary copy of the event to avoid possibility of
+            // a race condition if the last subscriber unsubscribes
+            // immediately after the null check and before the event is raised.
+            RequestTerseUpdate handler = OnRequestTerseUpdate;
+
+            if (handler != null)
+            {
+                handler ();
+            }
+        }
+
+        public virtual void RaiseOutOfBounds (Vector3 pos)
+        {
+            // Make a temporary copy of the event to avoid possibility of
+            // a race condition if the last subscriber unsubscribes
+            // immediately after the null check and before the event is raised.
+            OutOfBounds handler = OnOutOfBounds;
+
+            if (handler != null)
+            {
+                handler (pos);
+            }
+        }
+
+        public virtual void SendCollisionUpdate (EventArgs e)
+        {
+            CollisionUpdate handler = OnCollisionUpdate;
+
+            if (handler != null)
+            {
+                handler (e);
+            }
+        }
+
+        public virtual void TriggerSignificantMovement ()
+        {
+            //Call significant movement
+            RequestTerseUpdate significantMovement = OnSignificantMovement;
+
+            if (significantMovement != null)
+                significantMovement ();
+        }
+
+        public virtual void TriggerMovementUpdate ()
+        {
+            //Call significant movement
+            RequestTerseUpdate movementUpdate = OnPositionAndVelocityUpdate;
+
+            if (movementUpdate != null)
+                movementUpdate ();
+        }
+
+        public virtual void SetMaterial (int material)
+        {
+
+        }
+
+        public abstract Vector3 Position { get; set; }
+        public abstract float Mass { get; set; }
+        public abstract Vector3 Force { get; set; }
+
+        public abstract int VehicleType { get; set; }
+        public abstract void VehicleFloatParam (int param, float value);
+        public abstract void VehicleVectorParam (int param, Vector3 value);
+        public abstract void VehicleRotationParam (int param, Quaternion rotation);
+        public abstract void VehicleFlags (int param, bool remove);
+        public abstract void SetCameraPos (Vector3 CameraRotation);
+        public virtual void AddMovementForce (Vector3 force) { }
+        public virtual void SetMovementForce (Vector3 force) { }
+
+        public abstract void SetVolumeDetect (int param);    // Allows the detection of collisions with inherently non-physical prims. see llVolumeDetect for more
+
+        public abstract Vector3 GeometricCenter { get; }
+        public abstract Vector3 CenterOfMass { get; }
+        public abstract Vector3 Velocity { get; set; }
+        public abstract Vector3 Torque { get; set; }
+        public abstract float CollisionScore { get; set; }
+        public abstract Vector3 Acceleration { get; }
+        public abstract Quaternion Orientation { get; set; }
+        public abstract int PhysicsActorType { get; set; }
+        public abstract bool IsPhysical { get; set; }
+        public abstract bool Flying { get; set; }
+        public abstract bool SetAlwaysRun { get; set; }
+        public abstract bool ThrottleUpdates { get; set; }
+        public abstract bool IsColliding { get; set; }
+        public abstract bool CollidingGround { get; set; }
+        public abstract bool CollidingObj { get; set; }
+        public abstract bool FloatOnWater { set; }
+        public abstract Vector3 RotationalVelocity { get; set; }
+        public abstract float Buoyancy { get; set; }
+
+        // Used for MoveTo
+        public abstract Vector3 PIDTarget { get; set; }
+        public abstract bool PIDActive { get; set; }
+        public abstract float PIDTau { get; set; }
+
+        // Used for llSetHoverHeight and maybe vehicle height
+        // Hover Height will override MoveTo target's Z
+        public abstract bool PIDHoverActive { set; }
+        public abstract float PIDHoverHeight { set; }
+        public abstract PIDHoverType PIDHoverType { set; }
+        public abstract float PIDHoverTau { set; }
+
+        public abstract bool VolumeDetect { get; }
+
+        // For RotLookAt
+        public abstract Quaternion APIDTarget { set; }
+        public abstract bool APIDActive { set; }
+        public abstract float APIDStrength { set; }
+        public abstract float APIDDamping { set; }
+
+        public abstract void AddForce (Vector3 force, bool pushforce);
+        public abstract void AddAngularForce (Vector3 force, bool pushforce);
+        public abstract void SetMomentum (Vector3 momentum);
+        public abstract void SubscribeEvents (int ms);
+        public abstract void UnSubscribeEvents ();
+        public abstract bool SubscribedEvents ();
     }
 }

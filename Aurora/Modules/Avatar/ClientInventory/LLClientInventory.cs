@@ -367,7 +367,7 @@ namespace OpenSim.Region.Framework.Scenes
                 deleteIDs.Add(localID);
                 deleteGroups.Add(grp);
 
-                ScenePresence SP = remoteClient == null ? null : m_scene.GetScenePresence(remoteClient.AgentId);
+                IScenePresence SP = remoteClient == null ? null : m_scene.GetScenePresence (remoteClient.AgentId);
 
                 if (SP == null)
                 {
@@ -554,7 +554,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (transactionID == UUID.Zero)
             {
-                ScenePresence presence;
+                IScenePresence presence;
                 if (m_scene.TryGetScenePresence(remoteClient.AgentId, out presence))
                 {
                     byte[] data = null;
@@ -636,7 +636,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (!m_scene.Permissions.CanCreateUserInventory(invType, remoteClient.AgentId))
                 return;
 
-            ScenePresence presence;
+            IScenePresence presence;
             if (m_scene.TryGetScenePresence(remoteClient.AgentId, out presence))
             {
                 AssetBase asset = new AssetBase();
@@ -1741,7 +1741,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             destPart.ParentGroup.ResumeScripts();
 
-            ScenePresence avatar;
+            IScenePresence avatar;
             if (m_scene.TryGetScenePresence(srcTaskItem.OwnerID, out avatar))
             {
                 destPart.GetProperties(avatar.ControllingClient);
@@ -1865,7 +1865,7 @@ namespace OpenSim.Region.Framework.Scenes
             if ((srcTaskItem.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
                 part.Inventory.RemoveInventoryItem(itemId);
 
-            ScenePresence avatar;
+            IScenePresence avatar;
 
             if (m_scene.TryGetScenePresence(srcTaskItem.OwnerID, out avatar))
             {
@@ -1886,7 +1886,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="itemID"></param>
         public InventoryItemBase MoveTaskInventoryItemToUserInventory(UUID avatarId, UUID folderId, SceneObjectPart part, UUID itemId)
         {
-            ScenePresence avatar;
+            IScenePresence avatar;
 
             if (m_scene.TryGetScenePresence(avatarId, out avatar))
             {
@@ -1936,7 +1936,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            ScenePresence avatar = null;
+            IScenePresence avatar = null;
             if (m_scene.TryGetScenePresence(destID, out avatar))
             {
                 SendInventoryUpdate(avatar.ControllingClient, rootFolder, true, false);

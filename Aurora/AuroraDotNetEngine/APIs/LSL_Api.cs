@@ -3662,7 +3662,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (obj != null)
                         return (double)obj.GetMass();
                     // the object is null so the key is for an avatar
-                    ScenePresence avatar = World.GetScenePresence(key);
+                    IScenePresence avatar = World.GetScenePresence (key);
                     if (avatar != null)
                         if (avatar.IsChildAgent)
                             // reference http://www.lslwiki.net/lslwiki/wakka.php?wakka=llGetObjectMass
@@ -3684,7 +3684,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             if (m_host.IsAttachment)
             {
-                ScenePresence SP = m_host.ParentGroup.Scene.GetScenePresence(m_host.OwnerID);
+                IScenePresence SP = m_host.ParentGroup.Scene.GetScenePresence (m_host.OwnerID);
                 if (SP != null)
                     return SP.PhysicsActor.Mass;
                 else
@@ -3803,7 +3803,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 SceneObjectGroup grp = m_host.ParentGroup;
 
-                ScenePresence presence = World.GetScenePresence(m_host.OwnerID);
+                IScenePresence presence = World.GetScenePresence (m_host.OwnerID);
 
                 IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
                 if (attachmentsModule != null)
@@ -3847,7 +3847,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             SceneObjectGroup grp = host.ParentGroup;
             UUID itemID = grp.GetFromItemID();
-            ScenePresence presence = World.GetScenePresence(host.OwnerID);
+            IScenePresence presence = World.GetScenePresence (host.OwnerID);
 
             IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
             if (attachmentsModule != null)
@@ -4223,7 +4223,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     SceneObjectPart rootPart = null;
                     rootPart = group.GetChildPart(group.UUID);
 
-                    ScenePresence SP = World.GetScenePresence(m_host.OwnerID);
+                    IScenePresence SP = World.GetScenePresence (m_host.OwnerID);
                     if (SP != null)
                         group.SetGroup(m_host.GroupID, SP.ControllingClient);
 
@@ -4329,12 +4329,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
             }
 
-            ScenePresence presence = World.GetScenePresence(agentID);
+            IScenePresence presence = World.GetScenePresence (agentID);
 
             if (presence != null)
             {
                 string ownerName = "";
-                ScenePresence ownerPresence = World.GetScenePresence(m_host.ParentGroup.RootPart.OwnerID);
+                IScenePresence ownerPresence = World.GetScenePresence (m_host.ParentGroup.RootPart.OwnerID);
                 if (ownerPresence == null)
                     ownerName = resolveName(m_host.OwnerID);
                 else
@@ -4726,13 +4726,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
             }
             if (part != null)
-            {
-                if (part is SceneObjectPart)
-                    return ((SceneObjectPart)part).Name;
-                else if (part is ScenePresence)
-                    return ((ScenePresence)part).Name;
-                return UUID.Zero.ToString();
-            }
+                return part.Name;
             else
                 return UUID.Zero.ToString();
         }
@@ -5059,7 +5053,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID agentId = new UUID();
             if (UUID.TryParse(agent, out agentId))
             {
-                ScenePresence presence = World.GetScenePresence(agentId);
+                IScenePresence presence = World.GetScenePresence (agentId);
                 if (presence != null)
                 {
                     // agent must be over the owners land
@@ -5226,11 +5220,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!UUID.TryParse(target,out targetID))
                 return;
 
-            ScenePresence pusheeav = null;
+            IScenePresence pusheeav = null;
             Vector3 PusheePos = Vector3.Zero;
             SceneObjectPart pusheeob = null;
 
-            ScenePresence avatar = World.GetScenePresence(targetID);
+            IScenePresence avatar = World.GetScenePresence (targetID);
             if (avatar != null)
             {
                 pusheeIsAvatar = true;
@@ -6453,7 +6447,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             int flags = 0;
 
-            ScenePresence agent = World.GetScenePresence(key);
+            ScenePresence agent = World.GetScenePresence (key);
             if (agent == null)
             {
                 return 0;
@@ -6603,13 +6597,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID key = new UUID();
             if (UUID.TryParse(id,out key))
             {
-                ScenePresence presence = World.GetScenePresence(key);
+                IScenePresence presence = World.GetScenePresence (key);
 
                 if (presence != null)
-                {
-                    return presence.ControllingClient.Name;
-                    //return presence.Name;
-                }
+                    return presence.Name;
 
                 if (World.GetSceneObjectPart(key) != null)
                 {
@@ -6681,7 +6672,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID agentId = new UUID();
             if (UUID.TryParse(pest, out agentId))
             {
-                ScenePresence presence = World.GetScenePresence(agentId);
+                IScenePresence presence = World.GetScenePresence (agentId);
                 if (presence != null)
                 {
                     // agent must be over the owners land
@@ -6712,7 +6703,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID key = new UUID();
             if (UUID.TryParse(id, out key))
             {
-                ScenePresence presence = World.GetScenePresence(key);
+                IScenePresence presence = World.GetScenePresence (key);
                 IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
                 if (presence != null) // object is an avatar
                 {
@@ -6763,8 +6754,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGetAgentSize(string id)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            ScenePresence avatar = World.GetScenePresence((UUID)id);
+
+            IScenePresence avatar = World.GetScenePresence ((UUID)id);
             LSL_Vector agentSize;
             if (avatar == null || avatar.IsChildAgent) // Fail if not in the same region
             {
@@ -8153,8 +8144,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         SetPos(part as SceneObjectPart, v);
                     else if (part is ScenePresence)
                     {
-                        (part as ScenePresence).OffsetPosition = new Vector3((float)v.x, (float)v.y, (float)v.z);
-                        (part as ScenePresence).SendTerseUpdateToAllClients();
+                        (part as IScenePresence).OffsetPosition = new Vector3 ((float)v.x, (float)v.y, (float)v.z);
+                        (part as IScenePresence).SendTerseUpdateToAllClients ();
                     }
                 }
                 else if (code == (int)ScriptBaseClass.PRIM_SIZE)
@@ -8676,7 +8667,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             Quaternion q;
             if (m_host.ParentGroup.RootPart.AttachmentPoint != 0)
             {
-                ScenePresence avatar = World.GetScenePresence(m_host.AttachedAvatar);
+                IScenePresence avatar = World.GetScenePresence (m_host.AttachedAvatar);
                 if (avatar != null)
                     if ((avatar.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) != 0)
                         q = avatar.CameraRotation; // Mouselook
@@ -10122,7 +10113,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 ParcelMediaCommandEnum? commandToSend = null;
                 float time = 0.0f; // default is from start
 
-                ScenePresence presence = null;
+                IScenePresence presence = null;
 
                 for (int i = 0; i < commandList.Data.Length; i++)
                 {
@@ -10710,7 +10701,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
             }
 
-            ScenePresence presence = World.GetScenePresence(m_host.OwnerID);
+            IScenePresence presence = World.GetScenePresence (m_host.OwnerID);
             if (presence != null)
             {
                 LSL_Vector pos = new LSL_Vector(presence.CameraPosition.X, presence.CameraPosition.Y, presence.CameraPosition.Z);
@@ -10739,7 +10730,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
             }
 
-            ScenePresence presence = World.GetScenePresence(m_host.OwnerID);
+            IScenePresence presence = World.GetScenePresence (m_host.OwnerID);
             if (presence != null)
             {
                 return new LSL_Rotation(presence.CameraRotation.X, presence.CameraRotation.Y, presence.CameraRotation.Z, presence.CameraRotation.W);
@@ -10812,7 +10803,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (detectedParams != null)
                 avatarID = detectedParams.Key;
 
-            ScenePresence avatar = World.GetScenePresence(avatarID);
+            IScenePresence avatar = World.GetScenePresence (avatarID);
             if (avatar != null)
             {
                 Aurora.Framework.IMuteListModule module = m_host.ParentGroup.Scene.RequestModuleInterface<Aurora.Framework.IMuteListModule>();
@@ -10933,7 +10924,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if ((m_host.TaskInventory[invItemID].PermsMask & ScriptBaseClass.PERMISSION_CONTROL_CAMERA) == 0) return;
             }
 
-            ScenePresence presence = World.GetScenePresence(agentID);
+            IScenePresence presence = World.GetScenePresence (agentID);
 
             // we are not interested in child-agents
             if (presence.IsChildAgent) return;
@@ -10989,7 +10980,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if ((m_host.TaskInventory[invItemID].PermsMask & ScriptBaseClass.PERMISSION_CONTROL_CAMERA) == 0) return;
             }
 
-            ScenePresence presence = World.GetScenePresence(agentID);
+            IScenePresence presence = World.GetScenePresence (agentID);
 
             // we are not interested in child-agents
             if (presence.IsChildAgent) return;
@@ -11096,7 +11087,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             Vector3 velocity = m_host.Velocity;
             Quaternion rotation = m_host.RotationOffset;
             string ownerName = String.Empty;
-            ScenePresence scenePresence = World.GetScenePresence(m_host.OwnerID);
+            IScenePresence scenePresence = World.GetScenePresence (m_host.OwnerID);
             if (scenePresence == null)
                 ownerName = resolveName(m_host.OwnerID);
             else
@@ -11410,7 +11401,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID key = new UUID();
             if (UUID.TryParse(id, out key))
             {
-                ScenePresence av = World.GetScenePresence(key);
+                IScenePresence av = World.GetScenePresence (key);
 
                 if (av != null)
                 {

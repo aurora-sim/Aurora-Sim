@@ -128,7 +128,7 @@ namespace Aurora.Modules
 
         public void SendWindlightProfileTargeted(RegionLightShareData wl, UUID pUUID)
         {
-            ScenePresence Sc;
+            IScenePresence Sc;
             if (m_scene.TryGetScenePresence(pUUID, out Sc))
             {
                 SendProfileToClient(Sc, wl);
@@ -469,7 +469,7 @@ namespace Aurora.Modules
         }
 
         //Find the correct WL settings to send to the client
-        public void SendProfileToClient(ScenePresence presence)
+        public void SendProfileToClient (IScenePresence presence)
         {
             if (presence == null)
                 return;
@@ -526,7 +526,7 @@ namespace Aurora.Modules
             }
         }
 
-        public bool CheckOverRideParcels(ScenePresence presence)
+        public bool CheckOverRideParcels (IScenePresence presence)
         {
             foreach (RegionLightShareData parcelLSD in m_WindlightSettings.Values)
             {
@@ -542,7 +542,7 @@ namespace Aurora.Modules
             return false;
         }
 
-        public RegionLightShareData FindRegionWindLight(ScenePresence presence)
+        public RegionLightShareData FindRegionWindLight (IScenePresence presence)
         {
             foreach (RegionLightShareData parcelLSD in m_WindlightSettings.Values)
             {
@@ -558,7 +558,7 @@ namespace Aurora.Modules
             return m_defaultWindLight;
         }
 
-        public void SendProfileToClient(ScenePresence presence, RegionLightShareData wl)
+        public void SendProfileToClient (IScenePresence presence, RegionLightShareData wl)
         {
             if (m_enableWindlight)
             {
@@ -577,7 +577,7 @@ namespace Aurora.Modules
             }
         }
 
-        public void SendProfileToClientEQ(ScenePresence presence, RegionLightShareData wl)
+        public void SendProfileToClientEQ (IScenePresence presence, RegionLightShareData wl)
         {
             OSD item = BuildSendEQMessage(wl.ToOSD());
             IEventQueueService eq = presence.Scene.RequestModuleInterface<IEventQueueService>();

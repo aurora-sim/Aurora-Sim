@@ -197,7 +197,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Vector3 tmp;
             if (part == null) // Avatar, maybe?
             {
-                ScenePresence presence = scene.GetScenePresence(Key);
+                IScenePresence presence = scene.GetScenePresence(Key);
                 if (presence == null)
                     return;
 

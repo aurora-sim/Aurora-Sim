@@ -274,7 +274,7 @@ namespace OpenSim.Region.Physics.Manager
             public override PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying)
             {
                 m_log.InfoFormat("[PHYSICS]: NullPhysicsScene : AddAvatar({0})", position);
-                return PhysicsActor.Null;
+                return new NullPhysicsActor();
             }
 
             public override void RemoveAvatar(PhysicsActor actor)
@@ -307,7 +307,7 @@ namespace OpenSim.Region.Physics.Manager
                                                       Vector3 size, Quaternion rotation, bool isPhysical)
             {
                 m_log.InfoFormat("[PHYSICS]: NullPhysicsScene : AddPrim({0},{1})", position, size);
-                return PhysicsActor.Null;
+                return new NullPhysicsActor ();
             }
 
             public override void AddPhysicsActorTaint(PhysicsActor prim)

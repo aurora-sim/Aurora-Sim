@@ -122,7 +122,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             responsedata["content_type"] = "text/plain";
             responsedata["keepalive"] = false;
             responsedata["str_response_string"] = "Request wasn't what was expected";
-            ScenePresence avatar;
+            IScenePresence avatar;
             
             if (!m_scene.TryGetScenePresence(AgentId, out avatar))
                 return responsedata;
@@ -352,7 +352,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             }
             else
             {
-                avatar.Scene.GetScenePresence(avatar.UUID).ControllingClient.SendAlertMessage("You do not have permission to rez objects here: " + reason);
+                avatar.ControllingClient.SendAlertMessage("You do not have permission to rez objects here: " + reason);
             }
 
 

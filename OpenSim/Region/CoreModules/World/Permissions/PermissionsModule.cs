@@ -1302,7 +1302,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
             ILandObject l;
 
-            ScenePresence sp = scene.GetScenePresence(user);
+            IScenePresence sp = scene.GetScenePresence (user);
             if (sp == null)
                 return false;
 
@@ -1881,7 +1881,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
             if ((int)InventoryType.Landmark == invType)
             {
-                ScenePresence SP = m_scene.GetScenePresence(userID);
+                IScenePresence SP = m_scene.GetScenePresence (userID);
                 if (m_parcelManagement == null)
                     return true;
                 ILandObject parcel = m_parcelManagement.GetLandObject(SP.AbsolutePosition.X, SP.AbsolutePosition.Y);

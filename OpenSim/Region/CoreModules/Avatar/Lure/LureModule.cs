@@ -153,7 +153,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Lure
                 return;
 
             Scene scene = (Scene)(client.Scene);
-            ScenePresence presence = scene.GetScenePresence(client.AgentId);
+            IScenePresence presence = scene.GetScenePresence (client.AgentId);
 
             UUID dest = Util.BuildFakeParcelID(
                     scene.RegionInfo.RegionHandle,

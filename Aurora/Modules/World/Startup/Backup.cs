@@ -713,7 +713,7 @@ namespace Aurora.Modules
                         group.RootPart.SitTargetAvatar.CopyTo(ids);
                         foreach (UUID avID in ids)
                         {
-                            ScenePresence SP = m_scene.GetScenePresence(avID);
+                            IScenePresence SP = m_scene.GetScenePresence (avID);
                             if (SP != null)
                                 SP.StandUp();
                         }

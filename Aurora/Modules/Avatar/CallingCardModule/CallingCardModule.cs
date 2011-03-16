@@ -244,7 +244,7 @@ namespace Aurora.Modules
             if (scene == null)
                 return null;
 
-            ScenePresence presence = scene.GetScenePresence(agentID);
+            IScenePresence presence = scene.GetScenePresence (agentID);
             if (presence == null)
                 return null;
 
@@ -262,7 +262,7 @@ namespace Aurora.Modules
             {
                 foreach (Scene scene in m_scenes)
                 {
-                    ScenePresence presence = scene.GetScenePresence(agentId);
+                    IScenePresence presence = scene.GetScenePresence (agentId);
                     if (presence != null)
                     {
                         if (!presence.IsChildAgent)

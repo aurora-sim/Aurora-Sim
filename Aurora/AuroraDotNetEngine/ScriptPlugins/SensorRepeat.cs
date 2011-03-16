@@ -312,7 +312,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 // avatar rotation. This may include a nonzero elevation if
                 // in mouselook.
 
-                ScenePresence avatar = ts.host.ParentGroup.Scene.GetScenePresence(SensePoint.ParentGroup.RootPart.AttachedAvatar);
+                IScenePresence avatar = ts.host.ParentGroup.Scene.GetScenePresence (SensePoint.ParentGroup.RootPart.AttachedAvatar);
                 q = avatar.Rotation;
             }
             LSL_Types.Quaternion r = new LSL_Types.Quaternion(q.X, q.Y, q.Z, q.W);

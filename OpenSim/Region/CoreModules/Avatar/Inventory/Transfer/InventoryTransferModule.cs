@@ -147,7 +147,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             {
                 foreach (Scene scene in m_Scenelist)
                 {
-                    ScenePresence presence = scene.GetScenePresence(agentId);
+                    IScenePresence presence = scene.GetScenePresence (agentId);
                     if (presence != null)
                         return scene;
                 }
@@ -172,7 +172,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
                     return;
             
                 UUID receipientID = new UUID(im.toAgentID);
-                ScenePresence user = scene.GetScenePresence(receipientID);
+                IScenePresence user = scene.GetScenePresence (receipientID);
                 UUID copyID;
 
                 // First byte is the asset type
@@ -268,7 +268,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             }
             else if (im.dialog == (byte) InstantMessageDialog.InventoryAccepted)
             {
-                ScenePresence user = scene.GetScenePresence(new UUID(im.toAgentID));
+                IScenePresence user = scene.GetScenePresence (new UUID (im.toAgentID));
 
                 if (user != null) // Local
                 {
@@ -336,7 +336,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
                             "received inventory" + reason, false);
                 }
 
-                ScenePresence user = scene.GetScenePresence(new UUID(im.toAgentID));
+                IScenePresence user = scene.GetScenePresence (new UUID (im.toAgentID));
 
                 if (user != null) // Local
                 {
@@ -369,7 +369,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
 
             // Find agent to deliver to
             //
-            ScenePresence user = scene.GetScenePresence(new UUID(msg.toAgentID));
+            IScenePresence user = scene.GetScenePresence (new UUID (msg.toAgentID));
 
             // Just forward to local handling
             OnInstantMessage(user.ControllingClient, msg);

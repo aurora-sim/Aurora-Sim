@@ -813,7 +813,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         TaskInventoryItem item =
                                     part.Inventory.GetInventoryItem(itemID);
 
-                        ScenePresence presence =
+                        IScenePresence presence =
                                 part.ParentGroup.Scene.GetScenePresence(
                                 item.OwnerID);
 
@@ -891,7 +891,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         }
                         else
                         {
-                            ScenePresence presence =
+                            IScenePresence presence =
                                         part.ParentGroup.Scene.GetScenePresence(
                                         item.OwnerID);
 
