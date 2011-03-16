@@ -428,7 +428,7 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
-        public bool TryGetScenePresence(UUID avatarId, out ScenePresence avatar)
+        public bool TryGetScenePresence (UUID avatarId, out IScenePresence avatar)
         {
             foreach (Scene scene in m_localScenes)
             {
@@ -444,7 +444,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool TryGetAvatarsScene(UUID avatarId, out Scene scene)
         {
-            ScenePresence avatar = null;
+            IScenePresence avatar = null;
             foreach (Scene mScene in m_localScenes)
             {
                 if (mScene.TryGetScenePresence(avatarId, out avatar))
@@ -458,7 +458,7 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
-        public bool TryGetAvatarByName(string avatarName, out ScenePresence avatar)
+        public bool TryGetAvatarByName (string avatarName, out IScenePresence avatar)
         {
             foreach (Scene scene in m_localScenes)
             {
@@ -476,14 +476,14 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Get functions
 
-        public List<ScenePresence> GetCurrentSceneAvatars()
+        public List<IScenePresence> GetCurrentSceneAvatars ()
         {
-            List<ScenePresence> avatars = new List<ScenePresence>();
+            List<IScenePresence> avatars = new List<ScenePresence> ();
 
             ForEachCurrentScene(
                 delegate(Scene scene)
                 {
-                    scene.ForEachScenePresence(delegate(ScenePresence scenePresence)
+                    scene.ForEachScenePresence (delegate (IScenePresence scenePresence)
                     {
                         if (!scenePresence.IsChildAgent)
                             avatars.Add(scenePresence);
@@ -494,13 +494,13 @@ namespace OpenSim.Region.Framework.Scenes
             return avatars;
         }
 
-        public List<ScenePresence> GetCurrentScenePresences()
+        public List<IScenePresence> GetCurrentScenePresences ()
         {
-            List<ScenePresence> presences = new List<ScenePresence>();
+            List<IScenePresence> presences = new List<ScenePresence> ();
 
             ForEachCurrentScene(delegate(Scene scene)
             {
-                scene.ForEachScenePresence(delegate(ScenePresence sp)
+                scene.ForEachScenePresence (delegate (IScenePresence sp)
                 {
                     presences.Add(sp);
                 });
@@ -826,7 +826,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return;
                 if (cmdparams[2] == "all")
                 {
-                    foreach (ScenePresence presence in agents)
+                    foreach (IScenePresence presence in agents)
                     {
                         RegionInfo regionInfo = presence.Scene.RegionInfo;
 
@@ -849,7 +849,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (cmdparams.Length > 4)
                 alert = String.Format("\n{0}\n", String.Join(" ", cmdparams, 4, cmdparams.Length - 4));
 
-            foreach (ScenePresence presence in agents)
+            foreach (IScenePresence presence in agents)
             {
                 RegionInfo regionInfo = presence.Scene.RegionInfo;
 
@@ -1086,7 +1086,7 @@ namespace OpenSim.Region.Framework.Scenes
             ForEachCurrentScene(
                 delegate(Scene scene)
                 {
-                    scene.ForEachScenePresence(delegate(ScenePresence scenePresence)
+                    scene.ForEachScenePresence (delegate (IScenePresence scenePresence)
                     {
                         if (!scenePresence.IsChildAgent)
                         {
@@ -1121,7 +1121,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_log.Info (String.Format ("{0,-16}{1,-16}{2,-37}{3,-11}{4,-16}{5,-30}", "Firstname", "Lastname", "Agent ID", "Root/Child", "Region", "Position"));
 
-            foreach (ScenePresence presence in agents)
+            foreach (IScenePresence presence in agents)
             {
                 RegionInfo regionInfo = presence.Scene.RegionInfo;
                 string regionName;

@@ -3647,7 +3647,7 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         else
                         {
-                            ScenePresence av = Scene.SceneGraph.GetScenePresence(localId);
+                            IScenePresence av = Scene.SceneGraph.GetScenePresence (localId);
                             if (av.LocalId == localId)
                             {
                                 if (RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(av.Name))
@@ -3768,7 +3768,7 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         else
                         {
-                            ScenePresence av = Scene.SceneGraph.GetScenePresence(localId);
+                            IScenePresence av = Scene.SceneGraph.GetScenePresence (localId);
                             if (av.LocalId == localId)
                             {
                                 if (RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(av.Name))
@@ -3888,7 +3888,7 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         else
                         {
-                            ScenePresence av = Scene.SceneGraph.GetScenePresence(localId);
+                            IScenePresence av = Scene.SceneGraph.GetScenePresence (localId);
                             if (av.LocalId == localId)
                             {
                                 if (RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(av.Name))

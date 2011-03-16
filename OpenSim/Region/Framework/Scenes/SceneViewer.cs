@@ -47,8 +47,8 @@ namespace OpenSim.Region.Framework.Scenes
         private const double MINVIEWDSTEPSQ = MINVIEWDSTEP * MINVIEWDSTEP;
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
-        protected ScenePresence m_presence;
+
+        protected IScenePresence m_presence;
 //        protected PriorityQueue<EntityUpdate, double> m_partsUpdateQueue;
         /// <summary>
         /// Param 1 - LocalID of the object, Param 2 - The last version when this was added to the list
@@ -78,7 +78,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Constructor
 
-        public SceneViewer(ScenePresence presence)
+        public SceneViewer (IScenePresence presence)
         {
             m_presence = presence;
             m_presence.Scene.EventManager.OnSignificantClientMovement += SignificantClientMovement;
@@ -794,6 +794,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
     }
+#if testViewer
     public class TestSceneViewer
     {
          #region Declares
@@ -1034,7 +1035,7 @@ namespace OpenSim.Region.Framework.Scenes
         ///  and sending the needed updates to them if they have just entered.
         ///  NOTE: This does add the updates to the LLUDPClient queue, it does NOT have prioritization built in before this method!
         /// </summary>
-        public void SendPrimUpdates(ScenePresence client)
+        public void SendPrimUpdates(IScenePresence client)
         {
             if (m_inUse)
                 return;
@@ -1259,4 +1260,5 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
     }
+#endif
 }

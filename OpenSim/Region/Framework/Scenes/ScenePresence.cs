@@ -66,7 +66,7 @@ namespace OpenSim.Region.Framework.Scenes
         public ScriptControlled eventControls;
     }
 
-    public delegate void SendCourseLocationsMethod(UUID scene, ScenePresence presence, List<Vector3> coarseLocations, List<UUID> avatarUUIDs);
+    public delegate void SendCourseLocationsMethod (UUID scene, IScenePresence presence, List<Vector3> coarseLocations, List<UUID> avatarUUIDs);
 
     public class ScenePresence : EntityBase, IScenePresence
     {
@@ -2176,7 +2176,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_sendCourseLocationsMethod = d;
         }
 
-        public void SendCoarseLocationsDefault(UUID sceneId, ScenePresence p, List<Vector3> coarseLocations, List<UUID> avatarUUIDs)
+        public void SendCoarseLocationsDefault (UUID sceneId, IScenePresence p, List<Vector3> coarseLocations, List<UUID> avatarUUIDs)
         {
             m_perfMonMS = Util.EnvironmentTickCount();
             m_controllingClient.SendCoarseLocationUpdate(avatarUUIDs, coarseLocations);
@@ -2201,7 +2201,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_perfMonMS = Util.EnvironmentTickCount();
 
             int count = 0;
-            m_scene.ForEachScenePresence(delegate(ScenePresence scenePresence)
+            m_scene.ForEachScenePresence (delegate (IScenePresence scenePresence)
                                          {
                                              SendAvatarDataToAgent(scenePresence);
                                              count++;
@@ -2223,7 +2223,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_perfMonMS = Util.EnvironmentTickCount();
             int count = 0;
-            m_scene.ForEachScenePresence(delegate(ScenePresence scenePresence)
+            m_scene.ForEachScenePresence (delegate (IScenePresence scenePresence)
                                          {
                                              // only send information about root agents
                                              if (scenePresence.IsChildAgent)
@@ -2249,7 +2249,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Send avatar data to an agent.
         /// </summary>
         /// <param name="avatar"></param>
-        private void SendAvatarDataToAgent(ScenePresence avatar)
+        private void SendAvatarDataToAgent (IScenePresence avatar)
         {
             //m_log.WarnFormat("[SP] Send avatar data from {0} to {1}",m_uuid,avatar.ControllingClient.AgentId);
             avatar.ControllingClient.SendAvatarDataImmediate(this);
@@ -2272,7 +2272,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_perfMonMS = Util.EnvironmentTickCount();
 
             int count = 0;
-            m_scene.ForEachScenePresence(delegate(ScenePresence scenePresence)
+            m_scene.ForEachScenePresence (delegate (IScenePresence scenePresence)
                                          {
                                              if (scenePresence.UUID == UUID)
                                                  return;
@@ -2298,7 +2298,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_perfMonMS = Util.EnvironmentTickCount();
 
             int count = 0;
-            m_scene.ForEachScenePresence(delegate(ScenePresence scenePresence)
+            m_scene.ForEachScenePresence (delegate (IScenePresence scenePresence)
             {
                 // only send information about root agents
                 if (scenePresence.IsChildAgent)
@@ -2324,7 +2324,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Send appearance data to an agent.
         /// </summary>
         /// <param name="avatar"></param>
-        public void SendAppearanceToAgent(ScenePresence avatar)
+        public void SendAppearanceToAgent (IScenePresence avatar)
         {
             avatar.ControllingClient.SendAppearance(
                 m_appearance.Owner, m_appearance.VisualParams, m_appearance.Texture.GetBytes());

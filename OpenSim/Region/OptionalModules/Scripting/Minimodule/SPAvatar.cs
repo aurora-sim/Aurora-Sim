@@ -49,7 +49,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             m_ID = ID;
         }
 
-        private ScenePresence GetSP()
+        private IScenePresence GetSP ()
         {
             return m_rootScene.GetScenePresence(m_ID);
         }

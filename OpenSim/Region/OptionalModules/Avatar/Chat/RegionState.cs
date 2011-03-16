@@ -162,7 +162,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Chat
         // This event indicates that the agent has left the building. We should treat that the same
         // as if the agent has logged out (we don't want cross-region noise - or do we?)
 
-        private void OnMakeChildAgent(ScenePresence presence)
+        private void OnMakeChildAgent (IScenePresence presence)
         {
 
             IClientAPI client = presence.ControllingClient;
@@ -193,7 +193,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Chat
         // An agent has entered the region (from another region). Add the client to the locally
         // known clients list
 
-        private void OnMakeRootAgent(ScenePresence presence)
+        private void OnMakeRootAgent (IScenePresence presence)
         {
 
             IClientAPI client = presence.ControllingClient;
@@ -349,7 +349,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Chat
                 return;
             }
 
-            ScenePresence avatar = null;
+            IScenePresence avatar = null;
             string fromName = msg.From;
 
             if (msg.Sender != null)

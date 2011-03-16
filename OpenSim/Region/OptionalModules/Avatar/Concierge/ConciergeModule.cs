@@ -496,7 +496,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
             }
         }
 
-        protected void WelcomeAvatar(ScenePresence agent, Scene scene)
+        protected void WelcomeAvatar (IScenePresence agent, Scene scene)
         {
             // welcome mechanics: check whether we have a welcomes
             // directory set and wether there is a region specific
@@ -561,7 +561,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
                 (scene as Scene).EventManager.TriggerOnChatBroadcast(this, c);
         }
 
-        protected void AnnounceToAgent(ScenePresence agent, string msg)
+        protected void AnnounceToAgent (IScenePresence agent, string msg)
         {
             OSChatMessage c = new OSChatMessage();
             c.Message = msg;

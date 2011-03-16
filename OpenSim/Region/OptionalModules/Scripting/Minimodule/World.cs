@@ -81,7 +81,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             }
         }
 
-        void EventManager_OnNewPresence(ScenePresence presence)
+        void EventManager_OnNewPresence (IScenePresence presence)
         {
             if (_OnNewUser != null)
             {

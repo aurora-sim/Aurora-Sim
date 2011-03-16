@@ -107,7 +107,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
             {
                 if (m_avatars.ContainsKey(agentID))
                 {
-                    ScenePresence sp;
+                    IScenePresence sp;
                     scene.TryGetScenePresence(agentID, out sp);
                     sp.DoAutoPilot(0, pos, m_avatars[agentID]);
                 }
@@ -181,7 +181,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
 
                     p_scene.AddNewClient(npcAvatar);
 
-                    ScenePresence sp;
+                    IScenePresence sp;
                     if (p_scene.TryGetScenePresence(npcAvatar.AgentId, out sp))
                     {
                         AvatarAppearance x = GetAppearance(p_cloneAppearanceFrom, p_scene);

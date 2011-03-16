@@ -1242,7 +1242,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (IsAttachment)
                 {
-                    ScenePresence sp = m_parentGroup.Scene.GetScenePresence(AttachedAvatar);
+                    IScenePresence sp = m_parentGroup.Scene.GetScenePresence (AttachedAvatar);
                     if (sp != null)
                         return sp.AbsolutePosition;
                 }
@@ -1931,7 +1931,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void SendObjectPropertiesToClient(UUID AgentID)
         {
-            ScenePresence SP = ParentGroup.Scene.GetScenePresence(AgentID);
+            IScenePresence SP = ParentGroup.Scene.GetScenePresence (AgentID);
             if(SP != null)
                 m_parentGroup.GetProperties(SP.ControllingClient);
         }
@@ -2088,7 +2088,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (m_parentGroup != null)
                     {
-                        ScenePresence avatar;
+                        IScenePresence avatar;
                         if (m_parentGroup.Scene.TryGetScenePresence(avID, out avatar))
                         {
                             avatar.ParentPosition = GetWorldPosition();
@@ -2158,7 +2158,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (volume < 0)
                 volume = 0;
 
-            m_parentGroup.Scene.ForEachScenePresence(delegate(ScenePresence sp)
+            m_parentGroup.Scene.ForEachScenePresence (delegate (IScenePresence sp)
             {
                 if (!sp.IsChildAgent)
                     sp.ControllingClient.SendAttachedSoundGainChange(UUID, (float)volume);
@@ -3035,7 +3035,7 @@ namespace OpenSim.Region.Framework.Scenes
                             }
                             else
                             {
-                                ScenePresence av = ParentGroup.Scene.SceneGraph.GetScenePresence(localId);
+                                IScenePresence av = ParentGroup.Scene.SceneGraph.GetScenePresence (localId);
                                 if(av != null)
                                 {
                                     if (av.LocalId == localId)
@@ -3181,7 +3181,7 @@ namespace OpenSim.Region.Framework.Scenes
                             }
                             else
                             {
-                                ScenePresence av = ParentGroup.Scene.SceneGraph.GetScenePresence(localId);
+                                IScenePresence av = ParentGroup.Scene.SceneGraph.GetScenePresence (localId);
                                 if (av.LocalId == localId)
                                 {
                                     if (m_parentGroup.RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || m_parentGroup.RootPart.CollisionFilter.ContainsValue(av.Name))
@@ -3324,7 +3324,7 @@ namespace OpenSim.Region.Framework.Scenes
                             }
                             else
                             {
-                                ScenePresence av = ParentGroup.Scene.SceneGraph.GetScenePresence(localId);
+                                IScenePresence av = ParentGroup.Scene.SceneGraph.GetScenePresence (localId);
                                 if(av != null)
                                 {
                                     if (av.LocalId == localId)
@@ -3619,7 +3619,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            m_parentGroup.Scene.ForEachScenePresence(delegate(ScenePresence sp)
+            m_parentGroup.Scene.ForEachScenePresence (delegate (IScenePresence sp)
             {
                 if (sp.IsChildAgent)
                     return;
@@ -3726,7 +3726,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void ClearUpdateSchedule()
         {
-            foreach (ScenePresence SP in ParentGroup.Scene.ScenePresences)
+            foreach (IScenePresence SP in ParentGroup.Scene.ScenePresences)
             {
                 SP.SceneViewer.ClearUpdatesForPart(this);
             }
@@ -3738,7 +3738,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void ClearUpdateScheduleOnce()
         {
-            foreach (ScenePresence SP in ParentGroup.Scene.ScenePresences)
+            foreach (IScenePresence SP in ParentGroup.Scene.ScenePresences)
             {
                 SP.SceneViewer.ClearUpdatesForOneLoopForPart(this);
             }
@@ -3780,7 +3780,7 @@ namespace OpenSim.Region.Framework.Scenes
             PrimUpdateFlags PostUpdateFlags;
             if (ShouldScheduleUpdate(UpdateFlags, out PostUpdateFlags))
             {
-                m_parentGroup.Scene.ForEachScenePresence(delegate(ScenePresence avatar)
+                m_parentGroup.Scene.ForEachScenePresence (delegate (IScenePresence avatar)
                 {
                     avatar.AddUpdateToAvatar(this, PostUpdateFlags);
                 });
@@ -3792,7 +3792,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="UpdateFlags"></param>
         /// <param name="avatar"></param>
-        public void ScheduleUpdateToAvatar(PrimUpdateFlags UpdateFlags, ScenePresence avatar)
+        public void ScheduleUpdateToAvatar (PrimUpdateFlags UpdateFlags, IScenePresence avatar)
         {
             PrimUpdateFlags PostUpdateFlags;
             if (ShouldScheduleUpdate(UpdateFlags, out PostUpdateFlags))

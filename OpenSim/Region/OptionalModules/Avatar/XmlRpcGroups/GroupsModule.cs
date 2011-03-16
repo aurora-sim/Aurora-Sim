@@ -274,7 +274,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             // Used for Notices and Group Invites/Accept/Reject
             client.OnInstantMessage += OnInstantMessage;
 
-            ScenePresence SP = ((Scene)client.Scene).GetScenePresence(client.AgentId);
+            IScenePresence SP = client.Scene.GetScenePresence (client.AgentId);
             // Send client thier groups information.
             if (SP != null && !SP.IsChildAgent)
                 Util.FireAndForget(SendAgentGroupDataAsync, client);
@@ -1040,7 +1040,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
 
             // TODO: This update really should send out updates for everyone in the role that just got changed.
-            foreach (ScenePresence SP in ((Scene)remoteClient.Scene).ScenePresences)
+            foreach (IScenePresence SP in remoteClient.Scene.GetScenePresences())
             {
                 if (SP.ControllingClient.ActiveGroupId == groupID)
                     SendAgentGroupDataUpdate(SP.ControllingClient, GetRequestingAgentID(SP.ControllingClient));
@@ -1406,7 +1406,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             // Try root avatar first
             foreach (Scene scene in m_sceneList)
             {
-                ScenePresence user;
+                IScenePresence user;
                 if (scene.TryGetScenePresence (agentID, out user))
                 {
                     if (!user.IsChildAgent)
@@ -1498,7 +1498,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         {
             if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: Updating scene title for {0} with title: {1}", AgentID, Title);
 
-            ScenePresence presence = null;
+            IScenePresence presence = null;
 
             foreach (Scene scene in m_sceneList)
             {
@@ -1556,7 +1556,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             // to the core Groups Stub
             IScenePresence sp = null;
             remoteClient.Scene.TryGetScenePresence(dataForAgentID, out sp);
-            remoteClient.SendAvatarDataImmediate((ScenePresence)sp);
+            remoteClient.SendAvatarDataImmediate(sp);
 
             GroupMembershipData[] membershipArray = GetProfileListedGroupMemberships(remoteClient, dataForAgentID);
             SendGroupMembershipInfoViaCaps(remoteClient, dataForAgentID, membershipArray);

@@ -370,7 +370,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_log.InfoFormat("[Scene]: Closing down the single simulator: {0}", RegionInfo.RegionName);
 
             // Kick all ROOT agents with the message, 'The simulator is going down'
-            ForEachScenePresence(delegate(ScenePresence avatar)
+            ForEachScenePresence (delegate (IScenePresence avatar)
             {
                 if (!avatar.IsChildAgent)
                     avatar.ControllingClient.Kick("The simulator is going down.");
@@ -379,7 +379,7 @@ namespace OpenSim.Region.Framework.Scenes
             IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule> ();
             if (transferModule != null)
             {
-                foreach (ScenePresence avatar in ScenePresences)
+                foreach (IScenePresence avatar in ScenePresences)
                 {
                     transferModule.IncomingCloseAgent (this, avatar.UUID);
                 }
@@ -464,7 +464,7 @@ namespace OpenSim.Region.Framework.Scenes
                     List<UUID> avatarUUIDs;
                     SceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60);
                     // Send coarse locations to clients 
-                    foreach (ScenePresence presence in ScenePresences)
+                    foreach (IScenePresence presence in ScenePresences)
                     {
                         presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
                     }
@@ -553,7 +553,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return;
 
                 //Create the scenepresence
-                ScenePresence sp = m_sceneGraph.CreateAndAddChildScenePresence(client);
+                IScenePresence sp = m_sceneGraph.CreateAndAddChildScenePresence (client);
                 
                 //Make sure the appearanace is updated
                 if (aCircuit != null)
@@ -591,7 +591,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="?"></param>
         /// <returns></returns>
-        public bool RemoveAgent (ScenePresence presence)
+        public bool RemoveAgent (IScenePresence presence)
         {
             presence.ControllingClient.Close ();
             if (presence.ParentID != UUID.Zero)
@@ -639,7 +639,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="agentID"></param>
         /// <returns>null if the presence was not found</returns>
-        public ScenePresence GetScenePresence(UUID agentID)
+        public IScenePresence GetScenePresence (UUID agentID)
         {
             return m_sceneGraph.GetScenePresence(agentID);
         }
@@ -648,7 +648,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Performs action on all scene presences.
         /// </summary>
         /// <param name="action"></param>
-        public void ForEachScenePresence(Action<ScenePresence> action)
+        public void ForEachScenePresence (Action<IScenePresence> action)
         {
             if (m_sceneGraph != null)
             {
@@ -656,7 +656,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public ScenePresence[] ScenePresences
+        public IScenePresence[] ScenePresences
         {
             get { return m_sceneGraph.GetScenePresences(); }
         }
@@ -711,12 +711,12 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
-        public bool TryGetScenePresence(UUID avatarId, out ScenePresence avatar)
+        public bool TryGetScenePresence (UUID avatarId, out IScenePresence avatar)
         {
             return m_sceneGraph.TryGetScenePresence(avatarId, out avatar);
         }
 
-        public bool TryGetAvatarByName(string avatarName, out ScenePresence avatar)
+        public bool TryGetAvatarByName (string avatarName, out IScenePresence avatar)
         {
             return m_sceneGraph.TryGetAvatarByName(avatarName, out avatar);
         }

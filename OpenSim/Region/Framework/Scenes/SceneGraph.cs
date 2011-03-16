@@ -128,7 +128,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected internal void UpdateEntities()
         {
-            ForEachScenePresence(delegate(ScenePresence presence)
+            ForEachScenePresence (delegate (IScenePresence presence)
             {
                 presence.Update();
             });
@@ -251,9 +251,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected internal ScenePresence CreateAndAddChildScenePresence(IClientAPI client)
         {
-            ScenePresence newAvatar = null;
-
-            newAvatar = new ScenePresence(client, m_parentScene, m_regInfo);
+            ScenePresence newAvatar = new ScenePresence(client, m_parentScene, m_regInfo);
             newAvatar.IsChildAgent = true;
 
             AddScenePresence(newAvatar);
@@ -265,7 +263,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Add a presence to the scene
         /// </summary>
         /// <param name="presence"></param>
-        protected internal void AddScenePresence(ScenePresence presence)
+        protected internal void AddScenePresence (IScenePresence presence)
         {
             AddEntity (presence, true);
         }
@@ -295,16 +293,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// pass a delegate to ForEachScenePresence.
         /// </summary>
         /// <returns></returns>
-        public ScenePresence[] GetScenePresences ()
+        public IScenePresence[] GetScenePresences ()
         {
-            List<ScenePresence> presences = new List<ScenePresence> ();
-            IScenePresence[] sps = Entities.GetPresences ();
-            foreach (IScenePresence sp in sps)
-            {
-                if (sp is ScenePresence)
-                    presences.Add (sp as ScenePresence);
-            }
-            return presences.ToArray ();
+            return Entities.GetPresences ();
         }
 
         /// <summary>
@@ -312,12 +303,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="agentID"></param>
         /// <returns>null if the presence was not found</returns>
-        protected internal ScenePresence GetScenePresence (UUID agentID)
+        protected internal IScenePresence GetScenePresence (UUID agentID)
         {
             IScenePresence sp;
-            if (Entities.TryGetPresenceValue (agentID, out sp))
-                return sp as ScenePresence;
-            return null;
+            Entities.TryGetPresenceValue (agentID, out sp);
+            return sp;
         }
 
         /// <summary>
@@ -327,10 +317,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="firstName"></param>
         /// <param name="lastName"></param>
         /// <returns>null if the presence was not found</returns>
-        public ScenePresence GetScenePresence (string firstName, string lastName)
+        public IScenePresence GetScenePresence (string firstName, string lastName)
         {
-            ScenePresence[] presences = GetScenePresences ();
-            foreach (ScenePresence presence in presences)
+            IScenePresence[] presences = GetScenePresences ();
+            foreach (IScenePresence presence in presences)
             {
                 if (presence.Firstname == firstName && presence.Lastname == lastName)
                     return presence;
@@ -343,27 +333,24 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="localID"></param>
         /// <returns>null if the presence was not found</returns>
-        public ScenePresence GetScenePresence(uint localID)
+        public IScenePresence GetScenePresence (uint localID)
         {
-            ScenePresence[] presences = GetScenePresences ();
-            foreach (ScenePresence presence in presences)
+            IScenePresence[] presences = GetScenePresences ();
+            foreach (IScenePresence presence in presences)
                 if (presence.LocalId == localID)
                     return presence;
             return null;
         }
 
-        protected internal bool TryGetScenePresence(UUID agentID, out ScenePresence avatar)
+        protected internal bool TryGetScenePresence (UUID agentID, out IScenePresence avatar)
         {
-            IScenePresence sp;
-            bool retVal = Entities.TryGetPresenceValue (agentID, out sp);
-            avatar = sp as ScenePresence;
-            return retVal;
+            return Entities.TryGetPresenceValue (agentID, out avatar);
         }
 
-        protected internal bool TryGetAvatarByName(string name, out ScenePresence avatar)
+        protected internal bool TryGetAvatarByName (string name, out IScenePresence avatar)
         {
             avatar = null;
-            foreach (ScenePresence presence in GetScenePresences())
+            foreach (IScenePresence presence in GetScenePresences ())
             {
                 if (String.Compare(name, presence.ControllingClient.Name, true) == 0)
                 {
@@ -432,7 +419,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// modify outside of the scope of the delegate. 
         /// </summary>
         /// <param name="action"></param>
-        public void ForEachScenePresence(Action<ScenePresence> action)
+        public void ForEachScenePresence (Action<IScenePresence> action)
         {
             // Once all callers have their delegates configured for parallelism, we can unleash this
             /*
@@ -451,8 +438,8 @@ namespace OpenSim.Region.Framework.Scenes
             Parallel.ForEach<ScenePresence>(GetScenePresences(), protectedAction);
             */
             // For now, perform actions serially
-            ScenePresence[] presences = GetScenePresences ();
-            foreach (ScenePresence sp in presences)
+            IScenePresence[] presences = GetScenePresences ();
+            foreach (IScenePresence sp in presences)
             {
                 try
                 {
@@ -856,7 +843,7 @@ namespace OpenSim.Region.Framework.Scenes
             //m_log.Info("HITTARGET: " + RayTargetObj.ToString() + ", COPYTARGET: " + localID.ToString());
             SceneObjectPart target = m_parentScene.GetSceneObjectPart(localID);
             SceneObjectPart target2 = m_parentScene.GetSceneObjectPart(RayTargetObj);
-            ScenePresence Sp = GetScenePresence(AgentID);
+            IScenePresence Sp = GetScenePresence (AgentID);
             if (target != null && target2 != null)
             {
                 if (EnableFakeRaycasting)
@@ -1195,7 +1182,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     else
                     {
-                        ScenePresence SP = GetScenePresence(remoteClient.AgentId);
+                        IScenePresence SP = GetScenePresence (remoteClient.AgentId);
                         ((SceneObjectGroup)entity).ScheduleGroupUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
                     }
                 }

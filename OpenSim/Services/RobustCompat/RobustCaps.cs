@@ -39,7 +39,7 @@ namespace OpenSim.Services.RobustCompat
             scene.AuroraEventManager.OnGenericEvent += OnGenericEvent;
         }
 
-        void OnMakeRootAgent(ScenePresence presence)
+        void OnMakeRootAgent (IScenePresence presence)
         {
             if ((presence.m_callbackURI != null) && !presence.m_callbackURI.Equals(""))
             {

@@ -33,6 +33,7 @@ namespace OpenSim.Framework
 {
     public interface IScenePresence : IEntity, IRegistryCore
     {
+        string m_callbackURI;
         /// <summary>
         /// First name of the client
         /// </summary>
@@ -122,6 +123,10 @@ namespace OpenSim.Framework
         float DrawDistance { get; set; }
 
         void ChildAgentDataUpdate (AgentData agentData);
+
+        void DoAutoPilot (int p, Vector3 pos, IClientAPI avatar);
+
+        void SendAppearanceToAllOtherAgents ();
     }
 
     public interface ISceneObject : ISceneEntity

@@ -328,7 +328,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
         public string ProvisionVoiceAccountRequest(Scene scene, string request, string path, string param,
                                                    UUID agentID)
         {
-            ScenePresence avatar = scene.GetScenePresence(agentID);
+            IScenePresence avatar = scene.GetScenePresence (agentID);
             if (avatar == null)
             {
                 System.Threading.Thread.Sleep(2000);
@@ -399,7 +399,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
         public string ParcelVoiceInfoRequest(Scene scene, string request, string path, string param,
                                              UUID agentID)
         {
-            ScenePresence avatar = scene.GetScenePresence(agentID);
+            IScenePresence avatar = scene.GetScenePresence (agentID);
             string avatarName = avatar.Name;
 
             // - check whether we have a region channel in our cache
@@ -479,7 +479,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
         public string ChatSessionRequest(Scene scene, string request, string path, string param,
                                          UUID agentID)
         {
-            ScenePresence avatar = scene.GetScenePresence(agentID);
+            IScenePresence avatar = scene.GetScenePresence (agentID);
             string avatarName = avatar.Name;
 
             m_log.DebugFormat("[FreeSwitchVoice][CHATSESSION]: avatar \"{0}\": request: {1}, path: {2}, param: {3}",

@@ -522,7 +522,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             // Try root avatar first
             foreach (Scene scene in m_sceneList)
             {
-                ScenePresence user;
+                IScenePresence user;
                 if (scene.TryGetScenePresence (agentID, out user))
                 {
                     if (!user.IsChildAgent)

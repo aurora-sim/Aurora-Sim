@@ -2367,7 +2367,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (part.ParentGroup.RootPart.AttachmentPoint != 0)
                 {
-                    ScenePresence avatar = World.GetScenePresence(part.AttachedAvatar);
+                    IScenePresence avatar = World.GetScenePresence(part.AttachedAvatar);
                     if (avatar != null)
                     {
                         if ((avatar.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) != 0)

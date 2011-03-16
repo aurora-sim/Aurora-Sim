@@ -65,7 +65,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public UpdatePrioritizationSchemes UpdatePrioritizationScheme = UpdatePrioritizationSchemes.BestAvatarResponsiveness;
 
-        private Scene m_scene;
+        private IScene m_scene;
 
         private double m_rootReprioritizationDistance = 10.0;
         private double m_childReprioritizationDistance = 20.0;
@@ -73,7 +73,7 @@ namespace OpenSim.Region.Framework.Scenes
         public double RootReprioritizationDistance { get { return m_rootReprioritizationDistance; } }
         public double ChildReprioritizationDistance { get { return m_childReprioritizationDistance; } }
 
-        public Prioritizer(Scene scene)
+        public Prioritizer(IScene scene)
         {
             m_scene = scene;
             IConfig interestConfig = scene.Config.Configs["InterestManagement"];
@@ -303,7 +303,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Use group position for child prims
             Vector3 entityPos = entity.AbsolutePosition;
 
-            ScenePresence presence = m_scene.GetScenePresence(client.AgentId);
+            IScenePresence presence = m_scene.GetScenePresence (client.AgentId);
 
             if (presence != null)
             {
