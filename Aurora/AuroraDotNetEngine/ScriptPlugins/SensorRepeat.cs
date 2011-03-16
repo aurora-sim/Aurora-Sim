@@ -434,7 +434,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             Vector3 toRegionPos;
             double dis;
 
-            Action<ScenePresence> senseEntity = new Action<ScenePresence>(delegate(ScenePresence presence)
+            Action<IScenePresence> senseEntity = new Action<IScenePresence>(delegate(IScenePresence presence)
             {
                 if (presence.IsDeleted || presence.IsChildAgent || presence.GodLevel > 0.0)
                     return;
@@ -488,7 +488,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             // rather than getting a list to scan through
             if (ts.keyID != UUID.Zero)
             {
-                ScenePresence sp;
+                IScenePresence sp;
                 // Try direct lookup by UUID
                 if (!ts.host.ParentGroup.Scene.TryGetScenePresence(ts.keyID, out sp))
                     return sensedEntities;
@@ -496,7 +496,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
             else if (ts.name != null && ts.name != "")
             {
-                ScenePresence sp;
+                IScenePresence sp;
                 // Try lookup by name will return if/when found
                 if (!ts.host.ParentGroup.Scene.TryGetAvatarByName(ts.name, out sp))
                     return sensedEntities;

@@ -81,7 +81,7 @@ namespace Aurora.Modules
                 return;
             }
 
-            ScenePresence SP = ((Scene)MainConsole.Instance.ConsoleScene).SceneGraph.GetScenePresence(cmdparams[2], cmdparams[3]);
+            IScenePresence SP = ((Scene)MainConsole.Instance.ConsoleScene).SceneGraph.GetScenePresence(cmdparams[2], cmdparams[3]);
             if(SP == null)
             {
                 m_log.Warn("Could not find user");
@@ -210,7 +210,7 @@ namespace Aurora.Modules
         {
             if (RegionConnector == null)
                 return;
-            ScenePresence Sp = ((Scene)client.Scene).GetScenePresence (client.AgentId);
+            IScenePresence Sp = ((Scene)client.Scene).GetScenePresence (client.AgentId);
             if (!((Scene)client.Scene).Permissions.CanIssueEstateCommand(client.AgentId, false))
                 return;
 
@@ -305,7 +305,7 @@ namespace Aurora.Modules
             newPosition = Position;
             UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, userID);
 
-            ScenePresence Sp = scene.GetScenePresence(userID);
+            IScenePresence Sp = scene.GetScenePresence(userID);
             if (account == null)
             {
                 reason = "Failed authentication.";
@@ -474,7 +474,7 @@ namespace Aurora.Modules
                     List<ILandObject> Parcels = parcelManagement.ParcelsNearPoint(Position);
                     if (Parcels.Count == 0)
                     {
-                        ScenePresence SP;
+                        IScenePresence SP;
                         scene.TryGetScenePresence(userID, out SP);
                         newPosition = parcelManagement.GetNearestRegionEdgePosition(SP);
                     }
@@ -567,7 +567,7 @@ namespace Aurora.Modules
             
             UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, agent.AgentID);
 
-            ScenePresence Sp = scene.GetScenePresence(agent.AgentID);
+            IScenePresence Sp = scene.GetScenePresence(agent.AgentID);
             if (account == null)
             {
                 reason = "Failed authentication.";
@@ -781,7 +781,7 @@ namespace Aurora.Modules
             return true;
         }
 
-        private bool FindUnBannedParcel(Vector3 Position, ScenePresence Sp, UUID AgentID, out ILandObject ILO, out Vector3 newPosition, out string reason)
+        private bool FindUnBannedParcel(Vector3 Position, IScenePresence Sp, UUID AgentID, out ILandObject ILO, out Vector3 newPosition, out string reason)
         {
             ILO = null;
             IParcelManagementModule parcelManagement = Sp.Scene.RequestModuleInterface<IParcelManagementModule>();

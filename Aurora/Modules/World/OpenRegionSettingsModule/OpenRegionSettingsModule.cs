@@ -761,7 +761,7 @@ namespace Aurora.Modules
 
         public void SendToAllClients()
         {
-            m_scene.ForEachScenePresence(delegate(ScenePresence SP)
+            m_scene.ForEachScenePresence(delegate(IScenePresence SP)
             {
                 OpenRegionInfo(SP);
             });

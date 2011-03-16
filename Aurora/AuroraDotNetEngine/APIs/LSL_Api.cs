@@ -3395,7 +3395,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         //Recoil to the av
                         if (m_host.IsAttachment && doRecoil)
                         {
-                            ScenePresence SP = m_host.ParentGroup.Scene.GetScenePresence(m_host.OwnerID);
+                            IScenePresence SP = m_host.ParentGroup.Scene.GetScenePresence(m_host.OwnerID);
                             if (SP != null)
                             {
                                 //Push the av backwards (For every action, there is an equal, but opposite reaction)
@@ -3724,7 +3724,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (item.PermsGranter != UUID.Zero)
             {
-                ScenePresence presence = World.GetScenePresence(item.PermsGranter);
+                IScenePresence presence = World.GetScenePresence(item.PermsGranter);
 
                 if (presence != null)
                 {
@@ -3755,7 +3755,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (item.PermsGranter != UUID.Zero)
             {
-                ScenePresence presence = World.GetScenePresence(item.PermsGranter);
+                IScenePresence presence = World.GetScenePresence(item.PermsGranter);
 
                 if (presence != null)
                 {
@@ -4071,7 +4071,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if ((item.PermsMask & ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION) != 0)
             {
-                ScenePresence presence = World.GetScenePresence(item.PermsGranter);
+                IScenePresence presence = World.GetScenePresence(item.PermsGranter);
 
                 if (presence != null)
                 {
@@ -4131,7 +4131,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     animID=InventoryKey(anim);
                 }
 
-                ScenePresence presence = World.GetScenePresence(item.PermsGranter);
+                IScenePresence presence = World.GetScenePresence(item.PermsGranter);
 
                 if (presence != null)
                 {
@@ -4484,7 +4484,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             IClientAPI client = null;
-            ScenePresence sp = World.GetScenePresence(item.PermsGranter);
+            IScenePresence sp = World.GetScenePresence(item.PermsGranter);
             if (sp != null)
                 client = sp.ControllingClient;
 
@@ -5154,7 +5154,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
             UUID avatar = (UUID)id;
-            ScenePresence presence = World.GetScenePresence(avatar);
+            IScenePresence presence = World.GetScenePresence(avatar);
             if (presence == null)
                 return "";
 
@@ -6447,7 +6447,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             int flags = 0;
 
-            ScenePresence agent = World.GetScenePresence (key);
+            IScenePresence agent = World.GetScenePresence (key);
             if (agent == null)
             {
                 return 0;
@@ -6775,7 +6775,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID agentId = new UUID();
             if (!UUID.TryParse(agent, out agentId))
                 return new LSL_Integer(0);
-            ScenePresence presence = World.GetScenePresence(agentId);
+            IScenePresence presence = World.GetScenePresence(agentId);
             if (presence == null || presence.IsChildAgent) // Return flase for child agents
                 return new LSL_Integer(0);
             IClientAPI client = presence.ControllingClient;
@@ -6793,7 +6793,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID key = new UUID();
             if (UUID.TryParse(id, out key))
             {
-                ScenePresence av = World.GetScenePresence(key);
+                IScenePresence av = World.GetScenePresence(key);
 
                 if (av != null)
                 {
@@ -8142,7 +8142,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     v = rules.GetVector3Item(idx++);
                     if (part is SceneObjectPart)
                         SetPos(part as SceneObjectPart, v);
-                    else if (part is ScenePresence)
+                    else if (part is IScenePresence)
                     {
                         (part as IScenePresence).OffsetPosition = new Vector3 ((float)v.x, (float)v.y, (float)v.z);
                         (part as IScenePresence).SendTerseUpdateToAllClients ();
@@ -8612,7 +8612,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
 
             LSL_List l = new LSL_List();
-            ScenePresence av = World.GetScenePresence((UUID)id);
+            IScenePresence av = World.GetScenePresence((UUID)id);
             if (av == null || av.IsChildAgent) // only if in the region
                 return l;
             UUID[] anims;
@@ -8743,7 +8743,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 result.Add(new LSL_Vector());
                 return result;
             }
-            ScenePresence presence = World.GetScenePresence(objID);
+            IScenePresence presence = World.GetScenePresence(objID);
             if (presence != null)
             {
                 if (presence.ParentID == UUID.Zero) // not sat on an object
@@ -10293,7 +10293,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         landObject.SetMediaUrl(url);
 
                         // now send to all (non-child) agents
-                        World.ForEachScenePresence(delegate(ScenePresence sp)
+                        World.ForEachScenePresence(delegate(IScenePresence sp)
                         {
                             if (!sp.IsChildAgent && (sp.currentParcelUUID == landData.GlobalID))
                             {
@@ -10330,7 +10330,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (presence == null)
                     {
                         // send to all (non-child) agents
-                        World.ForEachScenePresence(delegate(ScenePresence sp)
+                        World.ForEachScenePresence(delegate(IScenePresence sp)
                         {
                             if (!sp.IsChildAgent)
                             {

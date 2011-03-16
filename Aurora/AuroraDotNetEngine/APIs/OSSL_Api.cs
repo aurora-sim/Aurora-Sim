@@ -777,7 +777,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osGetAgents", m_host, "OSSL");
 
             LSL_List result = new LSL_List();
-            World.ForEachScenePresence(delegate(ScenePresence sp)
+            World.ForEachScenePresence(delegate(IScenePresence sp)
             {
                 if (!sp.IsChildAgent)
                     result.Add(sp.Name);
@@ -793,7 +793,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID avatarID = (UUID)avatar;
 
 
-            ScenePresence target;
+            IScenePresence target;
             if (World.TryGetScenePresence (avatarID, out target))
             {
                 if (target != null)
@@ -826,7 +826,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID avatarID = (UUID)avatar;
 
 
-            ScenePresence target;
+            IScenePresence target;
             if (World.TryGetScenePresence (avatarID, out target))
             {
                 if (target != null)
@@ -2170,7 +2170,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.Severe, "osKickAvatar", m_host, "OSSL");
             if (World.Permissions.CanRunConsoleCommand(m_host.OwnerID))
             {
-                World.ForEachScenePresence(delegate(ScenePresence sp)
+                World.ForEachScenePresence(delegate(IScenePresence sp)
                 {
                     if (!sp.IsChildAgent &&
                         sp.Firstname == FirstName &&
@@ -2253,7 +2253,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osGetAvatarList", m_host, "OSSL");
             
             LSL_List result = new LSL_List();
-            World.ForEachScenePresence(delegate (ScenePresence avatar)
+            World.ForEachScenePresence(delegate (IScenePresence avatar)
             {
                 if (avatar != null && avatar.UUID != m_host.OwnerID)
                 {

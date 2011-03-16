@@ -216,7 +216,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         /// <param name="visualParam"></param>
         public void SetAppearance(IClientAPI client, Primitive.TextureEntry textureEntry, byte[] visualParams, WearableCache[] wearables)
         {
-            ScenePresence sp = m_scene.GetScenePresence(client.AgentId);
+            IScenePresence sp = m_scene.GetScenePresence(client.AgentId);
             if (sp == null)
             {
                 m_log.WarnFormat("[AvatarFactory]: SetAppearance unable to find presence for {0}", client.AgentId);
@@ -286,7 +286,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         /// <param name="sp"></param>
         /// <param name="textureEntry"></param>
         /// <param name="wearables"></param>
-        private void CacheWearableData(ScenePresence sp, Primitive.TextureEntry textureEntry, WearableCache[] wearables)
+        private void CacheWearableData(IScenePresence sp, Primitive.TextureEntry textureEntry, WearableCache[] wearables)
         {
             if (textureEntry == null || wearables.Length == 0)
                 return;
@@ -382,7 +382,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             long timestamp = DateTime.Now.Ticks + Convert.ToInt64(m_savetime * 1000 * 10000);
             lock (m_savequeue)
             {
-                ScenePresence sp = m_scene.GetScenePresence(agentid);
+                IScenePresence sp = m_scene.GetScenePresence(agentid);
                 if (sp == null)
                 {
                     m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene", agentid);
@@ -405,7 +405,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             long timestamp = DateTime.Now.Ticks + Convert.ToInt64(m_savetime * 1000 * 10000);
             lock (m_initialsendqueue)
             {
-                ScenePresence sp = m_scene.GetScenePresence(agentid);
+                IScenePresence sp = m_scene.GetScenePresence(agentid);
                 if (sp == null)
                 {
                     m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene", agentid);
@@ -418,7 +418,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
         private void HandleAppearanceSend(UUID agentid)
         {
-            ScenePresence sp = m_scene.GetScenePresence(agentid);
+            IScenePresence sp = m_scene.GetScenePresence(agentid);
             if (sp == null)
             {
                 m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene to send appearance for.", agentid);
@@ -465,7 +465,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         /// </summary>
         private void HandleInitialAppearanceSend(UUID agentid)
         {
-            ScenePresence sp = m_scene.GetScenePresence(agentid);
+            IScenePresence sp = m_scene.GetScenePresence(agentid);
             if (sp == null)
             {
                 m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene to send appearance for.", agentid);
@@ -557,7 +557,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         /// </summary>
         public void RequestWearables(IClientAPI client)
         {
-            ScenePresence sp = m_scene.GetScenePresence(client.AgentId);
+            IScenePresence sp = m_scene.GetScenePresence(client.AgentId);
             if (sp == null)
             {
                 m_log.WarnFormat("[AvatarFactory]: SendWearables unable to find presence for {0}", client.AgentId);
@@ -576,7 +576,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         /// <param name="e"></param>
         public void AvatarIsWearing(IClientAPI client, AvatarWearingArgs e)
         {
-            ScenePresence sp = m_scene.GetScenePresence(client.AgentId);
+            IScenePresence sp = m_scene.GetScenePresence(client.AgentId);
             if (sp == null)
             {
                 m_log.WarnFormat("[AvatarFactory]: AvatarIsWearing unable to find presence for {0}", client.AgentId);
@@ -694,7 +694,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         public void ForceSendAvatarAppearance(UUID agentid)
         {
             //If the avatar changes appearance, then proptly logs out, this will break!
-            ScenePresence sp = m_scene.GetScenePresence(agentid);
+            IScenePresence sp = m_scene.GetScenePresence(agentid);
             if (sp == null || sp.IsChildAgent)
             {
                 m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene", agentid);

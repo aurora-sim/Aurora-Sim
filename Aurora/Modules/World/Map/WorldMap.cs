@@ -318,7 +318,7 @@ namespace Aurora.Modules
                         remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
                         return;
                     }
-                    m_scene.ForEachScenePresence(delegate(ScenePresence sp)
+                    m_scene.ForEachScenePresence(delegate(IScenePresence sp)
                     {
                         // Don't send a green dot for yourself
                         if (!sp.IsChildAgent && sp.UUID != remoteClient.AgentId)
@@ -810,7 +810,7 @@ namespace Aurora.Modules
                 m_scene.RegionInfo.RegionName, exportPath);
         }
 
-        private void MakeRootAgent(ScenePresence avatar)
+        private void MakeRootAgent(IScenePresence avatar)
 		{
 			lock (m_rootAgents)
 			{
@@ -821,7 +821,7 @@ namespace Aurora.Modules
 			}
 		}
 
-		private void MakeChildAgent(ScenePresence avatar)
+		private void MakeChildAgent(IScenePresence avatar)
 		{
 			lock (m_rootAgents)
             {

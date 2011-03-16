@@ -473,7 +473,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void SendLandUpdateToAvatarsOverMe(bool snap_selection)
         {
-            m_scene.ForEachScenePresence(delegate(ScenePresence avatar)
+            m_scene.ForEachScenePresence(delegate(IScenePresence avatar)
             {
                 if (avatar.IsChildAgent)
                     return;

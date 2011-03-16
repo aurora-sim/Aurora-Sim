@@ -218,7 +218,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private double GetPriorityByDistance(IClientAPI client, ISceneEntity entity)
         {
-            ScenePresence presence = m_scene.GetScenePresence(client.AgentId);
+            IScenePresence presence = m_scene.GetScenePresence(client.AgentId);
             if (presence != null)
             {
                 // If this is an update for our own avatar give it the highest priority
@@ -241,7 +241,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private double GetPriorityByFrontBack(IClientAPI client, ISceneEntity entity)
         {
-            ScenePresence presence = m_scene.GetScenePresence(client.AgentId);
+            IScenePresence presence = m_scene.GetScenePresence(client.AgentId);
             if (presence != null)
             {
                 // If this is an update for our own avatar give it the highest priority
@@ -297,7 +297,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return 0.0;
             if (entity == null)
                 return double.NaN;
-            if (entity is ScenePresence)
+            if (entity is IScenePresence)
                 return 1.0;
 
             // Use group position for child prims
@@ -348,7 +348,7 @@ namespace OpenSim.Region.Framework.Scenes
                         PhysicsActor physActor = rootPart.PhysActor;
 
                         // Objects avatars are sitting on should be prioritized more
-                        if (presence.SittingOnUUID == rootPart.UUID)
+                        if (presence.ParentID == rootPart.UUID)
                         {
                             //Objects that are physical get more priority.
                             if (physActor != null && physActor.IsPhysical)

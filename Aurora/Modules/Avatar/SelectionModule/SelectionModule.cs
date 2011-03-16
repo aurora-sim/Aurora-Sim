@@ -127,7 +127,7 @@ namespace Aurora.Modules
             {
                 if (entity is SceneObjectGroup)
                 {
-                    ScenePresence SP = scene.GetScenePresence(remoteClient.AgentId);
+                    IScenePresence SP = scene.GetScenePresence(remoteClient.AgentId);
                     ((SceneObjectGroup)entity).ScheduleGroupUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
                 }
             }
@@ -203,7 +203,7 @@ namespace Aurora.Modules
             Scene scene = ((Scene)remoteClient.Scene);
             SceneObjectPart part = scene.GetSceneObjectPart(primLocalID);
             //Do this first... As if its null, this wont be fired.
-            ScenePresence SP;
+            IScenePresence SP;
             scene.TryGetScenePresence(remoteClient.AgentId, out SP);
 
             if (SP == null)

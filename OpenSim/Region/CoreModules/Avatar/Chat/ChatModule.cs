@@ -231,7 +231,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             foreach (Scene s in m_scenes)
             {
                 s.ForEachScenePresence(
-                    delegate(ScenePresence presence)
+                    delegate(IScenePresence presence)
                     {
                         TrySendChatMessage(presence, fromPos, regionPos, fromID, fromName, c.Type, message, sourceType);
                     }
@@ -276,7 +276,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             // m_log.DebugFormat("[CHAT] Broadcast: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, cType, sourceType);
 
             ((Scene)c.Scene).ForEachScenePresence(
-                delegate(ScenePresence presence)
+                delegate(IScenePresence presence)
                 {
                     // ignore chat from child agents
                     if (presence.IsChildAgent) return;
@@ -296,7 +296,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
         }
 
 
-        protected virtual void TrySendChatMessage(ScenePresence presence, Vector3 fromPos, Vector3 regionPos,
+        protected virtual void TrySendChatMessage(IScenePresence presence, Vector3 fromPos, Vector3 regionPos,
                                                   UUID fromAgentID, string fromName, ChatTypeEnum type,
                                                   string message, ChatSourceType src)
         {

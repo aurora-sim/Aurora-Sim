@@ -107,7 +107,7 @@ namespace OpenSim.Region.CoreModules.World.Sound
                     LocalOnly = (ILO.LandData.Flags & (uint)ParcelFlags.SoundLocal) == (uint)ParcelFlags.SoundLocal;
             }
 
-            m_scene.ForEachScenePresence(delegate(ScenePresence sp)
+            m_scene.ForEachScenePresence(delegate(IScenePresence sp)
             {
                 if (Cones.Count != 0)
                 {
@@ -228,7 +228,7 @@ namespace OpenSim.Region.CoreModules.World.Sound
                 }
             }
 
-            m_scene.ForEachScenePresence(delegate(ScenePresence sp)
+            m_scene.ForEachScenePresence(delegate(IScenePresence sp)
             {
                 if (Cones.Count != 0)
                 {

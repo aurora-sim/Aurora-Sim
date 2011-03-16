@@ -38,7 +38,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
     /// <summary>
     /// Handle all animation duties for a scene presence
     /// </summary>
-    public class ScenePresenceAnimator
+    public class Animator
     {
         public AnimationSet Animations
         {
@@ -76,9 +76,9 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         /// <value>
         /// The scene presence that this animator applies to
         /// </value>
-        protected ScenePresence m_scenePresence;
+        protected IScenePresence m_scenePresence;
         
-        public ScenePresenceAnimator(ScenePresence sp)
+        public Animator(IScenePresence sp)
         {
             m_scenePresence = sp;
             //This step makes sure that we don't waste almost 2.5! seconds on incoming agents

@@ -136,7 +136,7 @@ namespace Aurora.Modules
         {
             try
             {
-                ScenePresence m_avatar = FindAv(agentID);
+                IScenePresence m_avatar = FindAv(agentID);
                 OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
                 OSDArray display_name = (OSDArray)rm["display_name"];
                 string oldDisplayName = display_name[0].AsString();
@@ -174,7 +174,7 @@ namespace Aurora.Modules
 
                 foreach (Scene scene in m_scenes)
                 {
-                    foreach (ScenePresence SP in scene.ScenePresences)
+                    foreach (IScenePresence SP in scene.ScenePresences)
                     {
                         //Enable this after we do checking for draw distance!
                         //if (Vector3.Distance(SP.AbsolutePosition, m_avatar.AbsolutePosition) < SP.DrawDistance)
@@ -205,9 +205,9 @@ namespace Aurora.Modules
         /// </summary>
         /// <param name="uUID"></param>
         /// <returns></returns>
-        private ScenePresence FindAv(UUID uUID)
+        private IScenePresence FindAv(UUID uUID)
         {
-            ScenePresence Sp = null;
+            IScenePresence Sp = null;
             foreach (Scene scene in m_scenes)
             {
                 if (scene.TryGetScenePresence(uUID, out Sp))
@@ -287,7 +287,7 @@ namespace Aurora.Modules
         /// <param name="newDisplayName"></param>
         /// <param name="oldDisplayName"></param>
         /// <param name="m_avatar"></param>
-        public void SetDisplayNameReply(string newDisplayName, string oldDisplayName, ScenePresence m_avatar)
+        public void SetDisplayNameReply(string newDisplayName, string oldDisplayName, IScenePresence m_avatar)
         {
             if (m_eventQueue != null)
             {

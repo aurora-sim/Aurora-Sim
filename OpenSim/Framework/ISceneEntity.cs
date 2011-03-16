@@ -31,8 +31,11 @@ using OpenMetaverse;
 
 namespace OpenSim.Framework
 {
+    public delegate void AddPhysics ();
     public interface IScenePresence : IEntity, IRegistryCore
     {
+        public event AddPhysics OnAddPhysics;
+
         string m_callbackURI;
         /// <summary>
         /// First name of the client
@@ -127,6 +130,72 @@ namespace OpenSim.Framework
         void DoAutoPilot (int p, Vector3 pos, IClientAPI avatar);
 
         void SendAppearanceToAllOtherAgents ();
+
+        void TeleportWithMomentum (Vector3 value);
+
+        void SendAvatarDataToAllAgents ();
+
+        void SendTerseUpdateToAllClients ();
+
+        void Update ();
+
+        void SendCoarseLocations (List<Vector3> coarseLocations, List<OpenMetaverse.UUID> avatarUUIDs);
+
+        Vector3 CameraAtAxis { get; set; }
+
+        void AddNewMovement (Vector3 jumpForce, Quaternion quaternion);
+
+        Vector3 PreJumpForce { get; set; }
+
+        void AddToPhysicalScene (bool m_flying, bool p);
+
+        void NotInTransit ();
+
+        void CrossSittingAgent (IClientAPI iClientAPI, OpenMetaverse.UUID uUID);
+
+        void DoMoveToPosition (IScenePresence avatar, string p, List<string> coords);
+
+        uint GenerateClientFlags (SceneObjectPart p);
+
+        ScriptControllers GetScriptControler (OpenMetaverse.UUID uUID);
+
+        void UnRegisterControlEventsToScript (uint p, OpenMetaverse.UUID uUID);
+
+        bool IsDeleted { get; set; }
+
+        bool IsJumping { get; set; }
+
+        void PushForce (Vector3 impulse);
+
+        void RegisterScriptController (ScriptControllers SC);
+
+        void SendAppearanceToAgent (IScenePresence sp);
+
+        void SendAvatarDataToAgent (IScenePresence sp);
+
+        void SetHeight (float p);
+
+        bool SitGround { get; set; }
+
+        void StandUp ();
+
+        void ChildAgentDataUpdate (AgentPosition cAgentData, int tRegionX, int tRegionY, int p, int p_2);
+
+        void CopyTo (AgentData agent);
+
+        Vector3 ParentPosition { get; set; }
+
+        void MakeChildAgent ();
+
+        void SendOtherAgentsAppearanceToMe ();
+
+        bool m_InitialHasWearablesBeenSent { get; set; }
+
+        void Close ();
+
+        void AddUpdateToAvatar (ISceneChildEntity entity, PrimUpdateFlags PostUpdateFlags);
+
+        void RegisterControlEventsToScript (int controls, int accept, int pass_on, ISceneChildEntity m_host, OpenMetaverse.UUID m_itemID);
     }
 
     public interface ISceneObject : ISceneEntity
@@ -373,5 +442,28 @@ namespace OpenSim.Framework
         public abstract void SubscribeEvents (int ms);
         public abstract void UnSubscribeEvents ();
         public abstract bool SubscribedEvents ();
+    }
+
+    public enum ScriptControlled : uint
+    {
+        CONTROL_ZERO = 0,
+        CONTROL_FWD = 1,
+        CONTROL_BACK = 2,
+        CONTROL_LEFT = 4,
+        CONTROL_RIGHT = 8,
+        CONTROL_UP = 16,
+        CONTROL_DOWN = 32,
+        CONTROL_ROT_LEFT = 256,
+        CONTROL_ROT_RIGHT = 512,
+        CONTROL_LBUTTON = 268435456,
+        CONTROL_ML_LBUTTON = 1073741824
+    }
+
+    public struct ScriptControllers
+    {
+        public UUID itemID;
+        public ISceneChildEntity part;
+        public ScriptControlled ignoreControls;
+        public ScriptControlled eventControls;
     }
 }

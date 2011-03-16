@@ -138,7 +138,7 @@ namespace OpenSim.Region.CoreModules
 
         private void DeleteGroups(List<SceneObjectGroup> objectGroups)
         {
-            m_scene.ForEachScenePresence(delegate(ScenePresence avatar)
+            m_scene.ForEachScenePresence(delegate(IScenePresence avatar)
             {
                 lock (objectGroups)
                 {

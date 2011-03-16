@@ -256,7 +256,7 @@ namespace Aurora.Modules
             if (info == null)
                 return;
 
-            ScenePresence p = GetRegionUserIsIn(remoteClient.AgentId).GetScenePresence(remoteClient.AgentId);
+            IScenePresence p = GetRegionUserIsIn(remoteClient.AgentId).GetScenePresence(remoteClient.AgentId);
 
             if(p == null)
                 return; //Just fail
@@ -425,7 +425,7 @@ namespace Aurora.Modules
             if (info == null)
                 return;
 
-            ScenePresence p = GetRegionUserIsIn(remoteClient.AgentId).GetScenePresence(remoteClient.AgentId);
+            IScenePresence p = GetRegionUserIsIn(remoteClient.AgentId).GetScenePresence(remoteClient.AgentId);
 
             UUID parceluuid = p.currentParcelUUID;
             string user = "(unknown)";
@@ -767,7 +767,7 @@ namespace Aurora.Modules
                 return true;
             if (m_friendsModule.GetFriendPerms(requested, friend) == -1) //They aren't a friend
             {
-                ScenePresence SP = findScenePresence(friend);
+                IScenePresence SP = findScenePresence(friend);
                 if (SP != null && SP.Scene.Permissions.IsAdministrator(friend)) //Check is admin
                     return true;
 
@@ -776,11 +776,11 @@ namespace Aurora.Modules
             return true;
         }
 
-        public ScenePresence findScenePresence(UUID avID)
+        public IScenePresence findScenePresence(UUID avID)
         {
             foreach (Scene s in m_Scenes)
             {
-                ScenePresence SP = s.GetScenePresence(avID);
+                IScenePresence SP = s.GetScenePresence(avID);
                 if (SP != null)
                 {
                     return SP;

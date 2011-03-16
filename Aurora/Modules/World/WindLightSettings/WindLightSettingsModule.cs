@@ -182,7 +182,7 @@ namespace Aurora.Modules
             responsedata["keepalive"] = false;
             responsedata["str_response_string"] = "";
 
-            ScenePresence SP = m_scene.GetScenePresence(agentID);
+            IScenePresence SP = m_scene.GetScenePresence(agentID);
             if (SP == null)
                 return responsedata; //They don't exist
             IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
@@ -268,7 +268,7 @@ namespace Aurora.Modules
             responsedata["keepalive"] = false;
             responsedata["str_response_string"] = "";
 
-            ScenePresence SP = m_scene.GetScenePresence(agentID);
+            IScenePresence SP = m_scene.GetScenePresence(agentID);
             if(SP == null)
                 return responsedata; //They don't exist
 

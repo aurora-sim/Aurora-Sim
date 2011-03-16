@@ -145,7 +145,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         #region Agent Teleports
 
-        public virtual void Teleport(ScenePresence sp, ulong regionHandle, Vector3 position, Vector3 lookAt, uint teleportFlags)
+        public virtual void Teleport(IScenePresence sp, ulong regionHandle, Vector3 position, Vector3 lookAt, uint teleportFlags)
         {
             uint x = 0, y = 0;
             Utils.LongToUInts(regionHandle, out x, out y);
@@ -175,7 +175,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             Teleport(sp, reg, position, lookAt, teleportFlags);
         }
 
-        public virtual void Teleport(ScenePresence sp, GridRegion finalDestination, Vector3 position, Vector3 lookAt, uint teleportFlags)
+        public virtual void Teleport(IScenePresence sp, GridRegion finalDestination, Vector3 position, Vector3 lookAt, uint teleportFlags)
         {
             string reason = "";
 
@@ -245,7 +245,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             }
         }
 
-        public virtual void DoTeleport(ScenePresence sp, GridRegion finalDestination, Vector3 position, Vector3 lookAt, uint teleportFlags)
+        public virtual void DoTeleport(IScenePresence sp, GridRegion finalDestination, Vector3 position, Vector3 lookAt, uint teleportFlags)
         {
             sp.ControllingClient.SendTeleportProgress(teleportFlags, "sending_dest");
             if (finalDestination == null)
@@ -320,7 +320,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             sp.MakeChildAgent();
         }
 
-        protected void KillEntity (Scene scene, IEntity entity)
+        protected void KillEntity (IScene scene, IEntity entity)
         {
             scene.ForEachClient(delegate(IClientAPI client)
             {
@@ -328,7 +328,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             });
         }
 
-        protected void KillEntities (Scene scene, IEntity[] grp)
+        protected void KillEntities (IScene scene, IEntity[] grp)
         {
             scene.ForEachClient(delegate(IClientAPI client)
             {
@@ -395,7 +395,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                                             Vector3 lookAt, uint teleportFlags)
         {
             Scene scene = (Scene)remoteClient.Scene;
-            ScenePresence sp = scene.GetScenePresence(remoteClient.AgentId);
+            IScenePresence sp = scene.GetScenePresence(remoteClient.AgentId);
             if (sp != null)
             {
                 Teleport(sp, regionHandle, position, lookAt, teleportFlags);
@@ -414,7 +414,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                                             Vector3 lookAt, uint teleportFlags)
         {
             Scene scene = (Scene)remoteClient.Scene;
-            ScenePresence sp = scene.GetScenePresence(remoteClient.AgentId);
+            IScenePresence sp = scene.GetScenePresence(remoteClient.AgentId);
             if (sp != null)
             {
                 Teleport(sp, reg, position, lookAt, teleportFlags);
@@ -495,27 +495,26 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         #region Agent Crossings
 
-        public virtual void Cross(ScenePresence agent, bool isFlying, GridRegion crossingRegion)
+        public virtual void Cross(IScenePresence agent, bool isFlying, GridRegion crossingRegion)
         {
-            Scene scene = agent.Scene;
             Vector3 newposition = new Vector3(agent.AbsolutePosition.X, agent.AbsolutePosition.Y, agent.AbsolutePosition.Z);;
 
             CrossAgentToNewRegionDelegate d = CrossAgentToNewRegionAsync;
             d.BeginInvoke(agent, newposition, crossingRegion, isFlying, CrossAgentToNewRegionCompleted, d);
         }
 
-        public delegate ScenePresence CrossAgentToNewRegionDelegate(ScenePresence agent, Vector3 pos, GridRegion crossingRegion, bool isFlying);
+        public delegate IScenePresence CrossAgentToNewRegionDelegate(IScenePresence agent, Vector3 pos, GridRegion crossingRegion, bool isFlying);
 
         /// <summary>
         /// This Closes child agents on neighboring regions
         /// Calls an asynchronous method to do so..  so it doesn't lag the sim.
         /// </summary>
-        protected ScenePresence CrossAgentToNewRegionAsync(ScenePresence agent, Vector3 pos,
+        protected IScenePresence CrossAgentToNewRegionAsync(IScenePresence agent, Vector3 pos,
             GridRegion crossingRegion, bool isFlying)
         {
             m_log.DebugFormat("[EntityTransferModule]: Crossing agent {0} to region {1}", agent.Name, crossingRegion.RegionName);
 
-            Scene m_scene = agent.Scene;
+            IScene m_scene = agent.Scene;
 
             if (crossingRegion != null)
             {
@@ -592,7 +591,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             return agent;
         }
 
-        private void KillAttachments(ScenePresence agent)
+        private void KillAttachments(IScenePresence agent)
         {
             IAttachmentsModule attModule = agent.Scene.RequestModuleInterface<IAttachmentsModule>();
             if (attModule != null)
@@ -615,7 +614,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         protected void CrossAgentToNewRegionCompleted(IAsyncResult iar)
         {
             CrossAgentToNewRegionDelegate icon = (CrossAgentToNewRegionDelegate)iar.AsyncState;
-            ScenePresence agent = icon.EndInvoke(iar);
+            IScenePresence agent = icon.EndInvoke(iar);
 
             // If the cross was successful, this agent is a child agent
             // Otherwise, put them back in the scene
@@ -716,7 +715,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     {
                         foreach (UUID avID in grp.RootPart.SitTargetAvatar)
                         {
-                            ScenePresence SP = grp.Scene.GetScenePresence(avID);
+                            IScenePresence SP = grp.Scene.GetScenePresence(avID);
                             CrossAgentToNewRegionAsync(SP, grp.AbsolutePosition, destination, false);
                         }
                     }
@@ -839,7 +838,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 {
                     foreach (UUID avID in newObject.RootPart.SitTargetAvatar)
                     {
-                        ScenePresence SP = scene.GetScenePresence(avID);
+                        IScenePresence SP = scene.GetScenePresence(avID);
                         while (SP == null)
                         {
                             Thread.Sleep(20);
@@ -964,7 +963,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 return false;
             }
 
-            ScenePresence sp = scene.GetScenePresence (agent.AgentID);
+            IScenePresence sp = scene.GetScenePresence (agent.AgentID);
 
             if (sp != null && !sp.IsChildAgent)
             {
@@ -1052,7 +1051,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             // We have to wait until the viewer contacts this region after receiving EAC.
             // That calls AddNewClient, which finally creates the ScenePresence and then this gets set up
             // So if the client isn't here yet, save the update for them when they get into the region fully
-            ScenePresence SP = scene.GetScenePresence (cAgentData.AgentID);
+            IScenePresence SP = scene.GetScenePresence (cAgentData.AgentID);
             if (SP != null)
                 SP.ChildAgentDataUpdate (cAgentData);
             else
@@ -1074,7 +1073,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         public virtual bool IncomingChildAgentDataUpdate (Scene scene, AgentPosition cAgentData)
         {
             //m_log.Debug(" XXX Scene IncomingChildAgentDataUpdate POSITION in " + RegionInfo.RegionName);
-            ScenePresence presence = scene.GetScenePresence (cAgentData.AgentID);
+            IScenePresence presence = scene.GetScenePresence (cAgentData.AgentID);
             if (presence != null)
             {
                 // I can't imagine *yet* why we would get an update if the agent is a root agent..
@@ -1101,7 +1100,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         public virtual bool IncomingRetrieveRootAgent (Scene scene, UUID id, out IAgentData agent)
         {
             agent = null;
-            ScenePresence sp = scene.GetScenePresence (id);
+            IScenePresence sp = scene.GetScenePresence (id);
             if ((sp != null) && (!sp.IsChildAgent))
             {
                 sp.IsChildAgent = true;
@@ -1123,7 +1122,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         {
             //m_log.DebugFormat("[SCENE]: Processing incoming close agent for {0}", agentID);
 
-            ScenePresence presence = scene.GetScenePresence (agentID);
+            IScenePresence presence = scene.GetScenePresence (agentID);
             if (presence != null)
             {
                 bool RetVal = scene.RemoveAgent (presence);

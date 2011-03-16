@@ -738,7 +738,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             if (!m_scene.Permissions.CanIssueEstateCommand(remover_client.AgentId, false))
                 return;
 
-            m_scene.ForEachScenePresence(delegate(ScenePresence sp)
+            m_scene.ForEachScenePresence(delegate(IScenePresence sp)
             {
                 if (sp.UUID != senderID)
                 {
@@ -1067,7 +1067,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
         public void sendRegionInfoPacketToAll()
         {
-            m_scene.ForEachScenePresence(delegate(ScenePresence sp)
+            m_scene.ForEachScenePresence(delegate(IScenePresence sp)
             {
                 if (!sp.IsChildAgent)
                     HandleRegionInfoRequest(sp.ControllingClient);

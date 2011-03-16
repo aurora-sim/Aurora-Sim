@@ -331,7 +331,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
                     //Add the user to the list of allowed speakers and 'chat' admins
                     if (message[1] == "AddToAuth")
                     {
-                        ScenePresence NewSP;
+                        IScenePresence NewSP;
                         ((Scene)c.Scene).TryGetAvatarByName(message[2], out NewSP);
                         m_authList.Add(NewSP.UUID);
                         chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(scene.RegionInfo.RegionLocX,
@@ -409,7 +409,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
                 //Tell all the clients about the incoming client if it is enabled
                 if (m_announceNewAgents)
                 {
-                    ((Scene)client.Scene).ForEachScenePresence(delegate(ScenePresence presence)
+                    ((Scene)client.Scene).ForEachScenePresence(delegate(IScenePresence presence)
                     {
                         if (presence.UUID != client.AgentId && !presence.IsChildAgent)
                         {
@@ -447,7 +447,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
             //Announce the closing agent if enabled
             if (m_announceClosedAgents)
             {
-                scene.ForEachScenePresence(delegate(ScenePresence SP)
+                scene.ForEachScenePresence(delegate(IScenePresence SP)
                 {
                     if (SP.UUID != clientID && !SP.IsChildAgent)
                     {

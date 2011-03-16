@@ -72,7 +72,7 @@ namespace Aurora.BotManager
 
         private UUID m_myID = UUID.Random();
         private Scene m_scene;
-        private ScenePresence m_scenePresence;
+        private IScenePresence m_scenePresence;
 
         private RexBotState m_currentState = RexBotState.Idle;
         public RexBotState State
@@ -173,8 +173,8 @@ namespace Aurora.BotManager
 
         public void Initialize()
         {
-            ScenePresence[] avatars = m_scene.ScenePresences;
-            foreach (ScenePresence avatar in avatars)
+            IScenePresence[] avatars = m_scene.ScenePresences;
+            foreach (IScenePresence avatar in avatars)
             {
                 if (avatar.ControllingClient == this)
                 {

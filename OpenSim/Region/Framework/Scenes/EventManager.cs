@@ -158,7 +158,7 @@ namespace OpenSim.Region.Framework.Scenes
         public event ScriptMovingEndEvent OnScriptMovingEndEvent;
         public delegate void ScriptMovingEndEvent(SceneObjectPart part);
 
-        public delegate void ScriptControlEvent(SceneObjectPart part, UUID item, UUID avatarID, uint held, uint changed);
+        public delegate void ScriptControlEvent (ISceneChildEntity part, UUID item, UUID avatarID, uint held, uint changed);
         public event ScriptControlEvent OnScriptControlEvent;
 
         public delegate void ScriptAtTargetEvent(uint localID, uint handle, Vector3 targetpos, Vector3 atpos);
@@ -1037,7 +1037,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerOnMakeRootAgent(ScenePresence presence)
+        public void TriggerOnMakeRootAgent(IScenePresence presence)
         {
             OnMakeRootAgentDelegate handlerMakeRootAgent = OnMakeRootAgent;
             if (handlerMakeRootAgent != null)
@@ -1363,7 +1363,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        internal void TriggerControlEvent(SceneObjectPart part, UUID scriptUUID, UUID avatarID, uint held, uint _changed)
+        internal void TriggerControlEvent(ISceneChildEntity part, UUID scriptUUID, UUID avatarID, uint held, uint _changed)
         {
             ScriptControlEvent handlerScriptControlEvent = OnScriptControlEvent;
             if (handlerScriptControlEvent != null)

@@ -133,7 +133,7 @@ namespace Aurora.Modules
 
         public void SendGeneralAlert(string message)
         {
-            m_scene.ForEachScenePresence(delegate(ScenePresence presence)
+            m_scene.ForEachScenePresence(delegate(IScenePresence presence)
             {
                 if (!presence.IsChildAgent)
                     presence.ControllingClient.SendAlertMessage(message);
@@ -237,7 +237,7 @@ namespace Aurora.Modules
         public void SendNotificationToUsersInRegion(
             UUID fromAvatarID, string fromAvatarName, string message)
         {
-            m_scene.ForEachScenePresence(delegate(ScenePresence presence)
+            m_scene.ForEachScenePresence(delegate(IScenePresence presence)
             {
                 if (!presence.IsChildAgent)
                     presence.ControllingClient.SendBlueBoxMessage(fromAvatarID, fromAvatarName, message);

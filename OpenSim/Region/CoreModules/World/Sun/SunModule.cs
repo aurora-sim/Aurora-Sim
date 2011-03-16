@@ -536,7 +536,7 @@ namespace OpenSim.Region.CoreModules
 
         private void SunUpdateToAllClients()
         {
-            m_scene.ForEachScenePresence(delegate(ScenePresence sp)
+            m_scene.ForEachScenePresence(delegate(IScenePresence sp)
             {
                 if (!sp.IsChildAgent)
                 {

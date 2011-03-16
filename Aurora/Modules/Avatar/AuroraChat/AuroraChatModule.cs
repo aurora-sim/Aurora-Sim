@@ -538,7 +538,7 @@ namespace Aurora.Modules
             // m_log.DebugFormat("[CHAT] Broadcast: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, cType, sourceType);
 
             ((Scene)c.Scene).ForEachScenePresence(
-                delegate(ScenePresence presence)
+                delegate(IScenePresence presence)
                 {
                     // ignore chat from child agents
                     if (presence.IsChildAgent) return;

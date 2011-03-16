@@ -698,19 +698,6 @@ namespace OpenSim.Region.Framework.Scenes
             return null;
         }
 
-        public bool TryGetScenePresence(UUID agentID, out IScenePresence scenePresence)
-        {
-            scenePresence = null;
-            ScenePresence sp = null;
-            if (TryGetScenePresence(agentID, out sp))
-            {
-                scenePresence = sp;
-                return true;
-            }
-
-            return false;
-        }
-
         public bool TryGetScenePresence (UUID avatarId, out IScenePresence avatar)
         {
             return m_sceneGraph.TryGetScenePresence(avatarId, out avatar);

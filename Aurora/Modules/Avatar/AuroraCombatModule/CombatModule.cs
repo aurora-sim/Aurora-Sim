@@ -104,7 +104,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
         {
             //Make sure that agents that are in combat cannot tp around. They CAN tp if they are out of combat however
             reason = "";
-            ScenePresence SP = null;
+            IScenePresence SP = null;
             if (scene.TryGetScenePresence(userID, out SP))
                 if (DisallowTeleportingForCombatants)
                     if (SP.RequestModuleInterface<ICombatPresence>() != null)
@@ -794,7 +794,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
         void OnLandObjectAdded (LandData newParcel)
         {
             //If a new land object is added or updated, we need to redo the check for the avatars invulnerability
-            m_scene.ForEachScenePresence (delegate (ScenePresence sp)
+            m_scene.ForEachScenePresence (delegate (IScenePresence sp)
             {
                 AvatarEnteringParcel (sp, 0, sp.Scene.RegionInfo.RegionID);
             });

@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Net;
 using Nini.Config;
@@ -92,5 +93,12 @@ namespace OpenSim.Framework
         IEnumerable<IScenePresence> GetScenePresences ();
 
         IScenePresence GetScenePresence (uint killerObjectLocalID);
+
+        bool CheckForObjectCulling { get; set; }
+
+        void ForEachClient (Action<IClientAPI> action);
+        void ForEachScenePresence (Action<IScenePresence> action);
+
+        bool m_useSplatAnimation { get; set; }
     }
 }

@@ -249,7 +249,7 @@ namespace Aurora.Modules
                 
 
             //Tell the clients to update all references to the new settings
-            foreach (ScenePresence sp in ((Scene)client.Scene).ScenePresences)
+            foreach (IScenePresence sp in ((Scene)client.Scene).ScenePresences)
             {
                 HandleRegionInfoRequest(sp.ControllingClient, ((Scene)client.Scene));
             }
@@ -305,7 +305,7 @@ namespace Aurora.Modules
                         ((IClientAPI)sender).SendAgentAlertMessage("Estate Updated.", false);
                     }
                     //Tell the clients to update all references to the new settings
-                    foreach (ScenePresence sp in ((Scene)((IClientAPI)sender).Scene).ScenePresences)
+                    foreach (IScenePresence sp in ((Scene)((IClientAPI)sender).Scene).ScenePresences)
                     {
                         HandleRegionInfoRequest(sp.ControllingClient, ((Scene)((IClientAPI)sender).Scene));
                     }

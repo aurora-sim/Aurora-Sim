@@ -331,11 +331,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
         }
 
 
-        public void OnMakeRootAgent(ScenePresence agent)
+        public void OnMakeRootAgent (IScenePresence agent)
         {
             if (m_conciergedScenes.Contains(agent.Scene))
             {
-                Scene scene = agent.Scene;
+                IScene scene = agent.Scene;
                 m_log.DebugFormat("[Concierge]: {0} enters {1}", agent.Name, scene.RegionInfo.RegionName);
                 WelcomeAvatar(agent, scene);
                 IEntityCountModule entityCountModule = scene.RequestModuleInterface<IEntityCountModule>();
@@ -349,11 +349,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
         }
 
 
-        public void OnMakeChildAgent(ScenePresence agent)
+        public void OnMakeChildAgent (IScenePresence agent)
         {
             if (m_conciergedScenes.Contains(agent.Scene))
             {
-                Scene scene = agent.Scene;
+                IScene scene = agent.Scene;
                 m_log.DebugFormat("[Concierge]: {0} leaves {1}", agent.Name, scene.RegionInfo.RegionName);
                 IEntityCountModule entityCountModule = scene.RequestModuleInterface<IEntityCountModule>();
                 if (entityCountModule != null)
@@ -380,7 +380,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
             }
         }
 
-        protected void UpdateBroker(Scene scene)
+        protected void UpdateBroker(IScene scene)
         {
             if (String.IsNullOrEmpty(m_brokerURI))
                 return;
@@ -397,7 +397,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
                                          scene.RegionInfo.RegionID,
                                          DateTime.UtcNow.ToString("s")));
             }
-            scene.ForEachScenePresence(delegate(ScenePresence sp)
+            scene.ForEachScenePresence(delegate(IScenePresence sp)
             {
                 if (!sp.IsChildAgent)
                 {
@@ -496,7 +496,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
             }
         }
 
-        protected void WelcomeAvatar (IScenePresence agent, Scene scene)
+        protected void WelcomeAvatar (IScenePresence agent, IScene scene)
         {
             // welcome mechanics: check whether we have a welcomes
             // directory set and wether there is a region specific

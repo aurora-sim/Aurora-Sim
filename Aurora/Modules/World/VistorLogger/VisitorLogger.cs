@@ -76,7 +76,7 @@ namespace Aurora.Modules
             }
         }
 
-        void OnMakeRootAgent(ScenePresence presence)
+        void OnMakeRootAgent(IScenePresence presence)
         {
             try
             {

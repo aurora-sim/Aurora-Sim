@@ -438,7 +438,7 @@ namespace OpenSim.Region.CoreModules
                     m_frameLastUpdateClientArray = m_frame;
                 }
 
-                m_scene.ForEachScenePresence(delegate(ScenePresence sp)
+                m_scene.ForEachScenePresence(delegate(IScenePresence sp)
                 {
                     if (!sp.IsChildAgent)
                         sp.ControllingClient.SendWindData(windSpeeds);

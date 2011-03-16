@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using log4net;
 using OpenMetaverse;
+using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
@@ -25,7 +26,7 @@ namespace Aurora.BotManager
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public ScenePresence m_Sp = null;
+        public IScenePresence m_Sp = null;
         private const float followDistance = 2.5f;
 
         public int cornerStoneX = 128;
@@ -35,7 +36,7 @@ namespace Aurora.BotManager
 
         public bool IsFollowing = false;
         public UUID FollowID = UUID.Zero;
-        public ScenePresence FollowSP = null;
+        public IScenePresence FollowSP = null;
         public string FollowName = "";
         private const float FollowTimeBeforeUpdate = 10;
         private float CurrentFollowTimeBeforeUpdate = 0;
@@ -57,7 +58,7 @@ namespace Aurora.BotManager
 
         #region Events
 
-        public void Initialize(ScenePresence SP)
+        public void Initialize(IScenePresence SP)
         {
             m_Sp = SP;
             SP.Scene.EventManager.OnFrame += OnFrame;

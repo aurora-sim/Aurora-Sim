@@ -37,12 +37,12 @@ namespace OpenSim.Region.Framework.Interfaces
 {
     public interface IEntityTransferModule
     {
-        void Teleport(ScenePresence agent, ulong regionHandle, Vector3 position,
+        void Teleport(IScenePresence agent, ulong regionHandle, Vector3 position,
                                                       Vector3 lookAt, uint teleportFlags);
 
         void TeleportHome(UUID id, IClientAPI client);
 
-        void Cross(ScenePresence agent, bool isFlying, GridRegion neighborRegion);
+        void Cross(IScenePresence agent, bool isFlying, GridRegion neighborRegion);
 
         bool CrossGroupToNewRegion(SceneObjectGroup sog, Vector3 position, GridRegion destination);
 
@@ -58,14 +58,14 @@ namespace OpenSim.Region.Framework.Interfaces
 
         bool IncomingCreateObject(UUID regionID, ISceneObject sog);
 
-        bool NewUserConnection (Scene scene, AgentCircuitData agent, uint teleportFlags, out string reason);
+        bool NewUserConnection (IScene scene, AgentCircuitData agent, uint teleportFlags, out string reason);
 
-        bool IncomingChildAgentDataUpdate (Scene scene, AgentData cAgentData);
+        bool IncomingChildAgentDataUpdate (IScene scene, AgentData cAgentData);
 
-        bool IncomingChildAgentDataUpdate (Scene scene, AgentPosition cAgentData);
+        bool IncomingChildAgentDataUpdate (IScene scene, AgentPosition cAgentData);
 
-        bool IncomingRetrieveRootAgent (Scene scene, UUID id, out IAgentData agent);
+        bool IncomingRetrieveRootAgent (IScene scene, UUID id, out IAgentData agent);
 
-        bool IncomingCloseAgent (Scene scene, UUID agentID);
+        bool IncomingCloseAgent (IScene scene, UUID agentID);
     }
 }

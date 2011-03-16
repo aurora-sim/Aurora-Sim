@@ -43,29 +43,6 @@ using Aurora.Framework;
 
 namespace OpenSim.Region.Framework.Scenes
 {
-    public enum ScriptControlled : uint
-    {
-        CONTROL_ZERO = 0,
-        CONTROL_FWD = 1,
-        CONTROL_BACK = 2,
-        CONTROL_LEFT = 4,
-        CONTROL_RIGHT = 8,
-        CONTROL_UP = 16,
-        CONTROL_DOWN = 32,
-        CONTROL_ROT_LEFT = 256,
-        CONTROL_ROT_RIGHT = 512,
-        CONTROL_LBUTTON = 268435456,
-        CONTROL_ML_LBUTTON = 1073741824
-    }
-
-    public struct ScriptControllers
-    {
-        public UUID itemID;
-        public SceneObjectPart part;
-        public ScriptControlled ignoreControls;
-        public ScriptControlled eventControls;
-    }
-
     public delegate void SendCourseLocationsMethod (UUID scene, IScenePresence presence, List<Vector3> coarseLocations, List<UUID> avatarUUIDs);
 
     public class ScenePresence : EntityBase, IScenePresence
@@ -99,11 +76,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// <value>
         /// The animator for this avatar
         /// </value>
-        public ScenePresenceAnimator Animator
+        public Animator Animator
         {
             get { return m_animator; }
         }
-        protected ScenePresenceAnimator m_animator;
+        protected Animator m_animator;
 
         private Dictionary<UUID, ScriptControllers> scriptedcontrols = new Dictionary<UUID, ScriptControllers>();
         private ScriptControlled IgnoredControls = ScriptControlled.CONTROL_ZERO;
@@ -661,7 +638,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             CreateSceneViewer();
 
-            m_animator = new ScenePresenceAnimator(this);
+            m_animator = new Animator(this);
 
             UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, m_uuid);
 
@@ -783,7 +760,7 @@ namespace OpenSim.Region.Framework.Scenes
             IsChildAgent = false;
 
             // send the animations of the other presences to me
-            m_scene.ForEachScenePresence(delegate(ScenePresence presence)
+            m_scene.ForEachScenePresence(delegate(IScenePresence presence)
             {
                 if (presence != this)
                     presence.Animator.SendAnimPackToClient(ControllingClient);
@@ -850,7 +827,7 @@ namespace OpenSim.Region.Framework.Scenes
             // It looks like m_animator is set to null somewhere, and MakeChild
             // is called after that. Probably in aborted teleports.
             if (m_animator == null)
-                m_animator = new ScenePresenceAnimator(this);
+                m_animator = new Animator(this);
             else
                 Animator.ResetAnimations();
 
@@ -2700,9 +2677,6 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion Child Agent Updates
 
         #region Physics
-
-        public delegate void AddPhysics();
-        public event AddPhysics OnAddPhysics;
 
         /// <summary>
         /// Adds a physical representation of the avatar to the Physics plugin

@@ -1291,7 +1291,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void DetachToGround()
         {
-            ScenePresence avatar = m_scene.GetScenePresence(m_rootPart.AttachedAvatar);
+            IScenePresence avatar = m_scene.GetScenePresence (m_rootPart.AttachedAvatar);
             if (avatar == null)
                 return;
 
@@ -1673,7 +1673,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (IsAttachment)
                 {
-                    ScenePresence avatar = m_scene.GetScenePresence(rootpart.AttachedAvatar);
+                    IScenePresence avatar = m_scene.GetScenePresence (rootpart.AttachedAvatar);
                     if (avatar != null)
                     {
                         avatar.PushForce(impulse);
@@ -1755,7 +1755,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (IsAttachment)
                 {
-                    ScenePresence avatar = m_scene.GetScenePresence(rootpart.AttachedAvatar);
+                    IScenePresence avatar = m_scene.GetScenePresence (rootpart.AttachedAvatar);
                     if (avatar != null)
                     {
                         List<string> coords = new List<string>();
@@ -1895,7 +1895,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="presence"></param>
         /// <param name="UpdateFlags"></param>
-        public void ScheduleGroupUpdateToAvatar(ScenePresence presence, PrimUpdateFlags UpdateFlags)
+        public void ScheduleGroupUpdateToAvatar (IScenePresence presence, PrimUpdateFlags UpdateFlags)
         {
             //We have to send the root part first as the client wants it that way
             RootPart.ScheduleUpdateToAvatar(UpdateFlags, presence);
@@ -2877,7 +2877,7 @@ namespace OpenSim.Region.Framework.Scenes
                 foreach (UUID clientID in this.RootPart.SitTargetAvatar)
                 {
                     //Send full updates to the avatar as well so that they move as well
-                    ScenePresence SP;
+                    IScenePresence SP;
                     if (m_scene.TryGetScenePresence(clientID, out SP))
                     {
                         SP.SendTerseUpdateToAllClients();

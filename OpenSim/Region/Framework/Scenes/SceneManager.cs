@@ -478,7 +478,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public List<IScenePresence> GetCurrentSceneAvatars ()
         {
-            List<IScenePresence> avatars = new List<ScenePresence> ();
+            List<IScenePresence> avatars = new List<IScenePresence> ();
 
             ForEachCurrentScene(
                 delegate(Scene scene)
@@ -496,7 +496,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public List<IScenePresence> GetCurrentScenePresences ()
         {
-            List<IScenePresence> presences = new List<ScenePresence> ();
+            List<IScenePresence> presences = new List<IScenePresence> ();
 
             ForEachCurrentScene(delegate(Scene scene)
             {

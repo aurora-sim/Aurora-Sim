@@ -705,7 +705,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public int GetActiveScripts (IEntity obj)
         {
             int activeScripts = 0;
-            if (obj is ScenePresence)
+            if (obj is IScenePresence)
             {
                 //Get all the scripts in the attachments and run through the loop
                 IAttachmentsModule attModule = (obj as IScenePresence).Scene.RequestModuleInterface<IAttachmentsModule>();
@@ -1011,7 +1011,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (SD == null)
                         return;
 
-                    ScenePresence presence = SD.World.GetScenePresence(SD.part.OwnerID);
+                    IScenePresence presence = SD.World.GetScenePresence(SD.part.OwnerID);
 
                     ScriptControllers SC = new ScriptControllers();
                     if (presence != null)

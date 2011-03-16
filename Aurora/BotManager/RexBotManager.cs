@@ -140,7 +140,7 @@ namespace Aurora.BotManager
 
             m_character.Initialize();
 
-            ScenePresence SP = m_scene.GetScenePresence(m_character.AgentId);
+            IScenePresence SP = m_scene.GetScenePresence(m_character.AgentId);
             SP.Appearance.SetAppearance(SP.Appearance.Texture, SP.Appearance.VisualParams);
             SP.SendAppearanceToAllOtherAgents();
             SP.SendAvatarDataToAllAgents();
@@ -183,7 +183,7 @@ namespace Aurora.BotManager
 
             m_character.Initialize();
 
-            ScenePresence SP = m_scene.GetScenePresence(m_character.AgentId);
+            IScenePresence SP = m_scene.GetScenePresence(m_character.AgentId);
             SP.Appearance.SetAppearance(SP.Appearance.Texture, SP.Appearance.VisualParams);
             SP.SendAppearanceToAllOtherAgents();
             SP.SendAvatarDataToAllAgents();
