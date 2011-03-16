@@ -475,39 +475,6 @@ namespace OpenSim.Region.Framework.Scenes
             return result;
         }
 
-        /// <summary>
-        /// Get a named prim contained in this scene (will return the first 
-        /// found, if there are more than one prim with the same name)
-        /// Do NOT use this method! This is only kept around so that NINJA physics is not broken
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns>null if the part was not found</returns>
-        public SceneObjectPart GetSceneObjectPart(string name)
-        {
-            SceneObjectPart sop = null;
-
-            Entities.Find(
-                delegate(EntityBase entity)
-                {
-                    if (entity is SceneObjectGroup)
-                    {
-                        foreach (SceneObjectPart p in ((SceneObjectGroup)entity).Parts)
-                        {
-                            if (p.Name == name)
-                            {
-                                sop = p;
-                                return true;
-                            }
-                        }
-                    }
-
-                    return false;
-                }
-            );
-
-            return sop;
-        }
-
         #endregion
 
         #region ForEach* Methods
@@ -1269,7 +1236,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="remoteClient"></param>
         protected internal void UpdatePrimSinglePosition(uint LocalID, Vector3 pos, IClientAPI remoteClient, bool SaveUpdate)
         {
-            EntityBase entity;
+            IEntity entity;
             if (TryGetEntity(LocalID, out entity))
             {
                 if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId) || ((SceneObjectGroup)entity).IsAttachment)
@@ -1539,7 +1506,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             UUID user = remoteClient.AgentId;
             UUID objid = UUID.Zero;
-            EntityBase entity;
+            IEntity entity;
             SceneObjectGroup grp;
             if (!TryGetEntity(LocalID, out entity))
                 return;
@@ -1584,7 +1551,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //m_log.DebugFormat("[SCENE]: Duplication of object {0} at offset {1} requested by agent {2}", originalPrim, offset, AgentID);
             SceneObjectGroup original;
-            EntityBase entity;
+            IEntity entity;
 
             if (TryGetEntity(LocalID, out entity))
             {

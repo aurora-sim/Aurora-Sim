@@ -58,17 +58,20 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 try
                 {
-                    m_entities.Remove(entity.UUID);
-                    m_entities.Remove(entity.LocalId);
-                    m_entities.Add(entity.UUID, entity.LocalId, entity);
-                    if (entity is SceneObjectGroup)
+                    if (entity is ISceneEntity)
                     {
-                        foreach (SceneObjectPart part in (entity as SceneObjectGroup).ChildrenList)
+                        foreach (ISceneChildEntity part in (entity as ISceneEntity).ChildrenEntities())
                         {
-                            m_child_2_parent_entities.Remove(part.UUID);
-                            m_child_2_parent_entities.Remove(part.LocalId);
-                            m_child_2_parent_entities.Add(part.UUID, part.LocalId, entity.UUID);
+                            m_child_2_parent_entities.Remove (part.UUID);
+                            m_child_2_parent_entities.Remove (part.LocalId);
+                            m_child_2_parent_entities.Add (part.UUID, part.LocalId, entity.UUID);
                         }
+                        m_objectEntities.Add (entity.UUID, entity.LocalId, entity as ISceneEntity);
+                    }
+                    else
+                    {
+                        IScenePresence presence = (IScenePresence)entity;
+                        m_presenceEntities.Add (presence.UUID, presence);
                     }
                 }
                 catch(Exception e)
@@ -113,10 +116,11 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     else
                          m_presenceEntities.Remove (entity.UUID);
+                    return true;
                 }
                 catch (Exception e)
                 {
-                    m_log.ErrorFormat("Remove Entity failed for {0}", id, e);
+                    m_log.ErrorFormat ("Remove Entity failed for {0}", entity.UUID, e);
                     return false;
                 }
             }
@@ -158,11 +162,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void ForEach(Action<EntityBase> action)
         {
             m_entities.ForEach(action);
-        }
-
-        public EntityBase Find(Predicate<EntityBase> predicate)
-        {
-            return m_entities.FindValue(predicate);
         }
 
         public IEntity this[UUID id]
@@ -298,10 +297,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 childPrim = null;
 
-                EntityBase entity;
+                IEntity entity;
                 if (!TryGetChildPrimParent(objectID, out entity))
-                    return false;
-                if (!(entity is SceneObjectGroup))
                     return false;
 
                 childPrim = (entity as SceneObjectGroup).GetChildPart(objectID);

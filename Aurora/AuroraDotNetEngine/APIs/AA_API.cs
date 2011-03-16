@@ -670,10 +670,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (SOP != null)
                 return SOP.Name;
 
-            EntityBase SensedObject;
-            World.Entities.TryGetValue(objecUUID, out SensedObject);
-
-            if (SensedObject == null)
+            ISceneChildEntity SensedObject;
+            if(!World.SceneGraph.TryGetPart(objecUUID, out SensedObject))
             {
                 IGroupsModule groups = World.RequestModuleInterface<IGroupsModule>();
                 if (groups != null)

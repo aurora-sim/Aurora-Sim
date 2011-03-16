@@ -82,7 +82,7 @@ namespace Aurora.Modules
         protected internal void jointMoved(PhysicsJoint joint)
         {
             // m_parentScene.PhysicsScene.DumpJointInfo(); // non-thread-locked version; we should already be in a lock (OdeLock) when this callback is invoked
-            SceneObjectPart jointProxyObject = m_scene.SceneGraph.GetSceneObjectPart(joint.ObjectNameInScene);
+            SceneObjectPart jointProxyObject = GetSceneObjectPart(joint.ObjectNameInScene);
             if (jointProxyObject == null)
             {
                 jointErrorMessage(joint, "WARNING, joint proxy not found, name " + joint.ObjectNameInScene);
@@ -90,7 +90,7 @@ namespace Aurora.Modules
             }
 
             // now update the joint proxy object in the scene to have the position of the joint as returned by the physics engine
-            SceneObjectPart trackedBody = m_scene.SceneGraph.GetSceneObjectPart(joint.TrackedBodyName); // FIXME: causes a sequential lookup
+            SceneObjectPart trackedBody = GetSceneObjectPart(joint.TrackedBodyName); // FIXME: causes a sequential lookup
             if (trackedBody == null) return; // the actor may have been deleted but the joint still lingers around a few frames waiting for deletion. during this time, trackedBody is NULL to prevent further motion of the joint proxy.
             jointProxyObject.Velocity = trackedBody.Velocity;
             jointProxyObject.AngularVelocity = trackedBody.AngularVelocity;
@@ -173,7 +173,7 @@ namespace Aurora.Modules
                 }
             }
 
-            SceneObjectPart trackedBody = m_scene.SceneGraph.GetSceneObjectPart(trackedBodyName); // FIXME: causes a sequential lookup
+            SceneObjectPart trackedBody = GetSceneObjectPart(trackedBodyName); // FIXME: causes a sequential lookup
             Quaternion localRotation = Quaternion.Identity;
             if (trackedBody != null)
             {
@@ -210,7 +210,7 @@ namespace Aurora.Modules
         protected internal void jointDeactivated(PhysicsJoint joint)
         {
             //m_log.Debug("[NINJA] SceneGraph.jointDeactivated, joint:" + joint.ObjectNameInScene);
-            SceneObjectPart jointProxyObject = m_scene.SceneGraph.GetSceneObjectPart(joint.ObjectNameInScene);
+            SceneObjectPart jointProxyObject = GetSceneObjectPart(joint.ObjectNameInScene);
             if (jointProxyObject == null)
             {
                 jointErrorMessage(joint, "WARNING, trying to deactivate (stop interpolation of) joint proxy, but not found, name " + joint.ObjectNameInScene);
@@ -239,7 +239,7 @@ namespace Aurora.Modules
                 if (joint.ErrorMessageCount > PhysicsJoint.maxErrorMessages)
                     return;
 
-                SceneObjectPart jointProxyObject = m_scene.SceneGraph.GetSceneObjectPart(joint.ObjectNameInScene);
+                SceneObjectPart jointProxyObject = GetSceneObjectPart(joint.ObjectNameInScene);
                 if (jointProxyObject != null)
                 {
                     IChatModule chatModule = m_scene.RequestModuleInterface<IChatModule>();
@@ -271,6 +271,39 @@ namespace Aurora.Modules
                     // couldn't find the joint proxy object; the error message is silently suppressed
                 }
             }
+        }
+
+        /// <summary>
+        /// Get a named prim contained in this scene (will return the first 
+        /// found, if there are more than one prim with the same name)
+        /// Do NOT use this method! This is only kept around so that NINJA physics is not broken
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns>null if the part was not found</returns>
+        public SceneObjectPart GetSceneObjectPart (string name)
+        {
+            SceneObjectPart sop = null;
+
+            /*Entities.Find(
+                delegate(EntityBase entity)
+                {
+                    if (entity is SceneObjectGroup)
+                    {
+                        foreach (SceneObjectPart p in ((SceneObjectGroup)entity).Parts)
+                        {
+                            if (p.Name == name)
+                            {
+                                sop = p;
+                                return true;
+                            }
+                        }
+                    }
+
+                    return false;
+                }
+            );*/
+
+            return sop;
         }
 
         #endregion

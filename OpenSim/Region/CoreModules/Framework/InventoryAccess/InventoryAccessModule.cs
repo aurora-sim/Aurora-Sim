@@ -673,7 +673,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             if (doc == null)
             {
                 //No asset, check task inventory
-                EntityBase e;
+                IEntity e;
                 m_scene.SceneGraph.TryGetEntity(fromTaskID, out e);
                 if (e != null && e is SceneObjectGroup)
                 {
