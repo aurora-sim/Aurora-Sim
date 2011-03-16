@@ -1995,8 +1995,11 @@ namespace OpenSim.Region.Framework.Scenes
             IEntity ent;
             if (Entities.TryGetValue(ID, out ent))
             {
-                ISceneEntity parent = (ISceneEntity)ent;
-                return parent.GetChildPrim(ID, out entity);
+                if (ent is ISceneEntity)
+                {
+                    ISceneEntity parent = (ISceneEntity)ent;
+                    return parent.GetChildPrim (ID, out entity);
+                }
             }
 
             entity = null;

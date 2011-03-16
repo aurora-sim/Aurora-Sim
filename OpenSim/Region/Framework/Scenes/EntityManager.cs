@@ -123,6 +123,7 @@ namespace OpenSim.Region.Framework.Scenes
                     lock (m_objectEntities)
                     {
                         m_objectEntities.Remove (entity.UUID);
+                        m_objectEntities.Remove (entity.LocalId);
                     }
                 }
                 else
