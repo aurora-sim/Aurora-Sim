@@ -72,7 +72,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="returnobjects">The objects to return</param>
         /// <param name="AgentId">The agent UUID that will get the inventory items for these objects</param>
         /// <returns></returns>
-        bool ReturnObjects(SceneObjectGroup[] sceneObjectGroup, UUID uUID);
+        bool ReturnObjects (ISceneEntity[] sceneObjectGroup, UUID uUID);
 
         /// <summary>
         /// Move the given item from the object task inventory to the agent's inventory

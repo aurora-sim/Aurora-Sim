@@ -285,6 +285,12 @@ namespace OpenSim.Framework
         int PrimCount { get; }
 
         bool HasGroupChanged { get; set; }
+
+        bool IsAttachment { get; set; }
+
+        OpenMetaverse.UUID GroupID { get; set; }
+
+        IScene Scene { get; set; }
     }
 
     public interface IEntity
@@ -381,6 +387,14 @@ namespace OpenSim.Framework
         int Material { get; set; }
 
         OpenMetaverse.UUID AttachedAvatar { get; set; }
+
+        uint OwnerMask { get; set; }
+
+        uint GroupMask { get; set; }
+
+        uint EveryoneMask { get; set; }
+
+        void SetScriptEvents (UUID ItemID, long events);
     }
 
     public enum PIDHoverType

@@ -29,50 +29,49 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
-using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
-namespace OpenSim.Region.Framework.Scenes
+namespace OpenSim.Framework
 {
     #region Delegates
-    public delegate uint GenerateClientFlagsHandler(UUID userID, SceneObjectPart part);
+
+    public delegate uint GenerateClientFlagsHandler (UUID userID, ISceneChildEntity part);
     public delegate void SetBypassPermissionsHandler(bool value);
     public delegate bool BypassPermissionsHandler();
     public delegate bool PropagatePermissionsHandler();
-    public delegate bool RezObjectHandler(int objectCount, UUID owner, Vector3 objectPosition, Scene scene, out string reason);
-    public delegate bool DeleteObjectHandler(UUID objectID, UUID deleter, Scene scene);
-    public delegate bool TakeObjectHandler(UUID objectID, UUID stealer, Scene scene);
-    public delegate bool TakeCopyObjectHandler(UUID objectID, UUID userID, Scene inScene);
-    public delegate bool DuplicateObjectHandler(int objectCount, UUID objectID, UUID owner, Scene scene, Vector3 objectPosition);
-    public delegate bool EditObjectHandler(UUID objectID, UUID editorID, Scene scene);
-    public delegate bool EditObjectInventoryHandler(UUID objectID, UUID editorID, Scene scene);
-    public delegate bool MoveObjectHandler(UUID objectID, UUID moverID, Scene scene);
+    public delegate bool RezObjectHandler(int objectCount, UUID owner, Vector3 objectPosition, IScene scene, out string reason);
+    public delegate bool DeleteObjectHandler (UUID objectID, UUID deleter, IScene scene);
+    public delegate bool TakeObjectHandler (UUID objectID, UUID stealer, IScene scene);
+    public delegate bool TakeCopyObjectHandler (UUID objectID, UUID userID, IScene inScene);
+    public delegate bool DuplicateObjectHandler (int objectCount, UUID objectID, UUID owner, IScene scene, Vector3 objectPosition);
+    public delegate bool EditObjectHandler (UUID objectID, UUID editorID, IScene scene);
+    public delegate bool EditObjectInventoryHandler (UUID objectID, UUID editorID, IScene scene);
+    public delegate bool MoveObjectHandler (UUID objectID, UUID moverID, IScene scene);
     public delegate bool ObjectEntryHandler(UUID objectID, bool enteringRegion, Vector3 newPoint, UUID OwnerID);
-    public delegate bool ReturnObjectsHandler(ILandObject land, UUID user, List<SceneObjectGroup> objects, Scene scene);
-    public delegate bool InstantMessageHandler(UUID user, UUID target, Scene startScene);
-    public delegate bool InventoryTransferHandler(UUID user, UUID target, Scene startScene);
-    public delegate bool ViewScriptHandler(UUID script, UUID objectID, UUID user, Scene scene);
-    public delegate bool ViewNotecardHandler(UUID script, UUID objectID, UUID user, Scene scene);
-    public delegate bool EditScriptHandler(UUID script, UUID objectID, UUID user, Scene scene);
-    public delegate bool EditNotecardHandler(UUID notecard, UUID objectID, UUID user, Scene scene);
-    public delegate bool RunScriptHandler(UUID script, UUID objectID, UUID user, Scene scene);
-    public delegate bool CompileScriptHandler(UUID ownerUUID, string scriptType, Scene scene);
-    public delegate bool StartScriptHandler(UUID script, UUID user, Scene scene);
-    public delegate bool StopScriptHandler(UUID script, UUID user, Scene scene);
-    public delegate bool ResetScriptHandler(UUID prim, UUID script, UUID user, Scene scene);
-    public delegate bool TerraformLandHandler(UUID user, Vector3 position, Scene requestFromScene);
-    public delegate bool RunConsoleCommandHandler(UUID user, Scene requestFromScene);
-    public delegate bool IssueEstateCommandHandler(UUID user, Scene requestFromScene, bool ownerCommand);
-    public delegate bool IsGodHandler(UUID user, Scene requestFromScene);
+    public delegate bool ReturnObjectsHandler (ILandObject land, UUID user, List<ISceneEntity> objects, IScene scene);
+    public delegate bool InstantMessageHandler (UUID user, UUID target, IScene startScene);
+    public delegate bool InventoryTransferHandler (UUID user, UUID target, IScene startScene);
+    public delegate bool ViewScriptHandler (UUID script, UUID objectID, UUID user, IScene scene);
+    public delegate bool ViewNotecardHandler (UUID script, UUID objectID, UUID user, IScene scene);
+    public delegate bool EditScriptHandler (UUID script, UUID objectID, UUID user, IScene scene);
+    public delegate bool EditNotecardHandler (UUID notecard, UUID objectID, UUID user, IScene scene);
+    public delegate bool RunScriptHandler (UUID script, UUID objectID, UUID user, IScene scene);
+    public delegate bool CompileScriptHandler (UUID ownerUUID, string scriptType, IScene scene);
+    public delegate bool StartScriptHandler (UUID script, UUID user, IScene scene);
+    public delegate bool StopScriptHandler (UUID script, UUID user, IScene scene);
+    public delegate bool ResetScriptHandler (UUID prim, UUID script, UUID user, IScene scene);
+    public delegate bool TerraformLandHandler (UUID user, Vector3 position, IScene requestFromScene);
+    public delegate bool RunConsoleCommandHandler (UUID user, IScene requestFromScene);
+    public delegate bool IssueEstateCommandHandler (UUID user, IScene requestFromScene, bool ownerCommand);
+    public delegate bool IsGodHandler (UUID user, IScene requestFromScene);
     public delegate bool IsAdministratorHandler(UUID user);
-    public delegate bool EditParcelPropertiesHandler(UUID user, ILandObject parcel, GroupPowers p, Scene scene);
-    public delegate bool EditParcelHandler(UUID user, ILandObject parcel, Scene scene);
-    public delegate bool SellParcelHandler(UUID user, ILandObject parcel, Scene scene);
-    public delegate bool AbandonParcelHandler(UUID user, ILandObject parcel, Scene scene);
-    public delegate bool ReclaimParcelHandler(UUID user, ILandObject parcel, Scene scene);
-    public delegate bool DeedParcelHandler(UUID user, ILandObject parcel, Scene scene);
-    public delegate bool DeedObjectHandler(UUID user, UUID group, Scene scene);
-    public delegate bool BuyLandHandler(UUID user, ILandObject parcel, Scene scene);
+    public delegate bool EditParcelPropertiesHandler (UUID user, ILandObject parcel, GroupPowers p, IScene scene);
+    public delegate bool EditParcelHandler (UUID user, ILandObject parcel, IScene scene);
+    public delegate bool SellParcelHandler (UUID user, ILandObject parcel, IScene scene);
+    public delegate bool AbandonParcelHandler (UUID user, ILandObject parcel, IScene scene);
+    public delegate bool ReclaimParcelHandler (UUID user, ILandObject parcel, IScene scene);
+    public delegate bool DeedParcelHandler (UUID user, ILandObject parcel, IScene scene);
+    public delegate bool DeedObjectHandler (UUID user, UUID group, IScene scene);
+    public delegate bool BuyLandHandler (UUID user, ILandObject parcel, IScene scene);
     public delegate bool LinkObjectHandler(UUID user, UUID objectID);
     public delegate bool DelinkObjectHandler(UUID user, UUID objectID);
     public delegate bool CreateObjectInventoryHandler(int invType, UUID objectID, UUID userID);
@@ -82,9 +81,9 @@ namespace OpenSim.Region.Framework.Scenes
     public delegate bool EditUserInventoryHandler(UUID itemID, UUID userID);
     public delegate bool CopyUserInventoryHandler(UUID itemID, UUID userID);
     public delegate bool DeleteUserInventoryHandler(UUID itemID, UUID userID);
-    public delegate bool TeleportHandler(UUID userID, Scene scene, Vector3 Position, out Vector3 newPosition, out string reason);
-    public delegate bool OutgoingRemoteTeleport(UUID userID, Scene scene, out string reason);
-    public delegate bool IncomingAgentHandler(Scene scene, AgentCircuitData agent, bool isRootAgent, out string reason);
+    public delegate bool TeleportHandler (UUID userID, IScene scene, Vector3 Position, out Vector3 newPosition, out string reason);
+    public delegate bool OutgoingRemoteTeleport (UUID userID, IScene scene, out string reason);
+    public delegate bool IncomingAgentHandler (IScene scene, AgentCircuitData agent, bool isRootAgent, out string reason);
     public delegate bool PushObjectHandler(UUID userID, ILandObject parcel);
     public delegate bool EditParcelAccessListHandler(UUID userID, ILandObject parcel, uint flags);
     public delegate bool GenericParcelHandler(UUID user, ILandObject parcel, ulong groupPowers);
@@ -95,9 +94,9 @@ namespace OpenSim.Region.Framework.Scenes
 
     public class ScenePermissions
     {
-        private Scene m_scene;
+        private IScene m_scene;
 
-        public ScenePermissions(Scene scene)
+        public ScenePermissions(IScene scene)
         {
             m_scene = scene;
         }
@@ -167,7 +166,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Object Permission Checks
 
-        public uint GenerateClientFlags(UUID userID, SceneObjectPart part)
+        public uint GenerateClientFlags (UUID userID, ISceneChildEntity part)
         {
             // libomv will moan about PrimFlags.ObjectYouOfficer being
             // obsolete...
@@ -398,7 +397,7 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region RETURN OBJECT
-        public bool CanReturnObjects(ILandObject land, UUID user, List<SceneObjectGroup> objects)
+        public bool CanReturnObjects (ILandObject land, UUID user, List<ISceneEntity> objects)
         {
             ReturnObjectsHandler handler = OnReturnObjects;
             if (handler != null)

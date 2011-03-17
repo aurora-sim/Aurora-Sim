@@ -27,10 +27,8 @@
 
 using System.Collections.Generic;
 using OpenMetaverse;
-using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
 
-namespace OpenSim.Region.Framework.Interfaces
+namespace OpenSim.Framework
 {
     public interface ILandObject
     {
@@ -83,6 +81,6 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="url"></param>
         void SetMusicUrl(string url);
 
-        List<SceneObjectGroup> GetPrimsOverByOwner(UUID targetID, int flags);
+        List<ISceneEntity> GetPrimsOverByOwner (UUID targetID, int flags);
     }
 }

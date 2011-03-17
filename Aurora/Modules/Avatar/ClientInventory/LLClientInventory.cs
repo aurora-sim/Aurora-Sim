@@ -337,7 +337,7 @@ namespace OpenSim.Region.Framework.Scenes
             // First, see of we can perform the requested action and
             // build a list of eligible objects
             List<uint> deleteIDs = new List<uint>();
-            List<SceneObjectGroup> deleteGroups = new List<SceneObjectGroup>();
+            List<ISceneEntity> deleteGroups = new List<ISceneEntity> ();
 
             #region Permission Check
 

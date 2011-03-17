@@ -527,7 +527,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// <param name="location">Location of object returned</param>
         /// <param name="reason">Reasion for object return</param>
         /// <param name="groups">The objects to return</param>
-        public void AddReturns(UUID agentID, string objectName, Vector3 location, string reason, List<SceneObjectGroup> Groups)
+        public void AddReturns(UUID agentID, string objectName, Vector3 location, string reason, List<ISceneEntity> Groups)
         {
             lock (m_returns)
             {
@@ -599,7 +599,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     if (async != null)
                     {
                         async.DeleteToInventory(
-                                DeRezAction.Return, ret.Value.Groups[0].RootPart.OwnerID, ret.Value.Groups, ret.Value.Groups[0].RootPart.OwnerID,
+                                DeRezAction.Return, ret.Value.Groups[0].RootChild.OwnerID, ret.Value.Groups, ret.Value.Groups[0].RootChild.OwnerID,
                                 true, true);
                     }
                 }
@@ -618,7 +618,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     if ((sog.RootPart.Flags & PrimFlags.TemporaryOnRez) != 0)
                     {
                         if (sog.RootPart.Expires <= DateTime.Now)
-                            AddReturns(UUID.Zero, sog.Name, sog.AbsolutePosition, "", new List<SceneObjectGroup>() { sog });
+                            AddReturns (UUID.Zero, sog.Name, sog.AbsolutePosition, "", new List<ISceneEntity> () { sog });
                     }
 
                     ILandObject parcel = GetLandObject(
@@ -641,7 +641,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                             if ((DateTime.UtcNow - sog.RootPart.Rezzed).TotalSeconds >
                                     parcel.LandData.OtherCleanTime * 60)
                             {
-                                AddReturns(UUID.Zero, sog.Name, sog.AbsolutePosition, "Auto Parcel Return", new List<SceneObjectGroup>() { sog });
+                                AddReturns (UUID.Zero, sog.Name, sog.AbsolutePosition, "Auto Parcel Return", new List<ISceneEntity> () { sog });
                             }
                         }
                     }

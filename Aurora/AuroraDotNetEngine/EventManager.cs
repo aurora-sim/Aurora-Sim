@@ -728,7 +728,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void moving_start(SceneObjectPart part)
+        public void moving_start (ISceneChildEntity part)
         {
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
 
@@ -748,13 +748,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void moving_end(SceneObjectPart part)
+        public void moving_end (ISceneChildEntity part)
         {
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
 
             if (datas == null || datas.Length == 0)
             {
-                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentEntity.RootChild.UUID);
                 if (datas == null || datas.Length == 0)
                     return;
             }
@@ -845,7 +845,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="engine"></param>
         /// <param name="stateSource"></param>
         /// <param name="RezzedFrom"></param>
-        public void rez_scripts(SceneObjectPart part, TaskInventoryItem[] items,
+        public void rez_scripts(ISceneChildEntity part, TaskInventoryItem[] items,
                 int startParam, bool postOnRez, int stateSource, UUID RezzedFrom)
         {
             List<LUStruct> ItemsToStart = new List<LUStruct>();
@@ -892,7 +892,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         else
                         {
                             IScenePresence presence =
-                                        part.ParentGroup.Scene.GetScenePresence(
+                                        part.ParentEntity.Scene.GetScenePresence(
                                         item.OwnerID);
 
                             if (presence != null)

@@ -114,7 +114,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         }
 
-        public Scene World
+        public IScene World
         {
             get { return m_host.ParentGroup.Scene; }
         }

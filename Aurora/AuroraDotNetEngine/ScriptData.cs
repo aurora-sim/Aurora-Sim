@@ -103,7 +103,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         //This is the UUID of the actual script.
         public UUID ItemID;
-        public SceneObjectPart part;
+        public ISceneChildEntity part;
 
         public int ScriptScore = 0;
         private ScriptEngine m_ScriptEngine;
@@ -450,7 +450,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 //Post the event for the prim that rezzed us
                 m_ScriptEngine.AddToObjectQueue(RezzedFrom, "object_rez", new DetectParams[0],
-                    -1, new object[] { (LSL_Types.LSLString) part.ParentGroup.RootPart.UUID.ToString() });
+                    -1, new object[] { (LSL_Types.LSLString) part.ParentEntity.RootChild.UUID.ToString() });
                 RezzedFrom = UUID.Zero;
             }
             if (StartedFromSavedState)

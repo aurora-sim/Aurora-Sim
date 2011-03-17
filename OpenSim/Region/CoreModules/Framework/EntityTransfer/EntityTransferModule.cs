@@ -672,7 +672,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 // We remove the object here
                 try
                 {
-                    List<SceneObjectGroup> objects = new List<SceneObjectGroup>() { grp };
+                    List<ISceneEntity> objects = new List<ISceneEntity> () { grp };
                     ILLClientInventory inventoryModule = grp.Scene.RequestModuleInterface<ILLClientInventory>();
                     if (inventoryModule != null)
                         return inventoryModule.ReturnObjects(objects.ToArray(), UUID.Zero);

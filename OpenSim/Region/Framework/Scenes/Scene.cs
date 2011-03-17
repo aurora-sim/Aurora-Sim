@@ -49,7 +49,7 @@ namespace OpenSim.Region.Framework.Scenes
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public List<SceneObjectGroup> PhysicsReturns = new List<SceneObjectGroup>();
+        public List<ISceneEntity> PhysicsReturns = new List<ISceneEntity> ();
 
         /// <value>
         /// The scene graph for this scene

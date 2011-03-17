@@ -893,7 +893,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         /// <param name="itemID"></param>
         /// <param name="localID"></param>
-        public LUStruct StartScript(SceneObjectPart part, UUID itemID, string Script, int startParam, bool postOnRez, StateSource statesource, UUID RezzedFrom)
+        public LUStruct StartScript(ISceneChildEntity part, UUID itemID, string Script, int startParam, bool postOnRez, StateSource statesource, UUID RezzedFrom)
         {
             ScriptData id = ScriptProtection.GetScript(part.UUID, itemID);
             
@@ -927,7 +927,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             id.State = "default";
             id.Source = Script;
             id.part = part;
-            id.World = part.ParentGroup.Scene;
+            id.World = part.ParentEntity.Scene;
             id.RezzedFrom = RezzedFrom;
             ls.ID = id;
             ScriptProtection.AddNewScript(id);
@@ -1336,7 +1336,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return null;
         }
 
-        private bool ScriptDanger(SceneObjectPart part, Vector3 pos)
+        private bool ScriptDanger (ISceneChildEntity part, Vector3 pos)
         {
             IScene scene = part.ParentGroup.Scene;
             if (part.IsAttachment && RunScriptsInAttachments)
@@ -1383,24 +1383,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return true;
         }
 
-        public bool PipeEventsForScript(SceneObjectPart part)
+        public bool PipeEventsForScript (ISceneChildEntity part)
         {
             // Changed so that child prims of attachments return ScriptDanger for their parent, so that
             //  their scripts will actually run.
             //      -- Leaf, Tue Aug 12 14:17:05 EDT 2008
-            SceneObjectPart parent = part.ParentGroup.RootPart;
+            ISceneChildEntity parent = part.ParentEntity.RootChild;
             if (parent != null && parent.IsAttachment)
                 return PipeEventsForScript(parent, parent.AbsolutePosition);
             else
                 return PipeEventsForScript(part, part.AbsolutePosition);
         }
 
-        public bool PipeEventsForScript(SceneObjectPart part, Vector3 position)
+        public bool PipeEventsForScript (ISceneChildEntity part, Vector3 position)
         {
             // Changed so that child prims of attachments return ScriptDanger for their parent, so that
             //  their scripts will actually run.
             //      -- Leaf, Tue Aug 12 14:17:05 EDT 2008
-            SceneObjectPart parent = part.ParentGroup.RootPart;
+            ISceneChildEntity parent = part.ParentEntity.RootChild;
             if (parent != null && parent.IsAttachment)
                 return ScriptDanger(parent, position);
             else

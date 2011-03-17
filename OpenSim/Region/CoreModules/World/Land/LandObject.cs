@@ -996,8 +996,8 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void ReturnLandObjects(uint type, UUID[] owners, UUID[] tasks, IClientAPI remote_client)
         {
-            Dictionary<UUID, List<SceneObjectGroup>> returns =
-                    new Dictionary<UUID, List<SceneObjectGroup>>();
+            Dictionary<UUID, List<ISceneEntity>> returns =
+                    new Dictionary<UUID, List<ISceneEntity>> ();
 
             IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();
             IPrimCounts primCounts = primCountModule.GetPrimCounts(LandData.GlobalID);
@@ -1005,12 +1005,12 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 foreach (SceneObjectPart child in primCounts.Objects)
                 {
-                    SceneObjectGroup obj = child.ParentGroup;
+                    ISceneEntity obj = child.ParentGroup;
                     if (obj.OwnerID == m_landData.OwnerID)
                     {
                         if (!returns.ContainsKey(obj.OwnerID))
                             returns[obj.OwnerID] =
-                                    new List<SceneObjectGroup>();
+                                    new List<ISceneEntity> ();
                         if (!returns[obj.OwnerID].Contains(obj))
                             returns[obj.OwnerID].Add(obj);
                     }
@@ -1020,12 +1020,12 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 foreach (SceneObjectPart child in primCounts.Objects)
                 {
-                    SceneObjectGroup obj = child.ParentGroup;
+                    ISceneEntity obj = child.ParentGroup;
                     if (obj.GroupID == m_landData.GroupID)
                     {
                         if (!returns.ContainsKey(obj.OwnerID))
                             returns[obj.OwnerID] =
-                                    new List<SceneObjectGroup>();
+                                    new List<ISceneEntity> ();
                         if (!returns[obj.OwnerID].Contains(obj))
                             returns[obj.OwnerID].Add(obj);
                     }
@@ -1035,14 +1035,14 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 foreach (SceneObjectPart child in primCounts.Objects)
                 {
-                    SceneObjectGroup obj = child.ParentGroup;
+                    ISceneEntity obj = child.ParentGroup;
                     if (obj.OwnerID != m_landData.OwnerID &&
                         (obj.GroupID != m_landData.GroupID ||
                         m_landData.GroupID == UUID.Zero))
                     {
                         if (!returns.ContainsKey(obj.OwnerID))
                             returns[obj.OwnerID] =
-                                    new List<SceneObjectGroup>();
+                                    new List<ISceneEntity> ();
                         if (!returns[obj.OwnerID].Contains(obj))
                             returns[obj.OwnerID].Add(obj);
                     }
@@ -1054,12 +1054,12 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                 foreach (SceneObjectPart child in primCounts.Objects)
                 {
-                    SceneObjectGroup obj = child.ParentGroup;
+                    ISceneEntity obj = child.ParentGroup;
                     if (ownerlist.Contains(obj.OwnerID))
                     {
                         if (!returns.ContainsKey(obj.OwnerID))
                             returns[obj.OwnerID] =
-                                    new List<SceneObjectGroup>();
+                                    new List<ISceneEntity> ();
                         if (!returns[obj.OwnerID].Contains(obj))
                             returns[obj.OwnerID].Add(obj);
                     }
@@ -1070,19 +1070,19 @@ namespace OpenSim.Region.CoreModules.World.Land
                 List<UUID> Tasks = new List<UUID>(tasks);
                 foreach (SceneObjectPart child in primCounts.Objects)
                 {
-                    SceneObjectGroup obj = child.ParentGroup;
+                    ISceneEntity obj = child.ParentGroup;
                     if (Tasks.Contains(obj.UUID))
                     {
                         if (!returns.ContainsKey(obj.OwnerID))
                             returns[obj.OwnerID] =
-                                    new List<SceneObjectGroup>();
+                                    new List<ISceneEntity> ();
                         if (!returns[obj.OwnerID].Contains(obj))
                             returns[obj.OwnerID].Add(obj);
                     }
                 }
             }
 
-            foreach (List<SceneObjectGroup> ol in returns.Values)
+            foreach (List<ISceneEntity> ol in returns.Values)
             {
                 if (m_scene.Permissions.CanReturnObjects(this, remote_client.AgentId, ol))
                 {

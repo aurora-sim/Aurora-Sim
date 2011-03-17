@@ -66,10 +66,12 @@ namespace OpenSim.Framework
         AuroraEventManager AuroraEventManager { get; }
         EntityManager Entities { get; }
         EventManager EventManager { get; }
+        ScenePermissions Permissions { get; }
         PhysicsScene PhysicsScene { get; }
 
         IConfigSource Config { get; }
 
+        List<ISceneEntity> PhysicsReturns;
         void Initialize (RegionInfo regionInfo);
         void Initialize (RegionInfo regionInfo, AgentCircuitManager authen, IClientNetworkServer clientServer);
         void StartHeartbeat ();

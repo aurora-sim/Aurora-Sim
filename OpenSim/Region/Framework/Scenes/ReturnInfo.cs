@@ -27,6 +27,7 @@
 
 using System.Collections.Generic;
 using OpenMetaverse;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -36,6 +37,6 @@ namespace OpenSim.Region.Framework.Scenes
         public Vector3 location;
         public string objectName;
         public string reason;
-        public List<SceneObjectGroup> Groups;
+        public List<ISceneEntity> Groups;
     }
 }

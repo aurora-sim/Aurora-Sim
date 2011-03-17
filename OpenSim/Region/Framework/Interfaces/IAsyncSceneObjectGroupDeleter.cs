@@ -11,7 +11,7 @@ namespace OpenSim.Region.Framework.Interfaces
     public interface IAsyncSceneObjectGroupDeleter
     {
         void DeleteToInventory(DeRezAction action, UUID folderID,
-                List<SceneObjectGroup> objectGroups, UUID AgentId,
+                List<ISceneEntity> objectGroups, UUID AgentId,
                 bool permissionToDelete, bool permissionToTake);
     }
 }

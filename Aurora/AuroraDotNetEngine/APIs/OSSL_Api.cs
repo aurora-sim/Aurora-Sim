@@ -280,8 +280,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osShutDown", m_host, "OSSL");
 
-            Dictionary<UUID, List<SceneObjectGroup>> returns =
-                    new Dictionary<UUID, List<SceneObjectGroup>>();
+            Dictionary<UUID, List<ISceneEntity>> returns =
+                    new Dictionary<UUID, List<ISceneEntity>> ();
             IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
             {
@@ -296,7 +296,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         {
                             if (!returns.ContainsKey(obj.OwnerID))
                                 returns[obj.OwnerID] =
-                                        new List<SceneObjectGroup>();
+                                        new List<ISceneEntity> ();
                             if(!returns[obj.OwnerID].Contains(obj.ParentGroup))
                                 returns[obj.OwnerID].Add(obj.ParentGroup);
                         }
@@ -312,7 +312,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         {
                             if (!returns.ContainsKey(obj.OwnerID))
                                 returns[obj.OwnerID] =
-                                        new List<SceneObjectGroup>();
+                                        new List<ISceneEntity> ();
                             if (!returns[obj.OwnerID].Contains(obj.ParentGroup))
                                 returns[obj.OwnerID].Add(obj.ParentGroup);
                         }
@@ -326,14 +326,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         {
                             if (!returns.ContainsKey(obj.OwnerID))
                                 returns[obj.OwnerID] =
-                                        new List<SceneObjectGroup>();
+                                        new List<ISceneEntity> ();
                             if (!returns[obj.OwnerID].Contains(obj.ParentGroup))
                                 returns[obj.OwnerID].Add(obj.ParentGroup);
                         }
                     }
                 }
 
-                foreach (List<SceneObjectGroup> ol in returns.Values)
+                foreach (List<ISceneEntity> ol in returns.Values)
                 {
                     if (World.Permissions.CanReturnObjects(LO, m_host.OwnerID, ol))
                     {
@@ -347,8 +347,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osReturnObject(LSL_Key userID)
         {
-            Dictionary<UUID, List<SceneObjectGroup>> returns =
-                    new Dictionary<UUID, List<SceneObjectGroup>>();
+            Dictionary<UUID, List<ISceneEntity>> returns =
+                    new Dictionary<UUID, List<ISceneEntity>> ();
             IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
             {
@@ -362,13 +362,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     {
                         if (!returns.ContainsKey(obj.OwnerID))
                             returns[obj.OwnerID] =
-                                    new List<SceneObjectGroup>();
+                                    new List<ISceneEntity> ();
                         if (!returns[obj.OwnerID].Contains(obj.ParentGroup))
                             returns[obj.OwnerID].Add(obj.ParentGroup);
                     }
                 }
 
-                foreach (List<SceneObjectGroup> ol in returns.Values)
+                foreach (List<ISceneEntity> ol in returns.Values)
                 {
                     if (World.Permissions.CanReturnObjects(LO, m_host.OwnerID, ol))
                     {
