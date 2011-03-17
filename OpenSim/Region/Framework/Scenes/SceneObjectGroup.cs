@@ -513,7 +513,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// THIS IS ONLY FOR SERIALIZATION AND AS A BASE CONSTRUCTOR
         /// </summary>
-        public SceneObjectGroup(Scene scene)
+        public SceneObjectGroup(IScene scene)
         {
             m_scene = scene;
             m_forceBackupNow = true;
@@ -525,7 +525,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// The original SceneObjectPart will be used rather than a copy, preserving
         /// its existing localID and UUID.
         /// </summary>
-        public SceneObjectGroup(SceneObjectPart part, Scene scene) :this(scene)
+        public SceneObjectGroup(SceneObjectPart part, IScene scene) :this(scene)
         {
             SetRootPart(part);
             part.Scale = part.Shape.Scale; // temporary hack to update oobb
@@ -534,7 +534,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_grpOOBsize = part.OOBsize;
             m_ValidgrpOOB = true;
         }
-        public SceneObjectGroup(SceneObjectPart part, Scene scene, bool AddToScene)
+        public SceneObjectGroup(SceneObjectPart part, IScene scene, bool AddToScene)
             : this(scene)
         {
             if (!AddToScene)
@@ -553,7 +553,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Constructor.  This object is added to the scene later via AttachToScene()
         /// </summary>
-        public SceneObjectGroup(UUID ownerID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape, Scene scene) : this(scene)
+        public SceneObjectGroup(UUID ownerID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape, IScene scene) : this(scene)
         {
             SceneObjectPart part = new SceneObjectPart(ownerID, shape, pos, rot, Vector3.Zero, scene);
             SetRootPart(part);
@@ -1684,7 +1684,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (rootpart.PhysActor != null)
                     {
                         rootpart.PhysActor.AddForce(impulse, true);
-                        m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);
+                        m_scene.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);
                     }
                 }
             }
@@ -1703,7 +1703,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!IsAttachment)
                     {
                         rootpart.PhysActor.AddAngularForce(impulse, true);
-                        m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);
+                        m_scene.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);
                     }
                 }
             }
@@ -1722,7 +1722,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!IsAttachment)
                     {
                         rootpart.PhysActor.Torque = impulse;
-                        m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);
+                        m_scene.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);
                     }
                 }
             }
@@ -2110,7 +2110,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (linkPart.PhysActor != null && m_rootPart.PhysActor != null)
                     {
                     linkPart.PhysActor.link(m_rootPart.PhysActor);
-                    this.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(linkPart.PhysActor);
+                    this.Scene.PhysicsScene.AddPhysicsActorTaint(linkPart.PhysActor);
                     }
                 //rest of parts
                 foreach (SceneObjectPart part in objectGroupChildren)
@@ -2122,7 +2122,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if (part.PhysActor != null && m_rootPart.PhysActor != null)
                             {
                             part.PhysActor.link(m_rootPart.PhysActor);
-                            this.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
+                            this.Scene.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
                             }
                     }
                 }
@@ -2172,7 +2172,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (linkPart.PhysActor != null)
             {
-                m_scene.SceneGraph.PhysicsScene.RemovePrim(linkPart.PhysActor);
+                m_scene.SceneGraph.RemovePrim(linkPart.PhysActor);
 //            linkPart.PhysActor.delink();
             }
 
@@ -2259,7 +2259,7 @@ namespace OpenSim.Region.Framework.Scenes
                             Vector3 grabforce = pos - AbsolutePosition;
                             grabforce = grabforce * m_rootPart.PhysActor.Mass;
                             m_rootPart.PhysActor.AddForce(grabforce, true);
-                            m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
+                            m_scene.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
                             // This is outside the above permissions condition
                             // so that if the object is locked the client moving the object
                             // get's it's position on the simulator even if it was the same as before
@@ -2370,7 +2370,7 @@ namespace OpenSim.Region.Framework.Scenes
                           Vector3 spinforce = new Vector3(rotationAxis.X, rotationAxis.Y, rotationAxis.Z);
                           spinforce = (spinforce/8) * m_rootPart.PhysActor.Mass; // 8 is an arbitrary torque scaling factor
                           m_rootPart.PhysActor.AddAngularForce(spinforce,true);
-                          m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
+                          m_scene.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
                         }
                     }
                     else
@@ -2557,7 +2557,7 @@ namespace OpenSim.Region.Framework.Scenes
                 part.UpdateShape(shapeBlock);
 
                 if (part.PhysActor != null)
-                    m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
+                    m_scene.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
                 m_ValidgrpOOB = false;
             }
         }
@@ -2617,7 +2617,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (part.PhysActor != null)
                 {
                     part.PhysActor.Size = scale;
-                    m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
+                    m_scene.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
                 }
                 //if (part.UUID != m_rootPart.UUID)
 
@@ -2718,7 +2718,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (part.PhysActor != null)
                 {
                     part.PhysActor.Size = prevScale;
-                    m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
+                    m_scene.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
                 }
 
                 part.IgnoreUndoUpdate = false;
@@ -2976,7 +2976,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (actor != null)
             {
                 actor.Orientation = m_rootPart.RotationOffset;
-                m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
+                m_scene.PhysicsScene.AddPhysicsActorTaint(actor);
             }
 
             HasGroupChanged = true;
@@ -3000,7 +3000,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (actor != null)
             {
                 actor.Orientation = m_rootPart.RotationOffset;
-                m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
+                m_scene.PhysicsScene.AddPhysicsActorTaint(actor);
             }
 
             AbsolutePosition = pos;
@@ -3072,7 +3072,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_rootPart.PhysActor != null)
             {
                 m_rootPart.PhysActor.Orientation = m_rootPart.RotationOffset;
-                m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
+                m_scene.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
             }
 
             lock (m_partsLock)
@@ -3600,7 +3600,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if (Scene == null)
                             return;
 
-                        SceneObjectPart obj = Scene.GetSceneObjectPart(localId);
+                        ISceneChildEntity obj = Scene.GetSceneObjectPart (localId);
                         string data = "";
                         if (obj != null)
                         {
@@ -3647,7 +3647,7 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         else
                         {
-                            IScenePresence av = Scene.SceneGraph.GetScenePresence (localId);
+                            IScenePresence av = Scene.GetScenePresence (localId);
                             if (av.LocalId == localId)
                             {
                                 if (RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(av.Name))
@@ -3721,7 +3721,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if (Scene == null)
                             return;
 
-                        SceneObjectPart obj = Scene.GetSceneObjectPart(localId);
+                        ISceneChildEntity obj = Scene.GetSceneObjectPart(localId);
                         string data = "";
                         if (obj != null)
                         {
@@ -3768,7 +3768,7 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         else
                         {
-                            IScenePresence av = Scene.SceneGraph.GetScenePresence (localId);
+                            IScenePresence av = Scene.GetScenePresence (localId);
                             if (av.LocalId == localId)
                             {
                                 if (RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(av.Name))
@@ -3841,7 +3841,7 @@ namespace OpenSim.Region.Framework.Scenes
                         // always running this check because if the user deletes the object it would return a null reference.
                         if (Scene == null)
                             return;
-                        SceneObjectPart obj = Scene.GetSceneObjectPart(localId);
+                        ISceneChildEntity obj = Scene.GetSceneObjectPart (localId);
                         string data = "";
                         if (obj != null)
                         {
@@ -3888,7 +3888,7 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         else
                         {
-                            IScenePresence av = Scene.SceneGraph.GetScenePresence (localId);
+                            IScenePresence av = Scene.GetScenePresence (localId);
                             if (av.LocalId == localId)
                             {
                                 if (RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(av.Name))

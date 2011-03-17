@@ -40,6 +40,7 @@ using OpenSim.Region.Physics.Manager;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using OpenSim.Services.Interfaces;
 using Aurora.Framework;
+using PrimType = OpenSim.Framework.PrimType;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -466,7 +467,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // without the parent rotation applied.
                     if (m_parentID != UUID.Zero)
                     {
-                        SceneObjectPart part = m_scene.GetSceneObjectPart(m_parentID);
+                        ISceneChildEntity part = m_scene.GetSceneObjectPart (m_parentID);
                         if (part != null)
                         {
                             return m_parentPosition + (m_pos * part.GetWorldRotation());
@@ -861,7 +862,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (OnRemovePhysics != null)
                         OnRemovePhysics();
                     if (m_physicsActor != null)
-                        m_scene.SceneGraph.PhysicsScene.RemoveAvatar(m_physicsActor);
+                        m_scene.PhysicsScene.RemoveAvatar(m_physicsActor);
                     if (m_physicsActor != null)
                         m_physicsActor.OnCollisionUpdate -= PhysicsCollisionUpdate;
                     if (m_physicsActor != null)
@@ -873,7 +874,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (m_physicsActor != null)
                         m_physicsActor.OnOutOfBounds -= OutOfBoundsCall;
                     if (m_physicsActor != null)
-                        m_scene.SceneGraph.PhysicsScene.RemoveAvatar(PhysicsActor);
+                        m_scene.PhysicsScene.RemoveAvatar(PhysicsActor);
                     if (m_physicsActor != null)
                         m_physicsActor.UnSubscribeEvents();
                     m_physicsActor = null;
@@ -1134,12 +1135,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             //m_log.DebugFormat("[FollowCam]: {0}", m_followCamAuto);
             // Raycast from the avatar's head to the camera to see if there's anything blocking the view
-            if ((m_movementUpdateCount % NumMovementsBetweenRayCast) == 0 && m_scene.SceneGraph.PhysicsScene.SupportsRayCast())
+            if ((m_movementUpdateCount % NumMovementsBetweenRayCast) == 0 && m_scene.PhysicsScene.SupportsRayCast())
             {
                 if (m_followCamAuto)
                 {
                     Vector3 posAdjusted = m_pos + HEAD_ADJUSTMENT;
-                    m_scene.SceneGraph.PhysicsScene.RaycastWorld(m_pos, Vector3.Normalize(m_CameraCenter - posAdjusted), Vector3.Distance(m_CameraCenter, posAdjusted) + 0.3f, RayCastCameraCallback);
+                    m_scene.PhysicsScene.RaycastWorld(m_pos, Vector3.Normalize(m_CameraCenter - posAdjusted), Vector3.Distance(m_CameraCenter, posAdjusted) + 0.3f, RayCastCameraCallback);
                 }
             }
             if (!m_CameraCenter.IsFinite())
@@ -1508,7 +1509,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_sitAtAutoTarget)
                 {
-                    SceneObjectPart part = m_scene.GetSceneObjectPart(m_requestedSitTargetUUID);
+                    ISceneChildEntity part = m_scene.GetSceneObjectPart (m_requestedSitTargetUUID);
                     if (part != null)
                     {
                         m_autoPilotTarget = Vector3.Zero;
@@ -1531,7 +1532,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (m_parentID != UUID.Zero)
             {
-                SceneObjectPart part = m_scene.GetSceneObjectPart(m_parentID);
+                ISceneChildEntity part = m_scene.GetSceneObjectPart (m_parentID);
                 if (part != null)
                 {
                     //Block movement of vehicles for a bit until after the changed event has fired
@@ -1584,9 +1585,9 @@ namespace OpenSim.Region.Framework.Scenes
             Animator.TrySetMovementAnimation("STAND");
         }
 
-        private SceneObjectPart FindNextAvailableSitTarget(UUID targetID)
+        private ISceneChildEntity FindNextAvailableSitTarget (UUID targetID)
         {
-            SceneObjectPart targetPart = m_scene.GetSceneObjectPart(targetID);
+            ISceneChildEntity targetPart = m_scene.GetSceneObjectPart(targetID);
             if (targetPart == null)
                 return null;
 
@@ -1594,8 +1595,8 @@ namespace OpenSim.Region.Framework.Scenes
             // If the primitive the player clicked on has no sit target, and one or more other linked objects have sit targets that are not full, the sit target of the object with the lowest link number will be used.
 
             // Get our own copy of the part array, and sort into the order we want to test
-            SceneObjectPart[] partArray = targetPart.ParentGroup.Parts;
-            Array.Sort(partArray, delegate(SceneObjectPart p1, SceneObjectPart p2)
+            ISceneChildEntity[] partArray = targetPart.ParentEntity.ChildrenEntities ().ToArray ();
+            Array.Sort (partArray, delegate (ISceneChildEntity p1, ISceneChildEntity p2)
                        {
                            // we want the originally selected part first, then the rest in link order -- so make the selected part link num (-1)
                            int linkNum1 = p1==targetPart ? -1 : p1.LinkNum;
@@ -1605,7 +1606,7 @@ namespace OpenSim.Region.Framework.Scenes
                 );
 
             //look for prims with explicit sit targets that are available
-            foreach (SceneObjectPart part in partArray)
+            foreach (ISceneChildEntity part in partArray)
             {
                 // Is a sit target available?
                 Vector3 avSitOffSet = part.SitTargetPosition;
@@ -1633,7 +1634,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_nextSitAnimation = "SIT";
             }
 
-            SceneObjectPart part = FindNextAvailableSitTarget(targetID);
+            ISceneChildEntity part = FindNextAvailableSitTarget (targetID);
 
             if (!String.IsNullOrEmpty(part.SitAnimation))
             {
@@ -1667,7 +1668,7 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 cameraAtOffset = Vector3.Zero;
             bool forceMouselook = false;
 
-            SceneObjectPart part =  FindNextAvailableSitTarget(targetID);
+            ISceneChildEntity part = FindNextAvailableSitTarget (targetID);
             m_requestedSitTargetUUID = part.UUID;
             if (part != null)
             {
@@ -1781,7 +1782,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_nextSitAnimation = "SIT";
             
             //SceneObjectPart part = m_scene.GetSceneObjectPart(targetID);
-            SceneObjectPart part = FindNextAvailableSitTarget(targetID);
+            ISceneChildEntity part = FindNextAvailableSitTarget (targetID);
 
             if (part != null)
             {
@@ -1822,7 +1823,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_nextSitAnimation = "SIT";
             }
 
-            SceneObjectPart part =  FindNextAvailableSitTarget(targetID);
+            ISceneChildEntity part = FindNextAvailableSitTarget (targetID);
             if (part != null)
             {
                 m_requestedSitOffset = offset;
@@ -1867,7 +1868,7 @@ namespace OpenSim.Region.Framework.Scenes
         
         public void HandleAgentSit(IClientAPI remoteClient, UUID agentID, string sitAnimation, bool UseSitTarget)
         {
-            SceneObjectPart part = m_scene.GetSceneObjectPart(m_requestedSitTargetUUID);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (m_requestedSitTargetUUID);
             if (part != null)
             {
                 if (m_sitAtAutoTarget || !m_autopilotMoving)
@@ -2696,7 +2697,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_appearance.AvatarHeight != 0)
                 m_avHeight = m_appearance.AvatarHeight;
 
-            PhysicsScene scene = m_scene.SceneGraph.PhysicsScene;
+            PhysicsScene scene = m_scene.PhysicsScene;
 
             Vector3 pVec = AbsolutePosition;
 

@@ -269,6 +269,22 @@ namespace OpenSim.Framework
         void ScheduleGroupTerseUpdate ();
 
         float Damage { get; set; }
+
+        ISceneChildEntity GetChildPart (UUID objectID);
+
+        ISceneChildEntity GetChildPart (uint childkey);
+
+        void TriggerScriptChangedEvent (Changed changed);
+
+        void LinkToGroup (ISceneEntity childPrim);
+
+        void ScheduleGroupUpdate (PrimUpdateFlags primUpdateFlags);
+
+        void GetProperties (IClientAPI client);
+
+        int PrimCount { get; }
+
+        bool HasGroupChanged { get; set; }
     }
 
     public interface IEntity
@@ -291,11 +307,80 @@ namespace OpenSim.Framework
 
         int UseSoundQueue { get; set; }
 
-        OpenMetaverse.UUID OwnerID { get; set; }
+        UUID OwnerID { get; set; }
+        UUID LastOwnerID { get; set; }
 
         bool VolumeDetectActive { get; set; }
 
         void UpdatePrimFlags (bool p, bool wasTemporary, bool wasPhantom, bool wasVD);
+
+        UUID GroupID { get; set; }
+
+        UUID CreatorID { get; set; }
+
+        Quaternion GetWorldRotation ();
+
+        PhysicsActor PhysActor { get; set; }
+
+        TaskInventoryDictionary TaskInventory { get; set; }
+
+        Vector3 GetWorldPosition ();
+
+        void RemoveAvatarOnSitTarget (OpenMetaverse.UUID UUID);
+
+        List<UUID> GetAvatarOnSitTarget ();
+
+        OpenMetaverse.UUID ParentUUID { get; set; }
+
+        float GetMass ();
+
+        int AttachmentPoint { get; set; }
+
+        bool CreateSelected { get; set; }
+
+        bool IsAttachment { get; set; }
+
+        void ApplyImpulse (Vector3 applied_linear_impulse, bool p);
+
+        string Description { get; set; }
+
+        Quaternion RotationOffset { get; set; }
+
+        void ScheduleUpdate (PrimUpdateFlags primUpdateFlags);
+
+        string SitAnimation { get; set; }
+
+        Vector3 SitTargetPosition { get; set; }
+
+        Quaternion SitTargetOrientation { get; set; }
+
+        void SetAvatarOnSitTarget (OpenMetaverse.UUID UUID);
+
+        PrimType GetPrimType ();
+
+        Vector3 CameraAtOffset { get; set; }
+
+        Vector3 CameraEyeOffset { get; set; }
+
+        bool ForceMouselook { get; set; }
+
+        Vector3 Scale { get; set; }
+
+        uint GetEffectiveObjectFlags ();
+
+        int GetNumberOfSides ();
+
+        object Text { get; set; }
+
+        Color4 GetTextColor ();
+
+        PrimitiveBaseShape Shape { get; set; }
+
+        int ParentID { get; set; }
+
+        int Material { get; set; }
+
+        OpenMetaverse.UUID AttachedAvatar { get; set; }
     }
 
     public enum PIDHoverType
@@ -307,6 +392,84 @@ namespace OpenSim.Framework
         Water
             , Absolute
     }
+
+    #region Enumerations
+
+    /// <summary>
+    /// Only used internally to schedule client updates.
+    /// 0 - no update is scheduled
+    /// 1 - terse update scheduled
+    /// 2 - full update scheduled
+    /// </summary>
+    /// 
+    public enum InternalUpdateFlags : byte
+    {
+        NoUpdate = 0,
+        TerseUpdate = 1,
+        FullUpdate = 2
+    }
+
+    [Flags]
+    public enum Changed : uint
+    {
+        INVENTORY = 1,
+        COLOR = 2,
+        SHAPE = 4,
+        SCALE = 8,
+        TEXTURE = 16,
+        LINK = 32,
+        ALLOWED_DROP = 64,
+        OWNER = 128,
+        REGION = 256,
+        TELEPORT = 512,
+        REGION_RESTART = 1024,
+        MEDIA = 2048,
+        ANIMATION = 16384,
+        STATE = 32768
+    }
+
+    // I don't really know where to put this except here.
+    // Can't access the OpenSim.Region.ScriptEngine.Common.LSL_BaseClass.Changed constants
+    [Flags]
+    public enum ExtraParamType
+    {
+        Something1 = 1,
+        Something2 = 2,
+        Something3 = 4,
+        Something4 = 8,
+        Flexible = 16,
+        Light = 32,
+        Sculpt = 48,
+        Something5 = 64,
+        Something6 = 128
+    }
+
+    [Flags]
+    public enum TextureAnimFlags : byte
+    {
+        NONE = 0x00,
+        ANIM_ON = 0x01,
+        LOOP = 0x02,
+        REVERSE = 0x04,
+        PING_PONG = 0x08,
+        SMOOTH = 0x10,
+        ROTATE = 0x20,
+        SCALE = 0x40
+    }
+
+    public enum PrimType : int
+    {
+        BOX = 0,
+        CYLINDER = 1,
+        PRISM = 2,
+        SPHERE = 3,
+        TORUS = 4,
+        TUBE = 5,
+        RING = 6,
+        SCULPT = 7
+    }
+
+    #endregion Enumerations
 
     public delegate void PositionUpdate (Vector3 position);
     public delegate void VelocityUpdate (Vector3 velocity);

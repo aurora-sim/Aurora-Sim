@@ -107,7 +107,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public int ScriptScore = 0;
         private ScriptEngine m_ScriptEngine;
-        public Scene World;
+        public IScene World;
         public IScript Script;
         public string State;
         public bool Running = true;

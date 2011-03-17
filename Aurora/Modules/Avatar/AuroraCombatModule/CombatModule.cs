@@ -696,13 +696,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 UUID killerObj = UUID.Zero;
                 foreach (uint localid in coldata.Keys)
                 {
-                    SceneObjectPart part = m_part.ParentGroup.Scene.GetSceneObjectPart(localid);
-                    if (part != null && part.ParentGroup.Damage != -1.0f)
+                    ISceneChildEntity part = m_part.ParentGroup.Scene.GetSceneObjectPart (localid);
+                    if (part != null && part.ParentEntity.Damage != -1.0f)
                     {
-                        if (part.ParentGroup.Damage > MaximumDamageToInflict)
-                            part.ParentGroup.Damage = MaximumDamageToInflict;
+                        if (part.ParentEntity.Damage > MaximumDamageToInflict)
+                            part.ParentEntity.Damage = MaximumDamageToInflict;
 
-                        Health -= part.ParentGroup.Damage;
+                        Health -= part.ParentEntity.Damage;
                         if (Health <= 0.0f) 
                             killerObj = part.UUID;
                     }

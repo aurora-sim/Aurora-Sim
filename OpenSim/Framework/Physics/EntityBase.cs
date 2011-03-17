@@ -27,20 +27,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
-using System.Security.Permissions;
-using OpenSim.Framework;
 using OpenMetaverse;
 
-namespace OpenSim.Region.Framework.Scenes
+namespace OpenSim.Framework
 {
     public abstract class EntityBase : IEntity
     {
-        protected Scene m_scene;
+        protected IScene m_scene;
         /// <summary>
         /// The scene to which this entity belongs
         /// </summary>
-        public Scene Scene
+        public IScene Scene
         {
             get { return m_scene; }
             set { m_scene = value; }
@@ -144,7 +141,7 @@ namespace OpenSim.Region.Framework.Scenes
         public Vector3 AAfaceNormal = new Vector3(0, 0, 0);
         public int face = -1;
         public bool HitTF = false;
-        public SceneObjectPart obj;
+        public ISceneChildEntity obj;
         public float distance = 0;
 
         public EntityIntersection()

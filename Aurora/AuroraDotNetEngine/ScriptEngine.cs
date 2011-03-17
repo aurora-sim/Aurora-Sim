@@ -1338,7 +1338,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         private bool ScriptDanger(SceneObjectPart part, Vector3 pos)
         {
-            Scene scene = part.ParentGroup.Scene;
+            IScene scene = part.ParentGroup.Scene;
             if (part.IsAttachment && RunScriptsInAttachments)
                 return true; //Always run as in SL
 

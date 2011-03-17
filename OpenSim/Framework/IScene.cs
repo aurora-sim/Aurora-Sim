@@ -63,6 +63,8 @@ namespace OpenSim.Framework
     {
         bool m_usePreJump;
         RegionInfo RegionInfo { get; }
+        AuroraEventManager AuroraEventManager { get; }
+        EntityManager Entities { get; }
         EventManager EventManager { get; }
         PhysicsScene PhysicsScene { get; }
 
@@ -98,7 +100,7 @@ namespace OpenSim.Framework
 
         IScenePresence GetScenePresence (UUID uUID);
 
-        void TryGetAvatarByName (string p, out IScenePresence NewSP);
+        bool TryGetAvatarByName (string p, out IScenePresence NewSP);
 
         IEnumerable<IScenePresence> GetScenePresences ();
 
@@ -114,5 +116,11 @@ namespace OpenSim.Framework
         ISceneChildEntity GetSceneObjectPart (uint localID);
 
         ISceneChildEntity GetSceneObjectPart (UUID objectID);
+
+        float MaxLowValue { get; set; }
+
+        bool TryGetPart (UUID objecUUID, out ISceneChildEntity SensedObject);
+
+        string DefaultObjectName { get; set; }
     }
 }

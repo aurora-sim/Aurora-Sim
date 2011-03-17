@@ -112,7 +112,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         }
 
-        public Scene World
+        public IScene World
         {
             get { return m_host.ParentGroup.Scene; }
         }
@@ -309,7 +309,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String aaGetLastOwner(LSL_String PrimID)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetLastOwner", m_host, "AA");
-            SceneObjectPart part = m_host.ParentGroup.Scene.GetSceneObjectPart(UUID.Parse(PrimID.m_string));
+            ISceneChildEntity part = m_host.ParentGroup.Scene.GetSceneObjectPart(UUID.Parse(PrimID.m_string));
             if (part != null)
                 return new LSL_String(part.LastOwnerID.ToString());
             else
@@ -634,7 +634,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.High, "AASetCenterOfGravity", m_host, "AA");
             if (m_host.ParentGroup.Scene.Permissions.CanIssueEstateCommand(m_host.OwnerID, true))
-                m_host.ParentGroup.Scene.SceneGraph.PhysicsScene.PointOfGravity = new Vector3((float)position.x, (float)position.y, (float)position.z);
+                m_host.ParentGroup.Scene.PhysicsScene.PointOfGravity = new Vector3((float)position.x, (float)position.y, (float)position.z);
         }
 
         #region Helpers
@@ -666,12 +666,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return account.Name;
 
             // try an scene object
-            SceneObjectPart SOP = World.GetSceneObjectPart(objecUUID);
+            ISceneChildEntity SOP = World.GetSceneObjectPart (objecUUID);
             if (SOP != null)
                 return SOP.Name;
 
             ISceneChildEntity SensedObject;
-            if(!World.SceneGraph.TryGetPart(objecUUID, out SensedObject))
+            if(!World.TryGetPart(objecUUID, out SensedObject))
             {
                 IGroupsModule groups = World.RequestModuleInterface<IGroupsModule>();
                 if (groups != null)

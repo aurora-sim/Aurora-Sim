@@ -129,7 +129,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         }
 
-        public Scene World
+        public IScene World
         {
             get { return m_host.ParentGroup.Scene; }
         }
@@ -1628,9 +1628,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             object[] resobj = new object[] { new LSL_Types.LSLString(m_host.UUID.ToString()), new LSL_Types.LSLString(message) };
 
-            SceneObjectPart sceneOP = World.GetSceneObjectPart(new UUID(objectUUID));
+            ISceneChildEntity sceneOP = World.GetSceneObjectPart (new UUID (objectUUID));
 
-            m_ScriptEngine.AddToObjectQueue( sceneOP.UUID, "dataserver", new DetectParams[0], -1, resobj);
+            m_ScriptEngine.AddToObjectQueue(sceneOP.UUID, "dataserver", new DetectParams[0], -1, resobj);
         }
 
 
@@ -2092,7 +2092,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Key osGetRegionMapTexture(string regionName)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetRegionMapTexture", m_host, "OSSL");
-            Scene scene = m_host.ParentGroup.Scene;
+            IScene scene = m_host.ParentGroup.Scene;
             UUID key = UUID.Zero;
             GridRegion region;
 
@@ -2220,7 +2220,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetProjectionParams", m_host, "OSSL");
 
-            SceneObjectPart obj = null;
+            ISceneChildEntity obj = null;
             if (prim == UUID.Zero.ToString())
             {
                 obj = m_host;
@@ -2239,7 +2239,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             obj.Shape.ProjectionAmbiance = (float)amb;
 
 
-            obj.ParentGroup.HasGroupChanged = true;
+            obj.ParentEntity.HasGroupChanged = true;
             obj.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
 
         }

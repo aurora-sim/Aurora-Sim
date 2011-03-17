@@ -191,9 +191,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void Populate(Scene scene)
+        public void Populate(IScene scene)
         {
-            SceneObjectPart part = scene.GetSceneObjectPart(Key);
+            ISceneChildEntity part = scene.GetSceneObjectPart (Key);
             Vector3 tmp;
             if (part == null) // Avatar, maybe?
             {
@@ -230,7 +230,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
             }
 
-            part=part.ParentGroup.RootPart; // We detect objects only
+            part=part.ParentEntity.RootChild; // We detect objects only
 
             LinkNum = 0; // Not relevant
 
@@ -242,7 +242,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             else
                 Type = 0x02; // Passive
 
-            foreach (SceneObjectPart p in part.ParentGroup.ChildrenList)
+            foreach (ISceneChildEntity p in part.ParentEntity.ChildrenEntities ())
             {
                 if (p.Inventory.ContainsScripts())
                 {
@@ -255,7 +255,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                              tmp.Y,
                                              tmp.Z);
 
-            Quaternion wr = part.ParentGroup.GroupRotation;
+            Quaternion wr = part.ParentEntity.GroupRotation;
             Rotation = new LSL_Types.Quaternion(wr.X, wr.Y, wr.Z, wr.W);
 
             tmp = part.Velocity;

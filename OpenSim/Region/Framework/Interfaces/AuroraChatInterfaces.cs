@@ -19,7 +19,7 @@ namespace Aurora.Framework
 
         void OnNewClient(IClientAPI client);
 
-        void OnClosingClient(UUID clientID, Scene scene);
+        void OnClosingClient (UUID clientID, IScene scene);
     }
 
     public interface IChatModule
@@ -37,10 +37,10 @@ namespace Aurora.Framework
         void DeliverChatToAvatars(ChatSourceType chatSourceType, OSChatMessage message);
 
         void SimChatBroadcast(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                                     UUID fromID, bool fromAgent, UUID ToAgentID, Scene scene);
+                                     UUID fromID, bool fromAgent, UUID ToAgentID, IScene scene);
         void SimChat(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                            UUID fromID, bool fromAgent, Scene scene);
+                            UUID fromID, bool fromAgent, IScene scene);
         void SimChat(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                               UUID fromID, bool fromAgent, bool broadcast, float range, UUID ToAgentID, Scene scene);
+                               UUID fromID, bool fromAgent, bool broadcast, float range, UUID ToAgentID, IScene scene);
     }
 }

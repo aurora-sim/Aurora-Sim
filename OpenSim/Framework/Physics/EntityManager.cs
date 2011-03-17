@@ -31,9 +31,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using log4net;
 using OpenMetaverse;
-using OpenSim.Framework;
 
-namespace OpenSim.Region.Framework.Scenes
+namespace OpenSim.Framework
 {
     public class EntityManager
     {
@@ -276,10 +275,10 @@ namespace OpenSim.Region.Framework.Scenes
             IEntity entity;
             if (!TryGetChildPrimParent (childkey, out entity))
                 return false;
-            if (!(entity is SceneObjectGroup))
+            if (!(entity is ISceneEntity))
                 return false;
 
-            child = (entity as SceneObjectGroup).GetChildPart (childkey);
+            child = (entity as ISceneEntity).GetChildPart (childkey);
 
             return true;
         }
@@ -292,7 +291,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (!TryGetChildPrimParent (objectID, out entity))
                 return false;
 
-            childPrim = (entity as SceneObjectGroup).GetChildPart (objectID);
+            childPrim = (entity as ISceneEntity).GetChildPart (objectID);
 
             return true;
         }

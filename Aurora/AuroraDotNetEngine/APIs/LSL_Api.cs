@@ -56,7 +56,7 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using PrimType = OpenSim.Region.Framework.Scenes.PrimType;
+using PrimType = OpenSim.Framework.PrimType;
 using AssetLandmark = OpenSim.Framework.AssetLandmark;
 
 using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
@@ -199,7 +199,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return timeToStopSleeping;
         }
 
-        public Scene World
+        public IScene World
         {
             get { return m_host.ParentGroup.Scene; }
         }
@@ -1078,7 +1078,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return account.Name;
 
             // try an scene object
-            SceneObjectPart SOP = World.GetSceneObjectPart(objecUUID);
+            ISceneChildEntity SOP = World.GetSceneObjectPart (objecUUID);
             if (SOP != null)
                 return SOP.Name;
 
@@ -2360,12 +2360,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return new LSL_Rotation(q.X, q.Y, q.Z, q.W);
         }
 
-        private LSL_Rotation GetPartRot(SceneObjectPart part)
+        private LSL_Rotation GetPartRot (ISceneChildEntity part)
         {
             Quaternion q;
             if (part.LinkNum == 0 || part.LinkNum == 1) // unlinked or root prim
             {
-                if (part.ParentGroup.RootPart.AttachmentPoint != 0)
+                if (part.ParentEntity.RootChild.AttachmentPoint != 0)
                 {
                     IScenePresence avatar = World.GetScenePresence(part.AttachedAvatar);
                     if (avatar != null)
@@ -2376,10 +2376,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             q = avatar.Rotation; // Currently infrequently updated so may be inaccurate
                     }
                     else
-                        q = part.ParentGroup.GroupRotation; // Likely never get here but just in case
+                        q = part.ParentEntity.GroupRotation; // Likely never get here but just in case
                 }
                 else
-                    q = part.ParentGroup.GroupRotation; // just the group rotation
+                    q = part.ParentEntity.GroupRotation; // just the group rotation
                 return new LSL_Rotation(q.X, q.Y, q.Z, q.W);
             }
             q = part.GetWorldRotation();
@@ -3658,7 +3658,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 try
                 {
-                    SceneObjectPart obj = World.GetSceneObjectPart(key);
+                    ISceneChildEntity obj = World.GetSceneObjectPart (key);
                     if (obj != null)
                         return (double)obj.GetMass();
                     // the object is null so the key is for an avatar
@@ -4488,22 +4488,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (sp != null)
                 client = sp.ControllingClient;
 
-            SceneObjectPart targetPart = World.GetSceneObjectPart(targetID);
+            ISceneChildEntity targetPart = World.GetSceneObjectPart (targetID);
 
-            if (targetPart.ParentGroup.RootPart.AttachmentPoint != 0)
+            if (targetPart.ParentEntity.RootChild.AttachmentPoint != 0)
                 return DateTime.Now; ; // Fail silently if attached
-            SceneObjectGroup parentPrim = null, childPrim = null;
+            ISceneEntity parentPrim = null, childPrim = null;
 
             if (targetPart != null)
             {
                 if (parent != 0) {
-                    parentPrim = m_host.ParentGroup;
-                    childPrim = targetPart.ParentGroup;
+                    parentPrim = m_host.ParentEntity;
+                    childPrim = targetPart.ParentEntity;
                 }
                 else
                 {
-                    parentPrim = targetPart.ParentGroup;
-                    childPrim = m_host.ParentGroup;
+                    parentPrim = targetPart.ParentEntity;
+                    childPrim = m_host.ParentEntity;
                 }
 //                byte uf = childPrim.RootPart.UpdateFlag;
                 parentPrim.LinkToGroup(childPrim);
@@ -4512,7 +4512,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             parentPrim.TriggerScriptChangedEvent(Changed.LINK);
-            parentPrim.RootPart.CreateSelected = true;
+            parentPrim.RootChild.CreateSelected = true;
             parentPrim.HasGroupChanged = true;
             parentPrim.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
 
@@ -5222,7 +5222,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             IScenePresence pusheeav = null;
             Vector3 PusheePos = Vector3.Zero;
-            SceneObjectPart pusheeob = null;
+            ISceneChildEntity pusheeob = null;
 
             IScenePresence avatar = World.GetScenePresence (targetID);
             if (avatar != null)
@@ -5243,7 +5243,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 // Pushee Linked?
                 if (pusheeav.ParentID != UUID.Zero)
                 {
-                    SceneObjectPart parentobj = World.GetSceneObjectPart(pusheeav.ParentID);
+                    ISceneChildEntity parentobj = World.GetSceneObjectPart (pusheeav.ParentID);
                     if (parentobj != null)
                     {
                         PusheePos = parentobj.AbsolutePosition;
@@ -5449,7 +5449,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return GetNumberOfSides(m_host);
         }
 
-        protected int GetNumberOfSides(SceneObjectPart part)
+        protected int GetNumberOfSides (ISceneChildEntity part)
         {
             int sides = part.GetNumberOfSides();
 
@@ -5738,7 +5738,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 try
                 {
-                    SceneObjectPart obj = World.GetSceneObjectPart(key);
+                    ISceneChildEntity obj = World.GetSceneObjectPart (key);
                     if (obj == null)
                         return id; // the key is for an agent so just return the key
                     else
@@ -6717,7 +6717,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
                 else // object is not an avatar
                 {
-                    SceneObjectPart obj = World.GetSceneObjectPart(key);
+                    ISceneChildEntity obj = World.GetSceneObjectPart (key);
                     if (obj != null)
                         if (parcelManagement != null)
                         {
@@ -8775,11 +8775,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     // which should include the avatar so set the UUID to the
                     // UUID of the object the avatar is sat on and allow it to fall through
                     // to processing an object
-                    SceneObjectPart p = World.GetSceneObjectPart(presence.ParentID);
+                    ISceneChildEntity p = World.GetSceneObjectPart (presence.ParentID);
                     objID = p.UUID;
                 }
             }
-            SceneObjectPart part = World.GetSceneObjectPart(objID);
+            ISceneChildEntity part = World.GetSceneObjectPart (objID);
             // Currently only works for single prims without a sitting avatar
             if (part != null)
             {
@@ -8852,7 +8852,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return res;
         }
 
-        public LSL_List GetLinkPrimitiveParams(SceneObjectPart part, LSL_List rules)
+        public LSL_List GetLinkPrimitiveParams (ISceneChildEntity part, LSL_List rules)
         {
             LSL_List res = new LSL_List();
             int idx = 0;
@@ -11292,15 +11292,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetObjectPrimCount(string object_id)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            SceneObjectPart part = World.GetSceneObjectPart(new UUID(object_id));
+
+            ISceneChildEntity part = World.GetSceneObjectPart (new UUID (object_id));
             if (part == null)
             {
                 return 0;
             }
             else
             {
-                return part.ParentGroup.PrimCount;
+                return part.ParentEntity.PrimCount;
             }
         }
 
@@ -11469,7 +11469,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                     return ret;
                 }
-                SceneObjectPart obj = World.GetSceneObjectPart(key);
+                ISceneChildEntity obj = World.GetSceneObjectPart (key);
                 if (obj != null)
                 {
                     foreach (object o in args.Data)
@@ -11717,7 +11717,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void SetPrimitiveParamsEx(LSL_Key prim, LSL_List rules)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetPrimitiveParams", m_host, "OSSL");
-            SceneObjectPart obj = World.GetSceneObjectPart(new UUID(prim));
+            ISceneChildEntity obj = World.GetSceneObjectPart (new UUID (prim));
             if (obj == null)
                 return;
 
@@ -11729,7 +11729,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_List GetLinkPrimitiveParamsEx(LSL_Key prim, LSL_List rules)
         {
-            SceneObjectPart obj = World.GetSceneObjectPart(new UUID(prim));
+            ISceneChildEntity obj = World.GetSceneObjectPart (new UUID (prim));
             if (obj == null)
                 return new LSL_List();
 
