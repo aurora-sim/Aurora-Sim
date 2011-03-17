@@ -78,7 +78,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             public int type;
             public double range;
             public double arc;
-            public SceneObjectPart host;
+            public ISceneChildEntity host;
         }
 
         //
@@ -108,7 +108,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         public void SetSenseRepeatEvent(UUID objectID, UUID m_itemID,
                                         string name, UUID keyID, int type, double range,
-                                        double arc, double sec, SceneObjectPart host)
+                                        double arc, double sec, ISceneChildEntity host)
         {
             // Always remove first, in case this is a re-set
             RemoveScript(objectID, m_itemID);
@@ -180,7 +180,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         public void SenseOnce(UUID objectID, UUID m_itemID,
                               string name, UUID keyID, int type,
-                              double range, double arc, SceneObjectPart host)
+                              double range, double arc, ISceneChildEntity host)
         {
             // Add to timer
             SenseRepeatClass ts = new SenseRepeatClass();
@@ -239,11 +239,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     List<DetectParams> detected = new List<DetectParams>();
                     for (idx = 0; idx < count; idx++)
                     {
-                        if(ts.host != null && ts.host.ParentGroup != null && ts.host.ParentGroup.Scene != null)
+                        if (ts.host != null && ts.host.ParentEntity != null && ts.host.ParentEntity.Scene != null)
                         {	
                         	DetectParams detect = new DetectParams();
                             detect.Key = sensedEntities[idx].itemID;
-                            detect.Populate(ts.host.ParentGroup.Scene);
+                            detect.Populate (ts.host.ParentEntity.Scene);
                             detected.Add(detect);
                         	if (detected.Count == maximumToReturn &&
                                 usemaximumToReturn)
@@ -276,7 +276,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             List<ISceneEntity> Entities;
             List<SensedEntity> sensedEntities = new List<SensedEntity>();
 
-            SceneObjectPart SensePoint = ts.host;
+            ISceneChildEntity SensePoint = ts.host;
 
             Vector3 fromRegionPos = SensePoint.AbsolutePosition;
 
@@ -285,7 +285,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             if (ts.keyID != UUID.Zero)
             {
                 IEntity e = null;
-                ts.host.ParentGroup.Scene.Entities.TryGetValue (ts.keyID, out e);
+                ts.host.ParentEntity.Scene.Entities.TryGetValue (ts.keyID, out e);
                 if (e == null || !(e is ISceneEntity))
                     return sensedEntities;
                 Entities = new List<ISceneEntity> ();
@@ -293,7 +293,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
             else
             {
-                Entities = new List<ISceneEntity> (ts.host.ParentGroup.Scene.Entities.GetEntities (fromRegionPos, (float)ts.range));
+                Entities = new List<ISceneEntity> (ts.host.ParentEntity.Scene.Entities.GetEntities (fromRegionPos, (float)ts.range));
             }
 
             // pre define some things to avoid repeated definitions in the loop body
@@ -306,13 +306,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             float dz;
 
             Quaternion q = SensePoint.RotationOffset;
-            if (SensePoint.ParentGroup.RootPart.IsAttachment)
+            if (SensePoint.ParentEntity.RootChild.IsAttachment)
             {
                 // In attachments, the sensor cone always orients with the
                 // avatar rotation. This may include a nonzero elevation if
                 // in mouselook.
 
-                IScenePresence avatar = ts.host.ParentGroup.Scene.GetScenePresence (SensePoint.ParentGroup.RootPart.AttachedAvatar);
+                IScenePresence avatar = ts.host.ParentEntity.Scene.GetScenePresence (SensePoint.ParentEntity.RootChild.AttachedAvatar);
                 q = avatar.Rotation;
             }
             LSL_Types.Quaternion r = new LSL_Types.Quaternion(q.X, q.Y, q.Z, q.W);
@@ -420,11 +420,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             List<SensedEntity> sensedEntities = new List<SensedEntity>();
 
             // If nobody about quit fast
-            IEntityCountModule entityCountModule = ts.host.ParentGroup.Scene.RequestModuleInterface<IEntityCountModule>();
+            IEntityCountModule entityCountModule = ts.host.ParentEntity.Scene.RequestModuleInterface<IEntityCountModule> ();
             if (entityCountModule != null && entityCountModule.RootAgents == 0)
                 return sensedEntities;
 
-            SceneObjectPart SensePoint = ts.host;
+            ISceneChildEntity SensePoint = ts.host;
             Vector3 fromRegionPos = SensePoint.AbsolutePosition;
             Quaternion q = SensePoint.RotationOffset;
             LSL_Types.Quaternion r = new LSL_Types.Quaternion(q.X, q.Y, q.Z, q.W);
@@ -490,7 +490,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             {
                 IScenePresence sp;
                 // Try direct lookup by UUID
-                if (!ts.host.ParentGroup.Scene.TryGetScenePresence(ts.keyID, out sp))
+                if (!ts.host.ParentEntity.Scene.TryGetScenePresence (ts.keyID, out sp))
                     return sensedEntities;
                 senseEntity(sp);
             }
@@ -498,13 +498,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             {
                 IScenePresence sp;
                 // Try lookup by name will return if/when found
-                if (!ts.host.ParentGroup.Scene.TryGetAvatarByName(ts.name, out sp))
+                if (!ts.host.ParentEntity.Scene.TryGetAvatarByName (ts.name, out sp))
                     return sensedEntities;
                 senseEntity(sp);
             }
             else
             {
-                ts.host.ParentGroup.Scene.ForEachScenePresence(senseEntity);
+                ts.host.ParentEntity.Scene.ForEachScenePresence (senseEntity);
             }
             return sensedEntities;
         }

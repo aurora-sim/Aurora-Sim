@@ -138,7 +138,6 @@ namespace OpenSim.Framework
         #region Other
 
         List<ISceneEntity> PhysicsReturns { get; }
-        float MaxLowValue { get; set; }
 
         #endregion
     }

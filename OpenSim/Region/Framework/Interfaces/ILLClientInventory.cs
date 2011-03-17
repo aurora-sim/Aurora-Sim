@@ -85,7 +85,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </param>
         /// <param name="part"></param>
         /// <param name="itemID"></param>
-        InventoryItemBase MoveTaskInventoryItemToUserInventory(UUID destId, UUID uUID, SceneObjectPart m_host, UUID objId);
+        InventoryItemBase MoveTaskInventoryItemToUserInventory (UUID destId, UUID uUID, ISceneChildEntity m_host, UUID objId);
 
         /// <summary>
         /// Move the given items from the object task inventory to the agent's inventory
@@ -95,7 +95,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="host"></param>
         /// <param name="items"></param>
         /// <returns></returns>
-        UUID MoveTaskInventoryItemsToUserInventory(UUID uUID, string p, SceneObjectPart part, List<UUID> invList);
+        UUID MoveTaskInventoryItemsToUserInventory (UUID uUID, string p, ISceneChildEntity part, List<UUID> invList);
 
         /// <summary>
         /// Copy a task (prim) inventory item to another task (prim)
@@ -103,7 +103,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="destId"></param>
         /// <param name="part"></param>
         /// <param name="itemId"></param>
-        void MoveTaskInventoryItemToObject(UUID destId, SceneObjectPart m_host, UUID objId);
+        void MoveTaskInventoryItemToObject (UUID destId, ISceneChildEntity m_host, UUID objId);
 
         /// <summary>
         /// Rez a script into a prim's inventory from another prim
@@ -115,6 +115,6 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="pin">The ScriptAccessPin of the prim</param>
         /// <param name="running">Whether the script should be running when it is started</param>
         /// <param name="start_param">The start param to pass to the script</param>
-        void RezScript(UUID srcId, SceneObjectPart m_host, UUID destId, int pin, int running, int start_param);
+        void RezScript (UUID srcId, ISceneChildEntity m_host, UUID destId, int pin, int running, int start_param);
     }
 }

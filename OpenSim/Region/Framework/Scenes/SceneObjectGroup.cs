@@ -2165,8 +2165,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="partID"></param>
         /// <param name="sendEvents"></param>
         /// <returns>The object group of the newly delinked prim.</returns>
-        public SceneObjectGroup DelinkFromGroup(SceneObjectPart linkPart, bool sendEvents)
+        public ISceneEntity DelinkFromGroup (ISceneChildEntity part, bool sendEvents)
         {
+            if (!(part is SceneObjectPart))
+                return null;
+            SceneObjectPart linkPart = part as SceneObjectPart;
 //                m_log.DebugFormat(
 //                    "[SCENE OBJECT GROUP]: Delinking part {0}, {1} from group with root part {2}, {3}",
 //                    linkPart.Name, linkPart.UUID, RootPart.Name, RootPart.UUID);

@@ -5676,5 +5676,27 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_parentGroup != null && m_parentGroup.Scene != null)
                 m_parentGroup.Scene.EventManager.TriggerOnScriptMovingEndEvent(this);
         }
+
+        #region ISceneChildEntity Members
+
+
+        bool ISceneChildEntity.AllowedDrop
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        int[] ISceneChildEntity.PayPrice
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        #endregion
     }
 }

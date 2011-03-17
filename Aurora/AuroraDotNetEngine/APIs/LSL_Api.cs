@@ -201,7 +201,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public IScene World
         {
-            get { return m_host.ParentGroup.Scene; }
+            get { return m_host.ParentEntity.Scene; }
         }
 
         public void state(string newState)
@@ -347,8 +347,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (m_host.ParentEntity != null)
                 {
-                    List<SceneObjectPart> parts = new List<SceneObjectPart>(m_host.ParentEntity.ChildrenEntities());
-                    return parts.ConvertAll<IEntity> (new Converter<SceneObjectPart, IEntity> (delegate (SceneObjectPart part)
+                    List<ISceneChildEntity> parts = new List<ISceneChildEntity> (m_host.ParentEntity.ChildrenEntities ());
+                    return parts.ConvertAll<IEntity> (new Converter<ISceneChildEntity, IEntity> (delegate (ISceneChildEntity part)
                         {
                             return (IEntity)part;
                         }));
@@ -371,8 +371,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (m_host.ParentEntity == null)
                     return new List<IEntity> ();
-                List<SceneObjectPart> sceneobjectparts = new List<SceneObjectPart> (m_host.ParentEntity.ChildrenEntities());
-                ret = sceneobjectparts.ConvertAll<IEntity> (new Converter<SceneObjectPart, IEntity> (delegate (SceneObjectPart part)
+                List<ISceneChildEntity> sceneobjectparts = new List<ISceneChildEntity> (m_host.ParentEntity.ChildrenEntities ());
+                ret = sceneobjectparts.ConvertAll<IEntity> (new Converter<ISceneChildEntity, IEntity> (delegate (ISceneChildEntity part)
                         {
                             return (IEntity)part;
                         }));
@@ -385,8 +385,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (m_host.ParentEntity == null)
                     return new List<IEntity> ();
-                List<SceneObjectPart> children = new List<SceneObjectPart> (m_host.ParentEntity.ChildrenEntities());
-                ret = children.ConvertAll<IEntity> (new Converter<SceneObjectPart, IEntity> (delegate (SceneObjectPart part)
+                List<ISceneChildEntity> children = new List<ISceneChildEntity> (m_host.ParentEntity.ChildrenEntities ());
+                ret = children.ConvertAll<IEntity> (new Converter<ISceneChildEntity, IEntity> (delegate (ISceneChildEntity part)
                 {
                     return (IEntity)part;
                 }));
@@ -941,7 +941,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
             if (chatModule != null)
                 chatModule.SimChat(text, ChatTypeEnum.Whisper, channelID,
-                    m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, false, World);
+                    m_host.ParentEntity.RootChild.AbsolutePosition, m_host.Name, m_host.UUID, false, World);
 
             if (m_comms != null)
                 m_comms.DeliverMessage(ChatTypeEnum.Whisper, channelID, m_host.Name, m_host.UUID, text);
@@ -964,8 +964,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
                 if (chatModule != null)
-                    chatModule.SimChat(text, ChatTypeEnum.Say, channelID, 
-                        m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, false, World);
+                    chatModule.SimChat(text, ChatTypeEnum.Say, channelID,
+                        m_host.ParentEntity.RootChild.AbsolutePosition, m_host.Name, m_host.UUID, false, World);
 
                 if (m_comms != null)
                     m_comms.DeliverMessage(ChatTypeEnum.Say, channelID, m_host.Name, m_host.UUID, text);
@@ -982,8 +982,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
             if (chatModule != null)
-                chatModule.SimChat(text, ChatTypeEnum.Shout, channelID, 
-                    m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true, World);
+                chatModule.SimChat(text, ChatTypeEnum.Shout, channelID,
+                    m_host.ParentEntity.RootChild.AbsolutePosition, m_host.Name, m_host.UUID, true, World);
 
             if (m_comms != null)
                 m_comms.DeliverMessage(ChatTypeEnum.Shout, channelID, m_host.Name, m_host.UUID, text);
@@ -1369,13 +1369,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (value != 0)
                 {
-                    SceneObjectGroup group = m_host.ParentGroup;
+                    ISceneEntity group = m_host.ParentEntity;
                     if (group == null)
                         return;
                     bool allow = true;
-                    foreach (SceneObjectPart part in group.ChildrenList)
+                    foreach (ISceneChildEntity part in group.ChildrenEntities())
                     {
-                        IOpenRegionSettingsModule WSModule = m_host.ParentGroup.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
+                        IOpenRegionSettingsModule WSModule = group.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
                         if (WSModule != null)
                         {
                             Vector3 tmp = part.Scale;
@@ -1560,12 +1560,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             SetScale(m_host, scale);
         }
 
-        protected void SetScale(SceneObjectPart part, LSL_Vector scale)
+        protected void SetScale(ISceneChildEntity part, LSL_Vector scale)
         {
-            if (part == null || part.ParentGroup == null || part.ParentGroup.IsDeleted)
+            if (part == null || part.ParentEntity == null || part.ParentEntity.IsDeleted)
                 return;
 
-            IOpenRegionSettingsModule WSModule = m_host.ParentGroup.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
+            IOpenRegionSettingsModule WSModule = m_host.ParentEntity.Scene.RequestModuleInterface<IOpenRegionSettingsModule> ();
             if (WSModule != null)
             {
                 if (WSModule.MinimumPrimScale != -1)
@@ -1578,7 +1578,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         scale.z = WSModule.MinimumPrimScale;
                 }
 
-                if (part.ParentGroup.RootPart.PhysActor != null && part.ParentGroup.RootPart.PhysActor.IsPhysical &&
+                if (part.ParentEntity.RootChild.PhysActor != null && part.ParentEntity.RootChild.PhysActor.IsPhysical &&
                     WSModule.MaximumPhysPrimScale != -1)
                 {
                     if (scale.x > WSModule.MaximumPhysPrimScale)
@@ -1606,7 +1606,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             tmp.Z = (float)scale.z;
             part.Scale = tmp;
             part.ScheduleUpdate(PrimUpdateFlags.FindBest);
-            part.ParentGroup.HasGroupChanged = true;
+            part.ParentEntity.HasGroupChanged = true;
         }
 
         public LSL_Vector llGetScale()
@@ -1621,7 +1621,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
             m_host.ClickAction = (byte)action;
-            if (m_host.ParentGroup != null) m_host.ParentGroup.HasGroupChanged = true;
+            if (m_host.ParentEntity != null) 
+                m_host.ParentEntity.HasGroupChanged = true;
             m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
         }
 
@@ -1774,7 +1775,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return GetAlpha(m_host, face);
         }
 
-        protected LSL_Float GetAlpha(SceneObjectPart part, int face)
+        protected LSL_Float GetAlpha (ISceneChildEntity part, int face)
         {
             Primitive.TextureEntry tex = part.Shape.Textures;
             if (face == ScriptBaseClass.ALL_SIDES)
@@ -1803,15 +1804,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetLinkAlpha(int linknumber, double alpha, int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
 
-            List<SceneObjectPart> parts = GetLinkParts(linknumber);
 
-            foreach (SceneObjectPart part in parts)
+            List<ISceneChildEntity> parts = GetLinkParts (linknumber);
+
+            foreach (ISceneChildEntity part in parts)
                 SetAlpha(part, alpha, face);
         }
 
-        protected void SetAlpha(SceneObjectPart part, double alpha, int face)
+        protected void SetAlpha (ISceneChildEntity part, double alpha, int face)
         {
             Primitive.TextureEntry tex = part.Shape.Textures;
             Color4 texcolor;
@@ -1930,7 +1931,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return GetColor(m_host, face);
         }
 
-        protected LSL_Vector GetColor(SceneObjectPart part, int face)
+        protected LSL_Vector GetColor (ISceneChildEntity part, int face)
         {
             Primitive.TextureEntry tex = part.Shape.Textures;
             Color4 texcolor;
@@ -1980,17 +1981,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public DateTime llSetLinkTexture(int linknumber, string texture, int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
 
-            List<SceneObjectPart> parts = GetLinkParts(linknumber);
 
-            foreach (SceneObjectPart part in parts)
+            List<ISceneChildEntity> parts = GetLinkParts (linknumber);
+
+            foreach (ISceneChildEntity part in parts)
               SetTexture(part, texture, face);
 
             return PScriptSleep(100);
         }
 
-        protected void SetTexture(SceneObjectPart part, string texture, int face)
+        protected void SetTexture (ISceneChildEntity part, string texture, int face)
         {
             UUID textureID=new UUID();
             int ns = GetNumberOfSides(part);
@@ -2036,7 +2037,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return PScriptSleep(200);
         }
 
-        protected void ScaleTexture(SceneObjectPart part, double u, double v, int face)
+        protected void ScaleTexture (ISceneChildEntity part, double u, double v, int face)
         {
             Primitive.TextureEntry tex = part.Shape.Textures;
             int ns = GetNumberOfSides(part);
@@ -2074,7 +2075,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return PScriptSleep(200);
         }
 
-        protected void OffsetTexture(SceneObjectPart part, double u, double v, int face)
+        protected void OffsetTexture (ISceneChildEntity part, double u, double v, int face)
         {
             Primitive.TextureEntry tex = part.Shape.Textures;
             int ns = GetNumberOfSides(part);
@@ -2112,7 +2113,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return PScriptSleep(200);
         }
 
-        protected void RotateTexture(SceneObjectPart part, double rotation, int face)
+        protected void RotateTexture(ISceneChildEntity part, double rotation, int face)
         {
             Primitive.TextureEntry tex = part.Shape.Textures;
             int ns = GetNumberOfSides(part);
@@ -2146,7 +2147,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return GetTexture(m_host, face);
         }
 
-        protected LSL_String GetTexture(SceneObjectPart part, int face)
+        protected LSL_String GetTexture (ISceneChildEntity part, int face)
         {
             Primitive.TextureEntry tex = part.Shape.Textures;
             
@@ -2191,7 +2192,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return end;
         }
 
-        protected void SetPos(SceneObjectPart part, LSL_Vector targetPos)
+        protected void SetPos(ISceneChildEntity part, LSL_Vector targetPos)
         {
             // Capped movemment if distance > 10m (http://wiki.secondlife.com/wiki/LlSetPos)
             LSL_Vector currentPos = GetPartLocalPos(part);
@@ -2201,16 +2202,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ITerrainChannel heightmap = World.RequestModuleInterface<ITerrainChannel>();
             if(heightmap != null)
                 ground = heightmap.GetNormalizedGroundHeight((int)(float)targetPos.x, (int)(float)targetPos.y);
-            if (part.ParentGroup == null)
+            if (part.ParentEntity == null)
             {
                 if (ground != 0 && (targetPos.z < ground) && disable_underground_movement && m_host.AttachmentPoint == 0)
                     targetPos.z = ground;
                     LSL_Vector real_vec = SetPosAdjust(currentPos, targetPos);
                     part.UpdateOffSet(new Vector3((float)real_vec.x, (float)real_vec.y, (float)real_vec.z));
             }
-            else if (part.ParentGroup.RootPart == part)
+            else if (part.ParentEntity.RootChild == part)
             {
-                SceneObjectGroup parent = part.ParentGroup;
+                ISceneEntity parent = part.ParentEntity;
                 if (!part.IsAttachment)
                 {
                     if (ground != 0 && (targetPos.z < ground) && disable_underground_movement)
@@ -2223,13 +2224,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 LSL_Vector rel_vec = SetPosAdjust(currentPos, targetPos);
                 part.FixOffsetPosition((new Vector3((float)rel_vec.x, (float)rel_vec.y, (float)rel_vec.z)),true);
-                SceneObjectGroup parent = part.ParentGroup;
+                ISceneEntity parent = part.ParentEntity;
                 parent.HasGroupChanged = true;
                 parent.ScheduleGroupTerseUpdate();
             }
         }
 
-        protected LSL_Vector GetPartLocalPos(SceneObjectPart part)
+        protected LSL_Vector GetPartLocalPos(ISceneChildEntity part)
         {
             Vector3 tmp;
             if (part.ParentID == 0)
@@ -2300,10 +2301,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             else
             {
                 // we are a child. The rotation values will be set to the one of root modified by rot, as in SL. Don't ask.
-                SceneObjectGroup group = m_host.ParentGroup;
+                ISceneEntity group = m_host.ParentEntity;
                 if (group != null) // a bit paranoid, maybe
                 {
-                    SceneObjectPart rootPart = group.RootPart;
+                    ISceneChildEntity rootPart = group.RootChild;
                     if (rootPart != null) // again, better safe than sorry
                     {
                         SetRot(m_host, rootPart.RotationOffset * Rot2Quaternion(rot));
@@ -2321,7 +2322,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return PScriptSleep(200);
         }
 
-        protected void SetRot(SceneObjectPart part, Quaternion rot)
+        protected void SetRot(ISceneChildEntity part, Quaternion rot)
         {
             part.UpdateRotation(rot);
             // Update rotation does not move the object in the physics scene if it's a linkset.
@@ -2339,7 +2340,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // scene
             if (part.PhysActor != null && !part.PhysActor.IsPhysical)
             {
-                part.ParentGroup.ResetChildPrimPhysicsPositions();
+                part.ParentEntity.ResetChildPrimPhysicsPositions ();
             }
         }
 
@@ -2396,16 +2397,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetForce(LSL_Vector force, int local)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
 
-            if (m_host.ParentGroup != null)
+
+            if (m_host.ParentEntity != null)
             {
-                if (!m_host.ParentGroup.IsDeleted)
+                if (!m_host.ParentEntity.IsDeleted)
                 {
                     if (local != 0)
                         force *= llGetRot();
 
-                    m_host.ParentGroup.RootPart.SetForce(new Vector3((float)force.x, (float)force.y, (float)force.z));
+                    m_host.ParentEntity.RootChild.SetForce (new Vector3 ((float)force.x, (float)force.y, (float)force.z));
                 }
             }
         }
@@ -3801,7 +3802,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if ((item.PermsMask & ScriptBaseClass.PERMISSION_ATTACH) != 0)
             {
-                SceneObjectGroup grp = m_host.ParentGroup;
+                ISceneEntity grp = m_host.ParentEntity;
 
                 IScenePresence presence = World.GetScenePresence (m_host.OwnerID);
 
@@ -3816,8 +3817,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llDetachFromAvatar()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            if (m_host.ParentGroup.RootPart.AttachmentPoint == 0)
+
+            if (m_host.ParentEntity.RootChild.AttachmentPoint == 0)
                 return;
 
             TaskInventoryItem item;
@@ -4454,9 +4455,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
-            List<SceneObjectPart> parts = GetLinkParts(linknumber);
+            List<ISceneChildEntity> parts = GetLinkParts(linknumber);
 
-            foreach (SceneObjectPart part in parts)
+            foreach (ISceneChildEntity part in parts)
                 part.SetFaceColor(new Vector3((float)color.x, (float)color.y, (float)color.z), face);
         }
 
@@ -4541,11 +4542,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (linknum < ScriptBaseClass.LINK_THIS)
                 return;
 
-            SceneObjectGroup parentPrim = m_host.ParentGroup;
+            ISceneEntity parentPrim = m_host.ParentEntity;
 
-            if (parentPrim.RootPart.AttachmentPoint != 0)
+            if (parentPrim.RootChild.AttachmentPoint != 0)
                 return; // Fail silently if attached
-            SceneObjectPart childPrim = null;
+            ISceneChildEntity childPrim = null;
 
             if(linknum == ScriptBaseClass.LINK_ROOT)
             {
@@ -4555,7 +4556,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 ScriptBaseClass.LINK_ALL_CHILDREN ||
                 ScriptBaseClass.LINK_THIS)
             {
-                foreach (SceneObjectPart part in parentPrim.ChildrenList)
+                foreach (ISceneChildEntity part in parentPrim.ChildrenEntities())
                 {
                     if (part.UUID != m_host.UUID)
                     {
@@ -4566,10 +4567,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             else
             {
-                IEntity target = m_host.ParentGroup.GetLinkNumPart (linknum);
-                if (target is SceneObjectPart)
+                IEntity target = m_host.ParentEntity.GetLinkNumPart (linknum);
+                if (target is ISceneChildEntity)
                 {
-                    childPrim = target as SceneObjectPart;
+                    childPrim = target as ISceneChildEntity;
                 }
                 else
                     return;
@@ -4580,9 +4581,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (linknum == ScriptBaseClass.LINK_ROOT)
             {
                 // Restructuring Multiple Prims.
-                List<SceneObjectPart> parts = new List<SceneObjectPart>(parentPrim.ChildrenList);
-                parts.Remove(parentPrim.RootPart);
-                foreach (SceneObjectPart part in parts)
+                List<ISceneChildEntity> parts = new List<ISceneChildEntity> (parentPrim.ChildrenEntities());
+                parts.Remove(parentPrim.RootChild);
+                foreach (ISceneChildEntity part in parts)
                 {
                     parentPrim.DelinkFromGroup(part, true);
                 }
@@ -4592,14 +4593,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 if (parts.Count > 0)
                 {
-                    SceneObjectPart newRoot = parts[0];
+                    ISceneChildEntity newRoot = parts[0];
                     parts.Remove(newRoot);
                     foreach (SceneObjectPart part in parts)
                     {
-                        newRoot.ParentGroup.LinkToGroup(part.ParentGroup);
+                        newRoot.ParentEntity.LinkToGroup (part.ParentGroup);
                     }
-                    newRoot.ParentGroup.HasGroupChanged = true;
-                    newRoot.ParentGroup.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                    newRoot.ParentEntity.HasGroupChanged = true;
+                    newRoot.ParentEntity.ScheduleGroupUpdate (PrimUpdateFlags.FullUpdate);
                 }
             }
             else
@@ -4617,15 +4618,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llBreakAllLinks()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            SceneObjectGroup parentPrim = m_host.ParentGroup;
-            if (parentPrim.RootPart.AttachmentPoint != 0)
+
+            ISceneEntity parentPrim = m_host.ParentEntity;
+            if (parentPrim.RootChild.AttachmentPoint != 0)
                 return; // Fail silently if attached
 
-            List<SceneObjectPart> parts = new List<SceneObjectPart>(parentPrim.ChildrenList);
-            parts.Remove(parentPrim.RootPart);
+            List<ISceneChildEntity> parts = new List<ISceneChildEntity> (parentPrim.ChildrenEntities ());
+            parts.Remove(parentPrim.RootChild);
 
-            foreach (SceneObjectPart part in parts)
+            foreach (ISceneChildEntity part in parts)
             {
                 parentPrim.DelinkFromGroup(part, true);
                 parentPrim.TriggerScriptChangedEvent(Changed.LINK);
@@ -4694,7 +4695,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     return m_host.Name;
                 else
                 {
-                    IEntity entity = m_host.ParentGroup.GetLinkNumPart (linknum);
+                    IEntity entity = m_host.ParentEntity.GetLinkNumPart (linknum);
                     if (entity != null)
                         return entity.Name;
                     else
@@ -4707,22 +4708,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (linknum < 0)
                 {
-                    part = m_host.ParentGroup.GetLinkNumPart(2);
+                    part = m_host.ParentEntity.GetLinkNumPart (2);
                 }
                 else
                 {
-                    part = m_host.ParentGroup.GetLinkNumPart(linknum);
+                    part = m_host.ParentEntity.GetLinkNumPart (linknum);
                 }
             }
             else // this is a child prim
             {
                 if (linknum < 2)
                 {
-                    part = m_host.ParentGroup.GetLinkNumPart(1);
+                    part = m_host.ParentEntity.GetLinkNumPart (1);
                 }
                 else
                 {
-                    part = m_host.ParentGroup.GetLinkNumPart(linknum);
+                    part = m_host.ParentEntity.GetLinkNumPart (linknum);
                 }
             }
             if (part != null)
@@ -4825,7 +4826,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 throw new Exception(String.Format("The inventory object '{0}' could not be found", inventory));
             }
 
-            UserInfo info = m_host.ParentGroup.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(destId.ToString());
+            UserInfo info = m_host.ParentEntity.Scene.RequestModuleInterface<IAgentInfoService> ().GetUserInfo (destId.ToString ());
 
             // check if destination is an avatar
             if ((info != null && info.IsOnline) || World.GetScenePresence(destId) != null)
@@ -5041,7 +5042,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
-            m_host.ParentGroup.Damage = (float)damage;
+            m_host.ParentEntity.Damage = (float)damage;
         }
 
         public DateTime llTeleportAgentHome(LSL_Key _agent)
@@ -5158,7 +5159,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (presence == null)
                 return "";
 
-            if (m_host.ParentGroup.Scene.RegionInfo.RegionHandle == presence.Scene.RegionInfo.RegionHandle)
+            if (m_host.ParentEntity.Scene.RegionInfo.RegionHandle == presence.Scene.RegionInfo.RegionHandle)
             {
                 Dictionary<UUID, string> animationstateNames = AnimationSet.Animations.AnimStateNames;
 
@@ -5177,12 +5178,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llMessageLinked(int linknumber, int num, string msg, string id)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
 
-            List<SceneObjectPart> parts = GetLinkParts(linknumber);
+
+            List<ISceneChildEntity> parts = GetLinkParts (linknumber);
 
             UUID partItemID;
-            foreach (SceneObjectPart part in parts)
+            foreach (ISceneChildEntity part in parts)
             {
                 TaskInventoryDictionary itemsDictionary = (TaskInventoryDictionary)((ICloneable)part.TaskInventory).Clone();
                 foreach (TaskInventoryItem item in itemsDictionary.Values)
@@ -5191,7 +5192,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     {
                         partItemID = item.ItemID;
                         int linkNumber = m_host.LinkNum;
-                        if (m_host.ParentGroup.ChildrenList.Count == 1)
+                        if (m_host.ParentEntity.ChildrenEntities().Count == 1)
                             linkNumber = 0;
 
                         object[] resobj = new object[]
@@ -5312,7 +5313,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             if ((targetlandObj.LandData.Flags & (uint)ParcelFlags.RestrictPushObject) == (uint)ParcelFlags.RestrictPushObject)
                             {
                                 //This takes care of everything
-                                pushAllowed = m_host.ParentGroup.Scene.Permissions.CanPushObject(m_host.OwnerID, targetlandObj);
+                                pushAllowed = m_host.ParentEntity.Scene.Permissions.CanPushObject (m_host.OwnerID, targetlandObj);
                                 // Need provisions for Group Owned here
                                 /*if (m_host.OwnerID == targetlandObj.LandData.OwnerID || 
                                     targetlandObj.LandData.IsGroupOwned || 
@@ -5628,12 +5629,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
 
             if (add != 0)
-                m_host.ParentGroup.RootPart.AllowedDrop = true;
+                m_host.ParentEntity.RootChild.AllowedDrop = true;
             else
-                m_host.ParentGroup.RootPart.AllowedDrop = false;
+                m_host.ParentEntity.RootChild.AllowedDrop = false;
 
             // Update the object flags
-            m_host.ParentGroup.RootPart.aggregateScriptEvents();
+            m_host.ParentEntity.RootChild.aggregateScriptEvents ();
         }
 
         public LSL_Vector llGetSunDirection()
@@ -5661,7 +5662,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return GetTextureOffset(m_host, face);
         }
 
-        protected LSL_Vector GetTextureOffset(SceneObjectPart part, int face)
+        protected LSL_Vector GetTextureOffset (ISceneChildEntity part, int face)
         {
             Primitive.TextureEntry tex = part.Shape.Textures;
             LSL_Vector offset = new LSL_Vector();
@@ -5705,7 +5706,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return GetTextureRot(m_host, face);
         }
 
-        protected LSL_Float GetTextureRot(SceneObjectPart part, int face)
+        protected LSL_Float GetTextureRot (ISceneChildEntity part, int face)
         {
             Primitive.TextureEntry tex = part.Shape.Textures;
             if (face == -1)
@@ -6622,9 +6623,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void llSetLinkTextureAnim(int linknumber, int mode, int face, int sizex, int sizey, double start, double length, double rate)
         {
-            
 
-            List<SceneObjectPart> parts = GetLinkParts(linknumber);
+
+            List<ISceneChildEntity> parts = GetLinkParts (linknumber);
 
             foreach (var part in parts)
             {
@@ -6632,7 +6633,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        private void SetTextureAnim(SceneObjectPart part, int mode, int face, int sizex, int sizey, double start, double length, double rate)
+        private void SetTextureAnim (ISceneChildEntity part, int mode, int face, int sizex, int sizey, double start, double length, double rate)
         {
 
             Primitive.TextureAnimation pTexAnim = new Primitive.TextureAnimation();
@@ -6651,7 +6652,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             part.AddTextureAnimation(pTexAnim);
             part.ScheduleUpdate(PrimUpdateFlags.FindBest);
-            part.ParentGroup.HasGroupChanged = true;
+            part.ParentEntity.HasGroupChanged = true;
         }
 
         public void llTriggerSoundLimited(string sound, double volume, LSL_Vector top_north_east,
@@ -6918,8 +6919,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetAttached()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            return m_host.ParentGroup.RootPart.AttachmentPoint;
+
+            return m_host.ParentEntity.RootChild.AttachmentPoint;
         }
 
         public LSL_Integer llGetFreeMemory()
@@ -7032,9 +7033,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llLinkParticleSystem(int linknumber, LSL_List rules)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
 
-            List<SceneObjectPart> parts = GetLinkParts(linknumber);
+
+            List<ISceneChildEntity> parts = GetLinkParts (linknumber);
 
             foreach (var part in parts)
             {
@@ -7049,12 +7050,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             SetParticleSystem(m_host, rules);
         }
 
-        private void SetParticleSystem(SceneObjectPart part, LSL_List rules)
+        private void SetParticleSystem (ISceneChildEntity part, LSL_List rules)
         {
             if (rules.Length == 0)
             {
                 part.RemoveParticleSystem();
-                part.ParentGroup.HasGroupChanged = true;
+                part.ParentEntity.HasGroupChanged = true;
             }
             else
             {
@@ -7230,7 +7231,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 prules.CRC = 1;
 
                 part.AddNewParticleSystem(prules);
-                part.ParentGroup.HasGroupChanged = true;
+                part.ParentEntity.HasGroupChanged = true;
             }
             part.ScheduleUpdate(PrimUpdateFlags.Particles);
         }
@@ -7333,11 +7334,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetVehicleType(int type)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            if (m_host.ParentGroup != null)
+            if (m_host.ParentEntity != null)
             {
-                if (!m_host.ParentGroup.IsDeleted)
+                if (!m_host.ParentEntity.IsDeleted)
                 {
-                    m_host.ParentGroup.RootPart.SetVehicleType(type);
+                    m_host.ParentEntity.RootChild.SetVehicleType (type);
                 }
             }
         }
@@ -7347,13 +7348,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetVehicleFloatParam(int param, LSL_Float value)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
 
-            if (m_host.ParentGroup != null)
+
+            if (m_host.ParentEntity != null)
             {
-                if (!m_host.ParentGroup.IsDeleted)
+                if (!m_host.ParentEntity.IsDeleted)
                 {
-                    m_host.ParentGroup.RootPart.SetVehicleFloatParam(param, (float)value);
+                    m_host.ParentEntity.RootChild.SetVehicleFloatParam (param, (float)value);
                 }
             }
         }
@@ -7363,12 +7364,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetVehicleVectorParam(int param, LSL_Vector vec)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            if (m_host.ParentGroup != null)
+
+            if (m_host.ParentEntity != null)
             {
-                if (!m_host.ParentGroup.IsDeleted)
+                if (!m_host.ParentEntity.IsDeleted)
                 {
-                    m_host.ParentGroup.RootPart.SetVehicleVectorParam(param,
+                    m_host.ParentEntity.RootChild.SetVehicleVectorParam (param,
                         new Vector3((float)vec.x, (float)vec.y, (float)vec.z));
                 }
             }
@@ -7379,12 +7380,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetVehicleRotationParam(int param, LSL_Rotation rot)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            if (m_host.ParentGroup != null)
+
+            if (m_host.ParentEntity != null)
             {
-                if (!m_host.ParentGroup.IsDeleted)
+                if (!m_host.ParentEntity.IsDeleted)
                 {
-                    m_host.ParentGroup.RootPart.SetVehicleRotationParam(param,
+                    m_host.ParentEntity.RootChild.SetVehicleRotationParam (param,
                         Rot2Quaternion(rot));
                 }
             }
@@ -7393,12 +7394,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetVehicleFlags(int flags)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            if (m_host.ParentGroup != null)
+
+            if (m_host.ParentEntity != null)
             {
-                if (!m_host.ParentGroup.IsDeleted)
+                if (!m_host.ParentEntity.IsDeleted)
                 {
-                    m_host.ParentGroup.RootPart.SetVehicleFlags(flags, false);
+                    m_host.ParentEntity.RootChild.SetVehicleFlags (flags, false);
                 }
             }
         }
@@ -7406,12 +7407,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llRemoveVehicleFlags(int flags)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            if (m_host.ParentGroup != null)
+
+            if (m_host.ParentEntity != null)
             {
-                if (!m_host.ParentGroup.IsDeleted)
+                if (!m_host.ParentEntity.IsDeleted)
                 {
-                    m_host.ParentGroup.RootPart.SetVehicleFlags(flags, true);
+                    m_host.ParentEntity.RootChild.SetVehicleFlags (flags, true);
                 }
             }
         }
@@ -7426,7 +7427,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             m_host.SitTargetPosition = new Vector3((float)offset.x, (float)offset.y, (float)offset.z);
             m_host.SitTargetOrientation = Rot2Quaternion(rot);
-            m_host.ParentGroup.HasGroupChanged = true;
+            m_host.ParentEntity.HasGroupChanged = true;
         }
 
         public LSL_String llAvatarOnSitTarget()
@@ -7572,12 +7573,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llVolumeDetect(int detect)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            if (m_host.ParentGroup != null)
+
+            if (m_host.ParentEntity != null)
             {
-                if (!m_host.ParentGroup.IsDeleted)
+                if (!m_host.ParentEntity.IsDeleted)
                 {
-                    m_host.ParentGroup.RootPart.ScriptSetVolumeDetect(detect!=0);
+                    m_host.ParentEntity.RootChild.ScriptSetVolumeDetect (detect != 0);
                 }
             }
         }
@@ -8075,17 +8076,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void llSetLinkPrimitiveParamsFast(int linknumber, LSL_List rules)
         {
-            List<SceneObjectPart> parts = GetLinkParts(linknumber);
+            List<ISceneChildEntity> parts = GetLinkParts (linknumber);
 
-            foreach (SceneObjectPart part in parts)
+            foreach (ISceneChildEntity part in parts)
                 SetPrimParams(part, rules);
         }
 
         public LSL_Integer llGetLinkNumberOfSides(int LinkNum)
         {
             int faces = 0;
-            List<SceneObjectPart> Parts = GetLinkParts(LinkNum);
-            foreach (SceneObjectPart part in Parts)
+            List<ISceneChildEntity> Parts = GetLinkParts (LinkNum);
+            foreach (ISceneChildEntity part in Parts)
             {
                 faces += GetNumberOfSides(part);
             }
@@ -8646,9 +8647,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGetRootPosition()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            return new LSL_Vector(m_host.ParentGroup.AbsolutePosition.X, m_host.ParentGroup.AbsolutePosition.Y, 
-                                  m_host.ParentGroup.AbsolutePosition.Z);
+
+            return new LSL_Vector (m_host.ParentEntity.AbsolutePosition.X, m_host.ParentEntity.AbsolutePosition.Y,
+                                  m_host.ParentEntity.AbsolutePosition.Z);
         }
 
         /// <summary>
@@ -8665,7 +8666,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
             Quaternion q;
-            if (m_host.ParentGroup.RootPart.AttachmentPoint != 0)
+            if (m_host.ParentEntity.RootChild.AttachmentPoint != 0)
             {
                 IScenePresence avatar = World.GetScenePresence (m_host.AttachedAvatar);
                 if (avatar != null)
@@ -8674,10 +8675,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     else
                         q = avatar.Rotation; // Currently infrequently updated so may be inaccurate
                 else
-                    q = m_host.ParentGroup.GroupRotation; // Likely never get here but just in case
+                    q = m_host.ParentEntity.GroupRotation; // Likely never get here but just in case
             }
             else
-                q = m_host.ParentGroup.GroupRotation; // just the group rotation
+                q = m_host.ParentEntity.GroupRotation; // just the group rotation
             return new LSL_Rotation(q.X, q.Y, q.Z, q.W);
         }
 
@@ -8721,7 +8722,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         avatarCount++;
             });*/
 
-            return m_host.ParentGroup.PrimCount + avatarCount;
+            return m_host.ParentEntity.PrimCount + avatarCount;
         }
 
         /// <summary>
@@ -8803,7 +8804,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             Vector3 MinPos = new Vector3(100000, 100000, 100000);
             Vector3 MaxPos = new Vector3(-100000, -100000, -100000);
-            foreach (SceneObjectPart child in m_host.ParentGroup.ChildrenList)
+            foreach (SceneObjectPart child in m_host.ParentEntity.ChildrenEntities())
             {
                 Vector3 tmp = child.AbsolutePosition;
                 if (tmp.X < MinPos.X)
@@ -8837,9 +8838,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_List llGetLinkPrimitiveParams(int linknumber, LSL_List rules)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            
-            List<SceneObjectPart> parts = GetLinkParts(linknumber);
+
+
+            List<ISceneChildEntity> parts = GetLinkParts (linknumber);
 
             LSL_List res = new LSL_List();
 
@@ -10295,7 +10296,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         // now send to all (non-child) agents
                         World.ForEachScenePresence(delegate(IScenePresence sp)
                         {
-                            if (!sp.IsChildAgent && (sp.currentParcelUUID == landData.GlobalID))
+                            if (!sp.IsChildAgent && (sp.CurrentParcelUUID == landData.GlobalID))
                             {
                                 sp.ControllingClient.SendParcelMediaUpdate(landData.MediaURL,
                                                                               landData.MediaID,
@@ -10671,13 +10672,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 LSLError("List must have at least 4 elements");
                 return;
             }
-            m_host.ParentGroup.RootPart.PayPrice[0]=price;
+            m_host.ParentEntity.RootChild.PayPrice[0] = price;
 
-            m_host.ParentGroup.RootPart.PayPrice[1]=(LSL_Integer)quick_pay_buttons.Data[0];
-            m_host.ParentGroup.RootPart.PayPrice[2]=(LSL_Integer)quick_pay_buttons.Data[1];
-            m_host.ParentGroup.RootPart.PayPrice[3]=(LSL_Integer)quick_pay_buttons.Data[2];
-            m_host.ParentGroup.RootPart.PayPrice[4]=(LSL_Integer)quick_pay_buttons.Data[3];
-            m_host.ParentGroup.HasGroupChanged = true;
+            m_host.ParentEntity.RootChild.PayPrice[1] = (LSL_Integer)quick_pay_buttons.Data[0];
+            m_host.ParentEntity.RootChild.PayPrice[2] = (LSL_Integer)quick_pay_buttons.Data[1];
+            m_host.ParentEntity.RootChild.PayPrice[3] = (LSL_Integer)quick_pay_buttons.Data[2];
+            m_host.ParentEntity.RootChild.PayPrice[4] = (LSL_Integer)quick_pay_buttons.Data[3];
+            m_host.ParentEntity.HasGroupChanged = true;
         }
 
         public LSL_Vector llGetCameraPos()
@@ -10806,7 +10807,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             IScenePresence avatar = World.GetScenePresence (avatarID);
             if (avatar != null)
             {
-                Aurora.Framework.IMuteListModule module = m_host.ParentGroup.Scene.RequestModuleInterface<Aurora.Framework.IMuteListModule>();
+                Aurora.Framework.IMuteListModule module = m_host.ParentEntity.Scene.RequestModuleInterface<Aurora.Framework.IMuteListModule> ();
                 if (module != null)
                 {
                     bool cached = false; //Unneeded

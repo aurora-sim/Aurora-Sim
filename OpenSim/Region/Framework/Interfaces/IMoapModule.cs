@@ -27,7 +27,7 @@
 
 using System;
 using OpenMetaverse;
-using OpenSim.Region.Framework.Scenes;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
@@ -44,7 +44,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="part"></param>
         /// <param name="face"></param>
         /// <returns></returns>
-        MediaEntry GetMediaEntry(SceneObjectPart part, int face);
+        MediaEntry GetMediaEntry (ISceneChildEntity part, int face);
         
         /// <summary>
         /// Set the media entry for a given prim face.
@@ -52,7 +52,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="SceneObjectPart"></param>
         /// <param name="face"></param>
         /// <param name="me"></param>
-        void SetMediaEntry(SceneObjectPart part, int face, MediaEntry me);
+        void SetMediaEntry (ISceneChildEntity part, int face, MediaEntry me);
         
         /// <summary>
         /// Clear the media entry for a given prim face.
@@ -62,6 +62,6 @@ namespace OpenSim.Region.Framework.Interfaces
         /// 
         /// <param name="part"></param>
         /// <param name="face">/param>
-        void ClearMediaEntry(SceneObjectPart part, int face);
+        void ClearMediaEntry (ISceneChildEntity part, int face);
     }
 }

@@ -131,7 +131,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public IScene World
         {
-            get { return m_host.ParentGroup.Scene; }
+            get { return m_host.ParentEntity.Scene; }
         }
 
         internal void OSSLError(string msg)
@@ -158,8 +158,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
             if (chatModule != null)
-                chatModule.SimChat(message, ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, 
-                m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true, World);
+                chatModule.SimChat(message, ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL,
+                m_host.ParentEntity.RootChild.AbsolutePosition, m_host.Name, m_host.UUID, true, World);
 
             IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             wComm.DeliverMessage(ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.Name, m_host.UUID, message);
@@ -2012,7 +2012,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             InitLSL();
             LSL_List retVal = new LSL_List();
             //Assign requested part directly
-            SceneObjectPart part = m_host.ParentGroup.GetLinkNumPart(linknumber) as SceneObjectPart;
+            SceneObjectPart part = m_host.ParentEntity.GetLinkNumPart (linknumber) as SceneObjectPart;
 
             //Check to see if the requested part exists (NOT null) and if so, get it's rules
             if (part != null) retVal = ((LSL_Api)m_LSL_Api).GetLinkPrimitiveParams(part, rules);
@@ -2092,7 +2092,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Key osGetRegionMapTexture(string regionName)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetRegionMapTexture", m_host, "OSSL");
-            IScene scene = m_host.ParentGroup.Scene;
+            IScene scene = m_host.ParentEntity.Scene;
             UUID key = UUID.Zero;
             GridRegion region;
 

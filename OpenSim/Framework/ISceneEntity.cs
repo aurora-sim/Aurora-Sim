@@ -295,6 +295,12 @@ namespace OpenSim.Framework
         void ScheduleGroupUpdate (PrimUpdateFlags primUpdateFlags);
 
         void GetProperties (IClientAPI client);
+
+        ISceneEntity DelinkFromGroup (ISceneChildEntity part, bool p);
+
+        void UpdateGroupPosition (Vector3 vector3, bool p);
+
+        void ResetChildPrimPhysicsPositions ();
     }
 
     public interface IEntity
@@ -458,6 +464,107 @@ namespace OpenSim.Framework
         int registerRotTargetWaypoint (Quaternion quaternion, float p);
 
         Vector3 GetForce ();
+
+        bool AddFlag (PrimFlags primFlags);
+
+        void AdjustSoundGain (double volume);
+
+        uint BaseMask { get; set; }
+
+        byte ClickAction { get; set; }
+
+        OpenMetaverse.UUID CollisionSound { get; set; }
+
+        float CollisionSoundVolume { get; set; }
+
+        OpenMetaverse.UUID CollisionSprite { get; set; }
+
+        int GetAxisRotation (int p);
+
+        bool GetDieAtEdge ();
+
+        Vector3 GetGeometricCenter ();
+
+        bool GetReturnAtEdge ();
+
+        bool GetStatusSandbox ();
+
+        uint NextOwnerMask { get; set; }
+
+        void SetVehicleType (int type);
+
+        void SetVehicleVectorParam (int param, Vector3 vector3);
+
+        void SetVehicleRotationParam (int param, Quaternion quaternion);
+
+        void SetVehicleFlags (int flags, bool p);
+
+        void ScriptSetVolumeDetect (bool p);
+
+        void ScriptSetPhysicsStatus (bool p);
+
+        void SetForce (Vector3 vector3);
+
+        int PassCollisions { get; set; }
+
+        int PassTouch { get; set; }
+
+        int registerTargetWaypoint (Vector3 vector3, float p);
+
+        void unregisterTargetWaypoint (int number);
+
+        void ScriptSetPhantomStatus (bool p);
+
+        bool AllowedDrop { get; set; }
+
+        void aggregateScriptEvents ();
+
+        int[] PayPrice { get; }
+
+        void SetAxisRotation (int statusrotationaxis, int value);
+
+        void SetStatusSandbox (bool p);
+
+        void SetDieAtEdge (bool p);
+
+        void SetReturnAtEdge (bool p);
+
+        void SetBlockGrab (bool p);
+
+        void SetVehicleFloatParam (int param, float p);
+
+        void SetFaceColor (Vector3 vector3, int face);
+
+        void SetSoundQueueing (int queue);
+
+        void FixOffsetPosition (Vector3 vector3, bool p);
+
+        void UpdateOffSet (Vector3 vector3);
+
+        void UpdateRotation (Quaternion rot);
+
+        void AddTextureAnimation (Primitive.TextureAnimation pTexAnim);
+
+        void RemoveParticleSystem ();
+
+        void AddNewParticleSystem (Primitive.ParticleSystem prules);
+
+        string SitName { get; set; }
+
+        string TouchName { get; set; }
+
+        int ScriptAccessPin { get; set; }
+
+        void SetFloatOnWater (int floatYN);
+
+        void UpdateTexture (Primitive.TextureEntry tex);
+
+        void SetText (string text, Vector3 av3, double p);
+
+        List<UUID> SitTargetAvatar { get; }
+        Dictionary<int, string> CollisionFilter { get; }
+
+        bool GetBlockGrab ();
     }
 
     public interface ISceneGraph
