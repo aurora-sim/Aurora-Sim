@@ -74,7 +74,7 @@ namespace OpenSim.Services.MessagingService
             {
                 LogOutAllAgentsForRegion(requestingRegion);
             }
-            else if (message["Method"] == "RegionIsOnline")
+            else if (message["Method"] == "RegionIsOnline") //This gets fired when the scene is fully finished starting up
             {
                 //Log out all the agents first, then add any child agents that should be in this region
                 LogOutAllAgentsForRegion(requestingRegion);
@@ -267,30 +267,27 @@ namespace OpenSim.Services.MessagingService
             INeighborService neighborService = m_registry.RequestModuleInterface<INeighborService>();
             if (neighborService != null)
             {
-                List<GridRegion> neighbors = neighborService.GetNeighbors(requestingRegion, 256);
+                List<GridRegion> neighbors = neighborService.GetNeighbors(requestingRegion, 0);
 
                 foreach (GridRegion neighbor in neighbors)
                 {
                     //m_log.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
 
-                    if (neighbor.RegionHandle != requestingRegion.RegionHandle)
+                    IRegionCapsService regionCaps = m_registry.RequestModuleInterface<ICapsService>().GetCapsForRegion(neighbor.RegionHandle);
+                    if (regionCaps == null) //If there isn't a region caps, there isn't an agent in this sim
+                        continue;
+                    List<UUID> usersInformed = new List<UUID>();
+                    foreach (IRegionClientCapsService regionClientCaps in regionCaps.GetClients())
                     {
-                        IRegionCapsService regionCaps = m_registry.RequestModuleInterface<ICapsService>().GetCapsForRegion(neighbor.RegionHandle);
-                        if (regionCaps == null)
+                        if (usersInformed.Contains(regionClientCaps.AgentID)) //Only inform agents once
                             continue;
-                        List<UUID> usersInformed = new List<UUID>();
-                        foreach (IRegionClientCapsService regionClientCaps in regionCaps.GetClients())
-                        {
-                            if (usersInformed.Contains(regionClientCaps.AgentID))
-                                continue;
 
-                            string reason;
-                            if (!InformClientOfNeighbor(regionClientCaps.AgentID, requestingRegion.RegionHandle,
-                                regionClientCaps.CircuitData.Copy(), neighbor, (uint)TeleportFlags.Default, null, out reason))
-                                informed = false;
-                            else
-                                usersInformed.Add(regionClientCaps.AgentID);
-                        }
+                        string reason; //Tell the region about it
+                        if (!InformClientOfNeighbor(regionClientCaps.AgentID, requestingRegion.RegionHandle,
+                            regionClientCaps.CircuitData.Copy(), requestingRegion, (uint)TeleportFlags.Default, null, out reason))
+                            informed = false;
+                        else
+                            usersInformed.Add(regionClientCaps.AgentID);
                     }
                     count++;
                 }
