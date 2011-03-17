@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using Nini.Config;
 using Aurora.Simulation.Base;
@@ -11,6 +12,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using log4net;
 
 namespace OpenSim.Services.GridService
 {
