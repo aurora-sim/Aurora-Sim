@@ -68,7 +68,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="groups"></param>
         /// <param name="DeleteScripts"></param>
         /// <returns></returns>
-        bool DeleteSceneObjects(SceneObjectGroup[] groups, bool DeleteScripts);
+        bool DeleteSceneObjects(ISceneEntity[] groups, bool DeleteScripts);
 
         /// <summary>
         /// Removes all current objects from the scene, but not from the database

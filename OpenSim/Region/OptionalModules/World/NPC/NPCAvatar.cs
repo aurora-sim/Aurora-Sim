@@ -43,10 +43,10 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         private readonly string m_lastname;
         private readonly Vector3 m_startPos;
         private readonly UUID m_uuid = UUID.Random();
-        private readonly Scene m_scene;
+        private readonly IScene m_scene;
 
 
-        public NPCAvatar(string firstname, string lastname, Vector3 position, Scene scene)
+        public NPCAvatar (string firstname, string lastname, Vector3 position, IScene scene)
         {
             m_firstname = firstname;
             m_lastname = lastname;

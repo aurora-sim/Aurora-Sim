@@ -807,9 +807,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 // Otherwise, use this default creation code;
                 sceneObject = new SceneObjectGroup(ownerID, pos, rot, shape, m_parentScene);
-                //This has to be set, otherwise it will break things like rezzing objects in an area where crossing is disabled, but rez isn't
-                sceneObject.m_lastSignificantPosition = pos;
-
+                
                 sceneObject.SetGroup(groupID, null);
                 AddPrimToScene(sceneObject);
                 sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);

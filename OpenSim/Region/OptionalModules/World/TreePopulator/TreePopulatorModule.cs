@@ -516,7 +516,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
             }
 
             SceneObjectGroup sceneObject = new SceneObjectGroup(ownerID, pos, rot, shape, m_scene);
-            SceneObjectPart rootPart = sceneObject.GetChildPart(sceneObject.UUID);
+            SceneObjectPart rootPart = (SceneObjectPart)sceneObject.GetChildPart(sceneObject.UUID);
 
             rootPart.AddFlag(PrimFlags.Phantom);
             if (rootPart.Shape.PCode != (byte)PCode.Grass)

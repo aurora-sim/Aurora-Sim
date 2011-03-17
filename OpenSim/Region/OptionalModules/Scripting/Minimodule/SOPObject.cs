@@ -114,7 +114,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             }
         }
 
-        void EventManager_OnObjectGrab(SceneObjectPart part, SceneObjectPart child, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
+        void EventManager_OnObjectGrab (ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
         {
             if (_OnTouchActive && m_localID == part.LocalId)
             {

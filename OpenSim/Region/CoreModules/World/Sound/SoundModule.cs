@@ -153,7 +153,7 @@ namespace OpenSim.Region.CoreModules.World.Sound
                 }*/
 
                 //Check to see if the person is local and the av is in the same parcel
-                if (LocalOnly && sp.currentParcelUUID != ILO.LandData.GlobalID)
+                if (LocalOnly && sp.CurrentParcelUUID != ILO.LandData.GlobalID)
                     return;
 
                 // Scale by distance
@@ -263,7 +263,7 @@ namespace OpenSim.Region.CoreModules.World.Sound
                     return;
 
                 //Check to see if the person is local and the av is in the same parcel
-                if (LocalOnly && sp.currentParcelUUID != ILO.LandData.GlobalID)
+                if (LocalOnly && sp.CurrentParcelUUID != ILO.LandData.GlobalID)
                     return;
 
                 // Scale by distance

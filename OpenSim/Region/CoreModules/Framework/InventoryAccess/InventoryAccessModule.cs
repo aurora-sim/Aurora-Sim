@@ -276,7 +276,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         /// <param name="objectGroup"></param>
         /// <param name="remoteClient"> </param>
         public virtual UUID DeleteToInventory(DeRezAction action, UUID folderID,
-                List<SceneObjectGroup> objectGroups, UUID agentId, out UUID itemID)
+                List<ISceneEntity> objectGroups, UUID agentId, out UUID itemID)
         {
             itemID = UUID.Zero;
             if (objectGroups.Count == 0)
@@ -288,11 +288,11 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
             if (objectGroups.Count == 1)
             {
-                AssetXML = SceneObjectSerializer.ToOriginalXmlFormat(objectGroups[0]);
+                AssetXML = ((ISceneObject)objectGroups[0]).ToXml2();
             }
             else
             {
-                foreach (SceneObjectGroup objectGroup in objectGroups)
+                foreach (ISceneEntity objectGroup in objectGroups)
                 {
                     Vector3 inventoryStoredPosition = new Vector3
                                 (((objectGroup.AbsolutePosition.X > m_scene.RegionInfo.RegionSizeX)
@@ -308,7 +308,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
                     objectGroup.AbsolutePosition = inventoryStoredPosition;
 
-                    AssetXML += SceneObjectSerializer.ToOriginalXmlFormat(objectGroup);
+                    AssetXML += ((ISceneObject)objectGroup).ToXml2();
 
                     objectGroup.AbsolutePosition = originalPosition;
                 }
@@ -341,7 +341,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 // All returns / deletes go to the object owner
                 //
 
-                userID = objectGroups[0].RootPart.OwnerID;
+                userID = objectGroups[0].OwnerID;
             }
 
             if (userID == UUID.Zero) // Can't proceed
@@ -360,7 +360,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     
             if (DeRezAction.SaveToExistingUserInventoryItem == action)
             {
-                item = new InventoryItemBase(objectGroups[0].RootPart.FromUserInventoryItemID, userID);
+                item = new InventoryItemBase(objectGroups[0].RootChild.FromUserInventoryItemID, userID);
                 item = m_scene.InventoryService.GetItem(item);
 
                 //item = userInfo.RootFolder.FindItem(
@@ -430,9 +430,9 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 //
                 if (action == DeRezAction.Attachment || action == DeRezAction.Take || action == DeRezAction.AcquireToUserInventory)
                 {
-                    if (objectGroups[0].RootPart.FromItemID != UUID.Zero)
+                    if (objectGroups[0].RootChild.FromUserInventoryItemID != UUID.Zero)
                     {
-                        InventoryFolderBase f = new InventoryFolderBase(objectGroups[0].RootPart.FromItemID, userID);
+                        InventoryFolderBase f = new InventoryFolderBase(objectGroups[0].RootChild.FromUserInventoryItemID, userID);
                         folder = m_scene.InventoryService.GetFolder(f);
                     }
                     else
@@ -452,7 +452,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 }
 
                 item = new InventoryItemBase();
-                item.CreatorId = objectGroups[0].RootPart.CreatorID.ToString();
+                item.CreatorId = objectGroups[0].RootChild.CreatorID.ToString();
                 item.ID = UUID.Random();
                 item.InvType = (int)InventoryType.Object;
                 item.Folder = folder.ID;
@@ -460,8 +460,8 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             }
 
             AssetBase asset = CreateAsset(
-                objectGroups[0].GetPartName(objectGroups[0].RootPart.LocalId),
-                objectGroups[0].GetPartDescription(objectGroups[0].RootPart.LocalId),
+                objectGroups[0].Name,
+                objectGroups[0].RootChild.Description,
                 (sbyte)AssetType.Object,
                 Utils.StringToBytes(AssetXML),
                 objectGroups[0].OwnerID.ToString());
@@ -477,7 +477,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             {
                 item.AssetID = asset.FullID;
 
-                if (SP != null && SP.ControllingClient != null && (SP.ControllingClient.AgentId != objectGroups[0].RootPart.OwnerID) && m_scene.Permissions.PropagatePermissions())
+                if (SP != null && SP.ControllingClient != null && (SP.ControllingClient.AgentId != objectGroups[0].OwnerID) && m_scene.Permissions.PropagatePermissions())
                 {
                     foreach (SceneObjectGroup group in objectGroups)
                     {

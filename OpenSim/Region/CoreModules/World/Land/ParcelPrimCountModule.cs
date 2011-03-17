@@ -49,7 +49,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         public int Temporary = 0;
         public Dictionary<UUID, int> Users =
                 new Dictionary<UUID, int>();
-        public Dictionary<UUID, SceneObjectPart> Objects = new Dictionary<UUID, SceneObjectPart>();
+        public Dictionary<UUID, ISceneChildEntity> Objects = new Dictionary<UUID, ISceneChildEntity>();
     }
 
     public class PrimCountModule : IPrimCountModule, INonSharedRegionModule
@@ -125,7 +125,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             get { return "PrimCountModule"; }
         }
 
-        private void OnPrimCountAdd(SceneObjectGroup obj)
+        private void OnPrimCountAdd(ISceneEntity obj)
         {
             // If we're tainted already, don't bother to add. The next
             // access will cause a recount anyway
@@ -136,7 +136,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
-        private void OnObjectBeingRemovedFromScene(SceneObjectGroup obj)
+        private void OnObjectBeingRemovedFromScene (ISceneEntity obj)
         {
             // Don't bother to update tainted counts
             lock (m_TaintLock)
@@ -170,11 +170,11 @@ namespace OpenSim.Region.CoreModules.World.Land
                 m_Tainted = true;
         }
 
-        private void SelectObject(SceneObjectGroup obj, bool IsNowSelected)
+        private void SelectObject (ISceneEntity obj, bool IsNowSelected)
         {
             if (obj.IsAttachment)
                 return;
-            if (((obj.RootPart.Flags & PrimFlags.TemporaryOnRez) != 0))
+            if (((obj.RootChild.Flags & PrimFlags.TemporaryOnRez) != 0))
                 return;
 
             Vector3 pos = obj.AbsolutePosition;
@@ -184,7 +184,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             ParcelCounts parcelCounts;
             if (m_ParcelCounts.TryGetValue(landData.GlobalID, out parcelCounts))
             {
-                int partCount = obj.Parts.Length;
+                int partCount = obj.ChildrenEntities().Count;
                 if (IsNowSelected)
                     parcelCounts.Selected += partCount;
                 else
@@ -202,11 +202,11 @@ namespace OpenSim.Region.CoreModules.World.Land
         }
 
         // NOTE: Call under Taint Lock
-        private void AddObject(SceneObjectGroup obj)
+        private void AddObject (ISceneEntity obj)
         {
             if (obj.IsAttachment)
                 return;
-            if (((obj.RootPart.Flags & PrimFlags.TemporaryOnRez) != 0))
+            if (((obj.RootChild.Flags & PrimFlags.TemporaryOnRez) != 0))
                 return;
             
             Vector3 pos = obj.AbsolutePosition;
@@ -220,7 +220,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 UUID landOwner = landData.OwnerID;
 
-                foreach (SceneObjectPart child in obj.ChildrenList)
+                foreach (ISceneChildEntity child in obj.ChildrenEntities())
                 {
                     if (parcelCounts.Objects.ContainsKey(child.UUID))
                     {
@@ -264,11 +264,11 @@ namespace OpenSim.Region.CoreModules.World.Land
         }
 
         // NOTE: Call under Taint Lock
-        private void RemoveObject(SceneObjectGroup obj)
+        private void RemoveObject(ISceneEntity obj)
         {
             if (obj.IsAttachment)
                 return;
-            if (((obj.RootPart.Flags & PrimFlags.TemporaryOnRez) != 0))
+            if (((obj.RootChild.Flags & PrimFlags.TemporaryOnRez) != 0))
                 return;
 
             Vector3 pos = obj.AbsolutePosition;
@@ -285,7 +285,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 UUID landOwner = landData.OwnerID;
 
-                foreach (SceneObjectPart child in obj.ChildrenList)
+                foreach (ISceneChildEntity child in obj.ChildrenEntities())
                 {
                     if (!parcelCounts.Objects.ContainsKey(child.UUID))
                     {
@@ -357,7 +357,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             return new Dictionary<UUID, int>();
         }
 
-        public List<SceneObjectPart> GetParcelObjects(UUID parcelID)
+        public List<ISceneChildEntity> GetParcelObjects (UUID parcelID)
         {
             lock (m_TaintLock)
             {
@@ -367,10 +367,10 @@ namespace OpenSim.Region.CoreModules.World.Land
                 ParcelCounts counts;
                 if (m_ParcelCounts.TryGetValue(parcelID, out counts))
                 {
-                    return new List<SceneObjectPart>(counts.Objects.Values);
+                    return new List<ISceneChildEntity> (counts.Objects.Values);
                 }
             }
-            return new List<SceneObjectPart>();
+            return new List<ISceneChildEntity> ();
         }
 
         public int GetOwnerCount(UUID parcelID)
@@ -592,7 +592,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
-        public List<SceneObjectPart> Objects
+        public List<ISceneChildEntity> Objects
         {
             get { return m_Parent.GetParcelObjects(m_ParcelID); }
         }

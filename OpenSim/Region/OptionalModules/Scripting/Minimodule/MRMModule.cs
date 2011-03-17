@@ -275,7 +275,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             return restrictedDomain;
         }
 
-        void EventManager_OnRezScript(SceneObjectPart part, UUID itemID, string script, int startParam, bool postOnRez, int stateSource)
+        void EventManager_OnRezScript (ISceneChildEntity part, UUID itemID, string script, int startParam, bool postOnRez, int stateSource)
         {
             if (script.StartsWith("//MRM:C#"))
             {

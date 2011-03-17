@@ -1765,7 +1765,7 @@ namespace OpenSim.Region.Framework.Scenes
             IClientAPI client;
             m_scene.TryGetClient(AgentId, out client);
             //Its ok if the client is null, its taken care of
-            DeRezObjects(client, IDs, returnobjects[0].RootPart.GroupID, DeRezAction.Return, UUID.Zero);
+            DeRezObjects(client, IDs, returnobjects[0].RootChild.GroupID, DeRezAction.Return, UUID.Zero);
             return true;
         }
 

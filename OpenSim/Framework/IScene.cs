@@ -70,6 +70,7 @@ namespace OpenSim.Framework
         ScenePermissions Permissions { get; }
         PhysicsScene PhysicsScene { get; }
         ISceneGraph SceneGraph { get; }
+        AgentCircuitManager AuthenticateHandler { get; }
 
         IConfigSource Config { get; }
 
@@ -126,5 +127,7 @@ namespace OpenSim.Framework
         bool TryGetPart (UUID objecUUID, out ISceneChildEntity SensedObject);
 
         string DefaultObjectName { get; set; }
+
+        bool RemoveAgent (IScenePresence presence);
     }
 }

@@ -122,7 +122,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public IScene World
         {
-            get { return m_host.ParentGroup.Scene; }
+            get { return m_host.ParentEntity.Scene; }
         }
 
         //

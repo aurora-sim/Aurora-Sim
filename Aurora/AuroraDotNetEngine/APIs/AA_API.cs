@@ -114,7 +114,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public IScene World
         {
-            get { return m_host.ParentGroup.Scene; }
+            get { return m_host.ParentEntity.Scene; }
         }
 
         public void aaSetCloudDensity(LSL_Float density)
@@ -588,7 +588,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             presence.ControllingClient.OnScriptAnswer += handleScriptAnswer;
 
             presence.ControllingClient.SendScriptQuestion(
-                m_host.UUID, m_host.ParentGroup.RootPart.Name, ownerName, invItemID, perm);
+                m_host.UUID, m_host.ParentEntity.RootChild.Name, ownerName, invItemID, perm);
         }
 
         void handleScriptAnswer(IClientAPI client, UUID taskID, UUID itemID, int answer)

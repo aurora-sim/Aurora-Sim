@@ -915,11 +915,11 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             if (over != null)
             {
-                if (force || avatar.currentParcelUUID != over.LandData.GlobalID)
+                if (force || avatar.CurrentParcelUUID != over.LandData.GlobalID)
                 {
                     if (!avatar.IsChildAgent)
                     {
-                        avatar.currentParcelUUID = over.LandData.GlobalID;
+                        avatar.CurrentParcelUUID = over.LandData.GlobalID;
                         m_scene.EventManager.TriggerAvatarEnteringNewParcel(avatar, over.LandData.LocalID,
                                                                             m_scene.RegionInfo.RegionID);
                     }
@@ -942,7 +942,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 {
                     if (!over.IsRestrictedFromLand(clientAvatar.UUID) && (!over.IsBannedFromLand(clientAvatar.UUID) || clientAvatar.AbsolutePosition.Z >= ParcelManagementModule.BAN_LINE_SAFETY_HEIGHT))
                     {
-                        clientAvatar.lastKnownAllowedPosition =
+                        clientAvatar.LastKnownAllowedPosition =
                             new Vector3(clientAvatar.AbsolutePosition.X, clientAvatar.AbsolutePosition.Y, clientAvatar.AbsolutePosition.Z);
                     }
                     else
@@ -964,13 +964,13 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (over != null)
             {
                 //Entered this new parcel
-                if (over.LandData.GlobalID != group.m_lastParcelUUID)
+                if (over.LandData.GlobalID != group.LastParcelUUID)
                 {
                     if (!m_scene.Permissions.CanObjectEntry(group.UUID,
                         false, group.AbsolutePosition, group.OwnerID))
                     {
                         //Revert the position and do not update the parcel ID
-                        group.AbsolutePosition = group.m_lastSignificantPosition;
+                        group.AbsolutePosition = group.LastSignificantPosition;
 
                         //If the object has physics, stop it from moving
                         if ((group.RootChild.Flags & PrimFlags.Physics) == PrimFlags.Physics)
@@ -985,9 +985,9 @@ namespace OpenSim.Region.CoreModules.World.Land
                     }
                     else
                     {
-                        UUID oldParcelUUID = group.m_lastParcelUUID;
+                        UUID oldParcelUUID = group.LastParcelUUID;
                         //Update the UUID then
-                        group.m_lastParcelUUID = over.LandData.GlobalID;
+                        group.LastParcelUUID = over.LandData.GlobalID;
                         //Trigger the event
                         object[] param = new object[3];
                         param[0] = group;

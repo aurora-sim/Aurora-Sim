@@ -664,7 +664,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             {
                 //Delete the object inworld to inventory
 
-                List<SceneObjectGroup> groups = new List<SceneObjectGroup>(1) { group };
+                List<ISceneEntity> groups = new List<ISceneEntity> (1) { group };
 
                 IInventoryAccessModule inventoryAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
                 if (inventoryAccess != null)

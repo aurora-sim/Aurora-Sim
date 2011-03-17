@@ -293,7 +293,7 @@ namespace Aurora.Modules
             byte classifiedFlags = queryclassifiedFlags;
             int classifiedPrice = queryclassifiedPrice;
 
-            UUID parceluuid = p.currentParcelUUID;
+            UUID parceluuid = p.CurrentParcelUUID;
             string parcelname = "Unknown";
             IParcelManagementModule parcelManagement = GetRegionUserIsIn(remoteClient.AgentId).RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
@@ -427,7 +427,7 @@ namespace Aurora.Modules
 
             IScenePresence p = GetRegionUserIsIn(remoteClient.AgentId).GetScenePresence(remoteClient.AgentId);
 
-            UUID parceluuid = p.currentParcelUUID;
+            UUID parceluuid = p.CurrentParcelUUID;
             string user = "(unknown)";
             string OrigionalName = "(unknown)";
 

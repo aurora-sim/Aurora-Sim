@@ -943,7 +943,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// or other applications where a full grid/Hypergrid presence may not be required.</param>
         /// <returns>True if the region accepts this agent.  False if it does not.  False will 
         /// also return a reason.</returns>
-        public bool NewUserConnection (Scene scene, AgentCircuitData agent, uint teleportFlags, out string reason)
+        public bool NewUserConnection (IScene scene, AgentCircuitData agent, uint teleportFlags, out string reason)
         {
             bool vialogin = ((teleportFlags & (uint)TeleportFlags.ViaLogin) != 0);
             reason = String.Empty;
@@ -1012,7 +1012,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// <param name="reason">outputs the reason to this string</param>
         /// <returns>True if the region accepts this agent.  False if it does not.  False will 
         /// also return a reason.</returns>
-        protected bool AuthorizeUser (Scene scene, AgentCircuitData agent, out string reason)
+        protected bool AuthorizeUser (IScene scene, AgentCircuitData agent, out string reason)
         {
             reason = String.Empty;
 
@@ -1039,7 +1039,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// <param name="cAgentData">Agent that contains all of the relevant things about an agent.
         /// Appearance, animations, position, etc.</param>
         /// <returns>true if we handled it.</returns>
-        public virtual bool IncomingChildAgentDataUpdate (Scene scene, AgentData cAgentData)
+        public virtual bool IncomingChildAgentDataUpdate (IScene scene, AgentData cAgentData)
         {
             //m_log.DebugFormat(
             //    "[SCENE]: Incoming child agent update for {0} in {1}", cAgentData.AgentID, RegionInfo.RegionName);
@@ -1070,7 +1070,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// </summary>
         /// <param name="cAgentData">AgentPosition that contains agent positional data so we can know what to send</param>
         /// <returns>true if we handled it.</returns>
-        public virtual bool IncomingChildAgentDataUpdate (Scene scene, AgentPosition cAgentData)
+        public virtual bool IncomingChildAgentDataUpdate (IScene scene, AgentPosition cAgentData)
         {
             //m_log.Debug(" XXX Scene IncomingChildAgentDataUpdate POSITION in " + RegionInfo.RegionName);
             IScenePresence presence = scene.GetScenePresence (cAgentData.AgentID);
@@ -1097,7 +1097,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             return false;
         }
 
-        public virtual bool IncomingRetrieveRootAgent (Scene scene, UUID id, out IAgentData agent)
+        public virtual bool IncomingRetrieveRootAgent (IScene scene, UUID id, out IAgentData agent)
         {
             agent = null;
             IScenePresence sp = scene.GetScenePresence (id);
@@ -1118,7 +1118,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// </summary>
         /// <param name="regionHandle"></param>
         /// <param name="agentID"></param>
-        public bool IncomingCloseAgent (Scene scene, UUID agentID)
+        public bool IncomingCloseAgent (IScene scene, UUID agentID)
         {
             //m_log.DebugFormat("[SCENE]: Processing incoming close agent for {0}", agentID);
 

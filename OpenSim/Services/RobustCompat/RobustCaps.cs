@@ -41,10 +41,10 @@ namespace OpenSim.Services.RobustCompat
 
         void OnMakeRootAgent (IScenePresence presence)
         {
-            if ((presence.m_callbackURI != null) && !presence.m_callbackURI.Equals(""))
+            if ((presence.CallbackURI != null) && !presence.CallbackURI.Equals(""))
             {
-                WebUtils.ServiceOSDRequest(presence.m_callbackURI, null, "DELETE", 10000);
-                presence.m_callbackURI = null;
+                WebUtils.ServiceOSDRequest(presence.CallbackURI, null, "DELETE", 10000);
+                presence.CallbackURI = null;
             }
         }
 

@@ -356,13 +356,39 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         [XmlIgnore]
-        public bool IsAttachment;
+        private bool m_IsAttachment;
+
+        [XmlIgnore]
+        public bool IsAttachment
+        {
+            get
+            {
+                return m_IsAttachment;
+            }
+            set
+            {
+                m_IsAttachment = value;
+            }
+        }
 
         [XmlIgnore]
         public scriptEvents AggregateScriptEvents;
 
         [XmlIgnore]
-        public UUID AttachedAvatar;
+        private UUID m_AttachedAvatar;
+
+        [XmlIgnore]
+        public UUID AttachedAvatar
+        {
+            get
+            {
+                return m_AttachedAvatar;
+            }
+            set
+            {
+                m_AttachedAvatar = value;
+            }
+        }
 
         private Vector3 m_AttachedPos;
         [XmlIgnore]
@@ -1159,7 +1185,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// The position of the entire group that this prim belongs to.
         /// </summary>
         public Vector3 GroupPosition
-            {
+        {
             get
             {
                 // If this is a linkset, we don't want the physics engine mucking up our group position here.
@@ -1177,15 +1203,12 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
                 return m_groupPosition;
-            }            
             }
-
-
+        }
 
         public Vector3 OffsetPosition
         {
             get { return m_offsetPosition; }
-  
         }
 
         public Vector3 RelativePosition
@@ -5653,70 +5676,5 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_parentGroup != null && m_parentGroup.Scene != null)
                 m_parentGroup.Scene.EventManager.TriggerOnScriptMovingEndEvent(this);
         }
-
-        #region ISceneChildEntity Members
-
-
-        bool ISceneChildEntity.IsAttachment
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        int ISceneChildEntity.ParentID
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        UUID ISceneChildEntity.AttachedAvatar
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        Vector3 ISceneChildEntity.OffsetPosition
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        bool ISceneChildEntity.IsRoot
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        #endregion
     }
 }

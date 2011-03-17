@@ -475,7 +475,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             m_log.InfoFormat("[AvatarFactory]: Handle initial appearance send for {0}", agentid);
 
             //Only set this if we actually have sent the wearables
-            sp.m_InitialHasWearablesBeenSent = true;
+            sp.InitialHasWearablesBeenSent = true;
 
             // This agent just became root. We are going to tell everyone about it.
             sp.SendAvatarDataToAllAgents();

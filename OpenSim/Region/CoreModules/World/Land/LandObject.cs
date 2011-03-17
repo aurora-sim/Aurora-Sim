@@ -974,18 +974,18 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         #region Object Returning
 
-        public List<SceneObjectGroup> GetPrimsOverByOwner(UUID targetID, int flags)
+        public List<ISceneEntity> GetPrimsOverByOwner(UUID targetID, int flags)
         {
-            List<SceneObjectGroup> prims = new List<SceneObjectGroup>();
+            List<ISceneEntity> prims = new List<ISceneEntity> ();
             IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();
             IPrimCounts primCounts = primCountModule.GetPrimCounts(LandData.GlobalID);
-            foreach (SceneObjectPart child in primCounts.Objects)
+            foreach (ISceneChildEntity child in primCounts.Objects)
             {
-                SceneObjectGroup obj = child.ParentGroup;
+                ISceneEntity obj = child.ParentEntity;
                 if (obj.OwnerID == m_landData.OwnerID)
                 {
                     if (flags == 4 && //Scripted
-                        (obj.RootPart.Flags & PrimFlags.Scripted) == PrimFlags.Scripted)
+                        (obj.RootChild.Flags & PrimFlags.Scripted) == PrimFlags.Scripted)
                         continue;
                     if(!prims.Contains(obj))
                         prims.Add(obj);

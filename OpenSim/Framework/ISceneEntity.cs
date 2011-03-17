@@ -49,7 +49,7 @@ namespace OpenSim.Framework
 
         event RemovePhysics OnRemovePhysics;
 
-        string m_callbackURI { get; set; }
+        string CallbackURI { get; set; }
         /// <summary>
         /// First name of the client
         /// </summary>
@@ -70,9 +70,9 @@ namespace OpenSim.Framework
         /// </summary>
         IScene Scene { get; }
 
-        ISceneViewer SceneViewer { get; set; }
+        ISceneViewer SceneViewer { get; }
 
-        IAnimator Animator { get; set; }
+        IAnimator Animator { get; }
 
         PhysicsActor PhysicsActor { get; set; }
 
@@ -91,9 +91,9 @@ namespace OpenSim.Framework
         /// </summary>
         Vector3 Lookat { get; }
 
-        Vector3 CameraPosition { get; set; }
+        Vector3 CameraPosition { get; }
 
-        Quaternion CameraRotation { get; set; }
+        Quaternion CameraRotation { get; }
 
         /// <summary>
         /// The offset from an object the avatar may be sitting on
@@ -130,13 +130,13 @@ namespace OpenSim.Framework
 
         bool Frozen { get; set; }
 
-        int UserLevel { get; set; }
+        int UserLevel { get; }
 
         void Teleport (Vector3 Pos);
 
-        Vector3 lastKnownAllowedPosition { get; set; }
+        Vector3 LastKnownAllowedPosition { get; set; }
 
-        OpenMetaverse.UUID currentParcelUUID { get; set; }
+        UUID CurrentParcelUUID { get; set; }
 
         bool Invulnerable { get; set; }
 
@@ -144,7 +144,7 @@ namespace OpenSim.Framework
 
         void ChildAgentDataUpdate (AgentData agentData);
 
-        void DoAutoPilot (int p, Vector3 pos, IClientAPI avatar);
+        void DoAutoPilot (uint p, Vector3 pos, IClientAPI avatar);
 
         void SendAppearanceToAllOtherAgents ();
 
@@ -158,7 +158,7 @@ namespace OpenSim.Framework
 
         void SendCoarseLocations (List<Vector3> coarseLocations, List<OpenMetaverse.UUID> avatarUUIDs);
 
-        Vector3 CameraAtAxis { get; set; }
+        Vector3 CameraAtAxis { get; }
 
         void AddNewMovement (Vector3 jumpForce, Quaternion quaternion);
 
@@ -170,7 +170,7 @@ namespace OpenSim.Framework
 
         void CrossSittingAgent (IClientAPI iClientAPI, OpenMetaverse.UUID uUID);
 
-        void DoMoveToPosition (IScenePresence avatar, string p, List<string> coords);
+        void DoMoveToPosition (object iClientAPI, string p, List<string> coords);
 
         uint GenerateClientFlags (ISceneChildEntity p);
 
@@ -206,7 +206,7 @@ namespace OpenSim.Framework
 
         void SendOtherAgentsAppearanceToMe ();
 
-        bool m_InitialHasWearablesBeenSent { get; set; }
+        bool InitialHasWearablesBeenSent { get; set; }
 
         void Close ();
 
@@ -240,9 +240,9 @@ namespace OpenSim.Framework
 
     public interface ISceneEntity : IEntity
     {
-        UUID m_lastParcelUUID { get; set; }
+        UUID LastParcelUUID { get; set; }
         ISceneChildEntity RootChild { get; set; }
-        Vector3 m_lastSignificantPosition{ get; }
+        Vector3 LastSignificantPosition{ get; }
         bool IsDeleted { get; set; }
         Vector3 GroupScale ();
         Quaternion GroupRotation { get; }
@@ -286,13 +286,19 @@ namespace OpenSim.Framework
 
         bool HasGroupChanged { get; set; }
 
-        bool IsAttachment { get; set; }
+        bool IsAttachment { get; }
 
-        OpenMetaverse.UUID GroupID { get; set; }
+        UUID GroupID { get; set; }
 
         IScene Scene { get; set; }
 
         bool IsSelected { get; set; }
+
+        IEntity GetLinkNumPart (int linkType);
+
+        ISceneChildEntity LoopSoundMasterPrim { get; set; }
+
+        List<ISceneChildEntity> LoopSoundSlavePrims { get; set; }
     }
 
     public interface IEntity
@@ -385,7 +391,7 @@ namespace OpenSim.Framework
 
         PrimitiveBaseShape Shape { get; set; }
 
-        int ParentID { get; set; }
+        uint ParentID { get; set; }
 
         int Material { get; set; }
 
@@ -407,13 +413,55 @@ namespace OpenSim.Framework
 
         void SetParent (ISceneEntity grp);
 
-        Vector3 OffsetPosition { get; set; }
+        Vector3 OffsetPosition { get; }
 
         Vector3 AttachedPos { get; set; }
 
-        bool IsRoot { get; set; }
+        bool IsRoot { get; }
 
         void SetConeOfSilence (double p);
+
+        byte SoundFlags { get; set; }
+
+        double SoundGain { get; set; }
+
+        OpenMetaverse.UUID Sound { get; set; }
+
+        double SoundRadius { get; set; }
+
+        void SendSound (string p, double volume, bool p_2, byte p_3, float p_4, bool p_5, bool p_6);
+
+        void PreloadSound (string sound);
+
+        void SetBuoyancy (float p);
+
+        void SetHoverHeight (float p, PIDHoverType hoverType, float p_2);
+
+        void ScheduleTerseUpdate ();
+
+        void StopLookAt ();
+
+        void RotLookAt (Quaternion rot, float p, float p_2);
+
+        void startLookAt (Quaternion rotation, float p, float p_2);
+
+        Vector3 Acceleration { get; set; }
+
+        Vector3 GetTorque ();
+
+        void SetAngularImpulse (Vector3 vector3, bool p);
+
+        void ApplyAngularImpulse (Vector3 vector3, bool p);
+
+        void MoveToTarget (Vector3 vector3, float p);
+
+        void StopMoveToTarget ();
+
+        void unregisterRotTargetWaypoint (int number);
+
+        int registerRotTargetWaypoint (Quaternion quaternion, float p);
+
+        Vector3 GetForce ();
     }
 
     public interface ISceneGraph

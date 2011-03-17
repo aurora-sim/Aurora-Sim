@@ -109,8 +109,23 @@ namespace OpenSim.Region.Framework.Scenes
         public DateTime timeLastChanged;
         public bool m_forceBackupNow = false;
         public bool m_isLoaded = false;
-        public Vector3 m_lastSignificantPosition = Vector3.Zero;
-        public UUID m_lastParcelUUID = UUID.Zero;
+        private Vector3 m_lastSignificantPosition = Vector3.Zero;
+        public Vector3 LastSignificantPosition
+        {
+            get { return m_lastSignificantPosition; }
+        }
+        private UUID m_lastParcelUUID = UUID.Zero;
+        public UUID LastParcelUUID
+        {
+            get
+            {
+                return m_lastParcelUUID;
+            }
+            set
+            {
+                m_lastParcelUUID = value;
+            }
+        }
         public bool m_inTransit = false;
 
         [XmlIgnore]
@@ -293,7 +308,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected Quaternion m_rotation = Quaternion.Identity;
 
-        public virtual Quaternion Rotation
+        public override Quaternion Rotation
         {
             get { return m_rotation; }
             set
@@ -465,29 +480,29 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        private SceneObjectPart m_PlaySoundMasterPrim = null;
-        public SceneObjectPart PlaySoundMasterPrim
+        private ISceneChildEntity m_PlaySoundMasterPrim = null;
+        public ISceneChildEntity PlaySoundMasterPrim
         {
             get { return m_PlaySoundMasterPrim; }
             set { m_PlaySoundMasterPrim = value; }
         }
 
-        private List<SceneObjectPart> m_PlaySoundSlavePrims = new List<SceneObjectPart>();
-        public List<SceneObjectPart> PlaySoundSlavePrims
+        private List<ISceneChildEntity> m_PlaySoundSlavePrims = new List<ISceneChildEntity> ();
+        public List<ISceneChildEntity> PlaySoundSlavePrims
         {
             get { return m_PlaySoundSlavePrims; }
             set { m_PlaySoundSlavePrims = value; }
         }
 
-        private SceneObjectPart m_LoopSoundMasterPrim = null;
-        public SceneObjectPart LoopSoundMasterPrim
+        private ISceneChildEntity m_LoopSoundMasterPrim = null;
+        public ISceneChildEntity LoopSoundMasterPrim
         {
             get { return m_LoopSoundMasterPrim; }
             set { m_LoopSoundMasterPrim = value; }
         }
 
-        private List<SceneObjectPart> m_LoopSoundSlavePrims = new List<SceneObjectPart>();
-        public List<SceneObjectPart> LoopSoundSlavePrims
+        private List<ISceneChildEntity> m_LoopSoundSlavePrims = new List<ISceneChildEntity> ();
+        public List<ISceneChildEntity> LoopSoundSlavePrims
         {
             get { return m_LoopSoundSlavePrims; }
             set { m_LoopSoundSlavePrims = value; }
@@ -557,6 +572,10 @@ namespace OpenSim.Region.Framework.Scenes
         {
             SceneObjectPart part = new SceneObjectPart(ownerID, shape, pos, rot, Vector3.Zero, scene);
             SetRootPart(part);
+
+            //This has to be set, otherwise it will break things like rezzing objects in an area where crossing is disabled, but rez isn't
+            m_lastSignificantPosition = pos;
+
             m_grpBSphereRadiusSQ = part.BSphereRadiusSQ;
             m_grpOOBoffset = part.OOBoffset;
             m_grpOOBsize = part.OOBsize;
@@ -2064,12 +2083,15 @@ namespace OpenSim.Region.Framework.Scenes
         /// Link the prims in a given group to this group
         /// </summary>
         /// <param name="objectGroup">The group of prims which should be linked to this group</param>
-        public void LinkToGroup(SceneObjectGroup objectGroup)
+        public void LinkToGroup (ISceneEntity grp)
         {
             //m_log.DebugFormat(
             //    "[SCENE OBJECT GROUP]: Linking group with root part {0}, {1} to group with root part {2}, {3}",
             //    objectGroup.RootPart.Name, objectGroup.RootPart.UUID, RootPart.Name, RootPart.UUID);
 
+            if (!(grp is SceneObjectGroup))
+                return;
+            SceneObjectGroup objectGroup = (SceneObjectGroup)grp;
             //Clear the update schedule so that we don't send wrong updates later about how this group is set up
             objectGroup.RootPart.ClearUpdateScheduleOnce();
             
@@ -4056,59 +4078,17 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region ISceneEntity Members
 
-        UUID ISceneEntity.m_lastParcelUUID
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
+        
 
         public ISceneChildEntity RootChild
         {
             get
             {
-                throw new NotImplementedException ();
+                return m_rootPart;
             }
             set
             {
-                throw new NotImplementedException ();
-            }
-        }
-
-        Vector3 ISceneEntity.m_lastSignificantPosition
-        {
-            get { throw new NotImplementedException (); }
-        }
-
-        ISceneChildEntity ISceneEntity.GetChildPart (UUID objectID)
-        {
-            throw new NotImplementedException ();
-        }
-
-        ISceneChildEntity ISceneEntity.GetChildPart (uint childkey)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public void LinkToGroup (ISceneEntity childPrim)
-        {
-            throw new NotImplementedException ();
-        }
-
-        bool ISceneEntity.IsAttachment
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
+                m_rootPart = (SceneObjectPart)value;
             }
         }
 

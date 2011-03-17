@@ -237,7 +237,7 @@ namespace Aurora.Modules
                             continue;
                         }
                         m_scene.SceneGraph.RestorePrimToScene(group);
-                        SceneObjectPart rootPart = group.GetChildPart(group.UUID);
+                        SceneObjectPart rootPart = (SceneObjectPart)group.GetChildPart(group.UUID);
                         rootPart.Flags &= ~PrimFlags.Scripted;
                         rootPart.TrimPermissions();
                         group.CheckSculptAndLoad();
@@ -442,11 +442,14 @@ namespace Aurora.Modules
             /// <param name="groups"></param>
             /// <param name="DeleteScripts"></param>
             /// <returns></returns>
-            public bool DeleteSceneObjects(SceneObjectGroup[] groups, bool DeleteScripts)
+            public bool DeleteSceneObjects (ISceneEntity[] groups, bool DeleteScripts)
             {
                 List<SceneObjectPart> parts = new List<SceneObjectPart>();
-                foreach (SceneObjectGroup group in groups)
+                foreach (ISceneEntity grp in groups)
                 {
+                    SceneObjectGroup group = grp as SceneObjectGroup;
+                    if (grp == null)
+                        continue;
                     //if (group.IsAttachment)
                     //    continue;
                     parts.AddRange(group.ChildrenList);

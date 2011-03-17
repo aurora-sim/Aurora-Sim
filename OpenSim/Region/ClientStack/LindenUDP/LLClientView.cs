@@ -5316,7 +5316,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //CRC
             Utils.UIntToBytes(part.CRC, objectData, i);
             i += 4;
-            objectData[i] = part.Material;
+            objectData[i] = (byte)part.Material;
             i++;
             objectData[i] = part.ClickAction;
             i++;

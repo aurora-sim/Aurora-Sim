@@ -612,11 +612,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetPrimFloatOnWater", m_host, "OSSL");
 
-            if (m_host.ParentGroup != null)
+            if (m_host.ParentEntity != null)
             {
-                if (m_host.ParentGroup.RootPart != null)
+                if (m_host.ParentEntity.RootChild != null)
                 {
-                    m_host.ParentGroup.RootPart.SetFloatOnWater(floatYN);
+                    m_host.ParentEntity.RootChild.SetFloatOnWater (floatYN);
                 }
             }
         }

@@ -53,11 +53,6 @@ namespace OpenSim.Region.Framework.Scenes
         public event AddPhysics OnAddPhysics;
         public event RemovePhysics OnRemovePhysics;
 
-        //        ~ScenePresence()
-//        {
-//            m_log.Debug("[ScenePresence] Destructor called");
-//        }
-
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private static readonly Array DIR_CONTROL_FLAGS = Enum.GetValues(typeof(Dir_ControlFlags));
@@ -73,14 +68,26 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         private static readonly Vector3 SIT_TARGET_ADJUSTMENT = new Vector3(0.1f, 0.0f, 0.3f);
 
-        public UUID currentParcelUUID = UUID.Zero;
+        private UUID m_currentParcelUUID = UUID.Zero;
+
+        public UUID CurrentParcelUUID
+        {
+            get
+            {
+                return m_currentParcelUUID;
+            }
+            set
+            {
+                m_currentParcelUUID = value;
+            }
+        }
 
         private ISceneViewer m_sceneViewer;
 
         /// <value>
         /// The animator for this avatar
         /// </value>
-        public Animator Animator
+        public IAnimator Animator
         {
             get { return m_animator; }
         }
@@ -91,8 +98,30 @@ namespace OpenSim.Region.Framework.Scenes
         private ScriptControlled LastCommands = ScriptControlled.CONTROL_ZERO;
         private bool MouseDown = false;
         private SceneObjectGroup proxyObjectGroup;
-        public Vector3 lastKnownAllowedPosition;
-        public Vector4 CollisionPlane = Vector4.UnitW;
+        private Vector3 m_lastKnownAllowedPosition;
+        public Vector3 LastKnownAllowedPosition
+        {
+            get
+            {
+                return m_lastKnownAllowedPosition;
+            }
+            set
+            {
+                m_lastKnownAllowedPosition = value;
+            }
+        }
+        private Vector4 m_CollisionPlane = Vector4.UnitW;
+        public Vector4 CollisionPlane
+        {
+            get
+            {
+                return m_CollisionPlane;
+            }
+            set
+            {
+                m_CollisionPlane = value;
+            }
+        }
 
         private bool m_updateflag;
         private uint m_movementflag;
@@ -108,8 +137,30 @@ namespace OpenSim.Region.Framework.Scenes
         private bool m_enqueueSendChildAgentUpdate = false;
         private DateTime m_enqueueSendChildAgentUpdateTime = new DateTime();
 
-        public bool SitGround = false;
-        public bool m_InitialHasWearablesBeenSent = false;
+        private bool m_SitGround = false;
+        public bool SitGround
+        {
+            get
+            {
+                return m_SitGround;
+            }
+            set
+            {
+                m_SitGround = value;
+            }
+        }
+        private bool m_InitialHasWearablesBeenSent = false;
+        public bool InitialHasWearablesBeenSent
+        {
+            get
+            {
+                return m_InitialHasWearablesBeenSent;
+            }
+            set
+            {
+                m_InitialHasWearablesBeenSent = value;
+            }
+        }
 
         private SendCourseLocationsMethod m_sendCourseLocationsMethod;
 
@@ -187,7 +238,15 @@ namespace OpenSim.Region.Framework.Scenes
 
         private const int NumMovementsBetweenRayCast = 5;
 
-        public string m_callbackURI = null;
+        private string m_callbackURI = null;
+        public string CallbackURI
+        {
+            get { return m_callbackURI; }
+            set
+            {
+                m_callbackURI = value;
+            }
+        }
 
         private bool CameraConstraintActive;
         //private int m_moveToPositionStateStatus;
@@ -544,7 +603,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public Quaternion Rotation
+        public override Quaternion Rotation
         {
             get { return m_bodyRot; }
             set { m_bodyRot = value; }
@@ -727,7 +786,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        public uint GenerateClientFlags(SceneObjectPart part)
+        public uint GenerateClientFlags (ISceneChildEntity part)
         {
             return m_scene.Permissions.GenerateClientFlags(m_uuid, part);
         }
@@ -1937,7 +1996,19 @@ namespace OpenSim.Region.Framework.Scenes
             Animator.RemoveAnimation(animID);
         }
 
-        public Vector3 PreJumpForce = Vector3.Zero;
+        public Vector3 m_preJumpForce = Vector3.Zero;
+
+        public Vector3 PreJumpForce
+        {
+            get
+            {
+                return m_preJumpForce;
+            }
+            set
+            {
+                m_preJumpForce = value;
+            }
+        }
 
         /// <summary>
         /// Rotate the avatar to the given rotation and apply a movement in the given relative vector
@@ -2227,7 +2298,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Send avatar data to an agent.
         /// </summary>
         /// <param name="avatar"></param>
-        private void SendAvatarDataToAgent (IScenePresence avatar)
+        public void SendAvatarDataToAgent (IScenePresence avatar)
         {
             //m_log.WarnFormat("[SP] Send avatar data from {0} to {1}",m_uuid,avatar.ControllingClient.AgentId);
             avatar.ControllingClient.SendAvatarDataImmediate(this);
@@ -2491,7 +2562,7 @@ namespace OpenSim.Region.Framework.Scenes
         private void Reset()
         {
             //Reset the parcel UUID for the user
-            currentParcelUUID = UUID.Zero;
+            CurrentParcelUUID = UUID.Zero;
             // Put the child agent back at the center
             AbsolutePosition
                 = new Vector3(Scene.RegionInfo.RegionSizeX * 0.5f, Scene.RegionInfo.RegionSizeY * 0.5f, 70);
@@ -2876,7 +2947,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="presence"></param>
         /// <param name="flags"></param>
-        public void AddUpdateToAvatar(SceneObjectPart part, PrimUpdateFlags flags)
+        public void AddUpdateToAvatar(ISceneChildEntity part, PrimUpdateFlags flags)
         {
             m_sceneViewer.QueuePartForUpdate(part, flags);
         }
@@ -2894,7 +2965,7 @@ namespace OpenSim.Region.Framework.Scenes
             return takecontrols;
         }
 
-        public void RegisterControlEventsToScript(int controls, int accept, int pass_on, SceneObjectPart part, UUID Script_item_UUID)
+        public void RegisterControlEventsToScript (int controls, int accept, int pass_on, ISceneChildEntity part, UUID Script_item_UUID)
         {
             ScriptControllers obj = new ScriptControllers();
             obj.ignoreControls = ScriptControlled.CONTROL_ZERO;
@@ -3103,242 +3174,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region IScenePresence Members
 
-
-        string IScenePresence.m_callbackURI
-        {
-            get { throw new NotImplementedException (); }
-        }
-
-        public IScene Scene
-        {
-            get { throw new NotImplementedException (); }
-        }
-
-        ISceneViewer IScenePresence.SceneViewer
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        IAnimator IScenePresence.Animator
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        Vector3 IScenePresence.CameraPosition
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        Quaternion IScenePresence.CameraRotation
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        Vector4 IScenePresence.CollisionPlane
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        int IScenePresence.UserLevel
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        Vector3 IScenePresence.lastKnownAllowedPosition
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        UUID IScenePresence.currentParcelUUID
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        public void DoAutoPilot (int p, Vector3 pos, IClientAPI avatar)
-        {
-            throw new NotImplementedException ();
-        }
-
-        Vector3 IScenePresence.CameraAtAxis
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        Vector3 IScenePresence.PreJumpForce
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        public void DoMoveToPosition (IScenePresence avatar, string p, List<string> coords)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public uint GenerateClientFlags (ISceneChildEntity p)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public bool IsDeleted
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        void IScenePresence.SendAvatarDataToAgent (IScenePresence sp)
-        {
-            throw new NotImplementedException ();
-        }
-
-        bool IScenePresence.SitGround
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        bool IScenePresence.m_InitialHasWearablesBeenSent
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        public void AddUpdateToAvatar (ISceneChildEntity entity, PrimUpdateFlags PostUpdateFlags)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public void RegisterControlEventsToScript (int controls, int accept, int pass_on, ISceneChildEntity m_host, UUID m_itemID)
-        {
-            throw new NotImplementedException ();
-        }
-
-        #endregion
-
-        #region IEntity Members
-
-        public UUID UUID
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        public uint LocalId
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        public int LinkNum
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
+        
 
         #endregion
     }

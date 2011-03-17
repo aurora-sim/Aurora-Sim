@@ -56,11 +56,11 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         private string p_firstname;
         private string p_lastname;
         private Vector3 p_position;
-        private Scene p_scene;
+        private IScene p_scene;
         private UUID p_cloneAppearanceFrom;
         private UUID p_returnUuid;
 
-        private AvatarAppearance GetAppearance(UUID target, Scene scene)
+        private AvatarAppearance GetAppearance(UUID target, IScene scene)
         {
             if (m_appearanceCache.ContainsKey(target))
                 return m_appearanceCache[target];
@@ -74,7 +74,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
             return new AvatarAppearance();
         }
 
-        public UUID CreateNPC(string firstname, string lastname,Vector3 position, Scene scene, UUID cloneAppearanceFrom)
+        public UUID CreateNPC (string firstname, string lastname, Vector3 position, IScene scene, UUID cloneAppearanceFrom)
         {
             // Block.
             m_createMutex.WaitOne();
@@ -101,7 +101,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
             return p_returnUuid;
         }
 
-        public void Autopilot(UUID agentID, Scene scene, Vector3 pos)
+        public void Autopilot (UUID agentID, IScene scene, Vector3 pos)
         {
             lock (m_avatars)
             {
@@ -114,7 +114,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
             }
         }
 
-        public void Say(UUID agentID, Scene scene, string text)
+        public void Say (UUID agentID, IScene scene, string text)
         {
             lock (m_avatars)
             {
@@ -125,7 +125,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
             }
         }
 
-        public void DeleteNPC(UUID agentID, Scene scene)
+        public void DeleteNPC (UUID agentID, IScene scene)
         {
             lock (m_avatars)
             {
