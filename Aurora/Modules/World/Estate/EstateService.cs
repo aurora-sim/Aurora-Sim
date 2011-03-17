@@ -264,9 +264,9 @@ namespace Aurora.Modules
                     telehub.TelehubLocX = part.AbsolutePosition.X;
                     telehub.TelehubLocY = part.AbsolutePosition.Y;
                     telehub.TelehubLocZ = part.AbsolutePosition.Z;
-                    telehub.TelehubRotX = part.ParentGroup.Rotation.X;
-                    telehub.TelehubRotY = part.ParentGroup.Rotation.Y;
-                    telehub.TelehubRotZ = part.ParentGroup.Rotation.Z;
+                    telehub.TelehubRotX = part.ParentEntity.Rotation.X;
+                    telehub.TelehubRotY = part.ParentEntity.Rotation.Y;
+                    telehub.TelehubRotZ = part.ParentEntity.Rotation.Z;
                     telehub.ObjectUUID = part.UUID;
                     telehub.Name = part.Name;
                     RegionConnector.AddTelehub(telehub, client.Scene.RegionInfo.RegionHandle);

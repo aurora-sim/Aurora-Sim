@@ -71,12 +71,12 @@ namespace OpenSim.Region.Physics.Manager
         {
             if (String.IsNullOrEmpty(physEngineName))
             {
-                return PhysicsScene.Null;
+                return new NullPhysicsScene();
             }
 
             if (String.IsNullOrEmpty(meshEngineName))
             {
-                return PhysicsScene.Null;
+                return new NullPhysicsScene();
             }
 
             IMesher meshEngine = null;

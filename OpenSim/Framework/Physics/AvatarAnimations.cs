@@ -29,7 +29,7 @@ using System.Collections.Generic;
 using System.Xml;
 using OpenMetaverse;
 
-namespace OpenSim.Region.Framework.Scenes.Animation
+namespace OpenSim.Framework
 {
     public class AvatarAnimations
     {

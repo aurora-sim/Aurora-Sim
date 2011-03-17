@@ -296,10 +296,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 uint killerObj = 0;
                 foreach (uint localid in coldata.Keys)
                 {
-                    SceneObjectPart part = m_SP.Scene.GetSceneObjectPart(localid);
+                    ISceneChildEntity part = m_SP.Scene.GetSceneObjectPart(localid);
                     if (part != null)
                     {
-                        if (part.ParentGroup.Damage != -1.0f)
+                        if (part.ParentEntity.Damage != -1.0f)
                             continue;
                         IScenePresence otherAvatar = m_SP.Scene.GetScenePresence (part.OwnerID);
                         if (otherAvatar != null) // If the avatar is null, the person is not inworld, and not on a team
@@ -309,9 +309,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                                 //If they have left combat, do not let them cause any damage.
                                 continue;
                             }
-                        } 
-                        if (part.ParentGroup.Damage > MaximumDamageToInflict)
-                            part.ParentGroup.Damage = MaximumDamageToInflict;
+                        }
+                        if (part.ParentEntity.Damage > MaximumDamageToInflict)
+                            part.ParentEntity.Damage = MaximumDamageToInflict;
 
                         if (AllowTeams)
                         {
@@ -338,16 +338,16 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                                     TeamHits[otherAvatar.UUID] = Hits;
 
                                     if(AllowTeamKilling) //Green light on team killing
-                                        Health -= part.ParentGroup.Damage;
+                                        Health -= part.ParentEntity.Damage;
                                 }
                                 else //Object, hit em
-                                    Health -= part.ParentGroup.Damage;
+                                    Health -= part.ParentEntity.Damage;
                             }
                             else //Other team, hit em
-                                Health -= part.ParentGroup.Damage;
+                                Health -= part.ParentEntity.Damage;
                         }
                         else //Free for all, hit em
-                            Health -= part.ParentGroup.Damage;
+                            Health -= part.ParentEntity.Damage;
                     }
                     else
                     {
@@ -402,7 +402,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                     if (killingAvatar == null)
                     {
                         // Try to get the object which was responsible for the killing
-                        SceneObjectPart part = m_SP.Scene.GetSceneObjectPart(killerObjectLocalID);
+                        ISceneChildEntity part = m_SP.Scene.GetSceneObjectPart (killerObjectLocalID);
                         if (part == null)
                         {
                             // Cause of death: Unknown
@@ -419,20 +419,20 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                                 UserAccount account = m_SP.Scene.UserAccountService.GetUserAccount(m_SP.Scene.RegionInfo.ScopeID, part.OwnerID);
                                 deadAvatarMessage = String.Format("You impaled yourself on {0} owned by {1}!", part.Name, account.Name);
                                 if (FireOnDeadEvent)
-                                    FireDeadAvatarEvent(account.Name, m_SP, part.ParentGroup);
+                                    FireDeadAvatarEvent (account.Name, m_SP, part.ParentEntity);
                             }
                             else
                             {
                                 killingAvatarMessage = String.Format("You fragged {0}!", m_SP.Name);
                                 if (FireOnDeadEvent)
-                                    FireDeadAvatarEvent(killingAvatar.Name, m_SP, part.ParentGroup);
+                                    FireDeadAvatarEvent (killingAvatar.Name, m_SP, part.ParentEntity);
                                 deadAvatarMessage = String.Format("You got killed by {0}!", killingAvatar.Name);
                             }
                         }
                     }
                     else
                     {
-                        SceneObjectPart part = m_SP.Scene.GetSceneObjectPart(killerObjectLocalID);
+                        ISceneChildEntity part = m_SP.Scene.GetSceneObjectPart (killerObjectLocalID);
                         if (part == null)
                         {
                             // Cause of death: Unknown
@@ -446,7 +446,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                             killingAvatarMessage = String.Format("You fragged {0}!", m_SP.Name);
                             deadAvatarMessage = String.Format("You got killed by {0}!", killingAvatar.Name);
                             if (FireOnDeadEvent)
-                                FireDeadAvatarEvent(killingAvatar.Name, m_SP, part.ParentGroup);
+                                FireDeadAvatarEvent (killingAvatar.Name, m_SP, part.ParentEntity);
                         }
                     }
                 }
@@ -498,14 +498,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 this.HasLeftCombat = false;
             }
 
-            private void FireDeadAvatarEvent (string KillerName, IScenePresence DeadAv, SceneObjectGroup killer)
+            private void FireDeadAvatarEvent (string KillerName, IScenePresence DeadAv, ISceneEntity killer)
             {
                 IScriptModule[] scriptEngines = DeadAv.Scene.RequestModuleInterfaces<IScriptModule>();
                 foreach (IScriptModule m in scriptEngines)
                 {
                     if (killer != null)
                     {
-                        foreach (SceneObjectPart part in killer.ChildrenList)
+                        foreach (ISceneChildEntity part in killer.ChildrenEntities())
                         {
                             m.PostObjectEvent(part.UUID, "dead_avatar", new object[] { DeadAv.Name, KillerName, DeadAv.UUID });
                         }

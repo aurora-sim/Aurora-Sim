@@ -29,21 +29,15 @@ using System.Collections.Generic;
 using System.Reflection;
 using log4net;
 using Nini.Config;
-using OpenSim.Framework;
 using OpenMetaverse;
 
-namespace OpenSim.Region.Physics.Manager
+namespace OpenSim.Framework
 {
     public delegate void RaycastCallback(bool hitYN, Vector3 collisionPoint, uint localid, float distance, Vector3 normal);
 
     public abstract class PhysicsScene
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        public static PhysicsScene Null
-        {
-            get { return new NullPhysicsScene(); }
-        }
 
         public virtual Vector3 PointOfGravity
         {
@@ -256,116 +250,116 @@ namespace OpenSim.Region.Physics.Manager
             if (retMethod != null)
                 retMethod(false, Vector3.Zero, 0, 999999999999f, Vector3.Zero);
         }
+    }
 
-        private class NullPhysicsScene : PhysicsScene
+    public class NullPhysicsScene : PhysicsScene
+    {
+        private static int m_workIndicator;
+
+
+        public override void Initialise (IMesher meshmerizer, RegionInfo region)
         {
-            private static int m_workIndicator;
+            // Does nothing right now
+        }
 
+        public override void PostInitialise (IConfigSource config)
+        {
+        }
 
-            public override void Initialise(IMesher meshmerizer, RegionInfo region)
-            {
-                // Does nothing right now
-            }
+        public override PhysicsActor AddAvatar (string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying)
+        {
+            m_log.InfoFormat ("[PHYSICS]: NullPhysicsScene : AddAvatar({0})", position);
+            return new NullPhysicsActor ();
+        }
 
-            public override void PostInitialise(IConfigSource config)
-            {
-            }
+        public override void RemoveAvatar (PhysicsActor actor)
+        {
+        }
 
-            public override PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying)
-            {
-                m_log.InfoFormat("[PHYSICS]: NullPhysicsScene : AddAvatar({0})", position);
-                return new NullPhysicsActor();
-            }
+        public override void RemovePrim (PhysicsActor prim)
+        {
+        }
 
-            public override void RemoveAvatar(PhysicsActor actor)
-            {
-            }
+        public override void SetWaterLevel (short[] map)
+        {
+        }
 
-            public override void RemovePrim(PhysicsActor prim)
-            {
-            }
+        /*
+                    public override PhysicsActor AddPrim(Vector3 position, Vector3 size, Quaternion rotation)
+                    {
+                        m_log.InfoFormat("NullPhysicsScene : AddPrim({0},{1})", position, size);
+                        return PhysicsActor.Null;
+                    }
+        */
 
-            public override void SetWaterLevel(short[] map)
-            {
-            }
+        public override PhysicsActor AddPrimShape (string primName, PrimitiveBaseShape pbs, Vector3 position,
+                                                  Vector3 size, Quaternion rotation) //To be removed
+        {
+            return AddPrimShape (primName, pbs, position, size, rotation, false);
+        }
 
-/*
-            public override PhysicsActor AddPrim(Vector3 position, Vector3 size, Quaternion rotation)
-            {
-                m_log.InfoFormat("NullPhysicsScene : AddPrim({0},{1})", position, size);
-                return PhysicsActor.Null;
-            }
-*/
+        public override PhysicsActor AddPrimShape (string primName, PrimitiveBaseShape pbs, Vector3 position,
+                                                  Vector3 size, Quaternion rotation, bool isPhysical)
+        {
+            m_log.InfoFormat ("[PHYSICS]: NullPhysicsScene : AddPrim({0},{1})", position, size);
+            return new NullPhysicsActor ();
+        }
 
-            public override PhysicsActor AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
-                                                      Vector3 size, Quaternion rotation) //To be removed
-            {
-                return AddPrimShape(primName, pbs, position, size, rotation, false);
-            }
+        public override void AddPhysicsActorTaint (PhysicsActor prim)
+        {
+        }
 
-            public override PhysicsActor AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
-                                                      Vector3 size, Quaternion rotation, bool isPhysical)
-            {
-                m_log.InfoFormat("[PHYSICS]: NullPhysicsScene : AddPrim({0},{1})", position, size);
-                return new NullPhysicsActor ();
-            }
+        public override float Simulate (float timeStep)
+        {
+            m_workIndicator = (m_workIndicator + 1) % 10;
 
-            public override void AddPhysicsActorTaint(PhysicsActor prim)
-            {
-            }
+            return 0f;
+        }
 
-            public override float Simulate(float timeStep)
-            {
-                m_workIndicator = (m_workIndicator + 1) % 10;
+        public override void GetResults ()
+        {
+            m_log.Info ("[PHYSICS]: NullPhysicsScene : GetResults()");
+        }
 
-                return 0f;
-            }
+        public override void SetTerrain (short[] heightMap)
+        {
+            m_log.InfoFormat ("[PHYSICS]: NullPhysicsScene : SetTerrain({0} items)", heightMap.Length);
+        }
 
-            public override void GetResults()
-            {
-                m_log.Info("[PHYSICS]: NullPhysicsScene : GetResults()");
-            }
+        public override void DeleteTerrain ()
+        {
+        }
 
-            public override void SetTerrain(short[] heightMap)
-            {
-                m_log.InfoFormat("[PHYSICS]: NullPhysicsScene : SetTerrain({0} items)", heightMap.Length);
-            }
+        public override bool IsThreaded
+        {
+            get { return false; }
+        }
 
-            public override void DeleteTerrain()
-            {
-            }
+        public override Vector3 PointOfGravity
+        {
+            get { return Vector3.Zero; }
+            set { }
+        }
 
-            public override bool IsThreaded
-            {
-                get { return false; }
-            }
+        public override void Dispose ()
+        {
+        }
 
-            public override Vector3 PointOfGravity
-            {
-                get { return Vector3.Zero; }
-                set { }
-            }
+        public override Dictionary<uint, float> GetTopColliders ()
+        {
+            Dictionary<uint, float> returncolliders = new Dictionary<uint, float> ();
+            return returncolliders;
+        }
 
-            public override void Dispose()
-            {
-            }
+        public override bool DisableCollisions
+        {
+            get { return false; }
+            set { }
+        }
 
-            public override Dictionary<uint,float> GetTopColliders()
-            {
-                Dictionary<uint, float> returncolliders = new Dictionary<uint, float>();
-                return returncolliders;
-            }
-
-            public override bool DisableCollisions
-            {
-                get { return false; }
-                set { }
-            }
-
-            public override bool UseUnderWaterPhysics
-            {
-                get { return false; }
-            }
+        public override bool UseUnderWaterPhysics
+        {
+            get { return false; }
         }
     }
     public delegate void JointMoved(PhysicsJoint joint);

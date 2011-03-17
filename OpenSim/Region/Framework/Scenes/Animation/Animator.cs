@@ -38,7 +38,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
     /// <summary>
     /// Handle all animation duties for a scene presence
     /// </summary>
-    public class Animator
+    public class Animator : IAnimator
     {
         public AnimationSet Animations
         {
@@ -116,7 +116,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             if (m_animations.Remove(animID))
                 SendAnimPack();
         }
-
+        
         // Called from scripts
         public bool RemoveAnimation(string name)
         {
@@ -130,7 +130,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             RemoveAnimation(animID);
             return true;
         }
-
+        
         public void ResetAnimations()
         {
             m_animations.Clear();
@@ -277,7 +277,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 {
                     if (move.Z == 0)
                     {
-                        if (m_scenePresence.Scene.SceneGraph.PhysicsScene.UseUnderWaterPhysics &&
+                        if (m_scenePresence.Scene.PhysicsScene.UseUnderWaterPhysics &&
                             actor.Position.Z < m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
                         {
                             return "SWIM_FORWARD";
@@ -295,13 +295,13 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                     }
                     else if (move.Z > 0)
                     {
-                        if (m_scenePresence.Scene.SceneGraph.PhysicsScene.UseUnderWaterPhysics &&
+                        if (m_scenePresence.Scene.PhysicsScene.UseUnderWaterPhysics &&
                             actor.Position.Z < m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
                             return "SWIM_UP";
                         else
                             return "FLYSLOW";
                     }
-                    if (m_scenePresence.Scene.SceneGraph.PhysicsScene.UseUnderWaterPhysics &&
+                    if (m_scenePresence.Scene.PhysicsScene.UseUnderWaterPhysics &&
                             actor.Position.Z < m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
                         return "SWIM_DOWN";
                     else
@@ -311,7 +311,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 {
                     //This is for the slow fly timer
                     m_timesBeforeSlowFlyIsOff = 0;
-                    if (m_scenePresence.Scene.SceneGraph.PhysicsScene.UseUnderWaterPhysics &&
+                    if (m_scenePresence.Scene.PhysicsScene.UseUnderWaterPhysics &&
                             actor.Position.Z < m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
                         return "SWIM_UP";
                     else
@@ -321,7 +321,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 {
                     //This is for the slow fly timer
                     m_timesBeforeSlowFlyIsOff = 0;
-                    if (m_scenePresence.Scene.SceneGraph.PhysicsScene.UseUnderWaterPhysics &&
+                    if (m_scenePresence.Scene.PhysicsScene.UseUnderWaterPhysics &&
                             actor.Position.Z < m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
                         return "SWIM_DOWN";
                     else
@@ -338,7 +338,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 {
                     //This is for the slow fly timer
                     m_timesBeforeSlowFlyIsOff = 0;
-                    if (m_scenePresence.Scene.SceneGraph.PhysicsScene.UseUnderWaterPhysics &&
+                    if (m_scenePresence.Scene.PhysicsScene.UseUnderWaterPhysics &&
                             actor.Position.Z < m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
                         return "SWIM_HOVER";
                     else
@@ -632,7 +632,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             m_animations.GetArrays(out animIDs, out sequenceNums, out objectIDs);
             return animIDs;
         }
-
+        
         /// <summary>
         ///
         /// </summary>

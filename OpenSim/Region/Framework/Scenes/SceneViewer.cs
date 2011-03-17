@@ -69,7 +69,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private Vector3 m_lastUpdatePos;
         private float lastDrawDistance;
-        public Prioritizer Prioritizer
+        public IPrioritizer Prioritizer
         {
             get { return m_prioritizer; }
         }

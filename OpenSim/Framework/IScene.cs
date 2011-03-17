@@ -28,9 +28,16 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Reflection;
+using log4net;
 using Nini.Config;
 using OpenMetaverse;
+using OpenSim.Framework;
+using OpenSim.Framework.Client;
 using OpenSim.Services.Interfaces;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using OpenMetaverse.StructuredData;
+using OpenSim.Framework.Servers.HttpServer;
 
 namespace OpenSim.Framework
 {
@@ -56,6 +63,8 @@ namespace OpenSim.Framework
     {
         bool m_usePreJump;
         RegionInfo RegionInfo { get; }
+        EventManager EventManager { get; }
+        PhysicsScene PhysicsScene { get; }
 
         IConfigSource Config { get; }
 

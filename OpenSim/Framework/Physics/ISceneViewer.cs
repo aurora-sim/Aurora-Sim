@@ -26,23 +26,22 @@
  */
 
 using System;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Framework;
+using OpenMetaverse;
 
-namespace OpenSim.Region.Framework.Interfaces
+namespace OpenSim.Framework
 {
     public interface ISceneViewer
     {
         /// <summary>
         /// The instance of the prioritizer the SceneViewer uses
         /// </summary>
-        Prioritizer Prioritizer { get; }
+        IPrioritizer Prioritizer { get; }
 
         /// <summary>
         /// Add the objects to the queue for which we need to send an update to the client
         /// </summary>
         /// <param name="part"></param>
-        void QueuePartForUpdate(SceneObjectPart part, PrimUpdateFlags UpdateFlags);
+        void QueuePartForUpdate(ISceneChildEntity part, PrimUpdateFlags UpdateFlags);
 
         /// <summary>
         /// This loops through all of the lists that we have for the client
@@ -55,13 +54,13 @@ namespace OpenSim.Region.Framework.Interfaces
         /// Clear the updates for this part in the next update loop
         /// </summary>
         /// <param name="part"></param>
-        void ClearUpdatesForPart(SceneObjectPart sceneObjectPart);
+        void ClearUpdatesForPart (ISceneChildEntity sceneObjectPart);
 
         /// <summary>
         /// Clear the updates for this part in the next update loop only
         /// </summary>
         /// <param name="part"></param>
-        void ClearUpdatesForOneLoopForPart(SceneObjectPart sceneObjectPart);
+        void ClearUpdatesForOneLoopForPart (ISceneChildEntity sceneObjectPart);
 
         /// <summary>
         /// Run through all of the updates we have and re-assign their priority depending
@@ -73,5 +72,30 @@ namespace OpenSim.Region.Framework.Interfaces
         /// Reset all lists that have to deal with what updates the viewer has
         /// </summary>
         void Reset();
+    }
+
+    public interface IPrioritizer
+    {
+        double GetUpdatePriority (IClientAPI client, ISceneEntity entity);
+        double RootReprioritizationDistance { get; }
+        double ChildReprioritizationDistance { get; }
+    }
+
+    public interface IAnimator
+    {
+        AnimationSet Animations { get; }
+        string CurrentMovementAnimation { get; }
+        void UpdateMovementAnimations ();
+        void AddAnimation (UUID animID, UUID objectID);
+        bool AddAnimation (string name, UUID objectID);
+        void RemoveAnimation (UUID animID);
+        bool RemoveAnimation (string name);
+        void ResetAnimations ();
+        void TrySetMovementAnimation (string anim);
+        UUID[] GetAnimationArray ();
+        void SendAnimPack (UUID[] animations, int[] seqs, UUID[] objectIDs);
+        void SendAnimPackToClient (IClientAPI client);
+        void SendAnimPack ();
+        void Close ();
     }
 }

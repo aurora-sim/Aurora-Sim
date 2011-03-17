@@ -27,12 +27,11 @@
 
 using System;
 using System.Collections.Generic;
-using OpenSim.Framework;
 using OpenMetaverse;
 
 using Animation = OpenSim.Framework.Animation;
 
-namespace OpenSim.Region.Framework.Scenes.Animation
+namespace OpenSim.Framework
 {
     [Serializable]
     public class AnimationSet

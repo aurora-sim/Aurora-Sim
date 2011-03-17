@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
-using OpenSim.Region.Physics.Manager;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Interfaces
 {

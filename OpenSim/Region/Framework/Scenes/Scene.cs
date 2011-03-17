@@ -137,6 +137,11 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Properties
 
+        public PhysicsScene PhysicsScene
+        {
+            get { return m_sceneGraph.PhysicsScene; }
+        }
+
         public float BaseSimFPS
         {
             get { return m_basesimfps; }
@@ -503,7 +508,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 IPhysicsMonitor monitor = RequestModuleInterface<IPhysicsMonitor>();
                 if (monitor != null)
-                    monitor.AddPhysicsStats(RegionInfo.RegionID, m_sceneGraph.PhysicsScene);
+                    monitor.AddPhysicsStats(RegionInfo.RegionID, PhysicsScene);
 
                 //Now fix the sim stats
                 int MonitorOtherFrameTime = Util.EnvironmentTickCountSubtract(OtherFrameTime);

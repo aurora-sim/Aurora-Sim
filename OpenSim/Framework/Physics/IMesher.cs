@@ -30,26 +30,31 @@ using System.Collections.Generic;
 using OpenSim.Framework;
 using OpenMetaverse;
 
-namespace OpenSim.Region.Physics.Manager
+namespace OpenSim.Framework
 {
-    public enum PhysicsJointType : int
+    public interface IMesher
     {
-        Ball = 0,
-        Hinge = 1
+        IMesh CreateMesh(String primName, PrimitiveBaseShape primShape, Vector3 size, float lod);
+        IMesh CreateMesh(String primName, PrimitiveBaseShape primShape, Vector3 size, float lod, bool isPhysical);
+        void RemoveMesh(ulong key);
     }
 
-    public class PhysicsJoint
+    public interface IVertex
     {
-        public virtual bool IsInPhysicsEngine { get { return false; } } // set internally to indicate if this joint has already been passed to the physics engine or is still pending
-        public PhysicsJointType Type;
-        public string RawParams;
-        public List<string> BodyNames = new List<string>();
-        public Vector3 Position; // global coords
-        public Quaternion Rotation; // global coords
-        public string ObjectNameInScene; // proxy object in scene that represents the joint position/orientation
-        public string TrackedBodyName; // body name that this joint is attached to (ObjectNameInScene will follow TrackedBodyName)
-        public Quaternion LocalRotation; // joint orientation relative to one of the involved bodies, the tracked body
-        public int ErrorMessageCount; // total # of error messages printed for this joint since its creation. if too many, further error messages are suppressed to prevent flooding.
-        public const int maxErrorMessages = 100; // no more than this # of error messages will be printed for each joint
+    }
+
+    public interface IMesh
+    {
+        List<Vector3> getVertexList();
+        int[] getIndexListAsInt();
+        int[] getIndexListAsIntLocked();
+        float[] getVertexListAsFloatLocked();
+        void getIndexListAsPtrToIntArray(out IntPtr indices, out int triStride, out int indexCount);
+        void getVertexListAsPtrToFloatArray(out IntPtr vertexList, out int vertexStride, out int vertexCount);
+        void releaseSourceMeshData();
+        void releasePinned();
+        void Append(IMesh newMesh);
+        void TransformLinear(float[,] matrix, float[] offset);
+        ulong Key { get; }
     }
 }

@@ -59,7 +59,7 @@ namespace OpenSim.Region.Framework.Scenes
         BestAvatarResponsiveness = 4
     }
 
-    public class Prioritizer
+    public class Prioritizer : IPrioritizer
     {
         private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 

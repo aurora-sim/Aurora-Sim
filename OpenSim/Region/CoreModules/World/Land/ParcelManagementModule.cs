@@ -973,12 +973,12 @@ namespace OpenSim.Region.CoreModules.World.Land
                         group.AbsolutePosition = group.m_lastSignificantPosition;
 
                         //If the object has physics, stop it from moving
-                        if ((group.RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics)
+                        if ((group.RootChild.Flags & PrimFlags.Physics) == PrimFlags.Physics)
                         {
-                            bool wasTemporary = ((group.RootPart.Flags & PrimFlags.TemporaryOnRez) != 0);
-                            bool wasPhantom = ((group.RootPart.Flags & PrimFlags.Phantom) != 0);
-                            bool wasVD = group.RootPart.VolumeDetectActive;
-                            group.RootPart.UpdatePrimFlags(false, wasTemporary, wasPhantom, wasVD);
+                            bool wasTemporary = ((group.RootChild.Flags & PrimFlags.TemporaryOnRez) != 0);
+                            bool wasPhantom = ((group.RootChild.Flags & PrimFlags.Phantom) != 0);
+                            bool wasVD = group.RootChild.VolumeDetectActive;
+                            group.RootChild.UpdatePrimFlags (false, wasTemporary, wasPhantom, wasVD);
                         }
                         //Send an update so that all clients see it
                         group.ScheduleGroupTerseUpdate();
