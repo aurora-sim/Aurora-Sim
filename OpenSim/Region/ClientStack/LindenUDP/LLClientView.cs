@@ -5204,7 +5204,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //update.JointAxisOrAnchor = Vector3.Zero; // These are deprecated
             //update.JointPivot = Vector3.Zero;
             //update.JointType = 0;
-            update.Material = data.Material;
+            update.Material = (byte)data.Material;
             update.MediaURL = Utils.StringToBytes(data.CurrentMediaVersion);
             if (data.IsAttachment)
             {

@@ -728,8 +728,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             return items;
         }
-        
-        public SceneObjectGroup GetRezReadySceneObject(TaskInventoryItem item)
+
+        public ISceneEntity GetRezReadySceneObject (TaskInventoryItem item)
         {
             AssetBase rezAsset = m_part.ParentGroup.Scene.AssetService.Get(item.AssetID.ToString());
 
@@ -755,7 +755,7 @@ namespace OpenSim.Region.Framework.Scenes
             //Reset IDs, etc
             m_part.ParentGroup.Scene.SceneGraph.PrepPrimForAdditionToScene(group);
 
-            SceneObjectPart rootPart = group.GetChildPart(group.UUID);
+            SceneObjectPart rootPart = (SceneObjectPart)group.GetChildPart(group.UUID);
 
             // Since renaming the item in the inventory does not affect the name stored
             // in the serialization, transfer the correct name from the inventory to the
@@ -916,8 +916,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// Serialize all the metadata for the items in this prim's inventory ready for sending to the client
         /// </summary>
         /// <param name="xferManager"></param>
-        public void RequestInventoryFile(IClientAPI client, IXfer xferManager)
+        public void RequestInventoryFile(IClientAPI client)
         {
+            IXfer xferManager = client.Scene.RequestModuleInterface<IXfer> ();
             if (m_inventorySerial == 0)
             {
                 //No inventory, no sending
@@ -1015,8 +1016,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// Process inventory backup
         /// </summary>
         /// <param name="datastore"></param>
-        public void ProcessInventoryBackup(ISimulationDataStore datastore)
+        public void ProcessInventoryBackup()
         {
+            ISimulationDataStore datastore = ((Scene)m_part.ParentGroup.Scene).SimulationDataService;
             if (HasInventoryChanged)
             {
 				HasInventoryChanged = false;

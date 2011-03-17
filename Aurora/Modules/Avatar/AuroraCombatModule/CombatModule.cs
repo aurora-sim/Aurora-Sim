@@ -100,7 +100,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             }
         }
 
-        private bool AllowedTeleports(UUID userID, Scene scene, out string reason)
+        private bool AllowedTeleports(UUID userID, IScene scene, out string reason)
         {
             //Make sure that agents that are in combat cannot tp around. They CAN tp if they are out of combat however
             reason = "";

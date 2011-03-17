@@ -799,5 +799,97 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         #endregion
+
+        #region IScene Members
+
+        bool IScene.m_usePreJump
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        ISceneGraph IScene.SceneGraph
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        List<ISceneEntity> IScene.PhysicsReturns
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public IEnumerable<IScenePresence> GetScenePresences ()
+        {
+            throw new NotImplementedException ();
+        }
+
+        public IScenePresence GetScenePresence (uint killerObjectLocalID)
+        {
+            throw new NotImplementedException ();
+        }
+
+        bool IScene.CheckForObjectCulling
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        bool IScene.m_useSplatAnimation
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        ISceneChildEntity IScene.GetSceneObjectPart (uint localID)
+        {
+            throw new NotImplementedException ();
+        }
+
+        ISceneChildEntity IScene.GetSceneObjectPart (UUID objectID)
+        {
+            throw new NotImplementedException ();
+        }
+
+        float IScene.MaxLowValue
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public bool TryGetPart (UUID objecUUID, out ISceneChildEntity SensedObject)
+        {
+            throw new NotImplementedException ();
+        }
+
+        string IScene.DefaultObjectName
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        #endregion
     }
 }

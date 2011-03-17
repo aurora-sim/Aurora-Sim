@@ -983,8 +983,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 //They can't even edit the object
                 return false;
             }
-        
-            SceneObjectPart part = scene.GetSceneObjectPart(objectID);
+
+            ISceneChildEntity part = scene.GetSceneObjectPart (objectID);
             if (part == null)
                 return false;
 
@@ -1454,7 +1454,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            SceneObjectPart part = scene.GetSceneObjectPart(objectID);
+            ISceneChildEntity part = scene.GetSceneObjectPart (objectID);
 
             if (part == null)
                 return false;
@@ -1638,7 +1638,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             }
             else // Prim inventory
             {
-                SceneObjectPart part = scene.GetSceneObjectPart(objectID);
+                ISceneChildEntity part = scene.GetSceneObjectPart (objectID);
 
                 if (part == null)
                 {
@@ -1742,7 +1742,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             }
             else // Prim inventory
             {
-                SceneObjectPart part = scene.GetSceneObjectPart(objectID);
+                ISceneChildEntity part = scene.GetSceneObjectPart (objectID);
 
                 if (part == null)
                 {

@@ -147,6 +147,6 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="position"></param>
         /// <param name="reason"></param>
         /// <param name="deleteGroups">Groups to delete</param>
-        void AddReturns(UUID agentID, string objectName, Vector3 position, string reason, List<SceneObjectGroup> deleteGroups);
+        void AddReturns(UUID agentID, string objectName, Vector3 position, string reason, List<ISceneEntity> deleteGroups);
     }
 }

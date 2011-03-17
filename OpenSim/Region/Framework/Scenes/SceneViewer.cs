@@ -65,7 +65,7 @@ namespace OpenSim.Region.Framework.Scenes
 //        protected int m_lastVersion = 0;
         private Queue<object> m_delayedUpdates = new Queue<object>();
 
-        private HashSet<SceneObjectGroup> lastGrpsInView = new HashSet<SceneObjectGroup>();
+        private HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity> ();
 
         private Vector3 m_lastUpdatePos;
         private float lastDrawDistance;
@@ -103,7 +103,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Add the objects to the queue for which we need to send an update to the client
         /// </summary>
         /// <param name="part"></param>
-        public void QueuePartForUpdate(SceneObjectPart part, PrimUpdateFlags UpdateFlags)
+        public void QueuePartForUpdate(ISceneChildEntity part, PrimUpdateFlags UpdateFlags)
             {
 /*            EntityUpdate update = new EntityUpdate(part, UpdateFlags);
             bool ignore;
@@ -117,7 +117,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_presence.Scene.CheckForObjectCulling)
                 {
                 // priority is negative of distance
-                double priority = m_prioritizer.GetUpdatePriority(m_presence.ControllingClient, part.ParentGroup);
+                double priority = m_prioritizer.GetUpdatePriority(m_presence.ControllingClient, part.ParentEntity);
                 if (priority < calcMinPrio())
                     return; // if 2 far ignore
                 }
@@ -181,7 +181,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Clear the updates for this part in the next update loop
         /// </summary>
         /// <param name="part"></param>
-        public void ClearUpdatesForPart(SceneObjectPart part)
+        public void ClearUpdatesForPart (ISceneChildEntity part)
         {
 /*
             lock (m_removeUpdateOf)
@@ -199,7 +199,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Clear the updates for this part in the next update loop
         /// </summary>
         /// <param name="part"></param>
-        public void ClearUpdatesForOneLoopForPart(SceneObjectPart part)
+        public void ClearUpdatesForOneLoopForPart (ISceneChildEntity part)
         {
 /*
             lock (m_removeNextUpdateOf)
@@ -283,11 +283,11 @@ namespace OpenSim.Region.Framework.Scenes
 
             // build a prioritized list of things we need to send
 
-            HashSet<SceneObjectGroup> NewGrpsInView = new HashSet<SceneObjectGroup>();
+            HashSet<ISceneEntity> NewGrpsInView = new HashSet<ISceneEntity> ();
 
             foreach (ISceneEntity e in entities)
                 {
-                if (e != null && e is SceneObjectGroup)
+                    if (e != null)
                     {
                     if (e.IsDeleted)
                         continue;
@@ -298,9 +298,9 @@ namespace OpenSim.Region.Framework.Scenes
                     if (priority < newminp)
                         continue; // if 2 far ignore
 
-                    NewGrpsInView.Add((SceneObjectGroup)e);
+                    NewGrpsInView.Add(e);
 
-                    if (lastGrpsInView.Contains((SceneObjectGroup)e))
+                    if (lastGrpsInView.Contains(e))
                         continue;
 
                     EntityUpdate update = new EntityUpdate(e, PrimUpdateFlags.FullUpdate);
@@ -530,7 +530,7 @@ namespace OpenSim.Region.Framework.Scenes
                     o = m_delayedUpdates.Dequeue();
                     if (o == null)
                         break;
-                    SceneObjectPart p = (SceneObjectPart)((object[])o)[0];
+                    ISceneChildEntity p = (ISceneChildEntity)((object[])o)[0];
                     PrimUpdateFlags updateFlags = (PrimUpdateFlags)((object[])o)[1];
                     SendUpdate(p, m_presence.GenerateClientFlags(p), updateFlags);
                     }
@@ -714,7 +714,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="clientFlags"></param>
-        protected internal void SendUpdate(SceneObjectPart part, uint clientFlags, PrimUpdateFlags changedFlags)
+        protected internal void SendUpdate (ISceneChildEntity part, uint clientFlags, PrimUpdateFlags changedFlags)
         {
             Vector3 lPos;
             if (part.IsRoot)
@@ -734,7 +734,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             // Suppress full updates during attachment editing
-            if (part.ParentGroup.IsSelected && part.IsAttachment)
+            if (part.ParentEntity.IsSelected && part.IsAttachment)
                 return;
 
             clientFlags &= ~(uint)PrimFlags.CreateSelected;
@@ -755,19 +755,16 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="UpdateFlags"></param>
         /// <param name="grp"></param>
-        protected internal void SendUpdate(PrimUpdateFlags UpdateFlags, SceneObjectGroup grp)
+        protected internal void SendUpdate(PrimUpdateFlags UpdateFlags, ISceneEntity grp)
         {
             SendUpdate(
-                grp.RootPart, m_presence.Scene.Permissions.GenerateClientFlags(m_presence.UUID, grp.RootPart), UpdateFlags);
+                grp.RootChild, m_presence.Scene.Permissions.GenerateClientFlags(m_presence.UUID, grp.RootChild), UpdateFlags);
 
-            List<SceneObjectPart> children;
-            lock (grp.ChildrenList)
-            {
-                children = new List<SceneObjectPart>(grp.ChildrenList);
-            }
+            List<ISceneChildEntity> children;
+            children = new List<ISceneChildEntity> (grp.ChildrenEntities());
             foreach (SceneObjectPart part in children)
             {
-                if (part != grp.RootPart)
+                if (part != grp.RootChild)
                     SendUpdate(
                         part, m_presence.Scene.Permissions.GenerateClientFlags(m_presence.UUID, part), UpdateFlags);
             }

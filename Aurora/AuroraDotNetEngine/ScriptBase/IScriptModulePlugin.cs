@@ -7,6 +7,7 @@ using OpenMetaverse;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
@@ -40,6 +41,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         IScriptApi GetApi(UUID m_itemID, string p);
 
-        bool PipeEventsForScript(SceneObjectPart m_host, Vector3 vector3);
+        bool PipeEventsForScript (ISceneChildEntity m_host, Vector3 vector3);
     }
 }

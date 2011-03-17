@@ -300,7 +300,7 @@ namespace Aurora.Modules
 
         #region Teleport Permissions
 
-        private bool OnAllowedIncomingTeleport(UUID userID, Scene scene, Vector3 Position, out Vector3 newPosition, out string reason)
+        private bool OnAllowedIncomingTeleport(UUID userID, IScene scene, Vector3 Position, out Vector3 newPosition, out string reason)
         {
             newPosition = Position;
             UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, userID);
@@ -559,7 +559,7 @@ namespace Aurora.Modules
             return true;
         }
 
-        private bool OnAllowedIncomingAgent(Scene scene, AgentCircuitData agent, bool isRootAgent, out string reason)
+        private bool OnAllowedIncomingAgent(IScene scene, AgentCircuitData agent, bool isRootAgent, out string reason)
         {
             #region Incoming Agent Checks
 

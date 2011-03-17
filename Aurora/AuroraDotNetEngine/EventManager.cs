@@ -172,13 +172,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return ret;
         }
 
-        public void changed(SceneObjectPart part, uint change)
+        public void changed (ISceneChildEntity part, uint change)
         {
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
 
             if (datas == null || datas.Length == 0)
             {
-                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentEntity.RootChild.UUID);
                 if (datas == null || datas.Length == 0)
                     return;
             }
@@ -201,7 +201,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="offsetPos"></param>
         /// <param name="remoteClient"></param>
         /// <param name="surfaceArgs"></param>
-        public void touch_start(SceneObjectPart part, SceneObjectPart child, Vector3 offsetPos,
+        public void touch_start (ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos,
                 IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
         {
             // Add to queue for all scripts in ObjectID object
@@ -212,7 +212,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             DetectParams detparam = new DetectParams();
             detparam.Key = remoteClient.AgentId;
 
-            detparam.Populate(part.ParentGroup.Scene);
+            detparam.Populate(part.ParentEntity.Scene);
             detparam.LinkNum = child.LinkNum;
             
             if (surfaceArgs != null)
@@ -238,7 +238,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void touch(SceneObjectPart part, SceneObjectPart child, Vector3 offsetPos,
+        public void touch (ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos,
                 IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
         {
             Dictionary<UUID, DetectParams> det = new Dictionary<UUID, DetectParams>();
@@ -253,7 +253,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                                      offsetPos.Y,
                                                      offsetPos.Z);
 
-            detparam.Populate(part.ParentGroup.Scene);
+            detparam.Populate(part.ParentEntity.Scene);
             detparam.LinkNum = child.LinkNum;
 
             if (surfaceArgs != null)
@@ -277,7 +277,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void touch_end(SceneObjectPart part, SceneObjectPart child, IClientAPI remoteClient,
+        public void touch_end (ISceneChildEntity part, ISceneChildEntity child, IClientAPI remoteClient,
                               SurfaceTouchEventArgs surfaceArgs)
         {
             Dictionary<UUID, DetectParams> det = new Dictionary<UUID, DetectParams>();
@@ -345,7 +345,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return ret;
         }
 
-        public void collision_start(SceneObjectPart part, ColliderArgs col)
+        public void collision_start (ISceneChildEntity part, ColliderArgs col)
         {
             // Add to queue for all scripts in ObjectID object
             List<DetectParams> det = new List<DetectParams>();
@@ -354,7 +354,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 DetectParams d = new DetectParams();
                 d.Key = detobj.keyUUID;
-                d.Populate(part.ParentGroup.Scene);
+                d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
             }
@@ -380,7 +380,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void collision(SceneObjectPart part, ColliderArgs col)
+        public void collision (ISceneChildEntity part, ColliderArgs col)
         {
             // Add to queue for all scripts in ObjectID object
             List<DetectParams> det = new List<DetectParams>();
@@ -389,7 +389,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 DetectParams d = new DetectParams();
                 d.Key = detobj.keyUUID;
-                d.Populate(part.ParentGroup.Scene);
+                d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
             }
@@ -415,7 +415,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void collision_end(SceneObjectPart part, ColliderArgs col)
+        public void collision_end (ISceneChildEntity part, ColliderArgs col)
         {
             // Add to queue for all scripts in ObjectID object
             List<DetectParams> det = new List<DetectParams>();
@@ -424,7 +424,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 DetectParams d = new DetectParams();
                 d.Key = detobj.keyUUID;
-                d.Populate(part.ParentGroup.Scene);
+                d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
             }
@@ -450,7 +450,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void land_collision_start(SceneObjectPart part, ColliderArgs col)
+        public void land_collision_start (ISceneChildEntity part, ColliderArgs col)
         {
             List<DetectParams> det = new List<DetectParams>();
 
@@ -461,7 +461,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     detobj.posVector.Y,
                     detobj.posVector.Z);
                 d.Key = detobj.keyUUID;
-                d.Populate(part.ParentGroup.Scene);
+                d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
             }
@@ -486,7 +486,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void land_collision(SceneObjectPart part, ColliderArgs col)
+        public void land_collision (ISceneChildEntity part, ColliderArgs col)
         {
             List<DetectParams> det = new List<DetectParams>();
 
@@ -497,7 +497,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     detobj.posVector.Y,
                     detobj.posVector.Z);
                 d.Key = detobj.keyUUID;
-                d.Populate(part.ParentGroup.Scene);
+                d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
             }
@@ -522,7 +522,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void land_collision_end(SceneObjectPart part, ColliderArgs col)
+        public void land_collision_end (ISceneChildEntity part, ColliderArgs col)
         {
             List<DetectParams> det = new List<DetectParams>();
 
@@ -533,7 +533,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     detobj.posVector.Y,
                     detobj.posVector.Z);
                 d.Key = detobj.keyUUID;
-                d.Populate(part.ParentGroup.Scene);
+                d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
             }
@@ -558,7 +558,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void control(SceneObjectPart part, UUID itemID, UUID agentID, uint held, uint change)
+        public void control (ISceneChildEntity part, UUID itemID, UUID agentID, uint held, uint change)
         {
             ScriptData ID = ScriptEngine.ScriptProtection.GetScript(part.UUID, itemID);
 
@@ -734,7 +734,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (datas == null || datas.Length == 0)
             {
-                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentEntity.RootChild.UUID);
                 if (datas == null || datas.Length == 0)
                     return;
             }
@@ -778,7 +778,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="postOnRez"></param>
         /// <param name="engine"></param>
         /// <param name="stateSource"></param>
-        public void rez_script(SceneObjectPart part, UUID itemID, string script,
+        public void rez_script (ISceneChildEntity part, UUID itemID, string script,
                 int startParam, bool postOnRez, int stateSource)
         {
             if (script.StartsWith("//MRM:"))
@@ -814,7 +814,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                     part.Inventory.GetInventoryItem(itemID);
 
                         IScenePresence presence =
-                                part.ParentGroup.Scene.GetScenePresence(
+                                part.ParentEntity.Scene.GetScenePresence(
                                 item.OwnerID);
 
                         if (presence != null)

@@ -841,11 +841,10 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectGroup group = m_scene.GetGroupByPrim(primLocalID);
             if (group != null)
             {
-                IXfer xfer = m_scene.RequestModuleInterface<IXfer>();
-                SceneObjectPart part = group.GetChildPart(primLocalID);
+                SceneObjectPart part = (SceneObjectPart)group.GetChildPart(primLocalID);
                 if (part != null)
                 {
-                    part.Inventory.RequestInventoryFile(remoteClient, xfer);
+                    part.Inventory.RequestInventoryFile(remoteClient);
                 }
                 else
                 {
@@ -1754,12 +1753,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="returnobjects">The objects to return</param>
         /// <param name="AgentId">The agent UUID that will get the inventory items for these objects</param>
         /// <returns></returns>
-        public bool ReturnObjects(SceneObjectGroup[] returnobjects,
+        public bool ReturnObjects(ISceneEntity[] returnobjects,
                 UUID AgentId)
         {
             //AddReturns(returnobjects[0].OwnerID, returnobjects[0].Name, returnobjects.Length, returnobjects[0].AbsolutePosition, "parcel owner return");
             List<uint> IDs = new List<uint>();
-            foreach (SceneObjectGroup grp in returnobjects)
+            foreach (ISceneEntity grp in returnobjects)
             {
                 IDs.Add(grp.LocalId);
             }

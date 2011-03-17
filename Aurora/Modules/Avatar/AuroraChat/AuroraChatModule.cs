@@ -242,7 +242,7 @@ namespace Aurora.Modules
             //Tell all client plugins that the user left
             foreach (IChatPlugin plugin in AllChatPlugins)
             {
-                plugin.OnClosingClient(client.AgentId, ((Scene)client.Scene));
+                plugin.OnClosingClient(client.AgentId, client.Scene);
             }
         }
 
@@ -269,8 +269,7 @@ namespace Aurora.Modules
         protected OSChatMessage FixPositionOfChatMessage(OSChatMessage c)
         {
             IScenePresence avatar;
-            Scene scene = (Scene)c.Scene;
-            if ((avatar = scene.GetScenePresence(c.Sender.AgentId)) != null)
+            if ((avatar = c.Scene.GetScenePresence (c.Sender.AgentId)) != null)
                 c.Position = avatar.AbsolutePosition;
 
             return c;
@@ -286,8 +285,7 @@ namespace Aurora.Modules
             c = FixPositionOfChatMessage(c);
 
             // redistribute to interested subscribers
-            Scene scene = (Scene)c.Scene;
-            scene.EventManager.TriggerOnChatFromClient(sender, c);
+            c.Scene.EventManager.TriggerOnChatFromClient(sender, c);
 
             // early return if not on public or debug channel
             if (c.Channel != DEFAULT_CHANNEL && c.Channel != DEBUG_CHANNEL) return;
@@ -357,7 +355,7 @@ namespace Aurora.Modules
         }
 
         public void SimChat(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                               UUID fromID, bool fromAgent, bool broadcast, float range, UUID ToAgentID, Scene scene)
+                               UUID fromID, bool fromAgent, bool broadcast, float range, UUID ToAgentID, IScene scene)
         {
             OSChatMessage args = new OSChatMessage();
 
@@ -378,7 +376,7 @@ namespace Aurora.Modules
             }
             else
             {
-                SceneObjectPart obj = scene.GetSceneObjectPart(fromID);
+                ISceneChildEntity obj = scene.GetSceneObjectPart(fromID);
                 args.SenderObject = obj;
             }
 
@@ -398,7 +396,7 @@ namespace Aurora.Modules
         }
 
         public void SimChat(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                            UUID fromID, bool fromAgent, Scene scene)
+                            UUID fromID, bool fromAgent, IScene scene)
         {
             SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, false, -1, UUID.Zero, scene);
         }
@@ -412,7 +410,7 @@ namespace Aurora.Modules
         /// <param name="fromName"></param>
         /// <param name="fromAgentID"></param>
         public void SimChatBroadcast(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                                     UUID fromID, bool fromAgent, UUID ToAgentID, Scene scene)
+                                     UUID fromID, bool fromAgent, UUID ToAgentID, IScene scene)
         {
             SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, true, -1, ToAgentID, scene);
         }

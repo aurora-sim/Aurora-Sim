@@ -37,7 +37,7 @@ namespace OpenSim.Framework
 
     public abstract class PhysicsScene
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        public static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public virtual Vector3 PointOfGravity
         {

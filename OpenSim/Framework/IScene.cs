@@ -38,6 +38,7 @@ using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework;
 
 namespace OpenSim.Framework
 {
@@ -61,17 +62,18 @@ namespace OpenSim.Framework
 
     public interface IScene : IRegistryCore
     {
-        bool m_usePreJump;
+        bool m_usePreJump { get; }
         RegionInfo RegionInfo { get; }
         AuroraEventManager AuroraEventManager { get; }
         EntityManager Entities { get; }
         EventManager EventManager { get; }
         ScenePermissions Permissions { get; }
         PhysicsScene PhysicsScene { get; }
+        ISceneGraph SceneGraph { get; }
 
         IConfigSource Config { get; }
 
-        List<ISceneEntity> PhysicsReturns;
+        List<ISceneEntity> PhysicsReturns { get; }
         void Initialize (RegionInfo regionInfo);
         void Initialize (RegionInfo regionInfo, AgentCircuitManager authen, IClientNetworkServer clientServer);
         void StartHeartbeat ();

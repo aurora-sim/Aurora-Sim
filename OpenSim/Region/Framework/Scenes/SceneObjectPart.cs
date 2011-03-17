@@ -71,6 +71,12 @@ namespace OpenSim.Region.Framework.Scenes
             get { return ParentGroup.GroupRotation; }
         }
 
+        public virtual Quaternion Rotation
+        {
+            get { return ParentGroup.GroupRotation; }
+            set { }
+        }
+
         // use only one serializer to give the runtime a chance to optimize it (it won't do that if you
         // use a new instance every time)
         //private static XmlSerializer serializer = new XmlSerializer(typeof (SceneObjectPart));
@@ -304,7 +310,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                IScene s = ParentGroup == null ? m_initialScene : ParentGroup.Scene == null ? m_initialScene : ParentGroup.Scene;
+                IScene s = ParentGroup == null ? null : ParentGroup.Scene == null ? null : ParentGroup.Scene;
                 if (s != null)
                 {
                     if (value)
@@ -557,7 +563,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// This scene is set from the constructor and will be right as long as the object does not leave the region, this is to be able to access the Scene while starting up
         /// </summary>
-        private IScene m_initialScene;
+        private IRegistryCore m_initialScene;
         
         /// <summary>
         /// Stores media texture data
@@ -701,7 +707,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
         }
 
-        public SceneObjectPart(IScene scene)
+        public SceneObjectPart(IRegistryCore scene)
         {
             // It's not necessary to persist this
             m_initialScene = scene;
@@ -920,9 +926,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public byte Material
+        public int Material
         {
-            get { return (byte) m_material; }
+            get { return (int) m_material; }
             set
             {
                 if (ParentGroup != null)
@@ -930,7 +936,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_material = (Material)value;
                 if (PhysActor != null)
                 {
-                    PhysActor.SetMaterial((int)value);
+                    PhysActor.SetMaterial(value);
                 }
             }
         }
@@ -1007,7 +1013,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                IScene s = ParentGroup == null ? m_initialScene : ParentGroup.Scene == null ? m_initialScene : ParentGroup.Scene;
+                IScene s = ParentGroup == null ? null : ParentGroup.Scene == null ? null : ParentGroup.Scene;
                 if (s != null)
                 {
                     if (value != Quaternion.Identity)
@@ -4311,9 +4317,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         ///
         /// </summary>
-        public void SetParent(SceneObjectGroup parent)
+        public void SetParent(ISceneEntity parent)
         {
-            m_parentGroup = parent;
+            m_parentGroup = (SceneObjectGroup)parent;
         }
 
         // Use this for attachments!  LocalID should be avatar's localid
@@ -5647,5 +5653,70 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_parentGroup != null && m_parentGroup.Scene != null)
                 m_parentGroup.Scene.EventManager.TriggerOnScriptMovingEndEvent(this);
         }
+
+        #region ISceneChildEntity Members
+
+
+        bool ISceneChildEntity.IsAttachment
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        int ISceneChildEntity.ParentID
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        UUID ISceneChildEntity.AttachedAvatar
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        Vector3 ISceneChildEntity.OffsetPosition
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        bool ISceneChildEntity.IsRoot
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        #endregion
     }
 }

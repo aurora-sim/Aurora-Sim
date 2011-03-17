@@ -40,7 +40,7 @@ namespace OpenSim.Region.CoreModules
     {
         public DeRezAction action;
         public UUID agentId;
-        public List<SceneObjectGroup> objectGroups;
+        public List<ISceneEntity> objectGroups;
         public UUID folderID;
         public bool permissionToDelete;
         public bool permissionToTake;
@@ -107,7 +107,7 @@ namespace OpenSim.Region.CoreModules
         /// Delete the given object from the scene
         /// </summary>
         public void DeleteToInventory(DeRezAction action, UUID folderID,
-                List<SceneObjectGroup> objectGroups, UUID AgentId,
+                List<ISceneEntity> objectGroups, UUID AgentId,
                 bool permissionToDelete, bool permissionToTake)
         {
             DeleteToInventoryHolder dtis = new DeleteToInventoryHolder();
@@ -136,15 +136,15 @@ namespace OpenSim.Region.CoreModules
             }
         }
 
-        private void DeleteGroups(List<SceneObjectGroup> objectGroups)
+        private void DeleteGroups(List<ISceneEntity> objectGroups)
         {
             m_scene.ForEachScenePresence(delegate(IScenePresence avatar)
             {
                 lock (objectGroups)
                 {
-                    foreach (SceneObjectGroup grp in objectGroups)
+                    foreach (ISceneEntity grp in objectGroups)
                     {
-                        avatar.ControllingClient.SendKillObject (m_scene.RegionInfo.RegionHandle, grp.ChildrenList.ToArray ());
+                        avatar.ControllingClient.SendKillObject (m_scene.RegionInfo.RegionHandle, grp.ChildrenEntities().ToArray ());
                     }
                 }
             });

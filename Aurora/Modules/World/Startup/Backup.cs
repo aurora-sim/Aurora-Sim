@@ -682,7 +682,7 @@ namespace Aurora.Modules
                 //Backup inventory, no lock as this isn't added ANYWHERE but here
                 foreach (SceneObjectPart part in grp.ChildrenList)
                 {
-                    part.Inventory.ProcessInventoryBackup(m_scene.SimulationDataService);
+                    part.Inventory.ProcessInventoryBackup();
                 }
 
                 m_log.DebugFormat(

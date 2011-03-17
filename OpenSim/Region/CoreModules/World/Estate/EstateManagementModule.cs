@@ -1039,7 +1039,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
         {
             if (m_scene.Permissions.CanIssueEstateCommand(client.AgentId, false))
             {
-                List<ISceneChildEntity> prims = new List<ISceneChildEntity> ();
+                List<ISceneEntity> prims = new List<ISceneEntity> ();
                 IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
                 if (parcelManagement != null)
                 {

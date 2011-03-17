@@ -32,6 +32,7 @@ using System.Runtime.InteropServices;
 using OpenSim.Region.Physics.Manager;
 using PrimMesher;
 using OpenMetaverse;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Physics.Meshing
 {

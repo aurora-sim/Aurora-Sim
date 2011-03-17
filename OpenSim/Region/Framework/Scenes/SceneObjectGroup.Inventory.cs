@@ -105,7 +105,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             UUID newItemId = (copyItemID != UUID.Zero) ? copyItemID : item.ID;
 
-            SceneObjectPart part = GetChildPart(localID);
+            SceneObjectPart part = (SceneObjectPart)GetChildPart(localID);
             if (part != null)
             {
                 TaskInventoryItem taskItem = new TaskInventoryItem();
@@ -179,7 +179,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>null if the item does not exist</returns>
         public TaskInventoryItem GetInventoryItem(uint primID, UUID itemID)
         {
-            SceneObjectPart part = GetChildPart(primID);
+            SceneObjectPart part = (SceneObjectPart)GetChildPart (primID);
             if (part != null)
             {
                 return part.Inventory.GetInventoryItem(itemID);
@@ -203,7 +203,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>false if the item did not exist, true if the update occurred succesfully</returns>
         public bool UpdateInventoryItem(TaskInventoryItem item)
         {
-            SceneObjectPart part = GetChildPart(item.ParentPartID);
+            SceneObjectPart part = (SceneObjectPart)GetChildPart (item.ParentPartID);
             if (part != null)
             {
                 part.Inventory.UpdateInventoryItem(item);
@@ -223,7 +223,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public int RemoveInventoryItem(uint localID, UUID itemID)
         {
-            SceneObjectPart part = GetChildPart(localID);
+            SceneObjectPart part = (SceneObjectPart)GetChildPart (localID);
             if (part != null)
             {
                 int type = part.Inventory.RemoveInventoryItem(itemID);

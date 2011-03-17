@@ -55,7 +55,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
     public class LS_Api : MarshalByRefObject, ILS_Api, IScriptApi
     {
         internal IScriptModulePlugin m_ScriptEngine;
-        internal SceneObjectPart m_host;
+        internal ISceneChildEntity m_host;
         internal uint m_localID;
         internal UUID m_itemID;
         internal bool m_LSFunctionsEnabled = false;
@@ -63,7 +63,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         internal ScriptProtectionModule ScriptProtection;
         //internal IWindLightSettingsModule m_lightShareModule;
 
-        public void Initialize(IScriptModulePlugin ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, ScriptProtectionModule module)
+        public void Initialize(IScriptModulePlugin ScriptEngine, ISceneChildEntity host, uint localID, UUID itemID, ScriptProtectionModule module)
         {
             m_ScriptEngine = ScriptEngine;
             m_host = host;
@@ -120,7 +120,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         }
 
-        public Scene World
+        public IScene World
         {
             get { return m_host.ParentGroup.Scene; }
         }
@@ -138,7 +138,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (chatModule != null)
                 chatModule.SimChat(message,
                           ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, 
-                          m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true, World);
+                          m_host.ParentEntity.RootChild.AbsolutePosition, m_host.Name, m_host.UUID, true, World);
 
             IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             wComm.DeliverMessage(ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.Name, m_host.UUID, message);

@@ -694,9 +694,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             m_log.Debug("[" + m_ScriptEngine.ScriptEngineName +
                     "]: Started Script " + InventoryItem.Name +
-                    " in object " + part.Name + "@" + part.ParentGroup.RootPart.AbsolutePosition +
+                    " in object " + part.Name + "@" + part.ParentEntity.RootChild.AbsolutePosition +
                     (presence != null ? " by " + presence.Name : "") + 
-                    " in region " + part.ParentGroup.Scene.RegionInfo.RegionName +
+                    " in region " + part.ParentEntity.Scene.RegionInfo.RegionName +
                     " in " + time.TotalSeconds + " seconds.");
         }
 

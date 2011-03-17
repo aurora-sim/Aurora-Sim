@@ -684,7 +684,7 @@ namespace OpenSim.Region.Framework.Scenes
                         m_partsList.Add(part);
                         m_ValidgrpOOB = false;
                     }
-                    m_partsList.Sort(m_scene.SceneGraph.linkSetSorter);
+                    m_partsList.Sort (m_scene.SceneGraph.LinkSetSorter);
                     return true;
                 }
             }
@@ -730,7 +730,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 // has prims so starts at 1
                 int lastSeenLinkNum = 1;
-                m_partsList.Sort(Scene.SceneGraph.linkSetSorter);
+                m_partsList.Sort (Scene.SceneGraph.LinkSetSorter);
                 for (int i = 0; i < m_partsList.Count; i++)
                 {
                     //If it isn't the same as the last seen +1, fix it
@@ -1392,7 +1392,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-                SceneObjectPart part = GetChildPart(localId);
+                SceneObjectPart part = (SceneObjectPart)GetChildPart(localId);
                 OnGrabPart(part, offsetPos, remoteClient);
             }
         }
@@ -1547,7 +1547,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             //Sort the list by link number so that we get them in the right order
-            partList.Sort(Scene.SceneGraph.linkSetSorter);
+            partList.Sort (Scene.SceneGraph.LinkSetSorter);
 
             foreach (SceneObjectPart part in partList)
             {
@@ -2025,31 +2025,33 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="primID"></param>
         /// <returns>null if a child part with the primID was not found</returns>
-        public SceneObjectPart GetChildPart(UUID primID)
+        public ISceneChildEntity GetChildPart (UUID primID)
         {
             SceneObjectPart childPart = null;
-            m_parts.TryGetValue(primID, out childPart);
+            m_parts.TryGetValue (primID, out childPart);
             return childPart;
         }
 
         /// <summary>
-        /// Get a part with a given local ID
+        /// Get a part with a given UUID
         /// </summary>
-        /// <param name="localID"></param>
-        /// <returns>null if a child part with the local ID was not found</returns>
-        public SceneObjectPart GetChildPart(uint localID)
+        /// <param name="primID"></param>
+        /// <returns>null if a child part with the primID was not found</returns>
+        public ISceneChildEntity GetChildPart (uint primID)
         {
-            List<SceneObjectPart> parts = new List<SceneObjectPart>(m_partsList);
-            foreach (SceneObjectPart part in parts)
+            ISceneChildEntity childPart = null;
+            lock (m_partsLock)
             {
-                //m_log.DebugFormat("Found {0}", part.LocalId);
-                if (part.LocalId == localID)
+                foreach (ISceneChildEntity part in m_partsList)
                 {
-                    return part;
+                    if (part.LocalId == primID)
+                    {
+                        childPart = part;
+                        break;
+                    }
                 }
             }
-
-            return null;
+            return childPart;
         }
 
         #endregion
@@ -2172,7 +2174,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (linkPart.PhysActor != null)
             {
-                m_scene.SceneGraph.RemovePrim(linkPart.PhysActor);
+                m_scene.PhysicsScene.RemovePrim(linkPart.PhysActor);
 //            linkPart.PhysActor.delink();
             }
 
@@ -2401,7 +2403,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="localID"></param>
         public void SetPartName(string name, uint localID)
         {
-            SceneObjectPart part = GetChildPart(localID);
+            ISceneChildEntity part = GetChildPart (localID);
             if (part != null)
             {
                 part.Name = name;
@@ -2410,7 +2412,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void SetPartDescription(string des, uint localID)
         {
-            SceneObjectPart part = GetChildPart(localID);
+            ISceneChildEntity part = GetChildPart (localID);
             if (part != null)
             {
                 part.Description = des;
@@ -2419,7 +2421,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void SetPartText(string text, uint localID)
         {
-            SceneObjectPart part = GetChildPart(localID);
+            SceneObjectPart part = (SceneObjectPart)GetChildPart (localID);
             if (part != null)
             {
                 part.SetText(text);
@@ -2428,7 +2430,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void SetPartText(string text, UUID partID)
         {
-            SceneObjectPart part = GetChildPart(partID);
+            SceneObjectPart part = (SceneObjectPart)GetChildPart (partID);
             if (part != null)
             {
                 part.SetText(text);
@@ -2437,7 +2439,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public string GetPartName(uint localID)
         {
-            SceneObjectPart part = GetChildPart(localID);
+            ISceneChildEntity part = GetChildPart (localID);
             if (part != null)
             {
                 return part.Name;
@@ -2447,7 +2449,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public string GetPartDescription(uint localID)
         {
-            SceneObjectPart part = GetChildPart(localID);
+            ISceneChildEntity part = GetChildPart(localID);
             if (part != null)
             {
                 return part.Description;
@@ -2464,7 +2466,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="data"></param>
         public void UpdatePrimFlags(uint localID, bool UsePhysics, bool IsTemporary, bool IsPhantom, bool IsVolumeDetect)
         {
-            SceneObjectPart selectionPart = GetChildPart(localID);
+            ISceneChildEntity selectionPart = GetChildPart (localID);
 
             if (IsTemporary)
             {
@@ -2507,7 +2509,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void UpdateExtraParam(uint localID, ushort type, bool inUse, byte[] data)
         {
-            SceneObjectPart part = GetChildPart(localID);
+            SceneObjectPart part = (SceneObjectPart)GetChildPart (localID);
             if (part != null)
             {
                 part.UpdateExtraParam(type, inUse, data);
@@ -2521,7 +2523,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="textureEntry"></param>
         public void UpdateTextureEntry(uint localID, byte[] textureEntry)
         {
-            SceneObjectPart part = GetChildPart(localID);
+            SceneObjectPart part = (SceneObjectPart)GetChildPart (localID);
             if (part != null)
             {
                 part.UpdateTextureEntry(textureEntry);
@@ -2551,7 +2553,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="shapeBlock"></param>
         public void UpdateShape(ObjectShapePacket.ObjectDataBlock shapeBlock, uint localID)
         {
-            SceneObjectPart part = GetChildPart(localID);
+            SceneObjectPart part = (SceneObjectPart)GetChildPart (localID);
             if (part != null)
             {
                 part.UpdateShape(shapeBlock);
@@ -2610,7 +2612,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_ValidgrpOOB = false;
 
-            SceneObjectPart part = GetChildPart(localID);
+            SceneObjectPart part = (SceneObjectPart)GetChildPart (localID);
             if (part != null)
             {
                 part.Resize(scale);
@@ -2639,7 +2641,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void GroupResize(Vector3 scale, uint localID)
         {
-            SceneObjectPart part = GetChildPart(localID);
+            SceneObjectPart part = (SceneObjectPart)GetChildPart (localID);
             if (part != null)
             {
                 part.IgnoreUndoUpdate = true;
@@ -2893,7 +2895,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="localID"></param>
         public void UpdateSinglePosition(Vector3 pos, uint localID, bool SaveUpdate)
         {
-            SceneObjectPart part = GetChildPart(localID);
+            SceneObjectPart part = (SceneObjectPart)GetChildPart (localID);
             if (part != null)
             {
                 if (!SaveUpdate)
@@ -3015,7 +3017,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="localID"></param>
         public void UpdateSingleRotation(Quaternion rot, uint localID)
         {
-            SceneObjectPart part = GetChildPart(localID);
+            SceneObjectPart part = (SceneObjectPart)GetChildPart (localID);
             foreach (SceneObjectPart parts in ChildrenList)
             {
                 parts.StoreUndoState();
@@ -3040,7 +3042,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="localID"></param>
         public void UpdateSingleRotation(Quaternion rot, Vector3 pos, uint localID)
         {
-            SceneObjectPart part = GetChildPart(localID);
+            SceneObjectPart part = (SceneObjectPart)GetChildPart (localID);
             if (part != null)
             {
                 if (part.UUID == m_rootPart.UUID)
@@ -4051,5 +4053,65 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
         }
+
+        #region ISceneEntity Members
+
+        UUID ISceneEntity.m_lastParcelUUID
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public ISceneChildEntity RootChild
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        Vector3 ISceneEntity.m_lastSignificantPosition
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        ISceneChildEntity ISceneEntity.GetChildPart (UUID objectID)
+        {
+            throw new NotImplementedException ();
+        }
+
+        ISceneChildEntity ISceneEntity.GetChildPart (uint childkey)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public void LinkToGroup (ISceneEntity childPrim)
+        {
+            throw new NotImplementedException ();
+        }
+
+        bool ISceneEntity.IsAttachment
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        #endregion
     }
 }

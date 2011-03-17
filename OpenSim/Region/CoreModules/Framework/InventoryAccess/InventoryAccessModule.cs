@@ -643,7 +643,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         /// <param name="fromTaskID"></param>
         /// <param name="attachment"></param>
         /// <returns>The SceneObjectGroup rezzed or null if rez was unsuccessful.</returns>
-        public virtual SceneObjectGroup RezObject(IClientAPI remoteClient, UUID itemID, Vector3 RayEnd, Vector3 RayStart,
+        public virtual SceneObjectGroup RezObject (IClientAPI remoteClient, UUID itemID, Vector3 RayEnd, Vector3 RayStart,
                                     UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
                                     bool RezSelected, bool RemoveItem, UUID fromTaskID)
         {
@@ -659,30 +659,30 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 bRayEndIsIntersection = (byte)0;
             }
 
-            Vector3 scale = new Vector3(0.5f, 0.5f, 0.5f);
+            Vector3 scale = new Vector3 (0.5f, 0.5f, 0.5f);
 
 
-            Vector3 pos = m_scene.SceneGraph.GetNewRezLocation(
+            Vector3 pos = m_scene.SceneGraph.GetNewRezLocation (
                       RayStart, RayEnd, RayTargetID, Quaternion.Identity,
                       BypassRayCast, bRayEndIsIntersection, true, scale, false);
 
             System.Xml.XmlDocument doc;
-            InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
-            item = m_scene.InventoryService.GetItem(item);
-            SceneObjectGroup group = CreateObjectFromInventory(item, remoteClient, itemID, out doc);
+            InventoryItemBase item = new InventoryItemBase (itemID, remoteClient.AgentId);
+            item = m_scene.InventoryService.GetItem (item);
+            SceneObjectGroup group = CreateObjectFromInventory (item, remoteClient, itemID, out doc);
             if (doc == null)
             {
                 //No asset, check task inventory
                 IEntity e;
-                m_scene.SceneGraph.TryGetEntity(fromTaskID, out e);
+                m_scene.SceneGraph.TryGetEntity (fromTaskID, out e);
                 if (e != null && e is SceneObjectGroup)
                 {
                     SceneObjectGroup grp = (SceneObjectGroup)e;
-                    TaskInventoryItem taskItem = grp.RootPart.Inventory.GetInventoryItem(itemID);
-                    item = new InventoryItemBase();
+                    TaskInventoryItem taskItem = grp.RootPart.Inventory.GetInventoryItem (itemID);
+                    item = new InventoryItemBase ();
 
-                    item.ID = UUID.Random();
-                    item.CreatorId = taskItem.CreatorID.ToString();
+                    item.ID = UUID.Random ();
+                    item.CreatorId = taskItem.CreatorID.ToString ();
                     item.Owner = remoteClient.AgentId;
                     item.AssetID = taskItem.AssetID;
                     item.Description = taskItem.Description;
@@ -693,7 +693,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     item.SalePrice = taskItem.SalePrice;
                     item.SaleType = taskItem.SaleType;
 
-                    if (m_scene.Permissions.PropagatePermissions())
+                    if (m_scene.Permissions.PropagatePermissions ())
                     {
                         item.BasePermissions = taskItem.BasePermissions & (taskItem.NextPermissions | (uint)PermissionMask.Move);
                         if (taskItem.InvType == (int)InventoryType.Object)
@@ -714,14 +714,14 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         item.EveryOnePermissions = taskItem.EveryonePermissions;
                         item.GroupPermissions = taskItem.GroupPermissions;
                     }
-                    group = CreateObjectFromInventory(item, remoteClient, itemID, out doc);
+                    group = CreateObjectFromInventory (item, remoteClient, itemID, out doc);
                 }
                 else
                     return null;
             }
-            if (group == null && doc.FirstChild.OuterXml.StartsWith("<groups>"))
+            if (group == null && doc.FirstChild.OuterXml.StartsWith ("<groups>"))
             {
-                List<SceneObjectGroup> Groups = RezMultipleObjectsFromInventory(doc.FirstChild.ChildNodes, itemID, remoteClient, pos, RezSelected, item, RayTargetID, BypassRayCast, RayEndIsIntersection, RayEnd, RayStart, bRayEndIsIntersection);
+                List<SceneObjectGroup> Groups = RezMultipleObjectsFromInventory (doc.FirstChild.ChildNodes, itemID, remoteClient, pos, RezSelected, item, RayTargetID, BypassRayCast, RayEndIsIntersection, RayEnd, RayStart, bRayEndIsIntersection);
                 if (Groups.Count != 0)
                     return Groups[0];
                 else
@@ -729,7 +729,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             }
 
             string reason;
-            if (!m_scene.Permissions.CanRezObject(
+            if (!m_scene.Permissions.CanRezObject (
                     group.ChildrenList.Count, remoteClient.AgentId, pos, out reason))
             {
                 // The client operates in no fail mode. It will
@@ -738,32 +738,32 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 // Put it back if it's not an attachment
                 //
                 if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
-                    remoteClient.SendBulkUpdateInventory(item);
-                remoteClient.SendAlertMessage("You do not have permission to rez objects here.");
+                    remoteClient.SendBulkUpdateInventory (item);
+                remoteClient.SendAlertMessage ("You do not have permission to rez objects here.");
                 return null;
             }
 
             if (RezSelected)
-                group.RootPart.AddFlag(PrimFlags.CreateSelected);
+                group.RootPart.AddFlag (PrimFlags.CreateSelected);
             // If we're rezzing an attachment then don't ask AddNewSceneObject() to update the client since
             // we'll be doing that later on.  Scheduling more than one full update during the attachment
             // process causes some clients to fail to display the attachment properly.
-            m_scene.SceneGraph.AddPrimToScene(group);
+            m_scene.SceneGraph.AddPrimToScene (group);
 
             //  m_log.InfoFormat("ray end point for inventory rezz is {0} {1} {2} ", RayEnd.X, RayEnd.Y, RayEnd.Z);
             //  Set it's position in world.
             float offsetHeight = 0;
-                pos = m_scene.SceneGraph.GetNewRezLocation(
-                    RayStart, RayEnd, RayTargetID, Quaternion.Identity,
-                    BypassRayCast, bRayEndIsIntersection, true, group.GetAxisAlignedBoundingBox(out offsetHeight), false);
-                pos.Z += offsetHeight;
-                group.AbsolutePosition = pos;
-                //   m_log.InfoFormat("rezx point for inventory rezz is {0} {1} {2}  and offsetheight was {3}", pos.X, pos.Y, pos.Z, offsetHeight);
+            pos = m_scene.SceneGraph.GetNewRezLocation (
+                RayStart, RayEnd, RayTargetID, Quaternion.Identity,
+                BypassRayCast, bRayEndIsIntersection, true, group.GetAxisAlignedBoundingBox (out offsetHeight), false);
+            pos.Z += offsetHeight;
+            group.AbsolutePosition = pos;
+            //   m_log.InfoFormat("rezx point for inventory rezz is {0} {1} {2}  and offsetheight was {3}", pos.X, pos.Y, pos.Z, offsetHeight);
 
-            SceneObjectPart rootPart = group.GetChildPart(group.UUID);
+            SceneObjectPart rootPart = (SceneObjectPart)group.GetChildPart (group.UUID);
             if (rootPart == null)
             {
-                m_log.Error("[AGENT INVENTORY]: Error rezzing ItemID: " + itemID + " object has no rootpart.");
+                m_log.Error ("[AGENT INVENTORY]: Error rezzing ItemID: " + itemID + " object has no rootpart.");
                 return null;
             }
 
@@ -773,9 +773,9 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             rootPart.Name = item.Name;
             rootPart.Description = item.Description;
 
-            List<SceneObjectPart> partList = new List<SceneObjectPart>(group.ChildrenList);
+            List<SceneObjectPart> partList = new List<SceneObjectPart> (group.ChildrenList);
 
-            group.SetGroup(remoteClient.ActiveGroupId, remoteClient);
+            group.SetGroup (remoteClient.ActiveGroupId, remoteClient);
             item.Owner = remoteClient.AgentId;
             if (rootPart.OwnerID != item.Owner)
             {
@@ -783,7 +783,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 rootPart.ObjectSaleType = 0;
                 rootPart.SalePrice = 10;
 
-                if (m_scene.Permissions.PropagatePermissions())
+                if (m_scene.Permissions.PropagatePermissions ())
                 {
                     if ((item.CurrentPermissions & 8) != 0)
                     {
@@ -795,7 +795,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         }
                     }
 
-                    group.ApplyNextOwnerPermissions();
+                    group.ApplyNextOwnerPermissions ();
                 }
             }
 
@@ -805,7 +805,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 {
                     part.LastOwnerID = part.OwnerID;
                     part.OwnerID = item.Owner;
-                    part.Inventory.ChangeInventoryOwner(item.Owner);
+                    part.Inventory.ChangeInventoryOwner (item.Owner);
                 }
                 else if ((item.CurrentPermissions & 8) != 0) // Slam!
                 {
@@ -816,25 +816,25 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 }
             }
 
-            rootPart.TrimPermissions();
+            rootPart.TrimPermissions ();
 
             if (group.RootPart.Shape.PCode == (byte)PCode.Prim)
-                {
-                    group.ClearPartAttachmentData();
-                }
+            {
+                group.ClearPartAttachmentData ();
+            }
 
-                // Fire on_rez
-                group.CreateScriptInstances(0, true, 0, UUID.Zero);
-                rootPart.ParentGroup.ResumeScripts();
+            // Fire on_rez
+            group.CreateScriptInstances (0, true, 0, UUID.Zero);
+            rootPart.ParentGroup.ResumeScripts ();
 
-            group.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
-            if (!m_scene.Permissions.BypassPermissions())
+            group.ScheduleGroupUpdate (PrimUpdateFlags.FullUpdate);
+            if (!m_scene.Permissions.BypassPermissions ())
             {
                 if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
                 {
-                    List<UUID> uuids = new List<UUID>();
-                    uuids.Add(item.ID);
-                    m_scene.InventoryService.DeleteItems(item.Owner, uuids);
+                    List<UUID> uuids = new List<UUID> ();
+                    uuids.Add (item.ID);
+                    m_scene.InventoryService.DeleteItems (item.Owner, uuids);
                 }
             }
             return group;
@@ -901,7 +901,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 //group.AbsolutePosition = pos;
                 //   m_log.InfoFormat("rezx point for inventory rezz is {0} {1} {2}  and offsetheight was {3}", pos.X, pos.Y, pos.Z, offsetHeight);
 
-                SceneObjectPart rootPart = group.GetChildPart(group.UUID);
+                SceneObjectPart rootPart = (SceneObjectPart)group.GetChildPart (group.UUID);
 
                 // Since renaming the item in the inventory does not affect the name stored
                 // in the serialization, transfer the correct name from the inventory to the

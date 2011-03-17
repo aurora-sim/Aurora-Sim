@@ -49,7 +49,7 @@ namespace OpenSim.Framework
 
         event RemovePhysics OnRemovePhysics;
 
-        string m_callbackURI;
+        string m_callbackURI { get; set; }
         /// <summary>
         /// First name of the client
         /// </summary>
@@ -240,9 +240,9 @@ namespace OpenSim.Framework
 
     public interface ISceneEntity : IEntity
     {
-        UUID m_lastParcelUUID;
+        UUID m_lastParcelUUID { get; set; }
         ISceneChildEntity RootChild { get; set; }
-        Vector3 m_lastSignificantPosition;
+        Vector3 m_lastSignificantPosition{ get; }
         bool IsDeleted { get; set; }
         Vector3 GroupScale ();
         Quaternion GroupRotation { get; }
@@ -291,6 +291,8 @@ namespace OpenSim.Framework
         OpenMetaverse.UUID GroupID { get; set; }
 
         IScene Scene { get; set; }
+
+        bool IsSelected { get; set; }
     }
 
     public interface IEntity
@@ -301,12 +303,13 @@ namespace OpenSim.Framework
         Vector3 AbsolutePosition { get; set; }
         Vector3 Velocity { get; set; }
         Quaternion Rotation { get; set; }
-        string Name { get; }
+        string Name { get; set; }
     }
 
     public interface ISceneChildEntity : IEntity
     {
         ISceneEntity ParentEntity { get; }
+        IEntityInventory Inventory { get; }
         void ResetEntityIDs ();
 
         PrimFlags Flags { get; set; }
@@ -376,7 +379,7 @@ namespace OpenSim.Framework
 
         int GetNumberOfSides ();
 
-        object Text { get; set; }
+        string Text { get; set; }
 
         Color4 GetTextColor ();
 
@@ -386,7 +389,7 @@ namespace OpenSim.Framework
 
         int Material { get; set; }
 
-        OpenMetaverse.UUID AttachedAvatar { get; set; }
+        UUID AttachedAvatar { get; set; }
 
         uint OwnerMask { get; set; }
 
@@ -395,6 +398,47 @@ namespace OpenSim.Framework
         uint EveryoneMask { get; set; }
 
         void SetScriptEvents (UUID ItemID, long events);
+
+        UUID FromUserInventoryItemID { get; set; }
+
+        Vector3 AngularVelocity { get; set; }
+
+        void SetParentLocalId (uint p);
+
+        void SetParent (ISceneEntity grp);
+
+        Vector3 OffsetPosition { get; set; }
+
+        Vector3 AttachedPos { get; set; }
+
+        bool IsRoot { get; set; }
+
+        void SetConeOfSilence (double p);
+    }
+
+    public interface ISceneGraph
+    {
+        void GetCoarseLocations (out List<Vector3> coarseLocations, out List<UUID> avatarUUIDs, uint maxLocations);
+        IScenePresence GetScenePresence (string firstName, string lastName);
+        IScenePresence GetScenePresence (uint localID);
+        void ForEachScenePresence (Action<IScenePresence> action);
+        bool LinkPartToSOG (ISceneEntity grp, ISceneChildEntity part, int linkNum);
+        ISceneEntity DuplicateEntity (ISceneEntity entity);
+        bool LinkPartToEntity (ISceneEntity entity, ISceneChildEntity part);
+        bool DeLinkPartFromEntity (ISceneEntity entity, ISceneChildEntity part);
+        void UpdateEntity (ISceneEntity entity, UUID newID);
+        bool TryGetEntity (UUID ID, out IEntity entity);
+        bool TryGetPart (uint LocalID, out ISceneChildEntity entity);
+        bool TryGetEntity (uint LocalID, out IEntity entity);
+        bool TryGetPart (UUID ID, out ISceneChildEntity entity);
+        void PrepPrimForAdditionToScene (ISceneEntity entity);
+        bool AddPrimToScene (ISceneEntity entity);
+        bool RestorePrimToScene (ISceneEntity entity);
+        void DelinkPartToScene (ISceneEntity entity);
+        bool DeleteEntity (IEntity entity);
+        void CheckAllocationOfLocalIds (ISceneEntity group);
+        uint AllocateLocalId ();
+        int LinkSetSorter (ISceneChildEntity a, ISceneChildEntity b);
     }
 
     public enum PIDHoverType
@@ -2003,7 +2047,7 @@ namespace OpenSim.Framework
             }
         }
 
-        internal void TriggerControlEvent (ISceneChildEntity part, UUID scriptUUID, UUID avatarID, uint held, uint _changed)
+        public void TriggerControlEvent (ISceneChildEntity part, UUID scriptUUID, UUID avatarID, uint held, uint _changed)
         {
             ScriptControlEvent handlerScriptControlEvent = OnScriptControlEvent;
             if (handlerScriptControlEvent != null)

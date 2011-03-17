@@ -57,12 +57,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
     public class AA_Api : MarshalByRefObject, IAA_Api, IScriptApi
     {
         internal IScriptModulePlugin m_ScriptEngine;
-        internal SceneObjectPart m_host;
+        internal ISceneChildEntity m_host;
         internal IAssetConnector AssetConnector;
         internal ScriptProtectionModule ScriptProtection;
         internal UUID m_itemID;
 
-        public void Initialize(IScriptModulePlugin ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, ScriptProtectionModule module)
+        public void Initialize (IScriptModulePlugin ScriptEngine, ISceneChildEntity host, uint localID, UUID itemID, ScriptProtectionModule module)
         {
             m_itemID = itemID;
             m_ScriptEngine = ScriptEngine;
@@ -309,7 +309,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String aaGetLastOwner(LSL_String PrimID)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetLastOwner", m_host, "AA");
-            ISceneChildEntity part = m_host.ParentGroup.Scene.GetSceneObjectPart(UUID.Parse(PrimID.m_string));
+            ISceneChildEntity part = m_host.ParentEntity.Scene.GetSceneObjectPart(UUID.Parse(PrimID.m_string));
             if (part != null)
                 return new LSL_String(part.LastOwnerID.ToString());
             else
@@ -326,7 +326,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
             if(chatModule != null)
                 chatModule.SimChat(text, ChatTypeEnum.Custom, channelID,
-                    m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name,
+                    m_host.ParentEntity.RootChild.AbsolutePosition, m_host.Name,
                     m_host.UUID, false, false, (float)Distance.value, UUID.Zero, World);
 
             IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
@@ -576,7 +576,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return; // Not in a prim? How??
 
             string ownerName = "";
-            IScenePresence ownerPresence = World.GetScenePresence (m_host.ParentGroup.RootPart.OwnerID);
+            IScenePresence ownerPresence = World.GetScenePresence (m_host.ParentEntity.OwnerID);
             if (ownerPresence == null)
                 ownerName = resolveName(m_host.OwnerID);
             else

@@ -1765,7 +1765,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                             // Preserve link ordering
                             //
-                            newSet.Sort(linkSetSorter);
+                            newSet.Sort(LinkSetSorter);
 
                             // Determine new root
                             //
@@ -1808,7 +1808,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        public int linkSetSorter (ISceneChildEntity a, ISceneChildEntity b)
+        public int LinkSetSorter (ISceneChildEntity a, ISceneChildEntity b)
         {
             return a.LinkNum.CompareTo(b.LinkNum);
         }
@@ -1819,11 +1819,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region New Scene Entity Manager Code
 
-        #region Non EntityBase methods that need cleaned up later
-
-        public bool LinkPartToSOG(SceneObjectGroup grp, SceneObjectPart part, int linkNum)
+        public bool LinkPartToSOG (ISceneEntity grp, ISceneChildEntity part, int linkNum)
         {
-            part.SetParentLocalId(grp.RootPart.LocalId);
+            part.SetParentLocalId(grp.RootChild.LocalId);
             part.SetParent(grp);
             // Insert in terms of link numbers, the new links
             // before the current ones (with the exception of 
@@ -1839,10 +1837,6 @@ namespace OpenSim.Region.Framework.Scenes
             part.LinkNum = linkNum;
             return LinkPartToEntity(grp, part);
         }
-
-        #endregion
-
-        #region Wrapper Methods
 
         /// <summary>
         /// Dupliate the entity and add it to the Scene
@@ -1945,7 +1939,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             return Entities.TryGetChildPrim (LocalID, out entity);
         }
-
+        
         /// <summary>
         /// Get a part (SceneObjectPart) from the EntityManager by UUID
         /// </summary>
@@ -1967,7 +1961,7 @@ namespace OpenSim.Region.Framework.Scenes
             entity = null;
             return false;
         }
-
+        
         /// <summary>
         /// Get this prim ready to add to the scene
         /// </summary>
@@ -2003,7 +1997,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             List<ISceneChildEntity> children = entity.ChildrenEntities ();
             //Sort so that we rebuild in the same order and the root being first
-            children.Sort(linkSetSorter);
+            children.Sort(LinkSetSorter);
 
             entity.ClearChildren();
 
@@ -2089,7 +2083,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             List<ISceneChildEntity> children = entity.ChildrenEntities ();
             //Sort so that we rebuild in the same order and the root being first
-            children.Sort(linkSetSorter);
+            children.Sort(LinkSetSorter);
 
             entity.ClearChildren();
 
@@ -2099,7 +2093,7 @@ namespace OpenSim.Region.Framework.Scenes
                 entity.AddChild(child, child.LinkNum);
             }
         }
-
+        
         /// <summary>
         /// Returns a new unallocated local ID
         /// </summary>
@@ -2119,9 +2113,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// Check all the localIDs in this group to make sure that they have not been used previously
         /// </summary>
         /// <param name="group"></param>
-        public void CheckAllocationOfLocalIds(SceneObjectGroup group)
+        public void CheckAllocationOfLocalIds (ISceneEntity group)
         {
-            foreach (SceneObjectPart part in group.ChildrenList)
+            foreach (ISceneChildEntity part in group.ChildrenEntities ())
             {
                 if (part.LocalId != 0)
                     CheckAllocationOfLocalId(part.LocalId);
@@ -2139,8 +2133,6 @@ namespace OpenSim.Region.Framework.Scenes
                 m_lastAllocatedLocalId = LocalID;
             _primAllocateMutex.ReleaseMutex();
         }
-
-        #endregion
 
         #endregion
     }

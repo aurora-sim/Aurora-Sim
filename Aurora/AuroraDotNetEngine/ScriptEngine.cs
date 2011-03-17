@@ -958,7 +958,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 m_log.ErrorFormat("[{0}]: Could not find scene object part corresponding " + "to localID {1} to start script", ScriptEngineName, partID);
                 return;
             }
-            id.World = id.part.ParentGroup.Scene;
+            id.World = id.part.ParentEntity.Scene;
             ls.ID = id;
             ScriptProtection.AddNewScript(id);
             MaintenanceThread.AddScriptChange(new LUStruct[] { ls }, LoadPriority.Restart);
@@ -1338,7 +1338,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         private bool ScriptDanger (ISceneChildEntity part, Vector3 pos)
         {
-            IScene scene = part.ParentGroup.Scene;
+            IScene scene = part.ParentEntity.Scene;
             if (part.IsAttachment && RunScriptsInAttachments)
                 return true; //Always run as in SL
 
@@ -1465,10 +1465,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Dictionary<uint, float> topScripts = new Dictionary<uint, float>();
             foreach (ScriptData script in data)
             {
-                if (!topScripts.ContainsKey(script.part.ParentGroup.LocalId))
-                    topScripts.Add(script.part.ParentGroup.LocalId, script.ScriptScore);
+                if (!topScripts.ContainsKey(script.part.ParentEntity.LocalId))
+                    topScripts.Add(script.part.ParentEntity.LocalId, script.ScriptScore);
                 else
-                    topScripts[script.part.ParentGroup.LocalId] += script.ScriptScore;
+                    topScripts[script.part.ParentEntity.LocalId] += script.ScriptScore;
             }
             return topScripts;
         }

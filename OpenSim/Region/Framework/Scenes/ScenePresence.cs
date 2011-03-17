@@ -3101,56 +3101,242 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        #region Module Interfaces
+        #region IScenePresence Members
 
-        /// <summary>
-        /// For the given interface, retrieve the region module which implements it.
-        /// </summary>
-        /// <returns>null if there is no registered module implementing that interface</returns>
-        public T RequestModuleInterface<T>()
+
+        string IScenePresence.m_callbackURI
         {
-            if (ModuleInterfaces.ContainsKey(typeof(T)) &&
-                    (ModuleInterfaces[typeof(T)].Count > 0))
-                return (T)ModuleInterfaces[typeof(T)][0];
-            else
-                return default(T);
+            get { throw new NotImplementedException (); }
         }
 
-        /// <value>
-        /// The module interfaces available from this scene presence.
-        /// </value>
-        protected Dictionary<Type, List<object>> ModuleInterfaces = new Dictionary<Type, List<object>>();
-
-        /// <summary>
-        /// Register an interface to a region module.  This allows module methods to be called directly as
-        /// well as via events.  If there is already a module registered for this interface, it is not replaced
-        /// (is this the best behaviour?)
-        /// </summary>
-        /// <param name="mod"></param>
-        public void RegisterModuleInterface<M>(M mod)
+        public IScene Scene
         {
-            //            m_log.DebugFormat("[SCENE BASE]: Registering interface {0}", typeof(M));
+            get { throw new NotImplementedException (); }
+        }
 
-            List<Object> l = null;
-            if (!ModuleInterfaces.TryGetValue(typeof(M), out l))
+        ISceneViewer IScenePresence.SceneViewer
+        {
+            get
             {
-                l = new List<Object>();
-                ModuleInterfaces.Add(typeof(M), l);
+                throw new NotImplementedException ();
             }
-
-            if (l.Count > 0)
-                return;
-
-            l.Add(mod);
+            set
+            {
+                throw new NotImplementedException ();
+            }
         }
 
-        public void UnregisterModuleInterface<M>(M mod)
+        IAnimator IScenePresence.Animator
         {
-            List<Object> l;
-            if (ModuleInterfaces.TryGetValue(typeof(M), out l))
+            get
             {
-                l.Remove(mod);
-                ModuleInterfaces[typeof(M)] = l;
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        Vector3 IScenePresence.CameraPosition
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        Quaternion IScenePresence.CameraRotation
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        Vector4 IScenePresence.CollisionPlane
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        int IScenePresence.UserLevel
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        Vector3 IScenePresence.lastKnownAllowedPosition
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        UUID IScenePresence.currentParcelUUID
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public void DoAutoPilot (int p, Vector3 pos, IClientAPI avatar)
+        {
+            throw new NotImplementedException ();
+        }
+
+        Vector3 IScenePresence.CameraAtAxis
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        Vector3 IScenePresence.PreJumpForce
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public void DoMoveToPosition (IScenePresence avatar, string p, List<string> coords)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public uint GenerateClientFlags (ISceneChildEntity p)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public bool IsDeleted
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        void IScenePresence.SendAvatarDataToAgent (IScenePresence sp)
+        {
+            throw new NotImplementedException ();
+        }
+
+        bool IScenePresence.SitGround
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        bool IScenePresence.m_InitialHasWearablesBeenSent
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public void AddUpdateToAvatar (ISceneChildEntity entity, PrimUpdateFlags PostUpdateFlags)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public void RegisterControlEventsToScript (int controls, int accept, int pass_on, ISceneChildEntity m_host, UUID m_itemID)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+
+        #region IEntity Members
+
+        public UUID UUID
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public uint LocalId
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public int LinkNum
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
             }
         }
 

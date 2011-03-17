@@ -31,7 +31,7 @@ using OpenMetaverse;
 
 namespace OpenSim.Framework
 {
-    public abstract class EntityBase : IEntity
+    public abstract class EntityBase : RegistryCore, IEntity
     {
         protected IScene m_scene;
         /// <summary>
@@ -105,6 +105,17 @@ namespace OpenSim.Framework
         {
             get { return m_pos; }
             set { m_pos = value; }
+        }
+        
+        protected Quaternion m_rot;
+
+        /// <summary>
+        ///
+        /// </summary>
+        public virtual Quaternion Rotation
+        {
+            get { return m_rot; }
+            set { m_rot = value; }
         }
 
         /// <summary>

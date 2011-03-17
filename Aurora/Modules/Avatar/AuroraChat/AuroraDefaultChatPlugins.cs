@@ -85,7 +85,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
         /// <param name="result"></param>
         /// <param name="scene"></param>
         /// <param name="position"></param>
-        private void BuildAndSendResult(float result, Scene scene, Vector3 position)
+        private void BuildAndSendResult(float result, IScene scene, Vector3 position)
         {
             OSChatMessage message = new OSChatMessage();
             message.From = "Server";
@@ -103,7 +103,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
         {
         }
 
-        public void OnClosingClient(UUID clientID, Scene scene)
+        public void OnClosingClient (UUID clientID, IScene scene)
         {
         }
 
@@ -230,7 +230,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
         {
         }
 
-        public void OnClosingClient(UUID clientID, Scene scene)
+        public void OnClosingClient (UUID clientID, IScene scene)
         {
             UserInfos.Remove(clientID);
         }
@@ -308,7 +308,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
                 if (!m_useAuth || m_authList.Contains(c.SenderUUID))
                 {
                     IScenePresence senderSP;
-                    ((Scene)c.Scene).TryGetScenePresence(c.SenderUUID, out senderSP);
+                    c.Scene.TryGetScenePresence(c.SenderUUID, out senderSP);
                     string[] message = c.Message.Split('.');
                     if (message[1] == "SayDistance")
                     {
@@ -332,7 +332,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
                     if (message[1] == "AddToAuth")
                     {
                         IScenePresence NewSP;
-                        ((Scene)c.Scene).TryGetAvatarByName(message[2], out NewSP);
+                        c.Scene.TryGetAvatarByName(message[2], out NewSP);
                         m_authList.Add(NewSP.UUID);
                         chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(scene.RegionInfo.RegionLocX,
                                                 scene.RegionInfo.RegionLocY, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, message[2] + " added.", ChatSourceType.System, -1);
@@ -396,7 +396,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
 
         public void OnNewClient(IClientAPI client)
         {
-            IScenePresence SP = ((Scene)client.Scene).GetScenePresence (client.AgentId);
+            IScenePresence SP = client.Scene.GetScenePresence (client.AgentId);
             if (!SP.IsChildAgent)
             {
                 //If chat is not blocked for now, add to the not blocked list
@@ -434,7 +434,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
             }
         }
 
-        public void OnClosingClient(UUID clientID, Scene scene)
+        public void OnClosingClient (UUID clientID, IScene scene)
         {
             //Clear out the auth speakers list
             lock (m_authorizedSpeakers)

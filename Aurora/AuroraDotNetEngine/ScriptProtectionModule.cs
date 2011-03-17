@@ -98,7 +98,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return true;
         }
 		
-		public void CheckThreatLevel(ThreatLevel level, string function, SceneObjectPart m_host, string API)
+		public void CheckThreatLevel(ThreatLevel level, string function, ISceneChildEntity m_host, string API)
         {
             List<UUID> FunctionPerms = new List<UUID>();
             if (!m_FunctionPerms.TryGetValue(function, out FunctionPerms))

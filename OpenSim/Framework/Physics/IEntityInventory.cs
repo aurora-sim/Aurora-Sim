@@ -28,13 +28,11 @@
 using System.Collections.Generic;
 using System.Collections;
 using OpenMetaverse;
-using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
 
-namespace OpenSim.Region.Framework.Interfaces
+namespace OpenSim.Framework
 {
     /// <summary>
-    /// Interface to an entity's (SceneObjectPart's) inventory
+    /// Interface to an ISceneChildEntity's inventory
     /// </summary>
     /// 
     /// This is not a finished 1.0 candidate interface 
@@ -190,7 +188,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// 
         /// <param name="item"></param>
         /// <returns>The scene object.  Null if the scene object asset couldn't be found</returns>
-        SceneObjectGroup GetRezReadySceneObject(TaskInventoryItem item);
+        ISceneEntity GetRezReadySceneObject(TaskInventoryItem item);
 
         /// <summary>
         /// Update an existing inventory item.
@@ -212,14 +210,14 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <summary>
         /// Serialize all the metadata for the items in this prim's inventory ready for sending to the client
         /// </summary>
-        /// <param name="xferManager"></param>
-        void RequestInventoryFile(IClientAPI client, IXfer xferManager);
+        /// <param name="client"></param>
+        void RequestInventoryFile(IClientAPI client);
 
         /// <summary>
         /// Backup the inventory to the given data store
         /// </summary>
         /// <param name="datastore"></param>
-        void ProcessInventoryBackup(ISimulationDataStore datastore);
+        void ProcessInventoryBackup();
 
         uint MaskEffectivePermissions();
 

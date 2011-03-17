@@ -27,10 +27,9 @@
 
 using System;
 using System.Collections.Generic;
-using OpenSim.Framework;
 using OpenMetaverse;
 
-namespace OpenSim.Region.Physics.Manager
+namespace OpenSim.Framework
 {
     public struct ContactPoint
     {

@@ -78,7 +78,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected IScriptModulePlugin m_ScriptEngine;
-        protected SceneObjectPart m_host;
+        protected ISceneChildEntity m_host;
         protected uint m_localID;
         protected UUID m_itemID;
         protected bool throwErrorOnNotImplemented = true;
@@ -107,7 +107,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         protected Dictionary<UUID, UserInfoCacheEntry> m_userInfoCache =
                 new Dictionary<UUID, UserInfoCacheEntry>();
 
-        public void Initialize(IScriptModulePlugin ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, ScriptProtectionModule module)
+        public void Initialize (IScriptModulePlugin ScriptEngine, ISceneChildEntity host, uint localID, UUID itemID, ScriptProtectionModule module)
         {
             m_ScriptEngine = ScriptEngine;
             m_host = host;
