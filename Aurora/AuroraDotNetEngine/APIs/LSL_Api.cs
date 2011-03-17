@@ -3731,7 +3731,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if ((item.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
                     {
-                        presence.RegisterControlEventsToScript(controls, accept, pass_on, m_host, m_itemID);
+                        IScriptControllerModule m = presence.RequestModuleInterface<IScriptControllerModule> ();
+                        if(m != null)
+                            m.RegisterControlEventsToScript(controls, accept, pass_on, m_host, m_itemID);
                     }
                 }
             }
@@ -3763,7 +3765,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if ((item.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
                     {
                         // Unregister controls from Presence
-                        presence.UnRegisterControlEventsToScript(m_localID, m_itemID);
+                        IScriptControllerModule m = presence.RequestModuleInterface<IScriptControllerModule> ();
+                        if (m != null)
+                            m.UnRegisterControlEventsToScript (m_localID, m_itemID);
                         // Remove Take Control permission.
                         item.PermsMask &= ~ScriptBaseClass.PERMISSION_TAKE_CONTROLS;
                     }

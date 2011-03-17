@@ -137,78 +137,74 @@ namespace OpenSim.Framework
         bool Invulnerable { get; set; }
 
         float DrawDistance { get; set; }
-
-        void ChildAgentDataUpdate (AgentData agentData);
-
-        void DoAutoPilot (uint p, Vector3 pos, IClientAPI avatar);
-
-        void SendAppearanceToAllOtherAgents ();
-
-        void TeleportWithMomentum (Vector3 value);
-
-        void SendAvatarDataToAllAgents ();
-
-        void SendTerseUpdateToAllClients ();
-
-        void Update ();
-
-        void SendCoarseLocations (List<Vector3> coarseLocations, List<OpenMetaverse.UUID> avatarUUIDs);
-
         Vector3 CameraAtAxis { get; }
 
-        void AddNewMovement (Vector3 jumpForce, Quaternion quaternion);
-
         Vector3 PreJumpForce { get; set; }
-
-        void AddToPhysicalScene (bool m_flying, bool p);
-
-        void NotInTransit ();
-
-        void CrossSittingAgent (IClientAPI iClientAPI, OpenMetaverse.UUID uUID);
-
-        void DoMoveToPosition (object iClientAPI, string p, List<string> coords);
-
-        uint GenerateClientFlags (ISceneChildEntity p);
-
-        ScriptControllers GetScriptControler (OpenMetaverse.UUID uUID);
-
-        void UnRegisterControlEventsToScript (uint p, OpenMetaverse.UUID uUID);
 
         bool IsDeleted { get; set; }
 
         bool IsJumping { get; set; }
 
         void PushForce (Vector3 impulse);
+        bool SitGround { get; set; }
+        Vector3 ParentPosition { get; set; }
+        bool InitialHasWearablesBeenSent { get; set; }
 
-        void RegisterScriptController (ScriptControllers SC);
+
+        void Update ();
+        void ChildAgentDataUpdate (AgentData agentData);
+        void ChildAgentDataUpdate (AgentPosition cAgentData, int tRegionX, int tRegionY, int p, int p_2);
+        void CopyTo (AgentData agent);
+        void MakeChildAgent ();
+        void Close ();
+
+
+        void DoAutoPilot (uint p, Vector3 pos, IClientAPI avatar);
+        void TeleportWithMomentum (Vector3 value);
+        void DoMoveToPosition (object iClientAPI, string p, List<string> coords);
+        void NotInTransit ();
+        void CrossSittingAgent (IClientAPI iClientAPI, OpenMetaverse.UUID uUID);
+        void AddNewMovement (Vector3 jumpForce, Quaternion quaternion);
+        void AddToPhysicalScene (bool m_flying, bool p);
+
+        void SendAppearanceToAllOtherAgents ();
+        void SendAvatarDataToAllAgents ();
+        void SendTerseUpdateToAllClients ();
+        uint GenerateClientFlags (ISceneChildEntity p);
+
+        void SendCoarseLocations (List<Vector3> coarseLocations, List<OpenMetaverse.UUID> avatarUUIDs);
 
         void SendAppearanceToAgent (IScenePresence sp);
-
         void SendAvatarDataToAgent (IScenePresence sp);
-
         void SetHeight (float p);
+        void SendOtherAgentsAppearanceToMe ();
+        void AddUpdateToAvatar (ISceneChildEntity entity, PrimUpdateFlags PostUpdateFlags);
 
-        bool SitGround { get; set; }
 
         void StandUp ();
 
-        void ChildAgentDataUpdate (AgentPosition cAgentData, int tRegionX, int tRegionY, int p, int p_2);
 
-        void CopyTo (AgentData agent);
 
-        Vector3 ParentPosition { get; set; }
 
-        void MakeChildAgent ();
+    }
 
-        void SendOtherAgentsAppearanceToMe ();
+    public interface IScriptControllerModule
+    {
+        ScriptControllers GetScriptControler (UUID uUID);
 
-        bool InitialHasWearablesBeenSent { get; set; }
+        void RegisterScriptController (ScriptControllers SC);
 
-        void Close ();
+        void UnRegisterControlEventsToScript (uint p, UUID uUID);
 
-        void AddUpdateToAvatar (ISceneChildEntity entity, PrimUpdateFlags PostUpdateFlags);
+        void RegisterControlEventsToScript (int controls, int accept, int pass_on, ISceneChildEntity m_host, UUID m_itemID);
 
-        void RegisterControlEventsToScript (int controls, int accept, int pass_on, ISceneChildEntity m_host, OpenMetaverse.UUID m_itemID);
+        void OnNewMovement (ref AgentManager.ControlFlags flags);
+
+        void RemoveAllScriptControllers (ISceneChildEntity part);
+
+        ControllerData[] Serialize ();
+
+        void Deserialize (ControllerData[] controllerData);
     }
 
     public interface ISceneObject : ISceneEntity

@@ -275,7 +275,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if ((permsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
                     {
                         if (sp != null)
-                            sp.UnRegisterControlEventsToScript(part.LocalId, ItemID);
+                        {
+                            IScriptControllerModule m = sp.RequestModuleInterface<IScriptControllerModule> ();
+                            if (m != null)
+                                m.UnRegisterControlEventsToScript (part.LocalId, ItemID);
+                        }
                     }
                 }
 

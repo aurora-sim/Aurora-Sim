@@ -83,7 +83,19 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Fields
 
-        public bool AllowedDrop;
+        private bool m_allowedDrop;
+
+        public bool AllowedDrop
+        {
+            get
+            {
+                return m_allowedDrop;
+            }
+            set
+            {
+                m_allowedDrop = value;
+            }
+        }
 
         [XmlIgnore]
         public bool DIE_AT_EDGE
@@ -173,7 +185,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         // TODO: This needs to be persisted in next XML version update!
         [XmlIgnore]
-        public readonly int[] PayPrice = {-2,-2,-2,-2,-2};
+        private readonly int[] m_PayPrice = {-2,-2,-2,-2,-2};
+
+        public int[] PayPrice
+        {
+            get { return m_PayPrice; }
+        }
 
         [XmlIgnore]
         public PhysicsActor PhysActor
@@ -5676,27 +5693,5 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_parentGroup != null && m_parentGroup.Scene != null)
                 m_parentGroup.Scene.EventManager.TriggerOnScriptMovingEndEvent(this);
         }
-
-        #region ISceneChildEntity Members
-
-
-        bool ISceneChildEntity.AllowedDrop
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        int[] ISceneChildEntity.PayPrice
-        {
-            get { throw new NotImplementedException (); }
-        }
-
-        #endregion
     }
 }

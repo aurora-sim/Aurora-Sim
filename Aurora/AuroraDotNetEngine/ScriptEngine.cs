@@ -1016,10 +1016,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     ScriptControllers SC = new ScriptControllers();
                     if (presence != null)
                     {
-                        SC = presence.GetScriptControler(SD.ItemID);
-                        if ((newItem.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
+                        IScriptControllerModule m = presence.RequestModuleInterface<IScriptControllerModule> ();
+                        if (m != null)
                         {
-                            presence.UnRegisterControlEventsToScript(SD.part.LocalId, SD.ItemID);
+                            SC = m.GetScriptControler (SD.ItemID);
+                            if ((newItem.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
+                            {
+                                m.UnRegisterControlEventsToScript (SD.part.LocalId, SD.ItemID);
+                            }
                         }
                     }
                     object[] Plugins = GetSerializationData(SD.ItemID, SD.part.UUID);
@@ -1048,7 +1052,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     {
                         SC.itemID = newItem.ItemID;
                         SC.part = SD.part;
-                        presence.RegisterScriptController(SC);
+                        IScriptControllerModule m = presence.RequestModuleInterface<IScriptControllerModule> ();
+                        if (m != null)
+                            m.RegisterScriptController(SC);
                     }
 
                     ScriptProtection.AddNewScript(SD);

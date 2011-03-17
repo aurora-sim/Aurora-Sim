@@ -93,10 +93,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
         protected Animator m_animator;
 
-        private Dictionary<UUID, ScriptControllers> scriptedcontrols = new Dictionary<UUID, ScriptControllers>();
-        private ScriptControlled IgnoredControls = ScriptControlled.CONTROL_ZERO;
-        private ScriptControlled LastCommands = ScriptControlled.CONTROL_ZERO;
-        private bool MouseDown = false;
         private SceneObjectGroup proxyObjectGroup;
         private Vector3 m_lastKnownAllowedPosition;
         public Vector3 LastKnownAllowedPosition
@@ -745,7 +741,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_controllingClient.OnSetAlwaysRun += HandleSetAlwaysRun;
             m_controllingClient.OnStartAnim += HandleStartAnim;
             m_controllingClient.OnStopAnim += HandleStopAnim;
-            m_controllingClient.OnForceReleaseControls += HandleForceReleaseControls;
             m_controllingClient.OnAutoPilotGo += DoAutoPilot;
             m_controllingClient.AddGenericPacketHandler("autopilot", DoMoveToPosition);
             m_controllingClient.OnRegionHandleRequest += RegionHandleRequest;
@@ -1207,14 +1202,9 @@ namespace OpenSim.Region.Framework.Scenes
                 m_CameraCenter = new Vector3(128, 128, 128);
             }
 
-            lock (scriptedcontrols)
-            {
-                if (scriptedcontrols.Count > 0)
-                {
-                    SendControlToScripts((uint)flags);
-                    flags = RemoveIgnoredControls(flags, IgnoredControls);
-                }
-            }
+            IScriptControllerModule m = RequestModuleInterface<IScriptControllerModule> ();
+            if (m != null) //Tell any scripts about it
+                m.OnNewMovement (ref flags);
 
             if (m_autopilotMoving)
                 CheckAtSitTarget();
@@ -1395,7 +1385,6 @@ namespace OpenSim.Region.Framework.Scenes
                                 LocalVectorToTarget2D.Y = LocalVectorToTarget3D.Y;
                                 LocalVectorToTarget2D.Z = 0f;
 
- // we live without heavy norm      LocalVectorToTarget2D.Normalize();
                                 agent_control_v3 += LocalVectorToTarget2D;
 
                                 // update avatar movement flags. the avatar coordinate system is as follows:
@@ -1597,21 +1586,10 @@ namespace OpenSim.Region.Framework.Scenes
                     //Block movement of vehicles for a bit until after the changed event has fired
                     if(part.PhysActor != null)
                         part.PhysActor.Selected = true;
-                    TaskInventoryDictionary taskIDict = part.TaskInventory;
-                    if (taskIDict != null)
-                    {
-                        lock (taskIDict)
-                        {
-                            foreach (UUID taskID in taskIDict.Keys)
-                            {
-                                UnRegisterControlEventsToScript(LocalId, taskID);
-                                taskIDict[taskID].PermsMask &= ~(
-                                    (int)ScriptPermission.ControlCamera |
-                                    (int)ScriptPermission.TakeControls);
-                            }
-                        }
-
-                    }
+                    IScriptControllerModule m = RequestModuleInterface<IScriptControllerModule> ();
+                    if (m != null)
+                        m.RemoveAllScriptControllers (part);
+                    
                     // Reset sit target.
                     if (part.GetAvatarOnSitTarget().Contains(UUID))
                         part.RemoveAvatarOnSitTarget(UUID);
@@ -2664,18 +2642,10 @@ namespace OpenSim.Region.Framework.Scenes
 
             cAgent.Appearance = new AvatarAppearance(m_appearance);
 
-            lock (scriptedcontrols)
-            {
-                ControllerData[] controls = new ControllerData[scriptedcontrols.Count];
-                int i = 0;
-
-                foreach (ScriptControllers c in scriptedcontrols.Values)
-                {
-                    controls[i++] = new ControllerData(c.itemID, (uint)c.ignoreControls, (uint)c.eventControls);
-                }
-                cAgent.Controllers = controls;
-            }
-
+            IScriptControllerModule m = RequestModuleInterface<IScriptControllerModule> ();
+            if (m != null)
+                cAgent.Controllers = m.Serialize ();
+            
             // Animations
             if (Animator != null)
                 cAgent.Anims = Animator.Animations.ToArray();
@@ -2713,23 +2683,10 @@ namespace OpenSim.Region.Framework.Scenes
 
                 try
                 {
-                    lock (scriptedcontrols)
-                    {
+                    IScriptControllerModule m = RequestModuleInterface<IScriptControllerModule> ();
+                    if (m != null)
                         if (cAgent.Controllers != null)
-                        {
-                            scriptedcontrols.Clear();
-
-                            foreach (ControllerData c in cAgent.Controllers)
-                            {
-                                ScriptControllers sc = new ScriptControllers();
-                                sc.itemID = c.ItemID;
-                                sc.ignoreControls = (ScriptControlled)c.IgnoreControls;
-                                sc.eventControls = (ScriptControlled)c.EventControls;
-
-                                scriptedcontrols[sc.itemID] = sc;
-                            }
-                        }
-                    }
+                            m.Deserialize(cAgent.Controllers);
                 }
                 catch { }
                 // Animations
@@ -2951,226 +2908,6 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_sceneViewer.QueuePartForUpdate(part, flags);
         }
-
-        #region Script Controls
-
-        public ScriptControllers GetScriptControler(UUID itemID)
-        {
-            ScriptControllers takecontrols;
-
-            lock (scriptedcontrols)
-            {
-                scriptedcontrols.TryGetValue(itemID, out takecontrols);
-            }
-            return takecontrols;
-        }
-
-        public void RegisterControlEventsToScript (int controls, int accept, int pass_on, ISceneChildEntity part, UUID Script_item_UUID)
-        {
-            ScriptControllers obj = new ScriptControllers();
-            obj.ignoreControls = ScriptControlled.CONTROL_ZERO;
-            obj.eventControls = ScriptControlled.CONTROL_ZERO;
-
-            obj.itemID = Script_item_UUID;
-            obj.part = part;
-            if (pass_on == 0 && accept == 0)
-            {
-                IgnoredControls |= (ScriptControlled)controls;
-                obj.ignoreControls = (ScriptControlled)controls;
-            }
-
-            if (pass_on == 0 && accept == 1)
-            {
-                IgnoredControls |= (ScriptControlled)controls;
-                obj.ignoreControls = (ScriptControlled)controls;
-                obj.eventControls = (ScriptControlled)controls;
-            }
-            if (pass_on == 1 && accept == 1)
-            {
-                IgnoredControls = ScriptControlled.CONTROL_ZERO;
-                obj.eventControls = (ScriptControlled)controls;
-                obj.ignoreControls = ScriptControlled.CONTROL_ZERO;
-            }
-
-            lock (scriptedcontrols)
-            {
-                if (pass_on == 1 && accept == 0)
-                {
-                    IgnoredControls &= ~(ScriptControlled)controls;
-                    if (scriptedcontrols.ContainsKey(Script_item_UUID))
-                        scriptedcontrols.Remove(Script_item_UUID);
-                }
-                else
-                {
-                    scriptedcontrols[Script_item_UUID] = obj;
-                }
-            }
-            ControllingClient.SendTakeControls(controls, pass_on == 1 ? true : false, true);
-        }
-
-        public void RegisterScriptController(ScriptControllers SC)
-        {
-            lock (scriptedcontrols)
-            {
-                scriptedcontrols[SC.itemID] = SC;
-            }
-            ControllingClient.SendTakeControls((int)SC.eventControls, true, true);
-        }
-
-        public void HandleForceReleaseControls(IClientAPI remoteClient, UUID agentID)
-        {
-            IgnoredControls = ScriptControlled.CONTROL_ZERO;
-            lock (scriptedcontrols)
-            {
-                scriptedcontrols.Clear();
-            }
-            ControllingClient.SendTakeControls(int.MaxValue, false, false);
-        }
-
-        public void UnRegisterControlEventsToScript(uint Obj_localID, UUID Script_item_UUID)
-        {
-            ScriptControllers takecontrols;
-
-            lock (scriptedcontrols)
-            {
-                if (scriptedcontrols.TryGetValue(Script_item_UUID, out takecontrols))
-                {
-                    ScriptControlled sctc = takecontrols.eventControls;
-
-                    ControllingClient.SendTakeControls((int)sctc, false, false);
-                    ControllingClient.SendTakeControls((int)sctc, true, false);
-
-                    scriptedcontrols.Remove(Script_item_UUID);
-                    IgnoredControls = ScriptControlled.CONTROL_ZERO;
-                    foreach (ScriptControllers scData in scriptedcontrols.Values)
-                    {
-                        IgnoredControls |= scData.ignoreControls;
-                    }
-                }
-            }
-        }
-
-        protected internal void SendControlToScripts(uint flags)
-        {
-            ScriptControlled allflags = ScriptControlled.CONTROL_ZERO;
-
-            if (MouseDown)
-            {
-                allflags = LastCommands & (ScriptControlled.CONTROL_ML_LBUTTON | ScriptControlled.CONTROL_LBUTTON);
-                if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_LBUTTON_UP) != 0 || (flags & unchecked((uint)AgentManager.ControlFlags.AGENT_CONTROL_ML_LBUTTON_UP)) != 0)
-                {
-                    allflags = ScriptControlled.CONTROL_ZERO;
-                    MouseDown = true;
-                }
-            }
-
-            if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_ML_LBUTTON_DOWN) != 0)
-            {
-                allflags |= ScriptControlled.CONTROL_ML_LBUTTON;
-                MouseDown = true;
-            }
-            if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_LBUTTON_DOWN) != 0)
-            {
-                allflags |= ScriptControlled.CONTROL_LBUTTON;
-                MouseDown = true;
-            }
-
-            // find all activated controls, whether the scripts are interested in them or not
-            if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS) != 0 || (flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_AT_POS) != 0)
-            {
-                allflags |= ScriptControlled.CONTROL_FWD;
-            }
-            if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_NEG) != 0 || (flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_AT_NEG) != 0)
-            {
-                allflags |= ScriptControlled.CONTROL_BACK;
-            }
-            if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) != 0 || (flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_UP_POS) != 0)
-            {
-                allflags |= ScriptControlled.CONTROL_UP;
-            }
-            if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG) != 0 || (flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_UP_NEG) != 0)
-            {
-                allflags |= ScriptControlled.CONTROL_DOWN;
-            }
-            if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_LEFT_POS) != 0 || (flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_POS) != 0)
-            {
-                allflags |= ScriptControlled.CONTROL_LEFT;
-            }
-            if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_LEFT_NEG) != 0 || (flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_NEG) != 0)
-            {
-                allflags |= ScriptControlled.CONTROL_RIGHT;
-            }
-            if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_YAW_NEG) != 0)
-            {
-                allflags |= ScriptControlled.CONTROL_ROT_RIGHT;
-            }
-            if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_YAW_POS) != 0)
-            {
-                allflags |= ScriptControlled.CONTROL_ROT_LEFT;
-            }
-            // optimization; we have to check per script, but if nothing is pressed and nothing changed, we can skip that
-            if (allflags != ScriptControlled.CONTROL_ZERO || allflags != LastCommands)
-            {
-                lock (scriptedcontrols)
-                {
-                    foreach (KeyValuePair<UUID, ScriptControllers> kvp in scriptedcontrols)
-                    {
-                        UUID scriptUUID = kvp.Key;
-                        ScriptControllers scriptControlData = kvp.Value;
-
-                        ScriptControlled localHeld = allflags & scriptControlData.eventControls;     // the flags interesting for us
-                        ScriptControlled localLast = LastCommands & scriptControlData.eventControls; // the activated controls in the last cycle
-                        ScriptControlled localChange = localHeld ^ localLast;                        // the changed bits
-                        if (localHeld != ScriptControlled.CONTROL_ZERO || localChange != ScriptControlled.CONTROL_ZERO)
-                        {
-                            // only send if still pressed or just changed
-                            m_scene.EventManager.TriggerControlEvent(scriptControlData.part, scriptUUID, UUID, (uint)localHeld, (uint)localChange);
-                        }
-                    }
-                }
-            }
-
-            LastCommands = allflags;
-        }
-
-        protected internal static AgentManager.ControlFlags RemoveIgnoredControls(AgentManager.ControlFlags flags, ScriptControlled ignored)
-        {
-            if (ignored == ScriptControlled.CONTROL_ZERO)
-                return flags;
-
-            if ((ignored & ScriptControlled.CONTROL_BACK) != 0)
-                flags &= ~(AgentManager.ControlFlags.AGENT_CONTROL_AT_NEG | AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_AT_NEG);
-            if ((ignored & ScriptControlled.CONTROL_FWD) != 0)
-                flags &= ~(AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_AT_POS | AgentManager.ControlFlags.AGENT_CONTROL_AT_POS);
-            if ((ignored & ScriptControlled.CONTROL_DOWN) != 0)
-                flags &= ~(AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG | AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_UP_NEG);
-            if ((ignored & ScriptControlled.CONTROL_UP) != 0)
-                flags &= ~(AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_UP_POS | AgentManager.ControlFlags.AGENT_CONTROL_UP_POS);
-            if ((ignored & ScriptControlled.CONTROL_LEFT) != 0)
-                flags &= ~(AgentManager.ControlFlags.AGENT_CONTROL_LEFT_POS | AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_POS);
-            if ((ignored & ScriptControlled.CONTROL_RIGHT) != 0)
-                flags &= ~(AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_NEG | AgentManager.ControlFlags.AGENT_CONTROL_LEFT_NEG);
-            if ((ignored & ScriptControlled.CONTROL_ROT_LEFT) != 0)
-                flags &= ~(AgentManager.ControlFlags.AGENT_CONTROL_YAW_NEG);
-            if ((ignored & ScriptControlled.CONTROL_ROT_RIGHT) != 0)
-                flags &= ~(AgentManager.ControlFlags.AGENT_CONTROL_YAW_POS);
-            if ((ignored & ScriptControlled.CONTROL_ML_LBUTTON) != 0)
-                flags &= ~(AgentManager.ControlFlags.AGENT_CONTROL_ML_LBUTTON_DOWN);
-            if ((ignored & ScriptControlled.CONTROL_LBUTTON) != 0)
-                flags &= ~(AgentManager.ControlFlags.AGENT_CONTROL_LBUTTON_UP | AgentManager.ControlFlags.AGENT_CONTROL_LBUTTON_DOWN);
-
-            //DIR_CONTROL_FLAG_FORWARD = AgentManager.ControlFlags.AGENT_CONTROL_AT_POS,
-            //DIR_CONTROL_FLAG_BACK = AgentManager.ControlFlags.AGENT_CONTROL_AT_NEG,
-            //DIR_CONTROL_FLAG_LEFT = AgentManager.ControlFlags.AGENT_CONTROL_LEFT_POS,
-            //DIR_CONTROL_FLAG_RIGHT = AgentManager.ControlFlags.AGENT_CONTROL_LEFT_NEG,
-            //DIR_CONTROL_FLAG_UP = AgentManager.ControlFlags.AGENT_CONTROL_UP_POS,
-            //DIR_CONTROL_FLAG_DOWN = AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG,
-            //DIR_CONTROL_FLAG_DOWN_NUDGE = AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_UP_NEG
-
-            return flags;
-        }
-
-        #endregion
 
         #region IScenePresence Members
 
