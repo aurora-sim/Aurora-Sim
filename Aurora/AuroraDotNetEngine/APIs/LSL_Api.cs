@@ -4941,7 +4941,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 ce = new UserInfoCacheEntry();
                 ce.time = Util.EnvironmentTickCount();
                 ce.account = account;
-                ce.pinfo = World.RequestModuleInterface<IAgentInfoService>().GetUserInfo(uuid.ToString());
+                pinfo = World.RequestModuleInterface<IAgentInfoService>().GetUserInfo(uuid.ToString());
+                ce.pinfo = pinfo;
             }
             else
             {
@@ -4957,6 +4958,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 ce.time = Util.EnvironmentTickCount();
                 ce.pinfo = World.RequestModuleInterface<IAgentInfoService>().GetUserInfo(uuid.ToString());
+                pinfo = ce.pinfo;
             }
 
             string reply = String.Empty;
@@ -4970,7 +4972,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         reply = "0";
                     break;
                 case 2: // DATA_NAME (First Last)
-                    reply = account.FirstName + " " + account.LastName;
+                    reply = account.Name;
                     break;
                 case 3: // DATA_BORN (YYYY-MM-DD)
                     DateTime born = new DateTime(1970, 1, 1, 0, 0, 0, 0);
