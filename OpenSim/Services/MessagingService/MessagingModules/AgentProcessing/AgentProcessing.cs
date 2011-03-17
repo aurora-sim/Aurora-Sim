@@ -251,10 +251,10 @@ namespace OpenSim.Services.MessagingService
             IRegionCapsService fullregionCaps = m_registry.RequestModuleInterface<ICapsService>().GetCapsForRegion(requestingRegion);
             if (fullregionCaps != null)
             {
+                //Now kill the region in the caps Service, DO THIS FIRST, otherwise you get an infinite loop later in the IClientCapsService when it tries to remove itself from the IRegionCapsService
+                m_registry.RequestModuleInterface<ICapsService>().RemoveCapsForRegion(requestingRegion);
                 //Close all regions and remove them from the region
                 fullregionCaps.Close();
-                //Now kill the region in the caps Service
-                m_registry.RequestModuleInterface<ICapsService>().RemoveCapsForRegion(requestingRegion);
             }
         }
 
