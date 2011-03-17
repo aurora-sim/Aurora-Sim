@@ -18,6 +18,7 @@ namespace OpenSim.Services.GridService
     {
         #region Declares
 
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected Dictionary<string, IGridRegistrationUrlModule> m_modules = new Dictionary<string, IGridRegistrationUrlModule>();
         protected LoadBalancerUrls m_loadBalancer = new LoadBalancerUrls();
         protected IGenericsConnector m_genericsConnector;
@@ -230,7 +231,10 @@ namespace OpenSim.Services.GridService
             {
                 urls.Expiration = DateTime.Now.AddHours(m_timeBeforeTimeout);
                 m_genericsConnector.AddGeneric(UUID.Zero, "GridRegistrationUrls", RegionHandle.ToString(), urls.ToOSD());
+                m_log.WarnFormat("[GridRegistrationService]: Updated URLs for {0}", RegionHandle);
             }
+            else
+                m_log.ErrorFormat("[GridRegistrationService]: Failed to find URLs to update for {0}", RegionHandle);
         }
 
         public void RegisterModule(IGridRegistrationUrlModule module)
