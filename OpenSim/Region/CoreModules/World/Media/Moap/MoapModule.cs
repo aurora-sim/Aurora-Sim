@@ -170,8 +170,8 @@ namespace OpenSim.Region.CoreModules.Media.Moap
                 m_omuCapUsers.Remove(path);
             }
         }
-            
-        public MediaEntry GetMediaEntry(SceneObjectPart part, int face)
+
+        public MediaEntry GetMediaEntry (ISceneChildEntity part, int face)
         {
             MediaEntry me = null;
             
@@ -197,8 +197,8 @@ namespace OpenSim.Region.CoreModules.Media.Moap
             
             return me;
         }
-        
-        public void SetMediaEntry(SceneObjectPart part, int face, MediaEntry me)
+
+        public void SetMediaEntry (ISceneChildEntity part, int face, MediaEntry me)
         {
             CheckFaceParam(part, face);
             
@@ -212,8 +212,8 @@ namespace OpenSim.Region.CoreModules.Media.Moap
             part.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
             part.TriggerScriptChangedEvent(Changed.MEDIA);
         }
-        
-        public void ClearMediaEntry(SceneObjectPart part, int face)
+
+        public void ClearMediaEntry (ISceneChildEntity part, int face)
         {
             SetMediaEntry(part, face, null);
         }
@@ -255,8 +255,8 @@ namespace OpenSim.Region.CoreModules.Media.Moap
         protected string HandleObjectMediaRequest(ObjectMediaRequest omr)
         {
             UUID primId = omr.PrimID;
-            
-            SceneObjectPart part = m_scene.GetSceneObjectPart(primId);
+
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (primId);
             
             if (null == part)
             {
@@ -295,8 +295,8 @@ namespace OpenSim.Region.CoreModules.Media.Moap
         protected string HandleObjectMediaUpdate(string path, ObjectMediaUpdate omu)
         {
             UUID primId = omu.PrimID;
-            
-            SceneObjectPart part = m_scene.GetSceneObjectPart(primId);
+
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (primId);
             
             if (null == part)
             {
@@ -421,8 +421,8 @@ namespace OpenSim.Region.CoreModules.Media.Moap
             omn.Deserialize(osd);
             
             UUID primId = omn.PrimID;
-            
-            SceneObjectPart part = m_scene.GetSceneObjectPart(primId);
+
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (primId);
             
             if (null == part)
             {
@@ -485,7 +485,7 @@ namespace OpenSim.Region.CoreModules.Media.Moap
         /// </summary>
         /// <param name="part"></param>
         /// <param name="face"></param>
-        protected void CheckFaceParam(SceneObjectPart part, int face)
+        protected void CheckFaceParam (ISceneChildEntity part, int face)
         {
             if (face < 0)
                 throw new ArgumentException("Face cannot be less than zero");
@@ -504,7 +504,7 @@ namespace OpenSim.Region.CoreModules.Media.Moap
         /// The id to attach to this update.  Normally, this is the user that changed the
         /// texture
         /// </param>
-        protected void UpdateMediaUrl(SceneObjectPart part, UUID updateId)
+        protected void UpdateMediaUrl (ISceneChildEntity part, UUID updateId)
         {
             if (null == part.MediaUrl)
             {

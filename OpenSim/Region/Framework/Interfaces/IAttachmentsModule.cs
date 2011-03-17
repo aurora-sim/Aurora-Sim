@@ -46,7 +46,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="attachPos"></param>
         /// <returns>true if the object was successfully attached, false otherwise</returns>
         bool AttachObjectFromInworldObject(
-            uint localID, IClientAPI remoteClient, ISceneChildEntity grp, int AttachmentPt);
+            uint localID, IClientAPI remoteClient, ISceneEntity grp, int AttachmentPt);
 
         /// <summary>
         /// Rez an attachment from user inventory
@@ -56,7 +56,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="AttachmentPt"></param>
         /// <param name="updateinventoryStatus">
         /// <returns>The scene object that was attached.  Null if the scene object could not be found</returns>
-        SceneObjectGroup RezSingleAttachmentFromInventory(
+        ISceneEntity RezSingleAttachmentFromInventory (
             IClientAPI remoteClient, UUID itemID, int AttachmentPt);
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="avatarID"></param>
         /// <returns></returns>
-        SceneObjectGroup[] GetAttachmentsForAvatar(UUID avatarID);
+        ISceneEntity[] GetAttachmentsForAvatar (UUID avatarID);
 
         /// <summary>
         /// Send a script event to all attachments

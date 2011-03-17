@@ -596,8 +596,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             IAttachmentsModule attModule = agent.Scene.RequestModuleInterface<IAttachmentsModule>();
             if (attModule != null)
             {
-                SceneObjectGroup[] attachments = attModule.GetAttachmentsForAvatar(agent.UUID);
-                foreach (SceneObjectGroup grp in attachments)
+                ISceneEntity[] attachments = attModule.GetAttachmentsForAvatar (agent.UUID);
+                foreach (ISceneEntity grp in attachments)
                 {
                     //Kill in all clients as it will be readded in the other region
                     KillEntities(agent.Scene, grp.ChildrenEntities().ToArray());

@@ -711,8 +711,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 IAttachmentsModule attModule = (obj as IScenePresence).Scene.RequestModuleInterface<IAttachmentsModule>();
                 if (attModule != null)
                 {
-                    SceneObjectGroup[] attachments = attModule.GetAttachmentsForAvatar(obj.UUID);
-                    foreach (SceneObjectGroup grp in attachments)
+                    ISceneEntity[] attachments = attModule.GetAttachmentsForAvatar (obj.UUID);
+                    foreach (ISceneEntity grp in attachments)
                     {
                         activeScripts += GetActiveScripts(grp);
                     }
@@ -743,8 +743,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 IAttachmentsModule attModule = ((IScenePresence)obj).Scene.RequestModuleInterface<IAttachmentsModule> ();
                 if (attModule != null)
                 {
-                    SceneObjectGroup[] attachments = attModule.GetAttachmentsForAvatar(obj.UUID);
-                    foreach (SceneObjectGroup grp in attachments)
+                    ISceneEntity[] attachments = attModule.GetAttachmentsForAvatar (obj.UUID);
+                    foreach (ISceneEntity grp in attachments)
                     {
                         totalScripts += GetTotalScripts(grp);
                     }

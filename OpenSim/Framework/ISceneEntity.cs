@@ -301,6 +301,24 @@ namespace OpenSim.Framework
         void UpdateGroupPosition (Vector3 vector3, bool p);
 
         void ResetChildPrimPhysicsPositions ();
+
+        Vector3 GetAttachmentPos ();
+
+        byte GetAttachmentPoint ();
+
+        byte GetSavedAttachmentPoint ();
+
+        void SetAttachmentPoint (byte p);
+
+        void CreateScriptInstances (int p, bool p_2, int p_3, OpenMetaverse.UUID uUID);
+
+        void ResumeScripts ();
+
+        void SetFromItemID (OpenMetaverse.UUID uUID);
+
+        void FireAttachmentCollisionEvents (EventArgs e);
+
+        void DetachToInventoryPrep ();
     }
 
     public interface IEntity
@@ -565,6 +583,18 @@ namespace OpenSim.Framework
         Dictionary<int, string> CollisionFilter { get; }
 
         bool GetBlockGrab ();
+
+        bool RemFlag (PrimFlags primFlags);
+
+        void GetProperties (IClientAPI iClientAPI);
+
+        string MediaUrl { get; set; }
+
+        void TriggerScriptChangedEvent (Changed changed);
+
+        int SavedAttachmentPoint { get; set; }
+
+        Vector3 SavedAttachedPos { get; set; }
     }
 
     public interface ISceneGraph

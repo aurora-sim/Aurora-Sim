@@ -2829,8 +2829,8 @@ namespace OpenSim.Region.Framework.Scenes
             IAttachmentsModule attModule = Scene.RequestModuleInterface<IAttachmentsModule>();
             if (attModule != null)
             {
-                SceneObjectGroup[] attachments = attModule.GetAttachmentsForAvatar(UUID);
-                foreach (SceneObjectGroup grp in attachments)
+                ISceneEntity[] attachments = attModule.GetAttachmentsForAvatar (UUID);
+                foreach (ISceneEntity grp in attachments)
                 {
                     grp.FireAttachmentCollisionEvents(e);
                 }

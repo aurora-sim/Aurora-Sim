@@ -6465,15 +6465,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             IAttachmentsModule attachMod = World.RequestModuleInterface<IAttachmentsModule>();
             if (attachMod != null)
             {
-                SceneObjectGroup[] att = attachMod.GetAttachmentsForAvatar(agent.UUID);
+                ISceneEntity[] att = attachMod.GetAttachmentsForAvatar (agent.UUID);
                 if (att.Length > 0)
                 {
                     flags |= ScriptBaseClass.AGENT_ATTACHMENTS;
-                    foreach (SceneObjectGroup gobj in att)
+                    foreach (ISceneEntity gobj in att)
                     {
                         if (gobj != null)
                         {
-                            if (gobj.RootPart.Inventory.ContainsScripts())
+                            if (gobj.RootChild.Inventory.ContainsScripts())
                             {
                                 flags |= ScriptBaseClass.AGENT_SCRIPTED;
                                 break;
@@ -6920,7 +6920,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
-            return m_host.ParentEntity.RootChild.AttachmentPoint;
+            return (int)m_host.ParentEntity.RootChild.AttachmentPoint;
         }
 
         public LSL_Integer llGetFreeMemory()

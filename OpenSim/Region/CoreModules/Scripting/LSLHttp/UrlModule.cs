@@ -131,7 +131,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
         public void Close()
         {
         }
-        public UUID RequestURL(IScriptModule engine, SceneObjectPart host, UUID itemID)
+        public UUID RequestURL (IScriptModule engine, ISceneChildEntity host, UUID itemID)
         {
             UUID urlcode = UUID.Random();
 
@@ -167,7 +167,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
             return urlcode;
         }
 
-        public UUID RequestSecureURL(IScriptModule engine, SceneObjectPart host, UUID itemID)
+        public UUID RequestSecureURL (IScriptModule engine, ISceneChildEntity host, UUID itemID)
         {
             UUID urlcode = UUID.Random();
 

@@ -954,7 +954,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="folderID"></param>
         /// <param name="part"></param>
         /// <param name="itemID"></param>
-        protected InventoryItemBase MoveTaskInventoryItemToUserInventory(IClientAPI remoteClient, UUID folderId, SceneObjectPart part, UUID itemId)
+        protected InventoryItemBase MoveTaskInventoryItemToUserInventory (IClientAPI remoteClient, UUID folderId, ISceneChildEntity part, UUID itemId)
         {
             m_log.DebugFormat(
                 "[PRIM INVENTORY]: Adding item {0} from {1} to folder {2} for {3}",
@@ -1237,7 +1237,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="part">The object that the item is in</param>
         /// <param name="itemId">The item to convert</param>
         /// <returns></returns>
-        private InventoryItemBase CreateAgentInventoryItemFromTask(UUID destAgent, SceneObjectPart part, UUID itemId)
+        private InventoryItemBase CreateAgentInventoryItemFromTask (UUID destAgent, ISceneChildEntity part, UUID itemId)
         {
             TaskInventoryItem taskItem = part.Inventory.GetInventoryItem(itemId);
 
@@ -1641,7 +1641,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="pin">The ScriptAccessPin of the prim</param>
         /// <param name="running">Whether the script should be running when it is started</param>
         /// <param name="start_param">The start param to pass to the script</param>
-        public void RezScript(UUID srcId, SceneObjectPart srcPart, UUID destId, int pin, int running, int start_param)
+        public void RezScript (UUID srcId, ISceneChildEntity srcPart, UUID destId, int pin, int running, int start_param)
         {
             TaskInventoryItem srcTaskItem = srcPart.Inventory.GetInventoryItem(srcId);
 
@@ -1654,7 +1654,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            SceneObjectPart destPart = m_scene.GetSceneObjectPart(destId);
+            ISceneChildEntity destPart = m_scene.GetSceneObjectPart (destId);
 
             if (destPart == null)
             {
@@ -1738,7 +1738,7 @@ namespace OpenSim.Region.Framework.Scenes
                 destPart.Inventory.CreateScriptInstance(destTaskItem, start_param, false, 0);
             }
 
-            destPart.ParentGroup.ResumeScripts();
+            destPart.ParentEntity.ResumeScripts();
 
             IScenePresence avatar;
             if (m_scene.TryGetScenePresence(srcTaskItem.OwnerID, out avatar))
@@ -1775,7 +1775,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="destId"></param>
         /// <param name="part"></param>
         /// <param name="itemId"></param>
-        public void MoveTaskInventoryItemToObject(UUID destId, SceneObjectPart part, UUID itemId)
+        public void MoveTaskInventoryItemToObject (UUID destId, ISceneChildEntity part, UUID itemId)
         {
             TaskInventoryItem srcTaskItem = part.Inventory.GetInventoryItem(itemId);
 
@@ -1789,7 +1789,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            SceneObjectPart destPart = m_scene.GetSceneObjectPart(destId);
+            ISceneChildEntity destPart = m_scene.GetSceneObjectPart (destId);
 
             if (destPart == null)
             {
@@ -1883,7 +1883,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </param>
         /// <param name="part"></param>
         /// <param name="itemID"></param>
-        public InventoryItemBase MoveTaskInventoryItemToUserInventory(UUID avatarId, UUID folderId, SceneObjectPart part, UUID itemId)
+        public InventoryItemBase MoveTaskInventoryItemToUserInventory (UUID avatarId, UUID folderId, ISceneChildEntity part, UUID itemId)
         {
             IScenePresence avatar;
 
@@ -1914,7 +1914,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="host"></param>
         /// <param name="items"></param>
         /// <returns></returns>
-        public UUID MoveTaskInventoryItemsToUserInventory(UUID destID, string name, SceneObjectPart host, List<UUID> items)
+        public UUID MoveTaskInventoryItemsToUserInventory (UUID destID, string name, ISceneChildEntity host, List<UUID> items)
         {
             InventoryFolderBase rootFolder = m_scene.InventoryService.GetRootFolder(destID);
 

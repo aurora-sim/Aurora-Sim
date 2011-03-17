@@ -58,11 +58,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
     public class Bot_Api : MarshalByRefObject, IBot_Api, IScriptApi
     {
         internal IScriptModulePlugin m_ScriptEngine;
-        internal SceneObjectPart m_host;
+        internal ISceneChildEntity m_host;
         internal ScriptProtectionModule ScriptProtection;
         internal UUID m_itemID;
 
-        public void Initialize(IScriptModulePlugin ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, ScriptProtectionModule module)
+        public void Initialize (IScriptModulePlugin ScriptEngine, ISceneChildEntity host, uint localID, UUID itemID, ScriptProtectionModule module)
         {
             m_itemID = itemID;
             m_ScriptEngine = ScriptEngine;
@@ -130,7 +130,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public IScene World
         {
-            get { return m_host.ParentGroup.Scene; }
+            get { return m_host.ParentEntity.Scene; }
         }
 
         public string botCreateBot(string FirstName, string LastName, string appearanceToClone)
