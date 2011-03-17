@@ -91,7 +91,7 @@ namespace OpenSim.Services.Connectors
             if(names.Length >= 2)
             {
                 //Join all the names together
-                string lastName= string.Join(" ", name, 1, names.Length - 2);
+                string lastName= string.Join(" ", names, 1, names.Length - 2);
                 sendData["LastName"] = lastName.ToString();
             }
             else
