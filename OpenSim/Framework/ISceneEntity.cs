@@ -48,6 +48,7 @@ namespace OpenSim.Framework
         event AddPhysics OnAddPhysics;
 
         event RemovePhysics OnRemovePhysics;
+        IScene Scene { get; set; }
 
         string CallbackURI { get; set; }
         /// <summary>
@@ -64,11 +65,6 @@ namespace OpenSim.Framework
         /// The actual client base (it sends and recieves packets)
         /// </summary>
         IClientAPI ControllingClient { get; }
-
-        /// <summary>
-        /// The scene this client is in
-        /// </summary>
-        IScene Scene { get; }
 
         ISceneViewer SceneViewer { get; }
 
@@ -240,12 +236,29 @@ namespace OpenSim.Framework
 
     public interface ISceneEntity : IEntity
     {
+        #region Get/Set
+
+        IScene Scene { get; set; }
         UUID LastParcelUUID { get; set; }
-        ISceneChildEntity RootChild { get; set; }
         Vector3 LastSignificantPosition{ get; }
         bool IsDeleted { get; set; }
         Vector3 GroupScale ();
         Quaternion GroupRotation { get; }
+        UUID OwnerID { get; set; }
+        float Damage { get; set; }
+        int PrimCount { get; }
+        bool HasGroupChanged { get; set; }
+        bool IsAttachment { get; }
+        UUID GroupID { get; set; }
+        bool IsSelected { get; set; }
+        ISceneChildEntity LoopSoundMasterPrim { get; set; }
+        List<ISceneChildEntity> LoopSoundSlavePrims { get; set; }
+
+        #endregion
+
+        #region Children
+
+        ISceneChildEntity RootChild { get; set; }
         List<ISceneChildEntity> ChildrenEntities ();
         void ClearChildren ();
         bool AddChild (ISceneChildEntity child, int linkNum);
@@ -253,6 +266,12 @@ namespace OpenSim.Framework
         bool RemoveChild (ISceneChildEntity child);
         bool GetChildPrim (uint LocalID, out ISceneChildEntity entity);
         bool GetChildPrim (UUID UUID, out ISceneChildEntity entity);
+        ISceneChildEntity GetChildPart (UUID objectID);
+        ISceneChildEntity GetChildPart (uint childkey);
+        void LinkToGroup (ISceneEntity childPrim);
+        IEntity GetLinkNumPart (int linkType);
+
+        #endregion
 
         void ClearUndoState ();
 
@@ -264,41 +283,18 @@ namespace OpenSim.Framework
 
         void ApplyPhysics (bool allowPhysicalPrims);
 
-        OpenMetaverse.UUID OwnerID { get; set; }
 
         void ScheduleGroupTerseUpdate ();
 
-        float Damage { get; set; }
 
-        ISceneChildEntity GetChildPart (UUID objectID);
-
-        ISceneChildEntity GetChildPart (uint childkey);
+        
 
         void TriggerScriptChangedEvent (Changed changed);
 
-        void LinkToGroup (ISceneEntity childPrim);
 
         void ScheduleGroupUpdate (PrimUpdateFlags primUpdateFlags);
 
         void GetProperties (IClientAPI client);
-
-        int PrimCount { get; }
-
-        bool HasGroupChanged { get; set; }
-
-        bool IsAttachment { get; }
-
-        UUID GroupID { get; set; }
-
-        IScene Scene { get; set; }
-
-        bool IsSelected { get; set; }
-
-        IEntity GetLinkNumPart (int linkType);
-
-        ISceneChildEntity LoopSoundMasterPrim { get; set; }
-
-        List<ISceneChildEntity> LoopSoundSlavePrims { get; set; }
     }
 
     public interface IEntity
@@ -466,6 +462,9 @@ namespace OpenSim.Framework
 
     public interface ISceneGraph
     {
+        ISceneEntity AddNewPrim (
+            UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape);
+        Vector3 GetNewRezLocation (Vector3 RayStart, Vector3 RayEnd, UUID RayTargetID, Quaternion rot, byte bypassRayCast, byte RayEndIsIntersection, bool frontFacesOnly, Vector3 scale, bool FaceCenter);
         void GetCoarseLocations (out List<Vector3> coarseLocations, out List<UUID> avatarUUIDs, uint maxLocations);
         IScenePresence GetScenePresence (string firstName, string lastName);
         IScenePresence GetScenePresence (uint localID);
@@ -487,16 +486,39 @@ namespace OpenSim.Framework
         void CheckAllocationOfLocalIds (ISceneEntity group);
         uint AllocateLocalId ();
         int LinkSetSorter (ISceneChildEntity a, ISceneChildEntity b);
+
+        void RegisterEntityCreatorModule (IEntityCreator entityCreator);
+    }
+
+    /// <summary>
+    /// Interface to a class that is capable of creating entities
+    /// </summary>
+    public interface IEntityCreator
+    {
+        /// <summary>
+        /// The entities that this class is capable of creating.  These match the PCode format.
+        /// </summary>
+        /// <returns></returns>
+        PCode[] CreationCapabilities { get; }
+
+        /// <summary>
+        /// Create an entity
+        /// </summary>
+        /// <param name="ownerID"></param>
+        /// <param name="groupID"></param>
+        /// <param name="pos"></param>
+        /// <param name="rot"></param>
+        /// <param name="shape"></param>
+        /// <returns>The entity created, or null if the creation failed</returns>
+        ISceneEntity CreateEntity (ISceneEntity baseEntity, UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape);
     }
 
     public enum PIDHoverType
     {
-        Ground
-        ,
-        GroundAndWater
-            ,
-        Water
-            , Absolute
+        Ground,
+        GroundAndWater,
+        Water,
+        Absolute
     }
 
     #region Enumerations

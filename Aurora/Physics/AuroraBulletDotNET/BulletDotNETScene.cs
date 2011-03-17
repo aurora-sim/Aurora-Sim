@@ -42,8 +42,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 {
     public class BulletDotNETScene : PhysicsScene
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         // private string m_sceneIdentifier = string.Empty;
 
         private HashSet<BulletDotNETCharacter> m_characters = new HashSet<BulletDotNETCharacter>();

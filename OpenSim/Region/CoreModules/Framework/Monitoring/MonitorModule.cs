@@ -561,7 +561,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     sb[26].StatValue = 0;
 
                     sb[27].StatID = (uint)Stats.SimPhysicsStepMS;
-                    sb[27].StatValue = m_currentScene.SceneGraph.PhysicsScene.StepTime;
+                    sb[27].StatValue = m_currentScene.PhysicsScene.StepTime;
                     
                     sb[28].StatID = (uint)Stats.SimPhysicsShape;
                     sb[28].StatValue = 0;

@@ -36,6 +36,7 @@ using OpenSim.Framework;
 using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using Mischel.Collections;
+using Nini.Config;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -66,6 +67,7 @@ namespace OpenSim.Region.Framework.Scenes
         private Queue<object> m_delayedUpdates = new Queue<object>();
 
         private HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity> ();
+        private bool CheckForObjectCulling = false;
 
         private Vector3 m_lastUpdatePos;
         private float lastDrawDistance;
@@ -83,6 +85,11 @@ namespace OpenSim.Region.Framework.Scenes
             m_presence = presence;
             m_presence.Scene.EventManager.OnSignificantClientMovement += SignificantClientMovement;
             m_prioritizer = new Prioritizer(presence.Scene);
+            IConfig aurorastartupConfig = presence.Scene.Config.Configs["AuroraStartup"];
+            if (aurorastartupConfig != null)
+            {
+                CheckForObjectCulling = aurorastartupConfig.GetBoolean ("CheckForObjectCulling", CheckForObjectCulling);
+            }
 //            m_partsUpdateQueue = new PriorityQueue<EntityUpdate, double>(presence.Scene.Entities.Count > 1000 ? presence.Scene.Entities.Count + 1000 : 1000);
         }
 
@@ -114,7 +121,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (ignore)
                 return;
 */
-            if (m_presence.Scene.CheckForObjectCulling)
+            if (CheckForObjectCulling)
                 {
                 // priority is negative of distance
                 double priority = m_prioritizer.GetUpdatePriority(m_presence.ControllingClient, part.ParentEntity);
@@ -233,7 +240,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="remote_client"></param>
         private void SignificantClientMovement(IClientAPI remote_client)
             {
-            if (!m_presence.Scene.CheckForObjectCulling)
+            if (!CheckForObjectCulling)
                 return;
 
             //Only check our presence
@@ -435,7 +442,7 @@ namespace OpenSim.Region.Framework.Scenes
                         m_queueing = true;
                         }
                     double minp = calcMinPrio();
-                    bool doculling = m_presence.Scene.CheckForObjectCulling;
+                    bool doculling = CheckForObjectCulling;
 
                     if (doculling &&
                         m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeX &&

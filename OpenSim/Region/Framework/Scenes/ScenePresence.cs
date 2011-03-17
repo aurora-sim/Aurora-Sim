@@ -1509,7 +1509,7 @@ namespace OpenSim.Region.Framework.Scenes
             PrimitiveBaseShape proxy = PrimitiveBaseShape.Default;
             //proxy.PCode = (byte)PCode.ParticleSystem;
 
-            proxyObjectGroup = new SceneObjectGroup(UUID, Pos, Rotation, proxy, m_scene);
+            proxyObjectGroup = new SceneObjectGroup(UUID, Pos, Rotation, proxy, "", m_scene);
             proxyObjectGroup.AttachToScene(m_scene);
 
             // Commented out this code since it could never have executed, but might still be informative.
@@ -2062,7 +2062,7 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             if (direc.Z < 2.5f)
                                 direc.Z = 2.5f;
-                            if (m_scene.m_usePreJump && !IsJumping)
+                            if (m_animator.UsePreJump && !IsJumping)
                             {
                                 //AllowMovement = false;
                                 IsJumping = true;

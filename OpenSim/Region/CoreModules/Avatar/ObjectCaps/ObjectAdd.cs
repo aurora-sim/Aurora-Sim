@@ -348,7 +348,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 // rez ON the ground, not IN the ground
                 // pos.Z += 0.25F;
 
-                obj = m_scene.SceneGraph.AddNewPrim(avatar.UUID, group_id, pos, rotation, pbs);
+                obj = (SceneObjectGroup)m_scene.SceneGraph.AddNewPrim(avatar.UUID, group_id, pos, rotation, pbs);
             }
             else
             {
@@ -370,7 +370,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
 
 
-            m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);
+            m_scene.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);
             
             responsedata["int_response_code"] = 200; //501; //410; //404;
             responsedata["content_type"] = "text/plain";

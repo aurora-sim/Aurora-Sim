@@ -751,9 +751,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="offsetPosition"></param>
         public SceneObjectPart(
             UUID ownerID, PrimitiveBaseShape shape, Vector3 groupPosition,
-            Quaternion rotationOffset, Vector3 offsetPosition, IScene scene)
+            Quaternion rotationOffset, Vector3 offsetPosition, string name, IScene scene)
         {
-            m_name = scene.DefaultObjectName;
+            m_name = name;
             m_initialScene = scene;
 
             _creationDate = (int)Utils.DateTimeToUnixTime(DateTime.Now);

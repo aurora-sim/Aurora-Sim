@@ -126,11 +126,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private volatile bool shuttingdown = false;
 
-        public bool CheckForObjectCulling = false;
-        private string m_DefaultObjectName = "Primitive";
-        public bool m_usePreJump = true;
-        public bool m_useSplatAnimation = true;
-        public float MaxLowValue = -1000;
         public bool ShouldRunHeartbeat = true;
 
         #endregion
@@ -140,6 +135,7 @@ namespace OpenSim.Region.Framework.Scenes
         public PhysicsScene PhysicsScene
         {
             get { return m_sceneGraph.PhysicsScene; }
+            set { m_sceneGraph.PhysicsScene = value; }
         }
 
         public float BaseSimFPS
@@ -167,7 +163,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return shuttingdown; }
         }
 
-        public SceneGraph SceneGraph
+        public ISceneGraph SceneGraph
         {
             get { return m_sceneGraph; }
         }
@@ -192,11 +188,6 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get { return m_config; }
             set { m_config = value; }
-        }
-
-        public string DefaultObjectName
-        {
-            get { return m_DefaultObjectName; }
         }
 
         public float TimeDilation
@@ -311,19 +302,8 @@ namespace OpenSim.Region.Framework.Scenes
             IConfig aurorastartupConfig = m_config.Configs["AuroraStartup"];
             if (aurorastartupConfig != null)
             {
-                MaxLowValue = aurorastartupConfig.GetFloat("MaxLowValue", -1000);
-                m_DefaultObjectName = aurorastartupConfig.GetString("DefaultObjectName", m_DefaultObjectName);
-                CheckForObjectCulling = aurorastartupConfig.GetBoolean("CheckForObjectCulling", CheckForObjectCulling);
                 //Region specific is still honored here, the RegionInfo checks for it
                 RegionInfo.ObjectCapacity = aurorastartupConfig.GetInt("ObjectCapacity", 80000);
-            }
-
-            //Animation states
-            IConfig animationConfig = m_config.Configs["Animations"];
-            if (animationConfig != null)
-            {
-                m_usePreJump = animationConfig.GetBoolean("enableprejump", m_usePreJump);
-                m_useSplatAnimation = animationConfig.GetBoolean("enableSplatAnimation", m_useSplatAnimation);
             }
 
             IConfig packetConfig = m_config.Configs["PacketPool"];
@@ -392,8 +372,8 @@ namespace OpenSim.Region.Framework.Scenes
             //Stop the heartbeat
             monitor.Stop();
 
-            if (SceneGraph.PhysicsScene != null)
-                SceneGraph.PhysicsScene.Dispose();
+            if (m_sceneGraph.PhysicsScene != null)
+                m_sceneGraph.PhysicsScene.Dispose ();
 
             //Tell the neighbors that this region is now down
             INeighborService service = RequestModuleInterface<INeighborService>();
@@ -626,7 +606,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             // Remove the avatar from the scene
-            SceneGraph.RemoveScenePresence (presence);
+            m_sceneGraph.RemoveScenePresence (presence);
             m_clientManager.Remove (presence.UUID);
 
             AuthenticateHandler.RemoveCircuit (presence.ControllingClient.CircuitCode);
@@ -802,22 +782,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region IScene Members
 
-        bool IScene.m_usePreJump
-        {
-            get { throw new NotImplementedException (); }
-        }
-
-        ISceneGraph IScene.SceneGraph
-        {
-            get { throw new NotImplementedException (); }
-        }
-
         List<ISceneEntity> IScene.PhysicsReturns
         {
             get { throw new NotImplementedException (); }
         }
 
-        public IEnumerable<IScenePresence> GetScenePresences ()
+        public List<IScenePresence> GetScenePresences ()
         {
             throw new NotImplementedException ();
         }
@@ -825,30 +795,6 @@ namespace OpenSim.Region.Framework.Scenes
         public IScenePresence GetScenePresence (uint killerObjectLocalID)
         {
             throw new NotImplementedException ();
-        }
-
-        bool IScene.CheckForObjectCulling
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        bool IScene.m_useSplatAnimation
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
         }
 
         ISceneChildEntity IScene.GetSceneObjectPart (uint localID)
@@ -861,33 +807,9 @@ namespace OpenSim.Region.Framework.Scenes
             throw new NotImplementedException ();
         }
 
-        float IScene.MaxLowValue
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
         public bool TryGetPart (UUID objecUUID, out ISceneChildEntity SensedObject)
         {
             throw new NotImplementedException ();
-        }
-
-        string IScene.DefaultObjectName
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
         }
 
         #endregion

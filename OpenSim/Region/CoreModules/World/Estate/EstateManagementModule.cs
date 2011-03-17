@@ -712,7 +712,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             if (m_scene.RegionInfo.RegionSettings.DisableCollisions == !CollisionEvents)
             {
                 m_scene.RegionInfo.RegionSettings.DisableCollisions = !CollisionEvents;
-                m_scene.SceneGraph.PhysicsScene.DisableCollisions = m_scene.RegionInfo.RegionSettings.DisableCollisions;
+                m_scene.PhysicsScene.DisableCollisions = m_scene.RegionInfo.RegionSettings.DisableCollisions;
             }
         }
 
@@ -940,7 +940,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             
             if (reportType == (uint)OpenMetaverse.EstateTools.LandStatReportType.TopColliders)
             {
-                SceneData = m_scene.SceneGraph.PhysicsScene.GetTopColliders();
+                SceneData = m_scene.PhysicsScene.GetTopColliders();
             }
             else if (reportType == (uint)OpenMetaverse.EstateTools.LandStatReportType.TopScripts)
             {

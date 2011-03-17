@@ -26,7 +26,7 @@
  */
 
 using OpenMetaverse;
-using OpenSim.Region.Framework.Scenes;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
@@ -43,7 +43,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="treeType"></param>
         /// <param name="newTree"></param>
         /// <returns></returns>
-        SceneObjectGroup AddTree(
+        ISceneEntity AddTree (
             UUID uuid, UUID groupID, Vector3 scale, Quaternion rotation, Vector3 position, Tree treeType, bool newTree);
     }
 }

@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using OpenMetaverse;
+using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -68,6 +69,13 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
         protected string m_movementAnimation = "DEFAULT";
 
+        protected bool m_useSplatAnimation = true;
+        protected bool m_usePreJump = true;
+        public bool UsePreJump
+        {
+            get { return m_usePreJump; }
+        }
+
         private float m_animTickFall;
         private float m_animTickJump;
         private float m_timesBeforeSlowFlyIsOff = 0;
@@ -81,6 +89,12 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         public Animator(IScenePresence sp)
         {
             m_scenePresence = sp;
+            IConfig animationConfig = sp.Scene.Config.Configs["Animations"];
+            if (animationConfig != null)
+            {
+                m_usePreJump = animationConfig.GetBoolean ("enableprejump", m_usePreJump);
+                m_useSplatAnimation = animationConfig.GetBoolean ("enableSplatAnimation", m_useSplatAnimation);
+            }
             //This step makes sure that we don't waste almost 2.5! seconds on incoming agents
             m_animations = new AnimationSet(DefaultAnimations);
         }
@@ -144,7 +158,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         {
             //m_log.DebugFormat("Updating movement animation to {0}", anim);
 
-            if (!m_scenePresence.Scene.m_useSplatAnimation && anim == "STANDUP")
+            if (!m_useSplatAnimation && anim == "STANDUP")
                 anim = "LAND";
 
             if (!m_scenePresence.IsChildAgent)
@@ -245,7 +259,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             float standupElapsed = (float)(Util.EnvironmentTickCount() - m_animTickStandup) / 1000f;
             if (standupElapsed < STANDUP_TIME &&
-                m_scenePresence.Scene.m_useSplatAnimation)
+                m_useSplatAnimation)
             {
                 // Falling long enough to trigger the animation
                 m_scenePresence.AllowMovement = false;
@@ -253,7 +267,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 return "STANDUP";
             }
             else if (standupElapsed < BRUSH_TIME &&
-                m_scenePresence.Scene.m_useSplatAnimation)
+                m_useSplatAnimation)
             {
                 m_scenePresence.AllowMovement = false;
                 return "BRUSH";
@@ -367,7 +381,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             // -- Revolution
             if (move.Z > 0f || m_animTickJump != 0)
             {
-                if (m_scenePresence.Scene.m_usePreJump)
+                if (m_usePreJump)
                 {
                     //This is to check to make sure they arn't trying to fly up by holding down jump
                     if ((m_scenePresence.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) == 0)
@@ -534,7 +548,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 }
                 else
                 {
-                    if (m_scenePresence.Scene.m_useSplatAnimation)
+                    if (m_useSplatAnimation)
                     {
                         m_animTickStandup = Util.EnvironmentTickCount();
                         return "STANDUP";

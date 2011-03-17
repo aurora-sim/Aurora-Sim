@@ -43,7 +43,7 @@ namespace OpenSim.Region.Framework.Scenes
     /// This class used to be called InnerScene and may not yet truly be a SceneGraph.  The non scene graph components
     /// should be migrated out over time.
     /// </summary>
-    public class SceneGraph
+    public class SceneGraph : ISceneGraph
     {
         #region Declares
 
@@ -54,6 +54,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected RegionInfo m_regInfo;
         protected Scene m_parentScene;
         protected bool EnableFakeRaycasting = false;
+        protected string m_DefaultObjectName = "Primitive";
 
         /// <summary>
         /// The last allocated local prim id.  When a new local id is requested, the next number in the sequence is
@@ -96,6 +97,7 @@ namespace OpenSim.Region.Framework.Scenes
             IConfig aurorastartupConfig = parent.Config.Configs["AuroraStartup"];
             if (aurorastartupConfig != null)
             {
+                m_DefaultObjectName = aurorastartupConfig.GetString("DefaultObjectName", m_DefaultObjectName);
                 EnableFakeRaycasting = aurorastartupConfig.GetBoolean("EnableFakeRaycasting", false);
             }
         }
@@ -790,23 +792,22 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="RayStart"></param>
         /// <param name="RayTargetID"></param>
         /// <param name="RayEndIsIntersection"></param>
-        public virtual SceneObjectGroup AddNewPrim(
+        public virtual ISceneEntity AddNewPrim(
             UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape)
         {
             //m_log.DebugFormat(
             //    "[SCENE]: Scene.AddNewPrim() pcode {0} called for {1} in {2}", shape.PCode, ownerID, RegionInfo.RegionName);
 
-            SceneObjectGroup sceneObject = null;
+            SceneObjectGroup sceneObject = new SceneObjectGroup (ownerID, pos, rot, shape, m_DefaultObjectName, m_parentScene);
 
             // If an entity creator has been registered for this prim type then use that
             if (m_entityCreators.ContainsKey((PCode)shape.PCode))
             {
-                sceneObject = (SceneObjectGroup)m_entityCreators[(PCode)shape.PCode].CreateEntity(ownerID, groupID, pos, rot, shape);
+                sceneObject = (SceneObjectGroup)m_entityCreators[(PCode)shape.PCode].CreateEntity (sceneObject, ownerID, groupID, pos, rot, shape);
             }
             else
             {
                 // Otherwise, use this default creation code;
-                sceneObject = new SceneObjectGroup(ownerID, pos, rot, shape, m_parentScene);
                 
                 sceneObject.SetGroup(groupID, null);
                 AddPrimToScene(sceneObject);
@@ -1893,11 +1894,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="newID">new UUID to set the root part to</param>
-        public void UpdateEntity(SceneObjectGroup entity, UUID newID)
+        public void UpdateEntity (ISceneEntity entity, UUID newID)
         {
             RemoveEntity(entity);
             //Set it to the root so that we don't create an infinite loop as the ONLY place this should be being called is from the setter in SceneObjectGroup.UUID
-            entity.RootPart.UUID = newID;
+            entity.RootChild.UUID = newID;
             AddEntity(entity, false);
         }
 

@@ -486,7 +486,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
         #region IVegetationModule Members
 
-        public SceneObjectGroup AddTree(
+        public ISceneEntity AddTree (
             UUID uuid, UUID groupID, Vector3 scale, Quaternion rotation, Vector3 position, Tree treeType, bool newTree)
         {
             PrimitiveBaseShape treeShape = new PrimitiveBaseShape();
@@ -507,7 +507,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
         public PCode[] CreationCapabilities { get { return creationCapabilities; } }
 
         public ISceneEntity CreateEntity(
-            UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape)
+            ISceneEntity baseEntity, UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape)
         {
             if (Array.IndexOf(creationCapabilities, (PCode)shape.PCode) < 0)
             {
@@ -515,7 +515,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
                 return null;
             }
 
-            SceneObjectGroup sceneObject = new SceneObjectGroup(ownerID, pos, rot, shape, m_scene);
+            SceneObjectGroup sceneObject = baseEntity as SceneObjectGroup;
             SceneObjectPart rootPart = (SceneObjectPart)sceneObject.GetChildPart(sceneObject.UUID);
 
             rootPart.AddFlag(PrimFlags.Phantom);
@@ -805,7 +805,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
             position.Z = m_scene.RequestModuleInterface<ITerrainChannel>()[(int)position.X, (int)position.Y];
             if (position.Z >= copse.m_treeline_low && position.Z <= copse.m_treeline_high)
             {
-                SceneObjectGroup tree = AddTree(uuid, UUID.Zero, copse.m_initial_scale, Quaternion.Identity, position, copse.m_tree_type, false);
+                SceneObjectGroup tree = (SceneObjectGroup)AddTree(uuid, UUID.Zero, copse.m_initial_scale, Quaternion.Identity, position, copse.m_tree_type, false);
 
                 tree.Name = copse.ToString();
                 copse.m_trees.Add(tree.UUID);

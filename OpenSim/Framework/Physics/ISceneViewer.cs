@@ -83,6 +83,7 @@ namespace OpenSim.Framework
 
     public interface IAnimator
     {
+        bool UsePreJump { get; }
         AnimationSet Animations { get; }
         string CurrentMovementAnimation { get; }
         void UpdateMovementAnimations ();

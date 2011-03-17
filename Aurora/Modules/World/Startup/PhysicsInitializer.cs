@@ -42,7 +42,7 @@ namespace OpenSim.Region.CoreModules
             physicsPluginManager.LoadPluginsFromAssemblies(Path);
 
             PhysicsScene pScene = physicsPluginManager.GetPhysicsScene(engine, meshEngine, source, scene.RegionInfo);
-            scene.SceneGraph.PhysicsScene = pScene;
+            scene.PhysicsScene = pScene;
         }
 
         public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)

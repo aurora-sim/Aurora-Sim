@@ -76,7 +76,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Vegetation
         public string Name { get { return "Vegetation Module"; } }
         public bool IsSharedModule { get { return false; } }
 
-        public SceneObjectGroup AddTree(
+        public ISceneEntity AddTree (
             UUID uuid, UUID groupID, Vector3 scale, Quaternion rotation, Vector3 position, Tree treeType, bool newTree)
         {
             PrimitiveBaseShape treeShape = new PrimitiveBaseShape();
@@ -90,15 +90,15 @@ namespace OpenSim.Region.CoreModules.Avatar.Vegetation
         }
         
         public ISceneEntity CreateEntity(
-            UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape)
+            ISceneEntity baseEntity, UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape)
         {
             if (Array.IndexOf(creationCapabilities, (PCode)shape.PCode) < 0)
             {
                 m_log.DebugFormat("[VEGETATION]: PCode {0} not handled by {1}", shape.PCode, Name);
                 return null;
             }
-            
-            SceneObjectGroup sceneObject = new SceneObjectGroup(ownerID, pos, rot, shape, m_scene);
+
+            SceneObjectGroup sceneObject = baseEntity as SceneObjectGroup;
             SceneObjectPart rootPart = (SceneObjectPart)sceneObject.GetChildPart(sceneObject.UUID);
             
             // if grass or tree, make phantom

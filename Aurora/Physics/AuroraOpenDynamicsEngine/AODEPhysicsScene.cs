@@ -90,10 +90,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             Null             //keep this last used do dim the methods array. does nothing but pulsing the prim
 }
 
-
-
-        private readonly ILog m_log;
-
         private CollisionLocker ode;
 
         public float ODE_STEPSIZE = 0.020f;
@@ -373,9 +369,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public AuroraODEPhysicsScene(CollisionLocker dode, string sceneIdentifier)
         {
-            m_log
-                = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.ToString() + "." + sceneIdentifier);
-
             OdeLock = new Object();
             ode = dode;
             nearCallback = near;

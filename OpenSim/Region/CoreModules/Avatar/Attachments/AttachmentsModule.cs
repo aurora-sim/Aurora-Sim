@@ -627,7 +627,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
             if (group.RootPart.PhysActor != null)
             {
-                m_scene.SceneGraph.PhysicsScene.RemovePrim(group.RootPart.PhysActor);
+                m_scene.PhysicsScene.RemovePrim(group.RootPart.PhysActor);
                 group.RootPart.PhysActor = null;
             }
 

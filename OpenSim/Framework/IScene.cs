@@ -62,7 +62,8 @@ namespace OpenSim.Framework
 
     public interface IScene : IRegistryCore
     {
-        bool m_usePreJump { get; }
+        #region Core
+
         RegionInfo RegionInfo { get; }
         AuroraEventManager AuroraEventManager { get; }
         EntityManager Entities { get; }
@@ -71,18 +72,47 @@ namespace OpenSim.Framework
         PhysicsScene PhysicsScene { get; }
         ISceneGraph SceneGraph { get; }
         AgentCircuitManager AuthenticateHandler { get; }
-
         IConfigSource Config { get; }
 
-        List<ISceneEntity> PhysicsReturns { get; }
+        #endregion
+
+        #region Initialize/Close
+
         void Initialize (RegionInfo regionInfo);
         void Initialize (RegionInfo regionInfo, AgentCircuitManager authen, IClientNetworkServer clientServer);
         void StartHeartbeat ();
         void Close ();
 
-        void AddNewClient(IClientAPI client);
+        #endregion
 
-        bool TryGetScenePresence(UUID agentID, out IScenePresence scenePresence);
+        #region Client Methods
+
+        void AddNewClient (IClientAPI client);
+        IScenePresence GetScenePresence (UUID uUID);
+        List<IScenePresence> GetScenePresences ();
+        IScenePresence GetScenePresence (uint localID);
+        bool TryGetScenePresence (UUID agentID, out IScenePresence scenePresence);
+        bool TryGetAvatarByName (string p, out IScenePresence NewSP);
+        bool RemoveAgent (IScenePresence presence);
+
+        #endregion
+
+        #region ForEach
+
+        void ForEachClient (Action<IClientAPI> action);
+        void ForEachScenePresence (Action<IScenePresence> action);
+
+        #endregion
+
+        #region Parts
+
+        ISceneChildEntity GetSceneObjectPart (uint localID);
+        ISceneChildEntity GetSceneObjectPart (UUID objectID);
+        bool TryGetPart (UUID objecUUID, out ISceneChildEntity SensedObject);
+
+        #endregion
+
+        #region FPS/stats
 
         float BaseSimFPS { get; }
         float BaseSimPhysFPS { get; }
@@ -90,6 +120,8 @@ namespace OpenSim.Framework
         bool ShuttingDown { get; }
         object SyncRoot { get; }
         float TimeDilation { get; }
+
+        #endregion
 
         #region Services
 
@@ -103,31 +135,11 @@ namespace OpenSim.Framework
 
         #endregion
 
-        IScenePresence GetScenePresence (UUID uUID);
+        #region Other
 
-        bool TryGetAvatarByName (string p, out IScenePresence NewSP);
-
-        IEnumerable<IScenePresence> GetScenePresences ();
-
-        IScenePresence GetScenePresence (uint killerObjectLocalID);
-
-        bool CheckForObjectCulling { get; set; }
-
-        void ForEachClient (Action<IClientAPI> action);
-        void ForEachScenePresence (Action<IScenePresence> action);
-
-        bool m_useSplatAnimation { get; set; }
-
-        ISceneChildEntity GetSceneObjectPart (uint localID);
-
-        ISceneChildEntity GetSceneObjectPart (UUID objectID);
-
+        List<ISceneEntity> PhysicsReturns { get; }
         float MaxLowValue { get; set; }
 
-        bool TryGetPart (UUID objecUUID, out ISceneChildEntity SensedObject);
-
-        string DefaultObjectName { get; set; }
-
-        bool RemoveAgent (IScenePresence presence);
+        #endregion
     }
 }

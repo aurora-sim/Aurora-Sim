@@ -183,7 +183,7 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (Scene scene in m_localScenes)
             {
                 scene.Config = config;
-                scene.SceneGraph.PhysicsScene.PostInitialise(config);
+                scene.PhysicsScene.PostInitialise(config);
             }
         }
 

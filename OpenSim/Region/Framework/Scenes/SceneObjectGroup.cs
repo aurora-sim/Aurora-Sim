@@ -568,9 +568,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Constructor.  This object is added to the scene later via AttachToScene()
         /// </summary>
-        public SceneObjectGroup(UUID ownerID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape, IScene scene) : this(scene)
+        public SceneObjectGroup(UUID ownerID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape, string name, IScene scene) : this(scene)
         {
-            SceneObjectPart part = new SceneObjectPart(ownerID, shape, pos, rot, Vector3.Zero, scene);
+            SceneObjectPart part = new SceneObjectPart(ownerID, shape, pos, rot, Vector3.Zero, name, scene);
             SetRootPart(part);
 
             //This has to be set, otherwise it will break things like rezzing objects in an area where crossing is disabled, but rez isn't
@@ -2764,7 +2764,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!IsAttachment && RootPart.Shape.State == 0)
                 {
                     IBackupModule backup = Scene.RequestModuleInterface<IBackupModule>();
-                    if ((val.X < 0f || val.Y < 0f || val.Z < m_scene.MaxLowValue ||
+                    if ((val.X < 0f || val.Y < 0f || val.Z < 0f ||
                         val.X > Scene.RegionInfo.RegionSizeX || val.Y > Scene.RegionInfo.RegionSizeY)
                         && !IsAttachmentCheckFull() && (backup == null || (backup != null && !backup.LoadingPrims))) //Don't do it when backup is loading prims, otherwise it lags the region out
                     {
