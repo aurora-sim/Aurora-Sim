@@ -215,19 +215,14 @@ namespace Aurora.Modules
             Dictionary<UUID, string> classifieds = new Dictionary<UUID, string>();
             UUID requestedUUID = new UUID(args[0]);
 
-            //Does this person have the power to view this person's profile?
-            bool isFriend = IsFriendOfUser(remoteClient.AgentId, requestedUUID);
-            if (isFriend)
+            IUserProfileInfo profile = ProfileFrontend.GetUserProfile(requestedUUID);
+            if (profile == null)
+                return;
+            foreach (object classified in profile.Classifieds.Values)
             {
-                IUserProfileInfo profile = ProfileFrontend.GetUserProfile(requestedUUID);
-                if (profile == null)
-                    return;
-                foreach (object classified in profile.Classifieds.Values)
-                {
-                    Classified Classified = new Classified();
-                    Classified.FromOSD((OSDMap)classified);
-                    classifieds.Add(Classified.ClassifiedUUID, Classified.Name);
-                }
+                Classified Classified = new Classified();
+                Classified.FromOSD((OSDMap)classified);
+                classifieds.Add(Classified.ClassifiedUUID, Classified.Name);
             }
 
             remoteClient.SendAvatarClassifiedReply(requestedUUID, classifieds);        
@@ -382,19 +377,15 @@ namespace Aurora.Modules
             Dictionary<UUID, string> picks = new Dictionary<UUID, string>();
             UUID requestedUUID = new UUID(args[0]);
 
-            bool isFriend = IsFriendOfUser(remoteClient.AgentId, requestedUUID);
-            if (isFriend)
-            {
-                IUserProfileInfo profile = ProfileFrontend.GetUserProfile(requestedUUID);
+            IUserProfileInfo profile = ProfileFrontend.GetUserProfile(requestedUUID);
 
-                if (profile == null)
-                    return;
-                foreach (OSD pick in profile.Picks.Values)
-                {
-                    ProfilePickInfo Pick = new ProfilePickInfo();
-                    Pick.FromOSD((OSDMap)pick);
-                    picks.Add(Pick.PickUUID, Pick.Name);
-                }
+            if (profile == null)
+                return;
+            foreach (OSD pick in profile.Picks.Values)
+            {
+                ProfilePickInfo Pick = new ProfilePickInfo();
+                Pick.FromOSD((OSDMap)pick);
+                picks.Add(Pick.PickUUID, Pick.Name);
             }
             remoteClient.SendAvatarPicksReply(requestedUUID, picks);
         }
