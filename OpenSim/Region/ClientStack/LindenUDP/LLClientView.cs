@@ -5007,8 +5007,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 acceleration = Vector3.Zero;
                 angularVelocity = Vector3.Zero;
                 rotation = presence.Rotation;
+                IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
                 if (sendTexture)
-                    textureEntry = presence.Appearance.Texture.GetBytes();
+                    textureEntry = appearance.Appearance.Texture.GetBytes ();
                 else
                     textureEntry = null;
             }
@@ -5148,7 +5149,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             update.Text = Utils.EmptyBytes;
             update.TextColor = new byte[4];
             update.TextureAnim = Utils.EmptyBytes;
-            update.TextureEntry = (data.Appearance.Texture != null) ? data.Appearance.Texture.GetBytes() : Utils.EmptyBytes;
+            IAvatarAppearanceModule appearance = data.RequestModuleInterface<IAvatarAppearanceModule> ();
+            if(appearance != null)
+                update.TextureEntry = (appearance.Appearance.Texture != null) ? appearance.Appearance.Texture.GetBytes () : Utils.EmptyBytes;
             update.UpdateFlags = (uint)(
                 PrimFlags.Physics | PrimFlags.ObjectModify | PrimFlags.ObjectCopy | PrimFlags.ObjectAnyOwner |
                 PrimFlags.ObjectYouOwner | PrimFlags.ObjectMove | PrimFlags.InventoryEmpty | PrimFlags.ObjectTransfer |
@@ -12192,7 +12195,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 if (block.Data != null)
                 {
                     uint localId = block.ObjectLocalID;
-                    SceneObjectPart part = tScene.GetSceneObjectPart(localId);
+                    ISceneChildEntity part = tScene.GetSceneObjectPart (localId);
 
                     if (part == null)
                     {
@@ -12886,7 +12889,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 Vector3 pos = presence.AbsolutePosition;
 
-                pos += new Vector3(0f, 0f, (presence.Appearance.AvatarHeight/6f));
+                IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
+                if(appearance != null)
+                    pos += new Vector3 (0f, 0f, (appearance.Appearance.AvatarHeight / 6f));
 
                 presence.AbsolutePosition = pos;
 
@@ -12895,7 +12900,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 // Mind you, that this method doesn't get called if the avatar's velocity magnitude is greater then a
                 // certain amount..   because the LLClient wouldn't land in that situation anyway.
 
-                presence.CollisionPlane = new Vector4(0, 0, 0, pos.Z - presence.Appearance.AvatarHeight/6f);
+                if (appearance != null)
+                    presence.CollisionPlane = new Vector4 (0, 0, 0, pos.Z - appearance.Appearance.AvatarHeight / 6f);
 
 
                 ImprovedTerseObjectUpdatePacket.ObjectDataBlock block =

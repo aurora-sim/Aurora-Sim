@@ -185,36 +185,43 @@ namespace OpenSim.CoreApplicationPlugins
             // Add them to the new Scene
             foreach (ISharedRegionModule module in m_sharedInstances)
             {
-                // Here is where we check if a replaceable interface
-                // is defined. If it is, the module is checked against
-                // the interfaces already defined. If the interface is
-                // defined, we simply skip the module. Else, if the module
-                // defines a replaceable interface, we add it to the deferred
-                // list.
-                Type replaceableInterface = module.ReplaceableInterface;
-                if (replaceableInterface != null)
+                try
                 {
-                    MethodInfo mii = mi.MakeGenericMethod(replaceableInterface);
-
-                    if (mii.Invoke(scene, new object[0]) != null)
+                    // Here is where we check if a replaceable interface
+                    // is defined. If it is, the module is checked against
+                    // the interfaces already defined. If the interface is
+                    // defined, we simply skip the module. Else, if the module
+                    // defines a replaceable interface, we add it to the deferred
+                    // list.
+                    Type replaceableInterface = module.ReplaceableInterface;
+                    if (replaceableInterface != null)
                     {
-                        m_log.DebugFormat("[REGIONMODULE]: Not loading {0} because another module has registered {1}", module.Name, replaceableInterface.ToString());
+                        MethodInfo mii = mi.MakeGenericMethod (replaceableInterface);
+
+                        if (mii.Invoke (scene, new object[0]) != null)
+                        {
+                            m_log.DebugFormat ("[REGIONMODULE]: Not loading {0} because another module has registered {1}", module.Name, replaceableInterface.ToString ());
+                            continue;
+                        }
+
+                        deferredSharedModules[replaceableInterface] = module;
+                        //m_log.DebugFormat("[REGIONMODULE]: Deferred load of {0}", module.Name);
                         continue;
                     }
 
-                    deferredSharedModules[replaceableInterface] = module;
-                    //m_log.DebugFormat("[REGIONMODULE]: Deferred load of {0}", module.Name);
-                    continue;
+                    //m_log.DebugFormat("[REGIONMODULE]: Adding scene {0} to shared module {1}",
+                    //                  scene.RegionInfo.RegionName, module.Name);
+
+                    module.AddRegion (scene);
+                    AddRegionModule (scene, module.Name, module);
+
+                    IRegionModuleBaseModules.Add (module);
+                    sharedlist.Add (module);
                 }
-
-                //m_log.DebugFormat("[REGIONMODULE]: Adding scene {0} to shared module {1}",
-                //                  scene.RegionInfo.RegionName, module.Name);
-
-                module.AddRegion(scene);
-                AddRegionModule(scene, module.Name, module);
-
-                IRegionModuleBaseModules.Add(module);
-                sharedlist.Add(module);
+                catch(Exception ex)
+                {
+                    m_log.Warn ("[RegionModulePlugin]: Failed to load plugin, " + ex.ToString ());
+                }
             }
 
             IConfig modulesConfig =

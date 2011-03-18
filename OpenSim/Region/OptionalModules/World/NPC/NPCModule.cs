@@ -187,9 +187,10 @@ namespace OpenSim.Region.OptionalModules.World.NPC
                         AvatarAppearance x = GetAppearance(p_cloneAppearanceFrom, p_scene);
 
                         List<UUID> Changed = new List<UUID>();
-                        sp.Appearance.SetTextureEntries(x.Texture, out Changed);
-                        sp.Appearance.SetVisualParams((byte[])x.VisualParams.Clone());
-                        sp.SendAppearanceToAllOtherAgents();
+                        IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
+                        appearance.Appearance.SetTextureEntries (x.Texture, out Changed);
+                        appearance.Appearance.SetVisualParams ((byte[])x.VisualParams.Clone ());
+                        appearance.SendAppearanceToAllOtherAgents ();
                     }
 
                     m_avatars.Add(npcAvatar.AgentId, npcAvatar);

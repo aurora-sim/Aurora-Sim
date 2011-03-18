@@ -589,7 +589,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         {
             foreach (Scene s in m_ScriptEngine.Worlds)
             {
-                SceneObjectPart part = s.GetSceneObjectPart(localID);
+                ISceneChildEntity part = s.GetSceneObjectPart (localID);
                 if (part != null)
                 {
                     return s;

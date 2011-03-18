@@ -102,22 +102,22 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
         protected void ObjectSaleInfo(
             IClientAPI client, UUID sessionID, uint localID, byte saleType, int salePrice)
         {
-            SceneObjectPart part = m_scene.GetSceneObjectPart(localID);
-            if (part == null || part.ParentGroup == null)
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (localID);
+            if (part == null || part.ParentEntity == null)
                 return;
 
-            if (part.ParentGroup.IsDeleted)
+            if (part.ParentEntity.IsDeleted)
                 return;
 
             if (part.OwnerID != client.AgentId && (!m_scene.Permissions.IsGod(client.AgentId)))
-                return; 
+                return;
 
-            part = part.ParentGroup.RootPart;
+            part = part.ParentEntity.RootChild;
 
             part.ObjectSaleType = saleType;
             part.SalePrice = salePrice;
 
-            part.ParentGroup.HasGroupChanged = true;
+            part.ParentEntity.HasGroupChanged = true;
 
             part.GetProperties(client);
         }
@@ -133,7 +133,7 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
             // didn't check the client sent data against the object do any.   Since the base modules are the 
             // 'crowning glory' examples of good practice..
 
-            SceneObjectPart part = ((Scene)remoteClient.Scene).GetSceneObjectPart(localID);
+            ISceneChildEntity part = ((Scene)remoteClient.Scene).GetSceneObjectPart (localID);
             if (part == null)
             {
                 remoteClient.SendAgentAlertMessage("Unable to buy now. The object was not found.", false);
@@ -169,15 +169,15 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
 
         public bool BuyObject(IClientAPI remoteClient, UUID categoryID, uint localID, byte saleType, int salePrice)
         {
-            SceneObjectPart part = m_scene.GetSceneObjectPart(localID);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (localID);
 
             if (part == null)
                 return false;
 
-            if (part.ParentGroup == null)
+            if (part.ParentEntity == null)
                 return false;
 
-            SceneObjectGroup group = part.ParentGroup;
+            ISceneEntity group = part.ParentEntity;
             ILLClientInventory inventoryModule = m_scene.RequestModuleInterface<ILLClientInventory>();
                 
             switch (saleType)
@@ -197,7 +197,7 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
 
                 if (m_scene.Permissions.PropagatePermissions())
                 {
-                    foreach (SceneObjectPart child in group.Parts)
+                    foreach (ISceneChildEntity child in group.ChildrenEntities())
                     {
                         child.Inventory.ChangeInventoryOwner(remoteClient.AgentId);
                         child.TriggerScriptChangedEvent(Changed.OWNER);
@@ -231,7 +231,7 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
 
                 group.AbsolutePosition = inventoryStoredPosition;
 
-                string sceneObjectXml = SceneObjectSerializer.ToOriginalXmlFormat(group);
+                string sceneObjectXml = SceneObjectSerializer.ToOriginalXmlFormat((SceneObjectGroup)group);
                 group.AbsolutePosition = originalPosition;
 
                 uint perms = group.GetEffectivePermissions();
@@ -243,9 +243,9 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
                     return false;
                 }
 
-                AssetBase asset = new AssetBase(UUID.Random(), group.GetPartName(localID),
+                AssetBase asset = new AssetBase(UUID.Random(), part.Name,
                     (sbyte)AssetType.Object, group.OwnerID.ToString());
-                asset.Description = group.GetPartDescription(localID);
+                asset.Description = part.Description;
                 asset.Data = Utils.StringToBytes(sceneObjectXml);
                 m_scene.AssetService.Store(asset);
 

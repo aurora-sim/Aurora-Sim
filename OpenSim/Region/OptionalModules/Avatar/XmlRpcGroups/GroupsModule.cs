@@ -1509,7 +1509,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     {
                         m_cachedGroupTitles[presence.UUID] = Title;
                         if (!presence.IsChildAgent)
-                            presence.SendAvatarDataToAllAgents();
+                        {
+                            IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
+                            if(appearance != null)
+                                appearance.SendAvatarDataToAllAgents ();
+                        }
                     }
                 }
             }

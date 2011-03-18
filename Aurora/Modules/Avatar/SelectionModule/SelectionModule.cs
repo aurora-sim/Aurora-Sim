@@ -200,8 +200,8 @@ namespace Aurora.Modules
         /// <param name="remoteClient"></param>
         protected void DeselectPrim(uint primLocalID, IClientAPI remoteClient)
         {
-            Scene scene = ((Scene)remoteClient.Scene);
-            SceneObjectPart part = scene.GetSceneObjectPart(primLocalID);
+            IScene scene = remoteClient.Scene;
+            ISceneChildEntity part = scene.GetSceneObjectPart (primLocalID);
             //Do this first... As if its null, this wont be fired.
             IScenePresence SP;
             scene.TryGetScenePresence(remoteClient.AgentId, out SP);
@@ -220,7 +220,7 @@ namespace Aurora.Modules
                 return;
 
             // The prim is in the process of being deleted.
-            if (null == part.ParentGroup.RootPart)
+            if (null == part.ParentEntity.RootChild)
                 return;
 
             // A deselect packet contains all the local prims being deselected.  However, since selection is still
@@ -232,10 +232,10 @@ namespace Aurora.Modules
             //            part.ParentGroup.IsSelected = false;
             part.IsSelected = false;
 
-            if (!part.ParentGroup.IsAttachment) //This NEEDS to be done because otherwise rotationalVelocity will break! Only for the editing av as the client stops the rotation for them when they are in edit
+            if (!part.ParentEntity.IsAttachment) //This NEEDS to be done because otherwise rotationalVelocity will break! Only for the editing av as the client stops the rotation for them when they are in edit
             {
-                if (part.ParentGroup.RootPart.AngularVelocity != Vector3.Zero && !part.ParentGroup.IsDeleted)
-                    part.ParentGroup.ScheduleGroupUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
+                if (part.ParentEntity.RootChild.AngularVelocity != Vector3.Zero && !part.ParentEntity.IsDeleted)
+                    part.ParentEntity.ScheduleGroupUpdateToAvatar (SP, PrimUpdateFlags.FullUpdate);
             }
 
             scene.AuroraEventManager.FireGenericEventHandler("ObjectDeselected", part);

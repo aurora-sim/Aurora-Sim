@@ -82,7 +82,8 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             get {
                 List<IAvatarAttachment> attachments = new List<IAvatarAttachment>();
 
-                List<AvatarAttachment> internalAttachments = GetSP().Appearance.GetAttachments();
+                IAvatarAppearanceModule appearance = GetSP ().RequestModuleInterface<IAvatarAppearanceModule> ();
+                List<AvatarAttachment> internalAttachments = appearance.Appearance.GetAttachments ();
                 foreach (AvatarAttachment attach in internalAttachments)
                 {
                     attachments.Add(new SPAvatarAttachment(m_rootScene, this, attach.AttachPoint,

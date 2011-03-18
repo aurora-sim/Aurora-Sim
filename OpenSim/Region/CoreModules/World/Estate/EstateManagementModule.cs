@@ -953,12 +953,12 @@ namespace OpenSim.Region.CoreModules.World.Estate
             {
                 foreach (uint obj in SceneData.Keys)
                 {
-                    SceneObjectPart prt = m_scene.GetSceneObjectPart(obj);
+                    ISceneChildEntity prt = m_scene.GetSceneObjectPart (obj);
                     if (prt != null)
                     {
-                        if (prt.ParentGroup != null)
+                        if (prt.ParentEntity != null)
                         {
-                            SceneObjectGroup sog = prt.ParentGroup;
+                            ISceneEntity sog = prt.ParentEntity;
                             if (sog != null)
                             {
                                 LandStatReportItem lsri = new LandStatReportItem();
@@ -966,8 +966,8 @@ namespace OpenSim.Region.CoreModules.World.Estate
                                 lsri.Score = SceneData[obj];
                                 lsri.TaskID = sog.UUID;
                                 lsri.TaskLocalID = sog.LocalId;
-                                lsri.TaskName = sog.GetPartName(obj);
-                                lsri.TimeModified = sog.RootPart.Rezzed;
+                                lsri.TaskName = prt.Name;
+                                lsri.TimeModified = sog.RootChild.Rezzed;
                                 OpenSim.Services.Interfaces.UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, sog.OwnerID);
                                 if (account != null)
                                     lsri.OwnerName = account.Name;

@@ -280,7 +280,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             //The agent will be a root agent
             agentCircuit.child = false;
             //Make sure the appearnace is right
-            agentCircuit.Appearance = sp.Appearance;
+            IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
+            agentCircuit.Appearance = appearance.Appearance;
 
             AgentData agent = new AgentData();
             sp.CopyTo(agent);
@@ -556,7 +557,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 AgentCircuitData agentCircuit = agent.ControllingClient.RequestClientInfo();
                 agentCircuit.startpos = pos;
                 agentCircuit.child = false;
-                agentCircuit.Appearance = agent.Appearance;
+                IAvatarAppearanceModule appearance = agent.RequestModuleInterface<IAvatarAppearanceModule> ();
+                agentCircuit.Appearance = appearance.Appearance;
 
                 IEventQueueService eq = agent.Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)

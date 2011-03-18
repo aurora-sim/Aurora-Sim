@@ -350,19 +350,19 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (uint localID in localIDs)
             {
                 // Invalid id
-                SceneObjectPart part = m_scene.GetSceneObjectPart(localID);
+                ISceneChildEntity part = m_scene.GetSceneObjectPart (localID);
                 if (part == null)
                     continue;
 
                 // Already deleted by someone else
-                if (part.ParentGroup == null || part.ParentGroup.IsDeleted)
+                if (part.ParentEntity == null || part.ParentEntity.IsDeleted)
                     continue;
 
                 // Can't delete child prims
-                if (part != part.ParentGroup.RootPart)
+                if (part != part.ParentEntity.RootChild)
                     continue;
 
-                SceneObjectGroup grp = part.ParentGroup;
+                ISceneEntity grp = part.ParentEntity;
 
                 deleteIDs.Add(localID);
                 deleteGroups.Add(grp);
@@ -870,10 +870,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="localID"></param>
         protected void RemoveTaskInventory(IClientAPI remoteClient, UUID itemID, uint localID)
         {
-            SceneObjectPart part = m_scene.GetSceneObjectPart(localID);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (localID);
             if (m_scene.Permissions.CanDeleteObjectInventory(itemID, part.UUID, remoteClient.AgentId))
             {
-                SceneObjectGroup group = part.ParentGroup;
+                ISceneEntity group = part.ParentEntity;
                 if (group != null)
                 {
                     TaskInventoryItem item = group.GetInventoryItem(localID, itemID);
@@ -905,7 +905,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="itemID">The UUID of the item to move</param>
         protected void ClientMoveTaskInventoryItemToUserInventory(IClientAPI remoteClient, UUID folderId, uint primLocalId, UUID itemId)
         {
-            SceneObjectPart part = m_scene.GetSceneObjectPart(primLocalId);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (primLocalId);
 
             if (null == part)
             {
@@ -1016,7 +1016,7 @@ namespace OpenSim.Region.Framework.Scenes
             UUID itemID = itemInfo.ItemID;
 
             // Find the prim we're dealing with
-            SceneObjectPart part = m_scene.GetSceneObjectPart(primLocalID);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (primLocalID);
 
             if (part != null)
             {
@@ -1043,7 +1043,7 @@ namespace OpenSim.Region.Framework.Scenes
                         // If we've found the item in the user's inventory or in the library
                         if (item != null)
                         {
-                            part.ParentGroup.AddInventoryItem(remoteClient, primLocalID, item, copyID);
+                            part.ParentEntity.AddInventoryItem (remoteClient, primLocalID, item, copyID);
                             m_log.InfoFormat(
                                 "[PRIM INVENTORY]: Update with item {0} requested of prim {1} for {2}",
                                 item.Name, primLocalID, remoteClient.Name);
@@ -1146,20 +1146,20 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (item != null)
                 {
-                    SceneObjectPart part = m_scene.GetSceneObjectPart(localID);
+                    ISceneChildEntity part = m_scene.GetSceneObjectPart (localID);
                     if (part != null)
                     {
                         if (!m_scene.Permissions.CanEditObjectInventory(part.UUID, remoteClient.AgentId))
                             return;
 
-                        part.ParentGroup.AddInventoryItem(remoteClient, localID, item, copyID);
+                        part.ParentEntity.AddInventoryItem (remoteClient, localID, item, copyID);
                         part.Inventory.CreateScriptInstance(copyID, 0, false, 0);
 
                         //                        m_log.InfoFormat("[PRIMINVENTORY]: " +
                         //                                         "Rezzed script {0} into prim local ID {1} for user {2}",
                         //                                         item.inventoryName, localID, remoteClient.Name);
                         part.GetProperties(remoteClient);
-                        part.ParentGroup.ResumeScripts();
+                        part.ParentEntity.ResumeScripts ();
                     }
                     else
                     {

@@ -163,6 +163,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         private bool ValidateBakedTextureCache(IClientAPI client, bool checkonly)
         {
             IScenePresence sp = m_scene.GetScenePresence(client.AgentId);
+            IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
             if (sp == null)
             {
                 m_log.WarnFormat("[AvatarFactory]: SetAppearance unable to find presence for {0}", client.AgentId);
@@ -175,7 +176,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             for (int i = 0; i < AvatarAppearance.BAKE_INDICES.Length; i++)
             {
                 int idx = AvatarAppearance.BAKE_INDICES[i];
-                Primitive.TextureEntryFace face = sp.Appearance.Texture.FaceTextures[idx];
+                Primitive.TextureEntryFace face = appearance.Appearance.Texture.FaceTextures[idx];
 
                 // if there is no texture entry, skip it
                 if (face == null)
@@ -216,7 +217,8 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         /// <param name="visualParam"></param>
         public void SetAppearance(IClientAPI client, Primitive.TextureEntry textureEntry, byte[] visualParams, WearableCache[] wearables)
         {
-            IScenePresence sp = m_scene.GetScenePresence(client.AgentId);
+            IScenePresence sp = m_scene.GetScenePresence (client.AgentId);
+            IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
             if (sp == null)
             {
                 m_log.WarnFormat("[AvatarFactory]: SetAppearance unable to find presence for {0}", client.AgentId);
@@ -235,7 +237,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                 if (textureEntry != null)
                 {
                     List<UUID> ChangedTextures = new List<UUID>();
-                    texturesChanged = sp.Appearance.SetTextureEntries(textureEntry, out ChangedTextures);
+                    texturesChanged = appearance.Appearance.SetTextureEntries (textureEntry, out ChangedTextures);
 
                     // m_log.WarnFormat("[AVFACTORY]: Prepare to check textures for {0}",client.AgentId);
 
@@ -254,11 +256,11 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                 if (visualParams != null)
                 {
                     //Now update the visual params and see if they have changed
-                    visualParamsChanged = sp.Appearance.SetVisualParams(visualParams);
+                    visualParamsChanged = appearance.Appearance.SetVisualParams (visualParams);
 
                     //Fix the height only if the parameters have changed
-                    if (visualParamsChanged && sp.Appearance.AvatarHeight > 0)
-                        sp.SetHeight(sp.Appearance.AvatarHeight);
+                    if (visualParamsChanged && appearance.Appearance.AvatarHeight > 0)
+                        sp.SetHeight (appearance.Appearance.AvatarHeight);
                 }
 
                 // Process the baked texture array
@@ -388,10 +390,11 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                     m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene", agentid);
                     return;
                 }
+                IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
                 m_savequeue[agentid] = timestamp;
                 lock (m_saveQueueData)
                 {
-                    m_saveQueueData[agentid] = sp.Appearance;
+                    m_saveQueueData[agentid] = appearance.Appearance;
                 }
                 m_updateTimer.Start();
             }
@@ -424,11 +427,12 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                 m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene to send appearance for.", agentid);
                 return;
             }
-
+            IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
+            
             // m_log.WarnFormat("[AvatarFactory]: Handle appearance send for {0}", agentid);
 
             // Send the appearance to everyone in the scene
-            sp.SendAppearanceToAllOtherAgents();
+            appearance.SendAppearanceToAllOtherAgents ();
 
             // Send animations back to the avatar as well
             sp.Animator.SendAnimPack();
@@ -471,34 +475,35 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                 m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene to send appearance for.", agentid);
                 return;
             }
-
+            IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
+                
             m_log.InfoFormat("[AvatarFactory]: Handle initial appearance send for {0}", agentid);
 
             //Only set this if we actually have sent the wearables
-            sp.InitialHasWearablesBeenSent = true;
+            appearance.InitialHasWearablesBeenSent = true;
 
             // This agent just became root. We are going to tell everyone about it.
-            sp.SendAvatarDataToAllAgents();
+            appearance.SendAvatarDataToAllAgents ();
 
             if (ValidateBakedTextureCache(sp.ControllingClient))
-                sp.SendAppearanceToAgent(sp);
+                appearance.SendAppearanceToAgent (sp);
             else
                 m_log.ErrorFormat("[AvatarFactory]: baked textures are NOT in the cache for {0}", sp.Name);
 
-            sp.ControllingClient.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
+            sp.ControllingClient.SendWearables (appearance.Appearance.Wearables, appearance.Appearance.Serial);
             
             // If the avatars baked textures are all in the cache, then we have a 
             // complete appearance... send it out, if not, then we'll send it when
             // the avatar finishes updating its appearance
-            sp.SendAppearanceToAllOtherAgents();
+            appearance.SendAppearanceToAllOtherAgents ();
 
             // This agent just became root. We are going to tell everyone about it. The process of
             // getting other avatars information was initiated in the constructor... don't do it 
             // again here... 
-            sp.SendAvatarDataToAllAgents();
+            appearance.SendAvatarDataToAllAgents ();
 
             //Tell us about everyone else as well now that we are here
-            sp.SendOtherAgentsAppearanceToMe();
+            appearance.SendOtherAgentsAppearanceToMe ();
         }
 
         private void HandleAppearanceUpdateTimer(object sender, EventArgs ea)
@@ -586,7 +591,8 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             m_log.DebugFormat("[AvatarFactory]: AvatarIsWearing called for {0}", client.AgentId);
 
             // operate on a copy of the appearance so we don't have to lock anything
-            AvatarAppearance avatAppearance = new AvatarAppearance(sp.Appearance, false);
+            IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
+            AvatarAppearance avatAppearance = new AvatarAppearance (appearance.Appearance, false);
 
             foreach (AvatarWearingArgs.Wearable wear in e.NowWearing)
             {
@@ -594,7 +600,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                     avatAppearance.Wearables[wear.Type].Add(wear.ItemID, UUID.Zero);
             }
 
-            avatAppearance.GetAssetsFrom(sp.Appearance);
+            avatAppearance.GetAssetsFrom (appearance.Appearance);
 
             // This could take awhile since it needs to pull inventory
             SetAppearanceAssets(sp.UUID, ref avatAppearance);
@@ -603,7 +609,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             // this should work correctly, also, we don't need to send the appearance here
             // since the "iswearing" will trigger a new set of visual param and baked texture changes
             // when those complete, the new appearance will be sent
-            sp.Appearance = avatAppearance;
+            appearance.Appearance = avatAppearance;
             //Send the wearables HERE so that the client knows what it is wearing
             //sp.ControllingClient.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
             //Do not save or send the appearance! The client loops back and sends a bunch of SetAppearance
@@ -702,14 +708,229 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             }
 
             //Force send!
-            sp.ControllingClient.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
-            sp.SendAvatarDataToAllAgents();
+            IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
+            sp.ControllingClient.SendWearables (appearance.Appearance.Wearables, appearance.Appearance.Serial);
+            appearance.SendAvatarDataToAllAgents ();
 
-            sp.SendAppearanceToAgent(sp);
+            appearance.SendAppearanceToAgent (sp);
 
-            sp.SendAppearanceToAllOtherAgents();
+            appearance.SendAppearanceToAllOtherAgents ();
         }
 
         #endregion
+
+        public class AvatarApperanceModule
+        {
+            public IScenePresence m_sp;
+            private bool m_InitialHasWearablesBeenSent = false;
+            public bool InitialHasWearablesBeenSent
+            {
+                get
+                {
+                    return m_InitialHasWearablesBeenSent;
+                }
+                set
+                {
+                    m_InitialHasWearablesBeenSent = value;
+                }
+            }
+
+            public AvatarApperanceModule (IScenePresence sp)
+            {
+                m_sp = sp;
+                m_sp.Scene.EventManager.OnMakeRootAgent += EventManager_OnMakeRootAgent;
+            }
+
+            private void EventManager_OnMakeRootAgent (IScenePresence presence)
+            {
+                //Check to make sure that we have sent all the appearance info 10 seconds later
+                System.Timers.Timer t = new System.Timers.Timer (10 * 1000);
+                t.Elapsed += CheckToMakeSureWearablesHaveBeenSent;
+                t.AutoReset = false;
+                t.Start ();
+            }
+
+            /// <summary>
+            /// Send this agent's avatar data to all other root and child agents in the scene
+            /// This agent must be root. This avatar will receive its own update. 
+            /// </summary>
+            public void SendAvatarDataToAllAgents ()
+            {
+                // only send update from root agents to other clients; children are only "listening posts"
+                if (m_sp.IsChildAgent)
+                {
+                    m_log.Warn ("[SCENEPRESENCE] attempt to send avatar data from a child agent");
+                    return;
+                }
+
+                int count = 0;
+                m_sp.Scene.ForEachScenePresence (delegate (IScenePresence scenePresence)
+                {
+                    SendAvatarDataToAgent (scenePresence);
+                    count++;
+                });
+
+                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), "Agent Update Count");
+                if (reporter != null)
+                {
+                    reporter.AddAgentUpdates (count);
+                }
+            }
+
+            /// <summary>
+            /// Send avatar data for all other root agents to this agent, this agent
+            /// can be either a child or root
+            /// </summary>
+            public void SendOtherAgentsAvatarDataToMe ()
+            {
+                int count = 0;
+                m_sp.Scene.ForEachScenePresence (delegate (IScenePresence scenePresence)
+                {
+                    // only send information about root agents
+                    if (scenePresence.IsChildAgent)
+                        return;
+
+                    // only send information about other root agents
+                    if (scenePresence.UUID == m_sp.UUID)
+                        return;
+
+                    IAvatarAppearanceModule appearance = scenePresence.RequestModuleInterface<IAvatarAppearanceModule> ();
+                    if (appearance != null)
+                        appearance.SendAvatarDataToAgent (m_sp);
+                    count++;
+                });
+
+                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), "Agent Update Count");
+                if (reporter != null)
+                {
+                    reporter.AddAgentUpdates (count);
+                }
+            }
+
+            /// <summary>
+            /// Send avatar data to an agent.
+            /// </summary>
+            /// <param name="avatar"></param>
+            public void SendAvatarDataToAgent (IScenePresence avatar)
+            {
+                //m_log.WarnFormat("[SP] Send avatar data from {0} to {1}",m_uuid,avatar.ControllingClient.AgentId);
+                avatar.ControllingClient.SendAvatarDataImmediate (m_sp);
+                m_sp.Animator.SendAnimPackToClient (avatar.ControllingClient);
+            }
+
+            /// <summary>
+            /// Send this agent's appearance to all other root and child agents in the scene
+            /// This agent must be root.
+            /// </summary>
+            public void SendAppearanceToAllOtherAgents ()
+            {
+                // only send update from root agents to other clients; children are only "listening posts"
+                if (m_sp.IsChildAgent)
+                {
+                    m_log.Warn ("[SCENEPRESENCE] attempt to send avatar data from a child agent");
+                    return;
+                }
+
+                int count = 0;
+                m_sp.Scene.ForEachScenePresence (delegate (IScenePresence scenePresence)
+                {
+                    if (scenePresence.UUID == m_sp.UUID)
+                        return;
+
+                    SendAppearanceToAgent (scenePresence);
+                    count++;
+                });
+
+                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), "Agent Update Count");
+                if (reporter != null)
+                {
+                    reporter.AddAgentUpdates (count);
+                }
+            }
+
+            /// <summary>
+            /// Send appearance from all other root agents to this agent. this agent
+            /// can be either root or child
+            /// </summary>
+            public void SendOtherAgentsAppearanceToMe ()
+            {
+                int count = 0;
+                m_sp.Scene.ForEachScenePresence (delegate (IScenePresence scenePresence)
+                {
+                    // only send information about root agents
+                    if (scenePresence.IsChildAgent)
+                        return;
+
+                    // only send information about other root agents
+                    if (scenePresence.UUID == m_sp.UUID)
+                        return;
+
+                    IAvatarAppearanceModule appearance = scenePresence.RequestModuleInterface<IAvatarAppearanceModule> ();
+                    if (appearance != null)
+                        appearance.SendAppearanceToAgent (m_sp);
+                    count++;
+                });
+
+                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), "Agent Update Count");
+                if (reporter != null)
+                {
+                    reporter.AddAgentUpdates (count);
+                }
+            }
+
+            /// <summary>
+            /// Send appearance data to an agent.
+            /// </summary>
+            /// <param name="avatar"></param>
+            public void SendAppearanceToAgent (IScenePresence avatar)
+            {
+                avatar.ControllingClient.SendAppearance (
+                    Appearance.Owner, Appearance.VisualParams, Appearance.Texture.GetBytes ());
+            }
+
+            /// <summary>
+            /// This makes sure that after the agent has entered the sim that they have their clothes and that they all exist
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
+            void CheckToMakeSureWearablesHaveBeenSent (object sender, ElapsedEventArgs e)
+            {
+                if (!m_InitialHasWearablesBeenSent)
+                {
+                    m_InitialHasWearablesBeenSent = true;
+                    m_log.Warn ("[AvatarAppearanceModule]: Been 10 seconds since root agent " + m_sp.Name + " was added and appearance was not sent, force sending now.");
+
+                    //Force send!
+                    m_InitialHasWearablesBeenSent = true;
+
+                    m_sp.ControllingClient.SendWearables (Appearance.Wearables, Appearance.Serial);
+
+                    //Send rebakes if needed
+                    // NOTE: Do NOT send this! It seems to make the client become a cloud
+                    //sp.SendAppearanceToAgent(sp);
+
+                    // If the avatars baked textures are all in the cache, then we have a 
+                    // complete appearance... send it out, if not, then we'll send it when
+                    // the avatar finishes updating its appearance
+                    SendAppearanceToAllOtherAgents ();
+
+                    // This agent just became roo t. We are going to tell everyone about it. The process of
+                    // getting other avatars information was initiated in the constructor... don't do it 
+                    // again here... 
+                    SendAvatarDataToAllAgents ();
+
+                    //Tell us about everyone else as well now that we are here
+                    SendOtherAgentsAppearanceToMe ();
+                }
+            }
+
+            protected AvatarAppearance m_appearance;
+
+            public AvatarAppearance Appearance
+            {
+                get { return m_appearance; }
+                set { m_appearance = value; }
+            }
+        }
     }
 }

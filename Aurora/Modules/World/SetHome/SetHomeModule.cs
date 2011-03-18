@@ -159,7 +159,8 @@ namespace Aurora.Modules.World.Auction
             {
                 if (scene.Permissions.CanSetHome(SP.UUID))
                 {
-                    position.Z += SP.Appearance.AvatarHeight / 2;
+                    IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule> ();
+                    position.Z += appearance.Appearance.AvatarHeight / 2;
                     IAgentInfoService agentInfoService = scene.RequestModuleInterface<IAgentInfoService>();
                     if (agentInfoService != null &&
                         agentInfoService.SetHomePosition(remoteClient.AgentId.ToString(), scene.RegionInfo.RegionID, position, lookAt) &&

@@ -73,11 +73,6 @@ namespace OpenSim.Framework
         PhysicsActor PhysicsActor { get; set; }
 
         /// <summary>
-        /// The appearance that this agent has
-        /// </summary>
-        AvatarAppearance Appearance { get; set; }
-
-        /// <summary>
         /// Is this client really in this region?
         /// </summary>
         bool IsChildAgent { get; set; }
@@ -148,7 +143,6 @@ namespace OpenSim.Framework
         void PushForce (Vector3 impulse);
         bool SitGround { get; set; }
         Vector3 ParentPosition { get; set; }
-        bool InitialHasWearablesBeenSent { get; set; }
 
 
         void Update ();
@@ -167,25 +161,32 @@ namespace OpenSim.Framework
         void AddNewMovement (Vector3 jumpForce, Quaternion quaternion);
         void AddToPhysicalScene (bool m_flying, bool p);
 
-        void SendAppearanceToAllOtherAgents ();
-        void SendAvatarDataToAllAgents ();
         void SendTerseUpdateToAllClients ();
         uint GenerateClientFlags (ISceneChildEntity p);
 
         void SendCoarseLocations (List<Vector3> coarseLocations, List<OpenMetaverse.UUID> avatarUUIDs);
 
-        void SendAppearanceToAgent (IScenePresence sp);
-        void SendAvatarDataToAgent (IScenePresence sp);
-        void SetHeight (float p);
-        void SendOtherAgentsAppearanceToMe ();
         void AddUpdateToAvatar (ISceneChildEntity entity, PrimUpdateFlags PostUpdateFlags);
 
 
         void StandUp ();
 
+        void SetHeight (float p);
+    }
 
-
-
+    public interface IAvatarAppearanceModule
+    {
+        /// <summary>
+        /// The appearance that this agent has
+        /// </summary>
+        AvatarAppearance Appearance { get; set; }
+        bool InitialHasWearablesBeenSent { get; set; }
+        void SendAppearanceToAgent (IScenePresence sp);
+        void SendAvatarDataToAgent (IScenePresence sp);
+        void SetHeight (float p);
+        void SendOtherAgentsAppearanceToMe ();
+        void SendAppearanceToAllOtherAgents ();
+        void SendAvatarDataToAllAgents ();
     }
 
     public interface IScriptControllerModule
@@ -315,6 +316,20 @@ namespace OpenSim.Framework
         void FireAttachmentCollisionEvents (EventArgs e);
 
         void DetachToInventoryPrep ();
+
+        TaskInventoryItem GetInventoryItem (uint localID, OpenMetaverse.UUID itemID);
+
+        int RemoveInventoryItem (uint localID, OpenMetaverse.UUID itemID);
+
+        bool AddInventoryItem (IClientAPI remoteClient, uint primLocalID, InventoryItemBase item, OpenMetaverse.UUID copyID);
+
+        void ScheduleGroupUpdateToAvatar (IScenePresence SP, PrimUpdateFlags primUpdateFlags);
+
+        void SetOwnerId (OpenMetaverse.UUID uUID);
+
+        uint GetEffectivePermissions ();
+
+        void SetRootPartOwner (ISceneChildEntity part, OpenMetaverse.UUID uUID, OpenMetaverse.UUID uUID_2);
     }
 
     public interface IEntity
@@ -591,6 +606,16 @@ namespace OpenSim.Framework
         int SavedAttachmentPoint { get; set; }
 
         Vector3 SavedAttachedPos { get; set; }
+
+        bool IsSelected { get; set; }
+
+        DateTime Rezzed { get; set; }
+
+        byte ObjectSaleType { get; set; }
+
+        int SalePrice { get; set; }
+
+        void ApplyNextOwnerPermissions ();
     }
 
     public interface ISceneGraph

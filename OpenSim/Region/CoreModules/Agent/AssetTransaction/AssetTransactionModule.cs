@@ -264,7 +264,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         /// <param name="transactionID"></param>
         /// <param name="item"></param>
         public void HandleTaskItemUpdateFromTransaction(
-            IClientAPI remoteClient, SceneObjectPart part, UUID transactionID, TaskInventoryItem item)
+            IClientAPI remoteClient, ISceneChildEntity part, UUID transactionID, TaskInventoryItem item)
         {
             //            m_log.DebugFormat(
             //                "[TRANSACTIONS MANAGER] Called HandleTaskItemUpdateFromTransaction with item {0}",

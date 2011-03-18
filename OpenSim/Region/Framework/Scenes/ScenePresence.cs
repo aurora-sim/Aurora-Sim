@@ -145,18 +145,6 @@ namespace OpenSim.Region.Framework.Scenes
                 m_SitGround = value;
             }
         }
-        private bool m_InitialHasWearablesBeenSent = false;
-        public bool InitialHasWearablesBeenSent
-        {
-            get
-            {
-                return m_InitialHasWearablesBeenSent;
-            }
-            set
-            {
-                m_InitialHasWearablesBeenSent = value;
-            }
-        }
 
         private SendCourseLocationsMethod m_sendCourseLocationsMethod;
 
@@ -250,8 +238,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         // Agent's Draw distance.
         protected float m_DrawDistance;
-
-        protected AvatarAppearance m_appearance;
 
         /// <summary>
         /// Implemented Control Flags
@@ -713,18 +699,12 @@ namespace OpenSim.Region.Framework.Scenes
             // Request info about all the (root) agents in this region
             // Note: This won't send data *to* other clients in that region (children don't send)
             //SendInitialFullUpdateToAllClients();
-            SendOtherAgentsAvatarDataToMe();
+            //SendOtherAgentsAvatarDataToMe();
             //Comment this out for now, just to see what happens
             //SendOtherAgentsAppearanceToMe();
 
             RegisterToEvents();
             SetDirectionVectors();
-        }
-
-        public ScenePresence(IClientAPI client, Scene world, RegionInfo reginfo, AvatarAppearance appearance)
-            : this(client, world, reginfo)
-        {
-            m_appearance = appearance;
         }
 
         private void CreateSceneViewer()
@@ -829,48 +809,6 @@ namespace OpenSim.Region.Framework.Scenes
                 attMod.SendScriptEventToAttachments(UUID, "changed", new Object[] { Changed.TELEPORT });
 
             m_scene.EventManager.TriggerOnMakeRootAgent(this);
-
-            //Check to make sure that we have sent all the appearance info 10 seconds later
-            Timer t = new Timer(10 * 1000);
-            t.Elapsed += CheckToMakeSureWearablesHaveBeenSent;
-            t.AutoReset = false;
-            t.Start();
-        }
-
-        /// <summary>
-        /// This makes sure that after the agent has entered the sim that they have their clothes and that they all exist
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        void CheckToMakeSureWearablesHaveBeenSent(object sender, ElapsedEventArgs e)
-        {
-            if (!m_InitialHasWearablesBeenSent)
-            {
-                m_InitialHasWearablesBeenSent = true;
-                m_log.Warn("[ScenePresence]: Been 10 seconds since root agent " + Name + " was added and appearance was not sent, force sending now.");
-
-                //Force send!
-                m_InitialHasWearablesBeenSent = true;
-
-                ControllingClient.SendWearables(Appearance.Wearables, Appearance.Serial);
-
-                //Send rebakes if needed
-                // NOTE: Do NOT send this! It seems to make the client become a cloud
-                //sp.SendAppearanceToAgent(sp);
-
-                // If the avatars baked textures are all in the cache, then we have a 
-                // complete appearance... send it out, if not, then we'll send it when
-                // the avatar finishes updating its appearance
-                SendAppearanceToAllOtherAgents();
-
-                // This agent just became roo t. We are going to tell everyone about it. The process of
-                // getting other avatars information was initiated in the constructor... don't do it 
-                // again here... 
-                SendAvatarDataToAllAgents();
-
-                //Tell us about everyone else as well now that we are here
-                SendOtherAgentsAppearanceToMe();
-            }
         }
 
         /// <summary>
@@ -949,11 +887,6 @@ namespace OpenSim.Region.Framework.Scenes
             Velocity = Vector3.Zero;
             AbsolutePosition = pos;
             AddToPhysicalScene(isFlying, true);
-            if (m_appearance != null)
-            {
-                if (m_appearance.AvatarHeight > 0)
-                    SetHeight(m_appearance.AvatarHeight);
-            }
 
             IAttachmentsModule attMod = Scene.RequestModuleInterface<IAttachmentsModule>();
             if (attMod != null)
@@ -972,11 +905,6 @@ namespace OpenSim.Region.Framework.Scenes
             RemoveFromPhysicalScene();
             AbsolutePosition = pos;
             AddToPhysicalScene(isFlying, true);
-            if (m_appearance != null)
-            {
-                if (m_appearance.AvatarHeight > 0)
-                    SetHeight(m_appearance.AvatarHeight);
-            }
 
             IAttachmentsModule attMod = Scene.RequestModuleInterface<IAttachmentsModule>();
             if (attMod != null)
@@ -1019,23 +947,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// Sets avatar height in the phyiscs plugin
-        /// </summary>
-        public void SetHeight(float height)
-        {
-            //If the av exists, set their new size, if not, add them to the region
-            if (PhysicsActor != null && !IsChildAgent)
-            {
-                if (height != m_avHeight)
-                {
-                    Vector3 SetSize = new Vector3(0.45f, 0.6f, Appearance.AvatarHeight);
-                    PhysicsActor.Size = SetSize;
-                }
-            }
-            m_avHeight = height;
-        }
-
-        /// <summary>
         /// Complete Avatar's movement into the region.
         /// This is called upon a very important packet sent from the client,
         /// so it's client-controlled. Never call this method directly.
@@ -1070,9 +981,6 @@ namespace OpenSim.Region.Framework.Scenes
             //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
             m_controllingClient.MoveAgentIntoRegion(m_regionInfo, AbsolutePosition, look);
 
-            //Send updates to everyone about us
-            SendAvatarDataToAllAgents();
-
             bool m_flying = ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
             MakeRootAgent(m_flying);
 
@@ -1081,7 +989,13 @@ namespace OpenSim.Region.Framework.Scenes
             AgentCircuitData agent = ControllingClient.RequestClientInfo();
             agent.startpos = AbsolutePosition;
             agent.child = true;
-            agent.Appearance = Appearance;
+            IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
+            if (appearance != null)
+            {
+                //Send updates to everyone about us
+                appearance.SendAvatarDataToAllAgents ();
+                agent.Appearance = appearance.Appearance;
+            }
 
             ISyncMessagePosterService syncPoster = Scene.RequestModuleInterface<ISyncMessagePosterService>();
             if (syncPoster != null)
@@ -1611,12 +1525,10 @@ namespace OpenSim.Region.Framework.Scenes
                 m_parentPosition = Vector3.Zero;
 
                 m_parentID = UUID.Zero;
-                SendAvatarDataToAllAgents();
+                IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
+                if (appearance != null)
+                    appearance.SendAvatarDataToAllAgents ();
                 m_requestedSitTargetUUID = UUID.Zero;
-                if ((m_physicsActor != null) && (m_avHeight > 0))
-                {
-                    SetHeight(m_avHeight);
-                }
             }
 
             Animator.TrySetMovementAnimation("STAND");
@@ -1692,7 +1604,9 @@ namespace OpenSim.Region.Framework.Scenes
             Velocity = Vector3.Zero;
             RemoveFromPhysicalScene();
 
-            SendAvatarDataToAllAgents();
+            IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
+            if (appearance != null)
+                appearance.SendAvatarDataToAllAgents();
             Animator.TrySetMovementAnimation(m_nextSitAnimation);
         }
 
@@ -1758,29 +1672,33 @@ namespace OpenSim.Region.Framework.Scenes
                             RemoveFromPhysicalScene();
                             Vector3 Position = part.AbsolutePosition;
                             Vector3 MovePos = Vector3.Zero;
-                            if (part.GetPrimType() == PrimType.BOX ||
-                                part.GetPrimType() == PrimType.CYLINDER ||
-                                part.GetPrimType() == PrimType.TORUS ||
-                                part.GetPrimType() == PrimType.TUBE ||
-                                part.GetPrimType() == PrimType.RING ||
-                                part.GetPrimType() == PrimType.PRISM ||
-                                part.GetPrimType() == PrimType.SCULPT)
+                            IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
+                            if (appearance != null)
                             {
-                                Position.Z += part.Scale.Z / 2f;
-                                Position.Z += m_appearance.AvatarHeight / 2;
-                                Position.Z -= (float)(SIT_TARGET_ADJUSTMENT.Z / 1.5);//m_appearance.AvatarHeight / 15;
+                                if (part.GetPrimType () == PrimType.BOX ||
+                                    part.GetPrimType () == PrimType.CYLINDER ||
+                                    part.GetPrimType () == PrimType.TORUS ||
+                                    part.GetPrimType () == PrimType.TUBE ||
+                                    part.GetPrimType () == PrimType.RING ||
+                                    part.GetPrimType () == PrimType.PRISM ||
+                                    part.GetPrimType () == PrimType.SCULPT)
+                                {
+                                    Position.Z += part.Scale.Z / 2f;
+                                    Position.Z += appearance.Appearance.AvatarHeight / 2;
+                                    Position.Z -= (float)(SIT_TARGET_ADJUSTMENT.Z / 1.5);//m_appearance.AvatarHeight / 15;
 
-                                MovePos.X = (part.Scale.X / 2) + .1f;
-                                MovePos *= Rotation;
-                            }
-                            else if (part.GetPrimType() == PrimType.SPHERE)
-                            {
-                                Position.Z += part.Scale.Z / 2f;
-                                Position.Z += m_appearance.AvatarHeight / 2;
-                                Position.Z -= (float)(SIT_TARGET_ADJUSTMENT.Z / 1.5);//m_appearance.AvatarHeight / 15;
+                                    MovePos.X = (part.Scale.X / 2) + .1f;
+                                    MovePos *= Rotation;
+                                }
+                                else if (part.GetPrimType () == PrimType.SPHERE)
+                                {
+                                    Position.Z += part.Scale.Z / 2f;
+                                    Position.Z += appearance.Appearance.AvatarHeight / 2;
+                                    Position.Z -= (float)(SIT_TARGET_ADJUSTMENT.Z / 1.5);//m_appearance.AvatarHeight / 15;
 
-                                MovePos.X = (float)(part.Scale.X / 2.5);
-                                MovePos *= Rotation;
+                                    MovePos.X = (float)(part.Scale.X / 2.5);
+                                    MovePos *= Rotation;
+                                }
                             }
                             Position += MovePos;
                             AbsolutePosition = Position;
@@ -1939,7 +1857,9 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
                 Animator.TrySetMovementAnimation(sitAnimation);
-                SendAvatarDataToAllAgents();
+                IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
+                if (appearance != null)
+                    appearance.SendAvatarDataToAllAgents();
                 // This may seem stupid, but Our Full updates don't send avatar rotation :P
                 // So we're also sending a terse update (which has avatar rotation)
                 // [Update] We do now.
@@ -2210,160 +2130,6 @@ namespace OpenSim.Region.Framework.Scenes
             IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
             if (reporter != null)
                 reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
-        }
-
-        /// <summary>
-        /// Send this agent's avatar data to all other root and child agents in the scene
-        /// This agent must be root. This avatar will receive its own update. 
-        /// </summary>
-        public void SendAvatarDataToAllAgents()
-        {
-            // only send update from root agents to other clients; children are only "listening posts"
-            if (IsChildAgent)
-            {
-                m_log.Warn("[SCENEPRESENCE] attempt to send avatar data from a child agent");
-                return;
-            }
-
-            m_perfMonMS = Util.EnvironmentTickCount();
-
-            int count = 0;
-            m_scene.ForEachScenePresence (delegate (IScenePresence scenePresence)
-                                         {
-                                             SendAvatarDataToAgent(scenePresence);
-                                             count++;
-                                         });
-
-            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
-            if (reporter != null)
-            {
-                reporter.AddAgentUpdates(count);
-                reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
-            }
-        }
-
-        /// <summary>
-        /// Send avatar data for all other root agents to this agent, this agent
-        /// can be either a child or root
-        /// </summary>
-        public void SendOtherAgentsAvatarDataToMe()
-        {
-            m_perfMonMS = Util.EnvironmentTickCount();
-            int count = 0;
-            m_scene.ForEachScenePresence (delegate (IScenePresence scenePresence)
-                                         {
-                                             // only send information about root agents
-                                             if (scenePresence.IsChildAgent)
-                                                 return;
-
-                                             // only send information about other root agents
-                                             if (scenePresence.UUID == UUID)
-                                                 return;
-
-                                             scenePresence.SendAvatarDataToAgent(this);
-                                             count++;
-                                         });
-
-            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
-            if (reporter != null)
-            {
-                reporter.AddAgentUpdates(count);
-                reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
-            }
-        }
-
-        /// <summary>
-        /// Send avatar data to an agent.
-        /// </summary>
-        /// <param name="avatar"></param>
-        public void SendAvatarDataToAgent (IScenePresence avatar)
-        {
-            //m_log.WarnFormat("[SP] Send avatar data from {0} to {1}",m_uuid,avatar.ControllingClient.AgentId);
-            avatar.ControllingClient.SendAvatarDataImmediate(this);
-            Animator.SendAnimPackToClient(avatar.ControllingClient);
-        }
-
-        /// <summary>
-        /// Send this agent's appearance to all other root and child agents in the scene
-        /// This agent must be root.
-        /// </summary>
-        public void SendAppearanceToAllOtherAgents()
-        {
-            // only send update from root agents to other clients; children are only "listening posts"
-            if (IsChildAgent)
-            {
-                m_log.Warn("[SCENEPRESENCE] attempt to send avatar data from a child agent");
-                return;
-            }
-
-            m_perfMonMS = Util.EnvironmentTickCount();
-
-            int count = 0;
-            m_scene.ForEachScenePresence (delegate (IScenePresence scenePresence)
-                                         {
-                                             if (scenePresence.UUID == UUID)
-                                                 return;
-
-                                             SendAppearanceToAgent(scenePresence);
-                                             count++;
-                                         });
-
-            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
-            if (reporter != null)
-            {
-                reporter.AddAgentUpdates(count);
-                reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
-            }
-        }
-
-        /// <summary>
-        /// Send appearance from all other root agents to this agent. this agent
-        /// can be either root or child
-        /// </summary>
-        public void SendOtherAgentsAppearanceToMe()
-        {
-            m_perfMonMS = Util.EnvironmentTickCount();
-
-            int count = 0;
-            m_scene.ForEachScenePresence (delegate (IScenePresence scenePresence)
-            {
-                // only send information about root agents
-                if (scenePresence.IsChildAgent)
-                    return;
-
-                // only send information about other root agents
-                if (scenePresence.UUID == UUID)
-                    return;
-
-                scenePresence.SendAppearanceToAgent(this);
-                count++;
-            });
-
-            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
-            if (reporter != null)
-            {
-                reporter.AddAgentUpdates(count);
-                reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
-            }
-        }
-
-        /// <summary>
-        /// Send appearance data to an agent.
-        /// </summary>
-        /// <param name="avatar"></param>
-        public void SendAppearanceToAgent (IScenePresence avatar)
-        {
-            avatar.ControllingClient.SendAppearance(
-                m_appearance.Owner, m_appearance.VisualParams, m_appearance.Texture.GetBytes());
-        }
-
-        // Because appearance setting is in a module, we actually need
-        // to give it access to our appearance directly, otherwise we
-        // get a synchronization issue.
-        public AvatarAppearance Appearance
-        {
-            get { return m_appearance; }
-            set { m_appearance = value; }
         }
 
         #endregion
@@ -2638,9 +2404,12 @@ namespace OpenSim.Region.Framework.Scenes
             cAgent.Speed = SpeedModifier;
             cAgent.DrawDistance = DrawDistance;
             cAgent.AlwaysRun = m_setAlwaysRun;
-            cAgent.SentInitialWearables = m_InitialHasWearablesBeenSent;
-
-            cAgent.Appearance = new AvatarAppearance(m_appearance);
+            IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
+            if (appearance != null)
+            {
+                cAgent.SentInitialWearables = appearance.InitialHasWearablesBeenSent;
+                cAgent.Appearance = new AvatarAppearance (appearance.Appearance);
+            }
 
             IScriptControllerModule m = RequestModuleInterface<IScriptControllerModule> ();
             if (m != null)
@@ -2678,8 +2447,12 @@ namespace OpenSim.Region.Framework.Scenes
                 m_speedModifier = cAgent.Speed;
                 DrawDistance = cAgent.DrawDistance;
                 m_setAlwaysRun = cAgent.AlwaysRun;
-                m_InitialHasWearablesBeenSent = cAgent.SentInitialWearables;
-                m_appearance = new AvatarAppearance(cAgent.Appearance);
+                IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
+                if (appearance != null)
+                {
+                    appearance.InitialHasWearablesBeenSent = cAgent.SentInitialWearables;
+                    appearance.Appearance = new AvatarAppearance (cAgent.Appearance);
+                }
 
                 try
                 {
@@ -2719,11 +2492,15 @@ namespace OpenSim.Region.Framework.Scenes
             //Set this so we don't do it multiple times
             m_creatingPhysicalRepresentation = true;
 
-            if (m_appearance.AvatarHeight == 0)
-                m_appearance.SetHeight();
+            IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
+            if (appearance != null)
+            {
+                if (appearance.Appearance.AvatarHeight == 0)
+                    appearance.Appearance.SetHeight ();
 
-            if (m_appearance.AvatarHeight != 0)
-                m_avHeight = m_appearance.AvatarHeight;
+                if (appearance.Appearance.AvatarHeight != 0)
+                    m_avHeight = appearance.Appearance.AvatarHeight;
+            }
 
             PhysicsScene scene = m_scene.PhysicsScene;
 
@@ -2733,7 +2510,7 @@ namespace OpenSim.Region.Framework.Scenes
                 pVec.Z += m_avHeight;
 
             m_physicsActor = scene.AddAvatar(Name, pVec, Rotation,
-                                                 new Vector3(0f, 0f, m_appearance.AvatarHeight), isFlying);
+                                                 new Vector3 (0f, 0f, m_avHeight), isFlying);
 
             scene.AddPhysicsActorTaint(m_physicsActor);
             m_physicsActor.OnRequestTerseUpdate += SendTerseUpdateToAllClients;
@@ -2752,6 +2529,23 @@ namespace OpenSim.Region.Framework.Scenes
 
             //All done, reset this
             m_creatingPhysicalRepresentation = false;
+        }
+
+        /// <summary>
+        /// Sets avatar height in the phyiscs plugin
+        /// </summary>
+        public void SetHeight (float height)
+        {
+            //If the av exists, set their new size, if not, add them to the region
+            if (PhysicsActor != null && !IsChildAgent)
+            {
+                if (height != m_avHeight)
+                {
+                    Vector3 SetSize = new Vector3 (0.45f, 0.6f, height);
+                    PhysicsActor.Size = SetSize;
+                }
+            }
+            m_avHeight = height;
         }
 
         private void OutOfBoundsCall(Vector3 pos)

@@ -162,7 +162,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         //}
 
         public void RequestUpdateTaskInventoryItem(
-           IClientAPI remoteClient, SceneObjectPart part, UUID transactionID, TaskInventoryItem item)
+           IClientAPI remoteClient, ISceneChildEntity part, UUID transactionID, TaskInventoryItem item)
         {
             if (XferUploaders.ContainsKey(transactionID))
             {

@@ -320,14 +320,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool money(uint localID, UUID agentID, int amount)
         {
             bool ret = false;
-            SceneObjectPart part = m_scriptEngine.findPrim(localID);
+            ISceneChildEntity part = m_scriptEngine.findPrim(localID);
             if (part == null) return ret;
 
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
 
             if (datas == null || datas.Length == 0)
             {
-                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentEntity.UUID);
                 if (datas == null || datas.Length == 0) return ret;
             }
             string functionName = "money";
@@ -578,14 +578,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void email(uint localID, UUID itemID, string timeSent,
                 string address, string subject, string message, int numLeft)
         {
-            SceneObjectPart part = m_scriptEngine.findPrim(localID);
+            ISceneChildEntity part = m_scriptEngine.findPrim (localID);
             if (part == null)
                 return;
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
 
             if (datas == null || datas.Length == 0)
             {
-                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentEntity.UUID);
                 if (datas == null || datas.Length == 0)
                     return;
             }
@@ -607,14 +607,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void at_target(uint localID, uint handle, Vector3 targetpos,
                 Vector3 atpos)
         {
-            SceneObjectPart part = m_scriptEngine.findPrim(localID);
+            ISceneChildEntity part = m_scriptEngine.findPrim (localID);
             if (part == null)
                 return;
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
 
             if (datas == null || datas.Length == 0)
             {
-                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentEntity.UUID);
                 if (datas == null || datas.Length == 0)
                     return;
             }
@@ -633,14 +633,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void not_at_target(uint localID)
         {
-            SceneObjectPart part = m_scriptEngine.findPrim(localID);
+            ISceneChildEntity part = m_scriptEngine.findPrim (localID);
             if (part == null)
                 return;
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
 
             if (datas == null || datas.Length == 0)
             {
-                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentEntity.UUID);
                 if (datas == null || datas.Length == 0)
                     return;
             }
@@ -657,14 +657,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void at_rot_target(uint localID, uint handle, Quaternion targetrot,
                 Quaternion atrot)
         {
-            SceneObjectPart part = m_scriptEngine.findPrim(localID);
+            ISceneChildEntity part = m_scriptEngine.findPrim (localID);
             if (part == null)
                 return;
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
 
             if (datas == null || datas.Length == 0)
             {
-                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentEntity.UUID);
                 if (datas == null || datas.Length == 0)
                     return;
             }
@@ -683,14 +683,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void not_at_rot_target(uint localID)
         {
-            SceneObjectPart part = m_scriptEngine.findPrim(localID);
+            ISceneChildEntity part = m_scriptEngine.findPrim (localID);
             if (part == null)
                 return;
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
 
             if (datas == null || datas.Length == 0)
             {
-                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentEntity.UUID);
                 if (datas == null || datas.Length == 0)
                     return;
             }
@@ -706,14 +706,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void attach(uint localID, UUID itemID, UUID avatar)
         {
-            SceneObjectPart part = m_scriptEngine.findPrim(localID);
+            ISceneChildEntity part = m_scriptEngine.findPrim (localID);
             if (part == null)
                 return;
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
 
             if (datas == null || datas.Length == 0)
             {
-                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
+                datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentEntity.UUID);
                 if (datas == null || datas.Length == 0)
                     return;
             }

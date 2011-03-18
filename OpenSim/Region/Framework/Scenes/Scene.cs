@@ -542,7 +542,11 @@ namespace OpenSim.Region.Framework.Scenes
                 
                 //Make sure the appearanace is updated
                 if (aCircuit != null)
-                    sp.Appearance = aCircuit.Appearance;
+                {
+                    IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
+                    if (appearance != null)
+                        appearance.Appearance = aCircuit.Appearance;
+                }
                 sp.IsChildAgent = aCircuit.child;
 
                 m_clientManager.Add(client);

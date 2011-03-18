@@ -107,7 +107,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         protected void MakeChildAgent (IScenePresence presence)
         {
-            foreach (AvatarAttachment att in presence.Appearance.GetAttachments())
+            IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
+            foreach (AvatarAttachment att in appearance.Appearance.GetAttachments ())
             {
                 //Don't fire events as we just want to remove them 
                 //  and we don't want to remove the attachment from the av either
@@ -137,7 +138,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         protected void RezAttachments (IScenePresence presence)
         {
-            if (null == presence.Appearance)
+            IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
+            if (null == appearance.Appearance)
             {
                 m_log.WarnFormat("[ATTACHMENT]: Appearance has not been initialized for agent {0}", presence.UUID);
                 return;
@@ -146,7 +148,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             //Create the avatar attachments plugin for the av
             AvatarAttachments attachmentsPlugin = new AvatarAttachments(presence);
 
-            List<AvatarAttachment> attachments = presence.Appearance.GetAttachments();
+            List<AvatarAttachment> attachments = appearance.Appearance.GetAttachments ();
             foreach (AvatarAttachment attach in attachments)
             {
                 int p = attach.AttachPoint;
@@ -197,12 +199,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             try
             {
                 // If we can't take it, we can't attach it!
-                SceneObjectPart part = m_scene.GetSceneObjectPart(objectLocalID);
+                ISceneChildEntity part = m_scene.GetSceneObjectPart (objectLocalID);
                 if (part == null)
                     return;
 
                 // Calls attach with a Zero position
-                AttachObjectFromInworldObject(objectLocalID, remoteClient, part.ParentGroup, AttachmentPt);
+                AttachObjectFromInworldObject(objectLocalID, remoteClient, part.ParentEntity, AttachmentPt);
             }
             catch (Exception e)
             {
@@ -352,7 +354,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             IScenePresence presence;
             if (m_scene.TryGetScenePresence(remoteClient.AgentId, out presence))
             {
-                presence.Appearance.DetachAttachment(itemID);
+                IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
+                appearance.Appearance.DetachAttachment (itemID);
 
                 m_log.Debug("[ATTACHMENTS MODULE]: Detaching from UserID: " + remoteClient.AgentId + ", ItemID: " + itemID);
                 if (AvatarFactory != null)
@@ -381,7 +384,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     part.ParentGroup.PrimCount, remoteClient.AgentId, presence.AbsolutePosition, out reason))
                     return;
 
-                presence.Appearance.DetachAttachment(itemID);
+                IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
+                appearance.Appearance.DetachAttachment (itemID);
 
                 AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
 
@@ -699,7 +703,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             group.SetFromItemID(item.ID);
 
             //If we updated the attachment, we need to save the change
-            if (presence.Appearance.SetAttachment((int)AttachmentPt, itemID, item.AssetID))
+            IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
+            if (appearance.Appearance.SetAttachment ((int)AttachmentPt, itemID, item.AssetID))
                 AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
 
             //Now recreate it so that it is selected

@@ -1320,11 +1320,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return null;
         }
 
-        public SceneObjectPart findPrim(uint localID)
+        public ISceneChildEntity findPrim(uint localID)
         {
             foreach (Scene s in m_Scenes)
             {
-                SceneObjectPart part = s.GetSceneObjectPart(localID);
+                ISceneChildEntity part = s.GetSceneObjectPart (localID);
                 if (part != null)
                     return part;
             }
@@ -1335,7 +1335,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             foreach (Scene s in m_Scenes)
             {
-                SceneObjectPart part = s.GetSceneObjectPart(localID);
+                ISceneChildEntity part = s.GetSceneObjectPart (localID);
                 if (part != null)
                     return s;
             }

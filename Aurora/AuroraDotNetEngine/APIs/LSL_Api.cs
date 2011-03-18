@@ -6768,7 +6768,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             else
             {
-                agentSize = new LSL_Vector(0.45, 0.6, avatar.Appearance.AvatarHeight);
+                IAvatarAppearanceModule appearance = avatar.RequestModuleInterface<IAvatarAppearanceModule> ();
+                if (appearance != null)
+                    agentSize = new LSL_Vector (0.45, 0.6, appearance.Appearance.AvatarHeight);
+                else
+                    agentSize = ScriptBaseClass.ZERO_VECTOR;
             }
             return agentSize;
         }
@@ -8753,22 +8757,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (presence.ParentID == UUID.Zero) // not sat on an object
                 {
-                    LSL_Vector lower;
-                    LSL_Vector upper;
+                    LSL_Vector lower = new LSL_Vector();
+                    LSL_Vector upper = new LSL_Vector();
                     if (presence.Animator.Animations.DefaultAnimation.AnimID 
                         == AnimationSet.Animations.AnimsUUID["SIT_GROUND_CONSTRAINED"])
                     {
                         // This is for ground sitting avatars
-                        float height = presence.Appearance.AvatarHeight / 2.66666667f;
-                        lower = new LSL_Vector(-0.3375f, -0.45f, height * -1.0f);
-                        upper = new LSL_Vector(0.3375f, 0.45f, 0.0f);
+                        IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
+                        if (appearance != null)
+                        {
+                            float height = appearance.Appearance.AvatarHeight / 2.66666667f;
+                            lower = new LSL_Vector (-0.3375f, -0.45f, height * -1.0f);
+                            upper = new LSL_Vector (0.3375f, 0.45f, 0.0f);
+                        }
                     }
                     else
                     {
                         // This is for standing/flying avatars
-                        float height = presence.Appearance.AvatarHeight / 2.0f;
-                        lower = new LSL_Vector(-0.225f, -0.3f, height * -1.0f);
-                        upper = new LSL_Vector(0.225f, 0.3f, height + 0.05f);
+                        IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
+                        if (appearance != null)
+                        {
+                            float height = appearance.Appearance.AvatarHeight / 2.0f;
+                            lower = new LSL_Vector (-0.225f, -0.3f, height * -1.0f);
+                            upper = new LSL_Vector (0.225f, 0.3f, height + 0.05f);
+                        }
                     }
                     result.Add(lower);
                     result.Add(upper);
