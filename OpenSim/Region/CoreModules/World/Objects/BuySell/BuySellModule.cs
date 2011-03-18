@@ -92,11 +92,11 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
 
         protected void ObjectRequestPayPrice(IClientAPI client, UUID objectID)
         {
-            SceneObjectPart task = ((Scene)client.Scene).GetSceneObjectPart(objectID);
+            ISceneChildEntity task = client.Scene.GetSceneObjectPart (objectID);
             if (task == null)
                 return;
 
-            client.SendPayPrice(objectID, task.ParentGroup.RootPart.PayPrice);
+            client.SendPayPrice(objectID, task.ParentEntity.RootChild.PayPrice);
         }
 
         protected void ObjectSaleInfo(

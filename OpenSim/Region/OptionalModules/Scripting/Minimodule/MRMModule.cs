@@ -116,7 +116,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
 
         public void SetScriptRunning(IClientAPI controllingClient, UUID objectID, UUID itemID, bool running)
         {
-            SceneObjectPart part = m_scene.GetSceneObjectPart(objectID);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (objectID);
             if (part == null)
                 return;
 

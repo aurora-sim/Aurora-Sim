@@ -296,7 +296,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
             /// </summary>
             public void DataReceived(byte[] data, Scene scene)
             {
-                SceneObjectPart part = scene.GetSceneObjectPart(PrimID);
+                ISceneChildEntity part = scene.GetSceneObjectPart (PrimID);
 
                 if (part == null || data == null || data.Length <= 1)
                 {
@@ -305,7 +305,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                     IChatModule chatModule = scene.RequestModuleInterface<IChatModule>();
                     if (chatModule != null)
                         chatModule.SimChat(msg, ChatTypeEnum.Say, 0, 
-                            part.ParentGroup.RootPart.AbsolutePosition, part.Name, part.UUID, false, scene);
+                            part.ParentEntity.AbsolutePosition, part.Name, part.UUID, false, scene);
                     return;
                 }
 

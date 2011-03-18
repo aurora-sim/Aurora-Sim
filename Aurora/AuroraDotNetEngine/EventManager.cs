@@ -131,7 +131,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private bool HandleObjectPaid(UUID objectID, UUID agentID, int amount)
         {
             bool ret = false;
-            SceneObjectPart part = m_scriptEngine.findPrim(objectID);
+            ISceneChildEntity part = m_scriptEngine.findPrim(objectID);
 
             //if (part == null)
             //    return;
@@ -147,7 +147,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (part != null) 
             {
                 m_log.Debug("Paid: " + objectID + " from " + agentID + ", amount " + amount);
-                if (part.ParentGroup != null) part = part.ParentGroup.RootPart;
+                if (part.ParentEntity != null) part = part.ParentEntity.RootChild;
                 if (part != null)
                 {
                     ret = money(part.LocalId, agentID, amount);

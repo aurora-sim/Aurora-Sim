@@ -838,26 +838,17 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="primLocalID"></param>
         protected void RequestTaskInventory(IClientAPI remoteClient, uint primLocalID)
         {
-            SceneObjectGroup group = m_scene.GetGroupByPrim(primLocalID);
-            if (group != null)
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (primLocalID);
+            if (part != null)
             {
-                SceneObjectPart part = (SceneObjectPart)group.GetChildPart(primLocalID);
-                if (part != null)
-                {
-                    part.Inventory.RequestInventoryFile(remoteClient);
-                }
-                else
-                {
-                    m_log.ErrorFormat(
-                        "[PRIM INVENTORY]: " +
-                        "Couldn't find part {0} in object group {1}, {2} to request inventory data",
-                        primLocalID, group.Name, group.UUID);
-                }
+                part.Inventory.RequestInventoryFile (remoteClient);
             }
             else
             {
-                m_log.ErrorFormat(
-                    "[PRIM INVENTORY]: Inventory requested of prim {0} which doesn't exist", primLocalID);
+                m_log.ErrorFormat (
+                    "[PRIM INVENTORY]: " +
+                    "Couldn't find part {0} to request inventory data",
+                    primLocalID);
             }
         }
 
@@ -1179,7 +1170,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else  // script has been rezzed directly into a prim's inventory
             {
-                SceneObjectPart part = m_scene.GetSceneObjectPart(itemBase.Folder);
+                ISceneChildEntity part = m_scene.GetSceneObjectPart (itemBase.Folder);
                 if (part == null)
                     return;
 
@@ -1222,7 +1213,7 @@ namespace OpenSim.Region.Framework.Scenes
                 part.GetProperties(remoteClient);
 
                 part.Inventory.CreateScriptInstance(taskItem, 0, false, 0);
-                part.ParentGroup.ResumeScripts();
+                part.ParentEntity.ResumeScripts();
             }
         }
 
@@ -2210,8 +2201,8 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
                 // Retrieve group
-                SceneObjectPart part = m_scene.GetSceneObjectPart(primId);
-                if (null == part.ParentGroup)
+                ISceneChildEntity part = m_scene.GetSceneObjectPart (primId);
+                if (null == part.ParentEntity)
                 {
                     m_log.ErrorFormat(
                         "[PRIM INVENTORY]: " +
@@ -2243,7 +2234,7 @@ namespace OpenSim.Region.Framework.Scenes
                 // Update item with new asset
                 item.AssetID = asset.FullID;
 
-                if (part.ParentGroup.UpdateInventoryItem(item))
+                if (part.ParentEntity.UpdateInventoryItem(item))
                     if (item.InvType == (int)InventoryType.LSL)
                         remoteClient.SendAgentAlertMessage("Script saved", false);
 
@@ -2263,7 +2254,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 part.GetProperties(remoteClient);
 
-                part.ParentGroup.ResumeScripts();
+                part.ParentEntity.ResumeScripts();
                 return errors;
             }
         }

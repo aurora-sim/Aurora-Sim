@@ -66,7 +66,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
         /// It is utilized in nearly every property and method.
         /// </summary>
         /// <returns></returns>
-        private SceneObjectPart GetSOP()
+        private ISceneChildEntity GetSOP ()
         {
             return m_rootScene.GetSceneObjectPart(m_localID);
         }
@@ -185,13 +185,13 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
         {
             get
             {
-                SceneObjectPart my = GetSOP();
-                int total = my.ParentGroup.ChildrenList.Count;
+                ISceneChildEntity my = GetSOP ();
+                int total = my.ParentEntity.PrimCount;
 
                 IObject[] rets = new IObject[total];
 
                 int i = 0;
-                foreach (SceneObjectPart child in my.ParentGroup.ChildrenList)
+                foreach (ISceneChildEntity child in my.ParentEntity.ChildrenEntities())
                 {
                     rets[i++] = new SOPObject(m_rootScene, child.LocalId, m_security);
                 }
@@ -202,14 +202,14 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
 
         public IObject Root
         {
-            get { return new SOPObject(m_rootScene, GetSOP().ParentGroup.RootPart.LocalId, m_security); }
+            get { return new SOPObject(m_rootScene, GetSOP().ParentEntity.RootChild.LocalId, m_security); }
         }
 
         public IObjectMaterial[] Materials
         {
             get
             {
-                SceneObjectPart sop = GetSOP();
+                ISceneChildEntity sop = GetSOP ();
                 IObjectMaterial[] rets = new IObjectMaterial[getNumberOfSides(sop)];
 
                 for (int i = 0; i < rets.Length; i++)
@@ -250,7 +250,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             {
                 if (CanEdit())
                 {
-                    SceneObjectPart pos = GetSOP();
+                    ISceneChildEntity pos = GetSOP ();
                     pos.UpdateOffSet(value - pos.AbsolutePosition);
                 }
             }
@@ -392,7 +392,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             if (!CanEdit())
                 return;
 
-            SceneObjectPart sop = GetSOP();
+            ISceneChildEntity sop = GetSOP ();
             IChatModule chatModule = m_rootScene.RequestModuleInterface<IChatModule>();
             if (chatModule != null)
                 chatModule.SimChat(msg, ChatTypeEnum.Say, 0, sop.AbsolutePosition,
@@ -404,7 +404,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             if (!CanEdit())
                 return;
 
-            SceneObjectPart sop = GetSOP();
+            ISceneChildEntity sop = GetSOP ();
             IChatModule chatModule = m_rootScene.RequestModuleInterface<IChatModule>();
             if (chatModule != null)
                 chatModule.SimChat(msg, ChatTypeEnum.Say, channel, sop.AbsolutePosition,
@@ -510,7 +510,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             return (int) PrimType.NotPrimitive;
         }
 
-        private static int getNumberOfSides(SceneObjectPart part)
+        private static int getNumberOfSides (ISceneChildEntity part)
         {
             int ret;
             bool hasCut;
@@ -794,7 +794,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
         {
             ObjectShapePacket.ObjectDataBlock shapeBlock = new ObjectShapePacket.ObjectDataBlock();
 
-            SceneObjectPart part = GetSOP();
+            ISceneChildEntity part = GetSOP ();
 
             UUID sculptId = map;
 

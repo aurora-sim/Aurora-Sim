@@ -540,7 +540,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         public void CreateFromData(UUID itemID, UUID objectID,
                                    Object[] data)
         {
-            SceneObjectPart part =
+            ISceneChildEntity part =
                 findPrimsScene(objectID).GetSceneObjectPart(
                     objectID);
 
@@ -576,7 +576,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         {
             foreach (Scene s in m_ScriptEngine.Worlds)
             {
-                SceneObjectPart part = s.GetSceneObjectPart(objectID);
+                ISceneChildEntity part = s.GetSceneObjectPart (objectID);
                 if (part != null)
                 {
                     return s;

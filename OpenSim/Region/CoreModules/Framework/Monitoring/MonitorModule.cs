@@ -609,7 +609,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     m_module.SendStatsResults(simStats);
 
                     //Tell all the scene presences about the new stats
-                    foreach (IScenePresence agent in m_currentScene.ScenePresences)
+                    foreach (IScenePresence agent in m_currentScene.GetScenePresences ())
                     {
                         if (!agent.IsChildAgent)
                             agent.ControllingClient.SendSimStats(simStats);

@@ -242,7 +242,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         public void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, string msg)
         {
             Vector3 position;
-            SceneObjectPart source;
+            ISceneChildEntity source;
             IScenePresence avatar;
 
             if ((source = m_scene.GetSceneObjectPart(id)) != null)
@@ -260,7 +260,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         public void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, string msg, float Range)
         {
             Vector3 position;
-            SceneObjectPart source;
+            ISceneChildEntity source;
             IScenePresence avatar;
 
             if ((source = m_scene.GetSceneObjectPart(id)) != null)
@@ -304,7 +304,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
                 if (li.GetHostID().Equals(id))
                     continue;
 
-                SceneObjectPart sPart = m_scene.GetSceneObjectPart(li.GetHostID());
+                ISceneChildEntity sPart = m_scene.GetSceneObjectPart (li.GetHostID ());
                 if (sPart == null)
                     continue;
 

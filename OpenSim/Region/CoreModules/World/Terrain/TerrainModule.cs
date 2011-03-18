@@ -1218,7 +1218,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             if (shouldTaint || forceSendOfTerrainInfo)
                 QueueTerrainUpdate();
 
-            foreach (IScenePresence presence in m_scene.ScenePresences)
+            foreach (IScenePresence presence in m_scene.GetScenePresences ())
             {
                 if (!m_sendTerrainUpdatesByViewDistance)
                 {

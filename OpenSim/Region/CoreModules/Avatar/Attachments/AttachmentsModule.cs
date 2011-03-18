@@ -177,17 +177,17 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         protected void ClientDetachObject(uint objectLocalID, IClientAPI remoteClient)
         {
-            SceneObjectGroup group = m_scene.GetGroupByPrim(objectLocalID);
+            ISceneEntity group = m_scene.GetGroupByPrim(objectLocalID);
             if (group != null)
             {
                 //group.DetachToGround();
-                DetachSingleAttachmentToInventory(group.GetFromItemID(), remoteClient);
+                DetachSingleAttachmentToInventory(group.RootChild.FromUserInventoryItemID, remoteClient);
             }
         }
 
         protected void ClientDropObject(uint objectLocalID, IClientAPI remoteClient)
         {
-            SceneObjectGroup group = m_scene.GetGroupByPrim(objectLocalID);
+            ISceneEntity group = m_scene.GetGroupByPrim (objectLocalID);
             if (group != null)
                 DetachSingleAttachmentToGround(group.UUID, remoteClient);
         }
@@ -214,16 +214,16 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         protected void ClientUpdateAttachmentPosition(uint objectLocalID, Vector3 pos, IClientAPI remoteClient, bool SaveUpdate)
         {
-            SceneObjectGroup group = m_scene.GetGroupByPrim(objectLocalID);
+            ISceneEntity group = m_scene.GetGroupByPrim (objectLocalID);
             if (group != null)
             {
-                if (group.IsAttachment || (group.RootPart.Shape.PCode == 9 && group.RootPart.Shape.State != 0))
+                if (group.IsAttachment || (group.RootChild.Shape.PCode == 9 && group.RootChild.Shape.State != 0))
                 {
                     //Move has edit permission as well
                     if (m_scene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))
                     {
                         //Only deal with attachments!
-                        UpdateAttachmentPosition(remoteClient, group.GetFromItemID(), pos);
+                        UpdateAttachmentPosition(remoteClient, group.RootChild.FromUserInventoryItemID, pos);
                     }
                 }
             }
@@ -367,21 +367,21 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         public void DetachSingleAttachmentToGround(UUID itemID, IClientAPI remoteClient)
         {
-            SceneObjectPart part = m_scene.GetSceneObjectPart(itemID);
-            if (part == null || part.ParentGroup == null)
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (itemID);
+            if (part == null || part.ParentEntity == null)
                 return;
 
-            if (part.ParentGroup.RootPart.AttachedAvatar != remoteClient.AgentId)
+            if (part.ParentEntity.RootChild.AttachedAvatar != remoteClient.AgentId)
                 return;
 
-            UUID inventoryID = part.ParentGroup.GetFromItemID();
+            UUID inventoryID = part.ParentEntity.RootChild.FromUserInventoryItemID;
 
             IScenePresence presence;
             if (m_scene.TryGetScenePresence(remoteClient.AgentId, out presence))
             {
                 string reason;
                 if (!m_scene.Permissions.CanRezObject(
-                    part.ParentGroup.PrimCount, remoteClient.AgentId, presence.AbsolutePosition, out reason))
+                    part.ParentEntity.PrimCount, remoteClient.AgentId, presence.AbsolutePosition, out reason))
                     return;
 
                 IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
@@ -389,7 +389,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
                 AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
 
-                part.ParentGroup.DetachToGround();
+                part.ParentEntity.DetachToGround();
 
                 List<UUID> uuids = new List<UUID>();
                 uuids.Add(inventoryID);
@@ -397,7 +397,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 remoteClient.SendRemoveInventoryItem(inventoryID);
             }
 
-            m_scene.EventManager.TriggerOnAttach(part.ParentGroup.LocalId, itemID, UUID.Zero);
+            m_scene.EventManager.TriggerOnAttach(part.ParentEntity.LocalId, itemID, UUID.Zero);
         }
 
         #endregion

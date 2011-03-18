@@ -687,7 +687,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void SetScriptRunning(IClientAPI controllingClient, UUID objectID, UUID itemID, bool running)
         {
-            SceneObjectPart part = findPrim(objectID);
+            ISceneChildEntity part = findPrim (objectID);
             if (part == null)
                 return;
             
@@ -774,11 +774,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void ProcessScriptReset(IClientAPI remoteClient, UUID objectID,
                 UUID itemID)
         {
-            SceneObjectPart part = findPrim(objectID);
+            ISceneChildEntity part = findPrim (objectID);
             if (part == null)
                 return;
 
-            if (part.ParentGroup.Scene.Permissions.CanResetScript(objectID, itemID, remoteClient.AgentId))
+            if (part.ParentEntity.Scene.Permissions.CanResetScript(objectID, itemID, remoteClient.AgentId))
             {
                 ScriptData ID = ScriptProtection.GetScript(itemID);
                 if (ID == null)
@@ -1309,11 +1309,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Helpers
 
-        public SceneObjectPart findPrim(UUID objectID)
+        public ISceneChildEntity findPrim (UUID objectID)
         {
             foreach (Scene s in m_Scenes)
             {
-                SceneObjectPart part = s.GetSceneObjectPart(objectID);
+                ISceneChildEntity part = s.GetSceneObjectPart (objectID);
                 if (part != null)
                     return part;
             }

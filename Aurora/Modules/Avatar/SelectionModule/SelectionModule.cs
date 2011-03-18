@@ -273,7 +273,7 @@ namespace Aurora.Modules
                     }
                 }
 
-                foreach (IScenePresence client in scene.ScenePresences)
+                foreach (IScenePresence client in scene.GetScenePresences ())
                 {
                     if (client.ControllingClient.AgentId != remoteClient.AgentId)
                         client.ControllingClient.SendViewerEffect(effectBlockArray);

@@ -49,7 +49,11 @@ namespace OpenSim.Region.Framework.Scenes
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public List<ISceneEntity> PhysicsReturns = new List<ISceneEntity> ();
+        private List<ISceneEntity> m_PhysicsReturns = new List<ISceneEntity> ();
+        public List<ISceneEntity> PhysicsReturns
+        {
+            get { return m_PhysicsReturns; }
+        }
 
         /// <value>
         /// The scene graph for this scene
@@ -364,7 +368,7 @@ namespace OpenSim.Region.Framework.Scenes
             IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule> ();
             if (transferModule != null)
             {
-                foreach (IScenePresence avatar in ScenePresences)
+                foreach (IScenePresence avatar in GetScenePresences ())
                 {
                     transferModule.IncomingCloseAgent (this, avatar.UUID);
                 }
@@ -449,7 +453,7 @@ namespace OpenSim.Region.Framework.Scenes
                     List<UUID> avatarUUIDs;
                     SceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60);
                     // Send coarse locations to clients 
-                    foreach (IScenePresence presence in ScenePresences)
+                    foreach (IScenePresence presence in GetScenePresences ())
                     {
                         presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
                     }
@@ -630,7 +634,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>null if the presence was not found</returns>
         public IScenePresence GetScenePresence (UUID agentID)
         {
-            return m_sceneGraph.GetScenePresence(agentID);
+            return m_sceneGraph.GetScenePresence (agentID);
+        }
+
+        public IScenePresence GetScenePresence (uint agentID)
+        {
+            return m_sceneGraph.GetScenePresence (agentID);
         }
 
         /// <summary>
@@ -645,9 +654,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public IScenePresence[] ScenePresences
+        public List<IScenePresence> GetScenePresences ()
         {
-            get { return m_sceneGraph.GetScenePresences(); }
+            return new List<IScenePresence> (m_sceneGraph.GetScenePresences ());
         }
 
         /// <summary>
@@ -655,11 +664,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="localID"></param>
         /// <returns></returns>
-        public SceneObjectPart GetSceneObjectPart(uint localID)
+        public ISceneChildEntity GetSceneObjectPart (uint localID)
         {
             ISceneChildEntity entity;
             m_sceneGraph.TryGetPart(localID, out entity);
-            return entity as SceneObjectPart;
+            return entity;
         }
 
         /// <summary>
@@ -667,11 +676,16 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="fullID"></param>
         /// <returns></returns>
-        public SceneObjectPart GetSceneObjectPart(UUID ObjectID)
+        public ISceneChildEntity GetSceneObjectPart (UUID ObjectID)
         {
             ISceneChildEntity entity;
             m_sceneGraph.TryGetPart(ObjectID, out entity);
             return entity as SceneObjectPart;
+        }
+
+        public bool TryGetPart (UUID objectUUID, out ISceneChildEntity SensedObject)
+        {
+            return m_sceneGraph.TryGetPart (objectUUID, out SensedObject);
         }
 
         /// <summary>
@@ -679,11 +693,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="localID"></param>
         /// <returns>null if no scene object group containing that prim is found</returns>
-        public SceneObjectGroup GetGroupByPrim(uint localID)
+        public ISceneEntity GetGroupByPrim (uint localID)
         {
-            SceneObjectPart part = GetSceneObjectPart(localID);
+            ISceneChildEntity part = GetSceneObjectPart (localID);
             if (part != null)
-                return part.ParentGroup;
+                return part.ParentEntity;
             return null;
         }
 
@@ -780,40 +794,6 @@ namespace OpenSim.Region.Framework.Scenes
             
             //Tell the SceneManager about it
             m_sceneManager.HandleStartupComplete(this, data);
-        }
-
-        #endregion
-
-        #region IScene Members
-
-        List<ISceneEntity> IScene.PhysicsReturns
-        {
-            get { throw new NotImplementedException (); }
-        }
-
-        public List<IScenePresence> GetScenePresences ()
-        {
-            throw new NotImplementedException ();
-        }
-
-        public IScenePresence GetScenePresence (uint killerObjectLocalID)
-        {
-            throw new NotImplementedException ();
-        }
-
-        ISceneChildEntity IScene.GetSceneObjectPart (uint localID)
-        {
-            throw new NotImplementedException ();
-        }
-
-        ISceneChildEntity IScene.GetSceneObjectPart (UUID objectID)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public bool TryGetPart (UUID objecUUID, out ISceneChildEntity SensedObject)
-        {
-            throw new NotImplementedException ();
         }
 
         #endregion

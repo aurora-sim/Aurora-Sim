@@ -27,6 +27,7 @@
 
 using System.Drawing;
 using OpenMetaverse;
+using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
@@ -34,9 +35,9 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
     class SOPObjectMaterial : System.MarshalByRefObject, IObjectMaterial
     {
         private readonly int m_face;
-        private readonly SceneObjectPart m_parent;
+        private readonly ISceneChildEntity m_parent;
 
-        public SOPObjectMaterial(int m_face, SceneObjectPart m_parent)
+        public SOPObjectMaterial (int m_face, ISceneChildEntity m_parent)
         {
             this.m_face = m_face;
             this.m_parent = m_parent;

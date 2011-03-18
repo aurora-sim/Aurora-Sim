@@ -330,6 +330,16 @@ namespace OpenSim.Framework
         uint GetEffectivePermissions ();
 
         void SetRootPartOwner (ISceneChildEntity part, OpenMetaverse.UUID uUID, OpenMetaverse.UUID uUID_2);
+
+        void SetGroup (OpenMetaverse.UUID groupID, IClientAPI remoteClient);
+
+        void ApplyNextOwnerPermissions ();
+
+        bool UpdateInventoryItem (TaskInventoryItem item);
+
+        void DetachToGround ();
+
+        void UpdatePermissions (OpenMetaverse.UUID agentID, byte field, uint localId, uint mask, byte set);
     }
 
     public interface IEntity
@@ -616,6 +626,18 @@ namespace OpenSim.Framework
         int SalePrice { get; set; }
 
         void ApplyNextOwnerPermissions ();
+
+        void ClearUpdateScheduleOnce ();
+
+        void StoreUndoState ();
+
+        EntityIntersection TestIntersectionOBB (Ray NewRay, Quaternion quaternion, bool frontFacesOnly, bool CopyCenters);
+
+        void UpdateShape (OpenMetaverse.Packets.ObjectShapePacket.ObjectDataBlock shapeBlock);
+
+        void Undo ();
+
+        void Redo ();
     }
 
     public interface ISceneGraph

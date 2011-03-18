@@ -174,7 +174,7 @@ namespace Aurora.Modules
 
                 foreach (Scene scene in m_scenes)
                 {
-                    foreach (IScenePresence SP in scene.ScenePresences)
+                    foreach (IScenePresence SP in scene.GetScenePresences ())
                     {
                         //Enable this after we do checking for draw distance!
                         //if (Vector3.Distance(SP.AbsolutePosition, m_avatar.AbsolutePosition) < SP.DrawDistance)

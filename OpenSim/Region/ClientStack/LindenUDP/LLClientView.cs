@@ -5136,7 +5136,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 update.ParentID = 0;
             else
             {
-                SceneObjectPart part = ((Scene)Scene).GetSceneObjectPart(data.ParentID);
+                ISceneChildEntity part = Scene.GetSceneObjectPart (data.ParentID);
                 update.ParentID = part.LocalId;
             }
             update.PathCurve = 16;
@@ -8181,7 +8181,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                     if (taskID != UUID.Zero) // Prim
                     {
-                        SceneObjectPart part = ((Scene)m_scene).GetSceneObjectPart(taskID);
+                        ISceneChildEntity part = m_scene.GetSceneObjectPart (taskID);
 
                         if (part == null)
                         {

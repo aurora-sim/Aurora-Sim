@@ -163,7 +163,7 @@ namespace Aurora.Modules
             report.ScreenshotID = screenshotID;
             if (objectID != UUID.Zero)
             {
-                SceneObjectPart Object = ((Scene)client.Scene).GetSceneObjectPart(objectID);
+                ISceneChildEntity Object = ((Scene)client.Scene).GetSceneObjectPart (objectID);
                 report.ObjectName = Object.Name;
             }
         	else

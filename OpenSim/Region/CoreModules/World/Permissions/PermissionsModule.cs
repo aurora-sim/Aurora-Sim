@@ -715,7 +715,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 permission = true;
             
             // Group members should be able to edit group objects
-            SceneObjectPart part = m_scene.GetSceneObjectPart(objId);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (objId);
             if ((group.GroupID != UUID.Zero)
                 && (part != null && (part.GroupMask & (uint)PermissionMask.Modify) != 0) 
                 && IsGroupMember(group.GroupID, currentUser, (ulong)OpenMetaverse.GroupPowers.ObjectManipulate))
@@ -1029,7 +1029,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            SceneObjectPart part = m_scene.GetSceneObjectPart(objectID);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (objectID);
 
             if (part == null)
             {
@@ -1046,9 +1046,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             {
                 // If we selected a sub-prim to edit, the objectID won't represent the object, but only a part.
                 // We have to check the permissions of the group, though.
-                if (part.ParentGroup != null)
+                if (part.ParentEntity != null)
                 {
-                    objectID = part.ParentGroup.UUID;
+                    objectID = part.ParentEntity.UUID;
                 }
             }
 
@@ -1854,7 +1854,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 if (m_allowedScriptCreators == UserSet.Administrators && !IsAdministrator(userID))
                     return false;
 
-            SceneObjectPart part = m_scene.GetSceneObjectPart(objectID);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (objectID);
             if (part.OwnerID == userID)
                 return true;
 
@@ -1942,7 +1942,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            SceneObjectPart part = m_scene.GetSceneObjectPart(prim);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (prim);
 
             // If we selected a sub-prim to reset, prim won't represent the object, but only a part.
             // We have to check the permissions of the object, though.
@@ -2024,8 +2024,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             
             if (null == m_moapModule)
                 return false;
-            
-            SceneObjectPart part = m_scene.GetSceneObjectPart(primID);
+
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (primID);
             if (null == part)
                 return false;
             
@@ -2050,8 +2050,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             
             if (null == m_moapModule)
                 return false;
-            
-            SceneObjectPart part = m_scene.GetSceneObjectPart(primID);
+
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (primID);
             if (null == part)
                 return false;
             
@@ -2067,8 +2067,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             
             return GenericPrimMediaPermission(part, agentID, me.InteractPermissions);
         }
-        
-        private bool GenericPrimMediaPermission(SceneObjectPart part, UUID agentID, MediaPermission perms)
+
+        private bool GenericPrimMediaPermission (ISceneChildEntity part, UUID agentID, MediaPermission perms)
         {
 //            if (IsAdministrator(agentID))
 //                return true;

@@ -208,13 +208,13 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             return (findPrim(objectID, out unused) != null);
         }
 
-        private SceneObjectPart findPrim(UUID objectID, out string ObjectRegionName)
+        private ISceneChildEntity findPrim (UUID objectID, out string ObjectRegionName)
         {
             lock (m_Scenes)
             {
                 foreach (Scene s in m_Scenes.Values)
                 {
-                    SceneObjectPart part = s.GetSceneObjectPart(objectID);
+                    ISceneChildEntity part = s.GetSceneObjectPart (objectID);
                     if (part != null)
                     {
                         ObjectRegionName = s.RegionInfo.RegionName;
@@ -235,7 +235,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             int objectLocX;
             int objectLocY;
             int objectLocZ;
-            SceneObjectPart part = findPrim(objectID, out m_ObjectRegionName);
+            ISceneChildEntity part = findPrim (objectID, out m_ObjectRegionName);
             if (part != null)
             {
                 objectLocX = (int)part.AbsolutePosition.X;
@@ -299,7 +299,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                 if (!m_localOnly)
                 {
                     string m_ObjectRegionName;
-                    SceneObjectPart part = findPrim(objectID, out m_ObjectRegionName);
+                    ISceneChildEntity part = findPrim (objectID, out m_ObjectRegionName);
                     if (part != null)
                     {
                         lock (m_Scenes)

@@ -1256,7 +1256,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (cmdparams.Length > 2)
             {
                 UUID id = UUID.Zero;
-                SceneObjectGroup grp = null;
+                ISceneEntity grp = null;
                 Scene sc = null;
 
                 if (!UUID.TryParse(cmdparams[2], out id))
@@ -1267,11 +1267,11 @@ namespace OpenSim.Region.Framework.Scenes
 
                 ForEachScene(delegate(Scene scene)
                 {
-                    SceneObjectPart part = scene.GetSceneObjectPart(id);
+                    ISceneChildEntity part = scene.GetSceneObjectPart (id);
                     if (part == null)
                         return;
 
-                    grp = part.ParentGroup;
+                    grp = part.ParentEntity;
                     sc = scene;
                 });
 
@@ -1286,7 +1286,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         IBackupModule backup = sc.RequestModuleInterface<IBackupModule>();
                         if (backup != null)
-                            backup.DeleteSceneObjects(new SceneObjectGroup[1] { grp }, true);
+                            backup.DeleteSceneObjects (new ISceneEntity[1] { grp }, true);
                     }
                     catch (Exception e)
                     {

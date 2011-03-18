@@ -166,7 +166,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                             );
 
                             //This does modify this list, but we make a copy of it
-                            foreach (IScenePresence p in m_scene.ScenePresences)
+                            foreach (IScenePresence p in m_scene.GetScenePresences ())
                             {
                                 if (p.UUID != godID)
                                 {

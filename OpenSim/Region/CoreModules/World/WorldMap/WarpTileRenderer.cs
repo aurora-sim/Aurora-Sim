@@ -253,9 +253,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             if (prim.ParentID != 0)
             {
-                SceneObjectGroup group = m_scene.GetGroupByPrim(prim.LocalId);
+                ISceneEntity group = m_scene.GetGroupByPrim (prim.LocalId);
                 if (group != null)
-                    m.transform(warp_Matrix.quaternionMatrix(ConvertQuaternion(group.RootPart.RotationOffset)));
+                    m.transform(warp_Matrix.quaternionMatrix(ConvertQuaternion(group.RootChild.RotationOffset)));
             }
 
             warp_Vector primScale = ConvertVector(prim.Scale);

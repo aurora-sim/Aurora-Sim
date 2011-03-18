@@ -1861,7 +1861,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="part"></param>
         /// <param name="cAgentID"></param>
         /// <param name="cGroupID"></param>
-        public void SetRootPartOwner(SceneObjectPart part, UUID cAgentID, UUID cGroupID)
+        public void SetRootPartOwner(ISceneChildEntity part, UUID cAgentID, UUID cGroupID)
         {
             part.LastOwnerID = part.OwnerID;
             part.OwnerID = cAgentID;

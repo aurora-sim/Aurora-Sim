@@ -91,11 +91,11 @@ namespace OpenSim.Region.CoreModules.World.Sound
         public virtual void PlayAttachedSound(
             UUID soundID, UUID ownerID, UUID objectID, double gain, Vector3 position, byte flags, float radius)
         {
-            SceneObjectPart part = m_scene.GetSceneObjectPart(objectID);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (objectID);
             if (part == null)
                 return;
 
-            SceneObjectGroup grp = part.ParentGroup;
+            ISceneEntity grp = part.ParentEntity;
 
             bool LocalOnly = false;
             ILandObject ILO = null;
@@ -179,7 +179,7 @@ namespace OpenSim.Region.CoreModules.World.Sound
         public virtual void AddConeOfSilence(UUID objectID, Vector3 position, double Radius)
         {
             //Must have parcel owner permissions, too many places for abuse in this
-            SceneObjectGroup group = m_scene.GetSceneObjectPart(objectID).ParentGroup;
+            ISceneEntity group = m_scene.GetSceneObjectPart (objectID).ParentEntity;
             IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
             {
@@ -210,7 +210,7 @@ namespace OpenSim.Region.CoreModules.World.Sound
                 if (ILO != null) //Check only if null, otherwise this breaks megaregions
                     LocalOnly = (ILO.LandData.Flags & (uint)ParcelFlags.SoundLocal) == (uint)ParcelFlags.SoundLocal;
             }
-            SceneObjectPart part = m_scene.GetSceneObjectPart(objectID);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart (objectID);
             if (part == null)
             {
                 IScenePresence sp;
@@ -219,7 +219,7 @@ namespace OpenSim.Region.CoreModules.World.Sound
             }
             else
             {
-                SceneObjectGroup grp = part.ParentGroup;
+                ISceneEntity grp = part.ParentEntity;
 
                 if (grp.IsAttachment && grp.GetAttachmentPoint() > 30)
                 {

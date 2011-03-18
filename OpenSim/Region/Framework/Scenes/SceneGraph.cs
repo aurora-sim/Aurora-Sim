@@ -184,7 +184,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (sp.ParentID != UUID.Zero)
                 {
                     // sitting avatar
-                    SceneObjectPart sop = m_parentScene.GetSceneObjectPart(sp.ParentID);
+                    ISceneChildEntity sop = m_parentScene.GetSceneObjectPart (sp.ParentID);
                     if (sop != null)
                     {
                         coarseLocations.Add(sop.AbsolutePosition + sp.OffsetPosition);
@@ -214,9 +214,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (primId != UUID.Zero)
             {
-                SceneObjectPart part = m_parentScene.GetSceneObjectPart(primId);
+                ISceneChildEntity part = m_parentScene.GetSceneObjectPart (primId);
                 if (part != null)
-
                     if (m_parentScene.Permissions.CanEditObject(part.UUID, remoteClient.AgentId))
                         part.Undo();
             }
@@ -226,7 +225,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (primId != UUID.Zero)
             {
-                SceneObjectPart part = m_parentScene.GetSceneObjectPart(primId);
+                ISceneChildEntity part = m_parentScene.GetSceneObjectPart (primId);
                 if (part != null)
                     if (m_parentScene.Permissions.CanEditObject(part.UUID, remoteClient.AgentId))
                         part.Redo();
@@ -683,7 +682,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (RayTargetID != UUID.Zero)
             {
-                SceneObjectPart target = m_parentScene.GetSceneObjectPart(RayTargetID);
+                ISceneChildEntity target = m_parentScene.GetSceneObjectPart (RayTargetID);
 
                 Vector3 direction = Vector3.Normalize(RayEnd - RayStart);
                 Vector3 AXOrigin = new Vector3(RayStart.X, RayStart.Y, RayStart.Z);
@@ -840,8 +839,8 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 pos;
             const bool frontFacesOnly = true;
             //m_log.Info("HITTARGET: " + RayTargetObj.ToString() + ", COPYTARGET: " + localID.ToString());
-            SceneObjectPart target = m_parentScene.GetSceneObjectPart(localID);
-            SceneObjectPart target2 = m_parentScene.GetSceneObjectPart(RayTargetObj);
+            ISceneChildEntity target = m_parentScene.GetSceneObjectPart (localID);
+            ISceneChildEntity target2 = m_parentScene.GetSceneObjectPart (RayTargetObj);
             IScenePresence Sp = GetScenePresence (AgentID);
             if (target != null && target2 != null)
             {
@@ -854,7 +853,7 @@ namespace OpenSim.Region.Framework.Scenes
                 Vector3 AXOrigin = new Vector3(RayStart.X, RayStart.Y, RayStart.Z);
                 Vector3 AXdirection = new Vector3(direction.X, direction.Y, direction.Z);
 
-                if (target2.ParentGroup != null)
+                if (target2.ParentEntity != null)
                 {
                     pos = target2.AbsolutePosition;
                     //m_log.Info("[OBJECTREZ]: TargetPos: " + pos.ToString() + ", RayStart: " + RayStart.ToString() + ", RayEnd: " + RayEnd.ToString() + ", Volume: " + Util.GetDistanceTo(RayStart,RayEnd).ToString() + ", mag1: " + Util.GetMagnitude(RayStart).ToString() + ", mag2: " + Util.GetMagnitude(RayEnd).ToString());
@@ -886,7 +885,7 @@ namespace OpenSim.Region.Framework.Scenes
                         pos = intersectionpoint + offset;
 
                         // stick in offset format from the original prim
-                        pos = pos - target.ParentGroup.AbsolutePosition;
+                        pos = pos - target.ParentEntity.AbsolutePosition;
                         if (CopyRotates)
                         {
                             Quaternion worldRot = target2.GetWorldRotation();
@@ -951,16 +950,16 @@ namespace OpenSim.Region.Framework.Scenes
                     return;
             }
 
-            List<SceneObjectGroup> groups = new List<SceneObjectGroup>();
+            List<ISceneEntity> groups = new List<ISceneEntity> ();
 
             foreach (uint localID in localIDs)
             {
-                SceneObjectPart part = m_parentScene.GetSceneObjectPart(localID);
-                if (!groups.Contains(part.ParentGroup))
-                    groups.Add(part.ParentGroup);
+                ISceneChildEntity part = m_parentScene.GetSceneObjectPart (localID);
+                if (!groups.Contains(part.ParentEntity))
+                    groups.Add(part.ParentEntity);
             }
 
-            foreach (SceneObjectGroup sog in groups)
+            foreach (ISceneEntity sog in groups)
             {
                 if (ownerID != UUID.Zero)
                 {
@@ -968,7 +967,7 @@ namespace OpenSim.Region.Framework.Scenes
                     sog.SetGroup(groupID, remoteClient);
                     sog.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
 
-                    foreach (SceneObjectPart child in sog.ChildrenList)
+                    foreach (ISceneChildEntity child in sog.ChildrenEntities())
                         child.Inventory.ChangeInventoryOwner(ownerID);
                 }
                 else
@@ -979,7 +978,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (sog.GroupID != groupID)
                         continue;
 
-                    foreach (SceneObjectPart child in sog.ChildrenList)
+                    foreach (ISceneChildEntity child in sog.ChildrenEntities())
                     {
                         child.LastOwnerID = child.OwnerID;
                         child.Inventory.ChangeInventoryOwner(groupID);
@@ -994,7 +993,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             foreach (uint localID in localIDs)
             {
-                SceneObjectPart part = m_parentScene.GetSceneObjectPart(localID);
+                ISceneChildEntity part = m_parentScene.GetSceneObjectPart (localID);
                 part.GetProperties(remoteClient);
             }
         }
@@ -1037,7 +1036,7 @@ namespace OpenSim.Region.Framework.Scenes
                 // Tell the object to do permission update
                 if (localId != 0)
                 {
-                    SceneObjectGroup chObjectGroup = m_parentScene.GetGroupByPrim(localId);
+                    ISceneEntity chObjectGroup = m_parentScene.GetGroupByPrim (localId);
                     if (chObjectGroup != null)
                     {
                         if (m_parentScene.Permissions.CanEditObject(chObjectGroup.UUID, controller.AgentId))
@@ -1334,10 +1333,10 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                 {
-                    SceneObjectPart part = m_parentScene.GetSceneObjectPart(LocalID);
+                    ISceneChildEntity part = m_parentScene.GetSceneObjectPart(LocalID);
                     part.ClickAction = Convert.ToByte(clickAction);
-                    ((SceneObjectGroup)group).HasGroupChanged = true;
-                    ((SceneObjectGroup)group).ScheduleGroupUpdate(PrimUpdateFlags.ClickAction);
+                    ((ISceneEntity)group).HasGroupChanged = true;
+                    ((ISceneEntity)group).ScheduleGroupUpdate (PrimUpdateFlags.ClickAction);
                 }
             }
         }
@@ -1349,10 +1348,10 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                 {
-                    SceneObjectPart part = m_parentScene.GetSceneObjectPart(LocalID);
+                    ISceneChildEntity part = m_parentScene.GetSceneObjectPart (LocalID);
                     part.Material = Convert.ToByte(material);
-                    ((SceneObjectGroup)group).HasGroupChanged = true;
-                    ((SceneObjectGroup)group).ScheduleGroupUpdate(PrimUpdateFlags.ClickAction);
+                    ((ISceneEntity)group).HasGroupChanged = true;
+                    ((ISceneEntity)group).ScheduleGroupUpdate (PrimUpdateFlags.ClickAction);
                 }
             }
         }
@@ -1526,16 +1525,16 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void DelinkObjects(List<uint> primIds, IClientAPI client)
         {
-            List<SceneObjectPart> parts = new List<SceneObjectPart>();
+            List<ISceneChildEntity> parts = new List<ISceneChildEntity> ();
 
             foreach (uint localID in primIds)
             {
-                SceneObjectPart part = m_parentScene.GetSceneObjectPart(localID);
+                ISceneChildEntity part = m_parentScene.GetSceneObjectPart (localID);
 
                 if (part == null)
                     continue;
 
-                if (m_parentScene.Permissions.CanDelinkObject(client.AgentId, part.ParentGroup.RootPart.UUID))
+                if (m_parentScene.Permissions.CanDelinkObject(client.AgentId, part.ParentEntity.UUID))
                     parts.Add(part);
             }
 
@@ -1546,8 +1545,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             List<UUID> owners = new List<UUID>();
 
-            List<SceneObjectPart> children = new List<SceneObjectPart>();
-            SceneObjectPart root = m_parentScene.GetSceneObjectPart(parentPrimId);
+            List<ISceneChildEntity> children = new List<ISceneChildEntity> ();
+            ISceneChildEntity root = m_parentScene.GetSceneObjectPart (parentPrimId);
 
             if (root == null)
             {
@@ -1555,7 +1554,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            if (!m_parentScene.Permissions.CanLinkObject(client.AgentId, root.ParentGroup.RootPart.UUID))
+            if (!m_parentScene.Permissions.CanLinkObject(client.AgentId, root.ParentEntity.UUID))
             {
                 m_log.DebugFormat("[LINK]: Refusing link. No permissions on root prim");
                 return;
@@ -1563,7 +1562,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             foreach (uint localID in childPrimIds)
             {
-                SceneObjectPart part = m_parentScene.GetSceneObjectPart(localID);
+                ISceneChildEntity part = m_parentScene.GetSceneObjectPart (localID);
 
                 if (part == null)
                     continue;
@@ -1571,7 +1570,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!owners.Contains(part.OwnerID))
                     owners.Add(part.OwnerID);
 
-                if (m_parentScene.Permissions.CanLinkObject(client.AgentId, part.ParentGroup.RootPart.UUID))
+                if (m_parentScene.Permissions.CanLinkObject(client.AgentId, part.ParentEntity.UUID))
                     children.Add(part);
             }
 
@@ -1626,28 +1625,28 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="client"></param>
         /// <param name="parentPrim"></param>
         /// <param name="childPrims"></param>
-        protected internal void LinkObjects(SceneObjectPart root, List<SceneObjectPart> children)
+        protected internal void LinkObjects (ISceneChildEntity root, List<ISceneChildEntity> children)
         {
             Monitor.Enter(m_updateLock);
             try
             {
-                SceneObjectGroup parentGroup = root.ParentGroup;
+                ISceneEntity parentGroup = root.ParentEntity;
 
-                List<SceneObjectGroup> childGroups = new List<SceneObjectGroup>();
+                List<ISceneEntity> childGroups = new List<ISceneEntity> ();
                 if (parentGroup != null)
                 {
                     // We do this in reverse to get the link order of the prims correct
                     for (int i = children.Count - 1; i >= 0; i--)
                     {
-                        SceneObjectGroup child = children[i].ParentGroup;
+                        ISceneEntity child = children[i].ParentEntity;
 
                         if (child != null)
                         {
                             // Make sure no child prim is set for sale
                             // So that, on delink, no prims are unwittingly
                             // left for sale and sold off
-                            child.RootPart.ObjectSaleType = 0;
-                            child.RootPart.SalePrice = 10;
+                            child.RootChild.ObjectSaleType = 0;
+                            child.RootChild.SalePrice = 10;
                             childGroups.Add(child);
                         }
                     }
@@ -1657,7 +1656,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return; // parent is null so not in this region
                 }
 
-                foreach (SceneObjectGroup child in childGroups)
+                foreach (ISceneEntity child in childGroups)
                 {
                     parentGroup.LinkToGroup(child);
 
@@ -1668,7 +1667,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 // We need to explicitly resend the newly link prim's object properties since no other actions
                 // occur on link to invoke this elsewhere (such as object selection)
-                parentGroup.RootPart.CreateSelected = true;
+                parentGroup.RootChild.CreateSelected = true;
                 parentGroup.HasGroupChanged = true;
                 //parentGroup.RootPart.SendFullUpdateToAllClients(PrimUpdateFlags.FullUpdate);
                 //parentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
@@ -1685,55 +1684,55 @@ namespace OpenSim.Region.Framework.Scenes
         /// Delink a linkset
         /// </summary>
         /// <param name="prims"></param>
-        protected internal void DelinkObjects(List<SceneObjectPart> prims)
+        protected internal void DelinkObjects (List<ISceneChildEntity> prims)
         {
             Monitor.Enter(m_updateLock);
             try
             {
-                List<SceneObjectPart> childParts = new List<SceneObjectPart>();
-                List<SceneObjectPart> rootParts = new List<SceneObjectPart>();
-                List<SceneObjectGroup> affectedGroups = new List<SceneObjectGroup>();
+                List<ISceneChildEntity> childParts = new List<ISceneChildEntity> ();
+                List<ISceneChildEntity> rootParts = new List<ISceneChildEntity> ();
+                List<ISceneEntity> affectedGroups = new List<ISceneEntity> ();
                 // Look them all up in one go, since that is comparatively expensive
                 //
-                foreach (SceneObjectPart part in prims)
+                foreach (ISceneChildEntity part in prims)
                 {
                     if (part != null)
                     {
-                        if (part.ParentGroup.ChildrenList.Count != 1) // Skip single
+                        if (part.ParentEntity.PrimCount != 1) // Skip single
                         {
                             if (part.LinkNum < 2) // Root
                                 rootParts.Add(part);
                             else
                                 childParts.Add(part);
 
-                            SceneObjectGroup group = part.ParentGroup;
+                            ISceneEntity group = part.ParentEntity;
                             if (!affectedGroups.Contains(group))
                                 affectedGroups.Add(group);
                         }
                     }
                 }
 
-                foreach (SceneObjectPart child in childParts)
+                foreach (ISceneChildEntity child in childParts)
                 {
                     // Unlink all child parts from their groups
                     //
-                    child.ParentGroup.DelinkFromGroup(child, true);
+                    child.ParentEntity.DelinkFromGroup(child, true);
 
                     // These are not in affected groups and will not be
                     // handled further. Do the honors here.
-                    child.ParentGroup.HasGroupChanged = true;
-                    child.ParentGroup.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                    child.ParentEntity.HasGroupChanged = true;
+                    child.ParentEntity.ScheduleGroupUpdate (PrimUpdateFlags.FullUpdate);
                 }
 
-                foreach (SceneObjectPart root in rootParts)
+                foreach (ISceneChildEntity root in rootParts)
                 {
                     // In most cases, this will run only one time, and the prim
                     // will be a solo prim
                     // However, editing linked parts and unlinking may be different
                     //
-                    SceneObjectGroup group = root.ParentGroup;
-                    List<SceneObjectPart> newSet = new List<SceneObjectPart>(group.ChildrenList);
-                    int numChildren = group.ChildrenList.Count;
+                    ISceneEntity group = root.ParentEntity;
+                    List<ISceneChildEntity> newSet = new List<ISceneChildEntity> (group.ChildrenEntities());
+                    int numChildren = group.PrimCount;
 
                     // If there are prims left in a link set, but the root is
                     // slated for unlink, we need to do this
@@ -1746,9 +1745,9 @@ namespace OpenSim.Region.Framework.Scenes
                         if (numChildren > 1)
                             sendEventsToRemainder = false;
 
-                        foreach (SceneObjectPart p in newSet)
+                        foreach (ISceneChildEntity p in newSet)
                         {
-                            if (p != group.RootPart)
+                            if (p != group.RootChild)
                                 group.DelinkFromGroup(p, sendEventsToRemainder);
                         }
 
@@ -1768,29 +1767,29 @@ namespace OpenSim.Region.Framework.Scenes
 
                             // Determine new root
                             //
-                            SceneObjectPart newRoot = newSet[0];
+                            ISceneChildEntity newRoot = newSet[0];
                             newSet.RemoveAt(0);
 
-                            foreach (SceneObjectPart newChild in newSet)
+                            foreach (ISceneChildEntity newChild in newSet)
                                 newChild.ClearUpdateScheduleOnce();
 
                             LinkObjects(newRoot, newSet);
-                            if (!affectedGroups.Contains(newRoot.ParentGroup))
-                                affectedGroups.Add(newRoot.ParentGroup);
+                            if (!affectedGroups.Contains(newRoot.ParentEntity))
+                                affectedGroups.Add (newRoot.ParentEntity);
                         }
                     }
                 }
 
                 // Finally, trigger events in the roots
                 //
-                foreach (SceneObjectGroup g in affectedGroups)
+                foreach (ISceneEntity g in affectedGroups)
                 {
                     g.TriggerScriptChangedEvent(Changed.LINK);
                     g.HasGroupChanged = true; // Persist
                     g.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
                 }
                 //Fix undo states now that the linksets have been changed
-                foreach (SceneObjectPart part in prims)
+                foreach (ISceneChildEntity part in prims)
                 {
                     part.StoreUndoState();
                 }

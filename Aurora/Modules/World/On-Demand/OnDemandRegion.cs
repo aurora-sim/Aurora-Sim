@@ -119,7 +119,7 @@ namespace Aurora.Modules.World.On_Demand
 
         private void OnRemovePresence (IScenePresence presence)
         {
-            if (m_scene.ScenePresences.Length == 1) //This presence hasn't been removed yet, so we check against one
+            if (m_scene.GetScenePresences ().Count == 1) //This presence hasn't been removed yet, so we check against one
             {
                 //If all clients are out of the region, we can close it again
                 if (m_scene.RegionInfo.Startup == StartupType.Medium)
