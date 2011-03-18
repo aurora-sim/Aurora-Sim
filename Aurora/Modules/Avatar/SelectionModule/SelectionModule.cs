@@ -165,12 +165,10 @@ namespace Aurora.Modules
                         }
                     }
                 }
-                IEntity entitybase;
                 //Check for avies! They arn't prims!
-                if (scene.SceneGraph.TryGetEntity(primLocalID, out entitybase))
+                if (scene.GetScenePresence(primLocalID) != null)
                 {
-                    if (entitybase is IScenePresence)
-                        continue;
+                    continue;
                 }
                 if (entity != null)
                     EntitiesToUpdate.Add(entity);
