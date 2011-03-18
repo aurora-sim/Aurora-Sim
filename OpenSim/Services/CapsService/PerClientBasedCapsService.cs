@@ -171,18 +171,14 @@ namespace OpenSim.Services.CapsService
             if (!m_RegionCapsServices.ContainsKey(regionHandle))
                 return;
 
-            //Remove all the CAPS handlers
-            if (m_RegionCapsServices.ContainsKey (regionHandle))
-            {
-                m_RegionCapsServices[regionHandle].Close ();
-                m_RegionCapsServices.Remove (regionHandle);
-            }
-
             //Remove the agent from the region caps
             IRegionCapsService regionCaps = m_CapsService.GetCapsForRegion(regionHandle);
-            if (regionCaps == null)
-                return;
-            regionCaps.RemoveClientFromRegion(m_RegionCapsServices[regionHandle]);
+            if (regionCaps != null)
+                regionCaps.RemoveClientFromRegion(m_RegionCapsServices[regionHandle]);
+
+            //Remove all the CAPS handlers
+            m_RegionCapsServices[regionHandle].Close ();
+            m_RegionCapsServices.Remove (regionHandle);
         }
     }
 }

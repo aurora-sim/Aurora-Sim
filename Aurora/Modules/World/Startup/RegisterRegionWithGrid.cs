@@ -43,10 +43,9 @@ namespace Aurora.Modules
             m_scenes.Add(scene);
             //Register the interface
             scene.RegisterModuleInterface<IGridRegisterModule>(this);
+            openSimBase.EventManager.OnGenericEvent += OnGenericEvent;
             //Now register our region with the grid
             RegisterRegionWithGrid(scene);
-
-            openSimBase.EventManager.OnGenericEvent += OnGenericEvent;
         }
 
         object OnGenericEvent(string FunctionName, object parameters)
@@ -55,7 +54,7 @@ namespace Aurora.Modules
             {
                 object[] o = (object[])parameters;
                 OSDMap map = (OSDMap)o[1];
-                if (m_timer != null)
+                if (m_timer == null)
                 {
                     m_timer = new Timer();
                     //Give it an extra minute after making hours into milliseconds
@@ -78,6 +77,10 @@ namespace Aurora.Modules
                     map["Method"] = "RegisterHandlers";
                     syncMessagePoster.Post(map, scene.RegionInfo.RegionHandle);
                 }
+            }
+            else
+            {
+                m_log.ErrorFormat("[RegisterRegionWithGrid]: ISyncMessagePosterService was null in m_timer_Elapsed;");
             }
         }
 

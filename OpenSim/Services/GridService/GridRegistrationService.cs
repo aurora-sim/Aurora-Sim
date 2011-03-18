@@ -118,7 +118,7 @@ namespace OpenSim.Services.GridService
         /// <returns></returns>
         OSDMap OnMessageReceived(OSDMap message)
         {
-            if (message.ContainsKey("Method") && message["Method"] == "RegisterHandlers")
+            if (message.ContainsKey("Method") && message["Method"].AsString() == "RegisterHandlers")
             {
                 ulong regionHandle = message["RegionHandle"].AsULong();
                 if (CheckThreatLevel("", regionHandle, "RegisterHandlers", ThreatLevel.None))
