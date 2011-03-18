@@ -1818,7 +1818,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             try
             {
                 OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
-                if (map.ContainsKey("region_id") && map.ContainsKey("location"))
+                if ((map.ContainsKey("region_id") || map.ContainsKey("region_handle")) && map.ContainsKey("location"))
                 {
                     UUID regionID = map["region_id"].AsUUID();
                     OSDArray list = (OSDArray)map["location"];
@@ -1849,6 +1849,11 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 m_log.ErrorFormat("[LAND] Fetch error: {0}", e.Message);
                 m_log.ErrorFormat("[LAND] ... in request {0}", request);
+            }
+
+            if (parcelID == UUID.Zero)
+            {
+                m_log.Warn ("[Land]: Failed to find parcel, " + request);
             }
 
             OSDMap res = new OSDMap();

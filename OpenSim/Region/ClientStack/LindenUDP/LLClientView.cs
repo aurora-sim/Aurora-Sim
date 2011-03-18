@@ -345,7 +345,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// All manipulation of this set has to occur under an m_entityUpdates.SyncRoot lock
         ///
         /// </value>
-        protected HashSet<uint> m_killRecord = new HashSet<uint>();
+        //protected HashSet<uint> m_killRecord = new HashSet<uint>();
 
 //        protected HashSet<uint> m_attachmentsSent;
 
@@ -442,7 +442,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             m_scene = scene;
 
             m_entityUpdates = new PriorityQueue<EntityUpdate, double>(m_scene.Entities.Count > 1000 ? m_scene.Entities.Count : 1000);
-            m_killRecord = new HashSet<uint>();
+            //m_killRecord = new HashSet<uint>();
 //            m_attachmentsSent = new HashSet<uint>();
 
             m_assetService = m_scene.RequestModuleInterface<IAssetService>();
@@ -478,7 +478,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void Reset()
         {
             //Reset the killObjectUpdate packet stats
-            m_killRecord = new HashSet<uint>();
+            //m_killRecord = new HashSet<uint>();
         }
 
         public void SetDebugPacketLevel(int newDebug)
@@ -1536,7 +1536,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     continue;
                 }
 
-                if ((entity is SceneObjectPart &&
+                /*if ((entity is SceneObjectPart &&
                     ((SceneObjectPart)entity).IsAttachment) ||
                     (entity is SceneObjectGroup &&
                     ((SceneObjectGroup)entity).RootPart.IsAttachment))
@@ -1544,7 +1544,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     // Do nothing
                 }
                 else if(entity is SceneObjectPart)
-                    m_killRecord.Add(entity.LocalId);
+                    m_killRecord.Add(entity.LocalId);*/
                 KillObjectPacket.ObjectDataBlock block = new KillObjectPacket.ObjectDataBlock();
                 block.ID = entity.LocalId;
                 kill.ObjectData[i] = block;
@@ -1590,7 +1590,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             int i = 0;
             foreach (uint entity in entities)
             {
-                m_killRecord.Add(entity);
+                //m_killRecord.Add(entity);
                 KillObjectPacket.ObjectDataBlock block = new KillObjectPacket.ObjectDataBlock();
                 block.ID = entity;
                 kill.ObjectData[i] = block;
@@ -3614,13 +3614,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 //
                 // This doesn't appear to apply to child prims - a client will happily ignore these updates
                 // after the root prim has been deleted.
-                if (m_killRecord.Contains(entity.LocalId))
+                /*if (m_killRecord.Contains(entity.LocalId))
                     {
                     m_log.ErrorFormat(
                         "[CLIENT]: Preventing update for prim with local id {0} after client for user {1} told it was deleted. Mantis this at http://mantis.aurora-sim.org/bug_report_page.php !",
                         entity.LocalId, Name);
                     return;
-                    }
+                    }*/
 
                 IObjectCache module = Scene.RequestModuleInterface<IObjectCache>();
                 if (module != null)
@@ -3867,13 +3867,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 //
                 // This doesn't appear to apply to child prims - a client will happily ignore these updates
                 // after the root prim has been deleted.
-                if (m_killRecord.Contains(entity.LocalId))
+                /*if (m_killRecord.Contains(entity.LocalId))
                     {
                     m_log.ErrorFormat(
                         "[CLIENT]: Preventing update for prim with local id {0} after client for user {1} told it was deleted. Mantis this at http://mantis.aurora-sim.org/bug_report_page.php !",
                         entity.LocalId, Name);
                     return;
-                    }
+                    }*/
 
                 IObjectCache module = Scene.RequestModuleInterface<IObjectCache>();
                 if (module != null)
@@ -4167,13 +4167,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         //
                         // This doesn't appear to apply to child prims - a client will happily ignore these updates
                         // after the root prim has been deleted.
-                        if (m_killRecord.Contains(update.Value.Entity.LocalId))
+                        /*if (m_killRecord.Contains(update.Value.Entity.LocalId))
                         {
                                 m_log.ErrorFormat(
                                     "[CLIENT]: Preventing update for prim with local id {0} after client for user {1} told it was deleted. Mantis this at http://mantis.aurora-sim.org/bug_report_page.php !",
                                     update.Value.Entity.LocalId, Name);
                             continue;
-                        }
+                        }*/
 
                         IObjectCache module = Scene.RequestModuleInterface<IObjectCache>();
                         if (module != null)
