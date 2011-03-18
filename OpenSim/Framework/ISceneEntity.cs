@@ -183,7 +183,6 @@ namespace OpenSim.Framework
         bool InitialHasWearablesBeenSent { get; set; }
         void SendAppearanceToAgent (IScenePresence sp);
         void SendAvatarDataToAgent (IScenePresence sp);
-        void SetHeight (float p);
         void SendOtherAgentsAppearanceToMe ();
         void SendAppearanceToAllOtherAgents ();
         void SendAvatarDataToAllAgents ();

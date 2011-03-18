@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using Nini.Config;
 using Aurora.Simulation.Base;
@@ -11,6 +12,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using log4net;
 
 namespace OpenSim.Services.GridService
 {
@@ -18,6 +20,7 @@ namespace OpenSim.Services.GridService
     {
         #region Declares
 
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected Dictionary<string, IGridRegistrationUrlModule> m_modules = new Dictionary<string, IGridRegistrationUrlModule>();
         protected LoadBalancerUrls m_loadBalancer = new LoadBalancerUrls();
         protected IGenericsConnector m_genericsConnector;
@@ -115,7 +118,7 @@ namespace OpenSim.Services.GridService
         /// <returns></returns>
         OSDMap OnMessageReceived(OSDMap message)
         {
-            if (message.ContainsKey("Method") && message["Method"] == "RegisterHandlers")
+            if (message.ContainsKey("Method") && message["Method"].AsString() == "RegisterHandlers")
             {
                 ulong regionHandle = message["RegionHandle"].AsULong();
                 if (CheckThreatLevel("", regionHandle, "RegisterHandlers", ThreatLevel.None))
@@ -230,7 +233,10 @@ namespace OpenSim.Services.GridService
             {
                 urls.Expiration = DateTime.Now.AddHours(m_timeBeforeTimeout);
                 m_genericsConnector.AddGeneric(UUID.Zero, "GridRegistrationUrls", RegionHandle.ToString(), urls.ToOSD());
+                m_log.WarnFormat("[GridRegistrationService]: Updated URLs for {0}", RegionHandle);
             }
+            else
+                m_log.ErrorFormat("[GridRegistrationService]: Failed to find URLs to update for {0}", RegionHandle);
         }
 
         public void RegisterModule(IGridRegistrationUrlModule module)

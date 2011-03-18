@@ -90,6 +90,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             scene.RegisterModuleInterface<IAvatarFactory>(this);
             scene.EventManager.OnNewClient += NewClient;
             scene.EventManager.OnClosingClient += RemoveClient;
+            scene.EventManager.OnNewPresence += EventManager_OnNewPresence;
 
             MainConsole.Instance.Commands.AddCommand("region", false, "force send appearance", "force send appearance",
                 "Force send the avatar's appearance", HandleConsoleForceSendAppearance);
@@ -105,6 +106,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             scene.UnregisterModuleInterface<IAvatarFactory>(this);
             scene.EventManager.OnNewClient -= NewClient;
             scene.EventManager.OnClosingClient -= RemoveClient;
+            scene.EventManager.OnNewPresence -= EventManager_OnNewPresence;
         }
 
         public void RegionLoaded(Scene scene)
@@ -719,7 +721,13 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
         #endregion
 
-        public class AvatarApperanceModule
+        void EventManager_OnNewPresence (IScenePresence presence)
+        {
+            AvatarApperanceModule m = new AvatarApperanceModule (presence);
+            presence.RegisterModuleInterface<IAvatarAppearanceModule> (m);
+        }
+
+        public class AvatarApperanceModule : IAvatarAppearanceModule
         {
             public IScenePresence m_sp;
             private bool m_InitialHasWearablesBeenSent = false;

@@ -543,7 +543,13 @@ namespace OpenSim.Region.Framework.Scenes
 
                 //Create the scenepresence
                 IScenePresence sp = m_sceneGraph.CreateAndAddChildScenePresence (client);
-                
+                sp.IsChildAgent = aCircuit.child;
+
+                m_clientManager.Add(client);
+
+                //Trigger events
+                m_eventManager.TriggerOnNewPresence (sp);
+
                 //Make sure the appearanace is updated
                 if (aCircuit != null)
                 {
@@ -551,12 +557,6 @@ namespace OpenSim.Region.Framework.Scenes
                     if (appearance != null)
                         appearance.Appearance = aCircuit.Appearance;
                 }
-                sp.IsChildAgent = aCircuit.child;
-
-                m_clientManager.Add(client);
-
-                //Trigger events
-                m_eventManager.TriggerOnNewPresence(sp);
 
                 if (GetScenePresence(client.AgentId) != null)
                 {

@@ -36,12 +36,12 @@ namespace OpenSim.Framework
 {
     public class EntityManager
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
         private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, EntityBase> m_entities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, EntityBase> ();
         private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, ISceneEntity> m_objectEntities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, ISceneEntity> ();
         private readonly Dictionary<UUID, IScenePresence> m_presenceEntities = new Dictionary<UUID, IScenePresence> ();
         private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID> m_child_2_parent_entities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID> ();
-        
+
         public int Count
         {
             get { return m_objectEntities.Count + m_presenceEntities.Count; }
@@ -178,56 +178,67 @@ namespace OpenSim.Framework
             }
         }
 
-        public bool TryGetValue(UUID key, out IEntity obj)
+        public bool TryGetValue (UUID key, out IEntity obj)
         {
-            return InternalTryGetValue(key, true, out obj);
+            return InternalTryGetValue (key, true, out obj);
         }
 
         private bool InternalTryGetValue (UUID key, bool checkRecursive, out IEntity obj)
         {
             IScenePresence presence;
+            bool gotit;
             lock (m_presenceEntities)
+                gotit = m_presenceEntities.TryGetValue (key, out presence);
+            if (!gotit)
             {
-                if (!m_presenceEntities.TryGetValue (key, out presence))
+                ISceneEntity presence2;
+                lock (m_objectEntities)
+                    gotit = m_objectEntities.TryGetValue (key, out presence2);
+
+                //Deal with the possibility we may have been asked for a child prim
+                if ((!gotit) && checkRecursive)
+                    return TryGetChildPrimParent (key, out obj);
+                else if (gotit)
                 {
-                    lock (m_objectEntities)
-                    {
-                        ISceneEntity entity;
-                        if (!m_objectEntities.TryGetValue (key, out entity) && checkRecursive)
-                        {
-                            //Deal with the possibility we may have been asked for a child prim
-                            return TryGetChildPrimParent (key, out obj);
-                        }
-                        else obj = entity;
-                    }
+                    obj = presence2;
+                    return true;
                 }
-                else obj = presence;
+
             }
-            if (!checkRecursive && obj == null)
-                return false;
-            return true;
+            else if (gotit)
+            {
+                obj = presence;
+                return true;
+            }
+            obj = null;
+            return false;
         }
 
         public bool TryGetValue (uint key, out IEntity obj)
         {
-            return InternalTryGetValue(key, true, out obj);
+            return InternalTryGetValue (key, true, out obj);
         }
 
         private bool InternalTryGetValue (uint key, bool checkRecursive, out IEntity obj)
         {
             ISceneEntity entity;
+            bool gotit;
             lock (m_objectEntities)
+                gotit = m_objectEntities.TryGetValue (key, out entity);
+
+            //Deal with the possibility we may have been asked for a child prim
+            if (!gotit && checkRecursive)
+                return TryGetChildPrimParent (key, out obj);
+            else if (gotit)
             {
-                if (!m_objectEntities.TryGetValue (key, out entity) && checkRecursive)
-                {
-                    //Deal with the possibility we may have been asked for a child prim
-                    return TryGetChildPrimParent (key, out obj);
-                }
-                else obj = entity;
+                obj = entity;
+                return true;
             }
-            if (!checkRecursive && obj == null)
+            else
+            {
+                obj = null;
                 return false;
-            return true;
+            }
         }
 
         /// <summary>
@@ -238,15 +249,16 @@ namespace OpenSim.Framework
         /// <returns></returns>
         public bool TryGetChildPrimParent (UUID childkey, out IEntity obj)
         {
+            UUID ParentKey = UUID.Zero;
+            bool gotit;
             lock (m_child_2_parent_entities)
-            {
-                UUID ParentKey = UUID.Zero;
-                if (m_child_2_parent_entities.TryGetValue(childkey, out ParentKey))
-                    return InternalTryGetValue(ParentKey, false, out obj);
+                gotit = m_child_2_parent_entities.TryGetValue (childkey, out ParentKey);
 
-                obj = null;
-                return false;
-            }
+            if (gotit)
+                return InternalTryGetValue (ParentKey, false, out obj);
+
+            obj = null;
+            return false;
         }
 
         /// <summary>
@@ -257,15 +269,16 @@ namespace OpenSim.Framework
         /// <returns></returns>
         public bool TryGetChildPrimParent (uint childkey, out IEntity obj)
         {
+            bool gotit;
+            UUID ParentKey = UUID.Zero;
             lock (m_child_2_parent_entities)
-            {
-                UUID ParentKey = UUID.Zero;
-                if (m_child_2_parent_entities.TryGetValue(childkey, out ParentKey))
-                    return InternalTryGetValue(ParentKey, false, out obj);
+                gotit = m_child_2_parent_entities.TryGetValue (childkey, out ParentKey);
 
-                obj = null;
-                return false;
-            }
+            if (gotit)
+                return InternalTryGetValue (ParentKey, false, out obj);
+
+            obj = null;
+            return false;
         }
 
         public bool TryGetChildPrim (uint childkey, out ISceneChildEntity child)

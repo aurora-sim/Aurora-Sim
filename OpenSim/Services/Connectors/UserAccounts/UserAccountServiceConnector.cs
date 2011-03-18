@@ -85,6 +85,18 @@ namespace OpenSim.Services.Connectors
             sendData["ScopeID"] = scopeID;
             sendData["Name"] = name;
 
+            //Leave these for compatibility with OpenSim!!!
+            string[] names = name.Split(' ');
+            sendData["FirstName"] = names[0];
+            if(names.Length >= 2)
+            {
+                //Join all the names together
+                string lastName= string.Join(" ", names, 1, names.Length - 2);
+                sendData["LastName"] = lastName.ToString();
+            }
+            else
+                sendData["LastName"] = "";//No last name then
+
             return SendAndGetReply(UUID.Zero, sendData);
         }
 

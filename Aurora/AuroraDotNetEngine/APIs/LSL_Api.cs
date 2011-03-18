@@ -76,7 +76,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
     [Serializable]
     public class LSL_Api : MarshalByRefObject, ILSL_Api, IScriptApi
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected IScriptModulePlugin m_ScriptEngine;
         protected ISceneChildEntity m_host;
         protected uint m_localID;
@@ -4849,7 +4849,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 byte[] objBytes = agentItem.ID.GetBytes();
                 Array.Copy(objBytes, 0, bucket, 1, 16);
 
-                m_log.Debug("Giving inventory to " + destId + " from " + m_host.Name);
+                //m_log.Debug("Giving inventory to " + destId + " from " + m_host.Name);
                 GridInstantMessage msg = new GridInstantMessage(World,
                         m_host.UUID, m_host.Name+", an object owned by "+
                         resolveName(m_host.OwnerID)+",", destId,
@@ -4940,7 +4940,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 ce = new UserInfoCacheEntry();
                 ce.time = Util.EnvironmentTickCount();
                 ce.account = account;
-                ce.pinfo = World.RequestModuleInterface<IAgentInfoService>().GetUserInfo(uuid.ToString());
+                pinfo = World.RequestModuleInterface<IAgentInfoService>().GetUserInfo(uuid.ToString());
+                ce.pinfo = pinfo;
             }
             else
             {
@@ -4956,6 +4957,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 ce.time = Util.EnvironmentTickCount();
                 ce.pinfo = World.RequestModuleInterface<IAgentInfoService>().GetUserInfo(uuid.ToString());
+                pinfo = ce.pinfo;
             }
 
             string reply = String.Empty;
@@ -4969,7 +4971,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         reply = "0";
                     break;
                 case 2: // DATA_NAME (First Last)
-                    reply = account.FirstName + " " + account.LastName;
+                    reply = account.Name;
                     break;
                 case 3: // DATA_BORN (YYYY-MM-DD)
                     DateTime born = new DateTime(1970, 1, 1, 0, 0, 0, 0);

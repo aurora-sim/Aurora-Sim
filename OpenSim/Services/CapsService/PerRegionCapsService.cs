@@ -122,7 +122,7 @@ namespace OpenSim.Services.CapsService
         {
             foreach (IRegionClientCapsService regionC in m_clientsInThisRegion.Values)
             {
-                regionC.Close();
+                regionC.ClientCaps.RemoveCAPS(m_RegionHandle);
             }
             m_clientsInThisRegion.Clear();
         }
