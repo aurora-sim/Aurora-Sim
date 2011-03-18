@@ -38,17 +38,17 @@ namespace OpenSim.Region.Framework.Scenes
     public class EntityManager
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, EntityBase> m_entities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, EntityBase> ();
-        private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, ISceneEntity> m_objectEntities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, ISceneEntity> ();
-        private readonly Dictionary<UUID, IScenePresence> m_presenceEntities = new Dictionary<UUID, IScenePresence> ();
-        private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID> m_child_2_parent_entities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID> ();
-        
+        private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, EntityBase> m_entities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, EntityBase>();
+        private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, ISceneEntity> m_objectEntities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, ISceneEntity>();
+        private readonly Dictionary<UUID, IScenePresence> m_presenceEntities = new Dictionary<UUID, IScenePresence>();
+        private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID> m_child_2_parent_entities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID>();
+
         public int Count
         {
             get { return m_objectEntities.Count + m_presenceEntities.Count; }
         }
 
-        public void Add (IEntity entity)
+        public void Add(IEntity entity)
         {
             if (entity.LocalId == 0)
                 return;
@@ -59,16 +59,16 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     lock (m_child_2_parent_entities)
                     {
-                        foreach (ISceneChildEntity part in (entity as ISceneEntity).ChildrenEntities ())
+                        foreach (ISceneChildEntity part in (entity as ISceneEntity).ChildrenEntities())
                         {
-                            m_child_2_parent_entities.Remove (part.UUID);
-                            m_child_2_parent_entities.Remove (part.LocalId);
-                            m_child_2_parent_entities.Add (part.UUID, part.LocalId, entity.UUID);
+                            m_child_2_parent_entities.Remove(part.UUID);
+                            m_child_2_parent_entities.Remove(part.LocalId);
+                            m_child_2_parent_entities.Add(part.UUID, part.LocalId, entity.UUID);
                         }
                     }
                     lock (m_objectEntities)
                     {
-                        m_objectEntities.Add (entity.UUID, entity.LocalId, entity as ISceneEntity);
+                        m_objectEntities.Add(entity.UUID, entity.LocalId, entity as ISceneEntity);
                     }
                 }
                 else
@@ -76,33 +76,33 @@ namespace OpenSim.Region.Framework.Scenes
                     IScenePresence presence = (IScenePresence)entity;
                     lock (m_presenceEntities)
                     {
-                        m_presenceEntities.Add (presence.UUID, presence);
+                        m_presenceEntities.Add(presence.UUID, presence);
                     }
                 }
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat ("Add Entity failed: {0}", e.Message);
+                m_log.ErrorFormat("Add Entity failed: {0}", e.Message);
             }
         }
 
-        public void Clear ()
+        public void Clear()
         {
             lock (m_objectEntities)
             {
-                m_objectEntities.Clear ();
+                m_objectEntities.Clear();
             }
             lock (m_presenceEntities)
             {
-                m_presenceEntities.Clear ();
+                m_presenceEntities.Clear();
             }
             lock (m_child_2_parent_entities)
             {
-                m_child_2_parent_entities.Clear ();
+                m_child_2_parent_entities.Clear();
             }
         }
 
-        public bool Remove (IEntity entity)
+        public bool Remove(IEntity entity)
         {
             if (entity == null)
                 return false;
@@ -114,68 +114,68 @@ namespace OpenSim.Region.Framework.Scenes
                     lock (m_child_2_parent_entities)
                     {
                         //Remove all child entities
-                        foreach (ISceneChildEntity part in (entity as ISceneEntity).ChildrenEntities ())
+                        foreach (ISceneChildEntity part in (entity as ISceneEntity).ChildrenEntities())
                         {
-                            m_child_2_parent_entities.Remove (part.UUID);
-                            m_child_2_parent_entities.Remove (part.LocalId);
+                            m_child_2_parent_entities.Remove(part.UUID);
+                            m_child_2_parent_entities.Remove(part.LocalId);
                         }
                     }
                     lock (m_objectEntities)
                     {
-                        m_objectEntities.Remove (entity.UUID);
-                        m_objectEntities.Remove (entity.LocalId);
+                        m_objectEntities.Remove(entity.UUID);
+                        m_objectEntities.Remove(entity.LocalId);
                     }
                 }
                 else
                     lock (m_presenceEntities)
-                        m_presenceEntities.Remove (entity.UUID);
+                        m_presenceEntities.Remove(entity.UUID);
                 return true;
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat ("Remove Entity failed for {0}", entity.UUID, e);
+                m_log.ErrorFormat("Remove Entity failed for {0}", entity.UUID, e);
                 return false;
             }
         }
 
-        public IScenePresence[] GetPresences ()
+        public IScenePresence[] GetPresences()
         {
             lock (m_presenceEntities)
             {
-                return new List<IScenePresence> (m_presenceEntities.Values).ToArray ();
+                return new List<IScenePresence>(m_presenceEntities.Values).ToArray();
             }
         }
 
-        public ISceneEntity[] GetEntities ()
+        public ISceneEntity[] GetEntities()
         {
             lock (m_objectEntities)
             {
-                List<ISceneEntity> tmp = new List<ISceneEntity> (m_objectEntities.Count);
-                m_objectEntities.ForEach (delegate (ISceneEntity entity) { tmp.Add (entity); });
-                return tmp.ToArray ();
+                List<ISceneEntity> tmp = new List<ISceneEntity>(m_objectEntities.Count);
+                m_objectEntities.ForEach(delegate(ISceneEntity entity) { tmp.Add(entity); });
+                return tmp.ToArray();
             }
         }
 
-        public ISceneEntity[] GetEntities (Vector3 pos, float radius)
+        public ISceneEntity[] GetEntities(Vector3 pos, float radius)
         {
             lock (m_objectEntities)
             {
-                List<ISceneEntity> tmp = new List<ISceneEntity> (m_objectEntities.Count);
+                List<ISceneEntity> tmp = new List<ISceneEntity>(m_objectEntities.Count);
 
-                m_objectEntities.ForEach (delegate (ISceneEntity entity)
+                m_objectEntities.ForEach(delegate(ISceneEntity entity)
                 {
-                    if ((entity.AbsolutePosition - pos).LengthSquared () < radius * radius)
-                        tmp.Add (entity);
+                    if ((entity.AbsolutePosition - pos).LengthSquared() < radius * radius)
+                        tmp.Add(entity);
                 });
-                return tmp.ToArray ();
+                return tmp.ToArray();
             }
         }
 
-        public bool TryGetPresenceValue (UUID key, out IScenePresence presence)
+        public bool TryGetPresenceValue(UUID key, out IScenePresence presence)
         {
             lock (m_presenceEntities)
             {
-                return m_presenceEntities.TryGetValue (key, out presence);
+                return m_presenceEntities.TryGetValue(key, out presence);
             }
         }
 
@@ -184,67 +184,59 @@ namespace OpenSim.Region.Framework.Scenes
             return InternalTryGetValue(key, true, out obj);
         }
 
-        private bool InternalTryGetValue (UUID key, bool checkRecursive, out IEntity obj)
+        private bool InternalTryGetValue(UUID key, bool checkRecursive, out IEntity obj)
         {
             IScenePresence presence;
+            bool gotit;
             lock (m_presenceEntities)
+                gotit = m_presenceEntities.TryGetValue(key, out presence);
+            if (!gotit)
             {
-                if (!m_presenceEntities.TryGetValue (key, out presence))
+                ISceneEntity presence2;
+                lock (m_objectEntities)
+                    gotit = m_objectEntities.TryGetValue(key, out presence2);
+
+                //Deal with the possibility we may have been asked for a child prim
+                if ((!gotit) && checkRecursive)
+                    return TryGetChildPrimParent(key, out obj);
+                else if (gotit)
                 {
-                    lock (m_objectEntities)
-                    {
-                        ISceneEntity entity;
-                        if (!m_objectEntities.TryGetValue (key, out entity) && checkRecursive)
-                        {
-                            //Deal with the possibility we may have been asked for a child prim
-                            return TryGetChildPrimParent (key, out obj);
-                        }
-                        else obj = entity;
-                    }
+                    obj = presence2;
+                    return true;
                 }
-                else obj = presence;
+
             }
-            if (!checkRecursive && obj == null)
-                return false;
-            return true;
+            else if (gotit)
+            {
+                obj = presence;
+                return true;
+            }
+            obj = null;
+            return false;
         }
 
-        public bool TryGetValue (uint key, out IEntity obj)
+        public bool TryGetValue(uint key, out IEntity obj)
         {
             return InternalTryGetValue(key, true, out obj);
         }
 
-        private bool InternalTryGetValue (uint key, bool checkRecursive, out IEntity obj)
+        private bool InternalTryGetValue(uint key, bool checkRecursive, out IEntity obj)
         {
             ISceneEntity entity;
+            bool gotit;
             lock (m_objectEntities)
+                gotit = m_objectEntities.TryGetValue(key, out entity);
+
+            //Deal with the possibility we may have been asked for a child prim
+            if (!gotit && checkRecursive)
+                return TryGetChildPrimParent(key, out obj);
+            else if (gotit)
             {
-                if (!m_objectEntities.TryGetValue (key, out entity) && checkRecursive)
-                {
-                    //Deal with the possibility we may have been asked for a child prim
-                    return TryGetChildPrimParent (key, out obj);
-                }
-                else obj = entity;
+                obj = entity;
+                return true;
             }
-            if (!checkRecursive && obj == null)
-                return false;
-            return true;
-        }
-
-        /// <summary>
-        /// Retrives the SceneObjectGroup of this child
-        /// </summary>
-        /// <param name="childkey"></param>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        public bool TryGetChildPrimParent (UUID childkey, out IEntity obj)
-        {
-            lock (m_child_2_parent_entities)
+            else
             {
-                UUID ParentKey = UUID.Zero;
-                if (m_child_2_parent_entities.TryGetValue(childkey, out ParentKey))
-                    return InternalTryGetValue(ParentKey, false, out obj);
-
                 obj = null;
                 return false;
             }
@@ -256,43 +248,64 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="childkey"></param>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public bool TryGetChildPrimParent (uint childkey, out IEntity obj)
+        public bool TryGetChildPrimParent(UUID childkey, out IEntity obj)
         {
+            UUID ParentKey = UUID.Zero;
+            bool gotit;
             lock (m_child_2_parent_entities)
-            {
-                UUID ParentKey = UUID.Zero;
-                if (m_child_2_parent_entities.TryGetValue(childkey, out ParentKey))
-                    return InternalTryGetValue(ParentKey, false, out obj);
+                gotit = m_child_2_parent_entities.TryGetValue(childkey, out ParentKey);
 
-                obj = null;
-                return false;
-            }
+            if (gotit)
+                return InternalTryGetValue(ParentKey, false, out obj);
+
+            obj = null;
+            return false;
         }
 
-        public bool TryGetChildPrim (uint childkey, out ISceneChildEntity child)
+        /// <summary>
+        /// Retrives the SceneObjectGroup of this child
+        /// </summary>
+        /// <param name="childkey"></param>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public bool TryGetChildPrimParent(uint childkey, out IEntity obj)
+        {
+            bool gotit;
+            UUID ParentKey = UUID.Zero;
+            lock (m_child_2_parent_entities)
+                gotit = m_child_2_parent_entities.TryGetValue(childkey, out ParentKey);
+
+            if (gotit)
+                return InternalTryGetValue(ParentKey, false, out obj);
+
+            obj = null;
+            return false;
+        }
+
+        public bool TryGetChildPrim(uint childkey, out ISceneChildEntity child)
         {
             child = null;
 
             IEntity entity;
-            if (!TryGetChildPrimParent (childkey, out entity))
+            if (!TryGetChildPrimParent(childkey, out entity))
                 return false;
             if (!(entity is SceneObjectGroup))
                 return false;
 
-            child = (entity as SceneObjectGroup).GetChildPart (childkey);
+            child = (entity as SceneObjectGroup).GetChildPart(childkey);
 
             return true;
         }
 
-        internal bool TryGetChildPrim (UUID objectID, out ISceneChildEntity childPrim)
+        internal bool TryGetChildPrim(UUID objectID, out ISceneChildEntity childPrim)
         {
             childPrim = null;
 
             IEntity entity;
-            if (!TryGetChildPrimParent (objectID, out entity))
+            if (!TryGetChildPrimParent(objectID, out entity))
                 return false;
 
-            childPrim = (entity as SceneObjectGroup).GetChildPart (objectID);
+            childPrim = (entity as SceneObjectGroup).GetChildPart(objectID);
 
             return true;
         }
