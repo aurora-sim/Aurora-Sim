@@ -183,13 +183,7 @@
       <Reference name="XMLRPC" path="../../bin/"/>
       
       <Files>
-        <Match pattern="*.cs" recurse="false"/>
-		    <Match path="Client" pattern="*.cs" recurse="true"/>
-        <Match path="ConsoleFramework" pattern="*.cs" recurse="true"/>
-        <Match path="Configuration" pattern="*.cs" recurse="true"/>
-        <Match path="Serialization" pattern="*.cs" recurse="true"/>
-        <Match path="Services" pattern="*.cs" recurse="true"/>
-        <Match path="Servers" pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true"/>
       </Files>
     </Project>
 
