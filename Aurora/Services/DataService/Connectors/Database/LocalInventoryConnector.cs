@@ -82,7 +82,7 @@ namespace Aurora.Services.DataService
         private InventoryItemBase[] ParseInventoryItems (Dictionary<string, List<string>> retVal)
         {
             List<InventoryItemBase> items = new List<InventoryItemBase> ();
-            if (retVal.Count == 0)
+            if (retVal == null || retVal.Count == 0)
                 return items.ToArray ();
             for (int i = 0; i < retVal.ElementAt (0).Value.Count; i++)
             {
