@@ -50,7 +50,7 @@ namespace Aurora.Modules
         private bool m_ClampPrimSizes = true;
         private bool m_ForceDrawDistance = true;
         private bool m_OffsetOfUTCDST = false;
-        private string m_OffsetOfUTC = "SLT";
+        private int m_OffsetOfUTC = -8;
         private bool m_EnableTeenMode = false;
         public UUID m_DefaultUnderpants = UUID.Zero;
         public UUID m_DefaultUndershirt = UUID.Zero;
@@ -195,7 +195,7 @@ namespace Aurora.Modules
             set { m_AllowPhysicalPrims = value; }
         }
 
-        public string OffsetOfUTC
+        public int OffsetOfUTC
         {
             get { return m_OffsetOfUTC; }
             set { m_OffsetOfUTC = value; }
@@ -282,7 +282,7 @@ namespace Aurora.Modules
             MaximumInventoryItemsTransfer = rm["MaxInventoryItemsTransfer"].AsInteger();
             DisplayMinimap = rm["AllowMinimap"].AsInteger() == 1;
             AllowPhysicalPrims = rm["AllowPhysicalPrims"].AsInteger() == 1;
-            OffsetOfUTC = rm["OffsetOfUTC"].AsString();
+            OffsetOfUTC = rm["OffsetOfUTC"].AsInteger();
             OffsetOfUTCDST = rm["OffsetOfUTCDST"].AsInteger() == 1;
             EnableTeenMode = rm["ToggleTeenMode"].AsInteger() == 1;
             SetTeenMode = rm["SetTeenMode"].AsInteger() == 1;
@@ -330,7 +330,7 @@ namespace Aurora.Modules
 
             body.Add("AllowMinimap", OSD.FromInteger(DisplayMinimap ? 1 : 0));
             body.Add("AllowPhysicalPrims", OSD.FromInteger(AllowPhysicalPrims ? 1 : 0));
-            body.Add("OffsetOfUTC", OSD.FromString(OffsetOfUTC));
+            body.Add("OffsetOfUTC", OSD.FromInteger(OffsetOfUTC));
             body.Add("OffsetOfUTCDST", OSD.FromInteger(OffsetOfUTCDST ? 1 : 0));
             body.Add("ToggleTeenMode", OSD.FromInteger(EnableTeenMode ? 1 : 0));
             body.Add("SetTeenMode", OSD.FromInteger(SetTeenMode ? 1 : 0));
@@ -476,7 +476,7 @@ namespace Aurora.Modules
             set { m_settings.AllowPhysicalPrims = value; }
         }
 
-        public string OffsetOfUTC
+        public int OffsetOfUTC
         {
             get { return m_settings.OffsetOfUTC; }
             set { m_settings.OffsetOfUTC = value; }
@@ -737,7 +737,16 @@ namespace Aurora.Modules
             m_settings.ClampPrimSizes = instanceSettings.GetBoolean("ClampPrimSizes", ClampPrimSizes);
             m_settings.ForceDrawDistance = instanceSettings.GetBoolean("ForceDrawDistance", ForceDrawDistance);
 
-            m_settings.OffsetOfUTC = instanceSettings.GetString("OffsetOfUTC", OffsetOfUTC);
+            string offset = instanceSettings.GetString("OffsetOfUTC", OffsetOfUTC.ToString());
+            int off;
+            if(!int.TryParse(offset, out off))
+            {
+                if (offset == "SLT" || offset == "PST" || offset == "PDT")
+                    off = -8;
+                else if (offset == "UTC" || offset == "GMT")
+                    off = 0;
+            }
+            m_settings.OffsetOfUTC = off;
             m_settings.OffsetOfUTCDST = instanceSettings.GetBoolean("OffsetOfUTCDST", OffsetOfUTCDST);
             m_settings.EnableTeenMode = instanceSettings.GetBoolean("EnableTeenMode", EnableTeenMode);
             m_settings.ShowTags = instanceSettings.GetInt("ShowTags", ShowTags);
@@ -821,7 +830,7 @@ namespace Aurora.Modules
 
             body.Add("AllowMinimap", OSD.FromInteger(m_settings.DisplayMinimap ? 1 : 0));
             body.Add("AllowPhysicalPrims", OSD.FromInteger(m_settings.AllowPhysicalPrims ? 1 : 0));
-            body.Add("OffsetOfUTC", OSD.FromInteger (int.Parse (m_settings.OffsetOfUTC)));
+            body.Add("OffsetOfUTC", OSD.FromInteger (m_settings.OffsetOfUTC));
             body.Add("OffsetOfUTCDST", OSD.FromInteger(m_settings.OffsetOfUTCDST ? 1 : 0));
             body.Add("ToggleTeenMode", OSD.FromInteger(m_settings.EnableTeenMode ? 1 : 0));
             body.Add("SetTeenMode", OSD.FromInteger(m_settings.SetTeenMode ? 1 : 0));
