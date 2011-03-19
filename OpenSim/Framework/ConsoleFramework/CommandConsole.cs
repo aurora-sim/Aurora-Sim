@@ -208,6 +208,75 @@ namespace OpenSim.Framework
                 return new string[0];
             }
 
+            public string[] FindCommands (string[] command)
+            {
+                List<string> values = new List<string> ();
+                if (command.Length != 0)
+                {
+                    string innerPath = string.Join (" ", command);
+                    if (ourPath != "")
+                        innerPath = innerPath.Replace (ourPath, "");
+                    if (innerPath.StartsWith (" "))
+                        innerPath = innerPath.Remove (0, 1);
+                    string[] commandPath = innerPath.Split (new string[1] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                    if ((commandPath.Length == 1 || !m_allowSubSets))
+                    {
+                        string fullcommand = string.Join (" ", command);
+                        foreach (KeyValuePair<string, CommandInfo> cmd in commands)
+                        {
+                            //If it starts with it, execute it (eg. q for quit)
+                            if (cmd.Key.StartsWith (fullcommand))
+                            {
+                                values.Add (cmd.Key);
+                            }
+                        }
+                        if (commandPath.Length != 0)
+                        {
+                            CommandSet downTheTree;
+                            if (commandsets.TryGetValue (commandPath[0], out downTheTree))
+                            {
+                                values.AddRange(downTheTree.FindCommands (commandPath));
+                            }
+                            else
+                            {
+                                //See if this is part of a word, and if it is part of a word, execute it
+                                foreach (KeyValuePair<string, CommandSet> cmd in commandsets)
+                                {
+                                    //If it starts with it, execute it (eg. q for quit)
+                                    if (cmd.Key.StartsWith (commandPath[0]))
+                                    {
+                                        values.AddRange (cmd.Value.FindCommands (commandPath));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else if(commandPath.Length != 0)
+                    {
+                        //Its down the tree somewhere
+                        CommandSet downTheTree;
+                        if (commandsets.TryGetValue (commandPath[0], out downTheTree))
+                        {
+                            return downTheTree.FindCommands (commandPath);
+                        }
+                        else
+                        {
+                            //See if this is part of a word, and if it is part of a word, execute it
+                            foreach (KeyValuePair<string, CommandSet> cmd in commandsets)
+                            {
+                                //If it starts with it, execute it (eg. q for quit)
+                                if (cmd.Key.StartsWith (commandPath[0]))
+                                {
+                                    return cmd.Value.FindCommands (commandPath);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return values.ToArray();
+            }
+
             public List<string> GetHelp ()
             {
                 List<string> help = new List<string> ();
@@ -309,73 +378,9 @@ namespace OpenSim.Framework
             AddCommand (command, help, longhelp, fn);
         }
 
-        public string[] FindNextOption (string[] cmd, bool term)
+        public string[] FindNextOption (string[] cmd)
         {
-            /*Dictionary<string, object> current = tree;
-
-            int remaining = cmd.Length;
-
-            foreach (string s in cmd)
-            {
-                remaining--;
-
-                List<string> found = new List<string> ();
-
-                foreach (string opt in current.Keys)
-                {
-                    if (remaining > 0 && opt == s)
-                    {
-                        found.Clear ();
-                        found.Add (opt);
-                        break;
-                    }
-                    if (opt.StartsWith (s))
-                    {
-                        found.Add (opt);
-                    }
-                }
-
-                if (found.Count == 1 && (remaining != 0 || term))
-                {
-                    current = (Dictionary<string, object>)current[found[0]];
-                }
-                else if (found.Count > 0)
-                {
-                    return found.ToArray ();
-                }
-                else
-                {
-                    break;
-                    //                    return new string[] {"<cr>"};
-                }
-            }
-
-            if (current.Count > 1)
-            {
-                List<string> choices = new List<string> ();
-
-                bool addcr = false;
-                foreach (string s in current.Keys)
-                {
-                    if (s == String.Empty)
-                    {
-                        CommandInfo ci = (CommandInfo)current[String.Empty];
-                        if (ci.fn.Count != 0)
-                            addcr = true;
-                    }
-                    else
-                        choices.Add (s);
-                }
-                if (addcr)
-                    choices.Add ("<cr>");
-                return choices.ToArray ();
-            }
-
-            if (current.ContainsKey (String.Empty))
-                return new string[] { "Command help: " + ((CommandInfo)current[String.Empty]).commandHelp };
-
-            return new string[] { new List<string> (current.Keys)[0] };*/
-            return new string[0];
+            return tree.FindCommands (cmd);
         }
 
         public string[] Resolve (string[] cmd)

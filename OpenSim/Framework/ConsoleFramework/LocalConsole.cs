@@ -416,12 +416,15 @@ namespace OpenSim.Framework
             if (words.Length > 0 && words[words.Length-1].StartsWith("http") && !trailingSpace)
                 return false;
 
-            string[] opts = Commands.FindNextOption(words, trailingSpace);
+            string[] opts = Commands.FindNextOption(words);
 
-            if (opts[0].StartsWith("Command help:"))
-                Output(opts[0]);
+            if (opts.Length == 0)
+                Output ("No options.");
             else
-                Output(String.Format("Options: {0}", String.Join(" ", opts)));
+                if (opts[0].StartsWith("Command help:"))
+                    Output(opts[0]);
+                 else
+                    Output(String.Format("Options: {0}", String.Join("\n", opts)));
 
             return true;
         }
@@ -538,6 +541,9 @@ namespace OpenSim.Framework
                     case ConsoleKey.RightArrow:
                         if (cp < cmdline.Length)
                             cp++;
+                        break;
+                    case ConsoleKey.Tab:
+                        ContextHelp ();
                         break;
                     case ConsoleKey.Enter:
                         SetCursorLeft(0);
