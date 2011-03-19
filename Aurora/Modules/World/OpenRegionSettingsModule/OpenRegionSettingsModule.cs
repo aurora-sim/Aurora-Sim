@@ -821,7 +821,7 @@ namespace Aurora.Modules
 
             body.Add("AllowMinimap", OSD.FromInteger(m_settings.DisplayMinimap ? 1 : 0));
             body.Add("AllowPhysicalPrims", OSD.FromInteger(m_settings.AllowPhysicalPrims ? 1 : 0));
-            body.Add("OffsetOfUTC", OSD.FromString(m_settings.OffsetOfUTC));
+            body.Add("OffsetOfUTC", OSD.FromInteger (int.Parse (m_settings.OffsetOfUTC)));
             body.Add("OffsetOfUTCDST", OSD.FromInteger(m_settings.OffsetOfUTCDST ? 1 : 0));
             body.Add("ToggleTeenMode", OSD.FromInteger(m_settings.EnableTeenMode ? 1 : 0));
             body.Add("SetTeenMode", OSD.FromInteger(m_settings.SetTeenMode ? 1 : 0));
