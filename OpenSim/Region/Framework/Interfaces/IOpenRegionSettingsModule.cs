@@ -26,7 +26,7 @@ namespace OpenSim.Region.Framework.Interfaces
         int MaximumInventoryItemsTransfer { get; set; }
         bool DisplayMinimap { get; set; }
         bool AllowPhysicalPrims { get; set; }
-        string OffsetOfUTC { get; set; }
+        int OffsetOfUTC { get; set; }
         bool EnableTeenMode { get; set; }
         UUID DefaultUnderpants { get; set; }
         UUID DefaultUndershirt { get; set; }
