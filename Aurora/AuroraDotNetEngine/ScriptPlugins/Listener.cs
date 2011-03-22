@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using log4net;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.CoreModules.Scripting.WorldComm;
@@ -76,20 +77,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
         }
 
-        public Object[] GetSerializationData(UUID itemID, UUID primID)
+        public OSD GetSerializationData (UUID itemID, UUID primID)
         {
-            object[] listeners = comms.GetSerializationData(itemID);
-            
-            List<Object> data = new List<object>();
-            data.Add(Name);
-            data.Add(listeners.Length);
-            data.AddRange(listeners);
-            
-            return data.ToArray();
+            return comms.GetSerializationData (itemID);
         }
 
         public void CreateFromData(UUID itemID, UUID hostID,
-                Object[] data)
+                OSD data)
         {
             comms.CreateFromData(itemID, hostID, data);
         }

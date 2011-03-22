@@ -37,6 +37,7 @@ using System.Text;
 using System.Xml;
 using log4net;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
 using System.IO;
@@ -144,7 +145,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool PostOnRez;
         public TaskInventoryItem InventoryItem;
         public DetectParams[] LastDetectParams = null;
-        public Object[] PluginData = new Object[0];
+        public OSDMap PluginData = new OSDMap();
         private StateSave LastStateSave = null;
         private double DefaultEventDelayTicks = (double)0.05;
         private double TouchEventDelayTicks = (double)0.1;

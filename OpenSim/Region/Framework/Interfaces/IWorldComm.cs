@@ -27,6 +27,7 @@
 
 using System;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Interfaces
@@ -95,9 +96,9 @@ namespace OpenSim.Region.Framework.Interfaces
         void ListenControl(UUID itemID, int handle, int active);
         void ListenRemove(UUID itemID, int handle);
         void DeleteListener(UUID itemID);
-        Object[] GetSerializationData(UUID itemID);
+        OSD GetSerializationData (UUID itemID);
         void CreateFromData(UUID itemID, UUID hostID,
-                            Object[] data);
+                            OSD data);
         void AddBlockedChannel(int channel);
         void RemoveBlockedChannel(int channel);
     }

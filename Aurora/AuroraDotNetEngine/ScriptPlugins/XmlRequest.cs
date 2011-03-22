@@ -32,6 +32,7 @@ using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.CoreModules.Scripting.XMLRPC;
 using OpenSim.Framework;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
@@ -114,12 +115,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         {
         }
 
-        public Object[] GetSerializationData(UUID itemID, UUID primID)
+        public OSD GetSerializationData (UUID itemID, UUID primID)
         {
-            return new Object[0];
+            return "";
         }
 
-        public void CreateFromData(UUID itemID, UUID objectID, Object[] data)
+        public void CreateFromData (UUID itemID, UUID objectID, object data)
         {
         }
 

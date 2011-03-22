@@ -1008,7 +1008,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             }
                         }
                     }
-                    object[] Plugins = GetSerializationData(SD.ItemID, SD.part.UUID);
+                    OSDMap Plugins = GetSerializationData(SD.ItemID, SD.part.UUID);
                     RemoveScript(SD.part.UUID, SD.ItemID);
 
                     MaintenanceThread.SetEventSchSetIgnoreNew(SD, true);
@@ -1229,9 +1229,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public Object[] GetSerializationData(UUID itemID, UUID primID)
+        public OSDMap GetSerializationData (UUID itemID, UUID primID)
         {
-            List<Object> data = new List<Object>();
+            OSDMap data = new OSDMap ();
 
             lock (ScriptPlugins)
             {
@@ -1239,7 +1239,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     try
                     {
-                        data.AddRange(plugin.GetSerializationData(itemID, primID));
+                        data.Add(plugin.Name, plugin.GetSerializationData(itemID, primID));
                     }
                     catch (Exception ex)
                     {
@@ -1248,41 +1248,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
             }
 
-            return data.ToArray();
+            return data;
         }
 
-        public void CreateFromData(UUID primID,
-                UUID itemID, UUID hostID, Object[] data)
+        public void CreateFromData (UUID primID,
+                UUID itemID, UUID hostID, OSDMap data)
         {
-            try
+            foreach (KeyValuePair<string, OSD> kvp in data)
             {
-                int idx = 0;
-                int len;
-
-                while (idx < data.Length - 1)
+                IScriptPlugin plugin = GetScriptPlugin (kvp.Key);
+                if (plugin != null)
                 {
-                    string type = data[idx].ToString();
-                    len = Convert.ToInt32(data[idx + 1]);
-                    idx += 2;
-
-                    if (len > 0)
-                    {
-                        Object[] item = new Object[len];
-                        Array.Copy(data, idx, item, 0, len);
-
-                        idx += len;
-
-                        IScriptPlugin plugin = GetScriptPlugin(type);
-                        if (plugin != null)
-                        {
-                            plugin.CreateFromData(itemID, hostID, item);
-                        }
-                    }
+                    plugin.CreateFromData (itemID, hostID, kvp.Value);
                 }
-            }
-            catch (Exception ex)
-            {
-                m_log.Warn("[" + Name + "]: Error attempting to CreateFromData, " + ex.ToString());
             }
         }
 

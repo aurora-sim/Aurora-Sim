@@ -6,14 +6,15 @@ using OpenSim.Framework;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     public interface IScriptPlugin : IPlugin
     {
         void Check();
-        Object[] GetSerializationData(UUID itemID, UUID primID);
-        void CreateFromData(UUID itemID, UUID objectID, Object[] data);
+        OSD GetSerializationData (UUID itemID, UUID primID);
+        void CreateFromData (UUID itemID, UUID objectID, OSD data);
         void RemoveScript(UUID primID, UUID itemID);
     }
 

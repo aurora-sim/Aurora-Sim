@@ -1,6 +1,7 @@
 ﻿using System;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Scenes.Components
 {
@@ -34,7 +35,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
         /// <param name="obj">The object being checked</param>
         /// <param name="Name">Name of the Component</param>
         /// <returns>The State of the Component</returns>
-        OSD GetComponentState(SceneObjectPart obj, string Name);
+        OSD GetComponentState (ISceneChildEntity obj, string Name);
 
         /// <summary>
         /// Set the State of the Component with the given name
@@ -42,22 +43,22 @@ namespace OpenSim.Region.Framework.Scenes.Components
         /// <param name="obj">The object to update</param>
         /// <param name="Name">Name of the Component</param>
         /// <param name="State">State to set the Component to</param>
-        void SetComponentState(SceneObjectPart obj, string Name, OSD State);
+        void SetComponentState (ISceneChildEntity obj, string Name, OSD State);
 
         /// <summary>
         /// Take the serialized string and set up the Components for this object
         /// </summary>
         /// <param name="obj"></param>
         /// <param name="serialized"></param>
-        void DeserializeComponents(SceneObjectPart obj, string serialized);
+        void DeserializeComponents (ISceneChildEntity obj, string serialized);
 
         /// <summary>
         /// Serialize all the registered Components into a string to be saved later
         /// </summary>
         /// <param name="obj">The object to serialize</param>
         /// <returns>The serialized string</returns>
-        string SerializeComponents(SceneObjectPart obj);
+        string SerializeComponents (ISceneChildEntity obj);
 
-        void ResetComponentIDsToNewObject(UUID oldID, SceneObjectPart part);
+        void ResetComponentIDsToNewObject (UUID oldID, ISceneChildEntity part);
     }
 }

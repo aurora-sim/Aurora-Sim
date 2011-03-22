@@ -15,7 +15,7 @@ namespace Aurora.Framework
         public bool Running;
         public bool Disabled;
         public string Variables;
-        public object Plugins;
+        public OSDMap Plugins;
         public string Permissions;
         public double MinEventDelay;
         public string AssemblyName;
@@ -29,7 +29,7 @@ namespace Aurora.Framework
             Running = map["Running"].AsBoolean ();
             Disabled = map["Disabled"].AsBoolean ();
             Variables = map["Variables"].AsString ();
-            Plugins = map["Plugins"].AsString ();
+            Plugins = (OSDMap)map["Plugins"];
             Permissions = map["Permissions"].AsString ();
             MinEventDelay = map["MinEventDelay"].AsReal ();
             AssemblyName = map["AssemblyName"].AsString ();
@@ -45,7 +45,7 @@ namespace Aurora.Framework
             map.Add ("Running", Running);
             map.Add ("Disabled", Disabled);
             map.Add ("Variables", Variables);
-            map.Add ("Plugins", Plugins.ToString ());
+            map.Add ("Plugins", Plugins);
             map.Add ("Permissions", Permissions);
             map.Add ("MinEventDelay", MinEventDelay);
             map.Add ("AssemblyName", AssemblyName);

@@ -29,6 +29,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Scenes;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
@@ -128,40 +129,33 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
         }
 
-        public Object[] GetSerializationData(UUID itemID, UUID primID)
+        public OSD GetSerializationData (UUID itemID, UUID primID)
         {
-            List<Object> data = new List<Object>();
+            OSDMap data = new OSDMap();
             string key = MakeTimerKey(primID, itemID);
             TimerClass timer;
             if(Timers.TryGetValue(key, out timer))
             {
-                data.Add(Name);
-                data.Add(2); //Two things after this row
-                data.Add(timer.interval);
-                data.Add(timer.next - Environment.TickCount);
+                data.Add ("Interval", timer.interval);
+                data.Add ("Next", timer.next - Environment.TickCount);
             }
-            return data.ToArray();
+            return data;
         }
 
-        public void CreateFromData(UUID itemID, UUID objectID,
-                                   Object[] data)
+        public void CreateFromData (UUID itemID, UUID objectID,
+                                   OSD data)
         {
-            int idx = 0;
+            OSDMap save = (OSDMap)data;
+            TimerClass ts = new TimerClass ();
 
-            while (idx < data.Length)
+            ts.ID = objectID;
+            ts.itemID = itemID;
+            ts.interval = (long)save["Interval"].AsReal ();
+            ts.next = Environment.TickCount + (long)save["Next"].AsReal ();
+
+            lock (TimerListLock)
             {
-                TimerClass ts = new TimerClass();
-
-                ts.ID = objectID;
-                ts.itemID = itemID;
-                ts.interval =(long)Convert.ToDouble(data[idx]);
-                ts.next = Environment.TickCount + (long)Convert.ToDouble(data[idx + 1]);
-                idx += 2;
-
-                lock (TimerListLock)
-                {
-                    Timers[MakeTimerKey(objectID, itemID)] = ts;
-                }
+                Timers[MakeTimerKey (objectID, itemID)] = ts;
             }
         }
 

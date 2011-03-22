@@ -29,6 +29,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Scenes;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
@@ -170,12 +171,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         {
         }
 
-        public Object[] GetSerializationData(UUID itemID, UUID primID)
+        public OSD GetSerializationData(UUID itemID, UUID primID)
         {
-            return new Object[0];
+            return "";
         }
 
-        public void CreateFromData(UUID itemID, UUID objectID, Object[] data)
+        public void CreateFromData (UUID itemID, UUID objectID, object data)
         {
         }
     }

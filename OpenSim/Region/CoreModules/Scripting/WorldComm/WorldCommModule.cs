@@ -30,6 +30,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Nini.Config;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -392,13 +393,13 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
                 DeliverMessage(e.Type, e.Channel, e.From, UUID.Zero, e.Message, e.Position, -1);
         }
 
-        public Object[] GetSerializationData(UUID itemID)
+        public OSD GetSerializationData (UUID itemID)
         {
             return m_listenerManager.GetSerializationData(itemID);
         }
 
         public void CreateFromData(UUID itemID, UUID hostID,
-                Object[] data)
+                OSD data)
         {
             m_listenerManager.AddFromData(itemID, hostID, data);
         }
@@ -622,9 +623,9 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             return collection;
         }
 
-        public Object[] GetSerializationData(UUID itemID)
+        public OSD GetSerializationData (UUID itemID)
         {
-            List<Object> data = new List<Object>();
+            OSDMap data = new OSDMap ();
 
             lock (m_listeners)
             {
@@ -632,29 +633,25 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
                 {
                     foreach (ListenerInfo l in list)
                     {
-                        if (l.GetItemID() == itemID)
-                            data.AddRange(l.GetSerializationData());
+                        if (l.GetItemID () == itemID)
+                        {
+                            data[itemID.ToString()] = l.GetSerializationData ();
+                        }
                     }
                 }
             }
-            return data.ToArray();
+            return data;
         }
 
         public void AddFromData(UUID itemID, UUID hostID,
-                Object[] data)
+                OSD data)
         {
-            int idx = 0;
-            Object[] item = new Object[6];
-
-            while (idx < data.Length)
+            OSDMap save = (OSDMap)data;
+            foreach (KeyValuePair<string, OSD> kvp in save)
             {
-                Array.Copy(data, idx, item, 0, 6);
-
-                ListenerInfo info =
-                        ListenerInfo.FromData(itemID, hostID, item);
-                AddListener(info.GetItemID(), info.GetHostID(), info.GetChannel(), info.GetName(), info.GetID(), info.GetMessage());
-
-                idx+=6;
+                OSDMap item = (OSDMap)kvp.Value;
+                ListenerInfo info = ListenerInfo.FromData (itemID, hostID, item);
+                AddListener (info.GetItemID (), info.GetHostID (), info.GetChannel (), info.GetName (), info.GetID (), info.GetMessage ());
             }
         }
     }
@@ -694,26 +691,33 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             m_message = message;
         }
 
-        public Object[] GetSerializationData()
+        public OSDMap GetSerializationData ()
         {
-            Object[] data = new Object[6];
+            OSDMap data = new OSDMap();
 
-            data[0] = m_active;
-            data[1] = m_handle;
-            data[2] = m_channel;
-            data[3] = m_name;
-            data[4] = m_id;
-            data[5] = m_message;
+            data["Active"] = m_active;
+            data["Handle"] = m_handle;
+            data["Channel"] = m_channel;
+            data["Name"] = m_name;
+            data["ID"] = m_id;
+            data["Message"] = m_message;
 
             return data;
         }
 
-        public static ListenerInfo FromData(UUID ItemID, UUID hostID, Object[] data)
+        public static ListenerInfo FromData (UUID ItemID, UUID hostID, OSDMap data)
         {
-            ListenerInfo linfo = new ListenerInfo(Convert.ToInt32(data[1]),
-                    ItemID, hostID, Convert.ToInt32(data[2]), (string)data[3],
-                    new UUID(data[4].ToString()), (string)data[5]);
-            linfo.m_active=Convert.ToBoolean(data[0]);
+            int Handle = data["Handle"].AsInteger ();
+            int Channel = data["Channel"].AsInteger ();
+            string Name = data["Name"].AsString ();
+            string Message = data["Message"].AsString ();
+            UUID ID = data["ID"].AsUUID ();
+            bool Active = data["Active"].AsBoolean ();
+
+            ListenerInfo linfo = new ListenerInfo (Handle,
+                    ItemID, hostID, Channel, Name,
+                    ID, Message);
+            linfo.m_active = Active;
 
             return linfo;
         }

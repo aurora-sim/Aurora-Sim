@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 
 using OpenSim.Region.Framework.Interfaces;
@@ -509,9 +510,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             return sensedEntities;
         }
 
-        public Object[] GetSerializationData(UUID itemID, UUID primID)
+        public OSD GetSerializationData (UUID itemID, UUID primID)
         {
-            List<Object> data = new List<Object>();
+            OSDMap data = new OSDMap();
 
             lock (SenseRepeatListLock)
             {
@@ -519,26 +520,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 {
                     if (ts.itemID == itemID)
                     {
-                        data.Add(ts.interval);
-                        data.Add(ts.name);
-                        data.Add(ts.keyID);
-                        data.Add(ts.type);
-                        data.Add(ts.range);
-                        data.Add(ts.arc);
+                        OSDMap map = new OSDMap();
+                        map.Add ("Interval", ts.interval);
+                        map.Add ("Name", ts.name);
+                        map.Add ("ID", ts.keyID);
+                        map.Add ("Type", ts.type);
+                        map.Add ("Range", ts.range);
+                        map.Add ("Arc", ts.arc);
+                        data[itemID.ToString ()] = map;
                     }
                 }
             }
 
-            List<object> RetVal = new List<object>();
-            RetVal.Add(Name);
-            RetVal.Add(data.Count);
-            RetVal.AddRange(data);
-
-            return RetVal.ToArray();
+            return data;
         }
 
         public void CreateFromData(UUID itemID, UUID objectID,
-                                   Object[] data)
+                                   OSD data)
         {
             ISceneChildEntity part =
                 findPrimsScene(objectID).GetSceneObjectPart(
@@ -547,28 +545,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             if (part == null)
                 return;
 
-            int idx = 0;
-
-            while (idx < data.Length)
+            OSDMap save = (OSDMap)data;
+            
+            foreach(KeyValuePair<string, OSD> kvp in save)
             {
-                SenseRepeatClass ts = new SenseRepeatClass();
+                OSDMap map = (OSDMap)kvp.Value;
+                SenseRepeatClass ts = new SenseRepeatClass ();
 
                 ts.objectID = objectID;
                 ts.itemID = itemID;
 
-                ts.interval = (long)Convert.ToDouble(data[idx]);
-                ts.name = (string)data[idx+1];
-                ts.keyID = new UUID(data[idx+2].ToString());
-                ts.type = Convert.ToInt32(data[idx+3]);
-                ts.range = Convert.ToDouble(data[idx+4]);
-                ts.arc = Convert.ToDouble(data[idx + 5]);
+                ts.interval = (long)map["Interval"].AsInteger();
+                ts.name = map["Name"].AsString();
+                ts.keyID = map["ID"].AsUUID();
+                ts.type = map["Type"].AsInteger();
+                ts.range = map["Range"].AsReal();
+                ts.arc = map["Arc"].AsReal ();
                 ts.host = part;
 
-                ts.next =
-                    DateTime.Now.ToUniversalTime().AddSeconds(ts.interval);
+                ts.next = DateTime.Now.ToUniversalTime().AddSeconds(ts.interval);
 
                 SenseRepeaters.Add(ts);
-                idx += 6;
             }
         }
 

@@ -34,6 +34,7 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
@@ -89,12 +90,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         {
         }
 
-        public Object[] GetSerializationData(UUID itemID, UUID primID)
+        public OSD GetSerializationData (UUID itemID, UUID primID)
         {
-            return new Object[0];
+            return "";
         }
 
-        public void CreateFromData(UUID itemID, UUID objectID, Object[] data)
+        public void CreateFromData (UUID itemID, UUID objectID, object data)
         {
         }
 

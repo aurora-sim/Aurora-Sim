@@ -225,7 +225,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
         /// <param name="obj">The object being checked</param>
         /// <param name="Name">Name of the Component</param>
         /// <returns>The State of the Component</returns>
-        public OSD GetComponentState(SceneObjectPart obj, string Name)
+        public OSD GetComponentState (ISceneChildEntity obj, string Name)
         {
             //Check whether a Component exists for this name
             if (m_components.ContainsKey(Name))
@@ -242,7 +242,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
         /// <param name="obj">The object to update</param>
         /// <param name="Name">Name of the Component</param>
         /// <param name="State">State to set the Component to</param>
-        public void SetComponentState(SceneObjectPart obj, string Name, OSD State)
+        public void SetComponentState(ISceneChildEntity obj, string Name, OSD State)
         {
             if (obj.UUID == UUID.Zero)
                 return;
@@ -259,7 +259,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
         /// </summary>
         /// <param name="oldID"></param>
         /// <param name="newID"></param>
-        public void ResetComponentIDsToNewObject(UUID oldID, SceneObjectPart part)
+        public void ResetComponentIDsToNewObject (UUID oldID, ISceneChildEntity part)
         {
             //Run through the list of components and serialize them
             foreach (IComponent component in m_components.Values)
@@ -276,7 +276,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
         /// </summary>
         /// <param name="obj"></param>
         /// <param name="serialized"></param>
-        public void DeserializeComponents(SceneObjectPart obj, string serialized)
+        public void DeserializeComponents (ISceneChildEntity obj, string serialized)
         {
             //Pull the OSDMap out for components
             OSDMap map;
@@ -308,7 +308,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
         /// </summary>
         /// <param name="obj">The object to serialize</param>
         /// <returns>The serialized string</returns>
-        public string SerializeComponents(SceneObjectPart obj)
+        public string SerializeComponents (ISceneChildEntity obj)
         {
             OSDMap ComponentsBody = new OSDMap();
             //Run through the list of components and serialize them
