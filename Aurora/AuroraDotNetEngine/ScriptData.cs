@@ -115,7 +115,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool Disabled = false;
         public bool Suspended = false;
         public bool Loading = true;
-        public string Source;
+        public string Source = "";
         public int StartParam;
         public StateSource stateSource;
         public AppDomain AppDomain;
@@ -572,6 +572,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             //Find the default state save
             DefaultState = m_ScriptEngine.Compiler.FindDefaultStateForScript (Source);
+            State = DefaultState;
 
             //If the saved state exists, if it isn't a reupload (something changed), and if the assembly exists, load the state save
             if (!reupload && Loading && LastStateSave != null

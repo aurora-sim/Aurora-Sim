@@ -39,29 +39,35 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
-    public class ListenerPlugin : INonSharedScriptPlugin
+    public class ListenerPlugin : IScriptPlugin
     {
         // private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         public ScriptEngine m_ScriptEngine;
-        private IWorldComm comms;
+        private List<IWorldComm> m_modules = new List<IWorldComm> ();
 
-        public void Initialize(ScriptEngine ScriptEngine, Scene scene)
+        public void Initialize (ScriptEngine engine)
         {
-            m_ScriptEngine = ScriptEngine;
-            comms = scene.RequestModuleInterface<IWorldComm>();
+            m_ScriptEngine = engine;
+        }
+
+        public void AddRegion (Scene scene)
+        {
+            m_modules.Add (scene.RequestModuleInterface<IWorldComm> ());
         }
 
         public void Check()
         {
-            if (comms.HasMessages())
+            foreach (IWorldComm comms in m_modules)
             {
-                while (comms.HasMessages())
+                if (comms.HasMessages ())
                 {
-                    ListenerInfo lInfo = (ListenerInfo)comms.GetNextMessage();
+                    while (comms.HasMessages ())
+                    {
+                        ListenerInfo lInfo = (ListenerInfo)comms.GetNextMessage ();
 
-                    //Deliver data to prim's listen handler
-                    object[] resobj = new object[]
+                        //Deliver data to prim's listen handler
+                        object[] resobj = new object[]
                     {
                         new LSL_Types.LSLInteger(lInfo.GetChannel()),
                         new LSL_Types.LSLString(lInfo.GetName()),
@@ -69,23 +75,33 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                         new LSL_Types.LSLString(lInfo.GetMessage())
                     };
 
-                    m_ScriptEngine.PostScriptEvent(
-                                lInfo.GetItemID(), lInfo.GetHostID(), new EventParams(
-                                "listen", resobj,
-                                new DetectParams[0]), EventPriority.Suspended);
+                        m_ScriptEngine.PostScriptEvent (
+                                    lInfo.GetItemID (), lInfo.GetHostID (), new EventParams (
+                                    "listen", resobj,
+                                    new DetectParams[0]), EventPriority.Suspended);
+                    }
                 }
             }
         }
 
         public OSD GetSerializationData (UUID itemID, UUID primID)
         {
-            return comms.GetSerializationData (itemID);
+            foreach (IWorldComm comms in m_modules)
+            {
+                OSD r = comms.GetSerializationData (itemID, primID);
+                if (r != null)
+                    return r;
+            }
+            return null;
         }
 
         public void CreateFromData(UUID itemID, UUID hostID,
                 OSD data)
         {
-            comms.CreateFromData(itemID, hostID, data);
+            foreach (IWorldComm comms in m_modules)
+            {
+                comms.CreateFromData (itemID, hostID, data);
+            }
         }
 
         public string Name
@@ -99,7 +115,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         public void RemoveScript(UUID primID, UUID itemID)
         {
-            comms.DeleteListener(itemID);
+            foreach (IWorldComm comms in m_modules)
+            {
+                comms.DeleteListener (itemID);
+            }
         }
     }
 }

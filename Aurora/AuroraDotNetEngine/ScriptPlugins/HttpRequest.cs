@@ -38,37 +38,43 @@ using OpenMetaverse.StructuredData;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
-    public class HttpRequestPlugin : INonSharedScriptPlugin
+    public class HttpRequestPlugin : IScriptPlugin
     {
         public ScriptEngine m_ScriptEngine;
-        private IHttpRequestModule iHttpReq = null;
+        private List<IHttpRequestModule> m_modules = new List<IHttpRequestModule> ();
 
-        public void Initialize(ScriptEngine engine, Scene scene)
+        public void Initialize(ScriptEngine engine)
         {
-            iHttpReq = scene.RequestModuleInterface<IHttpRequestModule>();
             m_ScriptEngine = engine;
+        }
+
+        public void AddRegion (Scene scene)
+        {
+            m_modules.Add(scene.RequestModuleInterface<IHttpRequestModule> ());
         }
 
         public void Check()
         {
-            IServiceRequest httpInfo = null;
-
-            if (iHttpReq != null)
-                httpInfo = iHttpReq.GetNextCompletedRequest();
-
-            if(httpInfo == null)
-                return;
-
-            while (httpInfo != null)
+            foreach (IHttpRequestModule iHttpReq in m_modules)
             {
-                HttpRequestClass info = (HttpRequestClass)httpInfo;
-                //m_log.Debug("[AsyncLSL]:" + httpInfo.response_body + httpInfo.status);
+                IServiceRequest httpInfo = null;
 
-                // Deliver data to prim's remote_data handler
+                if (iHttpReq != null)
+                    httpInfo = iHttpReq.GetNextCompletedRequest ();
 
-                iHttpReq.RemoveCompletedRequest(info.ReqID);
+                if (httpInfo == null)
+                    return;
 
-                object[] resobj = new object[]
+                while (httpInfo != null)
+                {
+                    HttpRequestClass info = (HttpRequestClass)httpInfo;
+                    //m_log.Debug("[AsyncLSL]:" + httpInfo.response_body + httpInfo.status);
+
+                    // Deliver data to prim's remote_data handler
+
+                    iHttpReq.RemoveCompletedRequest (info.ReqID);
+
+                    object[] resobj = new object[]
                 {
                     new LSL_Types.LSLString(info.ReqID.ToString()),
                     new LSL_Types.LSLInteger(info.Status),
@@ -76,8 +82,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     new LSL_Types.LSLString(info.ResponseBody)
                 };
 
-                m_ScriptEngine.AddToObjectQueue(info.PrimID, "http_response", new DetectParams[0], -1, resobj);
-                httpInfo = iHttpReq.GetNextCompletedRequest();
+                    m_ScriptEngine.AddToObjectQueue (info.PrimID, "http_response", new DetectParams[0], -1, resobj);
+                    httpInfo = iHttpReq.GetNextCompletedRequest ();
+                }
             }
         }
 
@@ -101,7 +108,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         public void RemoveScript(UUID primID, UUID itemID)
         {
-            iHttpReq.StopHttpRequest(primID, itemID);
+            foreach (IHttpRequestModule iHttpReq in m_modules)
+            {
+                iHttpReq.StopHttpRequest (primID, itemID);
+            }
         }
     }
 }

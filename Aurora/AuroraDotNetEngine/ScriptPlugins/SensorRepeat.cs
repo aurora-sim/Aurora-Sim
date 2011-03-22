@@ -39,7 +39,7 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
-    public class SensorRepeatPlugin : ISharedScriptPlugin
+    public class SensorRepeatPlugin : IScriptPlugin
     {
         public ScriptEngine m_ScriptEngine;
 
@@ -50,6 +50,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             usemaximumRange = engine.Config.GetBoolean("UseSensorMaxRange", true);
             maximumToReturn = engine.Config.GetInt("SensorMaxResults", 32);
             usemaximumToReturn = engine.Config.GetBoolean("UseSensorMaxResults", true);
+        }
+
+        public void AddRegion (Scene scene)
+        {
         }
 
         private Object SenseLock = new Object();

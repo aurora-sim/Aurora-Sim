@@ -393,15 +393,19 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
                 DeliverMessage(e.Type, e.Channel, e.From, UUID.Zero, e.Message, e.Position, -1);
         }
 
-        public OSD GetSerializationData (UUID itemID)
+        public OSD GetSerializationData (UUID itemID, UUID primID)
         {
-            return m_listenerManager.GetSerializationData(itemID);
+            if (m_scene.GetSceneObjectPart (primID) != null)
+                return m_listenerManager.GetSerializationData (itemID);
+            else
+                return null;
         }
 
         public void CreateFromData(UUID itemID, UUID hostID,
                 OSD data)
         {
-            m_listenerManager.AddFromData(itemID, hostID, data);
+            if (m_scene.GetSceneObjectPart (hostID) != null)
+                m_listenerManager.AddFromData(itemID, hostID, data);
         }
     }
 

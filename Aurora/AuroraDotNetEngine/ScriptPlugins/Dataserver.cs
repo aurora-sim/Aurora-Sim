@@ -37,7 +37,7 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
-    public class DataserverPlugin : ISharedScriptPlugin
+    public class DataserverPlugin : IScriptPlugin
     {
         public ScriptEngine m_ScriptEngine;
 
@@ -47,6 +47,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         public void Initialize(ScriptEngine engine)
         {
             m_ScriptEngine = engine;
+        }
+
+        public void AddRegion (Scene scene)
+        {
         }
 
         private class DataserverRequest

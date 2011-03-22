@@ -96,7 +96,7 @@ namespace OpenSim.Region.Framework.Interfaces
         void ListenControl(UUID itemID, int handle, int active);
         void ListenRemove(UUID itemID, int handle);
         void DeleteListener(UUID itemID);
-        OSD GetSerializationData (UUID itemID);
+        OSD GetSerializationData (UUID itemID, UUID primID);
         void CreateFromData(UUID itemID, UUID hostID,
                             OSD data);
         void AddBlockedChannel(int channel);

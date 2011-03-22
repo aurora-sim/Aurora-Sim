@@ -39,13 +39,17 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
-    public class TimerPlugin : ISharedScriptPlugin
+    public class TimerPlugin : IScriptPlugin
     {
         public ScriptEngine m_ScriptEngine;
 
         public void Initialize(ScriptEngine engine)
         {
             m_ScriptEngine = engine;
+        }
+
+        public void AddRegion (Scene scene)
+        {
         }
 
         //

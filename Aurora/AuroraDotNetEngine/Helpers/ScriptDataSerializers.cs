@@ -95,7 +95,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public StateSave FindScriptStateSave (ScriptData script)
         {
-            OSDMap component = (OSDMap)m_manager.GetComponentState (script.Part, m_componentName);
+            OSDMap component = m_manager.GetComponentState (script.Part, m_componentName) as OSDMap;
             //Attempt to find the state saves we have
             if (component != null)
             {
@@ -128,12 +128,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private void CreateOSDMapForState (ScriptData script, StateSave save)
         {
             //Get any previous state saves from the component manager
-            OSDMap component = (OSDMap)m_manager.GetComponentState (script.Part, m_componentName);
+            OSDMap component = m_manager.GetComponentState (script.Part, m_componentName) as OSDMap;
             if (component == null)
                 component = new OSDMap ();
 
             //Add our state to the list of all scripts in this object
             component[script.ItemID.ToString ()] = save.ToOSD ();
+
+            script.Part.ParentEntity.HasGroupChanged = true;
 
             //Now resave it
             m_manager.SetComponentState (script.Part, m_componentName, component);

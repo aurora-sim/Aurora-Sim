@@ -233,6 +233,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!m_enabled)
                 return;
 
+        	m_Scenes.Add(scene);
+
             //Register the console commands
             if (FirstStartup)
             {
@@ -241,37 +243,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 MainConsole.Instance.Commands.AddCommand ("ADNE stats", "ADNE stats", "Tells stats about the script engine", AuroraDotNetStats);
                 MainConsole.Instance.Commands.AddCommand ("ADNE disable", "ADNE disable", "Disables the script engine temperarily", AuroraDotNetDisable);
                 MainConsole.Instance.Commands.AddCommand ("ADNE enable", "ADNE enable", "Reenables the script engine", AuroraDotNetEnable);
-                
+
                 // Create all objects we'll be using
-                ScriptProtection = new ScriptProtectionModule(Config);
+                ScriptProtection = new ScriptProtectionModule (Config);
 
-                EventManager = new EventManager(this);
+                EventManager = new EventManager (this);
 
-                Compiler = new Compiler(this);
+                Compiler = new Compiler (this);
 
-                StateSave = new ScriptStateSave ();
-                StateSave.Initialize (this);
+                AppDomainManager = new AppDomainManager (this);
 
-                AppDomainManager = new AppDomainManager(this);
+                ScriptErrorReporter = new ScriptErrorReporter (Config);
 
-                ScriptErrorReporter = new ScriptErrorReporter(Config);
-
-                AssemblyResolver = new AssemblyResolver(ScriptEnginesPath);
+                AssemblyResolver = new AssemblyResolver (ScriptEnginesPath);
             }
-            
+
             FirstStartup = false;
 
-        	m_Scenes.Add(scene);
-
-            scene.StackModuleInterface<IScriptModule>(this);
+            scene.StackModuleInterface<IScriptModule> (this);
         }
 
         public void RegionLoaded(Scene scene)
         {
             if (!m_enabled)
                 return;
-
-            StartNonSharedScriptPlugins(scene);
 
             //Must come AFTER the script plugins setup! Otherwise you'll get weird errors from the plugins
             if (MaintenanceThread == null)
@@ -287,10 +282,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
 
                 //Only needs created once
-                MaintenanceThread = new MaintenanceThread(this);
+                MaintenanceThread = new MaintenanceThread (this);
+
+                StateSave = new ScriptStateSave ();
+                StateSave.Initialize (this);
 
                 FindDefaultLSLScript();
             }
+
+            AddRegionToScriptModules (scene);
 
             scene.EventManager.OnStartupComplete += EventManager_OnStartupComplete;
             scene.EventManager.TriggerAddToStartupQueue("ScriptEngine");
@@ -1172,16 +1172,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// Starts all non shared script plugins
         /// </summary>
         /// <param name="scene"></param>
-        private void StartNonSharedScriptPlugins(Scene scene)
+        private void AddRegionToScriptModules(Scene scene)
         {
-            List<INonSharedScriptPlugin> nonSharedPlugins = AuroraModuleLoader.PickupModules<INonSharedScriptPlugin>();
-            foreach (INonSharedScriptPlugin plugin in nonSharedPlugins)
-            {
-                plugin.Initialize(this, scene);
-            }
             lock (ScriptPlugins)
             {
-                ScriptPlugins.AddRange(nonSharedPlugins.ToArray());
+                foreach (IScriptPlugin plugin in ScriptPlugins)
+                {
+                    plugin.AddRegion (scene);
+                }
             }
         }
 
@@ -1190,8 +1188,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         public void StartSharedScriptPlugins()
         {
-            List<ISharedScriptPlugin> sharedPlugins = AuroraModuleLoader.PickupModules<ISharedScriptPlugin>();
-            foreach (ISharedScriptPlugin plugin in sharedPlugins)
+            List<IScriptPlugin> sharedPlugins = AuroraModuleLoader.PickupModules<IScriptPlugin> ();
+            foreach (IScriptPlugin plugin in sharedPlugins)
             {
                 plugin.Initialize(this);
             }
