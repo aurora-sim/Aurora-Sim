@@ -132,7 +132,8 @@ namespace OpenSim.Framework
             args["start_pos"] = OSD.FromString(startpos.ToString());
             args["client_ip"] = OSD.FromString(IPAddress);
             args["otherInfo"] = OSDParser.SerializeLLSDXmlString(OtherInformation);
-
+            args["teleport_flags"] = OSD.FromUInteger(teleportFlags);
+            
             if (Appearance != null)
             {
                 args["appearance_serial"] = OSD.FromInteger(Appearance.Serial);
@@ -189,6 +190,9 @@ namespace OpenSim.Framework
 
             if (args["start_pos"] != null)
                 Vector3.TryParse(args["start_pos"].AsString(), out startpos);
+
+            if (args["teleport_flags"] != null)
+                teleportFlags = args["teleport_flags"].AsUInteger();
 
             // DEBUG ON
             //m_log.WarnFormat("[AGENTCIRCUITDATA] agentid={0}, child={1}, startpos={2}", AgentID, child, startpos.ToString());
