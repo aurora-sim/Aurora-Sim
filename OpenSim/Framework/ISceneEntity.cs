@@ -1028,7 +1028,7 @@ namespace OpenSim.Framework
         /// Fired when a new script is created.
         /// </summary>
         public event NewRezScript OnRezScript;
-        public delegate void NewRezScript (ISceneChildEntity part, UUID itemID, string script, int startParam, bool postOnRez, int stateSource);
+        public delegate void NewRezScript (ISceneChildEntity part, UUID itemID, int startParam, bool postOnRez, int stateSource);
 
         public event NewRezScripts OnRezScripts;
         public delegate void NewRezScripts (ISceneChildEntity part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, int stateSource, UUID RezzedFrom);
@@ -1656,7 +1656,7 @@ namespace OpenSim.Framework
             }
         }
 
-        public void TriggerRezScript (ISceneChildEntity part, UUID itemID, string script, int startParam, bool postOnRez, int stateSource)
+        public void TriggerRezScript (ISceneChildEntity part, UUID itemID, int startParam, bool postOnRez, int stateSource)
         {
             NewRezScript handlerRezScript = OnRezScript;
             if (handlerRezScript != null)
@@ -1665,7 +1665,7 @@ namespace OpenSim.Framework
                 {
                     try
                     {
-                        d (part, itemID, script, startParam, postOnRez, stateSource);
+                        d (part, itemID, startParam, postOnRez, stateSource);
                     }
                     catch (Exception e)
                     {

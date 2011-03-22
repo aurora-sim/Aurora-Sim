@@ -356,50 +356,17 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (!m_part.ParentGroup.Scene.RegionInfo.RegionSettings.DisableScripts)
             {
-                if (stateSource == 1 && // Prim crossing
-
-                        m_part.ParentGroup.Scene.RegionInfo.TrustBinariesFromForeignSims)
+                lock (m_items)
                 {
-                    lock (m_items)
-                    {
-                        m_items[item.ItemID].PermsMask = 0;
-                        m_items[item.ItemID].PermsGranter = UUID.Zero;
-                    }
-
-                    bool SendUpdate = m_part.AddFlag(PrimFlags.Scripted);
-                    m_part.ParentGroup.Scene.EventManager.TriggerRezScript(
-                        m_part, item.ItemID, String.Empty, startParam, postOnRez, stateSource);
-                    HasInventoryChanged = true;
-                    m_part.ParentGroup.HasGroupChanged = true;
-                    if (SendUpdate)
-                        m_part.ScheduleUpdate(PrimUpdateFlags.PrimFlags); //We only need to send a compressed
-                    return;
+                    m_items[item.ItemID].PermsMask = 0;
+                    m_items[item.ItemID].PermsGranter = UUID.Zero;
                 }
 
-                AssetBase asset = m_part.ParentGroup.Scene.AssetService.Get(item.AssetID.ToString());
-                if (null == asset)
-                {
-                    m_log.ErrorFormat(
-                        "[PRIM INVENTORY]: " +
-                        "Couldn't start script {0}, {1} at {2} in {3} since asset ID {4} could not be found",
-                        item.Name, item.ItemID, m_part.AbsolutePosition, 
-                        m_part.ParentGroup.Scene.RegionInfo.RegionName, item.AssetID);
-                }
-                else
-                {
-                    lock (m_items)
-                    {
-                        m_items[item.ItemID].PermsMask = 0;
-                        m_items[item.ItemID].PermsGranter = UUID.Zero;
-                    }
-
-                    bool SendUpdate = m_part.AddFlag(PrimFlags.Scripted);
-                    string script = Utils.BytesToString(asset.Data);
-                    m_part.ParentGroup.Scene.EventManager.TriggerRezScript(
-                        m_part, item.ItemID, script, startParam, postOnRez, stateSource);
-                    if (SendUpdate)
-                        m_part.ScheduleUpdate(PrimUpdateFlags.PrimFlags); //We only need to send a compressed
-                }
+                bool SendUpdate = m_part.AddFlag (PrimFlags.Scripted);
+                m_part.ParentGroup.Scene.EventManager.TriggerRezScript (
+                    m_part, item.ItemID, startParam, postOnRez, stateSource);
+                if (SendUpdate)
+                    m_part.ScheduleUpdate (PrimUpdateFlags.PrimFlags); //We only need to send a compressed
             }
             HasInventoryChanged = true;
             m_part.ParentGroup.HasGroupChanged = true;

@@ -778,12 +778,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="postOnRez"></param>
         /// <param name="engine"></param>
         /// <param name="stateSource"></param>
-        public void rez_script (ISceneChildEntity part, UUID itemID, string script,
+        public void rez_script (ISceneChildEntity part, UUID itemID,
                 int startParam, bool postOnRez, int stateSource)
         {
-            if (script.StartsWith("//MRM:"))
-                return;
-
             List<IScriptModule> engines =
                 new List<IScriptModule>(
                 m_Scenes[0].RequestModuleInterfaces<IScriptModule>());
@@ -792,44 +789,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (IScriptModule m in engines)
                 names.Add(m.ScriptEngineName);
 
-            int lineEnd = script.IndexOf('\n');
-
-            if (lineEnd > 1)
-            {
-                string firstline = script.Substring(0, lineEnd).Trim();
-
-                int colon = firstline.IndexOf(':');
-                if (firstline.Length > 2 &&
-                    firstline.Substring(0, 2) == "//" && colon != -1)
-                {
-                    string engineName = firstline.Substring(2, colon - 2);
-
-                    if (names.Contains(engineName))
-                    {
-                        script = "//" + script.Substring(script.IndexOf(':') + 1);
-                    }
-                    else
-                    {
-                        TaskInventoryItem item =
-                                    part.Inventory.GetInventoryItem(itemID);
-
-                        IScenePresence presence =
-                                part.ParentEntity.Scene.GetScenePresence(
-                                item.OwnerID);
-
-                        if (presence != null)
-                        {
-                            presence.ControllingClient.SendAgentAlertMessage(
-                                     "Selected engine unavailable. " +
-                                     "Running script on " +
-                                     m_scriptEngine.ScriptEngineName,
-                                     false);
-                        }
-                    }
-                }
-            }
-
-            LUStruct itemToQueue = m_scriptEngine.StartScript(part, itemID, script,
+            LUStruct itemToQueue = m_scriptEngine.StartScript(part, itemID,
                     startParam, postOnRez, (StateSource)stateSource, UUID.Zero);
             if (itemToQueue.Action != LUType.Unknown)
                 m_scriptEngine.MaintenanceThread.AddScriptChange(new LUStruct[] { itemToQueue }, LoadPriority.FirstStart);
@@ -851,63 +811,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             List<LUStruct> ItemsToStart = new List<LUStruct>();
             foreach (TaskInventoryItem item in items)
             {
-                AssetBase asset = m_Scenes[0].AssetService.Get(item.AssetID.ToString());
-                if (null == asset)
-                {
-                    m_log.ErrorFormat(
-                        "[ADNE]: " +
-                        "Couldn't start script {0}, {1} since asset ID {2} could not be found",
-                        item.Name, item.ItemID, item.AssetID);
-                    continue;
-                }
-                string script = OpenMetaverse.Utils.BytesToString(asset.Data);
-
-                if (script.StartsWith("//MRM:"))
-                    return;
-
-                List<IScriptModule> engines =
-                    new List<IScriptModule>(
-                    m_Scenes[0].RequestModuleInterfaces<IScriptModule>());
-
-                List<string> names = new List<string>();
-                foreach (IScriptModule m in engines)
-                    names.Add(m.ScriptEngineName);
-
-                int lineEnd = script.IndexOf('\n');
-
-                if (lineEnd > 1)
-                {
-                    string firstline = script.Substring(0, lineEnd).Trim();
-
-                    int colon = firstline.IndexOf(':');
-                    if (firstline.Length > 2 &&
-                        firstline.Substring(0, 2) == "//" && colon != -1)
-                    {
-                        string engineName = firstline.Substring(2, colon - 2);
-
-                        if (names.Contains(engineName))
-                        {
-                            script = "//" + script.Substring(script.IndexOf(':') + 1);
-                        }
-                        else
-                        {
-                            IScenePresence presence =
-                                        part.ParentEntity.Scene.GetScenePresence(
-                                        item.OwnerID);
-
-                            if (presence != null)
-                            {
-                                presence.ControllingClient.SendAgentAlertMessage(
-                                         "Selected engine '" + engineName + "' is unavailable. " +
-                                         "Running script on " +
-                                         m_scriptEngine.ScriptEngineName,
-                                         false);
-                            }
-                        }
-                    }
-                }
-
-                LUStruct itemToQueue = m_scriptEngine.StartScript(part, item.ItemID, script,
+                LUStruct itemToQueue = m_scriptEngine.StartScript(part, item.ItemID,
                         startParam, postOnRez, (StateSource)stateSource, RezzedFrom);
                 if (itemToQueue.Action != LUType.Unknown)
                     ItemsToStart.Add(itemToQueue);
@@ -953,7 +857,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return false; //If the script doesn't contain the state, don't even bother queueing it
             
             //Make sure we can execute events at position
-            if (!m_scriptEngine.PipeEventsForScript(ID.part))
+            if (!m_scriptEngine.PipeEventsForScript(ID.Part))
                 return false;
 
             if (eventType == scriptEvents.timer)

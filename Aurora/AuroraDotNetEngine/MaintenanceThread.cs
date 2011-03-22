@@ -885,18 +885,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     //Check exceptions, some are ours to deal with, and others are to be logged
                     if (ex is SelfDeleteException)
                     {
-                        if (QIS.ID.part != null && QIS.ID.part.ParentEntity != null)
+                        if (QIS.ID.Part != null && QIS.ID.Part.ParentEntity != null)
                         {
-                            IBackupModule backup = QIS.ID.part.ParentEntity.Scene.RequestModuleInterface<IBackupModule> ();
+                            IBackupModule backup = QIS.ID.Part.ParentEntity.Scene.RequestModuleInterface<IBackupModule> ();
                             if (backup != null)
                                 backup.DeleteSceneObjects(
-                                    new ISceneEntity[1] { QIS.ID.part.ParentEntity }, true);
+                                    new ISceneEntity[1] { QIS.ID.Part.ParentEntity }, true);
                         }
                     }
                     else if (ex is ScriptDeleteException)
                     {
-                        if (QIS.ID.part != null && QIS.ID.part.ParentEntity != null)
-                            QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
+                        if (QIS.ID.Part != null && QIS.ID.Part.ParentEntity != null)
+                            QIS.ID.Part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
                     }
                     //Log it for the user
                     else if (!(ex is EventAbortException) &&

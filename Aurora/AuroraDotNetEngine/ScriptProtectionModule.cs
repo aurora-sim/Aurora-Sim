@@ -285,17 +285,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             lock (ScriptsItems)
             {
-                if(ID.part != null)
-                    ScriptsItems[ID.ItemID] = ID.part.UUID;
+                if(ID.Part != null)
+                    ScriptsItems[ID.ItemID] = ID.Part.UUID;
             }
             lock (Scripts)
             {
                 Dictionary<UUID, ScriptData> Instances = new Dictionary<UUID, ScriptData>();
-                if (!Scripts.TryGetValue(ID.part.UUID, out Instances))
+                if (!Scripts.TryGetValue(ID.Part.UUID, out Instances))
                     Instances = new Dictionary<UUID, ScriptData>();
 
                 Instances[ID.ItemID] = ID;
-                Scripts[ID.part.UUID] = Instances;
+                Scripts[ID.Part.UUID] = Instances;
             }
         }
         
@@ -324,12 +324,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             lock (Scripts)
             {
                 Dictionary<UUID, ScriptData> Instances = new Dictionary<UUID, ScriptData>();
-                if (Scripts.ContainsKey(Data.part.UUID))
+                if (Scripts.ContainsKey(Data.Part.UUID))
                 {
-                    Instances = Scripts[Data.part.UUID];
+                    Instances = Scripts[Data.Part.UUID];
                     Instances.Remove(Data.ItemID);
                 }
-                Scripts[Data.part.UUID] = Instances;
+                Scripts[Data.Part.UUID] = Instances;
             }
         }
         

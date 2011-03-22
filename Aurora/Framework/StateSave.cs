@@ -21,6 +21,7 @@ namespace Aurora.Framework
         public double MinEventDelay;
         public string AssemblyName;
         public UUID UserInventoryID;
+        public bool TargetOmegaWasSet;
 
         public override void FromOSD (OSDMap map)
         {
@@ -36,6 +37,7 @@ namespace Aurora.Framework
             MinEventDelay = map["MinEventDelay"].AsReal ();
             AssemblyName = map["AssemblyName"].AsString ();
             UserInventoryID = map["UserInventoryID"].AsUUID ();
+            TargetOmegaWasSet = map["TargetOmegaWasSet"].AsBoolean ();
         }
 
         public override OSDMap ToOSD ()
@@ -53,6 +55,7 @@ namespace Aurora.Framework
             map.Add ("MinEventDelay", MinEventDelay);
             map.Add ("AssemblyName", AssemblyName);
             map.Add ("UserInventoryID", UserInventoryID);
+            map.Add ("TargetOmegaWasSet", TargetOmegaWasSet);
             return map;
         }
 

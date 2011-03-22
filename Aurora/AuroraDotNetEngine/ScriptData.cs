@@ -103,7 +103,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         //This is the UUID of the actual script.
         public UUID ItemID;
-        public ISceneChildEntity part;
+        public ISceneChildEntity Part;
 
         public int ScriptScore = 0;
         private ScriptEngine m_ScriptEngine;
@@ -146,16 +146,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public TaskInventoryItem InventoryItem;
         public DetectParams[] LastDetectParams = null;
         public OSDMap PluginData = new OSDMap();
-        private StateSave LastStateSave = null;
         private double DefaultEventDelayTicks = (double)0.05;
         private double TouchEventDelayTicks = (double)0.1;
         private double TimerEventDelayTicks = (double)0.01;
         private double CollisionEventDelayTicks = (double)0.5;
         private Dictionary<string, long> NextEventDelay = new Dictionary<string, long>();
         public bool MovingInQueue = false;
-        /// <summary>
-        /// Note: This should be saved in the state save!
-        /// </summary>
         public bool TargetOmegaWasSet = false;
 
         public int EventsProcDataLocked = 0;
@@ -227,8 +223,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Only if this script changed target omega do we reset it
             if (TargetOmegaWasSet)
             {
-                part.AngularVelocity = Vector3.Zero; // Removed in SL
-                part.ScheduleUpdate(PrimUpdateFlags.AngularVelocity); // Send changes to client.
+                Part.AngularVelocity = Vector3.Zero; // Removed in SL
+                Part.ScheduleUpdate(PrimUpdateFlags.AngularVelocity); // Send changes to client.
             }
 
             #endregion
@@ -236,7 +232,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (Script != null)
             {
                 // Stop long command on script
-                m_ScriptEngine.RemoveScript(part.UUID, ItemID);
+                m_ScriptEngine.RemoveScript(Part.UUID, ItemID);
 
                 //Release the script and destroy it
                 ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as MarshalByRefObject);
@@ -254,7 +250,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_ScriptEngine.AppDomainManager.UnloadScriptAppDomain(AppDomain);
             AppDomain = null;
 
-            m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Closed Script " + InventoryItem.Name + " in " + part.Name);
+            m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Closed Script " + InventoryItem.Name + " in " + Part.Name);
         }
 
         /// <summary>
@@ -266,7 +262,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             if (InventoryItem != null)
             {
-                if (part != null)
+                if (Part != null)
                 {
                     int permsMask = InventoryItem.PermsMask;
                     UUID permsGranter = InventoryItem.PermsGranter;
@@ -278,7 +274,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         {
                             IScriptControllerModule m = sp.RequestModuleInterface<IScriptControllerModule> ();
                             if (m != null)
-                                m.UnRegisterControlEventsToScript (part.LocalId, ItemID);
+                                m.UnRegisterControlEventsToScript (Part.LocalId, ItemID);
                         }
                     }
                 }
@@ -324,9 +320,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Script.ResetVars();
             //Tell the SOP about the change.
             if (!Running) //No events!
-                part.SetScriptEvents(ItemID, 0);
+                Part.SetScriptEvents(ItemID, 0);
             else
-                part.SetScriptEvents(ItemID, Script.GetStateEventFlags(State));
+                Part.SetScriptEvents(ItemID, Script.GetStateEventFlags(State));
 
             //Remove MinEventDelay
             EventDelayTicks = 0;
@@ -338,7 +334,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             RemoveTouchEvents = true;
 
             //Unset the events that may still be firing after the change.
-            m_ScriptEngine.RemoveScript(part.UUID, ItemID);
+            m_ScriptEngine.RemoveScript(Part.UUID, ItemID);
 
             //Fire state_entry
             m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew(this,false); // accept new events
@@ -368,7 +364,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 //                VersionID++;
 
                 //Tell the SOP about the change.
-                part.SetScriptEvents (ItemID, Script.GetStateEventFlags (state));
+                Part.SetScriptEvents (ItemID, Script.GetStateEventFlags (state));
                 ScriptEngine.ScriptProtection.AddNewScript (this);
 
                 m_ScriptEngine.MaintenanceThread.AddEventSchQueue (this, "state_entry",
@@ -385,7 +381,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         //Makes ToString look nicer
         public override string ToString()
         {
-            return "UUID: " + part.UUID + ", itemID: " + ItemID;
+            return "UUID: " + Part.UUID + ", itemID: " + ItemID;
         }
 
         /// <summary>
@@ -398,7 +394,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (IScriptApi api in m_ScriptEngine.GetAPIs())
             {
                 Apis[api.Name] = api;
-                Apis[api.Name].Initialize(m_ScriptEngine, part, part.LocalId, ItemID, ScriptEngine.ScriptProtection);
+                Apis[api.Name].Initialize(m_ScriptEngine, Part, Part.LocalId, ItemID, ScriptEngine.ScriptProtection);
                 Script.InitApi(api);
             }
             Script.UpdateInitialValues();
@@ -406,7 +402,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void DisplayUserNotification(string message, string stage, bool postScriptCAPSError, bool IsError)
         {
-            IScenePresence presence = World.GetScenePresence(part.OwnerID);
+            IScenePresence presence = World.GetScenePresence(Part.OwnerID);
             if (presence != null && (!PostOnRez) && postScriptCAPSError)
                 if (m_ScriptEngine.ChatCompileErrorsToDebugChannel)
                     presence.ControllingClient.SendAgentAlertMessage("Script saved with errors, check debug window!", false);
@@ -435,7 +431,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
                 if (chatModule != null)
                     chatModule.SimChat(inworldtext, ChatTypeEnum.DebugChannel,
-                        2147483647, part.AbsolutePosition, part.Name, part.UUID, false, World);
+                        2147483647, Part.AbsolutePosition, Part.Name, Part.UUID, false, World);
             }
             m_ScriptEngine.ScriptFailCount++;
             m_ScriptEngine.ScriptErrorMessages += inworldtext;
@@ -454,7 +450,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 //Post the event for the prim that rezzed us
                 m_ScriptEngine.AddToObjectQueue(RezzedFrom, "object_rez", new DetectParams[0],
-                    -1, new object[] { (LSL_Types.LSLString) part.ParentEntity.RootChild.UUID.ToString() });
+                    -1, new object[] { (LSL_Types.LSLString) Part.ParentEntity.RootChild.UUID.ToString() });
                 RezzedFrom = UUID.Zero;
             }
             if (StartedFromSavedState)
@@ -463,7 +459,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     m_ScriptEngine.AddToScriptQueue(this, "on_rez", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { new LSL_Types.LSLInteger(StartParam) });
 
                 if (stateSource == StateSource.AttachedRez)
-                    m_ScriptEngine.AddToScriptQueue(this, "attach", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
+                    m_ScriptEngine.AddToScriptQueue(this, "attach", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { new LSL_Types.LSLString(Part.AttachedAvatar.ToString()) });
                 else if (stateSource == StateSource.NewRez)
                     m_ScriptEngine.AddToScriptQueue(this, "changed", new DetectParams[0], VersionID, EventPriority.FirstStart, new Object[] { new LSL_Types.LSLInteger(256) });
                 else if (stateSource == StateSource.PrimCrossing)
@@ -478,7 +474,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     m_ScriptEngine.AddToScriptQueue(this, "on_rez", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { new LSL_Types.LSLInteger(StartParam) });
 
                 if (stateSource == StateSource.AttachedRez)
-                    m_ScriptEngine.AddToScriptQueue(this, "attach", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { new LSL_Types.LSLString(part.AttachedAvatar.ToString()) });
+                    m_ScriptEngine.AddToScriptQueue(this, "attach", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { new LSL_Types.LSLString(Part.AttachedAvatar.ToString()) });
             }
         }
 
@@ -501,20 +497,46 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_ScriptEngine.ScriptErrorReporter.RemoveError(ItemID);
 
             //Find the inventory item
-            part.TaskInventory.TryGetValue(ItemID, out InventoryItem);
+            Part.TaskInventory.TryGetValue(ItemID, out InventoryItem);
 
             //Try to see if this was rezzed from someone's inventory
-            UserInventoryItemID = part.FromUserInventoryItemID;
+            UserInventoryItemID = Part.FromUserInventoryItemID;
 
             //Try to find the avatar who started this.
-            IScenePresence presence = World.GetScenePresence(part.OwnerID);
+            IScenePresence presence = World.GetScenePresence(Part.OwnerID);
 
 
             //Now that the initial loading is complete,
             // we need to find the state save and start loading the info from it
 
-            LastStateSave = m_ScriptEngine.StateSave.FindScriptStateSave (this);
-
+            StateSave LastStateSave = m_ScriptEngine.StateSave.FindScriptStateSave (this);
+            if (LastStateSave != null)
+            {
+                //Deserialize the most important pieces first
+                Source = LastStateSave.Source;
+            }
+            if (Source == "")
+            {
+                AssetBase asset = Part.ParentEntity.Scene.AssetService.Get (InventoryItem.AssetID.ToString ());
+                if (null == asset)
+                {
+                    m_log.ErrorFormat (
+                        "[ScriptData]: " +
+                        "Couldn't start script {0}, {1} at {2} in {3} since asset ID {4} could not be found",
+                        InventoryItem.Name, InventoryItem.ItemID, Part.AbsolutePosition,
+                        Part.ParentEntity.Scene.RegionInfo.RegionName, InventoryItem.AssetID);
+                    return;
+                }
+                Source = Utils.BytesToString (asset.Data);
+            }
+            if (Source == "")
+            {
+                m_log.ErrorFormat (
+                    "[ScriptData]: " +
+                    "Couldn't start script {0}, {1} at {2} in {3} since asset ID {4} could not be found",
+                    InventoryItem.Name, InventoryItem.ItemID, Part.AbsolutePosition,
+                    Part.ParentEntity.Scene.RegionInfo.RegionName, InventoryItem.AssetID);
+            }
 
             #region HTML Reader
 
@@ -578,7 +600,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     try
                     {
-                        m_ScriptEngine.Compiler.PerformScriptCompile(Source, ItemID, part.OwnerID, VersionID, out AssemblyName);
+                        m_ScriptEngine.Compiler.PerformScriptCompile(Source, ItemID, Part.OwnerID, VersionID, out AssemblyName);
                         #region Errors and Warnings
 
                         #region Errors
@@ -667,14 +689,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             SetApis();
 
             //Set the event flags
-            part.SetScriptEvents(ItemID, Script.GetStateEventFlags(State));
+            Part.SetScriptEvents(ItemID, Script.GetStateEventFlags(State));
 
             //Now do the full state save finding now that we have an app domain.
             if (LastStateSave != null)
             {
                 m_ScriptEngine.StateSave.Deserialize(this, LastStateSave);
 
-                m_ScriptEngine.CreateFromData(part.UUID, ItemID, part.UUID,
+                m_ScriptEngine.CreateFromData(Part.UUID, ItemID, Part.UUID,
                     PluginData);
 
                 // we get new rez events on sim restart, too
@@ -698,9 +720,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             m_log.Debug("[" + m_ScriptEngine.ScriptEngineName +
                     "]: Started Script " + InventoryItem.Name +
-                    " in object " + part.Name + "@" + part.ParentEntity.RootChild.AbsolutePosition +
+                    " in object " + Part.Name + "@" + Part.ParentEntity.RootChild.AbsolutePosition +
                     (presence != null ? " by " + presence.Name : "") + 
-                    " in region " + part.ParentEntity.Scene.RegionInfo.RegionName +
+                    " in region " + Part.ParentEntity.Scene.RegionInfo.RegionName +
                     " in " + time.TotalSeconds + " seconds.");
         }
 

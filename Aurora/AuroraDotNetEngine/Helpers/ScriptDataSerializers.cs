@@ -46,11 +46,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
         }
 
-        public StateSave FindScriptStateSave (ScriptData scriptData)
-        {
-            throw new NotImplementedException ();
-        }
-
         public void SaveStateTo (ScriptData script)
         {
             StateSave stateSave = new StateSave ();
@@ -65,6 +60,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             stateSave.Source = script.Source;
             stateSave.PermsGranter = script.InventoryItem.PermsGranter;
             stateSave.PermsMask = script.InventoryItem.PermsMask;
+            stateSave.TargetOmegaWasSet = script.TargetOmegaWasSet;
 
             //Vars
             Dictionary<string, Object> vars = new Dictionary<string, object> ();
@@ -73,13 +69,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             stateSave.Variables = WebUtils.BuildXmlResponse (vars);
 
             //Plugins
-            stateSave.Plugins = m_module.GetSerializationData (script.ItemID, script.part.UUID);
+            stateSave.Plugins = m_module.GetSerializationData (script.ItemID, script.Part.UUID);
 
             CreateOSDMapForState (script, stateSave);
-        }
-
-        public void DeleteFrom (ScriptData script)
-        {
         }
 
         public void Deserialize (ScriptData instance, StateSave save)
@@ -94,16 +86,49 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             instance.Source = save.Source;
             instance.InventoryItem.PermsGranter = save.PermsGranter;
             instance.InventoryItem.PermsMask = save.PermsMask;
+            instance.TargetOmegaWasSet = save.TargetOmegaWasSet;
 
             Dictionary<string, object> vars = WebUtils.ParseXmlResponse (save.Variables);
-            if (vars != null && vars.Count != 0)
+            if (vars != null && vars.Count != 0 || instance.Script != null)
                 instance.Script.SetStoreVars (vars);
+        }
+
+        public StateSave FindScriptStateSave (ScriptData script)
+        {
+            OSDMap component = (OSDMap)m_manager.GetComponentState (script.Part, m_componentName);
+            //Attempt to find the state saves we have
+            if (component != null)
+            {
+                OSD o;
+                //If we have one for this item, deserialize it
+                if(component.TryGetValue(script.ItemID.ToString(), out o))
+                {
+                    StateSave save = new StateSave ();
+                    save.FromOSD ((OSDMap)o);
+                    return save;
+                }
+            }
+            return null;
+        }
+
+        public void DeleteFrom (ScriptData script)
+        {
+            OSDMap component = (OSDMap)m_manager.GetComponentState (script.Part, m_componentName);
+            //Attempt to find the state saves we have
+            if (component != null)
+            {
+                //if we did remove something, resave it
+                if(component.Remove(script.ItemID.ToString()))
+                {
+                    m_manager.SetComponentState (script.Part, m_componentName, component);
+                }
+            }
         }
 
         private void CreateOSDMapForState (ScriptData script, StateSave save)
         {
             //Get any previous state saves from the component manager
-            OSDMap component = (OSDMap)m_manager.GetComponentState (script.part, m_componentName);
+            OSDMap component = (OSDMap)m_manager.GetComponentState (script.Part, m_componentName);
             if (component == null)
                 component = new OSDMap ();
 
@@ -111,7 +136,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             component[script.ItemID.ToString ()] = save.ToOSD ();
 
             //Now resave it
-            m_manager.SetComponentState (script.part, m_componentName, component);
+            m_manager.SetComponentState (script.Part, m_componentName, component);
         }
     }
 }

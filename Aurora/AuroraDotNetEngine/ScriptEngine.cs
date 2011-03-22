@@ -803,8 +803,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             id.Running = true;
-            id.part.SetScriptEvents(itemID, id.Script.GetStateEventFlags(id.State));
-            id.part.ScheduleUpdate(PrimUpdateFlags.FindBest);
+            id.Part.SetScriptEvents(itemID, id.Script.GetStateEventFlags(id.State));
+            id.Part.ScheduleUpdate(PrimUpdateFlags.FindBest);
         }
 
         public void OnStopScript(uint localID, UUID itemID)
@@ -814,8 +814,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             ID.Running = false;
-            ID.part.SetScriptEvents(itemID, 0);
-            ID.part.ScheduleUpdate(PrimUpdateFlags.FindBest);
+            ID.Part.SetScriptEvents(itemID, 0);
+            ID.Part.ScheduleUpdate(PrimUpdateFlags.FindBest);
         }
 
         public void OnGetScriptRunning(IClientAPI controllingClient,
@@ -878,7 +878,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         /// <param name="itemID"></param>
         /// <param name="localID"></param>
-        public LUStruct StartScript(ISceneChildEntity part, UUID itemID, string Script, int startParam, bool postOnRez, StateSource statesource, UUID RezzedFrom)
+        public LUStruct StartScript(ISceneChildEntity part, UUID itemID, int startParam, bool postOnRez, StateSource statesource, UUID RezzedFrom)
         {
             ScriptData id = ScriptProtection.GetScript(part.UUID, itemID);
             
@@ -909,8 +909,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             id.PostOnRez = postOnRez;
             id.StartParam = startParam;
             id.stateSource = statesource;
-            id.Source = Script;
-            id.part = part;
+            id.Part = part;
             id.World = part.ParentEntity.Scene;
             id.RezzedFrom = RezzedFrom;
             ls.ID = id;
@@ -931,17 +930,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             id.stateSource = (StateSource)stateSource;
             id.Source = script;
             id.EventDelayTicks = 0;
-            id.part = findPrim(partID);
+            id.Part = findPrim(partID);
             id.ItemID = itemID;
             id.EventDelayTicks = 0;
 
             //No SOP, no compile.
-            if (id.part == null)
+            if (id.Part == null)
             {
                 m_log.ErrorFormat("[{0}]: Could not find scene object part corresponding " + "to localID {1} to start script", ScriptEngineName, partID);
                 return;
             }
-            id.World = id.part.ParentEntity.Scene;
+            id.World = id.Part.ParentEntity.Scene;
             ls.ID = id;
             ScriptProtection.AddNewScript(id);
             MaintenanceThread.AddScriptChange(new LUStruct[] { ls }, LoadPriority.Restart);
@@ -976,7 +975,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Disconnect from other modules
             ObjectRemoved handlerObjectRemoved = OnObjectRemoved;
             if (handlerObjectRemoved != null)
-                handlerObjectRemoved(ls.ID.part.UUID);
+                handlerObjectRemoved(ls.ID.Part.UUID);
 
             ScriptRemoved handlerScriptRemoved = OnScriptRemoved;
             if (handlerScriptRemoved != null)
@@ -993,7 +992,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (SD == null)
                         return;
 
-                    IScenePresence presence = SD.World.GetScenePresence(SD.part.OwnerID);
+                    IScenePresence presence = SD.World.GetScenePresence(SD.Part.OwnerID);
 
                     ScriptControllers SC = new ScriptControllers();
                     if (presence != null)
@@ -1004,25 +1003,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             SC = m.GetScriptControler (SD.ItemID);
                             if ((newItem.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
                             {
-                                m.UnRegisterControlEventsToScript (SD.part.LocalId, SD.ItemID);
+                                m.UnRegisterControlEventsToScript (SD.Part.LocalId, SD.ItemID);
                             }
                         }
                     }
-                    OSDMap Plugins = GetSerializationData(SD.ItemID, SD.part.UUID);
-                    RemoveScript(SD.part.UUID, SD.ItemID);
+                    OSDMap Plugins = GetSerializationData(SD.ItemID, SD.Part.UUID);
+                    RemoveScript(SD.Part.UUID, SD.ItemID);
 
                     MaintenanceThread.SetEventSchSetIgnoreNew(SD, true);
 
                     ScriptProtection.RemoveScript(SD);
 
-                    SD.part = newPart;
+                    SD.Part = newPart;
                     SD.ItemID = newItem.ItemID;
                     //Find the asset ID
                     SD.InventoryItem = newItem;
                     //Try to see if this was rezzed from someone's inventory
-                    SD.UserInventoryItemID = SD.part.FromUserInventoryItemID;
+                    SD.UserInventoryItemID = SD.Part.FromUserInventoryItemID;
 
-                    CreateFromData(SD.part.UUID, SD.ItemID, SD.part.UUID, Plugins);
+                    CreateFromData(SD.Part.UUID, SD.ItemID, SD.Part.UUID, Plugins);
 
                     SD.World = newPart.ParentGroup.Scene;
                     SD.SetApis();
@@ -1033,7 +1032,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (presence != null && (newItem.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
                     {
                         SC.itemID = newItem.ItemID;
-                        SC.part = SD.part;
+                        SC.part = SD.Part;
                         IScriptControllerModule m = presence.RequestModuleInterface<IScriptControllerModule> ();
                         if (m != null)
                             m.RegisterScriptController(SC);
@@ -1430,10 +1429,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Dictionary<uint, float> topScripts = new Dictionary<uint, float>();
             foreach (ScriptData script in data)
             {
-                if (!topScripts.ContainsKey(script.part.ParentEntity.LocalId))
-                    topScripts.Add(script.part.ParentEntity.LocalId, script.ScriptScore);
+                if (!topScripts.ContainsKey(script.Part.ParentEntity.LocalId))
+                    topScripts.Add(script.Part.ParentEntity.LocalId, script.ScriptScore);
                 else
-                    topScripts[script.part.ParentEntity.LocalId] += script.ScriptScore;
+                    topScripts[script.Part.ParentEntity.LocalId] += script.ScriptScore;
             }
             return topScripts;
         }
