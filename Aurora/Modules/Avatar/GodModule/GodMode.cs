@@ -254,10 +254,10 @@ namespace Aurora.Modules
                 HandleRegionInfoRequest(sp.ControllingClient, ((Scene)client.Scene));
             }
 
-            //Also have to reregister the region with the grid
+            //Update the grid server as well
             IGridRegisterModule gridRegisterModule = client.Scene.RequestModuleInterface<IGridRegisterModule>();
             if (gridRegisterModule != null)
-                gridRegisterModule.RegisterRegionWithGrid(client.Scene);
+                gridRegisterModule.UpdateGridRegion(client.Scene);
         }
 
         private class EstateChange

@@ -137,7 +137,10 @@ namespace Aurora.Modules.RegionLoader
             else
                 textBox4.Text = "Adult";
             DisabledEdit.Checked = region.Disabled;
-            textBox9.Text = region.ExternalHostName;
+            if (region.FindExternalAutomatically)
+                textBox9.Text = "DEFAULT";
+            else
+                textBox9.Text = region.ExternalHostName;
             textBox7.Text = region.HttpPort.ToString();
             textBox3.Text = (region.RegionLocX / Constants.RegionSize).ToString();
             textBox5.Text = (region.RegionLocY / Constants.RegionSize).ToString();
@@ -226,7 +229,10 @@ namespace Aurora.Modules.RegionLoader
             else
                 textBox4.Text = "Adult";
             DisabledEdit.Checked = region.Disabled;
-            textBox9.Text = region.ExternalHostName;
+            if (region.FindExternalAutomatically)
+                textBox9.Text = "DEFAULT";
+            else
+                textBox9.Text = region.ExternalHostName;
             textBox7.Text = region.InternalEndPoint.Port.ToString();
             textBox3.Text = (region.RegionLocX / Constants.RegionSize).ToString();
             textBox5.Text = (region.RegionLocY / Constants.RegionSize).ToString();

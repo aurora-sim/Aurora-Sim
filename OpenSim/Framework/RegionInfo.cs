@@ -366,6 +366,7 @@ namespace OpenSim.Framework
                 args["allow_physical_prims"] = OSD.FromBoolean (AllowPhysicalPrims);
                 args["number_startup"] = OSD.FromInteger (NumberStartup);
                 args["startupType"] = OSD.FromInteger ((int)Startup);
+                args["FindExternalIP"] = OSD.FromBoolean (FindExternalAutomatically);
             }
             return args;
         }
@@ -438,6 +439,8 @@ namespace OpenSim.Framework
                 NumberStartup = args["number_startup"].AsInteger();
             if (args.ContainsKey ("startupType"))
                 Startup = (StartupType)args["startupType"].AsInteger ();
+            if (args.ContainsKey ("FindExternalIP"))
+                FindExternalAutomatically = args["FindExternalIP"].AsBoolean ();
         }
     }
 }

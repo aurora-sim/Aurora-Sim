@@ -67,7 +67,7 @@ namespace Aurora.Services.DataService
             for (int i = 0; i < RetVal.Count; i++)
             {
                 replyData.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeJson(RetVal[i]));
-                if (replyData.ExternalHostName == "DEFAULT")
+                if (replyData.ExternalHostName == "DEFAULT" || replyData.FindExternalAutomatically)
                 {
                     replyData.ExternalHostName = Aurora.Framework.Utilities.GetExternalIp();
                 }
@@ -93,7 +93,7 @@ namespace Aurora.Services.DataService
             if (RetVal.Count == 0)
                 return null;
             replyData.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeJson(RetVal[0]));
-            if (replyData.ExternalHostName == "DEFAULT")
+            if (replyData.ExternalHostName == "DEFAULT" || replyData.FindExternalAutomatically)
             {
                 replyData.ExternalHostName = Aurora.Framework.Utilities.GetExternalIp();
             }
@@ -109,7 +109,7 @@ namespace Aurora.Services.DataService
             if (RetVal.Count == 0)
                 return null;
             replyData.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeJson(RetVal[0]));
-            if (replyData.ExternalHostName == "DEFAULT")
+            if (replyData.ExternalHostName == "DEFAULT" || replyData.FindExternalAutomatically)
             {
                 replyData.ExternalHostName = Aurora.Framework.Utilities.GetExternalIp();
             }
