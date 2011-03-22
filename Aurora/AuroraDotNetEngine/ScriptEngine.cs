@@ -412,7 +412,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     try
                     {
                         //Remove the state save
-                        StateSave.DeleteFrom (ID.part, ID);
+                        StateSave.DeleteFrom (ID);
                         ID.Start (false);
                         //Reset this every time so that we don't reuse any compiled scripts
                         ScriptProtection.Reset (false);
@@ -952,7 +952,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ScriptData id = ScriptProtection.GetScript(PrimID, ItemID);
             if (id == null)
                 return;
-            StateSave.SaveStateTo (id.part, id);
+            StateSave.SaveStateTo (id);
         }
 
         /// <summary>
@@ -1041,7 +1041,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                     ScriptProtection.AddNewScript(SD);
 
-                    StateSave.SaveStateTo (SD.part, SD);
+                    StateSave.SaveStateTo (SD);
                 }
             }
             catch

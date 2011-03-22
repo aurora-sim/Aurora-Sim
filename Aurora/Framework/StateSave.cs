@@ -14,7 +14,7 @@ namespace Aurora.Framework
         public UUID ItemID;
         public bool Running;
         public bool Disabled;
-        public object Variables;
+        public string Variables;
         public object Plugins;
         public string Permissions;
         public double MinEventDelay;
@@ -44,7 +44,7 @@ namespace Aurora.Framework
             map.Add ("ItemID", ItemID);
             map.Add ("Running", Running);
             map.Add ("Disabled", Disabled);
-            map.Add ("Variables", Variables.ToString ());
+            map.Add ("Variables", Variables);
             map.Add ("Plugins", Plugins.ToString ());
             map.Add ("Permissions", Permissions);
             map.Add ("MinEventDelay", MinEventDelay);

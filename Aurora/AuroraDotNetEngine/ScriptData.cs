@@ -196,7 +196,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     // dont think we should fire state_exit here
                     //                    m_ScriptEngine.MaintenanceThread.DoAndWaitEventSch(this, "state_exit",
                     //                        new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0]);
-                    m_ScriptEngine.StateSave.SaveStateTo (part, this);
+                    m_ScriptEngine.StateSave.SaveStateTo (this);
                 }
             }
             VersionID += 5;
@@ -343,7 +343,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew(this,false); // accept new events
             m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { });
 
-            m_ScriptEngine.StateSave.SaveStateTo (part, this);
+            m_ScriptEngine.StateSave.SaveStateTo (this);
             m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Reset Script " + ItemID);
         }
 
@@ -373,7 +373,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 m_ScriptEngine.MaintenanceThread.AddEventSchQueue (this, "state_entry",
                     new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0] { });
                 //Save a state save after a state change, its a large change in the script's function
-                m_ScriptEngine.StateSave.SaveStateTo (part, this);
+                m_ScriptEngine.StateSave.SaveStateTo (this);
             }
         }
 
@@ -512,6 +512,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Now that the initial loading is complete,
             // we need to find the state save and start loading the info from it
 
+            LastStateSave = m_ScriptEngine.StateSave.FindScriptStateSave (this);
 
 
             #region HTML Reader
@@ -549,18 +550,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Find the default state save
             DefaultState = m_ScriptEngine.Compiler.FindDefaultStateForScript (Source);
 
-            // Attempt to find a state save to load from
-            
-            if (!reupload && Loading && ScriptFrontend != null) //Only get state saves on rezzing or region start up, in both cases, we will have the cached state as we loaded all states when the region started. 
-                LastStateSave = ScriptFrontend.GetStateSave(ItemID, UserInventoryItemID);
-
-            if(LastStateSave != null)
-                savedStateAssemblyName = Path.Combine(m_ScriptEngine.ScriptEnginesPath, Path.Combine(
-                    LastStateSave.AssemblyName.ToString().Substring(0, 3),
-                    LastStateSave.AssemblyName));
             //If the saved state exists, if it isn't a reupload (something changed), and if the assembly exists, load the state save
             if (!reupload && Loading && LastStateSave != null
-                && File.Exists(savedStateAssemblyName))
+                && File.Exists(LastStateSave.AssemblyName))
             {
                 //Retrive the previous assembly
                 AssemblyName = savedStateAssemblyName;
@@ -679,7 +671,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Now do the full state save finding now that we have an app domain.
             if (LastStateSave != null)
             {
-                ScriptDataSQLSerializer.Deserialize(this, m_ScriptEngine, LastStateSave);
+                m_ScriptEngine.StateSave.Deserialize(this, LastStateSave);
 
                 m_ScriptEngine.CreateFromData(part.UUID, ItemID, part.UUID,
                     PluginData);
@@ -692,7 +684,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             else
             {
                 //Make a new state save now
-                m_ScriptEngine.StateSave.SaveStateTo (part, this);
+                m_ScriptEngine.StateSave.SaveStateTo (this);
             }
 
             // Add it to our script memstruct so it can be found by other scripts

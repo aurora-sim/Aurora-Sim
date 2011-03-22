@@ -310,7 +310,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void RemoveState(ScriptData ID)
         {
-            m_ScriptEngine.StateSave.DeleteFrom (ID.part, ID);
+            m_ScriptEngine.StateSave.DeleteFrom (ID);
         }
 
         #endregion
