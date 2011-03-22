@@ -16,7 +16,8 @@ namespace Aurora.Framework
         public bool Disabled;
         public string Variables;
         public OSDMap Plugins;
-        public string Permissions;
+        public UUID PermsGranter;
+        public int PermsMask;
         public double MinEventDelay;
         public string AssemblyName;
         public UUID UserInventoryID;
@@ -30,7 +31,8 @@ namespace Aurora.Framework
             Disabled = map["Disabled"].AsBoolean ();
             Variables = map["Variables"].AsString ();
             Plugins = (OSDMap)map["Plugins"];
-            Permissions = map["Permissions"].AsString ();
+            PermsGranter = map["PermsGranter"].AsUUID ();
+            PermsMask = map["PermsMask"].AsInteger ();
             MinEventDelay = map["MinEventDelay"].AsReal ();
             AssemblyName = map["AssemblyName"].AsString ();
             UserInventoryID = map["UserInventoryID"].AsUUID ();
@@ -46,7 +48,8 @@ namespace Aurora.Framework
             map.Add ("Disabled", Disabled);
             map.Add ("Variables", Variables);
             map.Add ("Plugins", Plugins);
-            map.Add ("Permissions", Permissions);
+            map.Add ("PermsGranter", PermsGranter);
+            map.Add ("PermsMask", PermsMask);
             map.Add ("MinEventDelay", MinEventDelay);
             map.Add ("AssemblyName", AssemblyName);
             map.Add ("UserInventoryID", UserInventoryID);

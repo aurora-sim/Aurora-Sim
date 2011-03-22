@@ -62,6 +62,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             stateSave.UserInventoryID = script.UserInventoryItemID;
             //Allow for the full path to be put down, not just the assembly name itself
             stateSave.AssemblyName = script.AssemblyName;
+            stateSave.Source = script.Source;
+            stateSave.PermsGranter = script.InventoryItem.PermsGranter;
+            stateSave.PermsMask = script.InventoryItem.PermsMask;
 
             //Vars
             Dictionary<string, Object> vars = new Dictionary<string, object> ();
@@ -71,26 +74,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             //Plugins
             stateSave.Plugins = m_module.GetSerializationData (script.ItemID, script.part.UUID);
-
-
-
-            //
-            //TODO: FIX THIS
-            //
-
-
-
-
-            //perms
-            string perms = "";
-            if (script.InventoryItem != null)
-            {
-                if (script.InventoryItem.PermsMask != 0 && script.InventoryItem.PermsGranter != UUID.Zero)
-                {
-                    perms += script.InventoryItem.PermsGranter.ToString () + "," + script.InventoryItem.PermsMask.ToString ();
-                }
-            }
-            stateSave.Permissions = perms;
 
             CreateOSDMapForState (script, stateSave);
         }
@@ -108,29 +91,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             instance.Disabled = save.Disabled;
             instance.UserInventoryItemID = save.UserInventoryID;
             instance.PluginData = save.Plugins;
+            instance.Source = save.Source;
+            instance.InventoryItem.PermsGranter = save.PermsGranter;
+            instance.InventoryItem.PermsMask = save.PermsMask;
 
             Dictionary<string, object> vars = WebUtils.ParseXmlResponse (save.Variables);
             if (vars != null && vars.Count != 0)
                 instance.Script.SetStoreVars (vars);
-
-
-            //
-            //TODO: FIX ME
-            //
-
-
-
-
-            if (save.Permissions != " " && save.Permissions != "")
-            {
-                instance.InventoryItem.PermsGranter = new UUID (save.Permissions.Split (',')[0]);
-                instance.InventoryItem.PermsMask = int.Parse (save.Permissions.Split (',')[1], NumberStyles.Integer, Culture.NumberFormatInfo);
-            }
         }
 
         private void CreateOSDMapForState (ScriptData script, StateSave save)
         {
-            m_manager.SetComponentState (script.part, m_componentName, Insert.ToOSD ());
+            //Get any previous state saves from the component manager
+            OSDMap component = (OSDMap)m_manager.GetComponentState (script.part, m_componentName);
+            if (component == null)
+                component = new OSDMap ();
+
+            //Add our state to the list of all scripts in this object
+            component[script.ItemID.ToString ()] = save.ToOSD ();
+
+            //Now resave it
+            m_manager.SetComponentState (script.part, m_componentName, component);
         }
     }
 }
