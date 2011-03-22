@@ -296,62 +296,62 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
 
             if (!address.EndsWith(m_InterObjectHostname))
             {
+                bool didError = false;
                 if (!m_localOnly)
                 {
-                    string m_ObjectRegionName;
-                    ISceneChildEntity part = findPrim (objectID, out m_ObjectRegionName);
+                    // regular email, send it out
+                    try
+                    {
+                        //Creation EmailMessage
+                        EmailMessage emailMessage = new EmailMessage();
+                        //From
+                        emailMessage.FromAddress = new EmailAddress(objectID.ToString() + "@" + m_HostName);
+                        //To - Only One
+                        emailMessage.AddToAddress(new EmailAddress(address));
+                        //Subject
+                        emailMessage.Subject = subject;
+                        //Text
+                        emailMessage.BodyText = "Object-Name: " + LastObjectName +
+                                  "\nRegion: " + LastObjectRegionName + "\nLocal-Position: " +
+                                  LastObjectPosition + "\n\n" + body;
+
+                        //Config SMTP Server
+                        //Set SMTP SERVER config
+                        SmtpServer smtpServer = new SmtpServer(SMTP_SERVER_HOSTNAME, SMTP_SERVER_PORT);
+                        // Add authentication only when requested
+                        if (SMTP_SERVER_LOGIN != String.Empty && SMTP_SERVER_PASSWORD != String.Empty)
+                            smtpServer.SmtpAuthToken = new SmtpAuthToken(SMTP_SERVER_LOGIN, SMTP_SERVER_PASSWORD);
+                        //Add timeout of 15 seconds
+                        smtpServer.ServerTimeout = 15000;
+                        //Send Email Message
+                        didError = !emailMessage.Send(smtpServer);
+
+                        //Log
+                        if (!didError)
+                            m_log.Info("[EMAIL] EMail sent to: " + address + " from object: " + objectID.ToString() + "@" + m_HostName);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.Error("[EMAIL] DefaultEmailModule Exception: " + e.Message);
+                        didError = true;
+                    }
+                }
+                if ((didError) || (m_localOnly))
+                {
+                    // Notify Owner
+                    ISceneChildEntity part = findPrim(objectID, out LastObjectRegionName);
                     if (part != null)
                     {
                         lock (m_Scenes)
                         {
                             foreach (Scene s in m_Scenes.Values)
                             {
-                                IScenePresence SP = s.GetScenePresence (part.OwnerID);
-                                if (SP != null)
-                                {
-                                    if (!SP.IsChildAgent)
-                                        SP.ControllingClient.SendAlertMessage("llEmail: email module not configured for outgoing emails");
-                                }
+                                IScenePresence SP = s.GetScenePresence(part.OwnerID);
+                                if ((SP != null) && (!SP.IsChildAgent))
+                                    SP.ControllingClient.SendAlertMessage("llEmail: email module not configured for outgoing emails");
                             }
                         }
                     }
-                }
-                // regular email, send it out
-                try
-                {
-                    //Creation EmailMessage
-                    EmailMessage emailMessage = new EmailMessage();
-                    //From
-                    emailMessage.FromAddress = new EmailAddress(objectID.ToString() + "@" + m_HostName);
-                    //To - Only One
-                    emailMessage.AddToAddress(new EmailAddress(address));
-                    //Subject
-                    emailMessage.Subject = subject;
-                    //TEXT Body
-                    resolveNamePositionRegionName(objectID, out LastObjectName, out LastObjectPosition, out LastObjectRegionName);
-                    emailMessage.BodyText = "Object-Name: " + LastObjectName +
-                              "\nRegion: " + LastObjectRegionName + "\nLocal-Position: " +
-                              LastObjectPosition + "\n\n" + body;
-
-                    //Config SMTP Server
-                    //Set SMTP SERVER config
-                    SmtpServer smtpServer=new SmtpServer(SMTP_SERVER_HOSTNAME,SMTP_SERVER_PORT);
-                    // Add authentication only when requested
-                    //
-                    if (SMTP_SERVER_LOGIN != String.Empty && SMTP_SERVER_PASSWORD != String.Empty)
-                    {
-                        //Authentication
-                        smtpServer.SmtpAuthToken=new SmtpAuthToken(SMTP_SERVER_LOGIN, SMTP_SERVER_PASSWORD);
-                    }
-                    //Send Email Message
-                    emailMessage.Send(smtpServer);
-
-                    //Log
-                    m_log.Info("[EMAIL] EMail sent to: " + address + " from object: " + objectID.ToString() + "@" + m_HostName);
-                }
-                catch (Exception e)
-                {
-                    m_log.Error("[EMAIL] DefaultEmailModule Exception: " + e.Message);
                 }
             }
             else

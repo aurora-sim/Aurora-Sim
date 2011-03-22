@@ -94,13 +94,22 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 doc.LoadXml(xmlData);
                 parts = doc.GetElementsByTagName("RootPart");
 
+                Scene m_sceneForGroup = scene is Scene ? (Scene)scene : null;
+                SceneObjectGroup sceneObject;
                 if (parts.Count == 0)
-                    throw new Exception("Invalid Xml format - no root part");
+                {
+                    sceneObject = FromXml2Format(xmlData, m_sceneForGroup);
+                    if (sceneObject == null)
+                        throw new Exception("Invalid Xml format - no root part");
+                    else
+                        return sceneObject;
+                } 
 
                 sr = new StringReader(parts[0].InnerXml);
                 reader = new XmlTextReader(sr);
-                Scene m_sceneForGroup = scene is Scene ? (Scene)scene : null;
-                SceneObjectGroup sceneObject = new SceneObjectGroup(FromXml(reader, scene), m_sceneForGroup, false);
+                
+                 
+                sceneObject = new SceneObjectGroup(FromXml(reader, scene), m_sceneForGroup, false);
                 sceneObject.RootPart.FromUserInventoryItemID = fromUserInventoryItemID;
                 reader.Close();
                 sr.Close();

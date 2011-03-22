@@ -627,7 +627,7 @@ namespace Aurora.Modules
 
                 OpenSim.Services.Interfaces.UserInfo pinfo = presence.GetUserInfo(agent.AgentID.ToString());
 
-                if (pinfo == null || !pinfo.IsOnline)
+                if (pinfo == null || (!pinfo.IsOnline && ((agent.teleportFlags & (uint)TeleportFlags.ViaLogin) == 0)))
                 {
                     reason = String.Format("Failed to verify user presence in the grid for {0}, access denied to region {1}.", account.Name, scene.RegionInfo.RegionName);
                     return false;

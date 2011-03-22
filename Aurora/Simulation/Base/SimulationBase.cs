@@ -35,6 +35,7 @@ namespace Aurora.Simulation.Base
         protected OpenSimAppender m_consoleAppender;
         protected IAppender m_logFileAppender = null;
         protected IHttpServer m_BaseHTTPServer;
+        protected Timer m_TimerScriptTimer;
 
         /// <value>
         /// The config information passed into the OpenSimulator region server.
@@ -518,6 +519,9 @@ namespace Aurora.Simulation.Base
             }
             m_log.Warn("[CONSOLE]: Set Timer Interval to " + cmd[4]);
             m_TimerScriptTime = int.Parse(cmd[4]);
+            m_TimerScriptTimer.Enabled = false;
+            m_TimerScriptTimer.Interval = m_TimerScriptTime * 60 * 1000;
+            m_TimerScriptTimer.Enabled = true;
         }
 
         public virtual void HandleConfigRefresh(string mod, string[] cmd)
