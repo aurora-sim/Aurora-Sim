@@ -115,5 +115,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             } while (!complete);
             return results;
         }
+
+        public void FinishCompile (IScriptModulePlugin plugin, ScriptData data, IScript Script)
+        {
+        }
     }
 }

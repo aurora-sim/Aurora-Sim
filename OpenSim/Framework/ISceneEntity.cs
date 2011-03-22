@@ -351,7 +351,7 @@ namespace OpenSim.Framework
         IEntityInventory Inventory { get; }
         void ResetEntityIDs ();
 
-        OSDMap GenericData { get; }
+        string GenericData { get; }
 
         PrimFlags Flags { get; set; }
 

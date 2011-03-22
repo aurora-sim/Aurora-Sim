@@ -175,23 +175,6 @@ namespace OpenSim.Services
                 responsedata["str_response_string"] = result.ToString();
             }
 
-            if ((args["state"] != null) && s.RegionInfo.AllowScriptCrossing)
-            {
-                stateXmlStr = args["state"].AsString();
-                if (stateXmlStr != "")
-                {
-                    try
-                    {
-                        sog.SetState(stateXmlStr);
-                    }
-                    catch (Exception ex)
-                    {
-                        m_log.InfoFormat("[OBJECT HANDLER]: exception on setting state for scene object {0}", ex.ToString());
-                        // ignore and continue
-                    }
-                }
-            }
-
             try
             {
                 // This is the meaning of POST object

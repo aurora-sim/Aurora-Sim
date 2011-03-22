@@ -43,7 +43,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
     class SOPObject : MarshalByRefObject, IObject, IObjectPhysics, IObjectShape, IObjectSound
     {
-        private readonly Scene m_rootScene;
+        private readonly IScene m_rootScene;
         private readonly uint m_localID;
         private readonly ISecurityCredential m_security;
 
@@ -54,7 +54,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             m_localID = localID;
         }
 
-        public SOPObject(Scene rootScene, uint localID, ISecurityCredential credential)
+        public SOPObject (IScene rootScene, uint localID, ISecurityCredential credential)
         {
             m_rootScene = rootScene;
             m_localID = localID;

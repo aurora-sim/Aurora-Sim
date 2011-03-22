@@ -691,7 +691,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             m_message = message;
         }
 
-        public OSDMap GetSerializationData ()
+        public OSD GetSerializationData ()
         {
             OSDMap data = new OSDMap();
 

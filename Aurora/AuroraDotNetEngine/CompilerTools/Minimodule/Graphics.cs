@@ -36,9 +36,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
     class Graphics : System.MarshalByRefObject, IGraphics
     {
-        private readonly Scene m_scene;
+        private readonly IScene m_scene;
 
-        public Graphics(Scene m_scene)
+        public Graphics (IScene m_scene)
         {
             this.m_scene = m_scene;
         }

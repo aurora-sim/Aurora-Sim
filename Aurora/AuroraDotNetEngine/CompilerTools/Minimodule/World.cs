@@ -36,13 +36,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
     public class World : System.MarshalByRefObject, IWorld, IWorldAudio 
     {
-        private readonly Scene m_internalScene;
+        private readonly IScene m_internalScene;
         private readonly ISecurityCredential m_security;
         private readonly Heightmap m_heights;
 
         private readonly ObjectAccessor m_objs;
 
-        public World(Scene internalScene, ISecurityCredential securityCredential)
+        public World(IScene internalScene, ISecurityCredential securityCredential)
         {
             m_security = securityCredential;
             m_internalScene = internalScene;

@@ -42,5 +42,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         IScriptApi GetApi(UUID m_itemID, string p);
 
         bool PipeEventsForScript (ISceneChildEntity m_host, Vector3 vector3);
+
+        void RegisterExtension<T> (T instance);
+
+        Dictionary<Type, object> Extensions { get; }
     }
 }

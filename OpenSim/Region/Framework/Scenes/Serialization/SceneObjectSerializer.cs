@@ -128,10 +128,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                     sr.Close();
                 }
 
-                // Script state may, or may not, exist. Not having any, is NOT
-                // ever a problem.
-                sceneObject.LoadScriptState(doc);
-
                 return sceneObject;
             }
             catch (Exception e)
@@ -190,7 +186,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             }
 
             writer.WriteEndElement(); // OtherParts
-            sceneObject.SaveScriptedState(writer);
             writer.WriteEndElement(); // SceneObjectGroup
 
             //m_log.DebugFormat("[SERIALIZER]: Finished serialization of SOG {0}, {1}ms", Name, Util.EnvironmentTickCount() - time);
@@ -239,10 +234,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                     sr.Close();
                 }
 
-                // Script state may, or may not, exist. Not having any, is NOT
-                // ever a problem.
-
-                sceneObject.LoadScriptState(doc);
                 return sceneObject;
             }
             catch (Exception e)

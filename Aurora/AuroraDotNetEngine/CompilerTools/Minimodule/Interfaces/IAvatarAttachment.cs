@@ -29,6 +29,7 @@ using Aurora.ScriptEngine.AuroraDotNetEngine;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
+    public interface IAvatarAttachment
     {
         //// <value>
         /// Describes where on the avatar the attachment is located

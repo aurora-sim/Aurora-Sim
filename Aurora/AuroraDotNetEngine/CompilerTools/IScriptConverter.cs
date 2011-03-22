@@ -11,5 +11,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         void Convert(string Script, out string CompiledScript, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap);
         CompilerResults Compile(CompilerParameters parameters, string Script);
         string DefaultState { get; }
+        void FinishCompile (IScriptModulePlugin plugin, ScriptData data, IScript Script);
     }
 }

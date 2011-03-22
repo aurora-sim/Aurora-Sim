@@ -34,10 +34,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
     class LOParcel : System.MarshalByRefObject, IParcel
     {
-        private readonly Scene m_scene;
+        private readonly IScene m_scene;
         private readonly int m_parcelID;
 
-        public LOParcel(Scene m_scene, int m_parcelID)
+        public LOParcel (IScene m_scene, int m_parcelID)
         {
             this.m_scene = m_scene;
             this.m_parcelID = m_parcelID;

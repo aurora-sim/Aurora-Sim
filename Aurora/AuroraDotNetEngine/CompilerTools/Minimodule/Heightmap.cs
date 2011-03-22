@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Aurora.ScriptEngine.AuroraDotNetEngine;
@@ -33,9 +34,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
     public class Heightmap : System.MarshalByRefObject, IHeightmap
     {
-        private readonly Scene m_scene;
+        private readonly IScene m_scene;
 
-        public Heightmap(Scene scene)
+        public Heightmap (IScene scene)
         {
             m_scene = scene;
         }

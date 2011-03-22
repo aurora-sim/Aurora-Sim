@@ -29,7 +29,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using log4net;
-using OpenSim.Region.OptionalModules.Scripting.Minimodule.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule

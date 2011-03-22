@@ -39,12 +39,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
     internal class IObjEnum : System.MarshalByRefObject, IEnumerator<IObject>
     {
-        private readonly Scene m_scene;
+        private readonly IScene m_scene;
         private readonly IEnumerator<ISceneEntity> m_sogEnum;
         private readonly ISecurityCredential m_security;
         private readonly List<ISceneEntity> m_entities;
 
-        public IObjEnum(Scene scene, ISecurityCredential security)
+        public IObjEnum (IScene scene, ISecurityCredential security)
         {
             m_scene = scene;
             m_security = security;
@@ -83,10 +83,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
     public class ObjectAccessor : System.MarshalByRefObject, IObjectAccessor
     {
-        private readonly Scene m_scene;
+        private readonly IScene m_scene;
         private readonly ISecurityCredential m_security;
 
-        public ObjectAccessor(Scene scene, ISecurityCredential security)
+        public ObjectAccessor (IScene scene, ISecurityCredential security)
         {
             m_scene = scene;
             m_security = security;

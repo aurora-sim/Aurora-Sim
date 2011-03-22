@@ -40,9 +40,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
     {
         TaskInventoryDictionary m_privateInventory;                /// OpenSim's task inventory
         Dictionary<UUID, IInventoryItem> m_publicInventory;        /// MRM's inventory
-        Scene m_rootScene;
+        IScene m_rootScene;
 
-        public SOPObjectInventory(Scene rootScene, TaskInventoryDictionary taskInventory)
+        public SOPObjectInventory (IScene rootScene, TaskInventoryDictionary taskInventory)
         {
             m_rootScene = rootScene;
             m_privateInventory = taskInventory;

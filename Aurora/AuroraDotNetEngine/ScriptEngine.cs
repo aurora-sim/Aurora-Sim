@@ -1443,6 +1443,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         #endregion
+
+        #region Registry pieces
+
+        private Dictionary<Type, object> m_extensions = new Dictionary<Type, object> ();
+
+        public Dictionary<Type, object> Extensions
+        {
+            get { return m_extensions; }
+        }
+
+        public void RegisterExtension<T> (T instance)
+        {
+            m_extensions[typeof (T)] = instance;
+        }
+
+        #endregion
     }
 
     public class ScriptErrorReporter

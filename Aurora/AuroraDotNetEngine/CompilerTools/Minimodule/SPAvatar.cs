@@ -38,12 +38,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
     class SPAvatar : System.MarshalByRefObject, IAvatar
     {
-        private readonly Scene m_rootScene;
+        private readonly IScene m_rootScene;
         private readonly UUID m_ID;
         private readonly ISecurityCredential m_security;
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public SPAvatar(Scene scene, UUID ID, ISecurityCredential security)
+        public SPAvatar (IScene scene, UUID ID, ISecurityCredential security)
         {
             m_rootScene = scene;
             m_security = security;

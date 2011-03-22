@@ -65,57 +65,57 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         #region IScript Members
 
-        internal void InitApi (IScriptApi data)
+        public void InitApi (IScriptApi data)
         {
         }
 
-        internal ISponsor Sponsor
+        public ISponsor Sponsor
         {
             get { return null; }
         }
 
-        internal void UpdateLease (System.TimeSpan time)
+        public void UpdateLease (System.TimeSpan time)
         {
         }
 
-        internal long GetStateEventFlags (string state)
+        public long GetStateEventFlags (string state)
         {
             return 0;
         }
 
-        internal EnumeratorInfo ExecuteEvent (string state, string FunctionName, object[] args, EnumeratorInfo Start, out System.Exception ex)
+        public EnumeratorInfo ExecuteEvent (string state, string FunctionName, object[] args, EnumeratorInfo Start, out System.Exception ex)
         {
             ex = null;
             return null;
         }
 
-        internal Dictionary<string, object> GetVars ()
+        public Dictionary<string, object> GetVars ()
         {
             return new Dictionary<string, object> ();
         }
 
-        internal void SetVars (Dictionary<string, object> vars)
+        public void SetVars (Dictionary<string, object> vars)
         {
         }
 
-        internal Dictionary<string, object> GetStoreVars ()
+        public Dictionary<string, object> GetStoreVars ()
         {
             return new Dictionary<string, object> ();
         }
 
-        internal void SetStoreVars (Dictionary<string, object> vars)
+        public void SetStoreVars (Dictionary<string, object> vars)
         {
         }
 
-        internal void ResetVars ()
+        public void ResetVars ()
         {
         }
 
-        internal void UpdateInitialValues ()
+        public void UpdateInitialValues ()
         {
         }
 
-        internal void Close ()
+        public void Close ()
         {
             Stop();
         }

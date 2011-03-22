@@ -39,9 +39,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
     public class InventoryItem : IInventoryItem
     {
         TaskInventoryItem m_privateItem;
-        Scene m_rootScene;
-        
-        public InventoryItem(Scene rootScene, TaskInventoryItem internalItem)
+        IScene m_rootScene;
+
+        public InventoryItem (IScene rootScene, TaskInventoryItem internalItem)
         {
             m_rootScene = rootScene;
             m_privateItem = internalItem;

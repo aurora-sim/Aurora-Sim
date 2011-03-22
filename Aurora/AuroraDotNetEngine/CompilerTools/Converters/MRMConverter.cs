@@ -11,6 +11,7 @@ using Microsoft.VisualBasic;
 using log4net;
 using OpenSim.Region.Framework.Interfaces;
 using OpenMetaverse;
+using Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
@@ -32,11 +33,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public string Name
         {
-            get { return "mrm"; }
+            get { return "MRM:C#"; }
         }
+
         public void Dispose()
         {
         }
+
         private string CreateCompilerScript(string compileScript)
         {
             return ConvertMRMKeywords (compileScript);
@@ -109,6 +112,37 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 }
             } while (!complete);
             return results;
+        }
+
+        public void FinishCompile (IScriptModulePlugin plugin, ScriptData data, IScript Script)
+        {
+            MRMBase mmb = (MRMBase)Script;
+            if (mmb == null)
+                return;
+
+            InitializeMRM (plugin, data, mmb, data.Part.LocalId, data.ItemID);
+            mmb.Start ();
+        }
+
+        public void GetGlobalEnvironment (IScriptModulePlugin plugin, ScriptData data, uint localID, out IWorld world, out IHost host)
+        {
+            // UUID should be changed to object owner.
+            UUID owner = data.World.RegionInfo.EstateSettings.EstateOwner;
+            SEUser securityUser = new SEUser (owner, "Name Unassigned");
+            SecurityCredential creds = new SecurityCredential (securityUser, data.World);
+
+            world = new World (data.World, creds);
+            host = new Host (new SOPObject (data.World, localID, creds), data.World, new ExtensionHandler (plugin.Extensions));
+        }
+
+        public void InitializeMRM (IScriptModulePlugin plugin, ScriptData data, MRMBase mmb, uint localID, UUID itemID)
+        {
+            IWorld world;
+            IHost host;
+
+            GetGlobalEnvironment (plugin, data, localID, out world, out host);
+
+            mmb.InitMiniModule (world, host, itemID);
         }
     }
 }

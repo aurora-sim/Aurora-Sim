@@ -27,6 +27,7 @@
 
 using System.Reflection;
 using log4net;
+using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
 using Aurora.ScriptEngine.AuroraDotNetEngine;
 
@@ -41,7 +42,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         private readonly MicroScheduler m_threader = new MicroScheduler ();
         //private Scene m_scene;
 
-        public Host(IObject m_obj, Scene m_scene, IExtension m_extend)
+        public Host (IObject m_obj, IScene m_scene, IExtension m_extend)
         {
             this.m_obj = m_obj;
             this.m_extend = m_extend;

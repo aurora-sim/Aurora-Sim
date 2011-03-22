@@ -28,6 +28,7 @@
 using System;
 
 using OpenMetaverse;
+using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
 using Aurora.ScriptEngine.AuroraDotNetEngine;
 
@@ -35,15 +36,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
     public class SPAvatarAttachment : IAvatarAttachment
     {
-        private readonly Scene m_rootScene;
+        private readonly IScene m_rootScene;
         //private readonly IAvatar m_parent;
         private readonly int m_location;
         //private readonly UUID m_itemId;
         private readonly UUID m_assetId;
 
         private readonly ISecurityCredential m_security;
-        
-        public SPAvatarAttachment(Scene rootScene, IAvatar self, int location, UUID itemId, UUID assetId, ISecurityCredential security)
+
+        public SPAvatarAttachment (IScene rootScene, IAvatar self, int location, UUID itemId, UUID assetId, ISecurityCredential security)
         {
             m_rootScene = rootScene;
             m_security = security;

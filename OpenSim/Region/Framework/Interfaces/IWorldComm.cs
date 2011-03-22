@@ -34,7 +34,7 @@ namespace OpenSim.Region.Framework.Interfaces
 {
     public interface IWorldCommListenerInfo
     {
-        Object[] GetSerializationData();
+        OSD GetSerializationData();
         UUID GetItemID();
         UUID GetHostID();
         int GetChannel();

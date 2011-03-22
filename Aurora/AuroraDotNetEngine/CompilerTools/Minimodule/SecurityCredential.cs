@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
+using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
 using Aurora.ScriptEngine.AuroraDotNetEngine;
 
@@ -37,9 +38,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
     class SecurityCredential : ISecurityCredential
     {
         private readonly ISocialEntity m_owner;
-        private readonly Scene m_scene;
+        private readonly IScene m_scene;
 
-        public SecurityCredential(ISocialEntity m_owner, Scene m_scene)
+        public SecurityCredential (ISocialEntity m_owner, IScene m_scene)
         {
             this.m_owner = m_owner;
             this.m_scene = m_scene;

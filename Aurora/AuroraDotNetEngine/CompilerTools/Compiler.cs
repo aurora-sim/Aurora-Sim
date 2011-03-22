@@ -256,6 +256,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public string FindDefaultStateForScript (string Script)
         {
+            return FindConverterForScript(Script).DefaultState;
+        }
+
+        public IScriptConverter FindConverterForScript(string Script)
+        {
             IScriptConverter language = null;
             foreach (IScriptConverter convert in converters)
             {
@@ -271,7 +276,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     language = convert;
             }
 
-            return language.DefaultState;
+            return language;
         }
 
         private void CheckLanguageAndConvert(string Script, UUID ownerID, out IScriptConverter converter, out string compileScript)
@@ -632,6 +637,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     AddError("No compile error. But not able to locate compiled file.");
                 }
             }
+        }
+
+        internal void FinishCompile (ScriptData scriptData, IScript Script)
+        {
+            FindConverterForScript (scriptData.Source).FinishCompile (m_scriptEngine, scriptData, Script);
         }
 
         private class kvpSorter : IComparer<KeyValuePair<int, int>>

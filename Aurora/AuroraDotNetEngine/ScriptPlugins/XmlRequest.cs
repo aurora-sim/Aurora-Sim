@@ -120,7 +120,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             return "";
         }
 
-        public void CreateFromData (UUID itemID, UUID objectID, object data)
+        public void CreateFromData (UUID itemID, UUID objectID, OSD data)
         {
         }
 

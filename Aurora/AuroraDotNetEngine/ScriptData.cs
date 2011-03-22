@@ -659,6 +659,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             try
             {
                 Script = m_ScriptEngine.AppDomainManager.LoadScript(AssemblyName, "Script.ScriptClass", out AppDomain);
+                m_ScriptEngine.Compiler.FinishCompile (this, Script);
                 //Add now so that we don't add it too early and give it the possibility to fail
                 ScriptEngine.ScriptProtection.AddPreviouslyCompiled(Source, this);
             }
