@@ -61,6 +61,7 @@ namespace Aurora.Framework
         {
             try
             {
+                List<InternalHeartbeat> hbToRemove = null;
                 while (m_timesToIterate >= 0)
                 {
                     lock (m_lock)
@@ -74,7 +75,22 @@ namespace Aurora.Framework
                             }
                             else if(!isRunning)
                             {
+                                if(hbToRemove == null)
+                                    hbToRemove = new List<InternalHeartbeat> ();
+                                hbToRemove.Add (intHB);
                             }
+                        }
+
+                        if (hbToRemove != null)
+                        {
+                            foreach (InternalHeartbeat intHB in hbToRemove)
+                            {
+                                m_heartbeats.Remove (intHB);
+                            }
+                            //Renull it for later
+                            hbToRemove = null;
+                            if (m_heartbeats.Count == 0) //None left, break
+                                break;
                         }
                     }
                     //0 is infinite
