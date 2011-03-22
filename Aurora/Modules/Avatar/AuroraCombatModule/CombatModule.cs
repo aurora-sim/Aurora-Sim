@@ -284,7 +284,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 m_healthtimer.Stop ();
                 m_healthtimer.Close ();
                 m_SP.OnAddPhysics -= SP_OnAddPhysics;
-                m_SP.OnRemovePhysics += SP_OnRemovePhysics;
+                m_SP.OnRemovePhysics -= SP_OnRemovePhysics;
                 SP_OnRemovePhysics ();
                 m_SP = null;
             }

@@ -92,7 +92,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 if (r != null)
                     return r;
             }
-            return null;
+            return new OSD();
         }
 
         public void CreateFromData(UUID itemID, UUID hostID,

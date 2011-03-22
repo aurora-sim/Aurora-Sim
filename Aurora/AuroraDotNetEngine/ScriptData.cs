@@ -509,7 +509,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             // we need to find the state save and start loading the info from it
 
             StateSave LastStateSave = m_ScriptEngine.StateSave.FindScriptStateSave (this);
-            if (LastStateSave != null)
+            if (!reupload && Loading && LastStateSave != null)
             {
                 //Deserialize the most important pieces first
                 Source = LastStateSave.Source;
@@ -535,6 +535,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     "Couldn't start script {0}, {1} at {2} in {3} since asset ID {4} could not be found",
                     InventoryItem.Name, InventoryItem.ItemID, Part.AbsolutePosition,
                     Part.ParentEntity.Scene.RegionInfo.RegionName, InventoryItem.AssetID);
+                return;
             }
 
             #region HTML Reader
