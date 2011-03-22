@@ -75,6 +75,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         //The compiler for all scripts
         public Compiler Compiler;
+
+        //This deals with all state saving for scripts
+        public ScriptStateSave StateSave;
         
         //Handles the queues
         public MaintenanceThread MaintenanceThread;
@@ -246,6 +249,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 Compiler = new Compiler(this);
 
+                StateSave = new ScriptStateSave ();
+                StateSave.Initialize (this);
+
                 AppDomainManager = new AppDomainManager(this);
 
                 ScriptErrorReporter = new ScriptErrorReporter(Config);
@@ -401,13 +407,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 Compiler.RecreateDirectory ();
                 ScriptData[] scripts = ScriptProtection.GetAllScripts ();
                 ScriptProtection.Reset (true);
-                IScriptDataConnector con = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IScriptDataConnector> ();
                 foreach (ScriptData ID in scripts)
                 {
                     try
                     {
                         //Remove the state save
-                        con.DeleteStateSave (ID.ItemID);
+                        StateSave.DeleteFrom (ID.part, ID);
                         ID.Start (false);
                         //Reset this every time so that we don't reuse any compiled scripts
                         ScriptProtection.Reset (false);
@@ -857,26 +862,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #endregion
 
-        #region XML Serialization
-
-        public string GetXMLState(UUID itemID)
-        {
-            ScriptData data = ScriptProtection.GetScript(itemID);
-            if(data == null)
-                return "";
-            return ScriptDataXMLSerializer.GetXMLState(data, this);
-        }
-
-        public bool SetXMLState(UUID itemID, string xml)
-        {
-            ScriptData data = ScriptProtection.GetScript(itemID);
-            if (data == null)
-                return false;
-            ScriptDataXMLSerializer.SetXMLState(xml, data, this);
-            return true;
-        }
-        #endregion
-
         #region Error reporting
 
         public ArrayList GetScriptErrors(UUID itemID)
@@ -967,7 +952,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ScriptData id = ScriptProtection.GetScript(PrimID, ItemID);
             if (id == null)
                 return;
-            MaintenanceThread.AddToStateSaverQueue(id, true);
+            StateSave.SaveStateTo (id.part, id);
         }
 
         /// <summary>
@@ -1002,7 +987,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             try
             {
-                Aurora.DataManager.DataManager.RequestPlugin<IScriptDataConnector>().DeleteStateSave(olditemID);
                 if (newPart.ParentGroup.Scene != null)
                 {
                     ScriptData SD = ScriptProtection.GetScript(olditemID);
@@ -1057,8 +1041,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                     ScriptProtection.AddNewScript(SD);
 
-
-                    ScriptDataSQLSerializer.SaveState(SD, this);
+                    StateSave.SaveStateTo (SD.part, SD);
                 }
             }
             catch

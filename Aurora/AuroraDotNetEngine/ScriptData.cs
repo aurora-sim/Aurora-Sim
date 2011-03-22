@@ -56,7 +56,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public ScriptData(ScriptEngine engine)
         {
             m_ScriptEngine = engine;
-            ScriptFrontend = Aurora.DataManager.DataManager.RequestPlugin<IScriptDataConnector>();
 
             NextEventDelay.Add("at_rot_target", 0);
             NextEventDelay.Add("at_target", 0);
@@ -147,7 +146,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public DetectParams[] LastDetectParams = null;
         public Object[] PluginData = new Object[0];
         private StateSave LastStateSave = null;
-        private IScriptDataConnector ScriptFrontend;
         private double DefaultEventDelayTicks = (double)0.05;
         private double TouchEventDelayTicks = (double)0.1;
         private double TimerEventDelayTicks = (double)0.01;
@@ -180,25 +178,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!Silent)
             {
                 if (Script != null)
-                    {
-                        /*
-                        //Fire this directly so its not closed before its fired
-                        SetEventParams("state_exit", new DetectParams[0]);
+                {
+                    /*
+                    //Fire this directly so its not closed before its fired
+                    SetEventParams("state_exit", new DetectParams[0]);
 
-                        m_ScriptEngine.MaintenanceThread.ProcessQIS(new QueueItemStruct()
-                        {
-                            ID = this,
-                            CurrentlyAt = null,
-                            functionName = "state_exit",
-                            param = new object[0],
-                            llDetectParams = new DetectParams[0],
-                            VersionID = VersionID
-                        });
-     */
-// dont think we should fire state_exit here
-//                    m_ScriptEngine.MaintenanceThread.DoAndWaitEventSch(this, "state_exit",
-//                        new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0]);
-                    ScriptDataSQLSerializer.SaveState(this, m_ScriptEngine);
+                    m_ScriptEngine.MaintenanceThread.ProcessQIS(new QueueItemStruct()
+                    {
+                        ID = this,
+                        CurrentlyAt = null,
+                        functionName = "state_exit",
+                        param = new object[0],
+                        llDetectParams = new DetectParams[0],
+                        VersionID = VersionID
+                    });
+                    */
+                    // dont think we should fire state_exit here
+                    //                    m_ScriptEngine.MaintenanceThread.DoAndWaitEventSch(this, "state_exit",
+                    //                        new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0]);
+                    m_ScriptEngine.StateSave.SaveStateTo (part, this);
                 }
             }
             VersionID += 5;
@@ -345,18 +343,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew(this,false); // accept new events
             m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { });
 
-            m_ScriptEngine.MaintenanceThread.AddToStateSaverQueue(this, true);
+            m_ScriptEngine.StateSave.SaveStateTo (part, this);
             m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Reset Script " + ItemID);
         }
 
-        internal void ChangeState(string state)
+        internal void ChangeState (string state)
         {
             if (State != state)
-                {
-                m_ScriptEngine.MaintenanceThread.FlushEventSchQueue(this, false);
-                m_ScriptEngine.MaintenanceThread.AddEventSchQueue(this, "state_exit",
+            {
+                m_ScriptEngine.MaintenanceThread.FlushEventSchQueue (this, false);
+                m_ScriptEngine.MaintenanceThread.AddEventSchQueue (this, "state_exit",
                     new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0] { });
-                
+
                 State = state;
 
                 //Remove events that may be fired again after the user stops touching the prim, etc
@@ -366,17 +364,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 RemoveTouchEvents = true;
 
                 //Wipe out old events
-//                VersionID++;
+                //                VersionID++;
 
                 //Tell the SOP about the change.
-                part.SetScriptEvents(ItemID, Script.GetStateEventFlags(state));
-                ScriptEngine.ScriptProtection.AddNewScript(this);
+                part.SetScriptEvents (ItemID, Script.GetStateEventFlags (state));
+                ScriptEngine.ScriptProtection.AddNewScript (this);
 
-                m_ScriptEngine.MaintenanceThread.AddEventSchQueue(this, "state_entry",
+                m_ScriptEngine.MaintenanceThread.AddEventSchQueue (this, "state_entry",
                     new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0] { });
                 //Save a state save after a state change, its a large change in the script's function
-                m_ScriptEngine.MaintenanceThread.AddToStateSaverQueue(this, true);
-                }
+                m_ScriptEngine.StateSave.SaveStateTo (part, this);
+            }
         }
 
         #endregion
@@ -509,6 +507,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             //Try to find the avatar who started this.
             IScenePresence presence = World.GetScenePresence(part.OwnerID);
+
+
+            //Now that the initial loading is complete,
+            // we need to find the state save and start loading the info from it
+
+
 
             #region HTML Reader
 
@@ -647,7 +651,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: File not found in app domain creation. Corrupt state save! " + AssemblyName);
                 ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
-                ScriptFrontend.DeleteStateSave(AssemblyName);
                 Start(reupload); // Lets restart the script if this happens
                 return;
             }
@@ -689,7 +692,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             else
             {
                 //Make a new state save now
-                m_ScriptEngine.MaintenanceThread.AddToStateSaverQueue(this, true);
+                m_ScriptEngine.StateSave.SaveStateTo (part, this);
             }
 
             // Add it to our script memstruct so it can be found by other scripts

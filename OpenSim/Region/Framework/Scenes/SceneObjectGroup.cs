@@ -268,8 +268,6 @@ namespace OpenSim.Region.Framework.Scenes
         private bool m_scriptListens_atRotTarget;
         private bool m_scriptListens_notAtRotTarget;
 
-        internal Dictionary<UUID, string> m_savedScriptState;
-
         #region Properties
 
         /// <summary>
@@ -580,23 +578,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_grpOOBoffset = part.OOBoffset;
             m_grpOOBsize = part.OOBsize;
             m_ValidgrpOOB = true;
-        }
-
-        public void LoadScriptState(XmlDocument doc)
-        {
-            XmlNodeList nodes = doc.GetElementsByTagName("SavedScriptState");
-            if (nodes.Count > 0)
-            {
-                m_savedScriptState = new Dictionary<UUID, string>();
-                foreach (XmlNode node in nodes)
-                {
-                    if (node.Attributes["UUID"] != null)
-                    {
-                        UUID itemid = new UUID(node.Attributes["UUID"].Value);
-                        m_savedScriptState.Add(itemid, node.InnerXml);
-                    }
-                } 
-            }
         }
 
         public void SetFromItemID(UUID AssetId)
@@ -1247,41 +1228,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         #endregion
-
-        //Marked for deletion
-        public void SaveScriptedState(XmlTextWriter writer)
-        {
-            XmlDocument doc = new XmlDocument();
-            Dictionary<UUID,string> states = new Dictionary<UUID,string>();
-
-            // Capture script state while holding the lock
-            lock (m_partsLock)
-            {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    Dictionary<UUID,string> pstates = part.Inventory.GetScriptStates();
-                    foreach (UUID itemid in pstates.Keys)
-                    {
-                        states.Add(itemid, pstates[itemid]);
-                    }
-                }
-            }
-
-            if (states.Count > 0)
-            {
-                // Now generate the necessary XML wrappings
-                writer.WriteStartElement(String.Empty, "GroupScriptStates", String.Empty);
-                foreach (UUID itemid in states.Keys)
-                {
-                    doc.LoadXml(states[itemid]);
-                    writer.WriteStartElement(String.Empty, "SavedScriptState", String.Empty);
-                    writer.WriteAttributeString(String.Empty, "UUID", String.Empty, itemid.ToString());
-                    writer.WriteRaw(doc.DocumentElement.OuterXml); // Writes ScriptState element
-                    writer.WriteEndElement(); // End of SavedScriptState
-                }
-                writer.WriteEndElement(); // End of GroupScriptStates
-            }
-        }
 
         public byte GetAttachmentPoint()
         {

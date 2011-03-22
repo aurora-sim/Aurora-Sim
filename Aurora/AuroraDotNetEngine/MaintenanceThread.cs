@@ -45,12 +45,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         #region Declares
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IScriptDataConnector ScriptFrontend;
         private ScriptEngine m_ScriptEngine;
         private bool FiredStartupEvent = false;
         public AuroraThreadPool threadpool = null;
         public AuroraThreadPool Scriptthreadpool = null;
-        public bool StateSaveIsRunning = false;
         public bool ScriptChangeIsRunning = false;
         public bool EventProcessorIsRunning = false;
         public bool RunInMainProcessingThread = false;
@@ -73,7 +71,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 WorkersLock.nWorkers = 0;
 
                 threadpool.QueueEvent(ScriptChangeQueue, 2);
-                threadpool.QueueEvent(StateSaveQueue, 2);
                 //Start the queue because it can't start itself
                 threadpool.QueueEvent(CmdHandlerQueue, 2);
             }
@@ -98,7 +95,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public MaintenanceThread(ScriptEngine Engine)
         {
             m_ScriptEngine = Engine;
-            ScriptFrontend = Aurora.DataManager.DataManager.RequestPlugin<IScriptDataConnector>();
             EventManager = Engine.EventManager;
 
             RunInMainProcessingThread = Engine.Config.GetBoolean("RunInMainProcessingThread", false);
@@ -128,49 +124,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         #endregion
 
         #region Loops
-
-        public bool StateSaveQueue()
-        {
-            IMonitorModule module = m_ScriptEngine.Worlds[0].RequestModuleInterface<IMonitorModule>();
-            int StartTime = Util.EnvironmentTickCount();
-
-            if (!Started) //Break early
-                return true;
-
-            if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled)
-                return true;
-
-            StateSaveIsRunning = true;
-            StateQueueItem item;
-            lock (StateQueue)
-            {
-                if (StateQueue.Count != 0)
-                    item = (StateQueueItem)StateQueue.Dequeue();
-                else
-                {
-                    StateSaveIsRunning = false;
-                    return true;
-                }
-            }
-            if (item.ID == null)
-                return false;
-
-            if (item.Create)
-                ScriptDataSQLSerializer.SaveState(item.ID, m_ScriptEngine);
-            else
-                RemoveState(item.ID);
-
-            if (module != null)
-            {
-                foreach (Scene scene in m_ScriptEngine.Worlds)
-                {
-                    ITimeMonitor scriptMonitor = (ITimeMonitor)module.GetMonitor(scene.RegionInfo.RegionID.ToString(), "Script Frame Time");
-                    scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
-                }
-            }
-
-            return false;
-        }
 
         /// <summary>
         /// This loop deals with starting and stoping scripts
@@ -303,32 +256,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Add
 
-        /// <summary>
-        /// Adds the given item to the queue.
-        /// </summary>
-        /// <param name="ID">InstanceData that needs to be state saved</param>
-        /// <param name="create">true: create a new state. false: remove the state.</param>
-        public void AddToStateSaverQueue(ScriptData ID, bool create)
-        {
-            StateQueueItem SQ = new StateQueueItem();
-            SQ.ID = ID;
-            SQ.Create = create;
-
-            if (RunInMainProcessingThread)
-            {
-                if (SQ.Create)
-                    ScriptDataSQLSerializer.SaveState(SQ.ID, m_ScriptEngine);
-                else
-                    RemoveState(SQ.ID);
-            }
-            else
-            {
-                StateQueue.Enqueue(SQ);
-                if (!StateSaveIsRunning)
-                    StartThread("State");
-            }
-        }
-
         public void AddScriptChange(LUStruct[] items, LoadPriority priority)
         {
             if (RunInMainProcessingThread)
@@ -383,7 +310,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void RemoveState(ScriptData ID)
         {
-            ScriptFrontend.DeleteStateSave(ID.ItemID);
+            m_ScriptEngine.StateSave.DeleteFrom (ID.part, ID);
         }
 
         #endregion
@@ -396,11 +323,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="thread"></param>
         private void StartThread(string thread)
         {
-            if (thread == "State")
-            {
-                threadpool.QueueEvent(StateSaveQueue, 3);
-            }
-            else if (thread == "Change")
+            if (thread == "Change")
             {
                 threadpool.QueueEvent(ScriptChangeQueue, 2);
             }
@@ -413,8 +336,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         public void PokeThreads()
         {
-            if (StateQueue.Count != 0 && !StateSaveIsRunning)
-                StartThread("State");
             if (LUQueue.Count() != 0 && !ScriptChangeIsRunning)
                 StartThread("Change");
             // if (!EventProcessorIsRunning) //Can't check the count on this one, so poke it anyway

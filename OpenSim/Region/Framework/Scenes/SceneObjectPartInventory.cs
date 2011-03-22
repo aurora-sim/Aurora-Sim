@@ -387,9 +387,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 else
                 {
-                    if (m_part.ParentGroup.m_savedScriptState != null)
-                        RestoreSavedScriptState(item.OldItemID, item.ItemID);
-
                     lock (m_items)
                     {
                         m_items[item.ItemID].PermsMask = 0;
@@ -450,61 +447,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
             HasInventoryChanged = true;
             m_part.ParentGroup.HasGroupChanged = true;
-        }
-
-        private void RestoreSavedScriptState(UUID oldID, UUID newID)
-        {
-            IScriptModule[] engines = m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>();
-            if (engines == null) // No engine at all
-                return;
-
-            if (m_part.ParentGroup.m_savedScriptState.ContainsKey(oldID))
-            {
-                XmlDocument doc = new XmlDocument();
-
-                doc.LoadXml(m_part.ParentGroup.m_savedScriptState[oldID]);
-                
-                ////////// CRUFT WARNING ///////////////////////////////////
-                //
-                // Old objects will have <ScriptState><State> ...
-                // This format is XEngine ONLY
-                //
-                // New objects have <State Engine="...." ...><ScriptState>...
-                // This can be passed to any engine
-                //
-                XmlNode n = doc.SelectSingleNode("ScriptState");
-                if (n != null) // Old format data
-                {
-                    XmlDocument newDoc = new XmlDocument();
-
-                    XmlElement rootN = newDoc.CreateElement("", "State", "");
-                    XmlAttribute uuidA = newDoc.CreateAttribute("", "UUID", "");
-                    uuidA.Value = oldID.ToString();
-                    rootN.Attributes.Append(uuidA);
-                    XmlAttribute engineA = newDoc.CreateAttribute("", "Engine", "");
-                    engineA.Value = "XEngine";
-                    rootN.Attributes.Append(engineA);
-
-                    newDoc.AppendChild(rootN);
-
-                    XmlNode stateN = newDoc.ImportNode(n, true);
-                    rootN.AppendChild(stateN);
-
-                    // This created document has only the minimun data
-                    // necessary for XEngine to parse it successfully
-
-                    m_part.ParentGroup.m_savedScriptState[oldID] = newDoc.OuterXml;
-                }
-                foreach (IScriptModule e in engines)
-                {
-                    if (e != null)
-                    {
-                        if (e.SetXMLState(newID, m_part.ParentGroup.m_savedScriptState[oldID]))
-                            break;
-                    }
-                }
-                m_part.ParentGroup.m_savedScriptState.Remove(oldID);
-            }
         }
 
         /// <summary>
@@ -1021,28 +963,26 @@ namespace OpenSim.Region.Framework.Scenes
             ISimulationDataStore datastore = ((Scene)m_part.ParentGroup.Scene).SimulationDataService;
             if (HasInventoryChanged)
             {
-				HasInventoryChanged = false;
-                List<TaskInventoryItem> items = GetInventoryItems();
-                datastore.StorePrimInventory(m_part.UUID, items);
-                    IScriptModule[] engines = m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>();
-                    if (engines != null)
+                HasInventoryChanged = false;
+                List<TaskInventoryItem> items = GetInventoryItems ();
+                datastore.StorePrimInventory (m_part.UUID, items);
+                IScriptModule[] engines = m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule> ();
+                if (engines != null)
+                {
+                    foreach (TaskInventoryItem item in items)
                     {
-
-                        foreach (TaskInventoryItem item in items)
+                        if (item.Type == (int)InventoryType.LSL)
                         {
-                            if (item.Type == (int)InventoryType.LSL)
+                            foreach (IScriptModule engine in engines)
                             {
-                                foreach (IScriptModule engine in engines)
+                                if (engine != null)
                                 {
-                                    if (engine != null)
-                                    {
-                                        engine.SaveStateSave(item.ItemID, m_part.UUID);
-                                    }
+                                    engine.SaveStateSave (item.ItemID, m_part.UUID);
                                 }
                             }
                         }
                     }
-
+                }
             }
         }
 
@@ -1220,36 +1160,6 @@ namespace OpenSim.Region.Framework.Scenes
             return ret;
         }
         
-        public Dictionary<UUID, string> GetScriptStates()
-        {
-            IScriptModule[] engines = m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>();
-
-            Dictionary<UUID, string> ret = new Dictionary<UUID, string>();
-            if (engines == null) // No engine at all
-                return ret;
-
-            List<TaskInventoryItem> scripts = GetInventoryScripts();
-
-            foreach (TaskInventoryItem item in scripts)
-            {
-                foreach (IScriptModule e in engines)
-                {
-                    if (e != null)
-                    {
-                        string n = e.GetXMLState(item.ItemID);
-                        if (n != String.Empty)
-                        {
-                            if (!ret.ContainsKey(item.ItemID))
-                                ret[item.ItemID] = n;
-                            break;
-                        }
-                    }
-                }
-            }
-            
-            return ret;
-        }
-
         public void ResumeScripts()
         {
             IScriptModule[] engines = m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>();

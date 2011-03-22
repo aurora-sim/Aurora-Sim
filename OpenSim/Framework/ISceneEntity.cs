@@ -221,13 +221,6 @@ namespace OpenSim.Framework
         /// <returns></returns>
         string ExtraToXmlString ();
         void ExtraFromXmlString (string xmlstr);
-
-        /// <summary>
-        /// State snapshots (for script state transfer)
-        /// </summary>
-        /// <returns></returns>
-        string GetStateSnapshot ();
-        void SetState (string xmlstr);
     }
 
     public interface ISceneEntity : IEntity
