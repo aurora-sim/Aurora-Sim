@@ -108,6 +108,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             scene.EventManager.OnNewClient -= NewClient;
             scene.EventManager.OnClosingClient -= RemoveClient;
             scene.EventManager.OnNewPresence -= EventManager_OnNewPresence;
+            scene.EventManager.OnRemovePresence -= EventManager_OnRemovePresence;
         }
 
         public void RegionLoaded(Scene scene)
