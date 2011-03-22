@@ -110,6 +110,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public IScene World;
         public IScript Script;
         public string State;
+        public string DefaultState = "";
         public bool Running = true;
         public bool Disabled = false;
         public bool Suspended = false;
@@ -319,7 +320,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this, false); // let current InExec finish or lsl reset fails
 //            VersionID++;
             //Reset the state to default
-            State = "default";
+            State = DefaultState;
             //Reset all variables back to their original values.
             Script.ResetVars();
             //Tell the SOP about the change.
@@ -540,6 +541,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
 
             #endregion
+
+            //Find the default state save
+            DefaultState = m_ScriptEngine.Compiler.FindDefaultStateForScript (Source);
 
             // Attempt to find a state save to load from
             

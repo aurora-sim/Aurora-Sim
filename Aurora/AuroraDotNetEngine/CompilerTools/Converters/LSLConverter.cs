@@ -22,9 +22,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private CSharpCodeProvider CScodeProvider = new CSharpCodeProvider();
         private CSCodeGenerator LSL_Converter;
         private Compiler m_compiler;
+
+        public string DefaultState { get { return "Default"; } }
+
         public void Initialise(Compiler compiler)
         {
-        m_compiler = compiler;
+            m_compiler = compiler;
 //            LSL_Converter = new CSCodeGenerator(null, compiler);
         }
 

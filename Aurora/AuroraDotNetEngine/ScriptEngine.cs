@@ -924,7 +924,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             id.PostOnRez = postOnRez;
             id.StartParam = startParam;
             id.stateSource = statesource;
-            id.State = "default";
             id.Source = Script;
             id.part = part;
             id.World = part.ParentEntity.Scene;
@@ -945,7 +944,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             id.PostOnRez = postOnRez;
             id.StartParam = startParam;
             id.stateSource = (StateSource)stateSource;
-            id.State = "default";
             id.Source = script;
             id.EventDelayTicks = 0;
             id.part = findPrim(partID);

@@ -17,6 +17,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
     public class CSConverter : IScriptConverter
     {
         private CSharpCodeProvider CScodeProvider = new CSharpCodeProvider();
+
+        public string DefaultState { get { return ""; } }
+
         public void Initialise(Compiler compiler)
         {
         }

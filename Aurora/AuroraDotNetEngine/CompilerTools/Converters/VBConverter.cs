@@ -16,7 +16,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
     public class VBConverter : IScriptConverter
     {
-        private VBCodeProvider VBcodeProvider = new VBCodeProvider();
+        private VBCodeProvider VBcodeProvider = new VBCodeProvider ();
+        public string DefaultState { get { return ""; } }
+
         public void Initialise(Compiler compiler)
         {
         }

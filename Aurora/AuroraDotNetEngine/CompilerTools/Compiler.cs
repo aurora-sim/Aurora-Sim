@@ -254,6 +254,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             CompileFromDotNetText(compileScript, converter, "", Script, true);
         }
 
+        public string FindDefaultStateForScript (string Script)
+        {
+            IScriptConverter language = null;
+            foreach (IScriptConverter convert in converters)
+            {
+                if (convert.Name == DefaultCompileLanguage)
+                {
+                    language = convert;
+                    break;
+                }
+            }
+            foreach (IScriptConverter convert in converters)
+            {
+                if (Script.StartsWith ("//" + convert.Name, true, CultureInfo.InvariantCulture))
+                    language = convert;
+            }
+
+            return language.DefaultState;
+        }
+
         private void CheckLanguageAndConvert(string Script, UUID ownerID, out IScriptConverter converter, out string compileScript)
         {
             compileScript = Script;
