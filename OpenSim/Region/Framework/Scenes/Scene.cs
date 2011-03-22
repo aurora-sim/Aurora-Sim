@@ -614,6 +614,9 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.Error ("[SCENE] Scene.cs:RemoveClient exception: " + e.ToString ());
             }
 
+            //Remove any interfaces it might have stored
+            presence.RemoveAllInterfaces ();
+
             // Remove the avatar from the scene
             m_sceneGraph.RemoveScenePresence (presence);
             m_clientManager.Remove (presence.UUID);

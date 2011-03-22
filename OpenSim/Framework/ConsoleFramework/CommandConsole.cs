@@ -1032,52 +1032,45 @@ namespace OpenSim.Framework
         /// <summary>
         /// Starts the prompt for the console. This will never stop until the region is closed.
         /// </summary>
-        public void ReadConsole()
+        public void ReadConsole ()
         {
             while (true)
             {
                 if (!Processing)
                 {
-                    throw new Exception("Restart");
+                    throw new Exception ("Restart");
                 }
-                try
+                lock (m_consoleLock)
                 {
-                    lock (m_consoleLock)
+                    if (action == null)
                     {
-                        if (action == null)
+                        action = Prompt;
+                        result = action.BeginInvoke (null, null);
+                        m_calledEndInvoke = false;
+                    }
+                    try
+                    {
+                        if ((!result.IsCompleted) &&
+                            (!result.AsyncWaitHandle.WaitOne (5000, false) || !result.IsCompleted))
                         {
-                            action = Prompt;
-                            result = action.BeginInvoke(null, null);
-                            m_calledEndInvoke = false;
-                        }
-                        try
-                        {
-                            if ((!result.IsCompleted) &&
-                                (!result.AsyncWaitHandle.WaitOne(1000, false) || !result.IsCompleted))
-                            {
 
-                            }
-                            else if (action != null &&
-                                !result.CompletedSynchronously &&
-                                !m_calledEndInvoke)
-                            {
-                                m_calledEndInvoke = true;
-                                action.EndInvoke(result);
-                                action = null;
-                                result = null;
-                            }
                         }
-                        catch
+                        else if (action != null &&
+                            !result.CompletedSynchronously &&
+                            !m_calledEndInvoke)
                         {
-                            //Eat the exception and go on
+                            m_calledEndInvoke = true;
+                            action.EndInvoke (result);
                             action = null;
                             result = null;
                         }
                     }
-                }
-                catch (Exception e)
-                {
-                    m_log.ErrorFormat("Command error: {0}", e);
+                    catch
+                    {
+                        //Eat the exception and go on
+                        action = null;
+                        result = null;
+                    }
                 }
             }
         }

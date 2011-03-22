@@ -89,5 +89,10 @@ namespace OpenSim.Framework
         /// </summary>
         /// <returns></returns>
         Dictionary<Type, List<object>> GetInterfaces();
+
+        /// <summary>
+        /// Removes all interfaces from the registry
+        /// </summary>
+        void RemoveAllInterfaces ();
     }
 }

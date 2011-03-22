@@ -153,5 +153,10 @@ namespace OpenSim.Framework
             }
             return interfaces;
         }
+
+        public void RemoveAllInterfaces ()
+        {
+            ModuleInterfaces.Clear ();
+        }
     }
 }
