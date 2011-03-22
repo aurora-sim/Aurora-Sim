@@ -3848,10 +3848,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         private void DetachWrapper(object o)
         {
-            SceneObjectPart host = (SceneObjectPart)o;
+            ISceneChildEntity host = (ISceneChildEntity)o;
 
-            SceneObjectGroup grp = host.ParentGroup;
-            UUID itemID = grp.GetFromItemID();
+            ISceneEntity grp = host.ParentEntity;
+            UUID itemID = grp.RootChild.FromUserInventoryItemID;
             IScenePresence presence = World.GetScenePresence (host.OwnerID);
 
             IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();

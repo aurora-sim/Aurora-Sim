@@ -259,9 +259,6 @@ namespace OpenSim.Region.Framework.Scenes
         public uint TimeStampLastActivity; // Will be used for AutoReturn
         
         [XmlIgnore]
-        public UUID FromItemID;
-
-        [XmlIgnore]
         public int STATUS_ROTATE_X
         {
             get

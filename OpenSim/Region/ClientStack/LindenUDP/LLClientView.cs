@@ -5211,7 +5211,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             update.MediaURL = Utils.StringToBytes(data.CurrentMediaVersion);
             if (data.IsAttachment)
             {
-                update.NameValue = Util.StringToBytes256("AttachItemID STRING RW SV " + data.FromItemID);
+                update.NameValue = Util.StringToBytes256("AttachItemID STRING RW SV " + data.FromUserInventoryItemID);
                 update.State = (byte)((data.AttachmentPoint % 16) * 16 + (data.AttachmentPoint / 16));
             }
             else
@@ -5417,7 +5417,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 if (part.IsAttachment)
                 {
-                    byte[] NV = Util.StringToBytes256("AttachItemID STRING RW SV " + part.FromItemID);
+                    byte[] NV = Util.StringToBytes256 ("AttachItemID STRING RW SV " + part.FromUserInventoryItemID);
                     Buffer.BlockCopy(NV, 0, objectData, i, NV.Length);
                     i += NV.Length;
                 }

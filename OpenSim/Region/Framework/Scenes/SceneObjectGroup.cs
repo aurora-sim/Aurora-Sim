@@ -605,14 +605,9 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 foreach (SceneObjectPart part in m_partsList)
                 {
-                    part.FromItemID = AssetId;
+                    part.FromUserInventoryItemID = AssetId;
                 }
             }
-        }
-
-        public UUID GetFromItemID()
-        {
-            return m_rootPart.FromItemID;
         }
 
         public bool IsPhysical()
@@ -1314,7 +1309,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (avatar == null)
                 return;
 
-            RootPart.FromItemID = UUID.Zero;
+            RootPart.FromUserInventoryItemID = UUID.Zero;
 
             AbsolutePosition = avatar.AbsolutePosition;
             m_rootPart.AttachedAvatar = UUID.Zero;
@@ -3539,7 +3534,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public virtual string ExtraToXmlString()
         {
-            return "<ExtraFromItemID>" + GetFromItemID().ToString() + "</ExtraFromItemID>";
+            return "<ExtraFromItemID>" + RootChild.FromUserInventoryItemID + "</ExtraFromItemID>";
         }
 
         public virtual void ExtraFromXmlString(string xmlstr)
