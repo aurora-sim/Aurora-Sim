@@ -81,6 +81,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 m_scene = scene;
                 scene.RegisterModuleInterface<ICombatModule>(this);
                 scene.EventManager.OnNewPresence += NewPresence;
+                scene.EventManager.OnRemovePresence += EventManager_OnRemovePresence;
                 scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringParcel;
                 scene.Permissions.OnAllowedOutgoingLocalTeleport += AllowedTeleports;
                 scene.Permissions.OnAllowedOutgoingRemoteTeleport += AllowedTeleports;
@@ -93,6 +94,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             if (m_enabled)
             {
                 scene.EventManager.OnNewPresence -= NewPresence;
+                scene.EventManager.OnRemovePresence -= EventManager_OnRemovePresence;
                 scene.EventManager.OnAvatarEnteringNewParcel -= AvatarEnteringParcel;
                 scene.Permissions.OnAllowedOutgoingLocalTeleport -= AllowedTeleports;
                 scene.Permissions.OnAllowedOutgoingRemoteTeleport -= AllowedTeleports;
@@ -117,6 +119,16 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
         void NewPresence (IScenePresence presence)
         {
             presence.RegisterModuleInterface<ICombatPresence>(new CombatPresence(this, presence, m_config));
+        }
+
+        void EventManager_OnRemovePresence (IScenePresence presence)
+        {
+            CombatPresence m = (CombatPresence)presence.RequestModuleInterface<ICombatPresence> ();
+            if (m != null)
+            {
+                m.Close ();
+                presence.UnregisterModuleInterface<ICombatPresence> (m);
+            }
         }
 
         public void RegionLoaded(Scene scene)
@@ -208,7 +220,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             private AuroraCombatModule m_combatModule;
             private float m_health = 100f; 
             private string m_Team;
-            private Dictionary<UUID, float> TeamHits = new Dictionary<UUID, float>();
+            private Dictionary<UUID, float> TeamHits = new Dictionary<UUID, float> ();
+            private System.Timers.Timer m_healthtimer = new System.Timers.Timer ();
             //private Dictionary<string, float> GenericStats = new Dictionary<string, float>();
 
             public float Health
@@ -259,11 +272,21 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 SP.OnAddPhysics += SP_OnAddPhysics;
                 SP.OnRemovePhysics += SP_OnRemovePhysics;
 
-                System.Timers.Timer t = new System.Timers.Timer ();
                 //Use this to fix the avatars health
-                t.Interval = 1000; // 1 sec
-                t.Enabled = true;
-                t.Elapsed += new System.Timers.ElapsedEventHandler (fixAvatarHealth_Elapsed);
+                m_healthtimer.Interval = 1000; // 1 sec
+                m_healthtimer.Enabled = true;
+                m_healthtimer.Elapsed += new System.Timers.ElapsedEventHandler (fixAvatarHealth_Elapsed);
+            }
+
+            public void Close ()
+            {
+                m_combatModule = null;
+                m_healthtimer.Stop ();
+                m_healthtimer.Close ();
+                m_SP.OnAddPhysics -= SP_OnAddPhysics;
+                m_SP.OnRemovePhysics += SP_OnRemovePhysics;
+                SP_OnRemovePhysics ();
+                m_SP = null;
             }
 
             public void SP_OnRemovePhysics()

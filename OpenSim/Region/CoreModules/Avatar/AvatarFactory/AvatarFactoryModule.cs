@@ -91,6 +91,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             scene.EventManager.OnNewClient += NewClient;
             scene.EventManager.OnClosingClient += RemoveClient;
             scene.EventManager.OnNewPresence += EventManager_OnNewPresence;
+            scene.EventManager.OnRemovePresence += EventManager_OnRemovePresence;
 
             MainConsole.Instance.Commands.AddCommand("region", false, "force send appearance", "force send appearance",
                 "Force send the avatar's appearance", HandleConsoleForceSendAppearance);
@@ -727,6 +728,16 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             presence.RegisterModuleInterface<IAvatarAppearanceModule> (m);
         }
 
+        void EventManager_OnRemovePresence (IScenePresence presence)
+        {
+            AvatarApperanceModule m = (AvatarApperanceModule)presence.RequestModuleInterface<IAvatarAppearanceModule> ();
+            if (m != null)
+            {
+                m.Close ();
+                presence.UnregisterModuleInterface<IAvatarAppearanceModule> (m);
+            }
+        }
+
         public class AvatarApperanceModule : IAvatarAppearanceModule
         {
             public IScenePresence m_sp;
@@ -747,6 +758,12 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             {
                 m_sp = sp;
                 m_sp.Scene.EventManager.OnMakeRootAgent += EventManager_OnMakeRootAgent;
+            }
+
+            public void Close ()
+            {
+                m_sp.Scene.EventManager.OnMakeRootAgent -= EventManager_OnMakeRootAgent;
+                m_sp = null;
             }
 
             private void EventManager_OnMakeRootAgent (IScenePresence presence)

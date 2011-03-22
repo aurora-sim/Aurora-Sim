@@ -26,6 +26,7 @@ namespace Aurora.Modules.Avatar.AvatarModules
         public void AddRegion (Scene scene)
         {
             scene.EventManager.OnNewPresence += EventManager_OnNewPresence;
+            scene.EventManager.OnRemovePresence += EventManager_OnRemovePresence;
         }
 
         public void RegionLoaded (Scene scene)
@@ -35,6 +36,7 @@ namespace Aurora.Modules.Avatar.AvatarModules
         public void RemoveRegion (Scene scene)
         {
             scene.EventManager.OnNewPresence -= EventManager_OnNewPresence;
+            scene.EventManager.OnRemovePresence -= EventManager_OnRemovePresence;
         }
 
         public void Close ()
@@ -59,6 +61,16 @@ namespace Aurora.Modules.Avatar.AvatarModules
             presence.RegisterModuleInterface<IScriptControllerModule> (m);
         }
 
+        void EventManager_OnRemovePresence (IScenePresence presence)
+        {
+            ScriptControllerPresenceModule m = (ScriptControllerPresenceModule)presence.RequestModuleInterface<IScriptControllerModule> ();
+            if (m != null)
+            {
+                m.Close ();
+                presence.UnregisterModuleInterface<IScriptControllerModule> (m);
+            }
+        }
+
         public class ScriptControllerPresenceModule : IScriptControllerModule
         {
             private Dictionary<UUID, ScriptControllers> scriptedcontrols = new Dictionary<UUID, ScriptControllers> ();
@@ -71,6 +83,12 @@ namespace Aurora.Modules.Avatar.AvatarModules
             {
                 m_sp = sp;
                 m_sp.ControllingClient.OnForceReleaseControls += HandleForceReleaseControls;
+            }
+
+            public void Close ()
+            {
+                m_sp.ControllingClient.OnForceReleaseControls -= HandleForceReleaseControls;
+                m_sp = null;
             }
 
             public ScriptControllers GetScriptControler (UUID itemID)
