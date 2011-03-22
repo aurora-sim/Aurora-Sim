@@ -346,6 +346,14 @@ namespace OpenSim.Services.GridService
                 region.TerrainImage = gregion.TerrainImage;
                 region.TerrainMapImage = gregion.TerrainMapImage;
                 region.SessionID = sessionID;
+                //Update all of these as well, as they are able to be set by the region owner
+                region.EstateOwner = gregion.EstateOwner;
+                region.Access = gregion.Access;
+                region.ExternalHostName = gregion.ExternalHostName;
+                region.HttpPort = gregion.HttpPort;
+                region.RegionName = gregion.RegionName;
+                region.RegionType = gregion.RegionType;
+                region.ServerURI = gregion.ServerURI;
 
                 try
                 {
