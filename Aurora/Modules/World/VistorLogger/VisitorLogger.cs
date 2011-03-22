@@ -56,7 +56,7 @@ namespace Aurora.Modules
         void EventManager_OnClosingClient(IClientAPI client)
         {
             IScenePresence presence;
-            if (client.Scene.TryGetScenePresence(client.AgentId, out presence) && !presence.IsChildAgent)
+            if (client.Scene.TryGetScenePresence (client.AgentId, out presence) && !presence.IsChildAgent && m_timesOfUsers.ContainsKey(client.AgentId))
             {
                 try
                 {
