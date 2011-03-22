@@ -415,10 +415,10 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Scene Heartbeat Methods
 
-        private void Update()
+        private bool Update()
         {
             if (!ShouldRunHeartbeat) //If we arn't supposed to be running, kill ourselves
-                throw new Exception("ThreadAbort");
+                return false;
 
             ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "SimFrameStats");
             ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Total Frame Time");
@@ -507,8 +507,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
             catch (Exception e)
             {
-                m_log.Error("[REGION]: Failed with exception " + e.ToString() + " in region: " + RegionInfo.RegionName);
-                return;
+                m_log.Error ("[REGION]: Failed with exception " + e.ToString () + " in region: " + RegionInfo.RegionName);
+                return true;
             }
 
             int MonitorEndFrameTime = Util.EnvironmentTickCountSubtract(BeginningFrameTime) + maintc;
@@ -518,7 +518,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             sleepFrameMonitor.AddTime(maintc);
 
-            totalFrameMonitor.AddFrameTime(MonitorEndFrameTime);
+            totalFrameMonitor.AddFrameTime (MonitorEndFrameTime);
+            return true;
         }
 
         #endregion

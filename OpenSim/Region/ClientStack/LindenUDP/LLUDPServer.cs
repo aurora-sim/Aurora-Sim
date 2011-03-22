@@ -944,12 +944,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
         }
 
-        private void OutgoingPacketHandlerLoop()
+        private bool OutgoingPacketHandlerLoop()
         {
             if (!IsRunning)
-                Thread.CurrentThread.Abort();
+                return false;
             if (!m_scene.ShouldRunHeartbeat)
-                throw new Exception ("ThreadAbort");
+                return false;
             
             // Typecast the function to an Action<IClientAPI> once here to avoid allocating a new
             // Action generic every round
@@ -1012,6 +1012,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 m_log.Error("[LLUDPSERVER]: OutgoingPacketHandler loop threw an exception: " + ex.Message, ex);
             }
+            return true;
         }
 
         private void ClientOutgoingPacketHandler(IClientAPI client)
@@ -1047,12 +1048,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
         }
 
-        private void IncomingPacketHandlerLoop()
+        private bool IncomingPacketHandlerLoop()
         {
             if (!IsRunning)
-                Thread.CurrentThread.Abort ();
+                return false;
             if (!m_scene.ShouldRunHeartbeat)
-                throw new Exception ("ThreadAbort");
+                return false;
 
             // Set this culture for the thread that incoming packets are received
             // on to en-US to avoid number parsing issues
@@ -1083,8 +1084,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             catch (Exception ex)
             {
                 m_log.Error("[LLUDPSERVER]: Error in the incoming packet handler loop: " + ex.Message, ex);
-                return;
             }
+            return true;
         }
 
         private void ProcessInPacket(object state)

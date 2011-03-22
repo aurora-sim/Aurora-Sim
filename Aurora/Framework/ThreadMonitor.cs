@@ -14,7 +14,7 @@ namespace Aurora.Framework
             public Heartbeat heartBeat;
             public int millisecondTimeOut;
         }
-        public delegate void Heartbeat();
+        public delegate bool Heartbeat();
         protected internal delegate void FireEvent(Heartbeat thread);
         protected Object m_lock = new Object();
         protected List<InternalHeartbeat> m_heartbeats = new List<InternalHeartbeat>();
@@ -67,8 +67,14 @@ namespace Aurora.Framework
                     {
                         foreach (InternalHeartbeat intHB in m_heartbeats)
                         {
-                            if (!CallAndWait (intHB.millisecondTimeOut, intHB.heartBeat))
+                            bool isRunning = false;
+                            if (!CallAndWait (intHB.millisecondTimeOut, intHB.heartBeat, out isRunning))
+                            {
                                 Console.WriteLine ("WARNING: Could not run Heartbeat in specified limits!");
+                            }
+                            else if(!isRunning)
+                            {
+                            }
                         }
                     }
                     //0 is infinite
@@ -97,12 +103,13 @@ namespace Aurora.Framework
         /// <param name="timeout"></param>
         /// <param name="enumerator"></param>
         /// <returns></returns>
-        protected bool CallAndWait(int timeout, Heartbeat enumerator)
+        protected bool CallAndWait(int timeout, Heartbeat enumerator, out bool isRunning)
         {
+            isRunning = false;
             bool RetVal = false;
             if (timeout == 0)
             {
-                enumerator();
+                isRunning = enumerator ();
                 RetVal = true;
             }
             else
@@ -122,11 +129,13 @@ namespace Aurora.Framework
                 if (((timeout != 0) && !result.IsCompleted) &&
                     (!result.AsyncWaitHandle.WaitOne(timeout, false) || !result.IsCompleted))
                 {
+                    isRunning = false;
                     return false;
                 }
                 else
                 {
                     wrappedAction.EndInvoke(result);
+                    isRunning = true;
                 }
             }
             //Return what we got
