@@ -751,6 +751,8 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
             private void EventManager_OnMakeRootAgent (IScenePresence presence)
             {
+                //Send everyone to me!
+                SendOtherAgentsAvatarDataToMe ();
                 //Check to make sure that we have sent all the appearance info 10 seconds later
                 System.Timers.Timer t = new System.Timers.Timer (10 * 1000);
                 t.Elapsed += CheckToMakeSureWearablesHaveBeenSent;
