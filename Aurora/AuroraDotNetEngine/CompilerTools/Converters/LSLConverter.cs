@@ -23,7 +23,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private CSCodeGenerator LSL_Converter;
         private Compiler m_compiler;
 
-        public string DefaultState { get { return "Default"; } }
+        public string DefaultState { get { return "default"; } }
 
         public void Initialise(Compiler compiler)
         {

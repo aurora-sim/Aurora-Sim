@@ -485,7 +485,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void Start(bool reupload)
         {
             DateTime StartTime = DateTime.Now.ToUniversalTime();
-            string savedStateAssemblyName="";
 
             //Clear out the removing of events for this script.
             VersionID++;
@@ -579,7 +578,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 && File.Exists(LastStateSave.AssemblyName))
             {
                 //Retrive the previous assembly
-                AssemblyName = savedStateAssemblyName;
+                AssemblyName = LastStateSave.AssemblyName;
             }
             else
             {
