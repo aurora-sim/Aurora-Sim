@@ -49,5 +49,7 @@ namespace OpenSim.Framework
 
         event ObjectPaid OnObjectPaid;
         event PostObjectPaid OnPostObjectPaid;
+
+        void FireObjectPaid (UUID uUID, UUID uUID_2, int p);
     }
 }

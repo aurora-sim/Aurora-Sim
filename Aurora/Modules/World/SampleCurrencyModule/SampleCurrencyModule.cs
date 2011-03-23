@@ -75,6 +75,12 @@ namespace Aurora.OptionalModules
         public event ObjectPaid OnObjectPaid;
         public event PostObjectPaid OnPostObjectPaid;
 
+        public void FireObjectPaid (UUID objectID, UUID agentID, int amount)
+        {
+            if (OnObjectPaid != null)
+                OnObjectPaid (objectID, agentID, amount);
+        }
+
 #pragma warning restore 67
 
         #region IRegionModuleBase Members
