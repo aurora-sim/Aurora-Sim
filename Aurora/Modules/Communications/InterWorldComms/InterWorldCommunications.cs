@@ -268,6 +268,7 @@ namespace Aurora.Modules
                 return;
             }
             con = new IWCCertificate();
+            con.Connection = new IWCConnection ();
             con.Connection.RecieverURL = Url;
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0);
             con.Connection.SenderURL = server.HostName + ":" + server.Port + "/iwcconnection";
@@ -395,7 +396,7 @@ namespace Aurora.Modules
             else
             {
                 c = new IWCCertificate();
-
+                c.Connection = new IWCConnection ();
                 //Build the certificate
                 c.ValidUntil = DateTime.Now.AddDays(1); //One day for now...
 
@@ -468,6 +469,7 @@ namespace Aurora.Modules
                     IWCConnection c = new IWCConnection ();
                     c.FromOSD(innerReply);
                     IWCCertificate cert = new IWCCertificate ();
+                    cert.Connection = new IWCConnection ();
                     cert.Active = true;
                     cert.Connection.SenderURL = c.SenderURL;
                     cert.Connection.RecieverURL = c.RecieverURL;
@@ -766,7 +768,7 @@ namespace Aurora.Modules
 
         public override IDataTransferable Duplicate ()
         {
-            IWCCertificate m = new IWCCertificate ();
+            IWCConnection m = new IWCConnection ();
             m.FromOSD (ToOSD ());
             return m;
         }
