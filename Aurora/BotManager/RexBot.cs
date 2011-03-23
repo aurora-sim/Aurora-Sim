@@ -52,7 +52,7 @@ namespace Aurora.BotManager
         void EnableWalk();
     }
 
-    public class RexBot : GenericNpcCharacter, IRexBot, IClientAPI, IClientCore
+    public class RexBot : IRexBot, IClientAPI, IClientCore
     {
         #region Declares
         public enum RexBotState { Idle, Walking, Flying, Unknown }
@@ -73,6 +73,7 @@ namespace Aurora.BotManager
         private UUID m_myID = UUID.Random();
         private Scene m_scene;
         private IScenePresence m_scenePresence;
+        private AgentCircuitData m_circuitData;
 
         private RexBotState m_currentState = RexBotState.Idle;
         public RexBotState State
@@ -104,24 +105,24 @@ namespace Aurora.BotManager
             get { return m_navMesh; }
         }
 
-        public override Vector3 StartPos
+        public Vector3 StartPos
         {
             get { return DEFAULT_START_POSITION; }
             set { }
         }
 
-        public override UUID AgentId
+        public UUID AgentId
         {
             get { return m_myID; }
         }
 
-        public override string FirstName
+        public string FirstName
         {
             get { return m_firstName; }
             set { m_firstName = value; }
         }
 
-        public override string LastName
+        public string LastName
         {
             get { return m_lastName; }
             set { m_lastName = value; }
@@ -129,18 +130,18 @@ namespace Aurora.BotManager
 
         private uint m_circuitCode;
 
-        public override uint CircuitCode
+        public uint CircuitCode
         {
             get { return m_circuitCode; }
             set { m_circuitCode = value; }
         }
 
-        public override String Name
+        public String Name
         {
             get { return FirstName + " " + LastName; }
         }
 
-        public override IScene Scene
+        public IScene Scene
         {
             get { return m_scene; }
         }
@@ -148,10 +149,11 @@ namespace Aurora.BotManager
         #endregion
 
         // creates new bot on the default location
-        public RexBot(Scene scene)
+        public RexBot(Scene scene, AgentCircuitData data)
         {
-            RegisterInterfaces(); 
+            RegisterInterfaces();
 
+            m_circuitData = data;
             m_scene = scene;
             m_navMesh = null;
             
@@ -186,7 +188,7 @@ namespace Aurora.BotManager
             m_scenePresence.Teleport(DEFAULT_START_POSITION);
         }
 
-        public override void Close()
+        public void Close()
         {
             // Pull Client out of Region
             m_log.Info("[RexBot]: Removing bot " + Name);
@@ -760,76 +762,378 @@ namespace Aurora.BotManager
 
         #endregion
 
+        protected virtual void OnBotChatFromViewer (object sender, OSChatMessage e)
+        {
+            OnChatFromClient (sender, e);
+        }
+
+        protected virtual void OnBotAgentUpdate (uint controlFlag, Quaternion bodyRotation)
+        {
+            if (OnAgentUpdate != null)
+            {
+                AgentUpdateArgs pack = new AgentUpdateArgs ();
+                pack.ControlFlags = controlFlag;
+                pack.BodyRotation = bodyRotation;
+                OnAgentUpdate (this, pack);
+            }
+        }
+
+        protected virtual void OnBotLogout ()
+        {
+            if (OnLogout != null)
+            {
+                OnLogout (this);
+            }
+        }
+
+        protected virtual void OnBotConnectionClosed ()
+        {
+            OnConnectionClosed (this);
+        }
+
+        #region IClientAPI
+
+#pragma warning disable 67
+        public event Action<IClientAPI> OnLogout;
+        public event ObjectPermissions OnObjectPermissions;
+
+        public event MoneyTransferRequest OnMoneyTransferRequest;
+        public event ParcelBuy OnParcelBuy;
+        public event Action<IClientAPI> OnConnectionClosed;
+
+        public event ImprovedInstantMessage OnInstantMessage;
+        public event ChatMessage OnChatFromClient;
+        public event RezObject OnRezObject;
+        public event ModifyTerrain OnModifyTerrain;
+        public event BakeTerrain OnBakeTerrain;
+        public event SetAppearance OnSetAppearance;
+        public event AvatarNowWearing OnAvatarNowWearing;
+        public event RezSingleAttachmentFromInv OnRezSingleAttachmentFromInv;
+        public event UUIDNameRequest OnDetachAttachmentIntoInv;
+        public event ObjectAttach OnObjectAttach;
+        public event ObjectDeselect OnObjectDetach;
+        public event ObjectDrop OnObjectDrop;
+        public event StartAnim OnStartAnim;
+        public event StopAnim OnStopAnim;
+        public event LinkObjects OnLinkObjects;
+        public event DelinkObjects OnDelinkObjects;
+        public event RequestMapBlocks OnRequestMapBlocks;
+        public event RequestMapName OnMapNameRequest;
+        public event TeleportLocationRequest OnTeleportLocationRequest;
+        public event TeleportLandmarkRequest OnTeleportLandmarkRequest;
+        public event DisconnectUser OnDisconnectUser;
+        public event RequestAvatarProperties OnRequestAvatarProperties;
+        public event SetAlwaysRun OnSetAlwaysRun;
+        public event DeRezObject OnDeRezObject;
+        public event Action<IClientAPI> OnRegionHandShakeReply;
+        public event GenericCall1 OnRequestWearables;
+        public event GenericCall1 OnCompleteMovementToRegion;
+        public event UpdateAgent OnAgentUpdate;
+        public event AgentRequestSit OnAgentRequestSit;
+        public event AgentSit OnAgentSit;
+        public event AvatarPickerRequest OnAvatarPickerRequest;
+        public event Action<IClientAPI> OnRequestAvatarsData;
+        public event AddNewPrim OnAddPrim;
+        public event RequestGodlikePowers OnRequestGodlikePowers;
+        public event GodKickUser OnGodKickUser;
+        public event ObjectDuplicate OnObjectDuplicate;
+        public event GrabObject OnGrabObject;
+        public event DeGrabObject OnDeGrabObject;
+        public event MoveObject OnGrabUpdate;
+        public event ViewerEffectEventHandler OnViewerEffect;
+
+        public event FetchInventory OnAgentDataUpdateRequest;
+        public event TeleportLocationRequest OnSetStartLocationRequest;
+
+        public event UpdateShape OnUpdatePrimShape;
+        public event ObjectExtraParams OnUpdateExtraParams;
+        public event RequestObjectPropertiesFamily OnRequestObjectPropertiesFamily;
+        public event ObjectSelect OnObjectSelect;
+        public event GenericCall7 OnObjectDescription;
+        public event GenericCall7 OnObjectName;
+        public event GenericCall7 OnObjectClickAction;
+        public event GenericCall7 OnObjectMaterial;
+        public event UpdatePrimFlags OnUpdatePrimFlags;
+        public event UpdatePrimTexture OnUpdatePrimTexture;
+        public event UpdateVectorWithUpdate OnUpdatePrimGroupPosition;
+        public event UpdateVectorWithUpdate OnUpdatePrimSinglePosition;
+        public event UpdatePrimRotation OnUpdatePrimGroupRotation;
+        public event UpdatePrimSingleRotation OnUpdatePrimSingleRotation;
+        public event UpdatePrimGroupRotation OnUpdatePrimGroupMouseRotation;
+        public event UpdateVector OnUpdatePrimScale;
+        public event UpdateVector OnUpdatePrimGroupScale;
+        public event StatusChange OnChildAgentStatus;
+        public event GenericCall2 OnStopMovement;
+
+        public event CreateNewInventoryItem OnCreateNewInventoryItem;
+        public event CreateInventoryFolder OnCreateNewInventoryFolder;
+        public event UpdateInventoryFolder OnUpdateInventoryFolder;
+        public event MoveInventoryFolder OnMoveInventoryFolder;
+        public event RemoveInventoryFolder OnRemoveInventoryFolder;
+        public event RemoveInventoryItem OnRemoveInventoryItem;
+        public event FetchInventoryDescendents OnFetchInventoryDescendents;
+        public event PurgeInventoryDescendents OnPurgeInventoryDescendents;
+        public event FetchInventory OnFetchInventory;
+        public event RequestTaskInventory OnRequestTaskInventory;
+        public event UpdateInventoryItem OnUpdateInventoryItem;
+        public event CopyInventoryItem OnCopyInventoryItem;
+        public event MoveInventoryItem OnMoveInventoryItem;
+        public event UDPAssetUploadRequest OnAssetUploadRequest;
+        public event RequestTerrain OnRequestTerrain;
+        public event RequestTerrain OnUploadTerrain;
+        public event XferReceive OnXferReceive;
+        public event RequestXfer OnRequestXfer;
+        public event ConfirmXfer OnConfirmXfer;
+        public event AbortXfer OnAbortXfer;
+        public event RezScript OnRezScript;
+        public event UpdateTaskInventory OnUpdateTaskInventory;
+        public event MoveTaskInventory OnMoveTaskItem;
+        public event RemoveTaskInventory OnRemoveTaskItem;
+        public event GenericMessage OnGenericMessage;
+        public event UUIDNameRequest OnNameFromUUIDRequest;
+        public event UUIDNameRequest OnUUIDGroupNameRequest;
+
+        public event ParcelPropertiesRequest OnParcelPropertiesRequest;
+        public event ParcelDivideRequest OnParcelDivideRequest;
+        public event ParcelJoinRequest OnParcelJoinRequest;
+        public event ParcelPropertiesUpdateRequest OnParcelPropertiesUpdateRequest;
+        public event ParcelAbandonRequest OnParcelAbandonRequest;
+        public event ParcelGodForceOwner OnParcelGodForceOwner;
+        public event ParcelReclaim OnParcelReclaim;
+        public event ParcelReturnObjectsRequest OnParcelReturnObjectsRequest;
+        public event ParcelReturnObjectsRequest OnParcelDisableObjectsRequest;
+        public event ParcelAccessListRequest OnParcelAccessListRequest;
+        public event ParcelAccessListUpdateRequest OnParcelAccessListUpdateRequest;
+        public event ParcelSelectObjects OnParcelSelectObjects;
+        public event ParcelObjectOwnerRequest OnParcelObjectOwnerRequest;
+        public event ObjectDeselect OnObjectDeselect;
+        public event RegionInfoRequest OnRegionInfoRequest;
+        public event EstateCovenantRequest OnEstateCovenantRequest;
+        public event EstateChangeInfo OnEstateChangeInfo;
+
+        public event ObjectDuplicateOnRay OnObjectDuplicateOnRay;
+
+        public event FriendActionDelegate OnApproveFriendRequest;
+        public event FriendActionDelegate OnDenyFriendRequest;
+        public event FriendshipTermination OnTerminateFriendship;
+
+        public event EconomyDataRequest OnEconomyDataRequest;
+        public event MoneyBalanceRequest OnMoneyBalanceRequest;
+        public event UpdateAvatarProperties OnUpdateAvatarProperties;
+
+        public event ObjectIncludeInSearch OnObjectIncludeInSearch;
+        public event UUIDNameRequest OnTeleportHomeRequest;
+
+        public event ScriptAnswer OnScriptAnswer;
+        public event RequestPayPrice OnRequestPayPrice;
+        public event ObjectSaleInfo OnObjectSaleInfo;
+        public event ObjectBuy OnObjectBuy;
+        public event BuyObjectInventory OnBuyObjectInventory;
+        public event AgentSit OnUndo;
+
+        public event ForceReleaseControls OnForceReleaseControls;
+
+        public event GodLandStatRequest OnLandStatRequest;
+        public event RequestObjectPropertiesFamily OnObjectGroupRequest;
+        public event AgentCachedTextureRequest OnAgentCachedTextureRequest;
+
+        public event DetailedEstateDataRequest OnDetailedEstateDataRequest;
+        public event SetEstateFlagsRequest OnSetEstateFlagsRequest;
+        public event SetEstateTerrainBaseTexture OnSetEstateTerrainBaseTexture;
+        public event SetEstateTerrainDetailTexture OnSetEstateTerrainDetailTexture;
+        public event SetEstateTerrainTextureHeights OnSetEstateTerrainTextureHeights;
+        public event CommitEstateTerrainTextureRequest OnCommitEstateTerrainTextureRequest;
+        public event SetRegionTerrainSettings OnSetRegionTerrainSettings;
+        public event EstateRestartSimRequest OnEstateRestartSimRequest;
+        public event EstateChangeCovenantRequest OnEstateChangeCovenantRequest;
+        public event UpdateEstateAccessDeltaRequest OnUpdateEstateAccessDeltaRequest;
+        public event SimulatorBlueBoxMessageRequest OnSimulatorBlueBoxMessageRequest;
+        public event EstateBlueBoxMessageRequest OnEstateBlueBoxMessageRequest;
+        public event EstateDebugRegionRequest OnEstateDebugRegionRequest;
+        public event EstateTeleportOneUserHomeRequest OnEstateTeleportOneUserHomeRequest;
+        public event EstateTeleportAllUsersHomeRequest OnEstateTeleportAllUsersHomeRequest;
+        public event ScriptReset OnScriptReset;
+        public event GetScriptRunning OnGetScriptRunning;
+        public event SetScriptRunning OnSetScriptRunning;
+        public event UpdateVector OnAutoPilotGo;
+
+        public event TerrainUnacked OnUnackedTerrain;
+
+        public event RegionHandleRequest OnRegionHandleRequest;
+        public event ParcelInfoRequest OnParcelInfoRequest;
+
+        public event ActivateGesture OnActivateGesture;
+        public event DeactivateGesture OnDeactivateGesture;
+        public event ObjectOwner OnObjectOwner;
+
+        public event DirPlacesQuery OnDirPlacesQuery;
+        public event DirFindQuery OnDirFindQuery;
+        public event DirLandQuery OnDirLandQuery;
+        public event DirPopularQuery OnDirPopularQuery;
+        public event DirClassifiedQuery OnDirClassifiedQuery;
+        public event EventInfoRequest OnEventInfoRequest;
+        public event ParcelSetOtherCleanTime OnParcelSetOtherCleanTime;
+
+        public event MapItemRequest OnMapItemRequest;
+
+        public event OfferCallingCard OnOfferCallingCard;
+        public event AcceptCallingCard OnAcceptCallingCard;
+        public event DeclineCallingCard OnDeclineCallingCard;
+        public event SoundTrigger OnSoundTrigger;
+
+        public event StartLure OnStartLure;
+        public event TeleportLureRequest OnTeleportLureRequest;
+        public event NetworkStats OnNetworkStatsUpdate;
+
+        public event ClassifiedInfoRequest OnClassifiedInfoRequest;
+        public event ClassifiedInfoUpdate OnClassifiedInfoUpdate;
+        public event ClassifiedDelete OnClassifiedDelete;
+        public event ClassifiedDelete OnClassifiedGodDelete;
+
+        public event EventNotificationAddRequest OnEventNotificationAddRequest;
+        public event EventNotificationRemoveRequest OnEventNotificationRemoveRequest;
+        public event EventGodDelete OnEventGodDelete;
+
+        public event ParcelDwellRequest OnParcelDwellRequest;
+        public event UserInfoRequest OnUserInfoRequest;
+        public event UpdateUserInfo OnUpdateUserInfo;
+
+        public event RetrieveInstantMessages OnRetrieveInstantMessages;
+        public event SpinStart OnSpinStart;
+        public event SpinStop OnSpinStop;
+        public event SpinObject OnSpinUpdate;
+        public event ParcelDeedToGroup OnParcelDeedToGroup;
+
+        public event AvatarNotesUpdate OnAvatarNotesUpdate;
+        public event MuteListRequest OnMuteListRequest;
+        public event PickDelete OnPickDelete;
+        public event PickGodDelete OnPickGodDelete;
+        public event PickInfoUpdate OnPickInfoUpdate;
+
+        public event PlacesQuery OnPlacesQuery;
+
+        public event UpdatePrimSingleRotationPosition OnUpdatePrimSingleRotationPosition;
+
+        public event ObjectRequest OnObjectRequest;
+
+        public event AvatarInterestUpdate OnAvatarInterestUpdate;
+        public event GrantUserFriendRights OnGrantUserRights;
+
+        public event LinkInventoryItem OnLinkInventoryItem;
+
+        public event AgentSit OnRedo;
+
+        public event LandUndo OnLandUndo;
+
+        public event FindAgentUpdate OnFindAgent;
+
+        public event TrackAgentUpdate OnTrackAgent;
+
+        public event NewUserReport OnUserReport;
+
+        public event SaveStateHandler OnSaveState;
+
+        public event GroupAccountSummaryRequest OnGroupAccountSummaryRequest;
+
+        public event GroupAccountDetailsRequest OnGroupAccountDetailsRequest;
+
+        public event GroupAccountTransactionsRequest OnGroupAccountTransactionsRequest;
+
+        public event FreezeUserUpdate OnParcelFreezeUser;
+
+        public event EjectUserUpdate OnParcelEjectUser;
+
+        public event ParcelBuyPass OnParcelBuyPass;
+
+        public event ParcelGodMark OnParcelGodMark;
+
+        public event GroupActiveProposalsRequest OnGroupActiveProposalsRequest;
+
+        public event GroupVoteHistoryRequest OnGroupVoteHistoryRequest;
+
+        public event SimWideDeletesDelegate OnSimWideDeletes;
+
+        public event GroupProposalBallotRequest OnGroupProposalBallotRequest;
+
+        public event SendPostcard OnSendPostcard;
+
+        public event MuteListEntryUpdate OnUpdateMuteListEntry;
+
+        public event MuteListEntryRemove OnRemoveMuteListEntry;
+
+        public event GodlikeMessage OnGodlikeMessage;
+
+        public event GodUpdateRegionInfoUpdate OnGodUpdateRegionInfoUpdate;
+
+        public event ChangeInventoryItemFlags OnChangeInventoryItemFlags;
+
+        public event TeleportCancel OnTeleportCancel;
+
+        public event GodlikeMessage OnEstateTelehubRequest;
+
+        public event ViewerStartAuction OnViewerStartAuction;
+
+#pragma warning restore 67
+
+        public void QueueDelayedUpdate (Mischel.Collections.PriorityQueueItem<EntityUpdate, double> it)
+        {
+        }
+
+        public virtual void SendRegionHandshake (RegionInfo regionInfo, RegionHandshakeArgs args)
+        {
+            if (OnRegionHandShakeReply != null)
+            {
+                OnRegionHandShakeReply (this);
+            }
+
+            if (OnCompleteMovementToRegion != null)
+            {
+                OnCompleteMovementToRegion (this);
+            }
+        }
+
+        #endregion
+
         #region IClientAPI Members
 
-        Vector3 IClientAPI.StartPos
+
+        public UUID SessionId
         {
-            get
-            {
-                return Vector3.Zero;
-            }
-            set
-            {
-                
-            }
+            get;
+            set;
         }
 
-        UUID IClientAPI.AgentId
+        public UUID SecureSessionId
         {
             get { return UUID.Zero; }
         }
 
-        UUID IClientAPI.SessionId
+        public UUID ActiveGroupId
         {
             get { return UUID.Zero; }
         }
 
-        UUID IClientAPI.SecureSessionId
-        {
-            get { return UUID.Zero; }
-        }
-
-        UUID IClientAPI.ActiveGroupId
-        {
-            get { return UUID.Zero; }
-        }
-
-        string IClientAPI.ActiveGroupName
+        public string ActiveGroupName
         {
             get { return ""; }
         }
 
-        ulong IClientAPI.ActiveGroupPowers
+        public ulong ActiveGroupPowers
         {
             get { return 0; }
         }
 
-        string IClientAPI.FirstName
-        {
-            get { return ""; }
-        }
-
-        string IClientAPI.LastName
-        {
-            get { return ""; }
-        }
-
-        IScene IClientAPI.Scene
+        public IPAddress EndPoint
         {
             get { return null; }
         }
 
-        int IClientAPI.NextAnimationSequenceNumber
+        public int NextAnimationSequenceNumber
         {
             get { return 0; }
         }
 
-        string IClientAPI.Name
-        {
-            get { return ""; }
-        }
-
-        bool IClientAPI.IsActive
+        public bool IsActive
         {
             get
             {
@@ -837,11 +1141,10 @@ namespace Aurora.BotManager
             }
             set
             {
-                
             }
         }
 
-        bool IClientAPI.IsLoggingOut
+        public bool IsLoggingOut
         {
             get
             {
@@ -849,2032 +1152,725 @@ namespace Aurora.BotManager
             }
             set
             {
-                
             }
         }
 
-        bool IClientAPI.SendLogoutPacketWhenClosing
+        public bool SendLogoutPacketWhenClosing
         {
-            set {  }
+            set { }
         }
 
-        uint IClientAPI.CircuitCode
+        public IPEndPoint RemoteEndPoint
         {
-            get { return 0; }
+            get { return new IPEndPoint (IPAddress.Loopback, (ushort)m_circuitCode); }
         }
 
-        IPEndPoint IClientAPI.RemoteEndPoint
-        {
-            get { return null; }
-        }
-
-        event GenericMessage IClientAPI.OnGenericMessage
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ImprovedInstantMessage IClientAPI.OnInstantMessage
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ChatMessage IClientAPI.OnChatFromClient
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RezObject IClientAPI.OnRezObject
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ModifyTerrain IClientAPI.OnModifyTerrain
-        {
-            add {  }
-            remove {  }
-        }
-
-        event BakeTerrain IClientAPI.OnBakeTerrain
-        {
-            add {  }
-            remove {  }
-        }
-
-        event EstateChangeInfo IClientAPI.OnEstateChangeInfo
-        {
-            add {  }
-            remove {  }
-        }
-
-        event SetAppearance IClientAPI.OnSetAppearance
-        {
-            add {  }
-            remove {  }
-        }
-
-        event AvatarNowWearing IClientAPI.OnAvatarNowWearing
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RezSingleAttachmentFromInv IClientAPI.OnRezSingleAttachmentFromInv
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UUIDNameRequest IClientAPI.OnDetachAttachmentIntoInv
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ObjectAttach IClientAPI.OnObjectAttach
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ObjectDeselect IClientAPI.OnObjectDetach
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ObjectDrop IClientAPI.OnObjectDrop
-        {
-            add {  }
-            remove {  }
-        }
-
-        event StartAnim IClientAPI.OnStartAnim
-        {
-            add {  }
-            remove {  }
-        }
-
-        event StopAnim IClientAPI.OnStopAnim
-        {
-            add {  }
-            remove {  }
-        }
-
-        event LinkObjects IClientAPI.OnLinkObjects
-        {
-            add {  }
-            remove {  }
-        }
-
-        event DelinkObjects IClientAPI.OnDelinkObjects
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RequestMapBlocks IClientAPI.OnRequestMapBlocks
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RequestMapName IClientAPI.OnMapNameRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event TeleportLocationRequest IClientAPI.OnTeleportLocationRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RequestAvatarProperties IClientAPI.OnRequestAvatarProperties
-        {
-            add {  }
-            remove {  }
-        }
-
-        event SetAlwaysRun IClientAPI.OnSetAlwaysRun
-        {
-            add {  }
-            remove {  }
-        }
-
-        event TeleportLandmarkRequest IClientAPI.OnTeleportLandmarkRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event DeRezObject IClientAPI.OnDeRezObject
-        {
-            add {  }
-            remove {  }
-        }
-
-        event Action<IClientAPI> IClientAPI.OnRegionHandShakeReply
-        {
-            add {  }
-            remove {  }
-        }
-
-        event GenericCall1 IClientAPI.OnRequestWearables
-        {
-            add {  }
-            remove {  }
-        }
-
-        event GenericCall1 IClientAPI.OnCompleteMovementToRegion
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UpdateAgent IClientAPI.OnAgentUpdate
-        {
-            add {  }
-            remove {  }
-        }
-
-        event AgentRequestSit IClientAPI.OnAgentRequestSit
-        {
-            add {  }
-            remove {  }
-        }
-
-        event AgentSit IClientAPI.OnAgentSit
-        {
-            add {  }
-            remove {  }
-        }
-
-        event AvatarPickerRequest IClientAPI.OnAvatarPickerRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event Action<IClientAPI> IClientAPI.OnRequestAvatarsData
-        {
-            add {  }
-            remove {  }
-        }
-
-        event AddNewPrim IClientAPI.OnAddPrim
-        {
-            add {  }
-            remove {  }
-        }
-
-        event FetchInventory IClientAPI.OnAgentDataUpdateRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event TeleportLocationRequest IClientAPI.OnSetStartLocationRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RequestGodlikePowers IClientAPI.OnRequestGodlikePowers
-        {
-            add {  }
-            remove {  }
-        }
-
-        event GodKickUser IClientAPI.OnGodKickUser
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ObjectDuplicate IClientAPI.OnObjectDuplicate
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ObjectDuplicateOnRay IClientAPI.OnObjectDuplicateOnRay
-        {
-            add {  }
-            remove {  }
-        }
-
-        event GrabObject IClientAPI.OnGrabObject
-        {
-            add {  }
-            remove {  }
-        }
-
-        event DeGrabObject IClientAPI.OnDeGrabObject
-        {
-            add {  }
-            remove {  }
-        }
-
-        event MoveObject IClientAPI.OnGrabUpdate
-        {
-            add {  }
-            remove {  }
-        }
-
-        event SpinStart IClientAPI.OnSpinStart
-        {
-            add {  }
-            remove {  }
-        }
-
-        event SpinObject IClientAPI.OnSpinUpdate
-        {
-            add {  }
-            remove {  }
-        }
-
-        event SpinStop IClientAPI.OnSpinStop
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UpdateShape IClientAPI.OnUpdatePrimShape
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ObjectExtraParams IClientAPI.OnUpdateExtraParams
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ObjectRequest IClientAPI.OnObjectRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ObjectSelect IClientAPI.OnObjectSelect
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ObjectDeselect IClientAPI.OnObjectDeselect
-        {
-            add {  }
-            remove {  }
-        }
-
-        event GenericCall7 IClientAPI.OnObjectDescription
-        {
-            add {  }
-            remove {  }
-        }
-
-        event GenericCall7 IClientAPI.OnObjectName
-        {
-            add {  }
-            remove {  }
-        }
-
-        event GenericCall7 IClientAPI.OnObjectClickAction
-        {
-            add {  }
-            remove {  }
-        }
-
-        event GenericCall7 IClientAPI.OnObjectMaterial
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RequestObjectPropertiesFamily IClientAPI.OnRequestObjectPropertiesFamily
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UpdatePrimFlags IClientAPI.OnUpdatePrimFlags
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UpdatePrimTexture IClientAPI.OnUpdatePrimTexture
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UpdateVectorWithUpdate IClientAPI.OnUpdatePrimGroupPosition
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UpdateVectorWithUpdate IClientAPI.OnUpdatePrimSinglePosition
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UpdatePrimRotation IClientAPI.OnUpdatePrimGroupRotation
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UpdatePrimSingleRotation IClientAPI.OnUpdatePrimSingleRotation
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UpdatePrimSingleRotationPosition IClientAPI.OnUpdatePrimSingleRotationPosition
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UpdatePrimGroupRotation IClientAPI.OnUpdatePrimGroupMouseRotation
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UpdateVector IClientAPI.OnUpdatePrimScale
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UpdateVector IClientAPI.OnUpdatePrimGroupScale
-        {
-            add {  }
-            remove {  }
-        }
-
-        event StatusChange IClientAPI.OnChildAgentStatus
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ObjectPermissions IClientAPI.OnObjectPermissions
-        {
-            add {  }
-            remove {  }
-        }
-
-        event CreateNewInventoryItem IClientAPI.OnCreateNewInventoryItem
-        {
-            add {  }
-            remove {  }
-        }
-
-        event LinkInventoryItem IClientAPI.OnLinkInventoryItem
-        {
-            add {  }
-            remove {  }
-        }
-
-        event CreateInventoryFolder IClientAPI.OnCreateNewInventoryFolder
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UpdateInventoryFolder IClientAPI.OnUpdateInventoryFolder
-        {
-            add {  }
-            remove {  }
-        }
-
-        event MoveInventoryFolder IClientAPI.OnMoveInventoryFolder
-        {
-            add {  }
-            remove {  }
-        }
-
-        event FetchInventoryDescendents IClientAPI.OnFetchInventoryDescendents
-        {
-            add {  }
-            remove {  }
-        }
-
-        event PurgeInventoryDescendents IClientAPI.OnPurgeInventoryDescendents
-        {
-            add {  }
-            remove {  }
-        }
-
-        event FetchInventory IClientAPI.OnFetchInventory
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RequestTaskInventory IClientAPI.OnRequestTaskInventory
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UpdateInventoryItem IClientAPI.OnUpdateInventoryItem
-        {
-            add {  }
-            remove {  }
-        }
-
-        event CopyInventoryItem IClientAPI.OnCopyInventoryItem
-        {
-            add {  }
-            remove {  }
-        }
-
-        event MoveInventoryItem IClientAPI.OnMoveInventoryItem
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RemoveInventoryFolder IClientAPI.OnRemoveInventoryFolder
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RemoveInventoryItem IClientAPI.OnRemoveInventoryItem
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UDPAssetUploadRequest IClientAPI.OnAssetUploadRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event XferReceive IClientAPI.OnXferReceive
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RequestXfer IClientAPI.OnRequestXfer
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ConfirmXfer IClientAPI.OnConfirmXfer
-        {
-            add {  }
-            remove {  }
-        }
-
-        event AbortXfer IClientAPI.OnAbortXfer
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RezScript IClientAPI.OnRezScript
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UpdateTaskInventory IClientAPI.OnUpdateTaskInventory
-        {
-            add {  }
-            remove {  }
-        }
-
-        event MoveTaskInventory IClientAPI.OnMoveTaskItem
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RemoveTaskInventory IClientAPI.OnRemoveTaskItem
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UUIDNameRequest IClientAPI.OnNameFromUUIDRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ParcelAccessListRequest IClientAPI.OnParcelAccessListRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ParcelAccessListUpdateRequest IClientAPI.OnParcelAccessListUpdateRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ParcelPropertiesRequest IClientAPI.OnParcelPropertiesRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ParcelDivideRequest IClientAPI.OnParcelDivideRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ParcelJoinRequest IClientAPI.OnParcelJoinRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ParcelPropertiesUpdateRequest IClientAPI.OnParcelPropertiesUpdateRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ParcelSelectObjects IClientAPI.OnParcelSelectObjects
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ParcelObjectOwnerRequest IClientAPI.OnParcelObjectOwnerRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ParcelAbandonRequest IClientAPI.OnParcelAbandonRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ParcelGodForceOwner IClientAPI.OnParcelGodForceOwner
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ParcelReclaim IClientAPI.OnParcelReclaim
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ParcelReturnObjectsRequest IClientAPI.OnParcelReturnObjectsRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ParcelDeedToGroup IClientAPI.OnParcelDeedToGroup
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RegionInfoRequest IClientAPI.OnRegionInfoRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event EstateCovenantRequest IClientAPI.OnEstateCovenantRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event FriendActionDelegate IClientAPI.OnApproveFriendRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event FriendActionDelegate IClientAPI.OnDenyFriendRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event FriendshipTermination IClientAPI.OnTerminateFriendship
-        {
-            add {  }
-            remove {  }
-        }
-
-        event MoneyTransferRequest IClientAPI.OnMoneyTransferRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event EconomyDataRequest IClientAPI.OnEconomyDataRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event MoneyBalanceRequest IClientAPI.OnMoneyBalanceRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UpdateAvatarProperties IClientAPI.OnUpdateAvatarProperties
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ParcelBuy IClientAPI.OnParcelBuy
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RequestPayPrice IClientAPI.OnRequestPayPrice
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ObjectSaleInfo IClientAPI.OnObjectSaleInfo
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ObjectBuy IClientAPI.OnObjectBuy
-        {
-            add {  }
-            remove {  }
-        }
-
-        event BuyObjectInventory IClientAPI.OnBuyObjectInventory
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RequestTerrain IClientAPI.OnRequestTerrain
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RequestTerrain IClientAPI.OnUploadTerrain
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ObjectIncludeInSearch IClientAPI.OnObjectIncludeInSearch
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UUIDNameRequest IClientAPI.OnTeleportHomeRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ScriptAnswer IClientAPI.OnScriptAnswer
-        {
-            add {  }
-            remove {  }
-        }
-
-        event AgentSit IClientAPI.OnUndo
-        {
-            add {  }
-            remove {  }
-        }
-
-        event AgentSit IClientAPI.OnRedo
-        {
-            add {  }
-            remove {  }
-        }
-
-        event LandUndo IClientAPI.OnLandUndo
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ForceReleaseControls IClientAPI.OnForceReleaseControls
-        {
-            add {  }
-            remove {  }
-        }
-
-        event GodLandStatRequest IClientAPI.OnLandStatRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event DetailedEstateDataRequest IClientAPI.OnDetailedEstateDataRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event SetEstateFlagsRequest IClientAPI.OnSetEstateFlagsRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event SetEstateTerrainBaseTexture IClientAPI.OnSetEstateTerrainBaseTexture
-        {
-            add {  }
-            remove {  }
-        }
-
-        event SetEstateTerrainDetailTexture IClientAPI.OnSetEstateTerrainDetailTexture
-        {
-            add {  }
-            remove {  }
-        }
-
-        event SetEstateTerrainTextureHeights IClientAPI.OnSetEstateTerrainTextureHeights
-        {
-            add {  }
-            remove {  }
-        }
-
-        event CommitEstateTerrainTextureRequest IClientAPI.OnCommitEstateTerrainTextureRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event SetRegionTerrainSettings IClientAPI.OnSetRegionTerrainSettings
-        {
-            add {  }
-            remove {  }
-        }
-
-        event EstateRestartSimRequest IClientAPI.OnEstateRestartSimRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event EstateChangeCovenantRequest IClientAPI.OnEstateChangeCovenantRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UpdateEstateAccessDeltaRequest IClientAPI.OnUpdateEstateAccessDeltaRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event SimulatorBlueBoxMessageRequest IClientAPI.OnSimulatorBlueBoxMessageRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event EstateBlueBoxMessageRequest IClientAPI.OnEstateBlueBoxMessageRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event EstateDebugRegionRequest IClientAPI.OnEstateDebugRegionRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event EstateTeleportOneUserHomeRequest IClientAPI.OnEstateTeleportOneUserHomeRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event EstateTeleportAllUsersHomeRequest IClientAPI.OnEstateTeleportAllUsersHomeRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UUIDNameRequest IClientAPI.OnUUIDGroupNameRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RegionHandleRequest IClientAPI.OnRegionHandleRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ParcelInfoRequest IClientAPI.OnParcelInfoRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RequestObjectPropertiesFamily IClientAPI.OnObjectGroupRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ScriptReset IClientAPI.OnScriptReset
-        {
-            add {  }
-            remove {  }
-        }
-
-        event GetScriptRunning IClientAPI.OnGetScriptRunning
-        {
-            add {  }
-            remove {  }
-        }
-
-        event SetScriptRunning IClientAPI.OnSetScriptRunning
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UpdateVector IClientAPI.OnAutoPilotGo
-        {
-            add {  }
-            remove {  }
-        }
-
-        event TerrainUnacked IClientAPI.OnUnackedTerrain
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ActivateGesture IClientAPI.OnActivateGesture
-        {
-            add {  }
-            remove {  }
-        }
-
-        event DeactivateGesture IClientAPI.OnDeactivateGesture
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ObjectOwner IClientAPI.OnObjectOwner
-        {
-            add {  }
-            remove {  }
-        }
-
-        event DirPlacesQuery IClientAPI.OnDirPlacesQuery
-        {
-            add {  }
-            remove {  }
-        }
-
-        event DirFindQuery IClientAPI.OnDirFindQuery
-        {
-            add {  }
-            remove {  }
-        }
-
-        event DirLandQuery IClientAPI.OnDirLandQuery
-        {
-            add {  }
-            remove {  }
-        }
-
-        event DirPopularQuery IClientAPI.OnDirPopularQuery
-        {
-            add {  }
-            remove {  }
-        }
-
-        event DirClassifiedQuery IClientAPI.OnDirClassifiedQuery
-        {
-            add {  }
-            remove {  }
-        }
-
-        event EventInfoRequest IClientAPI.OnEventInfoRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ParcelSetOtherCleanTime IClientAPI.OnParcelSetOtherCleanTime
-        {
-            add {  }
-            remove {  }
-        }
-
-        event MapItemRequest IClientAPI.OnMapItemRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event OfferCallingCard IClientAPI.OnOfferCallingCard
-        {
-            add {  }
-            remove {  }
-        }
-
-        event AcceptCallingCard IClientAPI.OnAcceptCallingCard
-        {
-            add {  }
-            remove {  }
-        }
-
-        event DeclineCallingCard IClientAPI.OnDeclineCallingCard
-        {
-            add {  }
-            remove {  }
-        }
-
-        event SoundTrigger IClientAPI.OnSoundTrigger
-        {
-            add {  }
-            remove {  }
-        }
-
-        event StartLure IClientAPI.OnStartLure
-        {
-            add {  }
-            remove {  }
-        }
-
-        event TeleportLureRequest IClientAPI.OnTeleportLureRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event NetworkStats IClientAPI.OnNetworkStatsUpdate
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ClassifiedInfoRequest IClientAPI.OnClassifiedInfoRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ClassifiedInfoUpdate IClientAPI.OnClassifiedInfoUpdate
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ClassifiedDelete IClientAPI.OnClassifiedDelete
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ClassifiedDelete IClientAPI.OnClassifiedGodDelete
-        {
-            add {  }
-            remove {  }
-        }
-
-        event EventNotificationAddRequest IClientAPI.OnEventNotificationAddRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event EventNotificationRemoveRequest IClientAPI.OnEventNotificationRemoveRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event EventGodDelete IClientAPI.OnEventGodDelete
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ParcelDwellRequest IClientAPI.OnParcelDwellRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UserInfoRequest IClientAPI.OnUserInfoRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event UpdateUserInfo IClientAPI.OnUpdateUserInfo
-        {
-            add {  }
-            remove {  }
-        }
-
-        event RetrieveInstantMessages IClientAPI.OnRetrieveInstantMessages
-        {
-            add {  }
-            remove {  }
-        }
-
-        event PickDelete IClientAPI.OnPickDelete
-        {
-            add {  }
-            remove {  }
-        }
-
-        event PickGodDelete IClientAPI.OnPickGodDelete
-        {
-            add {  }
-            remove {  }
-        }
-
-        event PickInfoUpdate IClientAPI.OnPickInfoUpdate
-        {
-            add {  }
-            remove {  }
-        }
-
-        event AvatarNotesUpdate IClientAPI.OnAvatarNotesUpdate
-        {
-            add {  }
-            remove {  }
-        }
-
-        event AvatarInterestUpdate IClientAPI.OnAvatarInterestUpdate
-        {
-            add {  }
-            remove {  }
-        }
-
-        event GrantUserFriendRights IClientAPI.OnGrantUserRights
-        {
-            add {  }
-            remove {  }
-        }
-
-        event MuteListRequest IClientAPI.OnMuteListRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event PlacesQuery IClientAPI.OnPlacesQuery
-        {
-            add {  }
-            remove {  }
-        }
-
-        event FindAgentUpdate IClientAPI.OnFindAgent
-        {
-            add {  }
-            remove {  }
-        }
-
-        event TrackAgentUpdate IClientAPI.OnTrackAgent
-        {
-            add {  }
-            remove {  }
-        }
-
-        event NewUserReport IClientAPI.OnUserReport
-        {
-            add {  }
-            remove {  }
-        }
-
-        event SaveStateHandler IClientAPI.OnSaveState
-        {
-            add {  }
-            remove {  }
-        }
-
-        event GroupAccountSummaryRequest IClientAPI.OnGroupAccountSummaryRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event GroupAccountDetailsRequest IClientAPI.OnGroupAccountDetailsRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event GroupAccountTransactionsRequest IClientAPI.OnGroupAccountTransactionsRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event FreezeUserUpdate IClientAPI.OnParcelFreezeUser
-        {
-            add {  }
-            remove {  }
-        }
-
-        event EjectUserUpdate IClientAPI.OnParcelEjectUser
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ParcelBuyPass IClientAPI.OnParcelBuyPass
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ParcelGodMark IClientAPI.OnParcelGodMark
-        {
-            add {  }
-            remove {  }
-        }
-
-        event GroupActiveProposalsRequest IClientAPI.OnGroupActiveProposalsRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event GroupVoteHistoryRequest IClientAPI.OnGroupVoteHistoryRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event SimWideDeletesDelegate IClientAPI.OnSimWideDeletes
-        {
-            add {  }
-            remove {  }
-        }
-
-        event SendPostcard IClientAPI.OnSendPostcard
-        {
-            add {  }
-            remove {  }
-        }
-
-        event MuteListEntryUpdate IClientAPI.OnUpdateMuteListEntry
-        {
-            add {  }
-            remove {  }
-        }
-
-        event MuteListEntryRemove IClientAPI.OnRemoveMuteListEntry
-        {
-            add {  }
-            remove {  }
-        }
-
-        event GodlikeMessage IClientAPI.OnGodlikeMessage
-        {
-            add {  }
-            remove {  }
-        }
-
-        event GodUpdateRegionInfoUpdate IClientAPI.OnGodUpdateRegionInfoUpdate
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ChangeInventoryItemFlags IClientAPI.OnChangeInventoryItemFlags
-        {
-            add {  }
-            remove {  }
-        }
-
-        event TeleportCancel IClientAPI.OnTeleportCancel
-        {
-            add {  }
-            remove {  }
-        }
-
-        event GodlikeMessage IClientAPI.OnEstateTelehubRequest
-        {
-            add {  }
-            remove {  }
-        }
-
-        event ViewerStartAuction IClientAPI.OnViewerStartAuction
-        {
-            add {  }
-            remove {  }
-        }
-
-        void IClientAPI.SetDebugPacketLevel(int newDebug)
+        public void SetDebugPacketLevel (int newDebug)
         {
             
         }
 
-        void IClientAPI.ProcessInPacket(OpenMetaverse.Packets.Packet NewPack)
+        public void ProcessInPacket (OpenMetaverse.Packets.Packet NewPack)
         {
             
         }
 
-        void IClientAPI.Close()
+        public void Stop ()
         {
             
         }
 
-        void IClientAPI.Kick(string message)
+        public void Kick (string message)
         {
             
         }
 
-        void IClientAPI.SendWearables(AvatarWearable[] wearables, int serial)
+        public void SendWearables (AvatarWearable[] wearables, int serial)
         {
             
         }
 
-        void IClientAPI.SendAppearance(UUID agentID, byte[] visualParams, byte[] textureEntry)
+        public void SendAgentCachedTexture (List<CachedAgentArgs> args)
         {
             
         }
 
-        void IClientAPI.SendStartPingCheck(byte seq)
-        {
-        }
-
-        void IClientAPI.SendKillObject (ulong regionHandle, IEntity[] localIDs)
-        {
-        }
-
-        void IClientAPI.SendKillObject(ulong regionHandle, uint[] localIDs)
-        {
-        }
-
-        void IClientAPI.SendAnimations(UUID[] animID, int[] seqs, UUID sourceAgentId, UUID[] objectIDs)
-        {
-        }
-
-        void IClientAPI.SendRegionHandshake(RegionInfo regionInfo, RegionHandshakeArgs args)
+        public void SendAppearance (UUID agentID, byte[] visualParams, byte[] textureEntry)
         {
             
         }
 
-        void IClientAPI.SendChatMessage(string message, byte type, Vector3 fromPos, string fromName, UUID fromAgentID, byte source, byte audible)
+        public void SendStartPingCheck (byte seq)
         {
             
         }
 
-        void IClientAPI.SendInstantMessage(GridInstantMessage im)
+        public void SendKillObject (ulong regionHandle, IEntity[] entities)
         {
             
         }
 
-        void IClientAPI.SendGenericMessage(string method, List<string> message)
+        public void SendKillObject (ulong regionHandle, uint[] entities)
         {
             
         }
 
-        void IClientAPI.SendGenericMessage(string method, List<byte[]> message)
+        public void SendAnimations (UUID[] animID, int[] seqs, UUID sourceAgentId, UUID[] objectIDs)
         {
             
         }
 
-        void IClientAPI.SendLayerData(short[] map)
-        {
-
-        }
-
-        void IClientAPI.SendLayerData(int px, int py, short[] map)
-        {
-
-        }
-
-        void IClientAPI.SendLayerData(int[] x, int[] y, short[] map, TerrainPatch.LayerType type)
-        {
-
-        }
-
-        void IClientAPI.SendWindData(Vector2[] windSpeeds)
+        public void SendChatMessage (string message, byte type, Vector3 fromPos, string fromName, UUID fromAgentID, byte source, byte audible)
         {
             
         }
 
-        void IClientAPI.SendCloudData(float[] cloudCover)
+        public void SendInstantMessage (GridInstantMessage im)
         {
             
         }
 
-        void IClientAPI.MoveAgentIntoRegion(RegionInfo regInfo, Vector3 pos, Vector3 look)
-        {
-            
-        }
-        AgentCircuitData IClientAPI.RequestClientInfo()
-        {
-            return null;
-        }
-
-        void IClientAPI.SendMapBlock(List<MapBlockData> mapBlocks, uint flag)
+        public void SendGenericMessage (string method, List<string> message)
         {
             
         }
 
-        void IClientAPI.SendLocalTeleport(Vector3 position, Vector3 lookAt, uint flags)
+        public void SendGenericMessage (string method, List<byte[]> message)
         {
             
         }
 
-        void IClientAPI.SendRegionTeleport(ulong regionHandle, byte simAccess, IPEndPoint regionExternalEndPoint, uint locationID, uint flags, string capsURL)
+        public void SendLayerData (short[] map)
         {
             
         }
 
-        void IClientAPI.SendTeleportFailed(string reason)
+        public void SendLayerData (int px, int py, short[] map)
         {
             
         }
 
-        void IClientAPI.SendMoneyBalance(UUID transaction, bool success, byte[] description, int balance)
+        public void SendLayerData (int[] x, int[] y, short[] map, TerrainPatch.LayerType type)
         {
             
         }
 
-        void IClientAPI.SendPayPrice(UUID objectID, int[] payPrice)
+        public void SendWindData (Vector2[] windSpeeds)
         {
             
         }
 
-        void IClientAPI.SendCoarseLocationUpdate(List<UUID> users, List<Vector3> CoarseLocations)
+        public void SendCloudData (float[] cloudCover)
         {
             
         }
 
-        void IClientAPI.SetChildAgentThrottle(byte[] throttle)
+        public void MoveAgentIntoRegion (RegionInfo regInfo, Vector3 pos, Vector3 look)
         {
             
         }
 
-        void IClientAPI.SendAvatarDataImmediate (IEntity avatar)
+        public AgentCircuitData RequestClientInfo ()
+        {
+            return m_circuitData;
+        }
+
+        public void SendMapBlock (List<MapBlockData> mapBlocks, uint flag)
         {
             
         }
 
-        void IClientAPI.SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags)
-        {
-        }
-
-        void IClientAPI.SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags, double priority)
-        {
-        }
-
-        void IClientAPI.FlushPrimUpdates()
+        public void SendLocalTeleport (Vector3 position, Vector3 lookAt, uint flags)
         {
             
         }
 
-        void IClientAPI.SendInventoryFolderDetails(UUID ownerID, UUID folderID, List<InventoryItemBase> items, List<InventoryFolderBase> folders, int version, bool fetchFolders, bool fetchItems)
+        public void SendRegionTeleport (ulong regionHandle, byte simAccess, IPEndPoint regionExternalEndPoint, uint locationID, uint flags, string capsURL)
         {
             
         }
 
-        void IClientAPI.SendInventoryItemDetails(UUID ownerID, InventoryItemBase item)
+        public void SendTeleportFailed (string reason)
         {
             
         }
 
-        void IClientAPI.SendInventoryItemCreateUpdate(InventoryItemBase Item, uint callbackId)
+        public void SendTeleportStart (uint flags)
         {
             
         }
 
-        void IClientAPI.SendRemoveInventoryItem(UUID itemID)
+        public void SendTeleportProgress (uint flags, string message)
         {
             
         }
 
-        void IClientAPI.SendTakeControls(int controls, bool passToAgent, bool TakeControls)
+        public void SendMoneyBalance (UUID transaction, bool success, byte[] description, int balance)
         {
             
         }
 
-        void IClientAPI.SendTaskInventory(UUID taskID, short serial, byte[] fileName)
+        public void SendPayPrice (UUID objectID, int[] payPrice)
         {
             
         }
 
-        void IClientAPI.SendBulkUpdateInventory(InventoryNodeBase node)
+        public void SendCoarseLocationUpdate (List<UUID> users, List<Vector3> CoarseLocations)
         {
             
         }
 
-        void IClientAPI.SendXferPacket(ulong xferID, uint packet, byte[] data)
+        public void SetChildAgentThrottle (byte[] throttle)
         {
             
         }
 
-        void IClientAPI.SendEconomyData(float EnergyEfficiency, int ObjectCapacity, int ObjectCount, int PriceEnergyUnit, int PriceGroupCreate, int PriceObjectClaim, float PriceObjectRent, float PriceObjectScaleFactor, int PriceParcelClaim, float PriceParcelClaimFactor, int PriceParcelRent, int PricePublicObjectDecay, int PricePublicObjectDelete, int PriceRentLight, int PriceUpload, int TeleportMinPrice, float TeleportPriceExponent)
+        public void SendAvatarDataImmediate (IEntity avatar)
         {
             
         }
 
-        void IClientAPI.SendAvatarPickerReply(AvatarPickerReplyAgentDataArgs AgentData, List<AvatarPickerReplyDataArgs> Data)
+        public void SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags)
         {
             
         }
 
-        void IClientAPI.SendAgentDataUpdate(UUID agentid, UUID activegroupid, string firstname, string lastname, ulong grouppowers, string groupname, string grouptitle)
+        public void SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags, double priority)
         {
             
         }
 
-        void IClientAPI.SendPreLoadSound(UUID objectID, UUID ownerID, UUID soundID)
+        public void FlushPrimUpdates ()
         {
             
         }
 
-        void IClientAPI.SendPlayAttachedSound(UUID soundID, UUID objectID, UUID ownerID, float gain, byte flags)
+        public void SendInventoryFolderDetails (UUID ownerID, UUID folderID, List<InventoryItemBase> items, List<InventoryFolderBase> folders, int version, bool fetchFolders, bool fetchItems)
         {
             
         }
 
-        void IClientAPI.SendTriggeredSound(UUID soundID, UUID ownerID, UUID objectID, UUID parentID, ulong handle, Vector3 position, float gain)
+        public void SendInventoryItemDetails (UUID ownerID, InventoryItemBase item)
         {
             
         }
 
-        void IClientAPI.SendAttachedSoundGainChange(UUID objectID, float gain)
+        public void SendInventoryItemCreateUpdate (InventoryItemBase Item, uint callbackId)
         {
             
         }
 
-        void IClientAPI.SendNameReply(UUID profileId, string firstname, string lastname)
+        public void SendRemoveInventoryItem (UUID itemID)
         {
             
         }
 
-        void IClientAPI.SendAlertMessage(string message)
+        public void SendTakeControls (int controls, bool passToAgent, bool TakeControls)
         {
             
         }
 
-        void IClientAPI.SendAgentAlertMessage(string message, bool modal)
+        public void SendTaskInventory (UUID taskID, short serial, byte[] fileName)
         {
             
         }
 
-        void IClientAPI.SendLoadURL(string objectname, UUID objectID, UUID ownerID, bool groupOwned, string message, string url)
+        public void SendBulkUpdateInventory (InventoryNodeBase node)
         {
             
         }
 
-        void IClientAPI.SendDialog(string objectname, UUID objectID, string ownerFirstName, string ownerLastName, string msg, UUID textureID, int ch, string[] buttonlabels)
+        public void SendXferPacket (ulong xferID, uint packet, byte[] data)
         {
             
         }
 
-        void IClientAPI.SendSunPos(Vector3 sunPos, Vector3 sunVel, ulong CurrentTime, uint SecondsPerSunCycle, uint SecondsPerYear, float OrbitalPosition)
+        public void SendAbortXferPacket (ulong xferID)
         {
             
         }
 
-        void IClientAPI.SendViewerEffect(OpenMetaverse.Packets.ViewerEffectPacket.EffectBlock[] effectBlocks)
+        public void SendEconomyData (float EnergyEfficiency, int ObjectCapacity, int ObjectCount, int PriceEnergyUnit, int PriceGroupCreate, int PriceObjectClaim, float PriceObjectRent, float PriceObjectScaleFactor, int PriceParcelClaim, float PriceParcelClaimFactor, int PriceParcelRent, int PricePublicObjectDecay, int PricePublicObjectDelete, int PriceRentLight, int PriceUpload, int TeleportMinPrice, float TeleportPriceExponent)
         {
             
         }
 
-        UUID IClientAPI.GetDefaultAnimation(string name)
+        public void SendAvatarPickerReply (AvatarPickerReplyAgentDataArgs AgentData, List<AvatarPickerReplyDataArgs> Data)
+        {
+            
+        }
+
+        public void SendAgentDataUpdate (UUID agentid, UUID activegroupid, string firstname, string lastname, ulong grouppowers, string groupname, string grouptitle)
+        {
+            
+        }
+
+        public void SendPreLoadSound (UUID objectID, UUID ownerID, UUID soundID)
+        {
+            
+        }
+
+        public void SendPlayAttachedSound (UUID soundID, UUID objectID, UUID ownerID, float gain, byte flags)
+        {
+            
+        }
+
+        public void SendTriggeredSound (UUID soundID, UUID ownerID, UUID objectID, UUID parentID, ulong handle, Vector3 position, float gain)
+        {
+            
+        }
+
+        public void SendAttachedSoundGainChange (UUID objectID, float gain)
+        {
+            
+        }
+
+        public void SendNameReply (UUID profileId, string firstname, string lastname)
+        {
+            
+        }
+
+        public void SendAlertMessage (string message)
+        {
+            
+        }
+
+        public void SendAgentAlertMessage (string message, bool modal)
+        {
+            
+        }
+
+        public void SendLoadURL (string objectname, UUID objectID, UUID ownerID, bool groupOwned, string message, string url)
+        {
+            
+        }
+
+        public void SendDialog (string objectname, UUID objectID, string ownerFirstName, string ownerLastName, string msg, UUID textureID, int ch, string[] buttonlabels)
+        {
+            
+        }
+
+        public void SendSunPos (Vector3 sunPos, Vector3 sunVel, ulong CurrentTime, uint SecondsPerSunCycle, uint SecondsPerYear, float OrbitalPosition)
+        {
+            
+        }
+
+        public void SendViewerEffect (OpenMetaverse.Packets.ViewerEffectPacket.EffectBlock[] effectBlocks)
+        {
+            
+        }
+
+        public UUID GetDefaultAnimation (string name)
         {
             return UUID.Zero;
         }
 
-        void IClientAPI.SendAvatarProperties(UUID avatarID, string aboutText, string bornOn, byte[] charterMember, string flAbout, uint flags, UUID flImageID, UUID imageID, string profileURL, UUID partnerID)
+        public void SendAvatarProperties (UUID avatarID, string aboutText, string bornOn, byte[] charterMember, string flAbout, uint flags, UUID flImageID, UUID imageID, string profileURL, UUID partnerID)
         {
             
         }
 
-        void IClientAPI.SendScriptQuestion(UUID taskID, string taskName, string ownerName, UUID itemID, int question)
+        public void SendScriptQuestion (UUID taskID, string taskName, string ownerName, UUID itemID, int question)
         {
             
         }
 
-        void IClientAPI.SendHealth(float health)
+        public void SendHealth (float health)
         {
             
         }
 
-        void IClientAPI.SendEstateList(UUID invoice, int code, UUID[] Data, uint estateID)
+        public void SendEstateList (UUID invoice, int code, UUID[] Data, uint estateID)
         {
             
         }
 
-        void IClientAPI.SendBannedUserList(UUID invoice, EstateBan[] banlist, uint estateID)
+        public void SendBannedUserList (UUID invoice, EstateBan[] banlist, uint estateID)
         {
             
         }
 
-        void IClientAPI.SendRegionInfoToEstateMenu(RegionInfoForEstateMenuArgs args)
+        public void SendRegionInfoToEstateMenu (RegionInfoForEstateMenuArgs args)
         {
             
         }
 
-        void IClientAPI.SendEstateCovenantInformation(UUID covenant, int covenantLastUpdated)
+        public void SendEstateCovenantInformation (UUID covenant, int covenantLastUpdated)
         {
             
         }
 
-        void IClientAPI.SendDetailedEstateData(UUID invoice, string estateName, uint estateID, uint parentEstate, uint estateFlags, uint sunPosition, UUID covenant, int covenantLastUpdated, string abuseEmail, UUID estateOwner)
+        public void SendDetailedEstateData (UUID invoice, string estateName, uint estateID, uint parentEstate, uint estateFlags, uint sunPosition, UUID covenant, int covenantLastUpdated, string abuseEmail, UUID estateOwner)
         {
             
         }
 
-        void IClientAPI.SendLandProperties(int sequence_id, bool snap_selection, int request_result, LandData landData, float simObjectBonusFactor, int parcelObjectCapacity, int simObjectCapacity, uint regionFlags)
+        public void SendLandProperties (int sequence_id, bool snap_selection, int request_result, LandData landData, float simObjectBonusFactor, int parcelObjectCapacity, int simObjectCapacity, uint regionFlags)
         {
             
         }
 
-        void IClientAPI.SendLandAccessListData(List<UUID> avatars, uint accessFlag, int localLandID)
+        public void SendLandAccessListData (List<UUID> avatars, uint accessFlag, int localLandID)
         {
             
         }
 
-        void IClientAPI.SendForceClientSelectObjects(List<uint> objectIDs)
+        public void SendForceClientSelectObjects (List<uint> objectIDs)
         {
             
         }
 
-        void IClientAPI.SendCameraConstraint(Vector4 ConstraintPlane)
+        public void SendCameraConstraint (Vector4 ConstraintPlane)
         {
             
         }
 
-        void IClientAPI.SendLandObjectOwners(List<LandObjectOwners> objOwners)
+        public void SendLandObjectOwners (List<LandObjectOwners> objOwners)
         {
             
         }
 
-        void IClientAPI.SendLandParcelOverlay(byte[] data, int sequence_id)
+        public void SendLandParcelOverlay (byte[] data, int sequence_id)
         {
             
         }
 
-        void IClientAPI.SendParcelMediaCommand(uint flags, ParcelMediaCommandEnum command, float time)
+        public void SendParcelMediaCommand (uint flags, ParcelMediaCommandEnum command, float time)
         {
             
         }
 
-        void IClientAPI.SendParcelMediaUpdate(string mediaUrl, UUID mediaTextureID, byte autoScale, string mediaType, string mediaDesc, int mediaWidth, int mediaHeight, byte mediaLoop)
+        public void SendParcelMediaUpdate (string mediaUrl, UUID mediaTextureID, byte autoScale, string mediaType, string mediaDesc, int mediaWidth, int mediaHeight, byte mediaLoop)
         {
             
         }
 
-        void IClientAPI.SendAssetUploadCompleteMessage(sbyte AssetType, bool Success, UUID AssetFullID)
+        public void SendAssetUploadCompleteMessage (sbyte AssetType, bool Success, UUID AssetFullID)
         {
             
         }
 
-        void IClientAPI.SendConfirmXfer(ulong xferID, uint PacketID)
+        public void SendConfirmXfer (ulong xferID, uint PacketID)
         {
             
         }
 
-        void IClientAPI.SendXferRequest(ulong XferID, short AssetType, UUID vFileID, byte FilePath, byte[] FileName)
+        public void SendXferRequest (ulong XferID, short AssetType, UUID vFileID, byte FilePath, byte[] FileName)
         {
             
         }
 
-        void IClientAPI.SendInitiateDownload(string simFileName, string clientFileName)
+        public void SendInitiateDownload (string simFileName, string clientFileName)
         {
             
         }
 
-        void IClientAPI.SendImageFirstPart(ushort numParts, UUID ImageUUID, uint ImageSize, byte[] ImageData, byte imageCodec)
+        public void SendImageFirstPart (ushort numParts, UUID ImageUUID, uint ImageSize, byte[] ImageData, byte imageCodec)
         {
             
         }
 
-        void IClientAPI.SendImageNextPart(ushort partNumber, UUID imageUuid, byte[] imageData)
+        public void SendImageNextPart (ushort partNumber, UUID imageUuid, byte[] imageData)
         {
             
         }
 
-        void IClientAPI.SendImageNotFound(UUID imageid)
+        public void SendImageNotFound (UUID imageid)
         {
             
         }
 
-        void IClientAPI.SendSimStats(SimStats stats)
+        public void SendSimStats (SimStats stats)
         {
             
         }
 
-        void IClientAPI.SendObjectPropertiesFamilyData(uint RequestFlags, UUID ObjectUUID, UUID OwnerID, UUID GroupID, uint BaseMask, uint OwnerMask, uint GroupMask, uint EveryoneMask, uint NextOwnerMask, int OwnershipCost, byte SaleType, int SalePrice, uint Category, UUID LastOwnerID, string ObjectName, string Description)
+        public void SendObjectPropertiesFamilyData (uint RequestFlags, UUID ObjectUUID, UUID OwnerID, UUID GroupID, uint BaseMask, uint OwnerMask, uint GroupMask, uint EveryoneMask, uint NextOwnerMask, int OwnershipCost, byte SaleType, int SalePrice, uint Category, UUID LastOwnerID, string ObjectName, string Description)
         {
             
         }
 
-        void IClientAPI.SendObjectPropertiesReply (List<IEntity> part)
+        public void SendObjectPropertiesReply (List<IEntity> part)
         {
             
         }
 
-        void IClientAPI.SendAgentOffline(UUID[] agentIDs)
+        public void SendAgentOffline (UUID[] agentIDs)
         {
             
         }
 
-        void IClientAPI.SendAgentOnline(UUID[] agentIDs)
+        public void SendAgentOnline (UUID[] agentIDs)
         {
             
         }
 
-        void IClientAPI.SendSitResponse(UUID TargetID, Vector3 OffsetPos, Quaternion SitOrientation, bool autopilot, Vector3 CameraAtOffset, Vector3 CameraEyeOffset, bool ForceMouseLook)
+        public void SendSitResponse (UUID TargetID, Vector3 OffsetPos, Quaternion SitOrientation, bool autopilot, Vector3 CameraAtOffset, Vector3 CameraEyeOffset, bool ForceMouseLook)
         {
             
         }
 
-        void IClientAPI.SendAdminResponse(UUID Token, uint AdminLevel)
+        public void SendAdminResponse (UUID Token, uint AdminLevel)
         {
             
         }
 
-        void IClientAPI.SendGroupMembership(GroupMembershipData[] GroupMembership)
+        public void SendGroupMembership (GroupMembershipData[] GroupMembership)
         {
             
         }
 
-        void IClientAPI.SendGroupNameReply(UUID groupLLUID, string GroupName)
+        public void SendGroupNameReply (UUID groupLLUID, string GroupName)
         {
             
         }
 
-        void IClientAPI.SendJoinGroupReply(UUID groupID, bool success)
+        public void SendJoinGroupReply (UUID groupID, bool success)
         {
             
         }
 
-        void IClientAPI.SendEjectGroupMemberReply(UUID agentID, UUID groupID, bool success)
+        public void SendEjectGroupMemberReply (UUID agentID, UUID groupID, bool success)
         {
             
         }
 
-        void IClientAPI.SendLeaveGroupReply(UUID groupID, bool success)
+        public void SendLeaveGroupReply (UUID groupID, bool success)
         {
             
         }
 
-        void IClientAPI.SendCreateGroupReply(UUID groupID, bool success, string message)
+        public void SendCreateGroupReply (UUID groupID, bool success, string message)
         {
             
         }
 
-        void IClientAPI.SendLandStatReply(uint reportType, uint requestFlags, uint resultCount, LandStatReportItem[] lsrpia)
+        public void SendLandStatReply (uint reportType, uint requestFlags, uint resultCount, LandStatReportItem[] lsrpia)
         {
             
         }
 
-        void IClientAPI.SendScriptRunningReply(UUID objectID, UUID itemID, bool running)
+        public void SendScriptRunningReply (UUID objectID, UUID itemID, bool running)
         {
             
         }
 
-        void IClientAPI.SendAsset(AssetRequestToClient req)
+        public void SendAsset (AssetRequestToClient req)
         {
             
         }
 
-        byte[] IClientAPI.GetThrottlesPacked(float multiplier)
+        public byte[] GetThrottlesPacked (float multiplier)
         {
-            return null;
+            return new byte[0];
         }
 
-        event ViewerEffectEventHandler IClientAPI.OnViewerEffect
-        {
-            add {  }
-            remove {  }
-        }
-
-        event Action<IClientAPI> IClientAPI.OnLogout
-        {
-            add {  }
-            remove {  }
-        }
-
-        event Action<IClientAPI> IClientAPI.OnConnectionClosed
-        {
-            add {  }
-            remove {  }
-        }
-
-        void IClientAPI.SendBlueBoxMessage(UUID FromAvatarID, string FromAvatarName, string Message)
+        public void SendBlueBoxMessage (UUID FromAvatarID, string FromAvatarName, string Message)
         {
             
         }
 
-        void IClientAPI.SendLogoutPacket()
+        public void SendLogoutPacket ()
         {
             
         }
 
-        EndPoint IClientAPI.GetClientEP()
+        public EndPoint GetClientEP ()
         {
             return null;
         }
 
-        void IClientAPI.SendSetFollowCamProperties(UUID objectID, SortedDictionary<int, float> parameters)
+        public void SendSetFollowCamProperties (UUID objectID, SortedDictionary<int, float> parameters)
         {
             
         }
 
-        void IClientAPI.SendClearFollowCamProperties(UUID objectID)
+        public void SendClearFollowCamProperties (UUID objectID)
         {
             
         }
 
-        void IClientAPI.SendRegionHandle(UUID regoinID, ulong handle)
+        public void SendRegionHandle (UUID regoinID, ulong handle)
         {
             
         }
 
-        void IClientAPI.SendParcelInfo(LandData land, UUID parcelID, uint x, uint y, string SimName)
+        public void SendParcelInfo (LandData land, UUID parcelID, uint x, uint y, string SimName)
         {
             
         }
 
-        void IClientAPI.SendScriptTeleportRequest(string objName, string simName, Vector3 pos, Vector3 lookAt)
+        public void SendScriptTeleportRequest (string objName, string simName, Vector3 pos, Vector3 lookAt)
         {
             
         }
 
-        void IClientAPI.SendDirPlacesReply(UUID queryID, DirPlacesReplyData[] data)
+        public void SendDirPlacesReply (UUID queryID, DirPlacesReplyData[] data)
         {
             
         }
 
-        void IClientAPI.SendDirPeopleReply(UUID queryID, DirPeopleReplyData[] data)
+        public void SendDirPeopleReply (UUID queryID, DirPeopleReplyData[] data)
         {
             
         }
 
-        void IClientAPI.SendDirEventsReply(UUID queryID, DirEventsReplyData[] data)
+        public void SendDirEventsReply (UUID queryID, DirEventsReplyData[] data)
         {
-            
         }
 
-        void IClientAPI.SendDirGroupsReply(UUID queryID, DirGroupsReplyData[] data)
+        public void SendDirGroupsReply (UUID queryID, DirGroupsReplyData[] data)
         {
-            
         }
 
-        void IClientAPI.SendDirClassifiedReply(UUID queryID, DirClassifiedReplyData[] data)
+        public void SendDirClassifiedReply (UUID queryID, DirClassifiedReplyData[] data)
         {
-            
         }
 
-        void IClientAPI.SendDirLandReply(UUID queryID, DirLandReplyData[] data)
+        public void SendDirLandReply (UUID queryID, DirLandReplyData[] data)
         {
-            
         }
 
-        void IClientAPI.SendDirPopularReply(UUID queryID, DirPopularReplyData[] data)
+        public void SendDirPopularReply (UUID queryID, DirPopularReplyData[] data)
         {
-            
         }
 
-        void IClientAPI.SendEventInfoReply(EventData info)
+        public void SendEventInfoReply (EventData info)
         {
-            
         }
 
-        void IClientAPI.SendMapItemReply(mapItemReply[] replies, uint mapitemtype, uint flags)
+        public void SendMapItemReply (mapItemReply[] replies, uint mapitemtype, uint flags)
         {
-            
         }
 
-        void IClientAPI.SendAvatarGroupsReply(UUID avatarID, GroupMembershipData[] data)
+        public void SendAvatarGroupsReply (UUID avatarID, GroupMembershipData[] data)
         {
-            
         }
 
-        void IClientAPI.SendOfferCallingCard(UUID srcID, UUID transactionID)
+        public void SendOfferCallingCard (UUID srcID, UUID transactionID)
         {
-            
         }
 
-        void IClientAPI.SendAcceptCallingCard(UUID transactionID)
+        public void SendAcceptCallingCard (UUID transactionID)
         {
-            
         }
 
-        void IClientAPI.SendDeclineCallingCard(UUID transactionID)
+        public void SendDeclineCallingCard (UUID transactionID)
         {
-            
         }
 
-        void IClientAPI.SendTerminateFriend(UUID exFriendID)
+        public void SendTerminateFriend (UUID exFriendID)
         {
-            
         }
 
-        void IClientAPI.SendAvatarClassifiedReply(UUID targetID, UUID[] classifiedID, string[] name)
+        public void SendAvatarClassifiedReply (UUID targetID, UUID[] classifiedID, string[] name)
         {
-            
         }
 
-        void IClientAPI.SendClassifiedInfoReply(UUID classifiedID, UUID creatorID, uint creationDate, uint expirationDate, uint category, string name, string description, UUID parcelID, uint parentEstate, UUID snapshotID, string simName, Vector3 globalPos, string parcelName, byte classifiedFlags, int price)
+        public void SendClassifiedInfoReply (UUID classifiedID, UUID creatorID, uint creationDate, uint expirationDate, uint category, string name, string description, UUID parcelID, uint parentEstate, UUID snapshotID, string simName, Vector3 globalPos, string parcelName, byte classifiedFlags, int price)
         {
-            
         }
 
-        void IClientAPI.SendAgentDropGroup(UUID groupID)
+        public void SendAgentDropGroup (UUID groupID)
         {
-            
         }
 
-        void IClientAPI.SendAvatarNotesReply(UUID targetID, string text)
+        public void SendAvatarNotesReply (UUID targetID, string text)
         {
-            
         }
 
-        void IClientAPI.SendAvatarPicksReply(UUID targetID, Dictionary<UUID, string> picks)
+        public void SendAvatarPicksReply (UUID targetID, Dictionary<UUID, string> picks)
         {
-            
         }
 
-        void IClientAPI.SendPickInfoReply(UUID pickID, UUID creatorID, bool topPick, UUID parcelID, string name, string desc, UUID snapshotID, string user, string originalName, string simName, Vector3 posGlobal, int sortOrder, bool enabled)
+        public void SendPickInfoReply (UUID pickID, UUID creatorID, bool topPick, UUID parcelID, string name, string desc, UUID snapshotID, string user, string originalName, string simName, Vector3 posGlobal, int sortOrder, bool enabled)
         {
-            
         }
 
-        void IClientAPI.SendAvatarClassifiedReply(UUID targetID, Dictionary<UUID, string> classifieds)
+        public void SendAvatarClassifiedReply (UUID targetID, Dictionary<UUID, string> classifieds)
         {
-            
         }
 
-        void IClientAPI.SendParcelDwellReply(int localID, UUID parcelID, float dwell)
+        public void SendParcelDwellReply (int localID, UUID parcelID, float dwell)
         {
-            
         }
 
-        void IClientAPI.SendUserInfoReply(bool imViaEmail, bool visible, string email)
+        public void SendUserInfoReply (bool imViaEmail, bool visible, string email)
         {
-            
         }
 
-        void IClientAPI.SendUseCachedMuteList()
+        public void SendUseCachedMuteList ()
         {
-            
         }
 
-        void IClientAPI.SendMuteListUpdate(string filename)
+        public void SendMuteListUpdate (string filename)
         {
-            
         }
 
-        void IClientAPI.SendGroupActiveProposals(UUID groupID, UUID transactionID, GroupActiveProposals[] Proposals)
+        public void SendGroupActiveProposals (UUID groupID, UUID transactionID, GroupActiveProposals[] Proposals)
         {
-            
         }
 
-        void IClientAPI.SendGroupVoteHistory(UUID groupID, UUID transactionID, GroupVoteHistory Vote, GroupVoteHistoryItem[] Items)
+        public void SendGroupVoteHistory (UUID groupID, UUID transactionID, GroupVoteHistory Vote, GroupVoteHistoryItem[] Items)
         {
-            
         }
 
-        bool IClientAPI.AddGenericPacketHandler(string MethodName, GenericMessage handler)
+        public bool AddGenericPacketHandler (string MethodName, GenericMessage handler)
         {
-            return false;   
+            return true;
         }
 
-        void IClientAPI.SendRebakeAvatarTextures(UUID textureID)
+        public bool RemoveGenericPacketHandler (string MethodName)
         {
-            
+            return true;
         }
 
-        void IClientAPI.SendAvatarInterestsReply(UUID avatarID, uint wantMask, string wantText, uint skillsMask, string skillsText, string languages)
+        public void SendRebakeAvatarTextures (UUID textureID)
         {
-            
         }
 
-        void IClientAPI.SendGroupAccountingDetails(IClientAPI sender, UUID groupID, UUID transactionID, UUID sessionID, int amt)
+        public void SendAvatarInterestsReply (UUID avatarID, uint wantMask, string wantText, uint skillsMask, string skillsText, string languages)
         {
-            
         }
 
-        void IClientAPI.SendGroupAccountingSummary(IClientAPI sender, UUID groupID, uint moneyAmt, int totalTier, int usedTier)
+        public void SendGroupAccountingDetails (IClientAPI sender, UUID groupID, UUID transactionID, UUID sessionID, int amt)
         {
-            
         }
 
-        void IClientAPI.SendGroupTransactionsSummaryDetails(IClientAPI sender, UUID groupID, UUID transactionID, UUID sessionID, int amt)
+        public void SendGroupAccountingSummary (IClientAPI sender, UUID groupID, uint moneyAmt, int totalTier, int usedTier)
         {
-            
         }
 
-        void IClientAPI.SendChangeUserRights(UUID agentID, UUID friendID, int rights)
+        public void SendGroupTransactionsSummaryDetails (IClientAPI sender, UUID groupID, UUID transactionID, UUID sessionID, int amt)
         {
-            
         }
 
-        void IClientAPI.SendTextBoxRequest(string message, int chatChannel, string objectname, string ownerFirstName, string ownerLastName, UUID objectId)
+        public void SendChangeUserRights (UUID agentID, UUID friendID, int rights)
         {
-            
         }
 
-        void IClientAPI.SendPlacesQuery(ExtendedLandData[] LandData, UUID queryID, UUID transactionID)
+        public void SendTextBoxRequest (string message, int chatChannel, string objectname, string ownerFirstName, string ownerLastName, UUID objectId)
         {
-            
         }
 
-        void IClientAPI.FireUpdateParcel(LandUpdateArgs args, int LocalID)
+        public void SendPlacesQuery (ExtendedLandData[] LandData, UUID queryID, UUID transactionID)
         {
-            
         }
 
-        void IClientAPI.SendTelehubInfo(Vector3 TelehubPos, Quaternion TelehubRot, List<Vector3> SpawnPoint, UUID ObjectID, string Name)
+        public void FireUpdateParcel (LandUpdateArgs args, int LocalID)
         {
-            
         }
 
-        void IClientAPI.StopFlying (IEntity presence)
+        public void SendTelehubInfo (Vector3 TelehubPos, Quaternion TelehubRot, List<Vector3> SpawnPoint, UUID ObjectID, string Name)
         {
-            
+        }
+
+        public void StopFlying (IEntity presence)
+        {
+        }
+
+        public void Reset ()
+        {
         }
 
         #endregion

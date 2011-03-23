@@ -692,10 +692,10 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             }
             string firstName = cmds[3], lastName = cmds[4];
 
-            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, firstName, lastName);
-            if(account != null)
+            IScenePresence SP ;
+            if (m_scene.TryGetAvatarByName (firstName + " " + lastName, out SP))
             {
-                ForceSendAvatarAppearance(account.PrincipalID);
+                ForceSendAvatarAppearance(SP.UUID);
             }
             else
                 m_log.Info("Could not find user's account.");

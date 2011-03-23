@@ -542,11 +542,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if (aCircuit == null) // no good, didn't pass NewUserConnection successfully
                     return;
 
+                m_clientManager.Add (client);
+
                 //Create the scenepresence
                 IScenePresence sp = m_sceneGraph.CreateAndAddChildScenePresence (client);
                 sp.IsChildAgent = aCircuit.child;
 
-                m_clientManager.Add(client);
 
                 //Trigger events
                 m_eventManager.TriggerOnNewPresence (sp);

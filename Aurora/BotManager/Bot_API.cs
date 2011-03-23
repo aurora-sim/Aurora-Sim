@@ -136,8 +136,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public string botCreateBot(string FirstName, string LastName, string appearanceToClone)
         {
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
-            //if (manager != null)
-            //    return manager.CreateAvatar(FirstName, LastName, UUID.Parse(appearanceToClone)).ToString();
+            if (manager != null)
+                return manager.CreateAvatar(FirstName, LastName, UUID.Parse(appearanceToClone)).ToString();
             return "";
         }
 

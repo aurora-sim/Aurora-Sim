@@ -49,8 +49,8 @@ namespace Aurora.BotManager
 
         #region Constructor
 
-        public AStarBot(Scene scene)
-            : base(scene)
+        public AStarBot(Scene scene, AgentCircuitData data)
+            : base(scene, data)
         {
         }
 

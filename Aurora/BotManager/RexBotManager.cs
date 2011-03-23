@@ -102,13 +102,7 @@ namespace Aurora.BotManager
         /// <returns></returns>
         private AvatarAppearance GetAppearance(UUID target)
         {
-            AvatarData adata = m_scene.AvatarService.GetAvatar(target);
-            if (adata != null)
-            {
-                AvatarAppearance x = adata.ToAvatarAppearance(target);
-                return x;
-            }
-            return new AvatarAppearance();
+            return m_scene.AvatarService.GetAppearance (target);
         }
 
         /// <summary>
@@ -120,19 +114,20 @@ namespace Aurora.BotManager
         /// <returns>ID of the bot</returns>
         public UUID CreateAvatar(string FirstName, string LastName, UUID cloneAppearanceFrom)
         {
-            //Create the new bot data
-            RexBot m_character = new RexBot(m_scene);
-
-            m_character.FirstName = FirstName;
-            m_character.LastName = LastName;
-
-            AgentCircuitData m_aCircuitData = new AgentCircuitData();
+            AgentCircuitData m_aCircuitData = new AgentCircuitData ();
             m_aCircuitData.child = false;
 
             //Add the circuit data so they can login
-            m_aCircuitData.circuitcode = m_character.CircuitCode;
+            m_aCircuitData.circuitcode = (uint)Util.RandomClass.Next();
 
-            m_aCircuitData.Appearance = GetAppearance(cloneAppearanceFrom);//Sets up appearance
+            m_aCircuitData.Appearance = GetAppearance (cloneAppearanceFrom);//Sets up appearance
+            //Create the new bot data
+            RexBot m_character = new RexBot (m_scene, m_aCircuitData);
+
+            m_character.FirstName = FirstName;
+            m_character.LastName = LastName;
+            m_aCircuitData.AgentID = m_character.AgentId;
+            m_aCircuitData.Appearance.Owner = m_character.AgentId;
 
             m_scene.AuthenticateHandler.AgentCircuits.Add(m_character.CircuitCode, m_aCircuitData);
             //This adds them to the scene and sets them inworld
@@ -143,8 +138,12 @@ namespace Aurora.BotManager
             IScenePresence SP = m_scene.GetScenePresence(m_character.AgentId);
             IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule> ();
             appearance.Appearance.SetAppearance (appearance.Appearance.Texture, appearance.Appearance.VisualParams);
-            appearance.SendAppearanceToAllOtherAgents ();
             appearance.SendAvatarDataToAllAgents ();
+            appearance.SendAppearanceToAllOtherAgents ();
+            appearance.SendOtherAgentsAppearanceToMe ();
+            IAvatarFactory avFactory = SP.Scene.RequestModuleInterface<IAvatarFactory> ();
+            if (avFactory != null)
+                avFactory.QueueInitialAppearanceSend (SP.UUID);
 
             //Save them in the bots list
             m_bots.Add(m_character.AgentId, m_character);
@@ -164,19 +163,19 @@ namespace Aurora.BotManager
         /// <returns>ID of the bot</returns>
         public UUID CreateAStarAvatar(string FirstName, string LastName, UUID cloneAppearanceFrom)
         {
-            //Create the new bot data
-            AStarBot m_character = new AStarBot(m_scene);
-
-            m_character.FirstName = FirstName;
-            m_character.LastName = LastName;
-
-            AgentCircuitData m_aCircuitData = new AgentCircuitData();
+            AgentCircuitData m_aCircuitData = new AgentCircuitData ();
             m_aCircuitData.child = false;
 
             //Add the circuit data so they can login
-            m_aCircuitData.circuitcode = m_character.CircuitCode;
+            m_aCircuitData.circuitcode = (uint)Util.RandomClass.Next ();
 
-            m_aCircuitData.Appearance = GetAppearance(cloneAppearanceFrom);//Sets up appearance
+            m_aCircuitData.Appearance = GetAppearance (cloneAppearanceFrom);//Sets up appearance
+
+            //Create the new bot data
+            AStarBot m_character = new AStarBot (m_scene, m_aCircuitData);
+
+            m_character.FirstName = FirstName;
+            m_character.LastName = LastName;
 
             m_scene.AuthenticateHandler.AgentCircuits.Add(m_character.CircuitCode, m_aCircuitData);
             //This adds them to the scene and sets them inworld
