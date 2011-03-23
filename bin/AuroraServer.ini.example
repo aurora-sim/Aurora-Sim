@@ -62,9 +62,16 @@
     AllowRemoteDelete = true
     
 [Includes]
-    ;; Main configuration
+    ;;
+    ;; Select only one of the next two
+    ;
+    ;; Main configuration without IWC
     Include-Main = AuroraServerConfiguration/Main.ini
     
+    ;; Configuration with IWC enabled
+    ;Include-IWCMain = AuroraServerConfiguration/IWCMain.ini
+    
+	
     ;;Other .ini files to add...
     Include-Login = AuroraServerConfiguration/Login.ini
     Include-FreeSwitch = AuroraServerConfiguration/FreeSwitch.ini
