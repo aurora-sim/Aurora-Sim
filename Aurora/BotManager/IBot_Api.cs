@@ -41,7 +41,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
     {
         void botStart(string bot);
         void botStop(string bot);
-        void botUnPause(string bot);
+        void botResume(string bot);
         void botPause(string bot);
         void botSetMap(string keyOfBot, LSL_List positions, LSL_List movementType);
         string botCreateBot(string FirstName, string LastName, string appearanceToClone);

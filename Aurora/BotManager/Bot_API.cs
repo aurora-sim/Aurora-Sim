@@ -168,7 +168,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 manager.PauseAutoMove(UUID.Parse(bot));
         }
 
-        public void botUnPause(string bot)
+        public void botResume(string bot)
         {
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
             if (manager != null)
