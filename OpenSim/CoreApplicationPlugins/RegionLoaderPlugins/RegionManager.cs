@@ -154,7 +154,7 @@ namespace Aurora.Modules.RegionLoader
             m_changingRegion = false;
         }
 
-        private void Update()
+        private new void Update()
         {
             RegionInfo region = m_connector.GetRegionInfo(textBox1.Text);
             if (region == null)
