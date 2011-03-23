@@ -926,7 +926,15 @@ namespace OpenSim.Region.Framework.Scenes
             UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, uuid);
             if (account != null)
             {
-                remote_client.SendNameReply(uuid, account.FirstName, account.LastName);
+                remote_client.SendNameReply (uuid, account.FirstName, account.LastName);
+            }
+            else
+            {
+                IScenePresence presence;
+                if ((presence = Scene.GetScenePresence (uuid)) != null)
+                {
+                    remote_client.SendNameReply (uuid, presence.Firstname, presence.Lastname);
+                }
             }
         }
 
