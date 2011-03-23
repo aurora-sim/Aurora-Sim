@@ -112,8 +112,9 @@ namespace Aurora.BotManager
         /// <param name="LastName"></param>
         /// <param name="cloneAppearanceFrom">UUID of the avatar whos appearance will be copied to give this bot an appearance</param>
         /// <returns>ID of the bot</returns>
-        public UUID CreateAvatar(string FirstName, string LastName, UUID cloneAppearanceFrom)
+        public UUID CreateAvatar(string FirstName, string LastName, IScene s, UUID cloneAppearanceFrom)
         {
+            Scene scene = (Scene)s;
             AgentCircuitData m_aCircuitData = new AgentCircuitData ();
             m_aCircuitData.child = false;
 
@@ -122,26 +123,26 @@ namespace Aurora.BotManager
 
             m_aCircuitData.Appearance = GetAppearance (cloneAppearanceFrom);//Sets up appearance
             //Create the new bot data
-            RexBot m_character = new RexBot (m_scene, m_aCircuitData);
+            RexBot m_character = new RexBot (scene, m_aCircuitData);
 
             m_character.FirstName = FirstName;
             m_character.LastName = LastName;
             m_aCircuitData.AgentID = m_character.AgentId;
             m_aCircuitData.Appearance.Owner = m_character.AgentId;
 
-            m_scene.AuthenticateHandler.AgentCircuits.Add(m_character.CircuitCode, m_aCircuitData);
+            scene.AuthenticateHandler.AgentCircuits.Add (m_character.CircuitCode, m_aCircuitData);
             //This adds them to the scene and sets them inworld
-            m_scene.AddNewClient(m_character);
+            scene.AddNewClient (m_character);
 
             m_character.Initialize();
 
-            IScenePresence SP = m_scene.GetScenePresence(m_character.AgentId);
+            IScenePresence SP = scene.GetScenePresence (m_character.AgentId);
             IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule> ();
             appearance.Appearance.SetAppearance (appearance.Appearance.Texture, appearance.Appearance.VisualParams);
             appearance.SendAvatarDataToAllAgents ();
             appearance.SendAppearanceToAllOtherAgents ();
             appearance.SendOtherAgentsAppearanceToMe ();
-            IAvatarFactory avFactory = SP.Scene.RequestModuleInterface<IAvatarFactory> ();
+            IAvatarFactory avFactory = scene.RequestModuleInterface<IAvatarFactory> ();
             if (avFactory != null)
                 avFactory.QueueInitialAppearanceSend (SP.UUID);
 

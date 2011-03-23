@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using OpenSim.Framework;
 using OpenMetaverse;
 
 namespace Aurora.Framework
@@ -8,7 +9,7 @@ namespace Aurora.Framework
 
     public interface IBotManager
     {
-        UUID CreateAvatar(string FirstName, string LastName, UUID cloneAppearanceFrom);
+        UUID CreateAvatar (string FirstName, string LastName, IScene scene, UUID cloneAppearanceFrom);
         void SetBotMap(UUID Bot, List<Vector3> Positions, List<TravelMode> mode);
         void UnpauseAutoMove(UUID Bot);
         void PauseAutoMove(UUID Bot);
