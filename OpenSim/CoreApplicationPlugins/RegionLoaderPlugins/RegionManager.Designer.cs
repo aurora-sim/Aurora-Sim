@@ -52,7 +52,6 @@
             this.label12 = new System.Windows.Forms.Label ();
             this.label14 = new System.Windows.Forms.Label ();
             this.groupBox1 = new System.Windows.Forms.GroupBox ();
-            this.CStartupType = new System.Windows.Forms.TextBox ();
             this.button18 = new System.Windows.Forms.Button ();
             this.label37 = new System.Windows.Forms.Label ();
             this.CStartNum = new System.Windows.Forms.TextBox ();
@@ -92,12 +91,11 @@
             this.label6 = new System.Windows.Forms.Label ();
             this.Export = new System.Windows.Forms.Button ();
             this.RegionListBox = new System.Windows.Forms.ListBox ();
-            this.UpdateRegion = new System.Windows.Forms.Button ();
             this.SearchForRegionByName = new System.Windows.Forms.Button ();
             this.label31 = new System.Windows.Forms.Label ();
             this.RegionToFind = new System.Windows.Forms.TextBox ();
             this.groupBox3 = new System.Windows.Forms.GroupBox ();
-            this.startupType = new System.Windows.Forms.TextBox ();
+            this.startupType = new System.Windows.Forms.ListBox ();
             this.button17 = new System.Windows.Forms.Button ();
             this.label36 = new System.Windows.Forms.Label ();
             this.RSizeYHelp = new System.Windows.Forms.Button ();
@@ -144,6 +142,7 @@
             this.textBox11 = new System.Windows.Forms.TextBox ();
             this.label30 = new System.Windows.Forms.Label ();
             this.tabPage2 = new System.Windows.Forms.TabPage ();
+            this.CStartupType = new System.Windows.Forms.ListBox ();
             this.groupBox1.SuspendLayout ();
             this.groupBox2.SuspendLayout ();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit ();
@@ -402,18 +401,10 @@
             this.groupBox1.Controls.Add (this.label7);
             this.groupBox1.Location = new System.Drawing.Point (9, 6);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size (362, 401);
+            this.groupBox1.Size = new System.Drawing.Size (362, 410);
             this.groupBox1.TabIndex = 27;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Region Info";
-            // 
-            // CStartupType
-            // 
-            this.CStartupType.Location = new System.Drawing.Point (247, 369);
-            this.CStartupType.Name = "CStartupType";
-            this.CStartupType.Size = new System.Drawing.Size (100, 20);
-            this.CStartupType.TabIndex = 62;
-            this.CStartupType.Text = "Normal";
             // 
             // button18
             // 
@@ -721,7 +712,7 @@
             this.tabControl1.Location = new System.Drawing.Point (-1, 39);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size (662, 436);
+            this.tabControl1.Size = new System.Drawing.Size (662, 448);
             this.tabControl1.TabIndex = 29;
             // 
             // tabPage1
@@ -729,7 +720,6 @@
             this.tabPage1.Controls.Add (this.button13);
             this.tabPage1.Controls.Add (this.groupBox4);
             this.tabPage1.Controls.Add (this.RegionListBox);
-            this.tabPage1.Controls.Add (this.UpdateRegion);
             this.tabPage1.Controls.Add (this.SearchForRegionByName);
             this.tabPage1.Controls.Add (this.label31);
             this.tabPage1.Controls.Add (this.RegionToFind);
@@ -737,14 +727,14 @@
             this.tabPage1.Location = new System.Drawing.Point (4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding (3);
-            this.tabPage1.Size = new System.Drawing.Size (654, 410);
+            this.tabPage1.Size = new System.Drawing.Size (654, 422);
             this.tabPage1.TabIndex = 2;
             this.tabPage1.Text = "Edit existing region";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
             // button13
             // 
-            this.button13.Location = new System.Drawing.Point (425, 301);
+            this.button13.Location = new System.Drawing.Point (570, 272);
             this.button13.Name = "button13";
             this.button13.Size = new System.Drawing.Size (75, 23);
             this.button13.TabIndex = 36;
@@ -798,16 +788,6 @@
             this.RegionListBox.Size = new System.Drawing.Size (217, 108);
             this.RegionListBox.TabIndex = 33;
             this.RegionListBox.SelectedIndexChanged += new System.EventHandler (this.RegionListBox_SelectedIndexChanged);
-            // 
-            // UpdateRegion
-            // 
-            this.UpdateRegion.Location = new System.Drawing.Point (567, 301);
-            this.UpdateRegion.Name = "UpdateRegion";
-            this.UpdateRegion.Size = new System.Drawing.Size (75, 23);
-            this.UpdateRegion.TabIndex = 32;
-            this.UpdateRegion.Text = "Update";
-            this.UpdateRegion.UseVisualStyleBackColor = true;
-            this.UpdateRegion.Click += new System.EventHandler (this.Update_Click);
             // 
             // SearchForRegionByName
             // 
@@ -885,18 +865,24 @@
             this.groupBox3.Controls.Add (this.label30);
             this.groupBox3.Location = new System.Drawing.Point (9, 6);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size (410, 393);
+            this.groupBox3.Size = new System.Drawing.Size (410, 410);
             this.groupBox3.TabIndex = 28;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Region Info";
             // 
             // startupType
             // 
+            this.startupType.FormattingEnabled = true;
+            this.startupType.Items.AddRange (new object[] {
+            "Normal",
+            "Medium",
+            "Soft"});
             this.startupType.Location = new System.Drawing.Point (247, 367);
             this.startupType.Name = "startupType";
-            this.startupType.Size = new System.Drawing.Size (157, 20);
-            this.startupType.TabIndex = 53;
-            this.startupType.Text = "Normal";
+            this.startupType.Size = new System.Drawing.Size (157, 30);
+            this.startupType.TabIndex = 37;
+            this.startupType.SelectedIndexChanged += new System.EventHandler (this.startupType_TextChanged);
+            this.startupType.Leave += new System.EventHandler (this.startupType_Leave);
             // 
             // button17
             // 
@@ -934,6 +920,8 @@
             this.RegionSizeY.Size = new System.Drawing.Size (157, 20);
             this.RegionSizeY.TabIndex = 48;
             this.RegionSizeY.Text = "256";
+            this.RegionSizeY.TextChanged += new System.EventHandler (this.startupType_TextChanged);
+            this.RegionSizeY.Leave += new System.EventHandler (this.startupType_Leave);
             // 
             // label32
             // 
@@ -961,6 +949,8 @@
             this.RegionSizeX.Size = new System.Drawing.Size (157, 20);
             this.RegionSizeX.TabIndex = 45;
             this.RegionSizeX.Text = "256";
+            this.RegionSizeX.TextChanged += new System.EventHandler (this.startupType_TextChanged);
+            this.RegionSizeX.Leave += new System.EventHandler (this.startupType_Leave);
             // 
             // label19
             // 
@@ -978,6 +968,8 @@
             this.StartupNumberBox.Size = new System.Drawing.Size (157, 20);
             this.StartupNumberBox.TabIndex = 44;
             this.StartupNumberBox.Text = "0";
+            this.StartupNumberBox.TextChanged += new System.EventHandler (this.startupType_TextChanged);
+            this.StartupNumberBox.Leave += new System.EventHandler (this.startupType_Leave);
             // 
             // button12
             // 
@@ -1006,6 +998,8 @@
             this.DisabledEdit.Size = new System.Drawing.Size (15, 14);
             this.DisabledEdit.TabIndex = 41;
             this.DisabledEdit.UseVisualStyleBackColor = true;
+            this.DisabledEdit.CheckStateChanged += new System.EventHandler (this.startupType_TextChanged);
+            this.DisabledEdit.Leave += new System.EventHandler (this.startupType_Leave);
             // 
             // DisabledHelp
             // 
@@ -1132,6 +1126,8 @@
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size (157, 20);
             this.textBox1.TabIndex = 2;
+            this.textBox1.TextChanged += new System.EventHandler (this.startupType_TextChanged);
+            this.textBox1.Leave += new System.EventHandler (this.startupType_Leave);
             // 
             // label20
             // 
@@ -1158,6 +1154,8 @@
             this.textBox3.Size = new System.Drawing.Size (157, 20);
             this.textBox3.TabIndex = 4;
             this.textBox3.Text = "1000";
+            this.textBox3.TextChanged += new System.EventHandler (this.startupType_TextChanged);
+            this.textBox3.Leave += new System.EventHandler (this.startupType_Leave);
             // 
             // label22
             // 
@@ -1184,6 +1182,8 @@
             this.textBox4.Size = new System.Drawing.Size (157, 20);
             this.textBox4.TabIndex = 21;
             this.textBox4.Text = "PG";
+            this.textBox4.TextChanged += new System.EventHandler (this.startupType_TextChanged);
+            this.textBox4.Leave += new System.EventHandler (this.startupType_Leave);
             // 
             // textBox5
             // 
@@ -1192,6 +1192,8 @@
             this.textBox5.Size = new System.Drawing.Size (157, 20);
             this.textBox5.TabIndex = 6;
             this.textBox5.Text = "1000";
+            this.textBox5.TextChanged += new System.EventHandler (this.startupType_TextChanged);
+            this.textBox5.Leave += new System.EventHandler (this.startupType_Leave);
             // 
             // label24
             // 
@@ -1218,6 +1220,8 @@
             this.textBox6.Size = new System.Drawing.Size (157, 20);
             this.textBox6.TabIndex = 19;
             this.textBox6.Text = "65536";
+            this.textBox6.TextChanged += new System.EventHandler (this.startupType_TextChanged);
+            this.textBox6.Leave += new System.EventHandler (this.startupType_Leave);
             // 
             // textBox7
             // 
@@ -1226,6 +1230,8 @@
             this.textBox7.Size = new System.Drawing.Size (157, 20);
             this.textBox7.TabIndex = 8;
             this.textBox7.Text = "9000";
+            this.textBox7.TextChanged += new System.EventHandler (this.startupType_TextChanged);
+            this.textBox7.Leave += new System.EventHandler (this.startupType_Leave);
             // 
             // label26
             // 
@@ -1252,6 +1258,8 @@
             this.textBox8.Size = new System.Drawing.Size (157, 20);
             this.textBox8.TabIndex = 17;
             this.textBox8.Text = "50";
+            this.textBox8.TextChanged += new System.EventHandler (this.startupType_TextChanged);
+            this.textBox8.Leave += new System.EventHandler (this.startupType_Leave);
             // 
             // textBox9
             // 
@@ -1260,6 +1268,8 @@
             this.textBox9.Size = new System.Drawing.Size (157, 20);
             this.textBox9.TabIndex = 10;
             this.textBox9.Text = "DEFAULT";
+            this.textBox9.TextChanged += new System.EventHandler (this.startupType_TextChanged);
+            this.textBox9.Leave += new System.EventHandler (this.startupType_Leave);
             // 
             // label28
             // 
@@ -1286,6 +1296,8 @@
             this.textBox10.Size = new System.Drawing.Size (157, 20);
             this.textBox10.TabIndex = 15;
             this.textBox10.Text = "256";
+            this.textBox10.TextChanged += new System.EventHandler (this.startupType_TextChanged);
+            this.textBox10.Leave += new System.EventHandler (this.startupType_Leave);
             // 
             // textBox11
             // 
@@ -1294,6 +1306,8 @@
             this.textBox11.Size = new System.Drawing.Size (157, 20);
             this.textBox11.TabIndex = 13;
             this.textBox11.Text = "Mainland";
+            this.textBox11.TextChanged += new System.EventHandler (this.startupType_TextChanged);
+            this.textBox11.Leave += new System.EventHandler (this.startupType_Leave);
             // 
             // label30
             // 
@@ -1312,20 +1326,33 @@
             this.tabPage2.Location = new System.Drawing.Point (4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding (3);
-            this.tabPage2.Size = new System.Drawing.Size (654, 410);
+            this.tabPage2.Size = new System.Drawing.Size (654, 422);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Create new region";
             this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // CStartupType
+            // 
+            this.CStartupType.FormattingEnabled = true;
+            this.CStartupType.Items.AddRange (new object[] {
+            "Normal",
+            "Medium",
+            "Soft"});
+            this.CStartupType.Location = new System.Drawing.Point (247, 373);
+            this.CStartupType.Name = "CStartupType";
+            this.CStartupType.Size = new System.Drawing.Size (100, 30);
+            this.CStartupType.TabIndex = 63;
             // 
             // RegionManager
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF (6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size (660, 472);
+            this.ClientSize = new System.Drawing.Size (660, 483);
             this.Controls.Add (this.label14);
             this.Controls.Add (this.tabControl1);
             this.Name = "RegionManager";
             this.Text = "RegionManager";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler (this.RegionManager_FormClosing);
             this.groupBox1.ResumeLayout (false);
             this.groupBox1.PerformLayout ();
             this.groupBox2.ResumeLayout (false);
@@ -1408,7 +1435,6 @@
         private System.Windows.Forms.TextBox textBox10;
         private System.Windows.Forms.TextBox textBox11;
         private System.Windows.Forms.Label label30;
-        private System.Windows.Forms.Button UpdateRegion;
         private System.Windows.Forms.ListBox RegionListBox;
         private System.Windows.Forms.Button RegionNameHelp;
         private System.Windows.Forms.Button button1;
@@ -1457,11 +1483,11 @@
         private System.Windows.Forms.Button button15;
         private System.Windows.Forms.TextBox CRegionSizeX;
         private System.Windows.Forms.Label label34;
-        private System.Windows.Forms.TextBox startupType;
         private System.Windows.Forms.Button button17;
         private System.Windows.Forms.Label label36;
-        private System.Windows.Forms.TextBox CStartupType;
         private System.Windows.Forms.Button button18;
         private System.Windows.Forms.Label label37;
+        private System.Windows.Forms.ListBox startupType;
+        private System.Windows.Forms.ListBox CStartupType;
     }
 }

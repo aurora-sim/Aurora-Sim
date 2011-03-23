@@ -28,6 +28,8 @@ namespace Aurora.Modules.RegionLoader
         private UUID CurrentRegionID = UUID.Zero;
         private ISimulationBase m_OpenSimBase;
         private IRegionInfoConnector m_connector = null;
+        private bool m_changingRegion = false;
+        private bool m_textHasChanged = false;
 
         public RegionManager(bool killOnCreate, bool openCreatePageFirst, ISimulationBase baseOpenSim)
         {
@@ -100,7 +102,7 @@ namespace Aurora.Modules.RegionLoader
                 return;
             }
             region.NumberStartup = int.Parse (CStartNum.Text);
-            region.Startup = (StartupType)Enum.Parse (typeof (StartupType), CStartupType.Text);
+            region.Startup = ConvertIntToStartupType(CStartupType.SelectedIndex);
 
             m_connector.UpdateRegionInfo(region);
             if (KillAfterRegionCreation)
@@ -126,6 +128,7 @@ namespace Aurora.Modules.RegionLoader
                 MessageBox.Show("Region was not found!");
                 return;
             }
+            m_changingRegion = true;
             CurrentRegionID = region.RegionID;
             textBox11.Text = region.RegionType;
             textBox6.Text = region.ObjectCapacity.ToString();
@@ -147,10 +150,11 @@ namespace Aurora.Modules.RegionLoader
             textBox1.Text = region.RegionName;
             RegionSizeX.Text = region.RegionSizeX.ToString ();
             RegionSizeY.Text = region.RegionSizeY.ToString ();
-            startupType.Text = region.Startup.ToString ();
+            startupType.SelectedIndex = ConvertStartupType(region.Startup);
+            m_changingRegion = false;
         }
 
-        private void Update_Click(object sender, EventArgs e)
+        private void Update()
         {
             RegionInfo region = m_connector.GetRegionInfo(textBox1.Text);
             if (region == null)
@@ -195,7 +199,7 @@ namespace Aurora.Modules.RegionLoader
             region.NumberStartup = int.Parse(StartupNumberBox.Text);
             region.RegionSizeX = int.Parse(RegionSizeX.Text);
             region.RegionSizeY = int.Parse(RegionSizeY.Text);
-            region.Startup = (StartupType)Enum.Parse (typeof (StartupType), startupType.Text);
+            region.Startup = ConvertIntToStartupType(startupType.SelectedIndex);
 
             if ((region.RegionSizeX % Constants.MinRegionSize) != 0 || 
                 (region.RegionSizeY % Constants.MinRegionSize) != 0)
@@ -218,6 +222,7 @@ namespace Aurora.Modules.RegionLoader
                 MessageBox.Show("Region was not found!");
                 return;
             }
+            m_changingRegion = true;
             CurrentRegionID = region.RegionID;
             textBox11.Text = region.RegionType;
             textBox6.Text = region.ObjectCapacity.ToString();
@@ -240,7 +245,28 @@ namespace Aurora.Modules.RegionLoader
             RegionSizeX.Text = region.RegionSizeX.ToString();
             RegionSizeY.Text = region.RegionSizeY.ToString();
             StartupNumberBox.Text = region.NumberStartup.ToString ();
-            startupType.Text = region.Startup.ToString ();
+            startupType.SelectedIndex = ConvertStartupType(region.Startup);
+            m_changingRegion = false;
+        }
+
+        private int ConvertStartupType (StartupType startupType)
+        {
+            if (startupType == StartupType.Normal)
+                return 0;
+            else if (startupType == StartupType.Medium)
+                return 1;
+            else
+                return 2;
+        }
+
+        private StartupType ConvertIntToStartupType (int i)
+        {
+            if (i == 2)
+                return StartupType.Soft;
+            else if (i == 1)
+                return StartupType.Medium;
+            else
+                return StartupType.Normal;
         }
 
         private void RegionNameHelp_Click(object sender, EventArgs e)
@@ -366,6 +392,31 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
                     //Update the regions in the list box as well
                     RefreshCurrentRegions();
                 }
+            }
+        }
+
+        private void startupType_TextChanged (object sender, EventArgs e)
+        {
+            if (!m_changingRegion)
+                m_textHasChanged = true; //When the user finishes and deselects the box, it will save
+        }
+
+        private void startupType_Leave (object sender, EventArgs e)
+        {
+            if (m_textHasChanged)
+            {
+                Update ();
+                m_textHasChanged = false;
+            }
+        }
+
+        private void RegionManager_FormClosing (object sender, FormClosingEventArgs e)
+        {
+            //Save at the end if it hasn't yet
+            if (m_textHasChanged)
+            {
+                Update ();
+                m_textHasChanged = false;
             }
         }
     }
