@@ -291,6 +291,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
 
             AddRegionToScriptModules (scene);
+            StateSave.AddScene (scene);
 
             scene.EventManager.OnStartupComplete += EventManager_OnStartupComplete;
             scene.EventManager.TriggerAddToStartupQueue("ScriptEngine");
@@ -944,6 +945,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ls.ID = id;
             ScriptProtection.AddNewScript(id);
             MaintenanceThread.AddScriptChange(new LUStruct[] { ls }, LoadPriority.Restart);
+        }
+
+        public void SaveStateSaves (UUID PrimID)
+        {
+            ScriptData[] ids = ScriptProtection.GetScripts (PrimID);
+            if (ids == null)
+                return;
+            foreach (ScriptData id in ids)
+            {
+                StateSave.SaveStateTo (id);
+            }
         }
 
         public void SaveStateSave(UUID ItemID, UUID PrimID)

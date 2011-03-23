@@ -288,6 +288,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
             if (objectGroups.Count == 1)
             {
+                m_scene.AuroraEventManager.FireGenericEventHandler("DeleteToInventory", objectGroups[0]);
                 AssetXML = ((ISceneObject)objectGroups[0]).ToXml2();
             }
             else
@@ -308,6 +309,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
                     objectGroup.AbsolutePosition = inventoryStoredPosition;
 
+                    m_scene.AuroraEventManager.FireGenericEventHandler ("DeleteToInventory", objectGroup);
                     AssetXML += ((ISceneObject)objectGroup).ToXml2();
 
                     objectGroup.AbsolutePosition = originalPosition;

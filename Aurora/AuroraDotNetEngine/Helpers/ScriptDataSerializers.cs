@@ -42,8 +42,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_manager.RegisterComponent (com);
         }
 
+        public void AddScene (Scene scene)
+        {
+            scene.AuroraEventManager.OnGenericEvent += AuroraEventManager_OnGenericEvent;
+        }
+
         public void Close ()
         {
+        }
+
+        object AuroraEventManager_OnGenericEvent (string FunctionName, object parameters)
+        {
+            if (FunctionName == "DeleteToInventory")
+            {
+                //Resave all the state saves for this object
+                ISceneEntity entity = (ISceneEntity)parameters;
+                foreach(ISceneChildEntity child in entity.ChildrenEntities())
+                {
+                    m_module.SaveStateSaves (child.UUID);
+                }
+            }
+            return null;
         }
 
         public void SaveStateTo (ScriptData script)
@@ -101,12 +120,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 OSD o;
                 //If we have one for this item, deserialize it
-                if(component.TryGetValue(script.ItemID.ToString(), out o))
+                if (!component.TryGetValue (script.ItemID.ToString (), out o))
                 {
-                    StateSave save = new StateSave ();
-                    save.FromOSD ((OSDMap)o);
-                    return save;
+                    if (!component.TryGetValue (script.InventoryItem.OldItemID.ToString (), out o))
+                    {
+                        return null;
+                    }
                 }
+                StateSave save = new StateSave ();
+                save.FromOSD ((OSDMap)o);
+                return save;
             }
             return null;
         }

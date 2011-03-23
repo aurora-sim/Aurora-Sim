@@ -114,7 +114,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Scene.EventManager.OnScriptMovingStartEvent += moving_start;
             Scene.EventManager.OnScriptMovingEndEvent += moving_end;
 
-            Scene.EventManager.OnRezScript += rez_script;
             Scene.EventManager.OnRezScripts += rez_scripts;
 
 
@@ -766,33 +765,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (CheckIfEventShouldFire(ID, functionName, param))
                     m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
             }
-        }
-
-        /// <summary>
-        /// Start one script in an object
-        /// </summary>
-        /// <param name="part"></param>
-        /// <param name="itemID"></param>
-        /// <param name="script"></param>
-        /// <param name="startParam"></param>
-        /// <param name="postOnRez"></param>
-        /// <param name="engine"></param>
-        /// <param name="stateSource"></param>
-        public void rez_script (ISceneChildEntity part, UUID itemID,
-                int startParam, bool postOnRez, int stateSource)
-        {
-            List<IScriptModule> engines =
-                new List<IScriptModule>(
-                m_Scenes[0].RequestModuleInterfaces<IScriptModule>());
-
-            List<string> names = new List<string>();
-            foreach (IScriptModule m in engines)
-                names.Add(m.ScriptEngineName);
-
-            LUStruct itemToQueue = m_scriptEngine.StartScript(part, itemID,
-                    startParam, postOnRez, (StateSource)stateSource, UUID.Zero);
-            if (itemToQueue.Action != LUType.Unknown)
-                m_scriptEngine.MaintenanceThread.AddScriptChange(new LUStruct[] { itemToQueue }, LoadPriority.FirstStart);
         }
 
         /// <summary>

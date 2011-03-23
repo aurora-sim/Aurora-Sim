@@ -29,5 +29,11 @@ namespace OpenSim.Region.Framework.Scenes.Components
         /// <param name="obj">The object being edited</param>
         /// <param name="osd">The value as an OSD</param>
         void SetState(UUID obj, OSD osd);
+
+        /// <summary>
+        /// Removes the state for the given object
+        /// </summary>
+        /// <param name="obj"></param>
+        void RemoveState (UUID obj);
     }
 }

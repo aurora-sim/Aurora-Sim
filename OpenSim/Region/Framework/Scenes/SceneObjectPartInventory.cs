@@ -363,8 +363,8 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
                 bool SendUpdate = m_part.AddFlag (PrimFlags.Scripted);
-                m_part.ParentGroup.Scene.EventManager.TriggerRezScript (
-                    m_part, item.ItemID, startParam, postOnRez, stateSource);
+                m_part.ParentGroup.Scene.EventManager.TriggerRezScripts (
+                    m_part, new TaskInventoryItem[] { item }, startParam, postOnRez, stateSource, UUID.Zero);
                 if (SendUpdate)
                     m_part.ScheduleUpdate (PrimUpdateFlags.PrimFlags); //We only need to send a compressed
             }

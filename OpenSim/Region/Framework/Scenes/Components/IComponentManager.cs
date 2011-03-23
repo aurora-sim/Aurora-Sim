@@ -59,6 +59,18 @@ namespace OpenSim.Region.Framework.Scenes.Components
         /// <returns>The serialized string</returns>
         string SerializeComponents (ISceneChildEntity obj);
 
+        /// <summary>
+        /// Changes the UUIDs of one object to another
+        /// </summary>
+        /// <param name="oldID"></param>
+        /// <param name="part"></param>
         void ResetComponentIDsToNewObject (UUID oldID, ISceneChildEntity part);
+
+        /// <summary>
+        /// Remove the component for the given object with the given name, resets it to null
+        /// </summary>
+        /// <param name="UUID"></param>
+        /// <param name="name"></param>
+        void RemoveComponentState (UUID UUID, string name);
     }
 }

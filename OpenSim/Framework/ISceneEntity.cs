@@ -1027,9 +1027,6 @@ namespace OpenSim.Framework
         /// <summary>
         /// Fired when a new script is created.
         /// </summary>
-        public event NewRezScript OnRezScript;
-        public delegate void NewRezScript (ISceneChildEntity part, UUID itemID, int startParam, bool postOnRez, int stateSource);
-
         public event NewRezScripts OnRezScripts;
         public delegate void NewRezScripts (ISceneChildEntity part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, int stateSource, UUID RezzedFrom);
 
@@ -1650,27 +1647,6 @@ namespace OpenSim.Framework
                     {
                         m_log.ErrorFormat (
                             "[EVENT MANAGER]: Delegate for TriggerObjectDeGrab failed - continuing.  {0} {1}",
-                            e.ToString (), e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerRezScript (ISceneChildEntity part, UUID itemID, int startParam, bool postOnRez, int stateSource)
-        {
-            NewRezScript handlerRezScript = OnRezScript;
-            if (handlerRezScript != null)
-            {
-                foreach (NewRezScript d in handlerRezScript.GetInvocationList ())
-                {
-                    try
-                    {
-                        d (part, itemID, startParam, postOnRez, stateSource);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat (
-                            "[EVENT MANAGER]: Delegate for TriggerRezScript failed - continuing.  {0} {1}",
                             e.ToString (), e.StackTrace);
                     }
                 }

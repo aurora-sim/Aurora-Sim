@@ -723,6 +723,15 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public void RemoveComponentState (string name)
+        {
+            IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene) == null ? null : (ParentGroup == null ? m_initialScene : ParentGroup.Scene).RequestModuleInterface<IComponentManager>();
+            if (manager != null)
+            {
+                manager.RemoveComponentState (UUID, name);
+            }
+        }
+
         public void ResetComponentsToNewID(UUID oldID)
         {
             if (oldID == UUID.Zero)
@@ -2454,6 +2463,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_parentGroup.Scene.AssetService.Get(dupe.m_shape.SculptTexture.ToString(), dupe, AssetReceived);
             }
+
+            dupe.RemoveComponentState ("ScriptState");
 
             /*PrimitiveBaseShape pbs = dupe.Shape;
             if (dupe.PhysActor != null)

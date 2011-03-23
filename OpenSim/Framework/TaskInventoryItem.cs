@@ -262,7 +262,8 @@ namespace OpenSim.Framework
                 return _oldID;
             }
             set {
-                _oldID = value;
+                if(_oldID == UUID.Zero)
+                    _oldID = value;
             }
         }
 
