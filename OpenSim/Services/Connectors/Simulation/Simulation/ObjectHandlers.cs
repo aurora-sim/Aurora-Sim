@@ -138,11 +138,9 @@ namespace OpenSim.Services
             destination.RegionLocY = y;
             destination.RegionName = regionname;
 
-            string sogXmlStr = "", extraStr = "", stateXmlStr = "";
+            string sogXmlStr = "", extraStr = "";
             if (args.ContainsKey("sog") && args["sog"] != null)
                 sogXmlStr = args["sog"].AsString();
-            if (args.ContainsKey("extra") && args["extra"] != null)
-                extraStr = args["extra"].AsString();
 
             IScene s = m_SimulationService.GetScene(destination.RegionHandle);
             ISceneObject sog = null;
