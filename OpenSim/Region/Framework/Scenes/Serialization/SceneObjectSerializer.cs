@@ -765,6 +765,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         {
             //Disable this, if we are rezzing from inventory, we want to get a new ItemID for next time
             //item.OldItemID = ReadUUID (reader, "OldItemID");
+            ReadUUID (reader, "OldItemID");
         }
 
         private static void ProcessTILastOwnerID(TaskInventoryItem item, XmlTextReader reader)
