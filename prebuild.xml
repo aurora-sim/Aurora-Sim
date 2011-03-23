@@ -1656,11 +1656,13 @@
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="System.Data"/>
+      <Reference name="System.Drawing"/>
       <Reference name="System.Runtime.Remoting"/>
       <Reference name="System.Xml"/>
 
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
+      <Reference name="Aurora.Simulation.Base"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Region.CoreModules" />
       <Reference name="OpenSim.Region.Framework" />
