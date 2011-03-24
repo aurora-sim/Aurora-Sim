@@ -62,32 +62,29 @@ namespace OpenSim.Services.Connectors
 
         public bool Get(UUID userID, out UserAccount account)
         {
-            bool inCache = false;
             if (m_UUIDCache.TryGetValue(userID, out account))
             {
                 //m_log.DebugFormat("[USER CACHE]: Account {0} {1} found in cache", account.FirstName, account.LastName);
-                return inCache;
+                return true;
             }
 
-            return inCache;
+            return false;
         }
 
         public bool Get(string name, out UserAccount account)
         {
-            bool inCache = false;
             account = null;
             if (!m_NameCache.Contains(name))
-                return inCache;
+                return false;
 
             UUID uuid = UUID.Zero;
             if (m_NameCache.TryGetValue(name, out uuid))
                 if (m_UUIDCache.TryGetValue(uuid, out account))
                 {
-                    inCache = true;
-                    return inCache;
+                    return true;
                 }
 
-            return inCache;
+            return false;
         }
     }
 }
