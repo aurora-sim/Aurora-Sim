@@ -500,7 +500,7 @@ namespace Aurora.Services.DataService
                 classifiedClause = " and Category = '" + category + "'";
 
             whereClause = " Name LIKE '%" + queryText + "%'" + classifiedClause + " LIMIT " + StartQuery.ToString() + ",50 ";
-            List<string> retVal = GD.Query(whereClause, "profileclassifieds", "*");
+            List<string> retVal = GD.Query (whereClause, "userclassifieds", "*");
             if (retVal.Count == 0)
                 return Data.ToArray();
 
@@ -572,7 +572,7 @@ namespace Aurora.Services.DataService
         public Classified[] GetClassifiedsInRegion(string regionName)
         {
             List<Classified> Classifieds = new List<Classified>();
-            List<string> retVal = GD.Query("SimName", regionName, "profileclassifieds", "*");
+            List<string> retVal = GD.Query ("SimName", regionName, "userclassifieds", "*");
             
             if (retVal.Count == 0)
                 return Classifieds.ToArray();

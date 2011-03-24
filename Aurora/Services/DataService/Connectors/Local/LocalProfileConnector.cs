@@ -132,7 +132,7 @@ namespace Aurora.Services.DataService
         public void AddClassified (Classified classified)
         {
             //It might be updating, delete the old
-            GD.Delete ("userclassifieds", new string[1] { "ClassifedUUID" }, new object[1] { classified.ClassifiedUUID });
+            GD.Delete ("userclassifieds", new string[1] { "ClassifiedUUID" }, new object[1] { classified.ClassifiedUUID });
             List<object> values = new List<object>();
             values.Add(classified.Name);
             values.Add(classified.Category);
@@ -147,7 +147,7 @@ namespace Aurora.Services.DataService
         {
             List<Classified> classifieds = new List<Classified> ();
             List<string> query = GD.Query (new string[1] { "OwnerUUID" }, new object[1] { ownerID }, "userclassifieds", "*");
-            for (int i = 0; i < query.Count; i++)
+            for (int i = 0; i < query.Count; i+=6)
             {
                 Classified classified = new Classified ();
                 classified.FromOSD ((OSDMap)OSDParser.DeserializeJson (query[i+5]));
@@ -158,19 +158,17 @@ namespace Aurora.Services.DataService
 
         public Classified GetClassified (UUID queryClassifiedID)
         {
-            List<string> query = GD.Query (new string[1] { "ClassifedUUID" }, new object[1] { queryClassifiedID }, "userclassifieds", "*");
-            for (int i = 0; i < 6; i++)
-            {
-                Classified classified = new Classified ();
-                classified.FromOSD ((OSDMap)OSDParser.DeserializeJson (query[5]));
-                return classified;
-            }
-            return null;
+            List<string> query = GD.Query (new string[1] { "ClassifiedUUID" }, new object[1] { queryClassifiedID }, "userclassifieds", "*");
+            if (query.Count < 6)
+                return null;
+            Classified classified = new Classified ();
+            classified.FromOSD ((OSDMap)OSDParser.DeserializeJson (query[5]));
+            return classified;
         }
 
         public void RemoveClassified (UUID queryClassifiedID)
         {
-            GD.Delete ("userclassifieds", new string[1] { "ClassifedUUID" }, new object[1] { queryClassifiedID });
+            GD.Delete ("userclassifieds", new string[1] { "ClassifiedUUID" }, new object[1] { queryClassifiedID });
         }
     }
 }

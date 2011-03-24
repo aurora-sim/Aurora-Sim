@@ -155,6 +155,26 @@ namespace Aurora.Services.DataService
             //No user creation from sims
         }
 
+        public void AddClassified (Classified classified)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public Classified GetClassified (UUID queryClassifiedID)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public List<Classified> GetClassifieds (UUID ownerID)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public void RemoveClassified (UUID queryClassifiedID)
+        {
+            throw new NotImplementedException ();
+        }
+
         #endregion
     }
 }
