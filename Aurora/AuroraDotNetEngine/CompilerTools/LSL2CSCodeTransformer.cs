@@ -101,7 +101,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 else
                 {
                     ((GlobalFunctionDefinition)s).ReturnType = m_datatypeLSL2OpenSim[((GlobalFunctionDefinition)s).ReturnType];
-                    if (GlobalMethods != null)
+                    if (GlobalMethods != null && !GlobalMethods.ContainsKey(((GlobalFunctionDefinition)s).Name))
                     {
                         GlobalMethods.Add(((GlobalFunctionDefinition)s).Name, ((GlobalFunctionDefinition)s).ReturnType);
                         MethodArguements.Add(((GlobalFunctionDefinition)s).Name, ((GlobalFunctionDefinition)s).kids);
