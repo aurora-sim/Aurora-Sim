@@ -303,7 +303,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             m_astRoot = null;
             IsParentEnumerable = false;
             OriginalScript = "";
-            FuncCalls.Clear();
+            lock (FuncCalls)
+                FuncCalls.Clear();
             FuncCntr = false;
             IsaGlobalVar = false;
             MethodsToAdd.Clear();
@@ -2723,87 +2724,91 @@ default
             }
             else if (isEnumerable)
             {
-                if(m_isInEnumeratedDeclaration && NeedRetVal) //Got to have a retVal for do/while
+                if (m_isInEnumeratedDeclaration && NeedRetVal) //Got to have a retVal for do/while
                 {
-                     //This is for things like the do/while statement, where a function is in the while() part and can't be dumped in front of the do/while
-                     string MethodName = RandomString(10, true);
-                     string typeDefs = "";
-                     ObjectList arguements = null;
-                     if(LocalMethodArguements.TryGetValue(fc.Id, out arguements))
-                     {
-                         // print the state arguments, if any
-                         foreach (SYMBOL kid in arguements)
-                         {
-                            if(kid is ArgumentDeclarationList)
+                    //This is for things like the do/while statement, where a function is in the while() part and can't be dumped in front of the do/while
+                    string MethodName = RandomString(10, true);
+                    string typeDefs = "";
+                    ObjectList arguements = null;
+                    if (LocalMethodArguements.TryGetValue(fc.Id, out arguements))
+                    {
+                        // print the state arguments, if any
+                        foreach (SYMBOL kid in arguements)
+                        {
+                            if (kid is ArgumentDeclarationList)
                             {
                                 ArgumentDeclarationList ADL = (ArgumentDeclarationList)kid;
                                 typeDefs += (GenerateArgumentDeclarationList(ADL)) + ",";
-                             }
-                         }
-                     }
-                     if(typeDefs.Length != 0)
-                         typeDefs = typeDefs.Remove(typeDefs.Length - 1);
+                            }
+                        }
+                    }
+                    if (typeDefs.Length != 0)
+                        typeDefs = typeDefs.Remove(typeDefs.Length - 1);
 
-                     string newMethod = string.Format("private {0} {1}({2}, out bool ahwowuerogng)", rettype, MethodName, typeDefs);
-                     newMethod += (Generate("{"));
-                     newMethod += (Generate("ahwowuerogng = true;"));
-                     Mname = RandomString(10, true);
-                     newMethod += (Generate("IEnumerator " + Mname + " = "));
-                     newMethod += (Generate(String.Format("{0}(", CheckName(fc.Id)), fc));
-                     newMethod += (tempString);
-                     newMethod += (Generate(");"));
+                    string newMethod = string.Format("private {0} {1}({2}, out bool ahwowuerogng)", rettype, MethodName, typeDefs);
+                    newMethod += (Generate("{"));
+                    newMethod += (Generate("ahwowuerogng = true;"));
+                    Mname = RandomString(10, true);
+                    newMethod += (Generate("IEnumerator " + Mname + " = "));
+                    newMethod += (Generate(String.Format("{0}(", CheckName(fc.Id)), fc));
+                    newMethod += (tempString);
+                    newMethod += (Generate(");"));
 
-                     newMethod += (Generate(" try {"));
-                     newMethod += (Generate(Mname + ".MoveNext();"));
-                     newMethod += (Generate("  if(" + Mname + ".Current != null)"));
-                     newMethod += (Generate("   return (" + rettype + ")" + Mname + ".Current;"));
-                     newMethod += (Generate("  }")); //End of try
-                     newMethod += (Generate(" catch(Exception ex) "));
-                     newMethod += (Generate("  {"));
-                     newMethod += (Generate("  }")); //End of catch
-                     newMethod += (Generate("ahwowuerogng = true;"));
-                     newMethod += (Generate("return default(" + rettype + ");")); //End while
-                     newMethod += "}";
-                     MethodsToAdd.Add(newMethod);
+                    newMethod += (Generate(" try {"));
+                    newMethod += (Generate(Mname + ".MoveNext();"));
+                    newMethod += (Generate("  if(" + Mname + ".Current != null)"));
+                    newMethod += (Generate("   return (" + rettype + ")" + Mname + ".Current;"));
+                    newMethod += (Generate("  }")); //End of try
+                    newMethod += (Generate(" catch(Exception ex) "));
+                    newMethod += (Generate("  {"));
+                    newMethod += (Generate("  }")); //End of catch
+                    newMethod += (Generate("ahwowuerogng = true;"));
+                    newMethod += (Generate("return default(" + rettype + ");")); //End while
+                    newMethod += "}";
+                    MethodsToAdd.Add(newMethod);
 
-                     List<string> fCalls = new List<string>();
-                     string boolname = RandomString(10, true);
-                     fCalls.Add(Generate("bool " + boolname + " = true;"));
-                     retstr += MethodName + "(" + tempString + ", out " + boolname + ")";
-                     FuncCalls.AddRange(fCalls);
+                    List<string> fCalls = new List<string>();
+                    string boolname = RandomString(10, true);
+                    fCalls.Add(Generate("bool " + boolname + " = true;"));
+                    retstr += MethodName + "(" + tempString + ", out " + boolname + ")";
+                    lock (FuncCalls)
+                        FuncCalls.AddRange(fCalls);
                 }
                 else
                 {
-                //Function calls are added to the DumpFunc command, and will be dumped safely before the statement that occurs here, so we don't have to deal with the issues behind having { and } in this area.
-                Mname = RandomString(10, true);
-                string Exname = RandomString(10, true);
-                List<string> fCalls = new List<string>();
-                fCalls.Add(Generate("string " + Exname + " =  \"\";"));
-                fCalls.Add(Generate("IEnumerator " + Mname + " = "));
-                fCalls.Add(Generate(String.Format("{0}(", CheckName(fc.Id)), fc));
-                fCalls.Add(tempString);
-                fCalls.Add(Generate(");"));
+                    //Function calls are added to the DumpFunc command, and will be dumped safely before the statement that occurs here, so we don't have to deal with the issues behind having { and } in this area.
+                    Mname = RandomString(10, true);
+                    string Exname = RandomString(10, true);
+                    List<string> fCalls = new List<string>();
+                    fCalls.Add(Generate("string " + Exname + " =  \"\";"));
+                    fCalls.Add(Generate("IEnumerator " + Mname + " = "));
+                    fCalls.Add(Generate(String.Format("{0}(", CheckName(fc.Id)), fc));
+                    fCalls.Add(tempString);
+                    fCalls.Add(Generate(");"));
 
-                fCalls.Add(Generate("while (true) {"));
-                fCalls.Add(Generate(" try {"));
-                fCalls.Add(Generate("  if(!" + Mname + ".MoveNext())"));
-                fCalls.Add(Generate("   break;"));
-                fCalls.Add(Generate("  }")); //End of try
-                fCalls.Add(Generate(" catch(Exception ex) "));
-                fCalls.Add(Generate("  {"));
-                fCalls.Add(Generate("  " + Exname + " = ex.Message;"));
-                fCalls.Add(Generate("  }")); //End of catch
-                fCalls.Add(Generate(" if(" + Exname + " != \"\")"));
-                fCalls.Add(Generate("   yield return " + Exname + ";")); //Exceptions go first
-                fCalls.Add(Generate(" else if(" + Mname + ".Current == null || " + Mname + ".Current is DateTime)"));
-                fCalls.Add(Generate("   yield return " + Mname + ".Current;")); //Let the other things process for a bit here at the end of each enumeration
-                fCalls.Add(Generate(" else break;")); //Let the other things process for a bit here at the end of each enumeration
-                fCalls.Add(Generate(" }")); //End while
-                if (NeedRetVal && rettype != "void")
-                {
-                    retstr += " (" + rettype + ") " + Mname + ".Current";
-                }
-                FuncCalls.AddRange(fCalls);
+                    fCalls.Add(Generate("while (true) {"));
+                    fCalls.Add(Generate(" try {"));
+                    fCalls.Add(Generate("  if(!" + Mname + ".MoveNext())"));
+                    fCalls.Add(Generate("   break;"));
+                    fCalls.Add(Generate("  }")); //End of try
+                    fCalls.Add(Generate(" catch(Exception ex) "));
+                    fCalls.Add(Generate("  {"));
+                    fCalls.Add(Generate("  " + Exname + " = ex.Message;"));
+                    fCalls.Add(Generate("  }")); //End of catch
+                    fCalls.Add(Generate(" if(" + Exname + " != \"\")"));
+                    fCalls.Add(Generate("   yield return " + Exname + ";")); //Exceptions go first
+                    fCalls.Add(Generate(" else if(" + Mname + ".Current == null || " + Mname + ".Current is DateTime)"));
+                    fCalls.Add(Generate("   yield return " + Mname + ".Current;"));
+                        //Let the other things process for a bit here at the end of each enumeration
+                    fCalls.Add(Generate(" else break;"));
+                        //Let the other things process for a bit here at the end of each enumeration
+                    fCalls.Add(Generate(" }")); //End while
+                    if (NeedRetVal && rettype != "void")
+                    {
+                        retstr += " (" + rettype + ") " + Mname + ".Current";
+                    }
+                    lock (FuncCalls)
+                        FuncCalls.AddRange(fCalls);
                 }
             }
             else
@@ -3108,9 +3113,12 @@ default
             {
                 return ret;
             }
-            foreach (string s in FuncCalls)
-                ret += GenerateIndentedLine(s);
-            FuncCalls.Clear();
+            lock (FuncCalls)
+            {
+                foreach (string s in FuncCalls)
+                    ret += GenerateIndentedLine(s);
+                FuncCalls.Clear();
+            }
             return ret;
         }
         private bool FuncCallsMarc()
