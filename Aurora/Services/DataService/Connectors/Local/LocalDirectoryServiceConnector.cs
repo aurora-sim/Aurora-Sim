@@ -505,11 +505,11 @@ namespace Aurora.Services.DataService
                 return Data.ToArray();
 
             DirClassifiedReplyData replyData = null;
-            for (int i = 0; i < retVal.Count; i += 5)
+            for (int i = 0; i < retVal.Count; i += 6)
             {
                 //Pull the classified out of OSD
                 Classified classified = new Classified();
-                classified.FromOSD((OSDMap)OSDParser.DeserializeJson(retVal[i + 4]));
+                classified.FromOSD((OSDMap)OSDParser.DeserializeJson(retVal[i + 5]));
 
                 replyData = new DirClassifiedReplyData();
                 replyData.classifiedFlags = classified.ClassifiedFlags;
@@ -578,10 +578,10 @@ namespace Aurora.Services.DataService
                 return Classifieds.ToArray();
             
             Classified classified = new Classified();
-            for (int i = 0; i < retVal.Count; i += 5)
+            for (int i = 0; i < retVal.Count; i += 6)
             {
                 //Pull the classified out of OSD
-                classified.FromOSD((OSDMap)OSDParser.DeserializeJson(retVal[i + 4]));
+                classified.FromOSD((OSDMap)OSDParser.DeserializeJson(retVal[i + 5]));
                 Classifieds.Add(classified);
                 classified = new Classified();
             }

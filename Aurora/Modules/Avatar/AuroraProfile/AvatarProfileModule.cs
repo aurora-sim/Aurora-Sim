@@ -226,7 +226,7 @@ namespace Aurora.Modules
         public void ClassifiedInfoRequest(UUID queryClassifiedID, IClientAPI remoteClient)
         {
             Classified classified = ProfileFrontend.GetClassified (queryClassifiedID);
-            if (classified == null)
+            if (classified == null || classified.CreatorUUID == UUID.Zero)
                 return;
             remoteClient.SendClassifiedInfoReply(queryClassifiedID, classified.CreatorUUID, classified.CreationDate, classified.ExpirationDate, classified.Category, classified.Name, classified.Description, classified.ParcelUUID, classified.ParentEstate, classified.SnapshotUUID, classified.SimName, classified.GlobalPos, classified.ParcelName, classified.ClassifiedFlags, classified.PriceForListing);
         }
