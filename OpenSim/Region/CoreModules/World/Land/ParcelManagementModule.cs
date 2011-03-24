@@ -974,27 +974,30 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void EventManagerOnSignificantClientMovement(IClientAPI remote_client)
         {
-            IScenePresence clientAvatar = m_scene.GetScenePresence (remote_client.AgentId);
-            if (clientAvatar != null)
+            Util.FireAndForget (delegate (object o)
             {
-                ILandObject over = GetLandObject((int)clientAvatar.AbsolutePosition.X, (int)clientAvatar.AbsolutePosition.Y);
-                if (over != null)
+                IScenePresence clientAvatar = m_scene.GetScenePresence (remote_client.AgentId);
+                if (clientAvatar != null)
                 {
-                    if (!over.IsRestrictedFromLand(clientAvatar.UUID) && (!over.IsBannedFromLand(clientAvatar.UUID) || clientAvatar.AbsolutePosition.Z >= ParcelManagementModule.BAN_LINE_SAFETY_HEIGHT))
+                    ILandObject over = GetLandObject ((int)clientAvatar.AbsolutePosition.X, (int)clientAvatar.AbsolutePosition.Y);
+                    if (over != null)
                     {
-                        clientAvatar.LastKnownAllowedPosition =
-                            new Vector3(clientAvatar.AbsolutePosition.X, clientAvatar.AbsolutePosition.Y, clientAvatar.AbsolutePosition.Z);
+                        if (!over.IsRestrictedFromLand (clientAvatar.UUID) && (!over.IsBannedFromLand (clientAvatar.UUID) || clientAvatar.AbsolutePosition.Z >= ParcelManagementModule.BAN_LINE_SAFETY_HEIGHT))
+                        {
+                            clientAvatar.LastKnownAllowedPosition =
+                                new Vector3 (clientAvatar.AbsolutePosition.X, clientAvatar.AbsolutePosition.Y, clientAvatar.AbsolutePosition.Z);
+                        }
+                        else
+                        {
+                            //Kick them out
+                            Vector3 pos = GetNearestAllowedPosition (clientAvatar);
+                            clientAvatar.Teleport (pos);
+                        }
+                        CheckEnteringNewParcel (clientAvatar, false);
+                        SendOutNearestBanLine (remote_client);
                     }
-                    else
-                    {
-                        //Kick them out
-                        Vector3 pos = GetNearestAllowedPosition(clientAvatar);
-                        clientAvatar.Teleport(pos);
-                    }
-                    CheckEnteringNewParcel(clientAvatar, false);
-                    SendOutNearestBanLine(remote_client);
                 }
-            }
+            });
         }
 
         //Like handleEventManagerOnSignificantClientMovement, but for objects for parcel incoming object permissions

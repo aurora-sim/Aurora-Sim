@@ -201,7 +201,10 @@ namespace OpenSim.Services.UserAccountService
             }
 
             if (d.Length < 1)
+            {
+                m_cache.Cache (principalID, null);
                 return null;
+            }
 
             m_cache.Cache (principalID, d[0]);
             return d[0];
