@@ -587,43 +587,43 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 foreach (KeyValuePair<UUID, ReturnInfo> ret in m_returns)
                 {
-                    UUID transaction = UUID.Random();
-
-                    GridInstantMessage msg = new GridInstantMessage();
-                    msg.fromAgentID = new Guid(UUID.Zero.ToString()); // From server
-                    msg.toAgentID = new Guid(ret.Key.ToString());
-                    msg.imSessionID = new Guid(transaction.ToString());
-                    msg.timestamp = (uint)Util.UnixTimeSinceEpoch();
-                    msg.fromAgentName = "Server";
-                    msg.dialog = (byte)19; // Object msg
-                    msg.fromGroup = false;
-                    msg.offline = (byte)1;
-                    msg.ParentEstateID = m_scene.RegionInfo.EstateSettings.ParentEstateID;
-                    msg.Position = Vector3.Zero;
-                    msg.RegionID = m_scene.RegionInfo.RegionID.Guid;
-                    msg.binaryBucket = new byte[0];
-
                     if (ret.Value.reason != "")
                     {
+                        UUID transaction = UUID.Random ();
+
+                        GridInstantMessage msg = new GridInstantMessage ();
+                        msg.fromAgentID = new Guid (UUID.Zero.ToString ()); // From server
+                        msg.toAgentID = new Guid (ret.Key.ToString ());
+                        msg.imSessionID = new Guid (transaction.ToString ());
+                        msg.timestamp = (uint)Util.UnixTimeSinceEpoch ();
+                        msg.fromAgentName = "Server";
+                        msg.dialog = (byte)19; // Object msg
+                        msg.fromGroup = false;
+                        msg.offline = (byte)1;
+                        msg.ParentEstateID = m_scene.RegionInfo.EstateSettings.ParentEstateID;
+                        msg.Position = Vector3.Zero;
+                        msg.RegionID = m_scene.RegionInfo.RegionID.Guid;
+                        msg.binaryBucket = new byte[0];
+
                         if (ret.Value.count > 1)
-                            msg.message = string.Format("Your {0} objects were returned from {1} in region {2} due to {3}", ret.Value.count, ret.Value.location.ToString(), m_scene.RegionInfo.RegionName, ret.Value.reason);
+                            msg.message = string.Format ("Your {0} objects were returned from {1} in region {2} due to {3}", ret.Value.count, ret.Value.location.ToString (), m_scene.RegionInfo.RegionName, ret.Value.reason);
                         else
-                            msg.message = string.Format("Your object {0} was returned from {1} in region {2} due to {3}", ret.Value.objectName, ret.Value.location.ToString(), m_scene.RegionInfo.RegionName, ret.Value.reason);
+                            msg.message = string.Format ("Your object {0} was returned from {1} in region {2} due to {3}", ret.Value.objectName, ret.Value.location.ToString (), m_scene.RegionInfo.RegionName, ret.Value.reason);
+
+                        IMessageTransferModule tr = m_scene.RequestModuleInterface<IMessageTransferModule> ();
+                        if (tr != null)
+                            tr.SendInstantMessage (msg);
+
+                        if (ret.Value.Groups.Count > 1)
+                            m_log.InfoFormat ("[LandManagement]: Returning {0} objects due to parcel auto return.", ret.Value.Groups.Count);
+                        else
+                            m_log.Info ("[LandManagement]: Returning 1 object due to parcel auto return.");
+
                     }
-
-                    IMessageTransferModule tr = m_scene.RequestModuleInterface<IMessageTransferModule>();
-                    if (tr != null)
-                        tr.SendInstantMessage(msg);
-
-                    if (ret.Value.Groups.Count > 1)
-                        m_log.InfoFormat("[LandManagement]: Returning {0} objects due to parcel auto return.", ret.Value.Groups.Count);
-                    else
-                        m_log.Info("[LandManagement]: Returning 1 object due to parcel auto return.");
-
-                    IAsyncSceneObjectGroupDeleter async = m_scene.RequestModuleInterface<IAsyncSceneObjectGroupDeleter>();
+                    IAsyncSceneObjectGroupDeleter async = m_scene.RequestModuleInterface<IAsyncSceneObjectGroupDeleter> ();
                     if (async != null)
                     {
-                        async.DeleteToInventory(
+                        async.DeleteToInventory (
                                 DeRezAction.Return, ret.Value.Groups[0].RootChild.OwnerID, ret.Value.Groups, ret.Value.Groups[0].RootChild.OwnerID,
                                 true, true);
                     }
@@ -634,10 +634,19 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         protected void CheckPrimForTemperary ()
         {
+            HashSet<ISceneEntity> entitiesToRemove = new HashSet<ISceneEntity>();
             foreach (ISceneEntity entity in m_entitiesInAutoReturnQueue)
             {
                 if (entity.RootChild.Expires <= DateTime.Now)
-                    AddReturns (UUID.Zero, entity.Name, entity.AbsolutePosition, "", new List<ISceneEntity> () { entity });
+                {
+                    entitiesToRemove.Add (entity);
+                    //Temporary objects don't get a reason, they return quietly
+                    AddReturns (entity.OwnerID, entity.Name, entity.AbsolutePosition, "", new List<ISceneEntity> () { entity });
+                }
+            }
+            foreach (ISceneEntity entity in entitiesToRemove)
+            {
+                m_entitiesInAutoReturnQueue.Remove (entity);
             }
         }
 
@@ -671,7 +680,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                                 if ((DateTime.UtcNow - sog.RootChild.Rezzed).TotalSeconds >
                                         parcel.LandData.OtherCleanTime * 60)
                                 {
-                                    AddReturns (UUID.Zero, sog.Name, sog.AbsolutePosition, "Auto Parcel Return", new List<ISceneEntity> () { sog });
+                                    AddReturns (sog.OwnerID, sog.Name, sog.AbsolutePosition, "Auto Parcel Return", new List<ISceneEntity> () { sog });
                                 }
                             }
                         }
