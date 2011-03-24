@@ -336,7 +336,7 @@ namespace Aurora.Modules
             });
         }
 
-        private delegate void SendPacket<T>(T[] data);
+        public delegate void SendPacket<T>(T[] data);
         public void SplitPackets<T>(List<T> packets, SendPacket<T> send)
         {
             if (packets.Count == 0)
