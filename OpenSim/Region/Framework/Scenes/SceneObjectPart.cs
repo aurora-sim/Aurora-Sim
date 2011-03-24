@@ -2089,7 +2089,12 @@ namespace OpenSim.Region.Framework.Scenes
                 Flags |= flag;
 
                 if (flag == PrimFlags.TemporaryOnRez)
-                    ResetExpire();
+                    ResetExpire ();
+
+                object[] o = new object[2];
+                o[0] = this;
+                o[1] = flag;
+                m_parentGroup.Scene.AuroraEventManager.FireGenericEventHandler ("ObjectAddedFlag", o);
                 return true;
             }
             return false;
@@ -3612,6 +3617,10 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 //m_log.Debug("Removing flag: " + ((PrimFlags)flag).ToString());
                 Flags &= ~flag;
+                object[] o = new object[2];
+                o[0] = this;
+                o[1] = flag;
+                m_parentGroup.Scene.AuroraEventManager.FireGenericEventHandler ("ObjectRemovedFlag", o);
                 return true;
             }
             return false;

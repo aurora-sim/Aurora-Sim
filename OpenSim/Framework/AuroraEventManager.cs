@@ -48,6 +48,10 @@ namespace Aurora.Framework
         ///      param is the EstateSettings of the changed estate
         /// GridRegionRegistered - New Region has been registered with remote grid service
         ///      param is an object[], with o[0] a GridRegion, o[1] the OSDMap response from the server
+        /// ObjectAddedFlag - An object in the Scene has added a prim flag
+        ///      param is an object[], with o[0] ISceneChildEntity and o[1] the flag that was changed
+        /// ObjectRemovedFlag - An object in the Scene has removed a prim flag
+        ///      param is an object[], with o[0] ISceneChildEntity and o[1] the flag that was changed
         /// 
         /// </summary>
         public event OnGenericEventHandler OnGenericEvent;

@@ -881,31 +881,26 @@ namespace OpenSim.Region.CoreModules.World.Land
                 {
                     IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();
                     IPrimCounts primCounts = primCountModule.GetPrimCounts(LandData.GlobalID);
-                    foreach (SceneObjectPart child in primCounts.Objects)
+                    foreach (ISceneEntity obj in primCounts.Objects)
                     {
-                        SceneObjectGroup obj = child.ParentGroup;
                         if (obj.LocalId > 0)
                         {
                             if (request_type == ParcelManagementModule.LAND_SELECT_OBJECTS_OWNER && obj.OwnerID == LandData.OwnerID)
                             {
-                                if (!resultLocalIDs.Contains(obj.LocalId))
-                                    resultLocalIDs.Add(obj.LocalId);
+                                resultLocalIDs.Add(obj.LocalId);
                             }
                             else if (request_type == ParcelManagementModule.LAND_SELECT_OBJECTS_GROUP && obj.GroupID == LandData.GroupID && LandData.GroupID != UUID.Zero)
                             {
-                                if (!resultLocalIDs.Contains(obj.LocalId))
-                                    resultLocalIDs.Add(obj.LocalId);
+                                resultLocalIDs.Add(obj.LocalId);
                             }
                             else if (request_type == ParcelManagementModule.LAND_SELECT_OBJECTS_OTHER &&
                                      obj.OwnerID != remote_client.AgentId)
                             {
-                                if (!resultLocalIDs.Contains(obj.LocalId))
-                                    resultLocalIDs.Add(obj.LocalId);
+                                resultLocalIDs.Add(obj.LocalId);
                             }
                             else if (request_type == (int)ObjectReturnType.List && returnIDs.Contains(obj.OwnerID))
                             {
-                                if(!resultLocalIDs.Contains(obj.LocalId))
-                                    resultLocalIDs.Add(obj.LocalId);
+                                resultLocalIDs.Add(obj.LocalId);
                             }
                         }
                     }
@@ -936,20 +931,22 @@ namespace OpenSim.Region.CoreModules.World.Land
                 {
                     IPrimCounts primCounts = primCountModule.GetPrimCounts(LandData.GlobalID);
                     Dictionary<UUID, LandObjectOwners> owners = new Dictionary<UUID, LandObjectOwners>();
-                    foreach(SceneObjectPart part in primCounts.Objects)
+                    foreach (ISceneEntity grp in primCounts.Objects)
                     {
                         bool newlyAdded = false;
-                        if(!owners.ContainsKey(part.OwnerID))
+                        LandObjectOwners landObj;
+                        if(!owners.TryGetValue(grp.OwnerID, out landObj))
                         {
-                            owners.Add(part.OwnerID, new LandObjectOwners());
+                            landObj = new LandObjectOwners ();
+                            owners.Add (grp.OwnerID, landObj);
                             newlyAdded = true;
                         }
-                        LandObjectOwners landObj = owners[part.OwnerID];
-                        landObj.Count++;
+
+                        landObj.Count += grp.PrimCount;
                         //Only do all of this once
                         if (newlyAdded)
                         {
-                            if (LandData.GroupID == part.OwnerID || part.GroupID != UUID.Zero)
+                            if (LandData.GroupID == grp.OwnerID || grp.GroupID != UUID.Zero)
                                 landObj.GroupOwned = true;
                             else
                                 landObj.GroupOwned = false;
@@ -958,14 +955,14 @@ namespace OpenSim.Region.CoreModules.World.Land
                             else
                             {
                                 IAgentInfoService presenceS = m_scene.RequestModuleInterface<IAgentInfoService>();
-                                UserInfo info = presenceS.GetUserInfo(part.OwnerID.ToString());
+                                UserInfo info = presenceS.GetUserInfo(grp.OwnerID.ToString());
                                 if(info != null)
                                     landObj.Online = info.IsOnline;
                             }
-                            landObj.OwnerID = part.OwnerID;
+                            landObj.OwnerID = grp.OwnerID;
                         }
-                        if(part.Rezzed > landObj.TimeLastRezzed)
-                            landObj.TimeLastRezzed = part.Rezzed; 
+                        if(grp.RootChild.Rezzed > landObj.TimeLastRezzed)
+                            landObj.TimeLastRezzed = grp.RootChild.Rezzed; 
                     }
                     remote_client.SendLandObjectOwners(new List<LandObjectOwners>(owners.Values));
                 }
@@ -981,16 +978,14 @@ namespace OpenSim.Region.CoreModules.World.Land
             List<ISceneEntity> prims = new List<ISceneEntity> ();
             IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();
             IPrimCounts primCounts = primCountModule.GetPrimCounts(LandData.GlobalID);
-            foreach (ISceneChildEntity child in primCounts.Objects)
+            foreach (ISceneEntity obj in primCounts.Objects)
             {
-                ISceneEntity obj = child.ParentEntity;
                 if (obj.OwnerID == m_landData.OwnerID)
                 {
                     if (flags == 4 && //Scripted
                         (obj.RootChild.Flags & PrimFlags.Scripted) == PrimFlags.Scripted)
                         continue;
-                    if(!prims.Contains(obj))
-                        prims.Add(obj);
+                    prims.Add(obj);
                 }
             }
             return prims;
@@ -1097,55 +1092,51 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void DisableLandObjects(uint type, UUID[] owners, UUID[] tasks, IClientAPI remote_client)
         {
-            Dictionary<UUID, List<SceneObjectGroup>> disabled =
-                    new Dictionary<UUID, List<SceneObjectGroup>>();
+            Dictionary<UUID, List<ISceneEntity>> disabled =
+                    new Dictionary<UUID, List<ISceneEntity>> ();
 
             IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();
             IPrimCounts primCounts = primCountModule.GetPrimCounts(LandData.GlobalID);
             if (type == (uint)ObjectReturnType.Owner)
             {
-                foreach (SceneObjectPart child in primCounts.Objects)
+                foreach (ISceneEntity obj in primCounts.Objects)
                 {
-                    SceneObjectGroup obj = child.ParentGroup;
                     if (obj.OwnerID == m_landData.OwnerID)
                     {
                         if (!disabled.ContainsKey(obj.OwnerID))
                             disabled[obj.OwnerID] =
-                                    new List<SceneObjectGroup>();
-                        if (!disabled[obj.OwnerID].Contains(obj))
-                            disabled[obj.OwnerID].Add(obj);
+                                    new List<ISceneEntity> ();
+                        
+                        disabled[obj.OwnerID].Add(obj);
                     }
                 }
             }
             else if (type == (uint)ObjectReturnType.Group && m_landData.GroupID != UUID.Zero)
             {
-                foreach (SceneObjectPart child in primCounts.Objects)
+                foreach (ISceneEntity obj in primCounts.Objects)
                 {
-                    SceneObjectGroup obj = child.ParentGroup;
                     if (obj.GroupID == m_landData.GroupID)
                     {
                         if (!disabled.ContainsKey(obj.OwnerID))
                             disabled[obj.OwnerID] =
-                                    new List<SceneObjectGroup>();
-                        if (!disabled[obj.OwnerID].Contains(obj))
-                            disabled[obj.OwnerID].Add(obj);
+                                    new List<ISceneEntity> ();
+                        
+                        disabled[obj.OwnerID].Add(obj);
                     }
                 }
             }
             else if (type == (uint)ObjectReturnType.Other)
             {
-                foreach (SceneObjectPart child in primCounts.Objects)
+                foreach (ISceneEntity obj in primCounts.Objects)
                 {
-                    SceneObjectGroup obj = child.ParentGroup;
                     if (obj.OwnerID != m_landData.OwnerID &&
                         (obj.GroupID != m_landData.GroupID ||
                         m_landData.GroupID == UUID.Zero))
                     {
                         if (!disabled.ContainsKey(obj.OwnerID))
                             disabled[obj.OwnerID] =
-                                    new List<SceneObjectGroup>();
-                        if (!disabled[obj.OwnerID].Contains(obj))
-                            disabled[obj.OwnerID].Add(obj);
+                                    new List<ISceneEntity> ();
+                        disabled[obj.OwnerID].Add(obj);
                     }
                 }
             }
@@ -1153,47 +1144,43 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 List<UUID> ownerlist = new List<UUID>(owners);
 
-                foreach (SceneObjectPart child in primCounts.Objects)
+                foreach (ISceneEntity obj in primCounts.Objects)
                 {
-                    SceneObjectGroup obj = child.ParentGroup;
                     if (ownerlist.Contains(obj.OwnerID))
                     {
                         if (!disabled.ContainsKey(obj.OwnerID))
                             disabled[obj.OwnerID] =
-                                    new List<SceneObjectGroup>();
-                        if (!disabled[obj.OwnerID].Contains(obj))
-                            disabled[obj.OwnerID].Add(obj);
+                                    new List<ISceneEntity> ();
+                        disabled[obj.OwnerID].Add(obj);
                     }
                 }
             }
             else if (type == 1)
             {
                 List<UUID> Tasks = new List<UUID>(tasks);
-                foreach (SceneObjectPart child in primCounts.Objects)
+                foreach (ISceneEntity obj in primCounts.Objects)
                 {
-                    SceneObjectGroup obj = child.ParentGroup;
                     if (Tasks.Contains(obj.UUID))
                     {
                         if (!disabled.ContainsKey(obj.OwnerID))
                             disabled[obj.OwnerID] =
-                                    new List<SceneObjectGroup>();
-                        if (!disabled[obj.OwnerID].Contains(obj))
-                            disabled[obj.OwnerID].Add(obj);
+                                    new List<ISceneEntity> ();
+                        disabled[obj.OwnerID].Add(obj);
                     }
                 }
             }
 
             IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
-            foreach (List<SceneObjectGroup> ol in disabled.Values)
+            foreach (List<ISceneEntity> ol in disabled.Values)
             {
-                foreach (SceneObjectGroup group in ol)
+                foreach (ISceneEntity group in ol)
                 {
                     if (m_scene.Permissions.CanEditObject(group.UUID, remote_client.AgentId))
                     {
                         foreach (IScriptModule module in modules)
                         {
                             //Disable the entire object
-                            foreach (SceneObjectPart part in group.ChildrenList)
+                            foreach (ISceneChildEntity part in group.ChildrenEntities ())
                             {
                                 foreach (TaskInventoryItem item in part.Inventory.GetInventoryItems())
                                 {

@@ -52,7 +52,7 @@ namespace OpenSim.Region.Framework.Interfaces
         int Selected { get; }
         int Temporary { get; }
         int Total { get; }
-        List<ISceneChildEntity> Objects { get; }
+        List<ISceneEntity> Objects { get; }
         IUserPrimCounts Users { get; }
 
         Dictionary<UUID, int> GetAllUserCounts();

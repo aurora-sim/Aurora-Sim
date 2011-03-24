@@ -632,6 +632,8 @@ namespace OpenSim.Framework
         void Undo ();
 
         void Redo ();
+
+        DateTime Expires { get; set; }
     }
 
     public interface ISceneGraph

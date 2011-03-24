@@ -49,7 +49,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         public int Temporary = 0;
         public Dictionary<UUID, int> Users =
                 new Dictionary<UUID, int>();
-        public Dictionary<UUID, ISceneChildEntity> Objects = new Dictionary<UUID, ISceneChildEntity>();
+        public Dictionary<UUID, ISceneEntity> Objects = new Dictionary<UUID, ISceneEntity> ();
     }
 
     public class PrimCountModule : IPrimCountModule, INonSharedRegionModule
@@ -220,45 +220,35 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 UUID landOwner = landData.OwnerID;
 
-                foreach (ISceneChildEntity child in obj.ChildrenEntities())
-                {
-                    if (parcelCounts.Objects.ContainsKey(child.UUID))
-                    {
-                        //Well... replace it then
-                        parcelCounts.Objects[child.UUID] = child;
-                    }
-                    else
-                    {
-                        parcelCounts.Objects[child.UUID] = child;
-                        m_SimwideCounts[landOwner] += 1;
-                        if (parcelCounts.Users.ContainsKey(obj.OwnerID))
-                            parcelCounts.Users[obj.OwnerID] += 1;
-                        else
-                            parcelCounts.Users[obj.OwnerID] = 1;
+                parcelCounts.Objects[obj.UUID] = obj;
+                m_SimwideCounts[landOwner] += obj.PrimCount;
 
-                        if (landData.IsGroupOwned)
-                        {
-                            UUID GroupUUID = obj.GroupID;
-                            if (obj.OwnerID == landData.GroupID)
-                            {
-                                GroupUUID = obj.OwnerID;
-                                parcelCounts.Owner += 1;
-                            }
-                            else if (obj.GroupID == landData.GroupID)
-                                parcelCounts.Group += 1;
-                            else
-                                parcelCounts.Others += 1;
-                        }
-                        else
-                        {
-                            if (obj.OwnerID == landData.OwnerID)
-                                parcelCounts.Owner += 1;
-                            else if (obj.GroupID == landData.GroupID)
-                                parcelCounts.Group += 1;
-                            else
-                                parcelCounts.Others += 1;
-                        }
+                if (parcelCounts.Users.ContainsKey (obj.OwnerID))
+                    parcelCounts.Users[obj.OwnerID] += obj.PrimCount;
+                else
+                    parcelCounts.Users[obj.OwnerID] = obj.PrimCount;
+
+                if (landData.IsGroupOwned)
+                {
+                    UUID GroupUUID = obj.GroupID;
+                    if (obj.OwnerID == landData.GroupID)
+                    {
+                        GroupUUID = obj.OwnerID;
+                        parcelCounts.Owner += obj.PrimCount;
                     }
+                    else if (obj.GroupID == landData.GroupID)
+                        parcelCounts.Group += obj.PrimCount;
+                    else
+                        parcelCounts.Others += obj.PrimCount;
+                }
+                else
+                {
+                    if (obj.OwnerID == landData.OwnerID)
+                        parcelCounts.Owner += obj.PrimCount;
+                    else if (obj.GroupID == landData.GroupID)
+                        parcelCounts.Group += obj.PrimCount;
+                    else
+                        parcelCounts.Others += obj.PrimCount;
                 }
             }
         }
@@ -357,7 +347,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             return new Dictionary<UUID, int>();
         }
 
-        public List<ISceneChildEntity> GetParcelObjects (UUID parcelID)
+        public List<ISceneEntity> GetParcelObjects (UUID parcelID)
         {
             lock (m_TaintLock)
             {
@@ -367,10 +357,10 @@ namespace OpenSim.Region.CoreModules.World.Land
                 ParcelCounts counts;
                 if (m_ParcelCounts.TryGetValue(parcelID, out counts))
                 {
-                    return new List<ISceneChildEntity> (counts.Objects.Values);
+                    return new List<ISceneEntity> (counts.Objects.Values);
                 }
             }
-            return new List<ISceneChildEntity> ();
+            return new List<ISceneEntity> ();
         }
 
         public int GetOwnerCount(UUID parcelID)
@@ -592,7 +582,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
-        public List<ISceneChildEntity> Objects
+        public List<ISceneEntity> Objects
         {
             get { return m_Parent.GetParcelObjects(m_ParcelID); }
         }

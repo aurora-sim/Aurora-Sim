@@ -290,21 +290,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 IPrimCounts primCounts = primCountModule.GetPrimCounts(LO.LandData.GlobalID);
                 if (Parameter == 0) // Owner objects
                 {
-                    foreach (SceneObjectPart obj in primCounts.Objects)
+                    foreach (ISceneEntity obj in primCounts.Objects)
                     {
                         if (obj.OwnerID == LO.LandData.OwnerID)
                         {
                             if (!returns.ContainsKey(obj.OwnerID))
                                 returns[obj.OwnerID] =
                                         new List<ISceneEntity> ();
-                            if(!returns[obj.OwnerID].Contains(obj.ParentGroup))
-                                returns[obj.OwnerID].Add(obj.ParentGroup);
+                            
+                            returns[obj.OwnerID].Add(obj);
                         }
                     }
                 }
                 if (Parameter == 1) //Everyone elses
                 {
-                    foreach (SceneObjectPart obj in primCounts.Objects)
+                    foreach (ISceneEntity obj in primCounts.Objects)
                     {
                         if (obj.OwnerID != LO.LandData.OwnerID &&
                             (obj.GroupID != LO.LandData.GroupID ||
@@ -313,22 +313,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             if (!returns.ContainsKey(obj.OwnerID))
                                 returns[obj.OwnerID] =
                                         new List<ISceneEntity> ();
-                            if (!returns[obj.OwnerID].Contains(obj.ParentGroup))
-                                returns[obj.OwnerID].Add(obj.ParentGroup);
+                            
+                            returns[obj.OwnerID].Add(obj);
                         }
                     }
                 }
                 if (Parameter == 2) // Group
                 {
-                    foreach (SceneObjectPart obj in primCounts.Objects)
+                    foreach (ISceneEntity obj in primCounts.Objects)
                     {
                         if (obj.GroupID == LO.LandData.GroupID)
                         {
                             if (!returns.ContainsKey(obj.OwnerID))
                                 returns[obj.OwnerID] =
                                         new List<ISceneEntity> ();
-                            if (!returns[obj.OwnerID].Contains(obj.ParentGroup))
-                                returns[obj.OwnerID].Add(obj.ParentGroup);
+
+                            returns[obj.OwnerID].Add(obj);
                         }
                     }
                 }
@@ -356,15 +356,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 IPrimCountModule primCountModule = World.RequestModuleInterface<IPrimCountModule>();
                 IPrimCounts primCounts = primCountModule.GetPrimCounts(LO.LandData.GlobalID);
-                foreach (SceneObjectPart obj in primCounts.Objects)
+                foreach (ISceneEntity obj in primCounts.Objects)
                 {
                     if (obj.OwnerID == new UUID(userID.m_string))
                     {
                         if (!returns.ContainsKey(obj.OwnerID))
                             returns[obj.OwnerID] =
                                     new List<ISceneEntity> ();
-                        if (!returns[obj.OwnerID].Contains(obj.ParentGroup))
-                            returns[obj.OwnerID].Add(obj.ParentGroup);
+
+                        returns[obj.OwnerID].Add(obj);
                     }
                 }
 
