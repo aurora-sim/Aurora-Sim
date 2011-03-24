@@ -38,6 +38,7 @@ using OpenMetaverse;
 using log4net;
 using Aurora.Framework;
 using Aurora.Simulation.Base;
+using OpenSim.Services.Connectors;
 
 namespace OpenSim.Services.UserAccountService
 {
@@ -49,6 +50,7 @@ namespace OpenSim.Services.UserAccountService
         protected IAuthenticationService m_AuthenticationService;
         protected IInventoryService m_InventoryService;
         protected IUserAccountData m_Database = null;
+        protected UserAccountCache m_cache = new UserAccountCache ();
 
         public virtual string Name
         {
@@ -107,6 +109,10 @@ namespace OpenSim.Services.UserAccountService
 
             UserAccount[] d;
 
+            UserAccount account;
+            if (m_cache.Get (firstName + " " + lastName, out account))
+                return account;
+
             if (scopeID != UUID.Zero)
             {
                 d = m_Database.Get(
@@ -129,12 +135,17 @@ namespace OpenSim.Services.UserAccountService
             if (d.Length < 1)
                 return null;
 
+            m_cache.Cache (d[0].PrincipalID, d[0]);
             return d[0];
         }
 
         public UserAccount GetUserAccount(UUID scopeID, string name)
         {
             UserAccount[] d;
+
+            UserAccount account;
+            if (m_cache.Get (name, out account))
+                return account;
 
             if (scopeID != UUID.Zero)
             {
@@ -158,12 +169,17 @@ namespace OpenSim.Services.UserAccountService
                 return null;
             }
 
+            m_cache.Cache (d[0].PrincipalID, d[0]);
             return d[0];
         }
 
         public UserAccount GetUserAccount(UUID scopeID, UUID principalID)
         {
             UserAccount[] d;
+
+            UserAccount account;
+            if (m_cache.Get (principalID, out account))
+                return account;
 
             if (scopeID != UUID.Zero)
             {
@@ -187,6 +203,7 @@ namespace OpenSim.Services.UserAccountService
             if (d.Length < 1)
                 return null;
 
+            m_cache.Cache (principalID, d[0]);
             return d[0];
         }
 
