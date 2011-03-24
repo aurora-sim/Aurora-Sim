@@ -45,57 +45,22 @@ namespace Aurora.Services.DataService
 
         #region IProfileConnector Members
 
-        public IUserProfileInfo GetUserProfile(UUID PrincipalID)
+        public IUserProfileInfo GetUserProfile (UUID PrincipalID)
         {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
-
-            sendData["PRINCIPALID"] = PrincipalID.ToString();
-            sendData["METHOD"] = "getprofile";
-
-            string reqString = WebUtils.BuildXmlResponse(sendData);
-
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(), "RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (PrincipalID.ToString (), "RemoteServerURI");
+                foreach (string url in serverURIs)
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                        {
-                            if (!replyData.ContainsKey("result"))
-                                return null;
-
-                            IUserProfileInfo profile = null;
-                            foreach (object f in replyData.Values)
-                            {
-                                if (f is Dictionary<string, object>)
-                                {
-                                    profile = new IUserProfileInfo();
-                                    profile.FromKVP((Dictionary<string, object>)f);
-                                }
-                                else
-                                    m_log.DebugFormat("[AuroraRemoteProfileConnector]: GetProfile {0} received invalid response type {1}",
-                                        PrincipalID, f.GetType());
-                            }
-                            // Success
-                            return profile;
-                        }
-
-                        else
-                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: GetProfile {0} received null response",
-                                PrincipalID);
-                    }
+                    OSDMap map = new OSDMap();
+                    map["Method"] = "getprofile";
+                    map["PrincipalID"] = PrincipalID;
+                    OSDMap response = WebUtils.PostToService (url + "osd", map);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat ("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.ToString ());
             }
 
             return null;
@@ -112,34 +77,13 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(Profile.PrincipalID.ToString(), "RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (Profile.PrincipalID.ToString (), "RemoteServerURI");
+                foreach (string url in serverURIs)
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                        {
-                            if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
-                            {
-                                m_log.DebugFormat("[AuroraRemoteProfileConnector]: UpdateProfile {0} received null response",
-                                    Profile.PrincipalID);
-                                return false;
-                            }
-                        }
-
-                        else
-                        {
-                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: UpdateProfile {0} received null response",
-                                Profile.PrincipalID);
-                            return false;
-                        }
-
-                    }
+                    OSDMap map = new OSDMap ();
+                    map["Method"] = "updateprofile";
+                    map["Profile"] = Profile.ToOSD();
+                    OSDMap response = WebUtils.PostToService (url + "osd", map);
                 }
                 return true;
             }
@@ -174,11 +118,6 @@ namespace Aurora.Services.DataService
         {
             throw new NotImplementedException ();
         }
-
-        #endregion
-
-        #region IProfileConnector Members
-
 
         public void AddPick (ProfilePickInfo pick)
         {

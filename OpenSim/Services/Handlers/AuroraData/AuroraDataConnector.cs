@@ -51,7 +51,8 @@ namespace OpenSim.Services
                 IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
                 m_port = server.Port;
 
-                server.AddStreamHandler(new AuroraDataServerPostHandler(url, 0, m_registry));
+                server.AddStreamHandler (new AuroraDataServerPostHandler (url, 0, m_registry));
+                server.AddStreamHandler (new AuroraDataServerPostOSDHandler (url + "osd", 0, m_registry));
             }
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
@@ -78,19 +79,21 @@ namespace OpenSim.Services
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
             m_port = server.Port;
-            
-            IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService>();
-            server.AddStreamHandler(new AuroraDataServerPostHandler(url, RegionHandle, m_registry));
+
+            IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService> ();
+            server.AddStreamHandler (new AuroraDataServerPostHandler (url, RegionHandle, m_registry));
+            server.AddStreamHandler (new AuroraDataServerPostOSDHandler (url + "osd", RegionHandle, m_registry));
         }
 
         public string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
             m_port = server.Port;
-            string url = "/auroradata" + UUID.Random();
+            string url = "/auroradata" + UUID.Random ();
 
-            IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService>();
-            server.AddStreamHandler(new AuroraDataServerPostHandler(url, RegionHandle, m_registry));
+            IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService> ();
+            server.AddStreamHandler (new AuroraDataServerPostHandler (url, RegionHandle, m_registry));
+            server.AddStreamHandler (new AuroraDataServerPostOSDHandler (url + "osd", RegionHandle, m_registry));
 
             return url;
         }

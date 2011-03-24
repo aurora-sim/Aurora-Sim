@@ -25,7 +25,6 @@ namespace OpenSim.Services
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private AgentInfoHandler AgentHandler = new AgentInfoHandler();
         private AssetHandler AssetHandler = new AssetHandler();
-        private ProfileInfoHandler ProfileHandler = new ProfileInfoHandler();
         private TelehubInfoHandler TelehubHandler = new TelehubInfoHandler();
         private OfflineMessagesInfoHandler OfflineMessagesHandler = new OfflineMessagesInfoHandler();
         private EstateInfoHandler EstateHandler = new EstateInfoHandler();
@@ -72,18 +71,6 @@ namespace OpenSim.Services
                             m_registry.RequestModuleInterface<IGridRegistrationService>();
                 switch (method)
                 {
-                    #region Profile
-                    case "getprofile":
-                        if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.None))
-                                return FailureResult();
-                        return ProfileHandler.GetProfile(request);
-                    case "updateprofile":
-                        if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.High))
-                                return FailureResult();
-                        return ProfileHandler.UpdateProfile(request);
-                    #endregion
                     #region Agents
                     case "getagent":
                         if (urlModule != null)
@@ -1915,100 +1902,6 @@ namespace OpenSim.Services
 
             return retVal;
 
-        }
-    }
-
-    public class ProfileInfoHandler
-    {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        IProfileConnector ProfileConnector;
-        public ProfileInfoHandler()
-        {
-            ProfileConnector = DataManager.RequestPlugin<IProfileConnector>("IProfileConnectorLocal");
-        }
-
-        public byte[] GetProfile(Dictionary<string, object> request)
-        {
-            UUID principalID = UUID.Zero;
-            if (request.ContainsKey("PRINCIPALID"))
-                UUID.TryParse(request["PRINCIPALID"].ToString(), out principalID);
-            else
-                m_log.WarnFormat("[AuroraDataServerPostHandler]: no principalID in request to get profile");
-
-            IUserProfileInfo UserProfile = ProfileConnector.GetUserProfile(principalID);
-            Dictionary<string, object> result = new Dictionary<string, object>();
-            if (UserProfile == null)
-                result["result"] = "null";
-            else
-            {
-                result["result"] = UserProfile.ToKeyValuePairs();
-            }
-             
-            string xmlString = WebUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding();
-            return encoding.GetBytes(xmlString);
-        }
-
-        public byte[] UpdateProfile(Dictionary<string, object> request)
-        {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-            
-            UUID principalID = UUID.Zero;
-            if (request.ContainsKey("PRINCIPALID"))
-                UUID.TryParse(request["PRINCIPALID"].ToString(), out principalID);
-            else
-            {
-                m_log.WarnFormat("[AuroraDataServerPostHandler]: no principalID in request to get profile");
-                result["result"] = "null";
-                string FailedxmlString = WebUtils.BuildXmlResponse(result);
-                m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", FailedxmlString);
-                UTF8Encoding Failedencoding = new UTF8Encoding();
-                return Failedencoding.GetBytes(FailedxmlString);
-            }
-
-            IUserProfileInfo UserProfile = new IUserProfileInfo();
-            UserProfile.FromKVP(request);
-            ProfileConnector.UpdateUserProfile(UserProfile);
-            result["result"] = "Successful";
-
-            string xmlString = WebUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding();
-            return encoding.GetBytes(xmlString);
-        }
-
-        private byte[] SuccessResult()
-        {
-            XmlDocument doc = new XmlDocument();
-
-            XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
-
-            doc.AppendChild(xmlnode);
-
-            XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
-
-            doc.AppendChild(rootElement);
-
-            XmlElement result = doc.CreateElement("", "Result", "");
-            result.AppendChild(doc.CreateTextNode("Success"));
-
-            rootElement.AppendChild(result);
-
-            return DocToBytes(doc);
-        }
-
-        private byte[] DocToBytes(XmlDocument doc)
-        {
-            MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, null);
-            xw.Formatting = Formatting.Indented;
-            doc.WriteTo(xw);
-            xw.Flush();
-
-            return ms.ToArray();
         }
     }
 
