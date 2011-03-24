@@ -587,51 +587,5 @@ namespace Aurora.Services.DataService
             }
             return Classifieds.ToArray();
         }
-
-        /// <summary>
-        /// Add classifieds to the search database
-        /// LOCAL Only, called by the profile service
-        /// </summary>
-        /// <param name="dictionary">objects of the dictionary are OSDMaps made from Classified</param>
-        public void AddClassifieds(OSDMap map)
-        {
-            //Add a dictionary of classifieds
-            foreach (OSD o in map.Values)
-            {
-                //Pull out the OSD map and make it into a classified
-                OSDMap classifiedmap = (OSDMap)o;
-                Classified c = new Classified();
-                c.FromOSD(classifiedmap);
-                List<object> Values = new List<object>();
-                Values.Add(c.Name);
-                Values.Add(c.Category);
-                Values.Add(c.SimName);
-                Values.Add(c.ClassifiedUUID);
-                Values.Add(OSDParser.SerializeJsonString(o));
-                GD.Insert("profileclassifieds", Values.ToArray());
-            }
-        }
-
-        /// <summary>
-        /// Remove classifieds from the search database
-        /// LOCAL Only, called by the profile service
-        /// </summary>
-        /// <param name="dictionary">objects of the dictionary are OSDMaps made from Classified</param>
-        public void RemoveClassifieds(OSDMap map)
-        {
-            //Remove all the UUIDs in the given dictionary from search
-            foreach (OSD o in map.Values)
-            {
-                //Pull out the OSDMaps
-                OSDMap classifiedmap = (OSDMap)o;
-                Classified c = new Classified();
-                c.FromOSD(classifiedmap);
-                List<string> Keys = new List<string>();
-                Keys.Add("ClassifiedUUID");
-                List<object> Values = new List<object>();
-                Values.Add(c.ClassifiedUUID);
-                GD.Delete("profileclassifieds", Keys.ToArray(), Values.ToArray());
-            }
-        }
     }
 }

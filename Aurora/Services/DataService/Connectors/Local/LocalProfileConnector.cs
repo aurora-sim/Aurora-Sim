@@ -107,17 +107,6 @@ namespace Aurora.Services.DataService
             //Update cache
             UserProfilesCache[Profile.PrincipalID] = Profile;
 
-            IUserProfileInfo UPI = GetUserProfile(Profile.PrincipalID);
-            if (UPI != null)
-            {
-                IDirectoryServiceConnector dirServiceConnector = DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
-                if (dirServiceConnector != null)
-                {
-                    dirServiceConnector.RemoveClassifieds(UPI.Classifieds);
-                    dirServiceConnector.AddClassifieds(Profile.Classifieds);
-                }
-            }
-
             return GD.Update("userdata", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
 		}
 
@@ -139,5 +128,49 @@ namespace Aurora.Services.DataService
 			
             GD.Insert("userdata", values.ToArray());
 		}
+
+        public void AddClassified (Classified classified)
+        {
+            //It might be updating, delete the old
+            GD.Delete ("userclassifieds", new string[1] { "ClassifedUUID" }, new object[1] { classified.ClassifiedUUID });
+            List<object> values = new List<object>();
+            values.Add(classified.Name);
+            values.Add(classified.Category);
+            values.Add(classified.SimName);
+            values.Add(classified.CreatorUUID);
+            values.Add(classified.ClassifiedUUID);
+            values.Add(OSDParser.SerializeJsonString(classified.ToOSD()));
+            GD.Insert("userclassifieds", values.ToArray());
+        }
+
+        public List<Classified> GetClassifieds (UUID ownerID)
+        {
+            List<Classified> classifieds = new List<Classified> ();
+            List<string> query = GD.Query (new string[1] { "OwnerUUID" }, new object[1] { ownerID }, "userclassifieds", "*");
+            for (int i = 0; i < query.Count; i++)
+            {
+                Classified classified = new Classified ();
+                classified.FromOSD ((OSDMap)OSDParser.DeserializeJson (query[i+5]));
+                classifieds.Add (classified);
+            }
+            return classifieds;
+        }
+
+        public Classified GetClassified (UUID queryClassifiedID)
+        {
+            List<string> query = GD.Query (new string[1] { "ClassifedUUID" }, new object[1] { queryClassifiedID }, "userclassifieds", "*");
+            for (int i = 0; i < 6; i++)
+            {
+                Classified classified = new Classified ();
+                classified.FromOSD ((OSDMap)OSDParser.DeserializeJson (query[5]));
+                return classified;
+            }
+            return null;
+        }
+
+        public void RemoveClassified (UUID queryClassifiedID)
+        {
+            GD.Delete ("userclassifieds", new string[1] { "ClassifedUUID" }, new object[1] { queryClassifiedID });
+        }
     }
 }

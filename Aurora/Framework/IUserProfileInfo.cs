@@ -214,11 +214,6 @@ namespace Aurora.Framework
         /// </summary>
         public OSDMap Picks = new OSDMap();
 
-        /// <summary>
-        /// All the classifieds of the user
-        /// </summary>
-        public OSDMap Classifieds = new OSDMap();
-
         public enum ProfileFlags : int
         {
             NoPaymentInfoOnFile = 2,
@@ -273,7 +268,6 @@ namespace Aurora.Framework
                 map.Add("MembershipGroup", OSD.FromString(MembershipGroup));
             }
 
-            map.Add("Classifieds", OSD.FromString(OSDParser.SerializeJsonString(Classifieds)));
             map.Add("Picks", OSD.FromString(OSDParser.SerializeJsonString(Picks)));
             map.Add("Notes", OSD.FromString(OSDParser.SerializeJsonString(Notes)));
             
@@ -294,15 +288,6 @@ namespace Aurora.Framework
             Interests.CanDoText = map["CanDoText"].AsString();
             Interests.Languages = map["Languages"].AsString();
             //End interests
-
-            try
-            {
-                if (map.ContainsKey("Classifieds"))
-                    Classifieds = (OSDMap)OSDParser.DeserializeJson(map["Classifieds"].AsString());
-            }
-            catch
-            {
-            }
 
             try
             {

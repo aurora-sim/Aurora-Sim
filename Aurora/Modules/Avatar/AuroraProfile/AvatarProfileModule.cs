@@ -212,17 +212,12 @@ namespace Aurora.Modules
                 return;
 
             IClientAPI remoteClient = (IClientAPI)sender;
-            Dictionary<UUID, string> classifieds = new Dictionary<UUID, string>();
             UUID requestedUUID = new UUID(args[0]);
 
-            IUserProfileInfo profile = ProfileFrontend.GetUserProfile(requestedUUID);
-            if (profile == null)
-                return;
-            foreach (object classified in profile.Classifieds.Values)
+            Dictionary<UUID, string> classifieds = new Dictionary<UUID, string> ();
+            foreach (Classified classified in ProfileFrontend.GetClassifieds (requestedUUID))
             {
-                Classified Classified = new Classified();
-                Classified.FromOSD((OSDMap)classified);
-                classifieds.Add(Classified.ClassifiedUUID, Classified.Name);
+                classifieds.Add (classified.ClassifiedUUID, classified.Name);
             }
 
             remoteClient.SendAvatarClassifiedReply(requestedUUID, classifieds);        
@@ -230,27 +225,16 @@ namespace Aurora.Modules
 
         public void ClassifiedInfoRequest(UUID queryClassifiedID, IClientAPI remoteClient)
         {
-            IUserProfileInfo info = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
-            if (info == null)
+            Classified classified = ProfileFrontend.GetClassified (queryClassifiedID);
+            if (classified == null)
                 return;
-            if (info.Classifieds.ContainsKey(queryClassifiedID.ToString()))
-            {
-                Classified classified = new Classified();
-                classified.FromOSD((OSDMap)info.Classifieds[queryClassifiedID.ToString()]);
-                remoteClient.SendClassifiedInfoReply(queryClassifiedID, classified.CreatorUUID, classified.CreationDate, classified.ExpirationDate, classified.Category, classified.Name, classified.Description, classified.ParcelUUID, classified.ParentEstate, classified.SnapshotUUID, classified.SimName, classified.GlobalPos, classified.ParcelName, classified.ClassifiedFlags, classified.PriceForListing);
-            }
+            remoteClient.SendClassifiedInfoReply(queryClassifiedID, classified.CreatorUUID, classified.CreationDate, classified.ExpirationDate, classified.Category, classified.Name, classified.Description, classified.ParcelUUID, classified.ParentEstate, classified.SnapshotUUID, classified.SimName, classified.GlobalPos, classified.ParcelName, classified.ClassifiedFlags, classified.PriceForListing);
         }
         
         public void ClassifiedInfoUpdate(UUID queryclassifiedID, uint queryCategory, string queryName, string queryDescription, UUID queryParcelID,
                                          uint queryParentEstate, UUID querySnapshotID, Vector3 queryGlobalPos, byte queryclassifiedFlags,
                                          int queryclassifiedPrice, IClientAPI remoteClient)
         {
-            //Security check
-            IUserProfileInfo info = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
-
-            if (info == null)
-                return;
-
             IScenePresence p = GetRegionUserIsIn(remoteClient.AgentId).GetScenePresence(remoteClient.AgentId);
 
             if(p == null)
@@ -264,16 +248,6 @@ namespace Aurora.Modules
                     remoteClient.SendAlertMessage("You do not have enough money to complete this upload.");
                     return;
                 }
-            }
-
-            if (info.Classifieds.ContainsKey(queryclassifiedID.ToString()))
-            {
-                Classified oldClassified = new Classified();
-                oldClassified.FromOSD((OSDMap)info.Classifieds[queryclassifiedID.ToString()]);
-                if (oldClassified.CreatorUUID != remoteClient.AgentId)
-                    return;
-
-                info.Classifieds.Remove(queryclassifiedID.ToString());
             }
 
             UUID creatorUUID = remoteClient.AgentId;
@@ -322,45 +296,19 @@ namespace Aurora.Modules
             classified.ClassifiedFlags = classifiedFlags;
             classified.PriceForListing = classifiedPrice;
 
-            info.Classifieds.Add(classified.ClassifiedUUID.ToString(), classified.ToOSD());
-            ProfileFrontend.UpdateUserProfile(info);
+            ProfileFrontend.AddClassified (classified);
         }
         
         public void ClassifiedDelete(UUID queryClassifiedID, IClientAPI remoteClient)
         {
-            //Security check
-            IUserProfileInfo info = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
-
-            if (info == null)
-                return;
-            if (info.Classifieds.ContainsKey(queryClassifiedID.ToString()))
-            {
-                Classified oldClassified = new Classified();
-                oldClassified.FromOSD((OSDMap)info.Classifieds[queryClassifiedID.ToString()]);
-                if (oldClassified.CreatorUUID != remoteClient.AgentId)
-                    return;
-
-                info.Classifieds.Remove(queryClassifiedID.ToString());
-                ProfileFrontend.UpdateUserProfile(info);
-            }
+            ProfileFrontend.RemoveClassified (queryClassifiedID);
         }
         
         public void GodClassifiedDelete(UUID queryClassifiedID, IClientAPI remoteClient)
         {
             if (GetRegionUserIsIn(remoteClient.AgentId).Permissions.IsGod(remoteClient.AgentId))
             {
-                IUserProfileInfo info = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
-
-                if (info == null)
-                    return;
-                if (info.Classifieds.ContainsKey(queryClassifiedID.ToString()))
-                {
-                    Classified oldClassified = new Classified();
-                    oldClassified.FromOSD((OSDMap)info.Classifieds[queryClassifiedID.ToString()]);
-
-                    info.Classifieds.Remove(queryClassifiedID.ToString());
-                    ProfileFrontend.UpdateUserProfile(info);
-                }
+                ProfileFrontend.RemoveClassified (queryClassifiedID);
             }
         }
         

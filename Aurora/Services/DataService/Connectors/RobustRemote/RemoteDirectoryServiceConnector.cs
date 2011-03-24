@@ -478,15 +478,5 @@ namespace Aurora.Services.DataService
             }
             return Classifieds.ToArray();
         }
-
-        public void AddClassifieds(OSDMap map)
-        {
-            //Not able to be done remotely
-        }
-
-        public void RemoveClassifieds(OSDMap map)
-        {
-            //Not able to be done remotely
-        }
     }
 }

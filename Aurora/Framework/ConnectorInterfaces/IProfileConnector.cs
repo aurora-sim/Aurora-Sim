@@ -30,5 +30,10 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="UUID"></param>
 		void CreateNewProfile(UUID UUID);
+
+        void AddClassified (Classified classified);
+        Classified GetClassified (UUID queryClassifiedID);
+        List<Classified> GetClassifieds (UUID ownerID);
+        void RemoveClassified (UUID queryClassifiedID);
     }
 }

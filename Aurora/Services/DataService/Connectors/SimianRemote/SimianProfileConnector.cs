@@ -18,7 +18,7 @@ using Aurora.Simulation.Base;
 
 namespace Aurora.Services.DataService
 {
-    public class SimianProfileConnector : IProfileConnector
+    /*public class SimianProfileConnector : IProfileConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -124,5 +124,5 @@ namespace Aurora.Services.DataService
         }
 
         #endregion
-    }
+    }*/
 }

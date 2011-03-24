@@ -94,19 +94,5 @@ namespace Aurora.Framework
         /// <param name="regionName"></param>
         /// <returns></returns>
 		Classified[] GetClassifiedsInRegion(string regionName);
-
-        /// <summary>
-        /// Add classifieds to the search database
-        /// LOCAL Only, called by the profile service
-        /// </summary>
-        /// <param name="dictionary">OSDMaps made from Classified</param>
-        void AddClassifieds(OSDMap map);
-
-        /// <summary>
-        /// Remove classifieds from the search database
-        /// LOCAL Only, called by the profile service
-        /// </summary>
-        /// <param name="dictionary">OSDMaps made from Classified</param>
-        void RemoveClassifieds(OSDMap map);
     }
 }
