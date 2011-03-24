@@ -1065,9 +1065,10 @@ namespace OpenSim.Framework
                             result = null;
                         }
                     }
-                    catch
+                    catch(Exception ex)
                     {
                         //Eat the exception and go on
+                        Output ("[Console]: Failed to execute command: " + ex.ToString ());
                         action = null;
                         result = null;
                     }

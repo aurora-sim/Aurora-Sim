@@ -1651,7 +1651,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 int x, y;
                 for (x = 0; x < tmodule.m_channel.Width; x++)
                     for (y = 0; y < tmodule.m_channel.Height; y++)
-                        tmodule.m_channel[x, y] *= float.Parse(cmd[0]);
+                        tmodule.m_channel[x, y] *= float.Parse(cmd[2]);
                 tmodule.CheckForTerrainUpdates();
             }
         }
