@@ -198,7 +198,7 @@ namespace Aurora.Services.DataService
         {
             List<ProfilePickInfo> picks = new List<ProfilePickInfo> ();
             List<string> query = GD.Query (new string[1] { "OwnerUUID" }, new object[1] { ownerID }, "userpicks", "*");
-            for (int i = 0; i < query.Count; i+=6)
+            for (int i = 0; i < query.Count; i+=5)
             {
                 ProfilePickInfo pick = new ProfilePickInfo ();
                 pick.FromOSD ((OSDMap)OSDParser.DeserializeJson (query[i+4]));

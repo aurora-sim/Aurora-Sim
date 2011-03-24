@@ -56,6 +56,13 @@ namespace Aurora.Services.DataService
                     map["Method"] = "getprofile";
                     map["PrincipalID"] = PrincipalID;
                     OSDMap response = WebUtils.PostToService (url + "osd", map);
+                    if (response["_Result"].Type == OSDType.Map)
+                    {
+                        OSDMap responsemap = (OSDMap)response["_Result"];
+                        IUserProfileInfo info = new IUserProfileInfo ();
+                        info.FromOSD (responsemap);
+                        return info;
+                    }
                 }
             }
             catch (Exception e)
@@ -68,13 +75,6 @@ namespace Aurora.Services.DataService
 
         public bool UpdateUserProfile(IUserProfileInfo Profile)
         {
-            Dictionary<string, object> sendData = Profile.ToKeyValuePairs();
-
-            sendData["PRINCIPALID"] = Profile.PrincipalID.ToString();
-            sendData["METHOD"] = "updateprofile";
-
-            string reqString = WebUtils.BuildXmlResponse(sendData);
-
             try
             {
                 List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (Profile.PrincipalID.ToString (), "RemoteServerURI");
@@ -101,42 +101,206 @@ namespace Aurora.Services.DataService
 
         public void AddClassified (Classified classified)
         {
-            throw new NotImplementedException ();
+            try
+            {
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (classified.CreatorUUID.ToString (), "RemoteServerURI");
+                foreach (string url in serverURIs)
+                {
+                    OSDMap map = new OSDMap ();
+                    map["Method"] = "addclassified";
+                    map["Classified"] = classified.ToOSD ();
+                    OSDMap response = WebUtils.PostToService (url + "osd", map);
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat ("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.ToString ());
+            }
         }
 
         public Classified GetClassified (UUID queryClassifiedID)
         {
-            throw new NotImplementedException ();
+            try
+            {
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf ("RemoteServerURI");
+                foreach (string url in serverURIs)
+                {
+                    OSDMap map = new OSDMap ();
+                    map["Method"] = "getclassified";
+                    map["ClassifiedUUID"] = queryClassifiedID;
+                    OSDMap response = WebUtils.PostToService (url + "osd", map);
+                    if (response["_Result"].Type == OSDType.Map)
+                    {
+                        OSDMap responsemap = (OSDMap)response["_Result"];
+                        Classified info = new Classified ();
+                        info.FromOSD (responsemap);
+                        return info;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat ("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.ToString ());
+            }
+            return null;
         }
 
         public List<Classified> GetClassifieds (UUID ownerID)
         {
-            throw new NotImplementedException ();
+            try
+            {
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (ownerID.ToString (), "RemoteServerURI");
+                foreach (string url in serverURIs)
+                {
+                    OSDMap map = new OSDMap ();
+                    map["Method"] = "getclassifieds";
+                    map["PrincipalID"] = ownerID;
+                    OSDMap response = WebUtils.PostToService (url + "osd", map);
+                    if (response["_Result"].Type == OSDType.Map)
+                    {
+                        OSDMap responsemap = (OSDMap)response["_Result"];
+                        if (responsemap.ContainsKey ("Result"))
+                        {
+                            List<Classified> list = new List<Classified> ();
+                            OSDArray picks = (OSDArray)responsemap["Result"];
+                            foreach (OSD o in picks)
+                            {
+                                Classified info = new Classified ();
+                                info.FromOSD ((OSDMap)o);
+                                list.Add (info);
+                            }
+                            return list;
+                        }
+                        return new List<Classified> ();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat ("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.ToString ());
+            }
+            return null;
         }
 
         public void RemoveClassified (UUID queryClassifiedID)
         {
-            throw new NotImplementedException ();
+            try
+            {
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf ("RemoteServerURI");
+                foreach (string url in serverURIs)
+                {
+                    OSDMap map = new OSDMap ();
+                    map["Method"] = "removeclassified";
+                    map["ClassifiedUUID"] = queryClassifiedID;
+                    OSDMap response = WebUtils.PostToService (url + "osd", map);
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat ("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.ToString ());
+            }
         }
 
         public void AddPick (ProfilePickInfo pick)
         {
-            throw new NotImplementedException ();
+            try
+            {
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (pick.CreatorUUID.ToString (), "RemoteServerURI");
+                foreach (string url in serverURIs)
+                {
+                    OSDMap map = new OSDMap ();
+                    map["Method"] = "addpick";
+                    map["Pick"] = pick.ToOSD ();
+                    OSDMap response = WebUtils.PostToService (url + "osd", map);
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat ("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.ToString ());
+            }
         }
 
         public ProfilePickInfo GetPick (UUID queryPickID)
         {
-            throw new NotImplementedException ();
+            try
+            {
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf ("RemoteServerURI");
+                foreach (string url in serverURIs)
+                {
+                    OSDMap map = new OSDMap ();
+                    map["Method"] = "getpick";
+                    map["PickUUID"] = queryPickID;
+                    OSDMap response = WebUtils.PostToService (url + "osd", map);
+                    if (response["_Result"].Type == OSDType.Map)
+                    {
+                        OSDMap responsemap = (OSDMap)response["_Result"];
+                        ProfilePickInfo info = new ProfilePickInfo ();
+                        info.FromOSD (responsemap);
+                        return info;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat ("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.ToString ());
+            }
+            return null;
         }
 
         public List<ProfilePickInfo> GetPicks (UUID ownerID)
         {
-            throw new NotImplementedException ();
+            try
+            {
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (ownerID.ToString (), "RemoteServerURI");
+                foreach (string url in serverURIs)
+                {
+                    OSDMap map = new OSDMap ();
+                    map["Method"] = "getpicks";
+                    map["PrincipalID"] = ownerID;
+                    OSDMap response = WebUtils.PostToService (url + "osd", map);
+                    if (response["_Result"].Type == OSDType.Map)
+                    {
+                        OSDMap responsemap = (OSDMap)response["_Result"];
+                        if (responsemap.ContainsKey ("Result"))
+                        {
+                            List<ProfilePickInfo> list = new List<ProfilePickInfo> ();
+                            OSDArray picks = (OSDArray)responsemap["Result"];
+                            foreach (OSD o in picks)
+                            {
+                                ProfilePickInfo info = new ProfilePickInfo ();
+                                info.FromOSD ((OSDMap)o);
+                                list.Add (info);
+                            }
+                            return list;
+                        }
+                        return new List<ProfilePickInfo>();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat ("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.ToString ());
+            }
+            return null;
         }
 
         public void RemovePick (UUID queryPickID)
         {
-            throw new NotImplementedException ();
+            try
+            {
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf ("RemoteServerURI");
+                foreach (string url in serverURIs)
+                {
+                    OSDMap map = new OSDMap ();
+                    map["Method"] = "removepick";
+                    map["PickUUID"] = queryPickID;
+                    OSDMap response = WebUtils.PostToService (url + "osd", map);
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat ("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.ToString ());
+            }
         }
 
         #endregion

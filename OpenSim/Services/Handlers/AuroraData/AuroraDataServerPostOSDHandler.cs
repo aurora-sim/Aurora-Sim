@@ -63,6 +63,46 @@ namespace OpenSim.Services
                             if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.High))
                                 return FailureResult ();
                         return ProfileHandler.UpdateProfile (args);
+                    case "getclassified":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.High))
+                                return FailureResult ();
+                        return ProfileHandler.GetClassifed (args);
+                    case "getclassifieds":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.High))
+                                return FailureResult ();
+                        return ProfileHandler.GetClassifieds (args);
+                    case "getpick":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.High))
+                                return FailureResult ();
+                        return ProfileHandler.GetPick (args);
+                    case "getpicks":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.High))
+                                return FailureResult ();
+                        return ProfileHandler.GetPicks (args);
+                    case "removepick":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.High))
+                                return FailureResult ();
+                        return ProfileHandler.RemovePick (args);
+                    case "removeclassified":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.High))
+                                return FailureResult ();
+                        return ProfileHandler.RemoveClassified (args);
+                    case "addclassified":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.High))
+                                return FailureResult ();
+                        return ProfileHandler.AddClassified (args);
+                    case "addpick":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.High))
+                                return FailureResult ();
+                        return ProfileHandler.AddPick (args);
                     #endregion
                 }
             }
@@ -152,6 +192,120 @@ namespace OpenSim.Services
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
+        }
+
+        public byte[] GetClassifed (OSDMap request)
+        {
+            UUID principalID = request["ClassifiedUUID"].AsUUID ();
+
+            Classified Classified = ProfileConnector.GetClassified (principalID);
+            OSDMap result = Classified != null ? Classified.ToOSD () : new OSDMap ();
+
+            string xmlString = OSDParser.SerializeJsonString (result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding ();
+            return encoding.GetBytes (xmlString);
+        }
+
+        public byte[] GetClassifieds (OSDMap request)
+        {
+            UUID principalID = request["PrincipalID"].AsUUID ();
+
+            List<Classified> Classified = ProfileConnector.GetClassifieds (principalID);
+            OSDMap result = new OSDMap ();
+            OSDArray array = new OSDArray ();
+            foreach (Classified info in Classified)
+            {
+                array.Add (info.ToOSD ());
+            }
+            result["Result"] = array;
+
+            string xmlString = OSDParser.SerializeJsonString (result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding ();
+            return encoding.GetBytes (xmlString);
+        }
+
+        public byte[] GetPick (OSDMap request)
+        {
+            UUID principalID = request["PickUUID"].AsUUID ();
+
+            ProfilePickInfo Pick = ProfileConnector.GetPick (principalID);
+            OSDMap result = Pick != null ? Pick.ToOSD () : new OSDMap ();
+
+            string xmlString = OSDParser.SerializeJsonString (result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding ();
+            return encoding.GetBytes (xmlString);
+        }
+
+        public byte[] GetPicks (OSDMap request)
+        {
+            UUID principalID = request["PrincipalID"].AsUUID ();
+
+            List<ProfilePickInfo> Pick = ProfileConnector.GetPicks (principalID);
+            OSDMap result = new OSDMap ();
+            OSDArray array = new OSDArray ();
+            foreach (ProfilePickInfo info in Pick)
+            {
+                array.Add (info.ToOSD ());
+            }
+            result["Result"] = array;
+
+            string xmlString = OSDParser.SerializeJsonString (result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding ();
+            return encoding.GetBytes (xmlString);
+        }
+
+        public byte[] RemovePick (OSDMap request)
+        {
+            UUID principalID = request["PickUUID"].AsUUID ();
+
+            ProfileConnector.RemovePick (principalID);
+
+            string xmlString = OSDParser.SerializeJsonString (new OSDMap ());
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding ();
+            return encoding.GetBytes (xmlString);
+        }
+
+        public byte[] RemoveClassified (OSDMap request)
+        {
+            UUID principalID = request["ClassifiedUUID"].AsUUID ();
+
+            ProfileConnector.RemoveClassified (principalID);
+
+            string xmlString = OSDParser.SerializeJsonString (new OSDMap ());
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding ();
+            return encoding.GetBytes (xmlString);
+        }
+
+        public byte[] AddPick (OSDMap request)
+        {
+            ProfilePickInfo info = new ProfilePickInfo ();
+            info.FromOSD ((OSDMap)request["Pick"]);
+
+            ProfileConnector.AddPick (info);
+
+            string xmlString = OSDParser.SerializeJsonString (new OSDMap ());
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding ();
+            return encoding.GetBytes (xmlString);
+        }
+
+        public byte[] AddClassified (OSDMap request)
+        {
+            Classified info = new Classified ();
+            info.FromOSD ((OSDMap)request["Classified"]);
+
+            ProfileConnector.AddClassified (info);
+
+            string xmlString = OSDParser.SerializeJsonString (new OSDMap ());
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding ();
+            return encoding.GetBytes (xmlString);
         }
 
         private byte[] SuccessResult()

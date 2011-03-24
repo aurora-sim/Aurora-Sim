@@ -958,7 +958,9 @@ namespace OpenSim.Region.CoreModules.World.Land
                             else
                             {
                                 IAgentInfoService presenceS = m_scene.RequestModuleInterface<IAgentInfoService>();
-                                landObj.Online = presenceS.GetUserInfo(part.OwnerID.ToString()).IsOnline;
+                                UserInfo info = presenceS.GetUserInfo(part.OwnerID.ToString());
+                                if(info != null)
+                                    landObj.Online = info.IsOnline;
                             }
                             landObj.OwnerID = part.OwnerID;
                         }
