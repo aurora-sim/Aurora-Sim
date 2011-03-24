@@ -170,5 +170,46 @@ namespace Aurora.Services.DataService
         {
             GD.Delete ("userclassifieds", new string[1] { "ClassifiedUUID" }, new object[1] { queryClassifiedID });
         }
+
+        public void AddPick (ProfilePickInfo pick)
+        {
+            //It might be updating, delete the old
+            GD.Delete ("userpicks", new string[1] { "PickUUID" }, new object[1] { pick.PickUUID });
+            List<object> values = new List<object> ();
+            values.Add (pick.Name);
+            values.Add (pick.SimName);
+            values.Add (pick.CreatorUUID);
+            values.Add (pick.PickUUID);
+            values.Add (OSDParser.SerializeJsonString (pick.ToOSD ()));
+            GD.Insert ("userpicks", values.ToArray ());
+        }
+
+        public ProfilePickInfo GetPick (UUID queryPickID)
+        {
+            List<string> query = GD.Query (new string[1] { "PickUUID" }, new object[1] { queryPickID }, "userpicks", "*");
+            if (query.Count < 5)
+                return null;
+            ProfilePickInfo pick = new ProfilePickInfo ();
+            pick.FromOSD ((OSDMap)OSDParser.DeserializeJson (query[4]));
+            return pick;
+        }
+
+        public List<ProfilePickInfo> GetPicks (UUID ownerID)
+        {
+            List<ProfilePickInfo> picks = new List<ProfilePickInfo> ();
+            List<string> query = GD.Query (new string[1] { "OwnerUUID" }, new object[1] { ownerID }, "userpicks", "*");
+            for (int i = 0; i < query.Count; i+=6)
+            {
+                ProfilePickInfo pick = new ProfilePickInfo ();
+                pick.FromOSD ((OSDMap)OSDParser.DeserializeJson (query[i+4]));
+                picks.Add (pick);
+            }
+            return picks;
+        }
+
+        public void RemovePick (UUID queryPickID)
+        {
+            GD.Delete ("userpicks", new string[1] { "PickUUID" }, new object[1] { queryPickID });
+        }
     }
 }

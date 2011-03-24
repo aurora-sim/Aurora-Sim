@@ -29,11 +29,16 @@ namespace Aurora.Framework
         /// Creates an new profile for the user
         /// </summary>
         /// <param name="UUID"></param>
-		void CreateNewProfile(UUID UUID);
+        void CreateNewProfile (UUID UUID);
 
         void AddClassified (Classified classified);
         Classified GetClassified (UUID queryClassifiedID);
         List<Classified> GetClassifieds (UUID ownerID);
         void RemoveClassified (UUID queryClassifiedID);
+
+        void AddPick (ProfilePickInfo pick);
+        ProfilePickInfo GetPick (UUID queryPickID);
+        List<ProfilePickInfo> GetPicks (UUID ownerID);
+        void RemovePick (UUID queryPickID);
     }
 }

@@ -176,5 +176,30 @@ namespace Aurora.Services.DataService
         }
 
         #endregion
+
+        #region IProfileConnector Members
+
+
+        public void AddPick (ProfilePickInfo pick)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public ProfilePickInfo GetPick (UUID queryPickID)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public List<ProfilePickInfo> GetPicks (UUID ownerID)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public void RemovePick (UUID queryPickID)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
     }
 }
