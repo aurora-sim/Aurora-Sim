@@ -2026,12 +2026,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void Update()
         {
-            if (!m_sendingPrimUpdates) // && (sendPrimsLoop & SendPrimsNum) == 0)
-            {
-                m_sendingPrimUpdates = true;
-                Util.FireAndForget(SendPrimUpdates);
-            }
-//            sendPrimsLoop++;
             //if (!IsChildAgent)
             //{
             //    if (m_parentID != UUID.Zero)
@@ -2062,15 +2056,6 @@ namespace OpenSim.Region.Framework.Scenes
                 m_enqueueSendChildAgentUpdateTime = new DateTime();
                 m_enqueueSendChildAgentUpdate = false;
             }
-        }
-
-        public volatile bool m_sendingPrimUpdates = false;
-//        private int sendPrimsLoop = 0;
-//        private const int SendPrimsNum = 5;
-        private void SendPrimUpdates(object o)
-        {
-            m_sceneViewer.SendPrimUpdates();
-            m_sendingPrimUpdates = false;
         }
 
         #endregion
