@@ -130,7 +130,16 @@ namespace OpenSim.Services.Interfaces
             foreach (KeyValuePair<string, object> _kvp in kvp)
             {
                 if (_kvp.Value != null)
-                    Data[_kvp.Key] = _kvp.Value.ToString();
+                {
+                    string key = _kvp.Key;
+                    if (_kvp.Key.StartsWith ("Wearable"))
+                    {
+                        key = _kvp.Key.Replace ("Wearable", "");
+                        key = key.Insert (1, ":"); //Add the : back
+                        key = "Wearable " + key; //Add the space back
+                    }
+                    Data[key] = _kvp.Value.ToString ();
+                }
             }
         }
 
@@ -145,7 +154,10 @@ namespace OpenSim.Services.Interfaces
             foreach (KeyValuePair<string, string> _kvp in Data)
             {
                 if (_kvp.Value != null)
-                    result[_kvp.Key] = _kvp.Value;
+                {
+                    //Remove spaces
+                    result[_kvp.Key.Replace (" ", "").Replace (":", "")] = _kvp.Value;
+                }
             }
             return result;
         }

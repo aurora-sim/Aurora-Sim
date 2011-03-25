@@ -122,6 +122,11 @@ namespace Aurora.BotManager
             m_aCircuitData.circuitcode = (uint)Util.RandomClass.Next();
 
             m_aCircuitData.Appearance = GetAppearance (cloneAppearanceFrom);//Sets up appearance
+            if (m_aCircuitData.Appearance == null)
+            {
+                m_aCircuitData.Appearance = new AvatarAppearance ();
+                m_aCircuitData.Appearance.Wearables = AvatarWearable.DefaultWearables;
+            }
             //Create the new bot data
             RexBot m_character = new RexBot (scene, m_aCircuitData);
 

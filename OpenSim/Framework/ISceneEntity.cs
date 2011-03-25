@@ -333,7 +333,7 @@ namespace OpenSim.Framework
 
         void UpdatePermissions (OpenMetaverse.UUID agentID, byte field, uint localId, uint mask, byte set);
 
-        float BSphereRadiusSQ { get; set; }
+        float BSphereRadiusSQ { get; }
     }
 
     public interface IEntity
