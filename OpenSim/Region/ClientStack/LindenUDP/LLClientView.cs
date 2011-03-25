@@ -3803,8 +3803,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void DequeueUpdates (int nupdates)
         {
-            ISceneViewer viewer = m_scene.GetScenePresence (AgentId).SceneViewer;
-            viewer.SendPrimUpdates ();
+            IScenePresence sp = m_scene.GetScenePresence (AgentId);
+            if (sp != null)
+            {
+                ISceneViewer viewer = sp.SceneViewer;
+                viewer.SendPrimUpdates ();
+            }
         }
 
         public void FlushPrimUpdates()

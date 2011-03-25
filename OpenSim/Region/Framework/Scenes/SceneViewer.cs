@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Reflection;
 using System.Linq;
 using System.Text;
@@ -59,7 +60,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected volatile bool m_inUse = false;
         protected Prioritizer m_prioritizer;
         protected Culler m_culler;
-        private Dictionary<UUID, EntityUpdate> m_presenceUpdatesToSend = new Dictionary<UUID, EntityUpdate> ();
+        private OrderedDictionary/*<UUID, EntityUpdate>*/ m_presenceUpdatesToSend = new OrderedDictionary/*<UUID, EntityUpdate>*/ ();
         private Dictionary<UUID, EntityUpdate> m_objectUpdatesToSend = new Dictionary<UUID, EntityUpdate> ();
 
         private HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity> ();
@@ -120,11 +121,11 @@ namespace OpenSim.Region.Framework.Scenes
 
             lock (m_presenceUpdatesToSend)
             {
-                EntityUpdate o;
-                if (!m_presenceUpdatesToSend.TryGetValue (presence.UUID, out o))
+                EntityUpdate o = (EntityUpdate)m_presenceUpdatesToSend[presence.UUID];
+                if (o == null)
                 {
                     o = new EntityUpdate (presence, flags);
-                    m_presenceUpdatesToSend.Add (presence.UUID, o);
+                    m_presenceUpdatesToSend.Insert (0,presence.UUID, o);
                 }
                 else
                 {
@@ -154,12 +155,12 @@ namespace OpenSim.Region.Framework.Scenes
                 EntityUpdate o;
                 if (!m_objectUpdatesToSend.TryGetValue (update.Entity.UUID, out o))
                 {
-                    m_presenceUpdatesToSend.Add (update.Entity.UUID, update);
+                    m_objectUpdatesToSend.Add (update.Entity.UUID, update);
                 }
                 else
                 {
                     update.Flags = o.Flags & update.Flags;
-                    m_presenceUpdatesToSend[update.Entity.UUID] = update;
+                    m_objectUpdatesToSend[update.Entity.UUID] = update;
                 }
             }
         }
@@ -403,13 +404,24 @@ namespace OpenSim.Region.Framework.Scenes
             lock (m_presenceUpdatesToSend)
             {
                 //Send 100 of them
-                m_presence.ControllingClient.SendPrimUpdate (m_presenceUpdatesToSend.Values.Take (100));
+                if (m_presenceUpdatesToSend.Count != 0)
+                {
+                    int count = 100 > m_presenceUpdatesToSend.Count ? 100 : m_presenceUpdatesToSend.Count;
+                    List<EntityUpdate> updates = new List<EntityUpdate> ();
+                    for (int i = 0; i < count; i++)
+                    {
+                        updates.Add ((EntityUpdate)m_presenceUpdatesToSend[0]);
+                        m_presenceUpdatesToSend.RemoveAt (0);
+                    }
+                    m_presence.ControllingClient.SendPrimUpdate (m_presenceUpdatesToSend.Values.OfType<EntityUpdate> ());
+                }
             }
 
             lock (m_objectUpdatesToSend)
             {
                 //Send 100 of them
-                m_presence.ControllingClient.SendPrimUpdate (m_objectUpdatesToSend.Values.Take (100));
+                //if (m_objectUpdatesToSend.Count != 0)
+                //    m_presence.ControllingClient.SendPrimUpdate (m_objectUpdatesToSend.Values.Take (100));
             }
 
             //Add the time to the stats tracker
