@@ -199,6 +199,7 @@ namespace Aurora.Modules.World.On_Demand
             {
                 backup.LoadPrims = true;
                 backup.LoadPrimsFromStorage ();
+                backup.CreateScriptInstances ();
             }
             GenericStartup ();
             m_isStartingUp = false;

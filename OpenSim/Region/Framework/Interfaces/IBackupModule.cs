@@ -38,6 +38,12 @@ namespace OpenSim.Region.Framework.Interfaces
         void LoadPrimsFromStorage ();
 
         /// <summary>
+        /// Creates script instances in all objects that have scripts in them
+        /// This is normally called during startup, but can be called later if not called during startup
+        /// </summary>
+        void CreateScriptInstances ();
+
+        /// <summary>
         /// Add a backup taint to the prim.
         /// </summary>
         /// <param name="sceneObjectGroup"></param>

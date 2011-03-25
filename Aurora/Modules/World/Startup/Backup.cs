@@ -294,7 +294,7 @@ namespace Aurora.Modules
             /// <summary>
             /// Start all the scripts in the scene which should be started.
             /// </summary>
-            protected void CreateScriptInstances()
+            public void CreateScriptInstances()
             {
                 m_log.Info("[BackupModule]: Starting scripts in " + m_scene.RegionInfo.RegionName);
                 //Set loading prims here to block backup

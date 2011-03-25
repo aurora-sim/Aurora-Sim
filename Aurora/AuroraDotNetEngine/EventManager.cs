@@ -790,7 +790,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             if (ItemsToStart.Count != 0)
                 m_scriptEngine.MaintenanceThread.AddScriptChange(ItemsToStart.ToArray(), LoadPriority.FirstStart);
-
         }
         
         /// <summary>
