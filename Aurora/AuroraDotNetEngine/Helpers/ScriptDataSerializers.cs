@@ -77,8 +77,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Allow for the full path to be put down, not just the assembly name itself
             stateSave.AssemblyName = script.AssemblyName;
             stateSave.Source = script.Source;
-            stateSave.PermsGranter = script.InventoryItem.PermsGranter;
-            stateSave.PermsMask = script.InventoryItem.PermsMask;
+            if (script.InventoryItem != null)
+            {
+                stateSave.PermsGranter = script.InventoryItem.PermsGranter;
+                stateSave.PermsMask = script.InventoryItem.PermsMask;
+            }
+            else
+            {
+                stateSave.PermsGranter = UUID.Zero;
+                stateSave.PermsMask = 0;
+            }
             stateSave.TargetOmegaWasSet = script.TargetOmegaWasSet;
 
             //Vars

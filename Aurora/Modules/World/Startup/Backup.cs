@@ -557,36 +557,44 @@ namespace Aurora.Modules
                 int PrimsBackedUp = 0;
                 foreach (SceneObjectGroup grp in backupPrims)
                 {
-                    //Check this prim
-                    bool shouldReaddToLoop;
-                    bool shouldReaddToLoopNow;
-                    //If its forced, we do it. If its time, we do it, else, check whether it should be requeued
-                    if (!forced && !isTimeForGroupToPersist(grp, out shouldReaddToLoop, out shouldReaddToLoopNow))
+                    try
                     {
-                        if (shouldReaddToLoop)
+                        //Check this prim
+                        bool shouldReaddToLoop;
+                        bool shouldReaddToLoopNow;
+                        //If its forced, we do it. If its time, we do it, else, check whether it should be requeued
+                        if (!forced && !isTimeForGroupToPersist (grp, out shouldReaddToLoop, out shouldReaddToLoopNow))
                         {
-                            //Readd it into the seconary backup loop then as its not time for it to backup yet
-                            lock (m_secondaryBackupTaintedPrims)
+                            if (shouldReaddToLoop)
+                            {
+                                //Readd it into the seconary backup loop then as its not time for it to backup yet
+                                lock (m_secondaryBackupTaintedPrims)
+                                    lock (m_backupTaintedPrims)
+                                        //Make sure its not in either so that we don't duplicate checking
+                                        if (!m_secondaryBackupTaintedPrims.ContainsKey (grp.UUID) &&
+                                            !m_backupTaintedPrims.ContainsKey (grp.UUID))
+                                            m_secondaryBackupTaintedPrims.Add (grp.UUID, grp);
+                            }
+                            if (shouldReaddToLoopNow)
+                            {
+                                //Readd it into the seconary backup loop then as its not time for it to backup yet
                                 lock (m_backupTaintedPrims)
                                     //Make sure its not in either so that we don't duplicate checking
-                                    if (!m_secondaryBackupTaintedPrims.ContainsKey(grp.UUID) &&
-                                        !m_backupTaintedPrims.ContainsKey(grp.UUID))
-                                        m_secondaryBackupTaintedPrims.Add(grp.UUID, grp);
+                                    if (!m_backupTaintedPrims.ContainsKey (grp.UUID))
+                                        m_backupTaintedPrims.Add (grp.UUID, grp);
+                            }
                         }
-                        if (shouldReaddToLoopNow)
+                        else
                         {
-                            //Readd it into the seconary backup loop then as its not time for it to backup yet
-                            lock (m_backupTaintedPrims)
-                                //Make sure its not in either so that we don't duplicate checking
-                                if (!m_backupTaintedPrims.ContainsKey(grp.UUID))
-                                    m_backupTaintedPrims.Add(grp.UUID, grp);
+                            //Given the ok to backup
+                            BackupGroup (grp);
+                            PrimsBackedUp++;
                         }
                     }
-                    else
+                    catch(Exception ex)
                     {
-                        //Given the ok to backup
-                        BackupGroup(grp);
-                        PrimsBackedUp++;
+                        m_log.Error ("[BackupModule] Error while ProcessPrimBackupTaints ", ex);
+                        //Now continue processing
                     }
                 }
                 if (PrimsBackedUp != 0)
