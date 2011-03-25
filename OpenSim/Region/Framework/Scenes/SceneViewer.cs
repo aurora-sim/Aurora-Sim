@@ -64,7 +64,6 @@ namespace OpenSim.Region.Framework.Scenes
         private HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity> ();
         private bool CheckForObjectCulling = false;
         private Vector3 m_lastUpdatePos;
-        private float lastDrawDistance;
 
         public IPrioritizer Prioritizer
         {
@@ -84,11 +83,33 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_presence = presence;
             m_presence.Scene.EventManager.OnSignificantClientMovement += SignificantClientMovement;
+            m_presence.Scene.AuroraEventManager.OnGenericEvent += AuroraEventManager_OnGenericEvent;
             m_prioritizer = new Prioritizer (presence.Scene);
             m_culler = new Scenes.Culler (presence.Scene);
             IConfig aurorastartupConfig = presence.Scene.Config.Configs["AuroraStartup"];
             if (aurorastartupConfig != null)
                 CheckForObjectCulling = aurorastartupConfig.GetBoolean ("CheckForObjectCulling", CheckForObjectCulling);
+        }
+
+        object AuroraEventManager_OnGenericEvent (string FunctionName, object parameters)
+        {
+            if (CheckForObjectCulling && FunctionName == "DrawDistanceChanged")
+            {
+                IScenePresence sp = (IScenePresence)parameters;
+                if (sp.UUID != m_presence.UUID)
+                    return null; //Only want our av
+
+                //If their draw distance is > the region size, they will get all the updates anyway,
+                // so turn off culling until they leave (they could turn the draw distance down, but if they had it
+                // large, theres a good chance they want it that large, so leave it alone)
+                if (m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeX &&
+                    m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeY)
+                {
+                    lastGrpsInView.Clear ();
+                    CheckForObjectCulling = false;
+                }
+            }
+            return null;
         }
 
         #endregion
@@ -222,18 +243,9 @@ namespace OpenSim.Region.Framework.Scenes
                 Vector3 pos = m_presence.CameraPosition;
                 float distsq = Vector3.DistanceSquared (pos, m_lastUpdatePos);
                 distsq += 0.2f * m_presence.Velocity.LengthSquared ();
-                if (lastDrawDistance == m_presence.DrawDistance && distsq < MINVIEWDSTEPSQ)
+                if (distsq < MINVIEWDSTEPSQ) //They havn't moved enough to trigger another update, so just quit
                     return;
-
-                if (lastDrawDistance > m_presence.Scene.RegionInfo.RegionSizeX &&
-                    lastDrawDistance > m_presence.Scene.RegionInfo.RegionSizeY)
-                {
-                    lastDrawDistance = m_presence.DrawDistance;
-                    lastGrpsInView.Clear ();
-                    CheckForObjectCulling = false;
-                    return;
-                }
-
+                Util.FireAndForget (DoSignificantClientMovement);
             }
         }
 
@@ -271,7 +283,8 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
             entities = null;
-            lastGrpsInView.Clear ();
+            //Keep all of them in view, the viewer doesn't lose them once it wanders out of range
+            //lastGrpsInView.Clear ();
             lastGrpsInView.UnionWith (NewGrpsInView);
             NewGrpsInView.Clear ();
 
@@ -416,14 +429,11 @@ namespace OpenSim.Region.Framework.Scenes
                     PrimUpdateFlags updateFlags = (PrimUpdateFlags)((object[])o)[1];
                     SendUpdate (p, m_presence.GenerateClientFlags (p), updateFlags);
                 }
-                m_lastUpdatePos = (m_presence.IsChildAgent) ?
-                    m_presence.AbsolutePosition :
-                    m_presence.CameraPosition;
-                lastDrawDistance = m_presence.DrawDistance;
-                if (lastDrawDistance < 32)
-                    lastDrawDistance = 32;
                 m_queueing = false;
             }
+            m_lastUpdatePos = (m_presence.IsChildAgent) ?
+                m_presence.AbsolutePosition :
+                m_presence.CameraPosition;
         }
 
         #endregion
