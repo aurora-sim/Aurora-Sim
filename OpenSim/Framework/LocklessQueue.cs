@@ -25,6 +25,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace OpenSim.Framework
@@ -256,6 +257,42 @@ namespace OpenSim.Framework
             }
 
             Interlocked.Decrement(ref count);
+            return true;
+        }
+
+        public bool Dequeue (int num, out List<T> items)
+        {
+            items = new List<T> (num);
+            SingleLinkNode oldHead = null;
+            bool haveAdvancedHead = false;
+
+            for (int i = 0; i < num; i++)
+            {
+                while (!haveAdvancedHead)
+                {
+                    oldHead = head;
+                    SingleLinkNode oldTail = tail;
+                    SingleLinkNode oldHeadNext = oldHead.Next;
+
+                    if (oldHead == head)
+                    {
+                        if (oldHead == oldTail)
+                        {
+                            if (oldHeadNext == null)
+                                return false;
+
+                            CAS (ref tail, oldTail, oldHeadNext);
+                        }
+                        else
+                        {
+                            items.Add(oldHeadNext.Item);
+                            haveAdvancedHead = CAS (ref head, oldHead, oldHeadNext);
+                        }
+                    }
+                }
+            }
+
+            Interlocked.Decrement (ref count);
             return true;
         }
 

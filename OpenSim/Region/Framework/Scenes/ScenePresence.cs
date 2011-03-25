@@ -2081,24 +2081,18 @@ namespace OpenSim.Region.Framework.Scenes
         /// Sends a location update to the client connected to this scenePresence
         /// </summary>
         /// <param name="remoteClient"></param>
-        public void SendTerseUpdateToClient(IClientAPI remoteClient)
+        public void SendTerseUpdateToClient (IScenePresence remoteClient)
         {
-            // If the client is inactive, it's getting its updates from another
-            // server.
-            if (remoteClient.IsActive)
+            //m_log.DebugFormat("[SCENEPRESENCE]: TerseUpdate: Pos={0} Rot={1} Vel={2}", m_pos, m_bodyRot, m_velocity);
+            remoteClient.SceneViewer.QueuePresenceForUpdate (
+                this,
+                PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity
+                | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity);
+
+            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_scene.RegionInfo.RegionID.ToString (), "Agent Update Count");
+            if (reporter != null)
             {
-                //m_log.DebugFormat("[SCENEPRESENCE]: TerseUpdate: Pos={0} Rot={1} Vel={2}", m_pos, m_bodyRot, m_velocity);
-
-                remoteClient.SendPrimUpdate(
-                    this,
-                    PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity
-                    | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity, 0);
-
-                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
-                if (reporter != null)
-                {
-                    reporter.AddAgentUpdates(1);
-                }
+                reporter.AddAgentUpdates (1);
             }
         }
 
@@ -2109,7 +2103,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_perfMonMS = Util.EnvironmentTickCount();
 
-            m_scene.ForEachClient(SendTerseUpdateToClient);
+            m_scene.ForEachScenePresence(SendTerseUpdateToClient);
 
             IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
             if (reporter != null)

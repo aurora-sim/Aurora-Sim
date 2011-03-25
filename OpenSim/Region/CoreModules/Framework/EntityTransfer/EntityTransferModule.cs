@@ -147,11 +147,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         public virtual void Teleport(IScenePresence sp, ulong regionHandle, Vector3 position, Vector3 lookAt, uint teleportFlags)
         {
-            uint x = 0, y = 0;
-            Utils.LongToUInts(regionHandle, out x, out y);
+            int x = 0, y = 0;
+            Util.UlongToInts(regionHandle, out x, out y);
 
-            GridRegion reg = sp.Scene.GridService.GetRegionByPosition(sp.Scene.RegionInfo.ScopeID, (int)x, (int)y);
-
+            GridRegion reg = sp.Scene.GridService.GetRegionByPosition (sp.Scene.RegionInfo.ScopeID, x, y);
+            
             if (reg == null)
             {
                 // TP to a place that doesn't exist (anymore)
@@ -159,8 +159,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 sp.ControllingClient.SendTeleportFailed("The region you tried to teleport to doesn't exist anymore");
 
                 // and set the map-tile to '(Offline)'
-                uint regX, regY;
-                Utils.LongToUInts(regionHandle, out regX, out regY);
+                int regX, regY;
+                Util.UlongToInts(regionHandle, out regX, out regY);
 
                 MapBlockData block = new MapBlockData();
                 block.X = (ushort)(regX / Constants.RegionSize);

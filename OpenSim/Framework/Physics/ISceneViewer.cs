@@ -72,6 +72,13 @@ namespace OpenSim.Framework
         /// Reset all lists that have to deal with what updates the viewer has
         /// </summary>
         void Reset();
+
+        /// <summary>
+        /// Send a presence terse update to all clients
+        /// </summary>
+        /// <param name="presence"></param>
+        /// <param name="flags"></param>
+        void QueuePresenceForUpdate (IScenePresence presence, PrimUpdateFlags flags);
     }
 
     public interface IPrioritizer
