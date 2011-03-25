@@ -83,7 +83,7 @@ namespace OpenSim.Framework
 
     public interface IPrioritizer
     {
-        double GetUpdatePriority (IClientAPI client, ISceneEntity entity);
+        double GetUpdatePriority (IClientAPI client, IEntity entity);
         double RootReprioritizationDistance { get; }
         double ChildReprioritizationDistance { get; }
     }

@@ -106,7 +106,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (CheckForObjectCulling)
             {
                 // priority is negative of distance
-                double priority = m_prioritizer.GetUpdatePriority (m_presence.ControllingClient, part.ParentEntity);
+                double priority = m_prioritizer.GetUpdatePriority (m_presence, part.ParentEntity);
                 if (priority < calcMinPrio ())
                     return; // if 2 far ignore
             }
@@ -260,7 +260,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (e.IsDeleted)
                         continue;
 
-                    double priority = m_prioritizer.GetUpdatePriority (m_presence.ControllingClient, e);
+                    double priority = m_prioritizer.GetUpdatePriority (m_presence, e);
 
                     //Check for culling here!
                     if (priority < newminp)
@@ -339,7 +339,7 @@ namespace OpenSim.Region.Framework.Scenes
                             if (e.IsDeleted)
                                 continue;
 
-                            double priority = m_prioritizer.GetUpdatePriority (m_presence.ControllingClient, e);
+                            double priority = m_prioritizer.GetUpdatePriority (m_presence, e);
 
                             //Check for culling here!
                             if (doculling)
@@ -360,6 +360,20 @@ namespace OpenSim.Region.Framework.Scenes
                     entities = null;
                     // send them 
                     SendQueued (m_entsqueue);
+                }
+            }
+
+            lock (m_updatesToSend)
+            {
+                object o;
+                while (m_updatesToSend.Count > 0)
+                {
+                    o = m_updatesToSend.Dequeue ();
+                    if (o == null)
+                        break;
+                    IScenePresence p = (IScenePresence)((object[])o)[0];
+                    PrimUpdateFlags updateFlags = (PrimUpdateFlags)((object[])o)[1];
+                    m_presence.ControllingClient.SendPrimUpdate (p, updateFlags);
                 }
             }
 
@@ -427,18 +441,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-
-            #endregion
-        /// <summary>
-        /// Sorts a list of Parts by Link Number so they end up in the correct order
-        /// </summary>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
-        /// <returns></returns>
-        public int linkSetSorter (EntityUpdate a, EntityUpdate b)
-        {
-            return a.Entity.LinkNum.CompareTo (b.Entity.LinkNum);
-        }
+        #endregion
 
         #endregion
 
@@ -533,10 +536,12 @@ namespace OpenSim.Region.Framework.Scenes
             if (CheckForObjectCulling)
             {
                 // priority is negative of distance
-                double priority = m_prioritizer.GetUpdatePriority (m_presence.ControllingClient, (ISceneEntity)presence);
+                double priority = m_prioritizer.GetUpdatePriority (m_presence, presence);
                 if (priority < calcMinPrio ())
                     return; // if 2 far ignore
             }
+
+            m_updatesToSend.Enqueue (new object[2] { presence, flags });
         }
         #endregion
     }

@@ -58,10 +58,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
-        public void QueueDelayedUpdate(PriorityQueueItem<EntityUpdate, double> it)
-            {
-            }
-
         public IScene Scene
         {
             get { return m_scene; }

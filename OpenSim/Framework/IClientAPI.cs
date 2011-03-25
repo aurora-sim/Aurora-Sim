@@ -1189,7 +1189,6 @@ namespace OpenSim.Framework
         void SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags);
         void SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags, double priority);
         void FlushPrimUpdates();
-        void QueueDelayedUpdate(PriorityQueueItem<EntityUpdate, double> it);
 
         void SendInventoryFolderDetails(UUID ownerID, UUID folderID, List<InventoryItemBase> items,
                                         List<InventoryFolderBase> folders, int version, bool fetchFolders,
