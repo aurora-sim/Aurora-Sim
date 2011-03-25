@@ -60,6 +60,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected volatile bool m_inUse = false;
         protected Prioritizer m_prioritizer;
         protected Culler m_culler;
+        protected bool m_forceCullCheck = false;
         private OrderedDictionary/*<UUID, EntityUpdate>*/ m_presenceUpdatesToSend = new OrderedDictionary/*<UUID, EntityUpdate>*/ ();
         private OrderedDictionary/*<UUID, EntityUpdate>*/ m_objectUpdatesToSend = new OrderedDictionary/*<UUID, EntityUpdate>*/ ();
 
@@ -109,6 +110,10 @@ namespace OpenSim.Region.Framework.Scenes
                     lastGrpsInView.Clear ();
                     Culler.UseCulling = false;
                 }
+
+                //Draw Distance chagned, force a cull check
+                m_forceCullCheck = true;
+                SignificantClientMovement (m_presence.ControllingClient);
             }
             return null;
         }
@@ -168,83 +173,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #region Unused
-
-        /// <summary>
-        /// Updates the last version securely and set the update's version correctly
-        /// </summary>
-        /// <param name="update"></param>
-        /*
-                private void FixVersion(EntityUpdate update)
-                {
-                    _versionAllocateMutex.WaitOne();
-                    m_lastVersion++;
-                    update.Version = m_lastVersion;
-                    _versionAllocateMutex.ReleaseMutex();
-                }
-
-                /// <summary>
-                /// Get the current version securely as we lock the mutex for it
-                /// </summary>
-                /// <returns></returns>
-                private int GetVersion()
-                {
-                    int version;
-
-                    _versionAllocateMutex.WaitOne();
-                    version = m_lastVersion;
-                    _versionAllocateMutex.ReleaseMutex();
-
-                    return version;
-                }
-        */
-        /// <summary>
-        /// Clear the updates for this part in the next update loop
-        /// </summary>
-        /// <param name="part"></param>
-        public void ClearUpdatesForPart (ISceneChildEntity part)
-        {
-            /*
-                        lock (m_removeUpdateOf)
-                        {
-                            //Add it to the list to check and make sure that we do not send updates for this object
-                            m_removeUpdateOf.Add(part.LocalId);
-                            //Make it check when the user comes around to it again
-                            if (m_objectsInView.Contains(part.UUID))
-                                m_objectsInView.Remove(part.UUID);
-                        }
-             */
-        }
-
-        /// <summary>
-        /// Clear the updates for this part in the next update loop
-        /// </summary>
-        /// <param name="part"></param>
-        public void ClearUpdatesForOneLoopForPart (ISceneChildEntity part)
-        {
-            /*
-                        lock (m_removeNextUpdateOf)
-                        {
-                            //Add it to the list to check and make sure that we do not send updates for this object
-                            m_removeNextUpdateOf.Add(part.LocalId, GetVersion());
-                            //Make it check when the user comes around to it again
-                            if (m_objectsInView.Contains(part.UUID))
-                                m_objectsInView.Remove(part.UUID);
-                        }
-             */
-        }
-
-        /// <summary>
-        /// Run through all of the updates we have and re-assign their priority depending
-        ///  on what is now going on in the Scene
-        /// </summary>
-        public void Reprioritize ()
-        {
-            //            m_updatesNeedReprioritization = true;
-        }
-
-        #endregion
-
         #endregion
 
         #region Object Culling by draw distance
@@ -274,8 +202,9 @@ namespace OpenSim.Region.Framework.Scenes
                 Vector3 pos = m_presence.CameraPosition;
                 float distsq = Vector3.DistanceSquared (pos, m_lastUpdatePos);
                 distsq += 0.2f * m_presence.Velocity.LengthSquared ();
-                if (distsq < MINVIEWDSTEPSQ) //They havn't moved enough to trigger another update, so just quit
+                if (distsq < MINVIEWDSTEPSQ && !m_forceCullCheck) //They havn't moved enough to trigger another update, so just quit
                     return;
+                m_forceCullCheck = false;
                 Util.FireAndForget (DoSignificantClientMovement);
             }
         }
