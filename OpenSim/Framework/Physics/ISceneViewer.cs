@@ -57,24 +57,6 @@ namespace OpenSim.Framework
         void SendPrimUpdates(int numUpdates);
 
         /// <summary>
-        /// Clear the updates for this part in the next update loop
-        /// </summary>
-        /// <param name="part"></param>
-        void ClearUpdatesForPart (ISceneChildEntity sceneObjectPart);
-
-        /// <summary>
-        /// Clear the updates for this part in the next update loop only
-        /// </summary>
-        /// <param name="part"></param>
-        void ClearUpdatesForOneLoopForPart (ISceneChildEntity sceneObjectPart);
-
-        /// <summary>
-        /// Run through all of the updates we have and re-assign their priority depending
-        ///  on what is now going on in the Scene
-        /// </summary>
-        void Reprioritize ();
-
-        /// <summary>
         /// The client has left this region and went into a child region, clean up anything required
         /// </summary>
         void Reset ();

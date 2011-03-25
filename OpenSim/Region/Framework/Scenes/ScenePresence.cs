@@ -192,10 +192,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// Used for trigging signficant camera movement
         /// </summary>
         protected Vector3 m_lastCameraCenter;
-        /// <summary>
-        /// This is used for reprioritization of updates so that we can reprioritze every time the position gets too different
-        /// </summary>
-        protected Vector3 m_lastAbsolutePosition;
 
         // Use these three vectors to figure out what the agent is looking at
         // Convert it to a Matrix and/or Quaternion
@@ -1151,15 +1147,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (AllowMovement && !SitGround && !Frozen)
             {
-                //! Note: we use last absolute position instead of camera pos as camera pos is updated far too often.
-                //! If you put your mouse on an object, it would reprioritize updates for over at the objects position, then again when you lifted the mouse off of the object if the object is more than 10 meters away.
-                //! So we only do AbsolutePosition for now until we can find a better way.
-                if (Vector3.Distance(m_lastAbsolutePosition, AbsolutePosition) >= m_sceneViewer.Prioritizer.RootReprioritizationDistance)
-                {
-                    m_lastAbsolutePosition = AbsolutePosition;
-                    m_sceneViewer.Reprioritize();
-                }
-
                 if (agentData.UseClientAgentPosition)
                 {
                     m_moveToPositionInProgress = (agentData.ClientAgentPosition - AbsolutePosition).Length() > 0.2f;
@@ -2344,7 +2331,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_scene.EventManager.TriggerSignificantClientMovement(m_controllingClient);
 
-            m_sceneViewer.Reprioritize();
             //m_velocity = cAgentData.Velocity;
         }
 

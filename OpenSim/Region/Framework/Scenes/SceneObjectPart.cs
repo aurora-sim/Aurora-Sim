@@ -3712,10 +3712,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void ClearUpdateSchedule()
         {
-            foreach (IScenePresence SP in ParentGroup.Scene.GetScenePresences())
+            /*foreach (IScenePresence SP in ParentGroup.Scene.GetScenePresences())
             {
                 SP.SceneViewer.ClearUpdatesForPart(this);
-            }
+            }*/
         }
 
         /// <summary>
@@ -3724,10 +3724,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void ClearUpdateScheduleOnce()
         {
-            foreach (IScenePresence SP in ParentGroup.Scene.GetScenePresences())
+            /*foreach (IScenePresence SP in ParentGroup.Scene.GetScenePresences())
             {
                 SP.SceneViewer.ClearUpdatesForOneLoopForPart(this);
-            }
+            }*/
         }
 
         /// <summary>
