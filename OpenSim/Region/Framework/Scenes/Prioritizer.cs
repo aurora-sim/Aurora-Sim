@@ -60,6 +60,21 @@ namespace OpenSim.Region.Framework.Scenes
         OOB = 5
     }
 
+    public class Culler : ICuller
+    {
+        private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        private bool m_useDistanceCulling = true;
+
+        private IScene m_scene;
+
+        public Culler (IScene scene)
+        {
+            m_scene = scene;
+
+        }
+    }
+
     public class Prioritizer : IPrioritizer
     {
         private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);

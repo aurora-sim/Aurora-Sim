@@ -57,6 +57,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected volatile bool m_queueing = false;
         protected volatile bool m_inUse = false;
         protected Prioritizer m_prioritizer;
+        protected Culler m_culler;
         private Queue<object> m_delayedUpdates = new Queue<object> ();
         private Queue<object> m_updatesToSend = new Queue<object> ();
 
@@ -70,6 +71,11 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_prioritizer; }
         }
 
+        public ICuller Culler
+        {
+            get { return m_culler; }
+        }
+
         #endregion
 
         #region Constructor
@@ -79,6 +85,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_presence = presence;
             m_presence.Scene.EventManager.OnSignificantClientMovement += SignificantClientMovement;
             m_prioritizer = new Prioritizer (presence.Scene);
+            m_culler = new Scenes.Culler (presence.Scene);
             IConfig aurorastartupConfig = presence.Scene.Config.Configs["AuroraStartup"];
             if (aurorastartupConfig != null)
                 CheckForObjectCulling = aurorastartupConfig.GetBoolean ("CheckForObjectCulling", CheckForObjectCulling);
@@ -237,8 +244,10 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     lastDrawDistance = m_presence.DrawDistance;
                     lastGrpsInView.Clear ();
+                    CheckForObjectCulling = false;
                     return;
                 }
+
             }
         }
 
@@ -339,17 +348,11 @@ namespace OpenSim.Region.Framework.Scenes
                             if (e.IsDeleted)
                                 continue;
 
-                            double priority = m_prioritizer.GetUpdatePriority (m_presence, e);
-
                             //Check for culling here!
-                            if (doculling)
-                            {
-                                // priority is negative of distance
-                                if (priority < minp)
-                                    continue; // if 2 far ignore
-                                lastGrpsInView.Add ((SceneObjectGroup)e);
-                            }
+                            if(doculling && !Culler.ShowObjectToClient(m_presence, e))
+                                continue;
 
+                            double priority = m_prioritizer.GetUpdatePriority (m_presence, e);
                             EntityUpdate update = new EntityUpdate (e, PrimUpdateFlags.FullUpdate);
                             PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double> ();
                             item.Value = update;

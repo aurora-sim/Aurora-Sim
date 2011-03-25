@@ -38,6 +38,11 @@ namespace OpenSim.Framework
         IPrioritizer Prioritizer { get; }
 
         /// <summary>
+        /// The instance of the culler the SceneViewer uses
+        /// </summary>
+        ICuller Culler { get; }
+
+        /// <summary>
         /// Add the objects to the queue for which we need to send an update to the client
         /// </summary>
         /// <param name="part"></param>
@@ -83,9 +88,14 @@ namespace OpenSim.Framework
 
     public interface IPrioritizer
     {
-        double GetUpdatePriority (IClientAPI client, IEntity entity);
+        double GetUpdatePriority (IScenePresence client, IEntity entity);
         double RootReprioritizationDistance { get; }
         double ChildReprioritizationDistance { get; }
+    }
+
+    public interface ICuller
+    {
+        bool ShowObjectToClient (IScenePresence client, IEntity entity);
     }
 
     public interface IAnimator
