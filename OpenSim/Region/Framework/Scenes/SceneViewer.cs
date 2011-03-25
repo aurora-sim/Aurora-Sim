@@ -116,7 +116,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void QueuePresenceForUpdate (IScenePresence presence, PrimUpdateFlags flags)
         {
-            if (!Culler.ShowObjectToClient (m_presence, presence))
+            if (!Culler.ShowEntityToClient (m_presence, presence))
                 return; // if 2 far ignore
 
             lock (m_presenceUpdatesToSend)
@@ -141,7 +141,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="part"></param>
         public void QueuePartForUpdate (ISceneChildEntity part, PrimUpdateFlags flags)
         {
-            if (!Culler.ShowObjectToClient(m_presence, part.ParentEntity))
+            if (!Culler.ShowEntityToClient(m_presence, part.ParentEntity))
                 return; // if 2 far ignore
 
             EntityUpdate o = new EntityUpdate (part, flags);
@@ -294,7 +294,7 @@ namespace OpenSim.Region.Framework.Scenes
                         continue;
 
                     //Check for culling here!
-                    if (!Culler.ShowObjectToClient(m_presence, e))
+                    if (!Culler.ShowEntityToClient(m_presence, e))
                         continue; // if 2 far ignore
 
                     double priority = m_prioritizer.GetUpdatePriority (m_presence, e);
@@ -372,7 +372,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 continue;
 
                             //Check for culling here!
-                            if (!Culler.ShowObjectToClient (m_presence, e))
+                            if (!Culler.ShowEntityToClient (m_presence, e))
                                 continue;
 
                             double priority = m_prioritizer.GetUpdatePriority (m_presence, e);

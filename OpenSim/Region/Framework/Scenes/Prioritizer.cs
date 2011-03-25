@@ -88,7 +88,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region ICuller Members
 
-        public bool ShowObjectToClient (IScenePresence client, IEntity entity)
+        public bool ShowEntityToClient (IScenePresence client, IEntity entity)
         {
             if (!m_useCulling)
                 return true; //If we arn't using culling, return true by default to show all prims

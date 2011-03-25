@@ -111,7 +111,7 @@ namespace OpenSim.Framework
         /// <param name="client"></param>
         /// <param name="entity"></param>
         /// <returns></returns>
-        bool ShowObjectToClient (IScenePresence client, IEntity entity);
+        bool ShowEntityToClient (IScenePresence client, IEntity entity);
     }
 
     public interface IAnimator

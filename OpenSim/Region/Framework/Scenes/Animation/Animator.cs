@@ -658,10 +658,11 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             if (m_scenePresence.IsChildAgent)
                 return;
 
-            m_scenePresence.Scene.ForEachClient(
-                delegate(IClientAPI client) 
+            m_scenePresence.Scene.ForEachScenePresence(
+                delegate(IScenePresence presence) 
                 { 
-                    client.SendAnimations(animations, seqs, m_scenePresence.ControllingClient.AgentId, objectIDs); 
+                    if(m_scenePresence.SceneViewer.Culler.ShowEntityToClient(presence, m_scenePresence))
+                        presence.ControllingClient.SendAnimations(animations, seqs, m_scenePresence.UUID, objectIDs); 
                 });
         }
 
