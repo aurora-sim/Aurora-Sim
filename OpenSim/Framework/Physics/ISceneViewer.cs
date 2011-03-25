@@ -53,7 +53,8 @@ namespace OpenSim.Framework
         ///  as well as checking whether the client has ever entered the sim before
         ///  and sending the needed updates to them if they have just entered.
         /// </summary>
-        void SendPrimUpdates();
+        /// <param name="numUpdates">The number of updates to send in this pass</param>
+        void SendPrimUpdates(int numUpdates);
 
         /// <summary>
         /// Clear the updates for this part in the next update loop

@@ -66,6 +66,9 @@ namespace OpenSim.Region.Framework.Scenes
         private HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity> ();
         private Vector3 m_lastUpdatePos;
 
+        private const float PresenceSendPercentage = 0.60f;
+        private const float PrimSendPercentage = 0.40f;
+
         public IPrioritizer Prioritizer
         {
             get { return m_prioritizer; }
@@ -342,7 +345,7 @@ namespace OpenSim.Region.Framework.Scenes
         ///  and sending the needed updates to them if they have just entered.
         ///  NOTE: This does add the updates to the LLUDPClient queue, it does NOT have prioritization built in before this method!
         /// </summary>
-        public void SendPrimUpdates ()
+        public void SendPrimUpdates (int numUpdates)
         {
             if (m_inUse)
                 return;
@@ -403,10 +406,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             lock (m_presenceUpdatesToSend)
             {
-                //Send 100 of them
+                int numToSend = (int)(numUpdates * PresenceSendPercentage);
+                //Send the numUpdates of them if that many
+                // if we don't have that many, we send as many as possible, then switch to objects
                 if (m_presenceUpdatesToSend.Count != 0)
                 {
-                    int count = m_presenceUpdatesToSend.Count > 100 ? 100 : m_presenceUpdatesToSend.Count;
+                    int count = m_presenceUpdatesToSend.Count > numToSend ? numToSend : m_presenceUpdatesToSend.Count;
                     List<EntityUpdate> updates = new List<EntityUpdate> ();
                     for (int i = 0; i < count; i++)
                     {
@@ -419,9 +424,10 @@ namespace OpenSim.Region.Framework.Scenes
 
             lock (m_objectUpdatesToSend)
             {
+                int numToSend = (int)(numUpdates * PrimSendPercentage);
                 if (m_objectUpdatesToSend.Count != 0)
                 {
-                    int count = m_objectUpdatesToSend.Count > 100 ? 100 : m_objectUpdatesToSend.Count;
+                    int count = m_objectUpdatesToSend.Count > numToSend ? numToSend : m_objectUpdatesToSend.Count;
                     List<EntityUpdate> updates = new List<EntityUpdate> ();
                     for (int i = 0; i < count; i++)
                     {

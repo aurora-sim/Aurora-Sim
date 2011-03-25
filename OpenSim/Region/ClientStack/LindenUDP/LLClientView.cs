@@ -3740,6 +3740,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             float TIME_DILATION = m_scene.TimeDilation;
             ushort timeDilation = Utils.FloatToUInt16 (TIME_DILATION, 0.0f, 1.0f);
 
+            //
+            // NOTE: These packets ARE being sent as Unknown for a reason
+            //        This method is ONLY being called by the SceneViewer, which is being called by
+            //        the LLUDPClient, which is attempting to send these packets out, they just have to 
+            //        be created. So instead of sending them as task (which puts them back in the queue),
+            //        we send them out immediately, as this is on a seperate thread anyway.
+            //
             if (objectUpdateBlocks.IsValueCreated)
             {
                 List<ObjectUpdatePacket.ObjectDataBlock> blocks = objectUpdateBlocks.Value;
@@ -3752,7 +3759,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket (packet, ThrottleOutPacketType.Task, true);
+                OutPacket (packet, ThrottleOutPacketType.OutBand, true);
             }
 
             if (compressedUpdateBlocks.IsValueCreated)
@@ -3767,7 +3774,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket (packet, ThrottleOutPacketType.Task, true);
+                OutPacket (packet, ThrottleOutPacketType.OutBand, true);
             }
 
             if (cachedUpdateBlocks.IsValueCreated)
@@ -3782,7 +3789,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket (packet, ThrottleOutPacketType.Task, true);
+                OutPacket (packet, ThrottleOutPacketType.OutBand, true);
             }
 
             if (terseUpdateBlocks.IsValueCreated)
@@ -3797,7 +3804,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket (packet, ThrottleOutPacketType.Task, true);
+                OutPacket (packet, ThrottleOutPacketType.OutBand, true);
             }
         }
 
@@ -3807,7 +3814,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (sp != null)
             {
                 ISceneViewer viewer = sp.SceneViewer;
-                viewer.SendPrimUpdates ();
+                viewer.SendPrimUpdates (nupdates);
             }
         }
 
@@ -3817,7 +3824,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             ISceneViewer viewer = m_scene.GetScenePresence (AgentId).SceneViewer;
             while (m_UpdatesQueue.Count > 0)
-                viewer.SendPrimUpdates ();
+                viewer.SendPrimUpdates (100);
         }
 
         #endregion Primitive Packet/Data Sending Methods
