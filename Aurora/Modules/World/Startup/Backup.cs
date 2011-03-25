@@ -488,58 +488,30 @@ namespace Aurora.Modules
             {
                 if (m_backingup)
                     return;
-
                 m_backingup = true;
-                HashSet<SceneObjectGroup> backupPrims = new HashSet<SceneObjectGroup>();
-                //Add all
-                if (backupAll)
+                try
                 {
-                    ISceneEntity[] entities = m_scene.Entities.GetEntities ();
-                    foreach (ISceneEntity entity in entities)
+                    HashSet<SceneObjectGroup> backupPrims = new HashSet<SceneObjectGroup>();
+                    //Add all
+                    if (backupAll)
                     {
-                        if (entity is SceneObjectGroup)
-                            backupPrims.Add(entity as SceneObjectGroup);
-                    }
-                }
-                else if (forced)
-                {
-                    lock (m_backupTaintedPrims)
-                    {
-                        //Add all these to the backup
-                        backupPrims = new HashSet<SceneObjectGroup>(m_backupTaintedPrims.Values);
-                        m_backupTaintedPrims.Clear();
-                        //Reset the timer
-                        runSecondaryBackup = DateTime.Now.AddMinutes(((double)m_dontPersistBefore / 60));
-
-                        if (m_secondaryBackupTaintedPrims.Count != 0)
+                        ISceneEntity[] entities = m_scene.Entities.GetEntities();
+                        foreach (ISceneEntity entity in entities)
                         {
-                            //Check this set
-                            foreach (SceneObjectGroup grp in m_secondaryBackupTaintedPrims.Values)
-                            {
-                                backupPrims.Add(grp);
-                            }
+                            if (entity is SceneObjectGroup)
+                                backupPrims.Add(entity as SceneObjectGroup);
                         }
-                        m_secondaryBackupTaintedPrims.Clear();
                     }
-                }
-                else
-                {
-                    lock (m_backupTaintedPrims)
+                    else if (forced)
                     {
-                        if (m_backupTaintedPrims.Count != 0)
+                        lock (m_backupTaintedPrims)
                         {
+                            //Add all these to the backup
                             backupPrims = new HashSet<SceneObjectGroup>(m_backupTaintedPrims.Values);
                             m_backupTaintedPrims.Clear();
-                        }
-                    }
-                    //The seconary backup storage is so that we do not check every time and kill checking for updates that are not ready to persist yet
-                    // So it runs every X minutes depending on how long the minimum persistance time is
-                    if (runSecondaryBackup.Ticks < DateTime.Now.Ticks)
-                    {
-                        //Add the min persistance time to now to get the new time
-                        runSecondaryBackup = DateTime.Now.AddMinutes(((double)m_dontPersistBefore / 60));
-                        lock (m_secondaryBackupTaintedPrims)
-                        {
+                            //Reset the timer
+                            runSecondaryBackup = DateTime.Now.AddMinutes(((double)m_dontPersistBefore / 60));
+
                             if (m_secondaryBackupTaintedPrims.Count != 0)
                             {
                                 //Check this set
@@ -550,67 +522,104 @@ namespace Aurora.Modules
                             }
                             m_secondaryBackupTaintedPrims.Clear();
                         }
-                        //Add the min persistance time to now to get the new time
-                        runSecondaryBackup = DateTime.Now.AddMinutes(((double)m_dontPersistBefore / 60));
                     }
-                }
-                int PrimsBackedUp = 0;
-                foreach (SceneObjectGroup grp in backupPrims)
-                {
-                    try
+                    else
                     {
-                        //Check this prim
-                        bool shouldReaddToLoop;
-                        bool shouldReaddToLoopNow;
-                        //If its forced, we do it. If its time, we do it, else, check whether it should be requeued
-                        if (!forced && !isTimeForGroupToPersist (grp, out shouldReaddToLoop, out shouldReaddToLoopNow))
+                        lock (m_backupTaintedPrims)
                         {
-                            if (shouldReaddToLoop)
+                            if (m_backupTaintedPrims.Count != 0)
                             {
-                                //Readd it into the seconary backup loop then as its not time for it to backup yet
-                                lock (m_secondaryBackupTaintedPrims)
+                                backupPrims = new HashSet<SceneObjectGroup>(m_backupTaintedPrims.Values);
+                                m_backupTaintedPrims.Clear();
+                            }
+                        }
+                        //The seconary backup storage is so that we do not check every time and kill checking for updates that are not ready to persist yet
+                        // So it runs every X minutes depending on how long the minimum persistance time is
+                        if (runSecondaryBackup.Ticks < DateTime.Now.Ticks)
+                        {
+                            //Add the min persistance time to now to get the new time
+                            runSecondaryBackup = DateTime.Now.AddMinutes(((double)m_dontPersistBefore / 60));
+                            lock (m_secondaryBackupTaintedPrims)
+                            {
+                                if (m_secondaryBackupTaintedPrims.Count != 0)
+                                {
+                                    //Check this set
+                                    foreach (SceneObjectGroup grp in m_secondaryBackupTaintedPrims.Values)
+                                    {
+                                        backupPrims.Add(grp);
+                                    }
+                                }
+                                m_secondaryBackupTaintedPrims.Clear();
+                            }
+                            //Add the min persistance time to now to get the new time
+                            runSecondaryBackup = DateTime.Now.AddMinutes(((double)m_dontPersistBefore / 60));
+                        }
+                    }
+                    int PrimsBackedUp = 0;
+                    foreach (SceneObjectGroup grp in backupPrims)
+                    {
+                        try
+                        {
+                            //Check this prim
+                            bool shouldReaddToLoop;
+                            bool shouldReaddToLoopNow;
+                            //If its forced, we do it. If its time, we do it, else, check whether it should be requeued
+                            if (!forced && !isTimeForGroupToPersist (grp, out shouldReaddToLoop, out shouldReaddToLoopNow))
+                            {
+                                if (shouldReaddToLoop)
+                                {
+                                    //Readd it into the seconary backup loop then as its not time for it to backup yet
+                                    lock (m_secondaryBackupTaintedPrims)
+                                        lock (m_backupTaintedPrims)
+                                            //Make sure its not in either so that we don't duplicate checking
+                                            if (!m_secondaryBackupTaintedPrims.ContainsKey (grp.UUID) &&
+                                                !m_backupTaintedPrims.ContainsKey (grp.UUID))
+                                                m_secondaryBackupTaintedPrims.Add (grp.UUID, grp);
+                                }
+                                if (shouldReaddToLoopNow)
+                                {
+                                    //Readd it into the seconary backup loop then as its not time for it to backup yet
                                     lock (m_backupTaintedPrims)
                                         //Make sure its not in either so that we don't duplicate checking
-                                        if (!m_secondaryBackupTaintedPrims.ContainsKey (grp.UUID) &&
-                                            !m_backupTaintedPrims.ContainsKey (grp.UUID))
-                                            m_secondaryBackupTaintedPrims.Add (grp.UUID, grp);
+                                        if (!m_backupTaintedPrims.ContainsKey (grp.UUID))
+                                            m_backupTaintedPrims.Add (grp.UUID, grp);
+                                }
                             }
-                            if (shouldReaddToLoopNow)
+                            else
                             {
-                                //Readd it into the seconary backup loop then as its not time for it to backup yet
-                                lock (m_backupTaintedPrims)
-                                    //Make sure its not in either so that we don't duplicate checking
-                                    if (!m_backupTaintedPrims.ContainsKey (grp.UUID))
-                                        m_backupTaintedPrims.Add (grp.UUID, grp);
+                                //Given the ok to backup
+                                BackupGroup (grp);
+                                PrimsBackedUp++;
                             }
                         }
-                        else
+                        catch(Exception ex)
                         {
-                            //Given the ok to backup
-                            BackupGroup (grp);
-                            PrimsBackedUp++;
+                            m_log.Error ("[BackupModule] Error while ProcessPrimBackupTaints ", ex);
                         }
                     }
-                    catch(Exception ex)
+                    if (PrimsBackedUp != 0)
+                        m_log.Info("[BackupModule]: Processed backup of " + PrimsBackedUp + " prims");
+                    //Now make sure that we delete any prims sitting around
+                    // Bit ironic that backup deals with deleting of objects too eh? 
+                    lock (m_needsDeleted)
                     {
-                        m_log.Error ("[BackupModule] Error while ProcessPrimBackupTaints ", ex);
-                        //Now continue processing
+                        if (m_needsDeleted.Count != 0)
+                        {
+                            //Removes all objects in one call
+                            m_scene.SimulationDataService.RemoveObjects(m_needsDeleted);
+                            m_needsDeleted.Clear();
+                        }
                     }
                 }
-                if (PrimsBackedUp != 0)
-                    m_log.Info("[BackupModule]: Processed backup of " + PrimsBackedUp + " prims");
-                //Now make sure that we delete any prims sitting around
-                // Bit ironic that backup deals with deleting of objects too eh? 
-                lock (m_needsDeleted)
+                catch (Exception e)
                 {
-                    if (m_needsDeleted.Count != 0)
-                    {
-                        //Removes all objects in one call
-                        m_scene.SimulationDataService.RemoveObjects(m_needsDeleted);
-                        m_needsDeleted.Clear();
-                    }
+                    m_log.Error ("[BackupModule] Error while ProcessPrimBackupTaints ", e);
+                    throw;
                 }
-                m_backingup = false;
+                finally
+                {
+                    m_backingup = false;
+                }
             }
 
             #endregion
