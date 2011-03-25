@@ -71,8 +71,36 @@ namespace OpenSim.Region.Framework.Scenes
         public Culler (IScene scene)
         {
             m_scene = scene;
-
         }
+
+        #region ICuller Members
+
+        public bool ShowObjectToClient (IScenePresence client, IEntity entity)
+        {
+            if (m_useDistanceCulling && !DistanceCulling (client, entity))
+                return false;
+
+            //No more, guess its fine
+            return true;
+        }
+
+        public bool DistanceCulling (IScenePresence client, IEntity entity)
+        {
+            float DD = client.DrawDistance;
+            if (DD < 32) //Limit to a small distance
+                DD = 32;
+            if (DD > client.Scene.RegionInfo.RegionSizeX)
+                return true; //Its larger than the region, no culling check even necessary
+
+            //If the distance is greater than the clients draw distance, its out of range
+            if (Vector3.DistanceSquared (client.AbsolutePosition, entity.AbsolutePosition) > 
+                DD * DD) //Use squares to make it faster than having to do the sqrt
+                return false;
+            
+            return true;
+        }
+
+        #endregion
     }
 
     public class Prioritizer : IPrioritizer

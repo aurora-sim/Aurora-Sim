@@ -95,28 +95,14 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Enqueue/Remove updates for objects
 
-        private double calcMinPrio ()
-        {
-            double p = -m_presence.DrawDistance * m_presence.DrawDistance;
-            if (p == 0)
-                p = -1024;
-            p -= MINVIEWDSTEPSQ;
-            return p;
-        }
-
         /// <summary>
         /// Add the objects to the queue for which we need to send an update to the client
         /// </summary>
         /// <param name="part"></param>
         public void QueuePartForUpdate (ISceneChildEntity part, PrimUpdateFlags UpdateFlags)
         {
-            if (CheckForObjectCulling)
-            {
-                // priority is negative of distance
-                double priority = m_prioritizer.GetUpdatePriority (m_presence, part.ParentEntity);
-                if (priority < calcMinPrio ())
-                    return; // if 2 far ignore
-            }
+            if (CheckForObjectCulling && !Culler.ShowObjectToClient(m_presence, part.ParentEntity))
+                return; // if 2 far ignore
 
             lock (m_delayedUpdates)
             {
@@ -256,8 +242,6 @@ namespace OpenSim.Region.Framework.Scenes
             ISceneEntity[] entities = m_presence.Scene.Entities.GetEntities (m_presence.AbsolutePosition, m_presence.DrawDistance);
             PriorityQueue<EntityUpdate, double> m_entsqueue = new PriorityQueue<EntityUpdate, double> (entities.Length);
 
-            double newminp = calcMinPrio () - 0.2 * m_presence.Velocity.LengthSquared (); ;
-
             // build a prioritized list of things we need to send
 
             HashSet<ISceneEntity> NewGrpsInView = new HashSet<ISceneEntity> ();
@@ -269,12 +253,11 @@ namespace OpenSim.Region.Framework.Scenes
                     if (e.IsDeleted)
                         continue;
 
-                    double priority = m_prioritizer.GetUpdatePriority (m_presence, e);
-
                     //Check for culling here!
-                    if (priority < newminp)
+                    if (!Culler.ShowObjectToClient(m_presence, e))
                         continue; // if 2 far ignore
 
+                    double priority = m_prioritizer.GetUpdatePriority (m_presence, e);
                     NewGrpsInView.Add (e);
 
                     if (lastGrpsInView.Contains (e))
@@ -327,13 +310,12 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_queueing = true;
                     }
-                    double minp = calcMinPrio ();
-                    bool doculling = CheckForObjectCulling;
 
-                    if (doculling &&
+                    //If the draw distance is > the region size, just turn culling off, even if they turn theirs down, they will get all the objects anyway
+                    if (CheckForObjectCulling &&
                         m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeX &&
                         m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeY)
-                        doculling = false;
+                        CheckForObjectCulling = false;
 
 
                     ISceneEntity[] entities = m_presence.Scene.Entities.GetEntities ();
@@ -349,7 +331,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 continue;
 
                             //Check for culling here!
-                            if(doculling && !Culler.ShowObjectToClient(m_presence, e))
+                            if (CheckForObjectCulling && !Culler.ShowObjectToClient (m_presence, e))
                                 continue;
 
                             double priority = m_prioritizer.GetUpdatePriority (m_presence, e);
@@ -536,12 +518,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void QueuePresenceForUpdate (IScenePresence presence, PrimUpdateFlags flags)
         {
-            if (CheckForObjectCulling)
+            if (CheckForObjectCulling && !Culler.ShowObjectToClient(m_presence, presence))
             {
-                // priority is negative of distance
-                double priority = m_prioritizer.GetUpdatePriority (m_presence, presence);
-                if (priority < calcMinPrio ())
-                    return; // if 2 far ignore
+                return; // if 2 far ignore
             }
 
             m_updatesToSend.Enqueue (new object[2] { presence, flags });
