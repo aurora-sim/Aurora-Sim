@@ -3588,12 +3588,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 bool canUseCached = true;
 
                 // Compressed and cached object updates only make sense for LL primitives
-                if (!(entity is SceneObjectPart))
+                if (!(entity is ISceneEntity))
                 {
                     canUseCompressed = false;
                     canUseCached = false;
                 }
-                if (entity is SceneObjectPart)
+                if (entity is ISceneChildEntity)
                 {
                     // Please do not remove this unless you can demonstrate on the OpenSim mailing list that a client
                     // will never receive an update after a prim kill.  Even then, keeping the kill record may be a good
@@ -3612,17 +3612,30 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             entity.LocalId, Name);
                         return;
                         }*/
+                    ISceneChildEntity ent = (ISceneChildEntity)entity;
+                    if (ent.Shape.PCode == 9 && ent.Shape.State != 0)
+                    {
+                        //Don't send hud attachments to other avatars except for the owner
+                        byte state = ent.Shape.State;
+                        if ((state == (byte)AttachmentPoint.HUDBottom ||
+                                state == (byte)AttachmentPoint.HUDBottomLeft ||
+                                state == (byte)AttachmentPoint.HUDBottomRight ||
+                                state == (byte)AttachmentPoint.HUDCenter ||
+                                state == (byte)AttachmentPoint.HUDCenter2 ||
+                                state == (byte)AttachmentPoint.HUDTop ||
+                                state == (byte)AttachmentPoint.HUDTopLeft ||
+                                state == (byte)AttachmentPoint.HUDTopRight)
+                                &&
+                                ent.OwnerID != AgentId)
+                            continue;
+                    }
 
                     IObjectCache module = Scene.RequestModuleInterface<IObjectCache> ();
                     if (module != null)
-                    {
-                        canUseCached = module.UseCachedObject (AgentId, entity.LocalId, ((SceneObjectPart)entity).CRC);
-                    }
+                        canUseCached = module.UseCachedObject (AgentId, entity.LocalId, ent.CRC);
                     else
-                    {
                         //No cache module? Don't use cached then, or it won't stop sending ObjectUpdateCached even when the client requests prims
                         canUseCached = false;
-                    }
                 }
 
                 if (updateFlags.HasFlag (PrimUpdateFlags.FullUpdate))

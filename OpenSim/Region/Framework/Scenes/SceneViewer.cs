@@ -59,10 +59,8 @@ namespace OpenSim.Region.Framework.Scenes
         protected volatile bool m_inUse = false;
         protected Prioritizer m_prioritizer;
         protected Culler m_culler;
-        private Queue<object> m_delayedUpdates = new Queue<object> ();
-        private Queue<object> m_updatesToSend = new Queue<object> ();
         private Dictionary<UUID, EntityUpdate> m_presenceUpdatesToSend = new Dictionary<UUID, EntityUpdate> ();
-        private Dictionary<UUID, object> m_objectUpdatesToSend = new Dictionary<UUID, object> ();
+        private Dictionary<UUID, EntityUpdate> m_objectUpdatesToSend = new Dictionary<UUID, EntityUpdate> ();
 
         private HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity> ();
         private Vector3 m_lastUpdatePos;
@@ -140,21 +138,30 @@ namespace OpenSim.Region.Framework.Scenes
         /// Add the objects to the queue for which we need to send an update to the client
         /// </summary>
         /// <param name="part"></param>
-        public void QueuePartForUpdate (ISceneChildEntity part, PrimUpdateFlags UpdateFlags)
+        public void QueuePartForUpdate (ISceneChildEntity part, PrimUpdateFlags flags)
         {
             if (!Culler.ShowObjectToClient(m_presence, part.ParentEntity))
                 return; // if 2 far ignore
 
-            lock (m_delayedUpdates)
+            EntityUpdate o = new EntityUpdate (part, flags);
+            QueueEntityUpdate (o);
+        }
+
+        private void QueueEntityUpdate(EntityUpdate update)
+        {
+            lock (m_objectUpdatesToSend)
             {
-                if (m_queueing)
+                EntityUpdate o;
+                if (!m_objectUpdatesToSend.TryGetValue (update.Entity.UUID, out o))
                 {
-                    object[] o = new object[] { part, UpdateFlags };
-                    m_delayedUpdates.Enqueue (o);
-                    return;
+                    m_presenceUpdatesToSend.Add (update.Entity.UUID, update);
+                }
+                else
+                {
+                    update.Flags = o.Flags & update.Flags;
+                    m_presenceUpdatesToSend[update.Entity.UUID] = update;
                 }
             }
-            //SendUpdate (part, m_presence.GenerateClientFlags (part), UpdateFlags);
         }
 
         #region Unused
@@ -295,11 +302,23 @@ namespace OpenSim.Region.Framework.Scenes
                     if (lastGrpsInView.Contains (e))
                         continue;
 
-                    EntityUpdate update = new EntityUpdate (e, PrimUpdateFlags.FullUpdate);
-                    PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double> ();
-                    item.Value = update;
-                    item.Priority = priority;
-                    m_entsqueue.Enqueue (item);
+                    //Send the root object first!
+                    EntityUpdate rootupdate = new EntityUpdate (e.RootChild, PrimUpdateFlags.FullUpdate);
+                    PriorityQueueItem<EntityUpdate, double> rootitem = new PriorityQueueItem<EntityUpdate, double> ();
+                    rootitem.Value = rootupdate;
+                    rootitem.Priority = priority;
+                    m_entsqueue.Enqueue (rootitem);
+
+                    foreach (ISceneChildEntity child in e.ChildrenEntities ())
+                    {
+                        if (child == e.RootChild)
+                            continue; //Already sent
+                        EntityUpdate update = new EntityUpdate (child, PrimUpdateFlags.FullUpdate);
+                        PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double> ();
+                        item.Value = update;
+                        item.Priority = priority;
+                        m_entsqueue.Enqueue (item);
+                    }
                 }
             }
             entities = null;
@@ -339,11 +358,6 @@ namespace OpenSim.Region.Framework.Scenes
                 //If they are not in this region, we check to make sure that we allow seeing into neighbors
                 if (!m_presence.IsChildAgent || (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor))
                 {
-                    lock (m_delayedUpdates)
-                    {
-                        m_queueing = true;
-                    }
-
                     ISceneEntity[] entities = m_presence.Scene.Entities.GetEntities ();
                     PriorityQueue<EntityUpdate, double> m_entsqueue = new PriorityQueue<EntityUpdate, double> (entities.Length);
 
@@ -361,11 +375,23 @@ namespace OpenSim.Region.Framework.Scenes
                                 continue;
 
                             double priority = m_prioritizer.GetUpdatePriority (m_presence, e);
-                            EntityUpdate update = new EntityUpdate (e, PrimUpdateFlags.FullUpdate);
-                            PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double> ();
-                            item.Value = update;
-                            item.Priority = priority;
-                            m_entsqueue.Enqueue (item);
+                            //Send the root object first!
+                            EntityUpdate rootupdate = new EntityUpdate (e.RootChild, PrimUpdateFlags.FullUpdate);
+                            PriorityQueueItem<EntityUpdate, double> rootitem = new PriorityQueueItem<EntityUpdate, double> ();
+                            rootitem.Value = rootupdate;
+                            rootitem.Priority = priority;
+                            m_entsqueue.Enqueue (rootitem);
+
+                            foreach (ISceneChildEntity child in e.ChildrenEntities ())
+                            {
+                                if (child == e.RootChild)
+                                    continue; //Already sent
+                                EntityUpdate update = new EntityUpdate (child, PrimUpdateFlags.FullUpdate);
+                                PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double> ();
+                                item.Value = update;
+                                item.Priority = priority;
+                                m_entsqueue.Enqueue (item);
+                            }
                         }
                     }
                     entities = null;
@@ -378,6 +404,12 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 //Send 100 of them
                 m_presence.ControllingClient.SendPrimUpdate (m_presenceUpdatesToSend.Values.Take (100));
+            }
+
+            lock (m_objectUpdatesToSend)
+            {
+                //Send 100 of them
+                m_presence.ControllingClient.SendPrimUpdate (m_objectUpdatesToSend.Values.Take (100));
             }
 
             //Add the time to the stats tracker
@@ -394,108 +426,16 @@ namespace OpenSim.Region.Framework.Scenes
 
             while (m_entsqueue.TryDequeue (out up))
             {
-                //Make sure not send deleted or null objects
-
-                SceneObjectGroup ent = (SceneObjectGroup)up.Value.Entity;
-                if (ent == null || ent.IsDeleted)
-                    continue;
-
-                if (ent.RootPart.Shape.PCode == 9 && ent.RootPart.Shape.State != 0)
-                {
-                    byte state = ent.RootPart.Shape.State;
-                    if ((
-                            state == (byte)AttachmentPoint.HUDBottom ||
-                            state == (byte)AttachmentPoint.HUDBottomLeft ||
-                            state == (byte)AttachmentPoint.HUDBottomRight ||
-                            state == (byte)AttachmentPoint.HUDCenter ||
-                            state == (byte)AttachmentPoint.HUDCenter2 ||
-                            state == (byte)AttachmentPoint.HUDTop ||
-                            state == (byte)AttachmentPoint.HUDTopLeft ||
-                            state == (byte)AttachmentPoint.HUDTopRight
-                            )
-                            &&
-                            ent.RootPart.OwnerID != m_presence.UUID)
-                        continue;
-                }
-                SendUpdate (up.Value.Flags, ent);
+                QueueEntityUpdate (up.Value);
             }
             m_entsqueue.Clear ();
 
-            // send things that arrived meanwhile
-            lock (m_delayedUpdates)
-            {
-                object o;
-                while (m_delayedUpdates.Count > 0)
-                {
-                    o = m_delayedUpdates.Dequeue ();
-                    if (o == null)
-                        break;
-                    ISceneChildEntity p = (ISceneChildEntity)((object[])o)[0];
-                    PrimUpdateFlags updateFlags = (PrimUpdateFlags)((object[])o)[1];
-                    SendUpdate (p, updateFlags);
-                }
-                m_queueing = false;
-            }
             m_lastUpdatePos = (m_presence.IsChildAgent) ?
                 m_presence.AbsolutePosition :
                 m_presence.CameraPosition;
         }
 
         #endregion
-
-        #endregion
-
-        #region Send the packets to the client handler
-
-        /// <summary>
-        /// Send a full update to the client for the given part
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="clientFlags"></param>
-        protected internal void SendUpdate (ISceneChildEntity part, PrimUpdateFlags changedFlags)
-        {
-            Vector3 lPos;
-            if (part.IsRoot)
-            {
-                if (part.IsAttachment)
-                {
-                    lPos = part.AttachedPos;
-                }
-                else
-                {
-                    lPos = part.AbsolutePosition;
-                }
-            }
-            else
-            {
-                lPos = part.OffsetPosition;
-            }
-
-            // Suppress full updates during attachment editing
-            if (part.ParentEntity.IsSelected && part.IsAttachment)
-                return;
-            m_presence.ControllingClient.SendPrimUpdate (part, changedFlags);
-        }
-
-        /// <summary>
-        /// This sends updates for all the prims in the group
-        /// </summary>
-        /// <param name="UpdateFlags"></param>
-        /// <param name="grp"></param>
-        protected internal void SendUpdate (PrimUpdateFlags UpdateFlags, ISceneEntity grp)
-        {
-            SendUpdate (
-                grp.RootChild, UpdateFlags);
-
-            List<ISceneChildEntity> children;
-            children = new List<ISceneChildEntity> (grp.ChildrenEntities ());
-            foreach (SceneObjectPart part in children)
-            {
-                if (part != grp.RootChild)
-                    SendUpdate (
-                        part, UpdateFlags);
-            }
-        }
 
         #endregion
 
@@ -517,10 +457,10 @@ namespace OpenSim.Region.Framework.Scenes
             m_SentInitialObjects = false;
             m_prioritizer = null;
             m_culler = null;
-            m_delayedUpdates.Clear ();
             m_inUse = false;
             m_queueing = false;
-            m_updatesToSend.Clear ();
+            m_objectUpdatesToSend.Clear ();
+            m_presenceUpdatesToSend.Clear ();
             m_presence.Scene.EventManager.OnSignificantClientMovement -= SignificantClientMovement;
             m_presence.Scene.AuroraEventManager.OnGenericEvent -= AuroraEventManager_OnGenericEvent;
             m_presence = null;
