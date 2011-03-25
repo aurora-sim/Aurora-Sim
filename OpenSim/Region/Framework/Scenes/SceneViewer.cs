@@ -61,7 +61,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected Prioritizer m_prioritizer;
         protected Culler m_culler;
         private OrderedDictionary/*<UUID, EntityUpdate>*/ m_presenceUpdatesToSend = new OrderedDictionary/*<UUID, EntityUpdate>*/ ();
-        private Dictionary<UUID, EntityUpdate> m_objectUpdatesToSend = new Dictionary<UUID, EntityUpdate> ();
+        private OrderedDictionary/*<UUID, EntityUpdate>*/ m_objectUpdatesToSend = new OrderedDictionary/*<UUID, EntityUpdate>*/ ();
 
         private HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity> ();
         private Vector3 m_lastUpdatePos;
@@ -152,15 +152,15 @@ namespace OpenSim.Region.Framework.Scenes
         {
             lock (m_objectUpdatesToSend)
             {
-                EntityUpdate o;
-                if (!m_objectUpdatesToSend.TryGetValue (update.Entity.UUID, out o))
+                EntityUpdate o = (EntityUpdate)m_objectUpdatesToSend[update.Entity.UUID];
+                if (o == null)
                 {
-                    m_objectUpdatesToSend.Add (update.Entity.UUID, update);
+                    m_objectUpdatesToSend.Insert (0, update.Entity.UUID, update);
                 }
                 else
                 {
-                    update.Flags = o.Flags & update.Flags;
-                    m_objectUpdatesToSend[update.Entity.UUID] = update;
+                    o.Flags = o.Flags & update.Flags;
+                    m_objectUpdatesToSend[update.Entity.UUID] = o;
                 }
             }
         }
@@ -406,22 +406,30 @@ namespace OpenSim.Region.Framework.Scenes
                 //Send 100 of them
                 if (m_presenceUpdatesToSend.Count != 0)
                 {
-                    int count = 100 > m_presenceUpdatesToSend.Count ? 100 : m_presenceUpdatesToSend.Count;
+                    int count = m_presenceUpdatesToSend.Count > 100 ? 100 : m_presenceUpdatesToSend.Count;
                     List<EntityUpdate> updates = new List<EntityUpdate> ();
                     for (int i = 0; i < count; i++)
                     {
                         updates.Add ((EntityUpdate)m_presenceUpdatesToSend[0]);
                         m_presenceUpdatesToSend.RemoveAt (0);
                     }
-                    m_presence.ControllingClient.SendPrimUpdate (m_presenceUpdatesToSend.Values.OfType<EntityUpdate> ());
+                    m_presence.ControllingClient.SendPrimUpdate (updates);
                 }
             }
 
             lock (m_objectUpdatesToSend)
             {
-                //Send 100 of them
-                //if (m_objectUpdatesToSend.Count != 0)
-                //    m_presence.ControllingClient.SendPrimUpdate (m_objectUpdatesToSend.Values.Take (100));
+                if (m_objectUpdatesToSend.Count != 0)
+                {
+                    int count = m_objectUpdatesToSend.Count > 100 ? 100 : m_objectUpdatesToSend.Count;
+                    List<EntityUpdate> updates = new List<EntityUpdate> ();
+                    for (int i = 0; i < count; i++)
+                    {
+                        updates.Add ((EntityUpdate)m_objectUpdatesToSend[0]);
+                        m_objectUpdatesToSend.RemoveAt (0);
+                    }
+                    m_presence.ControllingClient.SendPrimUpdate (updates);
+                }
             }
 
             //Add the time to the stats tracker

@@ -65,7 +65,7 @@ namespace OpenSim.Region.Framework.Scenes
         private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         
         private bool m_useDistanceCulling = true;
-        private bool m_useCulling = false;
+        private bool m_useCulling = true;
 
         public bool UseCulling
         {
