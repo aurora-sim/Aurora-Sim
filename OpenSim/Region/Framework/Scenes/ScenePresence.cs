@@ -2686,7 +2686,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void Close()
         {
-            m_sceneViewer.Reset();
+            m_sceneViewer.Close();
 
             RemoveFromPhysicalScene();
             if (m_animator == null)

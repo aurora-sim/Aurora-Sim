@@ -71,12 +71,17 @@ namespace OpenSim.Framework
         /// Run through all of the updates we have and re-assign their priority depending
         ///  on what is now going on in the Scene
         /// </summary>
-        void Reprioritize();
+        void Reprioritize ();
 
         /// <summary>
-        /// Reset all lists that have to deal with what updates the viewer has
+        /// The client has left this region and went into a child region, clean up anything required
         /// </summary>
-        void Reset();
+        void Reset ();
+
+        /// <summary>
+        /// Closes the SceneViewer
+        /// </summary>
+        void Close ();
 
         /// <summary>
         /// Send a presence terse update to all clients
@@ -95,6 +100,17 @@ namespace OpenSim.Framework
 
     public interface ICuller
     {
+        /// <summary>
+        /// Is culling enabled?
+        /// </summary>
+        bool UseCulling { get; set; }
+
+        /// <summary>
+        /// Should the given object be should to the given client?
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="entity"></param>
+        /// <returns></returns>
         bool ShowObjectToClient (IScenePresence client, IEntity entity);
     }
 

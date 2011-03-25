@@ -62,7 +62,6 @@ namespace OpenSim.Region.Framework.Scenes
         private Queue<object> m_updatesToSend = new Queue<object> ();
 
         private HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity> ();
-        private bool CheckForObjectCulling = false;
         private Vector3 m_lastUpdatePos;
 
         public IPrioritizer Prioritizer
@@ -86,14 +85,11 @@ namespace OpenSim.Region.Framework.Scenes
             m_presence.Scene.AuroraEventManager.OnGenericEvent += AuroraEventManager_OnGenericEvent;
             m_prioritizer = new Prioritizer (presence.Scene);
             m_culler = new Scenes.Culler (presence.Scene);
-            IConfig aurorastartupConfig = presence.Scene.Config.Configs["AuroraStartup"];
-            if (aurorastartupConfig != null)
-                CheckForObjectCulling = aurorastartupConfig.GetBoolean ("CheckForObjectCulling", CheckForObjectCulling);
         }
 
         object AuroraEventManager_OnGenericEvent (string FunctionName, object parameters)
         {
-            if (CheckForObjectCulling && FunctionName == "DrawDistanceChanged")
+            if (Culler.UseCulling && FunctionName == "DrawDistanceChanged")
             {
                 IScenePresence sp = (IScenePresence)parameters;
                 if (sp.UUID != m_presence.UUID)
@@ -106,7 +102,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeY)
                 {
                     lastGrpsInView.Clear ();
-                    CheckForObjectCulling = false;
+                    Culler.UseCulling = false;
                 }
             }
             return null;
@@ -114,7 +110,15 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        #region Enqueue/Remove updates for objects
+        #region Enqueue/Remove updates for entities
+
+        public void QueuePresenceForUpdate (IScenePresence presence, PrimUpdateFlags flags)
+        {
+            if (!Culler.ShowObjectToClient (m_presence, presence))
+                return; // if 2 far ignore
+
+            m_updatesToSend.Enqueue (new object[2] { presence, flags });
+        }
 
         /// <summary>
         /// Add the objects to the queue for which we need to send an update to the client
@@ -122,7 +126,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="part"></param>
         public void QueuePartForUpdate (ISceneChildEntity part, PrimUpdateFlags UpdateFlags)
         {
-            if (CheckForObjectCulling && !Culler.ShowObjectToClient(m_presence, part.ParentEntity))
+            if (!Culler.ShowObjectToClient(m_presence, part.ParentEntity))
                 return; // if 2 far ignore
 
             lock (m_delayedUpdates)
@@ -225,17 +229,17 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="remote_client"></param>
         private void SignificantClientMovement (IClientAPI remote_client)
         {
-            if (!CheckForObjectCulling)
+            if (!Culler.UseCulling)
                 return;
 
             //Only check our presence
             if (remote_client.AgentId != m_presence.UUID)
                 return;
 
-            if (m_presence.DrawDistance == 0)
+            if (m_presence.DrawDistance < 32)
             {
-                //If the draw distance is 0, the client has gotten messed up or something and we can't do this...
-                m_presence.DrawDistance = 64; //Force give them a draw distance
+                //If the draw distance is small, the client has gotten messed up or something and we can't do this...
+                m_presence.DrawDistance = 32; //Force give them a draw distance
             }
 
             if (!m_presence.IsChildAgent || (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor))
@@ -324,13 +328,6 @@ namespace OpenSim.Region.Framework.Scenes
                         m_queueing = true;
                     }
 
-                    //If the draw distance is > the region size, just turn culling off, even if they turn theirs down, they will get all the objects anyway
-                    if (CheckForObjectCulling &&
-                        m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeX &&
-                        m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeY)
-                        CheckForObjectCulling = false;
-
-
                     ISceneEntity[] entities = m_presence.Scene.Entities.GetEntities ();
                     PriorityQueue<EntityUpdate, double> m_entsqueue = new PriorityQueue<EntityUpdate, double> (entities.Length);
 
@@ -344,7 +341,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 continue;
 
                             //Check for culling here!
-                            if (CheckForObjectCulling && !Culler.ShowObjectToClient (m_presence, e))
+                            if (!Culler.ShowObjectToClient (m_presence, e))
                                 continue;
 
                             double priority = m_prioritizer.GetUpdatePriority (m_presence, e);
@@ -508,33 +505,30 @@ namespace OpenSim.Region.Framework.Scenes
         #region Reset and Close
 
         /// <summary>
-        /// Reset all lists that have to deal with what updates the viewer has
+        /// The client has left this region and went into a child region
         /// </summary>
         public void Reset ()
         {
-            /*
-            m_inUse = false;
-            m_updatesNeedReprioritization = false;
-            m_SentInitialObjects = false;
-            m_removeNextUpdateOf.Clear();
-            m_removeUpdateOf.Clear();
-            m_objectsInView.Clear();
-             */
+            //Don't reset these... the client is just in a child region now, we don't want to resent them all the prims
         }
 
-        #endregion
-
-        #region Presence Updates
-
-        public void QueuePresenceForUpdate (IScenePresence presence, PrimUpdateFlags flags)
+        /// <summary>
+        /// Reset all lists that have to deal with what updates the viewer has
+        /// </summary>
+        public void Close ()
         {
-            if (CheckForObjectCulling && !Culler.ShowObjectToClient(m_presence, presence))
-            {
-                return; // if 2 far ignore
-            }
-
-            m_updatesToSend.Enqueue (new object[2] { presence, flags });
+            m_SentInitialObjects = false;
+            m_prioritizer = null;
+            m_culler = null;
+            m_delayedUpdates.Clear ();
+            m_inUse = false;
+            m_queueing = false;
+            m_updatesToSend.Clear ();
+            m_presence.Scene.EventManager.OnSignificantClientMovement -= SignificantClientMovement;
+            m_presence.Scene.AuroraEventManager.OnGenericEvent -= AuroraEventManager_OnGenericEvent;
+            m_presence = null;
         }
+
         #endregion
     }
 #if testViewer

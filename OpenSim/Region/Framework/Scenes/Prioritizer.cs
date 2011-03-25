@@ -63,20 +63,36 @@ namespace OpenSim.Region.Framework.Scenes
     public class Culler : ICuller
     {
         private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
+        
         private bool m_useDistanceCulling = true;
+        private bool m_useCulling = true;
+
+        public bool UseCulling
+        {
+            get { return m_useCulling; }
+            set { m_useCulling = value; }
+        }
 
         private IScene m_scene;
 
         public Culler (IScene scene)
         {
             m_scene = scene;
+            IConfig interestConfig = scene.Config.Configs["InterestManagement"];
+            if (interestConfig != null)
+            {
+                m_useCulling = interestConfig.GetBoolean ("UseCulling", m_useCulling);
+                m_useDistanceCulling = interestConfig.GetBoolean ("UseDistanceBasedCulling", m_useDistanceCulling);
+            }
         }
 
         #region ICuller Members
 
         public bool ShowObjectToClient (IScenePresence client, IEntity entity)
         {
+            if (!m_useCulling)
+                return true; //If we arn't using culling, return true by default to show all prims
+
             if (m_useDistanceCulling && !DistanceCulling (client, entity))
                 return false;
 
