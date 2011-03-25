@@ -138,10 +138,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         private IScene m_scene;
 
-        private double m_rootReprioritizationDistance = 10.0;
         private double m_childReprioritizationDistance = 20.0;
 
-        public double RootReprioritizationDistance { get { return m_rootReprioritizationDistance; } }
         public double ChildReprioritizationDistance { get { return m_childReprioritizationDistance; } }
 
         public Prioritizer(IScene scene)
@@ -151,7 +149,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (interestConfig != null)
             {
                 string update_prioritization_scheme = interestConfig.GetString("UpdatePrioritizationScheme", "BestAvatarResponsiveness").Trim().ToLower();
-                m_rootReprioritizationDistance = interestConfig.GetDouble("RootReprioritizationDistance", 10.0);
                 m_childReprioritizationDistance = interestConfig.GetDouble("ChildReprioritizationDistance", 20.0);
                 try
                 {
@@ -174,6 +171,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (entity == null)
                 return double.PositiveInfinity;
 
+            bool adjustRootPriority = true;
             try
             {
                 switch (UpdatePrioritizationScheme)
@@ -194,6 +192,7 @@ namespace OpenSim.Region.Framework.Scenes
                         priority = GetPriorityByBestAvatarResponsiveness(client, entity);
                         break;
                     case UpdatePrioritizationSchemes.OOB:
+                        adjustRootPriority = false; //It doesn't need it
                         priority = GetPriorityByOOBDistance(client, entity);
                         break;
                     default:
@@ -210,32 +209,32 @@ namespace OpenSim.Region.Framework.Scenes
                 priority = double.PositiveInfinity;
             }
 
-            /*// Adjust priority so that root prims are sent to the viewer first.  This is especially important for 
+            // Adjust priority so that root prims are sent to the viewer first.  This is especially important for 
             // attachments acting as huds, since current viewers fail to display hud child prims if their updates
             // arrive before the root one.
 
-            if (entity is SceneObjectPart)
+            if (adjustRootPriority && entity is ISceneChildEntity)
             {
-                SceneObjectPart sop = ((SceneObjectPart)entity);
+                ISceneChildEntity sop = ((ISceneChildEntity)entity);
                 if (sop.IsRoot)
-                    {
-                    SceneObjectGroup grp = sop.ParentGroup;
+                {
+                    ISceneEntity grp = sop.ParentEntity;
                     priority -= (grp.BSphereRadiusSQ + 0.5f);
-                    }
- 
+                }
+
 
                 if (sop.IsRoot)
                 {
-                    if (priority >= double.MinValue + m_childPrimAdjustmentFactor)
-                        priority -= m_childPrimAdjustmentFactor;
+                    if (priority >= double.MinValue + 0.05)
+                        priority -= 0.05;
                 }
                 else
                 {
-                    if (priority <= double.MaxValue - m_childPrimAdjustmentFactor)
-                        priority += m_childPrimAdjustmentFactor;
+                    if (priority <= double.MaxValue - 0.05)
+                        priority += 0.05;
                 }
-            }*/
- 
+            }
+
             return priority;
         }
 

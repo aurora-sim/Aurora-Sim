@@ -138,35 +138,47 @@ namespace OpenSim.Region.Framework.Scenes
         private float m_grpBSphereRadiusSQ; // the square of the radius of a sphere containing the oob
 
 
+        /// <summary>
+        /// The size of a bounding box oriented as prim, is future will consider cutted prims, meshs etc
+        /// </summary>
         [XmlIgnore]
         public Vector3 OOBsize
+        {
+            get
             {
-            get {
                 if (!m_ValidgrpOOB)
-                    UpdateOOBfromOOBs();
+                    UpdateOOBfromOOBs ();
                 return m_grpOOBsize;
-                }
-            } // the size of a bounding box oriented as prim, is future will consider cutted prims, meshs etc
+            }
+        }
+
+        /// <summary>
+        /// The position center of the bounding box relative to it's Position
+        /// </summary>
         [XmlIgnore]
         public Vector3 OOBoffset
-            {
+        {
             get
-                {
+            {
                 if (!m_ValidgrpOOB)
-                    UpdateOOBfromOOBs();
+                    UpdateOOBfromOOBs ();
                 return m_grpOOBoffset;
-                }
-            } // the position center of the bounding box relative to it's Position
+            }
+        }
+
+        /// <summary>
+        /// The square of the radius of a sphere containing the oob
+        /// </summary>
         [XmlIgnore]
         public float BSphereRadiusSQ
-            {
+        {
             get
-                {
+            {
                 if (!m_ValidgrpOOB)
-                    UpdateOOBfromOOBs();
+                    UpdateOOBfromOOBs ();
                 return m_grpBSphereRadiusSQ;
-                }
-            } // the square of the radius of a sphere containing the oob
+            }
+        }
 
         public override bool HasGroupChanged
         {

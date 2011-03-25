@@ -90,7 +90,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_presence.Scene.EventManager.OnSignificantClientMovement += SignificantClientMovement;
             m_presence.Scene.AuroraEventManager.OnGenericEvent += AuroraEventManager_OnGenericEvent;
             m_prioritizer = new Prioritizer (presence.Scene);
-            m_culler = new Scenes.Culler (presence.Scene);
+            m_culler = new Culler (presence.Scene);
         }
 
         object AuroraEventManager_OnGenericEvent (string FunctionName, object parameters)
@@ -265,11 +265,10 @@ namespace OpenSim.Region.Framework.Scenes
         #region SendPrimUpdates
 
         /// <summary>
-        /// This loops through all of the lists that we have for the client
-        ///  as well as checking whether the client has ever entered the sim before
-        ///  and sending the needed updates to them if they have just entered.
-        ///  NOTE: This does add the updates to the LLUDPClient queue, it does NOT have prioritization built in before this method!
+        /// This method is called by the LLUDPServer and should never be called by anyone else
+        /// It loops through the available updates and sends them out (no waiting)
         /// </summary>
+        /// <param name="numUpdates">The number of updates to send</param>
         public void SendPrimUpdates (int numUpdates)
         {
             if (m_inUse)

@@ -332,6 +332,8 @@ namespace OpenSim.Framework
         void DetachToGround ();
 
         void UpdatePermissions (OpenMetaverse.UUID agentID, byte field, uint localId, uint mask, byte set);
+
+        float BSphereRadiusSQ { get; set; }
     }
 
     public interface IEntity

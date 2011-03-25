@@ -386,7 +386,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         //Send an update to all child agents if we are a root agent
                         m_enqueueSendChildAgentUpdate = true;
-                        m_enqueueSendChildAgentUpdateTime = DateTime.Now.AddSeconds(10);
+                        m_enqueueSendChildAgentUpdateTime = DateTime.Now.AddSeconds(5);
                     }
                 }
             }

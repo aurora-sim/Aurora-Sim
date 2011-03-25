@@ -43,17 +43,23 @@ namespace OpenSim.Framework
         ICuller Culler { get; }
 
         /// <summary>
+        /// Send a presence terse update to all clients
+        /// </summary>
+        /// <param name="presence"></param>
+        /// <param name="flags"></param>
+        void QueuePresenceForUpdate (IScenePresence presence, PrimUpdateFlags flags);
+
+        /// <summary>
         /// Add the objects to the queue for which we need to send an update to the client
         /// </summary>
         /// <param name="part"></param>
         void QueuePartForUpdate(ISceneChildEntity part, PrimUpdateFlags UpdateFlags);
 
         /// <summary>
-        /// This loops through all of the lists that we have for the client
-        ///  as well as checking whether the client has ever entered the sim before
-        ///  and sending the needed updates to them if they have just entered.
+        /// This method is called by the LLUDPServer and should never be called by anyone else
+        /// It loops through the available updates and sends them out (no waiting)
         /// </summary>
-        /// <param name="numUpdates">The number of updates to send in this pass</param>
+        /// <param name="numUpdates">The number of updates to send</param>
         void SendPrimUpdates(int numUpdates);
 
         /// <summary>
@@ -65,19 +71,21 @@ namespace OpenSim.Framework
         /// Closes the SceneViewer
         /// </summary>
         void Close ();
-
-        /// <summary>
-        /// Send a presence terse update to all clients
-        /// </summary>
-        /// <param name="presence"></param>
-        /// <param name="flags"></param>
-        void QueuePresenceForUpdate (IScenePresence presence, PrimUpdateFlags flags);
     }
 
     public interface IPrioritizer
     {
+        /// <summary>
+        /// Gets the priority for the given client/entity
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="entity"></param>
+        /// <returns></returns>
         double GetUpdatePriority (IScenePresence client, IEntity entity);
-        double RootReprioritizationDistance { get; }
+
+        /// <summary>
+        /// The distance before we send a child agent update to all neighbors
+        /// </summary>
         double ChildReprioritizationDistance { get; }
     }
 
