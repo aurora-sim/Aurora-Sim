@@ -501,7 +501,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return data;
         }
 
-        public bool EnqueueOutgoing(OutgoingPacket packet, bool forceQueue)
+        public bool EnqueueOutgoing(OutgoingPacket packet)
         {
             int category = (int)packet.Category;
             int prio;
