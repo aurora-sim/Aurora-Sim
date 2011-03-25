@@ -107,9 +107,20 @@ namespace OpenSim.Region.Framework.Scenes
                 DD = 32;
             if (DD > client.Scene.RegionInfo.RegionSizeX)
                 return true; //Its larger than the region, no culling check even necessary
-
+            Vector3 posToCheckFrom = client.AbsolutePosition;
+            if (client.IsChildAgent)
+            {
+                if (client.AbsolutePosition.X < 0)
+                    posToCheckFrom.X = client.Scene.RegionInfo.RegionSizeX - (client.Scene.RegionInfo.RegionSizeX + client.AbsolutePosition.X);
+                if (client.AbsolutePosition.Y < 0)
+                    posToCheckFrom.Y = client.Scene.RegionInfo.RegionSizeY - (client.Scene.RegionInfo.RegionSizeY + client.AbsolutePosition.Y);
+                if (client.AbsolutePosition.X > client.Scene.RegionInfo.RegionSizeX)
+                    posToCheckFrom.X = client.Scene.RegionInfo.RegionSizeX - (client.Scene.RegionInfo.RegionSizeX - client.AbsolutePosition.X);
+                if (client.AbsolutePosition.Y > client.Scene.RegionInfo.RegionSizeY)
+                    posToCheckFrom.Y = client.Scene.RegionInfo.RegionSizeY - (client.Scene.RegionInfo.RegionSizeY - client.AbsolutePosition.Y);
+            }
             //If the distance is greater than the clients draw distance, its out of range
-            if (Vector3.DistanceSquared (client.AbsolutePosition, entity.AbsolutePosition) > 
+            if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition) > 
                 DD * DD) //Use squares to make it faster than having to do the sqrt
                 return false;
             

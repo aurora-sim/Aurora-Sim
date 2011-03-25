@@ -2675,11 +2675,5 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_sceneViewer.QueuePartForUpdate(part, flags);
         }
-
-        #region IScenePresence Members
-
-        
-
-        #endregion
     }
 }

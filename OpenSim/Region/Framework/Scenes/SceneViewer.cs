@@ -101,14 +101,10 @@ namespace OpenSim.Region.Framework.Scenes
                 if (sp.UUID != m_presence.UUID)
                     return null; //Only want our av
 
-                //If their draw distance is > the region size, they will get all the updates anyway,
-                // so turn off culling until they leave (they could turn the draw distance down, but if they had it
-                // large, theres a good chance they want it that large, so leave it alone)
                 if (m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeX &&
                     m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeY)
                 {
                     lastGrpsInView.Clear ();
-                    Culler.UseCulling = false;
                 }
 
                 //Draw Distance chagned, force a cull check
