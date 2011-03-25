@@ -1187,7 +1187,6 @@ namespace OpenSim.Framework
 
         void SendAvatarDataImmediate (IEntity avatar);
         void SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags);
-        void SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags, double priority);
         void FlushPrimUpdates();
 
         void SendInventoryFolderDetails(UUID ownerID, UUID folderID, List<InventoryItemBase> items,

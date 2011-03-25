@@ -1330,12 +1330,7 @@ namespace Aurora.BotManager
             
         }
 
-        public void SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags)
-        {
-            
-        }
-
-        public void SendPrimUpdate (IEntity entity, PrimUpdateFlags updateFlags, double priority)
+        public void SendPrimUpdate (IEnumerable<EntityUpdate> updates)
         {
             
         }

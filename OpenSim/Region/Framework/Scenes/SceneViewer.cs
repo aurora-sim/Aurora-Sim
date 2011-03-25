@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using OpenMetaverse;
@@ -60,6 +61,8 @@ namespace OpenSim.Region.Framework.Scenes
         protected Culler m_culler;
         private Queue<object> m_delayedUpdates = new Queue<object> ();
         private Queue<object> m_updatesToSend = new Queue<object> ();
+        private Dictionary<UUID, EntityUpdate> m_presenceUpdatesToSend = new Dictionary<UUID, EntityUpdate> ();
+        private Dictionary<UUID, object> m_objectUpdatesToSend = new Dictionary<UUID, object> ();
 
         private HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity> ();
         private Vector3 m_lastUpdatePos;
@@ -117,7 +120,20 @@ namespace OpenSim.Region.Framework.Scenes
             if (!Culler.ShowObjectToClient (m_presence, presence))
                 return; // if 2 far ignore
 
-            m_updatesToSend.Enqueue (new object[2] { presence, flags });
+            lock (m_presenceUpdatesToSend)
+            {
+                EntityUpdate o;
+                if (!m_presenceUpdatesToSend.TryGetValue (presence.UUID, out o))
+                {
+                    o = new EntityUpdate (presence, flags);
+                    m_presenceUpdatesToSend.Add (presence.UUID, o);
+                }
+                else
+                {
+                    o.Flags = o.Flags & flags;
+                    m_presenceUpdatesToSend[presence.UUID] = o;
+                }
+            }
         }
 
         /// <summary>
@@ -138,7 +154,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return;
                 }
             }
-            SendUpdate (part, m_presence.GenerateClientFlags (part), UpdateFlags);
+            //SendUpdate (part, m_presence.GenerateClientFlags (part), UpdateFlags);
         }
 
         #region Unused
@@ -358,18 +374,10 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            lock (m_updatesToSend)
+            lock (m_presenceUpdatesToSend)
             {
-                object o;
-                while (m_updatesToSend.Count > 0)
-                {
-                    o = m_updatesToSend.Dequeue ();
-                    if (o == null)
-                        break;
-                    IScenePresence p = (IScenePresence)((object[])o)[0];
-                    PrimUpdateFlags updateFlags = (PrimUpdateFlags)((object[])o)[1];
-                    m_presence.ControllingClient.SendPrimUpdate (p, updateFlags);
-                }
+                //Send 100 of them
+                m_presence.ControllingClient.SendPrimUpdate (m_presenceUpdatesToSend.Values.Take (100));
             }
 
             //Add the time to the stats tracker
@@ -424,7 +432,7 @@ namespace OpenSim.Region.Framework.Scenes
                         break;
                     ISceneChildEntity p = (ISceneChildEntity)((object[])o)[0];
                     PrimUpdateFlags updateFlags = (PrimUpdateFlags)((object[])o)[1];
-                    SendUpdate (p, m_presence.GenerateClientFlags (p), updateFlags);
+                    SendUpdate (p, updateFlags);
                 }
                 m_queueing = false;
             }
@@ -444,7 +452,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="clientFlags"></param>
-        protected internal void SendUpdate (ISceneChildEntity part, uint clientFlags, PrimUpdateFlags changedFlags)
+        protected internal void SendUpdate (ISceneChildEntity part, PrimUpdateFlags changedFlags)
         {
             Vector3 lPos;
             if (part.IsRoot)
@@ -466,17 +474,6 @@ namespace OpenSim.Region.Framework.Scenes
             // Suppress full updates during attachment editing
             if (part.ParentEntity.IsSelected && part.IsAttachment)
                 return;
-
-            clientFlags &= ~(uint)PrimFlags.CreateSelected;
-
-            if (m_presence.UUID == part.OwnerID)
-            {
-                if ((part.Flags & PrimFlags.CreateSelected) != 0)
-                {
-                    clientFlags |= (uint)PrimFlags.CreateSelected;
-                    part.Flags &= ~PrimFlags.CreateSelected;
-                }
-            }
             m_presence.ControllingClient.SendPrimUpdate (part, changedFlags);
         }
 
@@ -488,7 +485,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected internal void SendUpdate (PrimUpdateFlags UpdateFlags, ISceneEntity grp)
         {
             SendUpdate (
-                grp.RootChild, m_presence.Scene.Permissions.GenerateClientFlags (m_presence.UUID, grp.RootChild), UpdateFlags);
+                grp.RootChild, UpdateFlags);
 
             List<ISceneChildEntity> children;
             children = new List<ISceneChildEntity> (grp.ChildrenEntities ());
@@ -496,7 +493,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (part != grp.RootChild)
                     SendUpdate (
-                        part, m_presence.Scene.Permissions.GenerateClientFlags (m_presence.UUID, part), UpdateFlags);
+                        part, UpdateFlags);
             }
         }
 
