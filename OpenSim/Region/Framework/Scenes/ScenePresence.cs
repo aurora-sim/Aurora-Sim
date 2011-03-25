@@ -2108,7 +2108,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void SendTerseUpdateToAllClients()
         {
             m_perfMonMS = Util.EnvironmentTickCount();
-            
+
             m_scene.ForEachClient(SendTerseUpdateToClient);
 
             IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
