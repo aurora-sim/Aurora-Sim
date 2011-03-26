@@ -54,15 +54,15 @@ namespace OpenSim.Services.AvatarService
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AvatarHandler", "") != Name)
-                return;
-
             m_registry = registry;
 
             IConfig avatarConfig = config.Configs["AvatarService"];
             if (avatarConfig != null)
                 m_enableCacheBakedTextures = avatarConfig.GetBoolean ("EnableBakedTextureCaching", m_enableCacheBakedTextures);
+            
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString ("AvatarHandler", "") != Name)
+                return;
 
             registry.RegisterModuleInterface<IAvatarService>(this);
         }

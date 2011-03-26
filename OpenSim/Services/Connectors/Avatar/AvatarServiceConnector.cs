@@ -78,6 +78,7 @@ namespace OpenSim.Services.Connectors
 
             string reply = string.Empty;
             string reqString = WebUtils.BuildQueryString(sendData);
+            AvatarData avatar = null;
             // m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
@@ -92,22 +93,21 @@ namespace OpenSim.Services.Connectors
                         m_log.DebugFormat("[AVATAR CONNECTOR]: GetAgent received null or empty reply");
                         return null;
                     }
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse (reply);
+
+                    if ((replyData != null) && replyData.ContainsKey ("result") && (replyData["result"] != null))
+                    {
+                        if (replyData["result"] is Dictionary<string, object>)
+                        {
+                            avatar = new AvatarData ((Dictionary<string, object>)replyData["result"]);
+                            return avatar;
+                        }
+                    }
                 }
             }
             catch (Exception e)
             {
                 m_log.DebugFormat("[AVATAR CONNECTOR]: Exception when contacting presence server: {0}", e.Message);
-            }
-
-            Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-            AvatarData avatar = null;
-
-            if ((replyData != null) && replyData.ContainsKey("result") && (replyData["result"] != null))
-            {
-                if (replyData["result"] is Dictionary<string, object>)
-                {
-                    avatar = new AvatarData((Dictionary<string, object>)replyData["result"]);
-                }
             }
 
             return avatar;
@@ -148,8 +148,6 @@ namespace OpenSim.Services.Connectors
                         {
                             if (replyData["result"].ToString().ToLower() == "success")
                                 return true;
-                            else
-                                return false;
                         }
                         else
                             m_log.DebugFormat("[AVATAR CONNECTOR]: SetAvatar reply data does not contain result field");
@@ -194,8 +192,6 @@ namespace OpenSim.Services.Connectors
                         {
                             if (replyData["result"].ToString().ToLower() == "success")
                                 return true;
-                            else
-                                return false;
                         }
                         else
                             m_log.DebugFormat("[AVATAR CONNECTOR]: SetItems reply data does not contain result field");
@@ -242,8 +238,6 @@ namespace OpenSim.Services.Connectors
                         {
                             if (replyData["result"].ToString().ToLower() == "success")
                                 return true;
-                            else
-                                return false;
                         }
                         else
                             m_log.DebugFormat("[AVATAR CONNECTOR]: SetItems reply data does not contain result field");
@@ -290,8 +284,6 @@ namespace OpenSim.Services.Connectors
                         {
                             if (replyData["result"].ToString().ToLower() == "success")
                                 return true;
-                            else
-                                return false;
                         }
                         else
                             m_log.DebugFormat("[AVATAR CONNECTOR]: RemoveItems reply data does not contain result field");
@@ -348,12 +340,12 @@ namespace OpenSim.Services.Connectors
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            m_registry = registry;
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AvatarHandler", "") != Name)
                 return;
 
             registry.RegisterModuleInterface<IAvatarService>(this);
-            m_registry = registry;
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
