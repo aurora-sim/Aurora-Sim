@@ -92,6 +92,11 @@ namespace OpenSim.Services.Interfaces
         /// <param name="principalID"></param>
         /// <param name="cachedWearable"></param>
         void CacheWearableData(UUID principalID, AvatarWearable cachedWearable);
+
+        /// <summary>
+        /// The local service (if possible)
+        /// </summary>
+        IAvatarService InnerService { get; }
     }
 
     /// <summary>

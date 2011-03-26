@@ -54,7 +54,12 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_serverUrl = String.Empty;
-        public string Name { get { return GetType().Name; } }
+        public string Name { get { return GetType ().Name; } }
+
+        public virtual IAvatarService InnerService
+        {
+            get { return this; }
+        }
         
         #region IService Members
 

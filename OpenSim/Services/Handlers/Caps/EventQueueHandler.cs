@@ -50,7 +50,7 @@ namespace OpenSim.Services
                 IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
                 m_port = server.Port;
 
-                server.AddStreamHandler(new EQMEventPoster(url, registry.RequestModuleInterface<IEventQueueService>(),
+                server.AddStreamHandler (new EQMEventPoster (url, registry.RequestModuleInterface<IEventQueueService> ().InnerService,
                 registry.RequestModuleInterface<ICapsService>(), 0, m_registry));
             }
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
@@ -79,7 +79,7 @@ namespace OpenSim.Services
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
             m_port = server.Port;
 
-            server.AddStreamHandler(new EQMEventPoster(url, m_registry.RequestModuleInterface<IEventQueueService>(),
+            server.AddStreamHandler (new EQMEventPoster (url, m_registry.RequestModuleInterface<IEventQueueService> ().InnerService,
                     m_registry.RequestModuleInterface<ICapsService>(), RegionHandle, m_registry));
         }
 
@@ -90,7 +90,7 @@ namespace OpenSim.Services
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
             m_port = server.Port;
 
-            server.AddStreamHandler(new EQMEventPoster(url, m_registry.RequestModuleInterface<IEventQueueService>(),
+            server.AddStreamHandler (new EQMEventPoster (url, m_registry.RequestModuleInterface<IEventQueueService> ().InnerService,
                     m_registry.RequestModuleInterface<ICapsService>(), RegionHandle, m_registry));
             return url;
         }

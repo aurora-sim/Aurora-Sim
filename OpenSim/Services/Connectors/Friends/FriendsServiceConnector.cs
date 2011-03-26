@@ -59,6 +59,7 @@ namespace OpenSim.Services.Connectors
 
             string reqString = WebUtils.BuildQueryString(sendData);
 
+            List<FriendInfo> finfos = new List<FriendInfo> ();
             try
             {
                 List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("FriendsServerURI");
@@ -74,11 +75,8 @@ namespace OpenSim.Services.Connectors
                         if (replyData != null)
                         {
                             if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
-                            {
-                                return new FriendInfo[0];
-                            }
+                                continue;
 
-                            List<FriendInfo> finfos = new List<FriendInfo>();
                             Dictionary<string, object>.ValueCollection finfosList = replyData.Values;
                             //m_log.DebugFormat("[FRIENDS CONNECTOR]: get neighbours returned {0} elements", rinfosList.Count);
                             foreach (object f in finfosList)
@@ -93,8 +91,6 @@ namespace OpenSim.Services.Connectors
                                         PrincipalID, f.GetType());
                             }
 
-                            // Success
-                            return finfos.ToArray();
                         }
 
                         else
@@ -108,8 +104,8 @@ namespace OpenSim.Services.Connectors
                 m_log.DebugFormat("[FRIENDS CONNECTOR]: Exception when contacting friends server: {0}", e.Message);
             }
 
-            return new FriendInfo[0];
-
+            // Success
+            return finfos.ToArray ();
         }
 
         public bool StoreFriend(UUID PrincipalID, string Friend, int flags)
@@ -132,6 +128,23 @@ namespace OpenSim.Services.Connectors
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI,
                             WebUtils.BuildQueryString(sendData));
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse (reply);
+
+                        if ((replyData != null) && replyData.ContainsKey ("Result") && (replyData["Result"] != null))
+                        {
+                            bool success = false;
+                            Boolean.TryParse (replyData["Result"].ToString (), out success);
+                            if(success)
+                                return success;
+                        }
+                        else
+                            m_log.DebugFormat ("[FRIENDS CONNECTOR]: StoreFriend {0} {1} received null response",
+                                PrincipalID, Friend);
+                    }
+                    else
+                        m_log.DebugFormat ("[FRIENDS CONNECTOR]: StoreFriend received null reply");
                 }
             }
             catch (Exception e)
@@ -139,23 +152,6 @@ namespace OpenSim.Services.Connectors
                 m_log.DebugFormat("[FRIENDS CONNECTOR]: Exception when contacting friends server: {0}", e.Message);
                 return false;
             }
-
-            if (reply != string.Empty)
-            {
-                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                if ((replyData != null) && replyData.ContainsKey("Result") && (replyData["Result"] != null))
-                {
-                    bool success = false;
-                    Boolean.TryParse(replyData["Result"].ToString(), out success);
-                    return success;
-                }
-                else
-                    m_log.DebugFormat("[FRIENDS CONNECTOR]: StoreFriend {0} {1} received null response",
-                        PrincipalID, Friend);
-            }
-            else
-                m_log.DebugFormat("[FRIENDS CONNECTOR]: StoreFriend received null reply");
 
             return false;
 
@@ -185,7 +181,8 @@ namespace OpenSim.Services.Connectors
                         {
                             bool success = false;
                             Boolean.TryParse(replyData["Result"].ToString(), out success);
-                            return success;
+                            if(success)
+                                return success;
                         }
                         else
                             m_log.DebugFormat("[FRIENDS CONNECTOR]: DeleteFriend {0} {1} received null response",
@@ -212,14 +209,19 @@ namespace OpenSim.Services.Connectors
             get { return GetType().Name; }
         }
 
+        public virtual IFriendsService InnerService
+        {
+            get { return this; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            m_registry = registry;
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("FriendsHandler", "") != Name)
                 return;
 
             registry.RegisterModuleInterface<IFriendsService>(this);
-            m_registry = registry;
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)

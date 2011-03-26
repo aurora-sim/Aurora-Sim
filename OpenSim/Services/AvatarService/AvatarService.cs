@@ -52,6 +52,11 @@ namespace OpenSim.Services.AvatarService
             get { return GetType().Name; }
         }
 
+        public virtual IAvatarService InnerService
+        {
+            get { return this; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             m_registry = registry;

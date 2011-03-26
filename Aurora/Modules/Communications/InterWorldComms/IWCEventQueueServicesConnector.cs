@@ -44,8 +44,11 @@ namespace Aurora.Modules
 
         public override void Start (IConfigSource config, IRegistryCore registry)
         {
-            base.Start (config, registry);
-            m_remoteService.Start (config, registry);
+            if (m_remoteService != null)
+            {
+                base.Start (config, registry);
+                m_remoteService.Start (config, registry);
+            }
         }
 
         public override void FinishedStartup()

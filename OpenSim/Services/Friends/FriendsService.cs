@@ -48,18 +48,23 @@ namespace OpenSim.Services.Friends
             get { return GetType().Name; }
         }
 
+        public virtual IFriendsService InnerService
+        {
+            get { return this; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("FriendsHandler", "") != Name)
                 return;
 
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IFriendsData>();
             registry.RegisterModuleInterface<IFriendsService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IFriendsData> ();
         }
 
         public void FinishedStartup()

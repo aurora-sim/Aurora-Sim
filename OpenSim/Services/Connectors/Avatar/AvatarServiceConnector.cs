@@ -338,6 +338,11 @@ namespace OpenSim.Services.Connectors
             get { return GetType().Name; }
         }
 
+        public IAvatarService InnerService
+        {
+            get { return this; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             m_registry = registry;

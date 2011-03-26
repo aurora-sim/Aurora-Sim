@@ -13,7 +13,7 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace Aurora.Modules 
 {
-    public class IWCUserConnector : IUserAccountService, IService
+    public class IWCUserAccountConnector : IUserAccountService, IService
     {
         protected UserAccountService m_localService;
         protected UserAccountServicesConnector m_remoteService;

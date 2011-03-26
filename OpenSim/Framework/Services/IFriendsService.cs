@@ -110,5 +110,10 @@ namespace OpenSim.Services.Interfaces
         /// <param name="Friend"></param>
         /// <returns></returns>
         bool Delete(UUID PrincipalID, string Friend);
+
+        /// <summary>
+        /// The local service (if possible)
+        /// </summary>
+        IFriendsService InnerService { get; }
     }
 }

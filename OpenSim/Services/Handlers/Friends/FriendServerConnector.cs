@@ -63,8 +63,8 @@ namespace OpenSim.Services
 
                 IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
                 m_port = server.Port;
-                
-                server.AddStreamHandler(new FriendsServerPostHandler(url, m_registry.RequestModuleInterface<IFriendsService>(), 0, m_registry));
+
+                server.AddStreamHandler (new FriendsServerPostHandler (url, m_registry.RequestModuleInterface<IFriendsService> ().InnerService, 0, m_registry));
             }
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
@@ -90,7 +90,7 @@ namespace OpenSim.Services
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
             m_port = server.Port;
 
-            server.AddStreamHandler(new FriendsServerPostHandler(url, m_registry.RequestModuleInterface<IFriendsService>(), RegionHandle, m_registry));
+            server.AddStreamHandler (new FriendsServerPostHandler (url, m_registry.RequestModuleInterface<IFriendsService> ().InnerService, RegionHandle, m_registry));
         }
 
         public string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
@@ -99,7 +99,7 @@ namespace OpenSim.Services
             m_port = server.Port;
             string url = "/friends" + UUID.Random();
 
-            server.AddStreamHandler(new FriendsServerPostHandler(url, m_registry.RequestModuleInterface<IFriendsService>(), RegionHandle, m_registry));
+            server.AddStreamHandler (new FriendsServerPostHandler (url, m_registry.RequestModuleInterface<IFriendsService> ().InnerService, RegionHandle, m_registry));
 
             return url;
         }
