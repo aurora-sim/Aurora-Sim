@@ -54,7 +54,7 @@ namespace OpenSim.Services.CapsService
             m_service = registry.RequestModuleInterface<ICapsService>();
         }
 
-        public void FinishedStartup()
+        public virtual void FinishedStartup ()
         {
         }
 
