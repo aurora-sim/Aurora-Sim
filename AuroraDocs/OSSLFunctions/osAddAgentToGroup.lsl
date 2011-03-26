@@ -11,17 +11,16 @@
 // Threat Levels only apply to OSSL & AA Functions
 // See http://opensimulator.org/wiki/Threat_level
 //================================================================
-// Inworld Script Line:  osAddAgentToGroup(key AgentID, key GroupID, key RequestedRoleID);
+// Inworld Script Line:  osAddAgentToGroup(key AgentID, string GroupName, string RequestedRole);
 //
 // PREREQUISITES 
 // - The Group must be created
 // - You must have the Group UUID
 // - Roles within the group must be defined (default has Everyone & Owners)
 //
-key GroupID = NULL_KEY;
-key RequestedRoleID = NULL_KEY;
 //
-integer Touched = FALSE;
+string GroupToJoin = "Test Group";
+string RoleToJoin = "Everyone";
 
 default
 {
@@ -33,17 +32,6 @@ default
     touch_end(integer num)
     {
         key AgentID = llDetectedKey(0);
-        //
-        GroupID = llList2Key(llGetObjectDetails(llGetKey(), [OBJECT_GROUP]),0);
-        if(GroupID == "" || GroupID == NULL_KEY)
-        {
-            llSay(0,"ERROR: GroupID for this object could not be determined.\n\tPlease ensure that Object is set to a valid Group and try again");
-            return;
-        }
-        // how to get next line ?
-        //  RequestedRoleID = "";
-        //
-        osAddAgentToGroup(AgentID, GroupID, RequestedRoleID);
-        
+        osAddAgentToGroup(AgentID, GroupToJoin, RoleToJoin);
     }
 }
