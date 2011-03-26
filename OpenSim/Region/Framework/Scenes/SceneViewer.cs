@@ -99,7 +99,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         object AuroraEventManager_OnGenericEvent (string FunctionName, object parameters)
         {
-            if (Culler.UseCulling && FunctionName == "DrawDistanceChanged")
+            if (Culler == null || Culler.UseCulling && FunctionName == "DrawDistanceChanged")
             {
                 IScenePresence sp = (IScenePresence)parameters;
                 if (sp.UUID != m_presence.UUID)
@@ -124,7 +124,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void QueuePresenceForUpdate (IScenePresence presence, PrimUpdateFlags flags)
         {
-            if (!Culler.ShowEntityToClient (m_presence, presence))
+            if (Culler == null || !Culler.ShowEntityToClient (m_presence, presence))
                 return; // if 2 far ignore
 
             lock (m_presenceUpdatesToSend)
