@@ -35,6 +35,8 @@ using Nini.Config;
 using OpenSim.Framework;
 using OpenMetaverse;
 using OpenSim.Region.Physics.Manager;
+using OpenSim.Services.Interfaces;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 /*
  * Steps to add a new prioritization policy:
@@ -64,6 +66,8 @@ namespace OpenSim.Region.Framework.Scenes
     {
         private bool m_useDistanceCulling = true;
         private bool m_useCulling = true;
+        private int m_cachedXOffset = 0;
+        private int m_cachedYOffset = 0;
 
         public bool UseCulling
         {
@@ -79,6 +83,12 @@ namespace OpenSim.Region.Framework.Scenes
                 m_useCulling = interestConfig.GetBoolean ("UseCulling", m_useCulling);
                 m_useDistanceCulling = interestConfig.GetBoolean ("UseDistanceBasedCulling", m_useDistanceCulling);
             }
+        }
+
+        public void Reset ()
+        {
+            m_cachedXOffset = 0;
+            m_cachedYOffset = 0;
         }
 
         #region ICuller Members
@@ -105,14 +115,32 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 posToCheckFrom = client.AbsolutePosition;
             if (client.IsChildAgent)
             {
-                if (client.AbsolutePosition.X < 0)
-                    posToCheckFrom.X = client.Scene.RegionInfo.RegionSizeX - (client.Scene.RegionInfo.RegionSizeX + client.AbsolutePosition.X);
-                if (client.AbsolutePosition.Y < 0)
-                    posToCheckFrom.Y = client.Scene.RegionInfo.RegionSizeY - (client.Scene.RegionInfo.RegionSizeY + client.AbsolutePosition.Y);
-                if (client.AbsolutePosition.X > client.Scene.RegionInfo.RegionSizeX)
-                    posToCheckFrom.X = client.Scene.RegionInfo.RegionSizeX - (client.Scene.RegionInfo.RegionSizeX - client.AbsolutePosition.X);
-                if (client.AbsolutePosition.Y > client.Scene.RegionInfo.RegionSizeY)
-                    posToCheckFrom.Y = client.Scene.RegionInfo.RegionSizeY - (client.Scene.RegionInfo.RegionSizeY - client.AbsolutePosition.Y);
+                if (m_cachedXOffset == 0 && m_cachedYOffset == 0) //Not found yet
+                {
+                    IAgentInfoService agentInfoService = client.Scene.RequestModuleInterface<IAgentInfoService> ();
+                    if (agentInfoService != null)
+                    {
+                        UserInfo info = agentInfoService.GetUserInfo (client.UUID.ToString ());
+                        if (info != null)
+                        {
+                            GridRegion r = client.Scene.GridService.GetRegionByUUID (client.Scene.RegionInfo.ScopeID, 
+                                info.CurrentRegionID);
+                            if (r != null)
+                            {
+                                m_cachedXOffset = client.Scene.RegionInfo.RegionLocX - r.RegionLocX;
+                                m_cachedYOffset = client.Scene.RegionInfo.RegionLocY - r.RegionLocY; 
+                            }
+                        }
+                    }
+                }
+                if (m_cachedXOffset < 0)
+                    posToCheckFrom.X = client.Scene.RegionInfo.RegionSizeX - (client.Scene.RegionInfo.RegionSizeX + client.AbsolutePosition.X + m_cachedXOffset);
+                if (m_cachedYOffset < 0)
+                    posToCheckFrom.Y = client.Scene.RegionInfo.RegionSizeY - (client.Scene.RegionInfo.RegionSizeY + client.AbsolutePosition.Y + m_cachedYOffset);
+                if (m_cachedXOffset > client.Scene.RegionInfo.RegionSizeX)
+                    posToCheckFrom.X = client.Scene.RegionInfo.RegionSizeX - (client.Scene.RegionInfo.RegionSizeX - (client.AbsolutePosition.X + m_cachedXOffset));
+                if (m_cachedYOffset > client.Scene.RegionInfo.RegionSizeY)
+                    posToCheckFrom.Y = client.Scene.RegionInfo.RegionSizeY - (client.Scene.RegionInfo.RegionSizeY - (client.AbsolutePosition.Y + m_cachedYOffset));
             }
             //If the distance is greater than the clients draw distance, its out of range
             if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition) > 

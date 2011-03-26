@@ -395,15 +395,6 @@ namespace OpenSim.Services.MessagingService
                     circuitData.OtherInformation["UserUrls"] = commsService.GetUrlsForUser(neighbor, circuitData.AgentID);
                 }
 
-                int RegX, RegY;
-                Util.UlongToInts (requestingRegion, out RegX, out RegY);
-                //Add the offset
-                int XOffset = neighbor.RegionLocX - RegX;
-                circuitData.startpos.X += XOffset;
-
-                int YOffset = neighbor.RegionLocY - RegY;
-                circuitData.startpos.Y += YOffset;
-
                 bool regionAccepted = SimulationService.CreateAgent(neighbor, circuitData,
                         TeleportFlags, agentData, out reason);
                 if (regionAccepted)
