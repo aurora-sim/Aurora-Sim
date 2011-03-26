@@ -8645,7 +8645,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (land == null)
                     return DateTime.Now;
 
-                if (!World.Permissions.CanEditParcel(m_host.UUID, land))
+                if (!World.Permissions.CanEditParcel(m_host.OwnerID, land))
                     return DateTime.Now;
 
                 land.SetMusicUrl(url);
