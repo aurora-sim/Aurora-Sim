@@ -27,9 +27,9 @@ namespace Aurora.Services.DataService
 
         public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
-            if (source.Configs["AuroraConnectors"].GetString("OfflineMessagesConnector", "LocalConnector") == "RemoteConnector")
+            m_registry = simBase;
+            if (source.Configs["AuroraConnectors"].GetString ("OfflineMessagesConnector", "LocalConnector") == "RemoteConnector")
             {
-                m_registry = simBase;
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }

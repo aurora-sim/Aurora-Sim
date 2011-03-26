@@ -33,7 +33,7 @@ namespace Aurora.Modules
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AgentInfoHandler", "") != Name)
+            if (handlerConfig.GetString ("FriendsHandler", "") != Name)
                 return;
 
             m_localService = new FriendsService ();
