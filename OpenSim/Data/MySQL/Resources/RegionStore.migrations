@@ -864,3 +864,9 @@ BEGIN;
 ALTER TABLE terrain ADD X VARCHAR(10) NOT NULL DEFAULT '-1';
 ALTER TABLE terrain ADD Y VARCHAR(10) NOT NULL DEFAULT '-1';
 COMMIT;
+
+:VERSION 44         #---------------------
+
+BEGIN;
+alter table prims change column `Generic` `Generic` Text NOT NULL default '';
+COMMIT;
