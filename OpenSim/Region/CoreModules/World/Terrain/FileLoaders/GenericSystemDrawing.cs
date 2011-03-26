@@ -31,6 +31,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
 using log4net;
+using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
@@ -61,7 +62,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
         /// </summary>
         /// <param name="filename">The target image to load</param>
         /// <returns>A terrain channel generated from the image.</returns>
-        public virtual ITerrainChannel LoadFile(string filename)
+        public virtual ITerrainChannel LoadFile (string filename, IScene scene)
         {
             return LoadBitmap(new Bitmap(filename));
         }
@@ -106,7 +107,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             return LoadBitmap(cloneBitmap);
         }
 
-        public virtual ITerrainChannel LoadStream(Stream stream)
+        public virtual ITerrainChannel LoadStream (Stream stream, IScene scene)
         {
             return LoadBitmap(new Bitmap(stream));
         }

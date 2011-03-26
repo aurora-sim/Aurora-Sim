@@ -29,6 +29,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
@@ -42,7 +43,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             get { return ".jpg"; }
         }
 
-        public ITerrainChannel LoadFile(string filename)
+        public ITerrainChannel LoadFile(string filename, IScene scene)
         {
             throw new NotImplementedException();
         }
@@ -52,7 +53,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             throw new NotImplementedException();
         }
 
-        public ITerrainChannel LoadStream(Stream stream)
+        public ITerrainChannel LoadStream (Stream stream, IScene scene)
         {
             throw new NotImplementedException();
         }

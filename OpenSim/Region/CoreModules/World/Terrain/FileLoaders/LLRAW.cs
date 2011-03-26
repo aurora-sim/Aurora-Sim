@@ -27,6 +27,7 @@
 
 using System;
 using System.IO;
+using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
@@ -60,11 +61,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
 
         #region ITerrainLoader Members
 
-        public ITerrainChannel LoadFile(string filename)
+        public ITerrainChannel LoadFile (string filename, IScene scene)
         {
             FileInfo file = new FileInfo(filename);
             FileStream s = file.Open(FileMode.Open, FileAccess.Read);
-            ITerrainChannel retval = LoadStream(s);
+            ITerrainChannel retval = LoadStream(s, scene);
 
             s.Close();
 
@@ -135,9 +136,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             return retval;
         }
 
-        public ITerrainChannel LoadStream(Stream s)
+        public ITerrainChannel LoadStream (Stream s, IScene scene)
         {
-            TerrainChannel retval = new TerrainChannel(true, null);
+            TerrainChannel retval = new TerrainChannel(true, scene);
 
             BinaryReader bs = new BinaryReader(s);
             int y;

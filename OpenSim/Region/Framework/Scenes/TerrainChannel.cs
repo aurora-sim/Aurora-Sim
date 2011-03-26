@@ -98,17 +98,14 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_scene = scene;
             m_Width = Constants.RegionSize;
+            if (scene != null)
+            {
+                m_Width = (int)scene.RegionInfo.RegionSizeX;
+            }
             if (createMap)
             {
-                int width = Constants.RegionSize;
-                int height = Constants.RegionSize;
-                if (scene != null)
-                {
-                    width = (int)scene.RegionInfo.RegionSizeX;
-                    height = (int)scene.RegionInfo.RegionSizeY;
-                }
-                m_map = new short[width * height];
-                taint = new bool[width / Constants.TerrainPatchSize, height / Constants.TerrainPatchSize];
+                m_map = new short[m_Width * m_Width];
+                taint = new bool[m_Width / Constants.TerrainPatchSize, m_Width / Constants.TerrainPatchSize];
             }
         }
 

@@ -698,7 +698,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     {
                         try
                         {
-                            ITerrainChannel channel = loader.Value.LoadFile(filename);
+                            ITerrainChannel channel = loader.Value.LoadFile (filename, m_scene);
                             channel.Scene = m_scene;
                             if (m_channel.Height == channel.Height &&
                                     m_channel.Width == channel.Width)
@@ -814,7 +814,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     {
                         try
                         {
-                            ITerrainChannel channel = loader.Value.LoadStream(stream);
+                            ITerrainChannel channel = loader.Value.LoadStream (stream, m_scene);
                             if (channel != null)
                             {
                                 channel.Scene = m_scene;
@@ -864,7 +864,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     {
                         try
                         {
-                            ITerrainChannel channel = loader.Value.LoadStream(stream);
+                            ITerrainChannel channel = loader.Value.LoadStream (stream, m_scene);
                             if (channel != null)
                             {
                                 channel.Scene = m_scene;
