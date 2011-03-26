@@ -69,6 +69,10 @@ namespace OpenSim.Region.Framework.Scenes
 
         private const float PresenceSendPercentage = 0.60f;
         private const float PrimSendPercentage = 0.40f;
+        /// <summary>
+        /// If this is set, we start inserting other presences updates at 1 so that our updates go before theirs
+        /// </summary>
+        private volatile bool m_ourPresenceHasUpdate = false;
 
         public IPrioritizer Prioritizer
         {
@@ -129,7 +133,17 @@ namespace OpenSim.Region.Framework.Scenes
                 if (o == null)
                 {
                     o = new EntityUpdate (presence, flags);
-                    m_presenceUpdatesToSend.Insert (0,presence.UUID, o);
+                    if (m_presence.UUID == presence.UUID)
+                    {
+                        //Its us, set us first!
+                        m_ourPresenceHasUpdate = true;
+                        m_presenceUpdatesToSend.Insert (0, presence.UUID, o);
+                    }
+                    else if(m_ourPresenceHasUpdate) //If this is set, we start inserting at 1 so that our updates go first
+                        // We can also safely assume that 1 is fine, because there has to be 0 already there set by us
+                        m_presenceUpdatesToSend.Insert (1,presence.UUID, o);
+                    else //Set us at 0, no updates from us
+                        m_presenceUpdatesToSend.Insert (0, presence.UUID, o);
                 }
                 else
                 {
@@ -342,6 +356,8 @@ namespace OpenSim.Region.Framework.Scenes
                         updates.Add ((EntityUpdate)m_presenceUpdatesToSend[0]);
                         m_presenceUpdatesToSend.RemoveAt (0);
                     }
+                    //If we're first, we definitely got set, so we don't need to check this at all
+                    m_ourPresenceHasUpdate = false;
                     m_presence.ControllingClient.SendPrimUpdate (updates);
                 }
             }
