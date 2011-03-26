@@ -16,6 +16,7 @@ namespace Aurora.Framework
         void StopAutoMove(UUID Bot);
         void EnableAutoMove(UUID Bot);
         void SetMovementSpeedMod(UUID Bot, float modifier);
+        void RemoveAvatar (UUID uUID, IScene iScene);
     }
 
     public interface IAStarBotManager : IBotManager

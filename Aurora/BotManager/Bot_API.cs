@@ -188,5 +188,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (manager != null)
                 manager.EnableAutoMove(UUID.Parse(bot));
         }
+
+        public void botRemoveBot (string bot)
+        {
+            IBotManager manager = World.RequestModuleInterface<IBotManager> ();
+            if (manager != null)
+                manager.RemoveAvatar (UUID.Parse (bot), m_host.ParentEntity.Scene);
+        }
     }
 }

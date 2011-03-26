@@ -160,6 +160,18 @@ namespace Aurora.BotManager
             return m_character.AgentId;
         }
 
+        public void RemoveAvatar (UUID avatarID, IScene scene)
+        {
+            if (!m_bots.Remove (avatarID))
+                return;
+            IScenePresence sp = scene.GetScenePresence (avatarID);
+            if (sp == null)
+                return;
+            //Kill the agent
+            IEntityTransferModule module = scene.RequestModuleInterface<IEntityTransferModule> ();
+            module.IncomingCloseAgent (scene, avatarID);
+        }
+
         /// <summary>
         /// Creates a new bot inworld
         /// </summary>
