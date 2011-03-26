@@ -167,7 +167,6 @@ namespace Aurora.Modules
         public void GodUpdateRegionInfoUpdate(IClientAPI client, float BillableFactor, int PricePerMeter, ulong EstateID, ulong RegionFlags, byte[] SimName, int RedirectX, int RedirectY)
         {
             //Check god perms
-            IScenePresence Sp = ((Scene)client.Scene).GetScenePresence (client.AgentId);
             if (!((Scene)client.Scene).Permissions.IsGod(client.AgentId))
                 return;
 

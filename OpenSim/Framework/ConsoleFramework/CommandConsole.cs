@@ -40,8 +40,6 @@ namespace OpenSim.Framework
 {
     public class Commands
     {
-        private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
-        
         /// <summary>
         /// Encapsulates a command that can be invoked from the console
         /// </summary>

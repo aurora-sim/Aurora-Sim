@@ -959,9 +959,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            IScenePresence sp = scene.GetScenePresence (user);
-            IClientAPI client = sp.ControllingClient;
-
             return m_groupsModule.GroupPermissionCheck(user, group, GroupPowers.DeedObject);
         }
 

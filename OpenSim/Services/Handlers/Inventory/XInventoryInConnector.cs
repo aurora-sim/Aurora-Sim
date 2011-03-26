@@ -449,7 +449,6 @@ namespace OpenSim.Services
 
         byte[] HandleAddFolder(Dictionary<string,object> request)
         {
-            Dictionary<string,object> result = new Dictionary<string,object>();
             InventoryFolderBase folder = BuildFolder(request);
 
             if (m_InventoryService.AddFolder(folder))
@@ -460,7 +459,6 @@ namespace OpenSim.Services
 
         byte[] HandleUpdateFolder(Dictionary<string,object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
             InventoryFolderBase folder = BuildFolder(request);
 
             if (m_InventoryService.UpdateFolder(folder))
@@ -471,7 +469,6 @@ namespace OpenSim.Services
 
         byte[] HandleMoveFolder(Dictionary<string,object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
             UUID parentID = UUID.Zero;
             UUID.TryParse(request["ParentID"].ToString(), out parentID);
             UUID folderID = UUID.Zero;
@@ -489,7 +486,6 @@ namespace OpenSim.Services
 
         byte[] HandleDeleteFolders(Dictionary<string,object> request)
         {
-            Dictionary<string,object> result = new Dictionary<string,object>();
             UUID principal = UUID.Zero;
             UUID.TryParse(request["PRINCIPAL"].ToString(), out principal);
             List<string> slist = (List<string>)request["FOLDERS"];
@@ -510,7 +506,6 @@ namespace OpenSim.Services
 
         byte[] HandlePurgeFolder(Dictionary<string,object> request)
         {
-            Dictionary<string,object> result = new Dictionary<string,object>();
             UUID folderID = UUID.Zero;
             UUID.TryParse(request["ID"].ToString(), out folderID);
 
@@ -523,7 +518,6 @@ namespace OpenSim.Services
 
         byte[] HandleAddItem(Dictionary<string,object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
             InventoryItemBase item = BuildItem(request);
 
             if (m_InventoryService.AddItem(item))
@@ -534,7 +528,6 @@ namespace OpenSim.Services
 
         byte[] HandleUpdateItem(Dictionary<string,object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
             InventoryItemBase item = BuildItem(request);
 
             if (m_InventoryService.UpdateItem(item))
@@ -545,7 +538,6 @@ namespace OpenSim.Services
 
         byte[] HandleMoveItems(Dictionary<string,object> request)
         {
-            Dictionary<string,object> result = new Dictionary<string,object>();
             List<string> idlist = (List<string>)request["IDLIST"];
             List<string> destlist = (List<string>)request["DESTLIST"];
             UUID principal = UUID.Zero;
@@ -584,7 +576,6 @@ namespace OpenSim.Services
 
         byte[] HandleDeleteItems(Dictionary<string,object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
             UUID principal = UUID.Zero;
             UUID.TryParse(request["PRINCIPAL"].ToString(), out principal);
             List<string> slist = (List<string>)request["ITEMS"];

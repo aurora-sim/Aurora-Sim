@@ -43,9 +43,6 @@ namespace OpenSim.Services.AvatarService
 {
     public class AvatarService : IAvatarService, IService
     {
-        private static readonly ILog m_log =
-                LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
         protected IAvatarData m_Database = null;
         protected IRegistryCore m_registry = null;
         protected bool m_enableCacheBakedTextures = true;

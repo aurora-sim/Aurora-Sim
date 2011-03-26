@@ -44,12 +44,9 @@ namespace OpenSim.Services.GridService
         protected class PermissionSet
         {
             private static Dictionary<string, ThreatLevel> PermittedFunctions = new Dictionary<string, ThreatLevel>();
-            private static IConfig m_config;
-
+            
             public static void ReadFunctions(IConfig config)
             {
-                m_config = config;
-
                 //Combine all threat level configs for ones that are less than our given threat level as well
                 foreach (ThreatLevel allThreatLevel in Enum.GetValues(typeof(ThreatLevel)))
                 {

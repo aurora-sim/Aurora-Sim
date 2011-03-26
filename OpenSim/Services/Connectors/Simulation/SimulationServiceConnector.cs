@@ -247,7 +247,7 @@ namespace OpenSim.Services.Connectors.Simulation
 
                 try
                 {
-                    OSDMap result = WebUtils.ServiceOSDRequest(uri, null, "DELETE", 10000);
+                    WebUtils.ServiceOSDRequest(uri, null, "DELETE", 10000);
                 }
                 catch (Exception e)
                 {

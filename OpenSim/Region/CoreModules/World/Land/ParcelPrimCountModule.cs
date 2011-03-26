@@ -230,12 +230,8 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                 if (landData.IsGroupOwned)
                 {
-                    UUID GroupUUID = obj.GroupID;
                     if (obj.OwnerID == landData.GroupID)
-                    {
-                        GroupUUID = obj.OwnerID;
                         parcelCounts.Owner += obj.PrimCount;
-                    }
                     else if (obj.GroupID == landData.GroupID)
                         parcelCounts.Group += obj.PrimCount;
                     else
@@ -291,12 +287,8 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                         if (landData.IsGroupOwned)
                         {
-                            UUID GroupUUID = obj.GroupID;
                             if (obj.OwnerID == landData.GroupID)
-                            {
-                                GroupUUID = obj.OwnerID;
                                 parcelCounts.Owner -= 1;
-                            }
                             else if (obj.GroupID == landData.GroupID)
                                 parcelCounts.Group -= 1;
                             else
@@ -539,7 +531,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             else if (FunctionName == "ObjectEnteringNewParcel")
             {
                 //Taint the parcels
-                SceneObjectGroup grp = (((Object[])parameters)[0]) as SceneObjectGroup;
+                //SceneObjectGroup grp = (((Object[])parameters)[0]) as SceneObjectGroup;
                 UUID newParcel = (UUID)(((Object[])parameters)[1]);
                 UUID oldParcel = (UUID)(((Object[])parameters)[2]);
                 ILandObject oldlandObject = m_Scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(oldParcel);

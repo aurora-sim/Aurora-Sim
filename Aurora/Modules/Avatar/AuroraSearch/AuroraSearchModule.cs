@@ -550,7 +550,6 @@ namespace Aurora.Modules
                     //Get more info on the event
                     EventData eventdata = directoryService.GetEventInfo(eventData.eventID.ToString());
                     
-                    string RegionName = eventdata.simName;
                     Vector3 globalPos = eventdata.globalPos;
                     mapitem = new mapItemReply();
                     

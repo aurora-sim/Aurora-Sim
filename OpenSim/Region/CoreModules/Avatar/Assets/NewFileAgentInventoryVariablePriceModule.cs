@@ -47,10 +47,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
 {
     public class NewFileAgentInventoryVariablePriceModule : INonSharedRegionModule
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Scene m_scene;
-        private IAssetService m_assetService;
 
         #region IRegionModuleBase Members
 
@@ -78,8 +75,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
 
         public void RegionLoaded(Scene scene)
         {
-            
-            m_assetService = m_scene.RequestModuleInterface<IAssetService>();
             m_scene.EventManager.OnRegisterCaps += RegisterCaps;
         }
 

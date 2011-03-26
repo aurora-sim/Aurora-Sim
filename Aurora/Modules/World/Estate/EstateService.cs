@@ -563,8 +563,6 @@ namespace Aurora.Modules
         {
             #region Incoming Agent Checks
 
-            Vector3 Position = agent.startpos;
-            
             UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, agent.AgentID);
 
             IScenePresence Sp = scene.GetScenePresence(agent.AgentID);

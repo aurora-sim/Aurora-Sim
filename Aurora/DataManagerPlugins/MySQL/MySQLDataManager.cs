@@ -131,7 +131,6 @@ namespace Aurora.DataManager.MySQL
             MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result = null;
             IDataReader reader = null;
-            List<string> RetVal = new List<string>();
             string query = "";
             if (keyRow == "")
             {
@@ -237,7 +236,6 @@ namespace Aurora.DataManager.MySQL
         {
             MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
-            List<string> RetVal = new List<string>();
             string query = String.Format("select {0} from {1} {2}",
                                       wantedValue, table, whereClause);
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
@@ -514,7 +512,6 @@ namespace Aurora.DataManager.MySQL
         {
             MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
-            IDataReader reader;
 
             string query = String.Format("insert into {0} (", table);
             Dictionary<string, object> param = new Dictionary<string, object>();
@@ -540,7 +537,7 @@ namespace Aurora.DataManager.MySQL
             {
                 try
                 {
-                    using (reader = result.ExecuteReader())
+                    using (result.ExecuteReader())
                     {
                         result.Dispose();
                         CloseDatabase(dbcon);
@@ -555,8 +552,7 @@ namespace Aurora.DataManager.MySQL
         {
             MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
-            IDataReader reader;
-
+            
             string query = String.Format("replace into {0} (", table);
             Dictionary<string, object> param = new Dictionary<string, object>();
 
@@ -588,7 +584,7 @@ namespace Aurora.DataManager.MySQL
             {
                 try
                 {
-                    using (reader = result.ExecuteReader())
+                    using (result.ExecuteReader())
                     {
                         result.Dispose();
                         CloseDatabase(dbcon);
@@ -606,8 +602,7 @@ namespace Aurora.DataManager.MySQL
         {
             MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
-            IDataReader reader;
-
+            
             string query = String.Format("replace into {0} (", table);
             Dictionary<string, object> param = new Dictionary<string, object>();
 
@@ -636,7 +631,7 @@ namespace Aurora.DataManager.MySQL
             {
                 try
                 {
-                    using (reader = result.ExecuteReader())
+                    using (result.ExecuteReader())
                     {
                         result.Dispose();
                         CloseDatabase(dbcon);
@@ -654,7 +649,6 @@ namespace Aurora.DataManager.MySQL
         {
             MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
-            IDataReader reader;
             string query = String.Format("insert into {0} VALUES('", table);
             foreach (object value in values)
             {
@@ -664,7 +658,7 @@ namespace Aurora.DataManager.MySQL
             query += String.Format(") ON DUPLICATE KEY UPDATE {0} = '{1}'", updateKey, updateValue);
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
             {
-                using (reader = result.ExecuteReader())
+                using (result.ExecuteReader())
                 {
                     result.Dispose();
                     CloseDatabase(dbcon);
@@ -677,7 +671,6 @@ namespace Aurora.DataManager.MySQL
         {
             MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
-            IDataReader reader;
             string query = "delete from " + table + (keys.Length > 0 ? " WHERE " : "");
             int i = 0;
             foreach (object value in values)
@@ -689,7 +682,7 @@ namespace Aurora.DataManager.MySQL
                 query = query.Remove(query.Length - 5);
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
             {
-                using (reader = result.ExecuteReader())
+                using (result.ExecuteReader())
                 {
                     result.Dispose();
                 }
@@ -724,11 +717,10 @@ namespace Aurora.DataManager.MySQL
         {
             MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
-            IDataReader reader;
             string query = "delete from " + table + " WHERE " + whereclause;
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
             {
-                using (reader = result.ExecuteReader())
+                using (result.ExecuteReader ())
                 {
                     result.Dispose();
                 }
@@ -741,11 +733,10 @@ namespace Aurora.DataManager.MySQL
         {
             MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
-            IDataReader reader;
             string query = "delete from " + table + " WHERE '" + key + "' < now()";
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
             {
-                using (reader = result.ExecuteReader())
+                using (result.ExecuteReader ())
                 {
                     result.Dispose();
                 }
@@ -844,10 +835,6 @@ namespace Aurora.DataManager.MySQL
                         removedColumns.Add(column.Name, column);
                 }
             }
-
-            string columnDefinition = string.Empty;
-            /*var primaryColumns = (from cd in columns where cd.IsPrimary == true select cd);
-            bool multiplePrimary = primaryColumns.Count() > 1;*/
 
             string addedColumnsQuery = "";
             string modifiedColumnsQuery = "";

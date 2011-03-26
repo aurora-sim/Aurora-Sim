@@ -53,11 +53,8 @@ namespace OpenSim.Services
         private ILoginService m_LocalService;
         private bool m_Proxy;
 
-        private IConfigSource m_Config;
-
-        public LLLoginHandlers(ILoginService service, IConfigSource config, bool hasProxy)
+         public LLLoginHandlers(ILoginService service, IConfigSource config, bool hasProxy)
         {
-            m_Config = config;
             m_LocalService = service;
             m_Proxy = hasProxy;
         }

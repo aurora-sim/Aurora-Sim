@@ -32,7 +32,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
     public class PhysicsFrameMonitor : IMonitor, IPhysicsFrameMonitor
     {
-        private readonly Scene m_scene;
         private float physicsFPS;
         private float lastReportedPhysicsFPS;
 
@@ -41,7 +40,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public PhysicsFrameMonitor(Scene scene)
         {
-            m_scene = scene;
         }
 
         #region Implementation of IMonitor

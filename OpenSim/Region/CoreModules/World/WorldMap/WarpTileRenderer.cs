@@ -170,7 +170,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 }
             }
 
-            float sizeRatio = (float)m_scene.RegionInfo.RegionSizeX / (float)Constants.RegionSize;
             for (float y = 0; y < m_scene.RegionInfo.RegionSizeY; y += 1)
             {
                 for (float x = 0; x < m_scene.RegionInfo.RegionSizeX; x += 1)

@@ -49,8 +49,6 @@ namespace OpenSim.Region.Framework.Scenes
         private const double MINVIEWDSTEP = 16;
         private const double MINVIEWDSTEPSQ = MINVIEWDSTEP * MINVIEWDSTEP;
 
-        private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
-
         protected IScenePresence m_presence;
         /// <summary>
         /// Have we sent all of the objects in the sim that the client can see for the first time?

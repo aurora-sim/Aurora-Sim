@@ -66,7 +66,7 @@ namespace Aurora.Modules.RegionLoader
             region.RegionLocY = int.Parse(LocY.Text) * Constants.RegionSize;
             
             IPAddress address = IPAddress.Parse("0.0.0.0");
-            int port = port = Convert.ToInt32(Port.Text);
+            int port = Convert.ToInt32(Port.Text);
             region.InternalEndPoint = new IPEndPoint(address, port);
 
             string externalName = ExternalIP.Text;
@@ -168,7 +168,7 @@ namespace Aurora.Modules.RegionLoader
             region.RegionLocY = int.Parse(textBox5.Text) * Constants.RegionSize;
 
             IPAddress address = IPAddress.Parse("0.0.0.0");
-            int port = port = Convert.ToInt32(textBox7.Text);
+            int port = Convert.ToInt32(textBox7.Text);
             region.InternalEndPoint = new IPEndPoint(address, port);
             region.HttpPort = (uint)port;
 

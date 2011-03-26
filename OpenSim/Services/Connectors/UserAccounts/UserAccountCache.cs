@@ -38,9 +38,6 @@ namespace OpenSim.Services.Connectors
     {
         private const double CACHE_EXPIRATION_SECONDS = 120.0;
 
-        private static readonly ILog m_log =
-                LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
         private ExpiringCache<UUID, UserAccount> m_UUIDCache;
         private ExpiringCache<string, UUID> m_NameCache;
 

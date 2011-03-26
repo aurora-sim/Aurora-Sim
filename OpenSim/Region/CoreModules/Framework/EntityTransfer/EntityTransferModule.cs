@@ -258,11 +258,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 "[ENTITY TRANSFER MODULE]: Request Teleport to {0}:{1}/{2}",
                 finalDestination.ServerURI, finalDestination.RegionName, position);
 
-            int newRegionX = finalDestination.RegionLocX;
-            int newRegionY = finalDestination.RegionLocY;
-            int oldRegionX = sp.Scene.RegionInfo.RegionLocX;
-            int oldRegionY = sp.Scene.RegionInfo.RegionLocY;
-
             sp.ControllingClient.SendTeleportProgress(teleportFlags, "arriving");
 
             // Fixing a bug where teleporting while sitting results in the avatar ending up removed from
@@ -947,7 +942,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// also return a reason.</returns>
         public bool NewUserConnection (IScene scene, AgentCircuitData agent, uint teleportFlags, out string reason)
         {
-            bool vialogin = ((teleportFlags & (uint)TeleportFlags.ViaLogin) != 0);
             reason = String.Empty;
 
             // Don't disable this log message - it's too helpful

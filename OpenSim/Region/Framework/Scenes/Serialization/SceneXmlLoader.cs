@@ -43,8 +43,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
     /// </summary>
     public class SceneXmlLoader
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         public static void LoadPrimsFromXml(Scene scene, string fileName, bool newIDS, Vector3 loadOffset)
         {
             XmlDocument doc = new XmlDocument();

@@ -94,7 +94,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             if (message.ContainsKey("Method") && message["Method"] == "NegotiateUrl")
             {
                 //We got a message, now display it
-                string user = message["User"].AsString();
+                //string user = message["User"].AsString();
                 string value = message["Value"].AsString();
 
                 IConfigurationService service = m_registry.RequestModuleInterface<IConfigurationService>();

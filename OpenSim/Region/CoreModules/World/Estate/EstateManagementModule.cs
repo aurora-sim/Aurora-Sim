@@ -189,7 +189,8 @@ namespace OpenSim.Region.CoreModules.World.Estate
             bool is_externally_visible = rm["is_externally_visible"].AsBoolean();
             bool is_sun_fixed = rm["is_sun_fixed"].AsBoolean();
             string owner_abuse_email = rm["owner_abuse_email"].AsString();
-            double sun_hour = rm["sun_hour"].AsReal();
+            double sun_hour = rm["sun_hour"].AsReal ();
+            m_scene.RegionInfo.EstateSettings.EstateName = estate_name;
             m_scene.RegionInfo.EstateSettings.AllowDirectTeleport = allow_direct_teleport;
             m_scene.RegionInfo.EstateSettings.AllowVoice = allow_voice_chat;
             m_scene.RegionInfo.EstateSettings.DenyAnonymous = deny_anonymous;

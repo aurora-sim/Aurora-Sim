@@ -80,7 +80,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                         float z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) / (strength);
                         if (z > 0) // add in non-zero amount
                         {
-                            float da = z;
                             float a = (map[x, y] - (average / avgsteps));
                             float newz = map[x, y] + (a * duration);
 

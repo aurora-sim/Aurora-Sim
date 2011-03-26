@@ -42,10 +42,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbor
 {
     public class LocalNeighborServicesConnector : ISharedRegionModule
     {
-        private static readonly ILog m_log =
-                LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         #region ISharedRegionModule
 
         public Type ReplaceableInterface 

@@ -166,7 +166,6 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             Vector3 pos = avatar.AbsolutePosition + (Vector3.UnitX * avatar.Rotation);
             Quaternion rot = Quaternion.Identity;
             Vector3 rootpos = Vector3.Zero;
-            Quaternion rootrot = Quaternion.Identity;
 
             SceneObjectGroup rootGroup = null;
             SceneObjectGroup[] allparts = new SceneObjectGroup[message.Objects.Length];
@@ -178,8 +177,6 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 if (i == 0)
                 {
                     rootpos = obj.Position;
-                    rootrot = obj.Rotation;
-
                 }
 
 

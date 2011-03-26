@@ -19,7 +19,6 @@ namespace Aurora.Modules
         private int m_objects = 0;
         private int m_activeObjects = 0;
 
-        private List<UUID> m_addedObjects = new List<UUID>();
         private Dictionary<UUID, bool> m_lastAddedPhysicalStatus = new Dictionary<UUID, bool>();
 
         private object m_objectsLock = new object();

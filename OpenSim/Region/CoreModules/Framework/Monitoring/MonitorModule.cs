@@ -439,7 +439,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)GetMonitor("SimFrameStats");
                     ITimeDilationMonitor timeDilationMonitor = (ITimeDilationMonitor)GetMonitor("Time Dilation");
                     ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)GetMonitor("Total Frame Time");
-                    ISetMonitor lastFrameMonitor = (ISetMonitor)GetMonitor("Last Completed Frame At");
                     ITimeMonitor sleepFrameMonitor = (ITimeMonitor)GetMonitor("Sleep Frame Time");
                     ITimeMonitor otherFrameMonitor = (ITimeMonitor)GetMonitor("Other Frame Time");
                     IPhysicsFrameMonitor physicsFrameMonitor = (IPhysicsFrameMonitor)GetMonitor("Total Physics Frame Time");

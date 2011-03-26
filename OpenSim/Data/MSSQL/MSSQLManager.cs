@@ -41,8 +41,6 @@ namespace OpenSim.Data.MSSQL
     /// </summary>
     public class MSSQLManager
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         /// <summary>
         /// Connection string for ADO.net
         /// </summary>
@@ -179,8 +177,6 @@ namespace OpenSim.Data.MSSQL
 
             return parameter;
         }
-
-        private static readonly Dictionary<string, string> emptyDictionary = new Dictionary<string, string>();
 
         /// <summary>
         /// Checks if we need to do some migrations to the database

@@ -34,8 +34,6 @@ namespace OpenSim.Framework
 {
     public class MainServer
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private static IHttpServer instance = null;
 
         public static IHttpServer Instance

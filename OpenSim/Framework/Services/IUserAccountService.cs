@@ -110,7 +110,6 @@ namespace OpenSim.Services.Interfaces
                 if (str != string.Empty)
                 {
                     string[] parts = str.Split(new char[] { ';' });
-                    Dictionary<string, object> dic = new Dictionary<string, object>();
                     foreach (string s in parts)
                     {
                         string[] parts2 = s.Split(new char[] { '*' });

@@ -44,8 +44,6 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 {
     public class RegionLoaderDataBaseSystem : IRegionLoader
     {
-        private static readonly ILog m_log
-            = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private ISimulationBase m_openSim;
         private IConfigSource m_configSource;
         private bool m_enabled = false;

@@ -115,10 +115,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private float nmTerrainContactBounce = 0.1f;
         private float nmTerrainContactERP = 0.1025f;
 
-        private float mTerrainContactFriction = 75f;
-        private float mTerrainContactBounce = 0.1f;
-        private float mTerrainContactERP = 0.05025f;
-
         private float nmAvatarObjectContactFriction = 250f;
         private float nmAvatarObjectContactBounce = 0.1f;
 
@@ -165,9 +161,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private readonly HashSet<AuroraODECharacter> _characters = new HashSet<AuroraODECharacter>();
         private readonly HashSet<AuroraODEPrim> _prims = new HashSet<AuroraODEPrim>();
         private readonly HashSet<AuroraODEPrim> _activeprims = new HashSet<AuroraODEPrim>();
-//        private readonly HashSet<AuroraODEPrim> _taintedPrimH = new HashSet<AuroraODEPrim>();
-        private readonly Object _taintedPrimLock = new Object();
-//        private readonly List<AuroraODEPrim> _taintedPrimL = new List<AuroraODEPrim>();
         private readonly HashSet<AuroraODECharacter> _taintedActors = new HashSet<AuroraODECharacter>();
         public struct AODEchangeitem
             {
@@ -247,9 +240,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private volatile int m_global_contactcount = 0;
 
-        private Vector3 m_worldOffset = Vector3.Zero;
         public Vector2 WorldExtents;
-        private PhysicsScene m_parentScene = null;
         private int contactsPerCollision = 80;
 
         public bool AllowUnderwaterPhysics = false;
@@ -463,10 +454,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     nmTerrainContactFriction = physicsconfig.GetFloat("nm_terraincontact_friction", 255.0f);
                     nmTerrainContactBounce = physicsconfig.GetFloat("nm_terraincontact_bounce", 0.1f);
                     nmTerrainContactERP = physicsconfig.GetFloat("nm_terraincontact_erp", 0.1025f);
-
-                    mTerrainContactFriction = physicsconfig.GetFloat("m_terraincontact_friction", 75f);
-                    mTerrainContactBounce = physicsconfig.GetFloat("m_terraincontact_bounce", 0.05f);
-                    mTerrainContactERP = physicsconfig.GetFloat("m_terraincontact_erp", 0.05025f);
 
                     nmAvatarObjectContactFriction = physicsconfig.GetFloat("objectcontact_friction", 250f);
                     nmAvatarObjectContactBounce = physicsconfig.GetFloat("objectcontact_bounce", 0.2f);
@@ -1597,15 +1584,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         #endregion
-
-        public override void Combine(PhysicsScene pScene, Vector3 offset, Vector3 extents)
-        {
-            m_worldOffset = offset;
-            WorldExtents = new Vector2(extents.X, extents.Y);
-            m_parentScene = pScene;
-        }
-
-
 
         public bool CheckTerrainColisionAABB(IntPtr geom)
             {
@@ -3819,10 +3797,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public override bool SupportsCombining()
         {
             return true;
-        }
-
-        public override void UnCombine(PhysicsScene pScene)
-        {
         }
 
         public override void SetWaterLevel(short[] map)

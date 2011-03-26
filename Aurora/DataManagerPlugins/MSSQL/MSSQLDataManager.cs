@@ -17,10 +17,8 @@ namespace Aurora.DataManager.MSSQL
 {
     public class MSSQLDataLoader : DataManagerBase
     {
-        readonly Mutex m_lock = new Mutex(false);
         string connectionString = "";
         private SqlConnection m_connection = null;
-        //private volatile bool m_InUse = false;
 
         public override string Identifier
         {
@@ -144,7 +142,6 @@ namespace Aurora.DataManager.MSSQL
             SqlConnection dbcon = GetLockedConnection();
             IDbCommand result = null;
             IDataReader reader = null;
-            List<string> RetVal = new List<string>();
             string query = "";
             if (keyRow == "")
             {
@@ -237,7 +234,6 @@ namespace Aurora.DataManager.MSSQL
         {
             SqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
-            List<string> RetVal = new List<string>();
             string query = String.Format("select {0} from {1} {2}",
                                       wantedValue, table, whereClause);
             using (result = Query(query, new Dictionary<string, object>(), dbcon))

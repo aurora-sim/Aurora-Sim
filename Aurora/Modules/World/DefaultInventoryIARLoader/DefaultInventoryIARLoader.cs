@@ -136,7 +136,7 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
                 //Fix the name for later
                 f.Name = iarFileName;
                 f.ParentID = UUID.Zero;
-                bool update = m_MockScene.InventoryService.UpdateFolder(f);
+                m_MockScene.InventoryService.UpdateFolder(f);
                 m_service.AddToDefaultInventory(f);
             }
             catch (Exception e)

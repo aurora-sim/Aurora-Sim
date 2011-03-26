@@ -28,7 +28,6 @@ namespace Aurora.Modules
         #region Declares
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IConfigSource m_config;
         private List<Scene> m_scenes = new List<Scene>();
         private Dictionary<string, string> genericInfo = new Dictionary<string, string>();
         private Timer m_timer;
@@ -39,7 +38,6 @@ namespace Aurora.Modules
 
         public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            m_config = source;
             m_scenes.Add(scene);
             //Register the interface
             scene.RegisterModuleInterface<IGridRegisterModule>(this);
@@ -261,7 +259,7 @@ namespace Aurora.Modules
                 if (error == "Region locked out")
                 {
                     m_log.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName + " with the grid the failed - The region you are attempting to join has been blocked from connecting. Please connect another region.");
-                    string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to exit");
+                    MainConsole.Instance.CmdPrompt("Press enter when you are ready to exit");
                     Environment.Exit(0);
                 }
                 if (error == "Error communicating with grid service")

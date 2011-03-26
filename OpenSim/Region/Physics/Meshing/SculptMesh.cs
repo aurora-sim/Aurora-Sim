@@ -388,7 +388,6 @@ namespace PrimMesher
 
             int coordsDown = rows.Count;
             int coordsAcross = rows[0].Count;
-            int lastColumn = coordsAcross - 1;
 
             float widthUnit = 1.0f / (coordsAcross - 1);
             float heightUnit = 1.0f / (coordsDown - 1);

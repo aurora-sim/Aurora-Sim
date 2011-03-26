@@ -147,7 +147,6 @@ namespace OpenSim.Services.LLLoginService
         private Hashtable uiConfigHash;
 
         private ArrayList loginFlags;
-        private ArrayList globalTextures;
         private ArrayList eventCategories;
         private ArrayList uiConfig;
         private ArrayList classifiedCategories;
@@ -159,8 +158,6 @@ namespace OpenSim.Services.LLLoginService
         private ArrayList inventoryLibrary;
         private ArrayList activeGestures;
         private ArrayList tutorial = new ArrayList();
-
-        private UserInfo userProfile;
 
         private UUID agentID;
         private UUID sessionID;
@@ -206,15 +203,12 @@ namespace OpenSim.Services.LLLoginService
             ErrorMessage = "";
             ErrorReason = LoginResponseEnum.OK;
             loginFlags = new ArrayList();
-            globalTextures = new ArrayList();
             eventCategories = new ArrayList();
             uiConfig = new ArrayList();
             classifiedCategories = new ArrayList();
 
             uiConfigHash = new Hashtable();
 
-            // defaultXmlRpcResponse = new XmlRpcResponse();
-            userProfile = new UserInfo();
             inventoryRoot = new ArrayList();
             initialOutfit = new ArrayList();
             agentInventory = new ArrayList();

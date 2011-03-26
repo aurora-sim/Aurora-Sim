@@ -50,9 +50,6 @@ namespace OpenSim.Services.CapsService
     {
         #region Declares
 
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private ulong m_RegionHandle;
         public ulong RegionHandle
         {

@@ -83,7 +83,7 @@ namespace Aurora.Services.DataService
                     OSDMap map = new OSDMap ();
                     map["Method"] = "updateprofile";
                     map["Profile"] = Profile.ToOSD();
-                    OSDMap response = WebUtils.PostToService (url + "osd", map);
+                    WebUtils.PostToService (url + "osd", map);
                 }
                 return true;
             }
@@ -109,7 +109,7 @@ namespace Aurora.Services.DataService
                     OSDMap map = new OSDMap ();
                     map["Method"] = "addclassified";
                     map["Classified"] = classified.ToOSD ();
-                    OSDMap response = WebUtils.PostToService (url + "osd", map);
+                    WebUtils.PostToService (url + "osd", map);
                 }
             }
             catch (Exception e)
@@ -192,7 +192,7 @@ namespace Aurora.Services.DataService
                     OSDMap map = new OSDMap ();
                     map["Method"] = "removeclassified";
                     map["ClassifiedUUID"] = queryClassifiedID;
-                    OSDMap response = WebUtils.PostToService (url + "osd", map);
+                    WebUtils.PostToService (url + "osd", map);
                 }
             }
             catch (Exception e)
@@ -211,7 +211,7 @@ namespace Aurora.Services.DataService
                     OSDMap map = new OSDMap ();
                     map["Method"] = "addpick";
                     map["Pick"] = pick.ToOSD ();
-                    OSDMap response = WebUtils.PostToService (url + "osd", map);
+                    WebUtils.PostToService (url + "osd", map);
                 }
             }
             catch (Exception e)
@@ -294,7 +294,7 @@ namespace Aurora.Services.DataService
                     OSDMap map = new OSDMap ();
                     map["Method"] = "removepick";
                     map["PickUUID"] = queryPickID;
-                    OSDMap response = WebUtils.PostToService (url + "osd", map);
+                    WebUtils.PostToService (url + "osd", map);
                 }
             }
             catch (Exception e)

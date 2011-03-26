@@ -62,8 +62,6 @@ namespace OpenSim.Region.Framework.Scenes
 
     public class Culler : ICuller
     {
-        private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        
         private bool m_useDistanceCulling = true;
         private bool m_useCulling = true;
 
@@ -73,11 +71,8 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_useCulling = value; }
         }
 
-        private IScene m_scene;
-
         public Culler (IScene scene)
         {
-            m_scene = scene;
             IConfig interestConfig = scene.Config.Configs["InterestManagement"];
             if (interestConfig != null)
             {
@@ -136,15 +131,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         public UpdatePrioritizationSchemes UpdatePrioritizationScheme = UpdatePrioritizationSchemes.BestAvatarResponsiveness;
 
-        private IScene m_scene;
-
         private double m_childReprioritizationDistance = 20.0;
 
         public double ChildReprioritizationDistance { get { return m_childReprioritizationDistance; } }
 
         public Prioritizer(IScene scene)
         {
-            m_scene = scene;
             IConfig interestConfig = scene.Config.Configs["InterestManagement"];
             if (interestConfig != null)
             {

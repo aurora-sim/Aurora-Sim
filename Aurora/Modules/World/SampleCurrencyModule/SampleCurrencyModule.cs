@@ -55,8 +55,6 @@ namespace Aurora.OptionalModules
     /// </summary>
     public class CurrencyModule : IMoneyModule, ISharedRegionModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private bool m_enabled = true;
 
         #region IMoneyModule Members
@@ -243,10 +241,10 @@ namespace Aurora.OptionalModules
 
         protected XmlRpcResponse buy_func(XmlRpcRequest request, IPEndPoint ep)
         {
-            Hashtable requestData = (Hashtable)request.Params[0];
+            /*Hashtable requestData = (Hashtable)request.Params[0];
             UUID agentId = UUID.Zero;
-            //int amount = 0;
-            /*if (requestData.ContainsKey("agentId") && requestData.ContainsKey("currencyBuy"))
+            int amount = 0;
+            if (requestData.ContainsKey("agentId") && requestData.ContainsKey("currencyBuy"))
             {
                 UUID.TryParse((string)requestData["agentId"], out agentId);
                 try
@@ -278,7 +276,6 @@ namespace Aurora.OptionalModules
 
         protected XmlRpcResponse preflightBuyLandPrep_func(XmlRpcRequest request, IPEndPoint ep)
         {
-            Hashtable requestData = (Hashtable)request.Params[0];
             XmlRpcResponse ret = new XmlRpcResponse();
             Hashtable retparam = new Hashtable();
 
@@ -307,7 +304,6 @@ namespace Aurora.OptionalModules
         {
             XmlRpcResponse ret = new XmlRpcResponse();
             Hashtable retparam = new Hashtable();
-            Hashtable requestData = (Hashtable)request.Params[0];
             retparam.Add("success", true);
             ret.Value = retparam;
             return ret;

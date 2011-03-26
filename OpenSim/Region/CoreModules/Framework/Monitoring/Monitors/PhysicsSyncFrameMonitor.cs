@@ -32,12 +32,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
     public class PhysicsSyncFrameMonitor : ITimeMonitor
     {
-        private readonly Scene m_scene;
         private float physicsSyncTime;
 
         public PhysicsSyncFrameMonitor(Scene scene)
         {
-            m_scene = scene;
         }
 
         #region Implementation of IMonitor

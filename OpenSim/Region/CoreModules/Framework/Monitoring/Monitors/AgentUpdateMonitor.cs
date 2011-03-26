@@ -32,7 +32,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
     public class AgentUpdateMonitor : IMonitor, IAgentUpdateMonitor
     {
-        private readonly Scene m_scene;
         private int agentUpdates = 0;
         private int agentTime = 0;
 
@@ -41,7 +40,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public AgentUpdateMonitor(Scene scene)
         {
-            m_scene = scene;
         }
 
         #region Implementation of IMonitor

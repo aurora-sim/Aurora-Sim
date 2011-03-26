@@ -2404,7 +2404,6 @@ namespace OpenSim.CoreApplicationPlugins
                 }
                 else throw new Exception("neither region_name nor region_uuid given");
 
-                Scene scene = manager.CurrentScene;
                 responseData["health"] = 0;
 
                 response.Value = responseData;

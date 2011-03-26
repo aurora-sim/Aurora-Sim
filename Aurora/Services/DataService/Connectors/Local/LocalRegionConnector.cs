@@ -100,7 +100,6 @@ namespace Aurora.Services.DataService
         public void RemoveTelehub(UUID regionID, ulong regionHandle)
         {
             //Look for a telehub first.
-            Vector3 oldPos = Vector3.Zero;
             if (FindTelehub(regionID, 0) != null)
             {
                 GD.Delete("telehubs", new string[] { "RegionID" }, new object[] { regionID });

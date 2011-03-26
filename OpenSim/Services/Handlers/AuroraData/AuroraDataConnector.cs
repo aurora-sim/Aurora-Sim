@@ -80,7 +80,6 @@ namespace OpenSim.Services
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
             m_port = server.Port;
 
-            IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService> ();
             server.AddStreamHandler (new AuroraDataServerPostHandler (url, RegionHandle, m_registry));
             server.AddStreamHandler (new AuroraDataServerPostOSDHandler (url + "osd", RegionHandle, m_registry));
         }
@@ -91,7 +90,6 @@ namespace OpenSim.Services
             m_port = server.Port;
             string url = "/auroradata" + UUID.Random ();
 
-            IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService> ();
             server.AddStreamHandler (new AuroraDataServerPostHandler (url, RegionHandle, m_registry));
             server.AddStreamHandler (new AuroraDataServerPostOSDHandler (url + "osd", RegionHandle, m_registry));
 

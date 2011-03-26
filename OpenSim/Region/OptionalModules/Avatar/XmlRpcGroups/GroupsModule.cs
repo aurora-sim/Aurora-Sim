@@ -326,10 +326,10 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         {
             OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 
-            UUID groupid = map["group-id"].AsUUID();
-            UUID proposalid = map["proposal-id"].AsUUID();
-            UUID sessionid = map["session-id"].AsUUID();
-            string vote = map["vote"].AsString();
+            //UUID groupid = map["group-id"].AsUUID();
+            //UUID proposalid = map["proposal-id"].AsUUID();
+            //UUID sessionid = map["session-id"].AsUUID();
+            //string vote = map["vote"].AsString();
 
             OSDMap resp = new OSDMap();
             resp["voted"] = OSD.FromBoolean(true);
@@ -1088,8 +1088,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         private GridInstantMessage BuildGroupNoticeIM(GroupNoticeInfo data, UUID groupNoticeID, UUID AgentID)
         {
-            GroupRecord groupInfo = m_groupData.GetGroupRecord(AgentID, data.GroupID, null);
-
             GridInstantMessage msg = new GridInstantMessage();
 
             msg.fromAgentID = data.GroupID.Guid;

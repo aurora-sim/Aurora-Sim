@@ -54,8 +54,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
         public Bitmap TerrainToBitmap(Bitmap mapbmp)
         {
-            int tc = Environment.TickCount;
-            //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Terrain");
+             //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Terrain");
 
             ITerrainChannel heightmap = m_scene.RequestModuleInterface<ITerrainChannel>();
             bool ShadowDebugContinue = true;

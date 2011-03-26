@@ -148,8 +148,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private SendCourseLocationsMethod m_sendCourseLocationsMethod;
 
-        private Vector3 m_requestedSitOffset = new Vector3();
-
         private float m_sitAvatarHeight = 2.0f;
 
         private int m_godLevel;
@@ -1584,7 +1582,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_nextSitAnimation = part.SitAnimation;
             }
-            m_requestedSitOffset = Vector3.Zero;
             m_requestedSitTargetUUID = targetID;
 
             Vector3 sitTargetPos = part.SitTargetPosition;
@@ -1740,7 +1737,6 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     m_nextSitAnimation = part.SitAnimation;
                 }
-                m_requestedSitOffset = offset;
                 m_requestedSitTargetUUID = targetID;
                 
                 //m_log.DebugFormat("[SIT]: Client requested Sit Position: {0}", offset);
@@ -1776,7 +1772,6 @@ namespace OpenSim.Region.Framework.Scenes
             ISceneChildEntity part = FindNextAvailableSitTarget (targetID);
             if (part != null)
             {
-                m_requestedSitOffset = offset;
                 m_requestedSitTargetUUID = targetID;
 
                 m_log.DebugFormat("[SIT]: Client requested Sit Position: {0}", offset);
@@ -2193,7 +2188,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             Vector3 pos2 = AbsolutePosition;
             Vector3 vel = Velocity;
-            int[] fix = new int[2];
 
             float timeStep = 0.1f;
             pos2.X = pos2.X + (vel.X*timeStep);

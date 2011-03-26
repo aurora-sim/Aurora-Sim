@@ -12,8 +12,6 @@ namespace OpenSim.CoreApplicationPlugins
 {
     public class AuroraDataStartupPlugin : IApplicationPlugin
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         #region IApplicationPlugin Members
 
         public void Initialize(ISimulationBase openSim)

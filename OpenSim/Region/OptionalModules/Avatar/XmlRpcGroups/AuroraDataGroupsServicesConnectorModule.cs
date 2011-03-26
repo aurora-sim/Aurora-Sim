@@ -59,11 +59,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         private bool m_connectorEnabled = false;
 
-        private string m_groupsServerURI = string.Empty;
-
-        private string m_groupReadKey  = string.Empty;
-        private string m_groupWriteKey = string.Empty;
-
         private IUserAccountService m_accountService = null;
 
         // Used to track which agents are have dropped from a group chat session

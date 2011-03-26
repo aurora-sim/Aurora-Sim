@@ -702,7 +702,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.BodyEnable (Body);
 
                 // add drive to body
-                Vector3 addAmount = m_linearMotorDirection / (m_linearMotorTimescale / (pTimestep * pTimestep));
+                Vector3 addAmount = m_linearMotorDirection / (m_linearMotorTimescale * m_linearMotorDecayTimescale / (pTimestep));
                 
                 m_lastLinearVelocityVector += (addAmount * 10);  // lastLinearVelocityVector is the current body velocity vector?
 
@@ -1037,12 +1037,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_angularMotorVelocity.X -= angularVelZChange / 3;
                 else
                     m_angularMotorVelocity.X -= angularVelZChange / 3;*/
-                float oldZAngVel = m_angularMotorVelocity.Z;
-
+                
                 float addAmount = m_angularMotorVelocity.X;
 
                 m_angularMotorVelocity.Z += (((1 - m_bankingMix) * m_bankingEfficiency * addAmount) / (m_bankingTimescale / pTimestep) * 5);
 
+                //float oldZAngVel = m_angularMotorVelocity.Z;
                 //m_angularMotorVelocity.X -= oldZAngVel - m_angularMotorVelocity.Z;
 
                 if (m_angularMotorVelocity.Z != 0)
@@ -1078,7 +1078,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if ((m_flags & (VehicleFlag.LIMIT_MOTOR_UP)) != 0 && Zchange > 0) //if it isn't going up, don't apply the limiting force
             {
-                Vector3 Change = Vector3.One;
                 //Requires idea of 'up', so use reference frame to rotate it
                 //Add to the X, because that will normally tilt the vehicle downward (if its rotated, it'll be rotated by the ref. frame
                 m_lastAngularVelocity *= (new Vector3(1 - ((float)Zchange * (pTimestep * 10)), 1, 1) *  m_referenceFrame);
@@ -1195,7 +1194,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         private List<Vector3> m_forcelist = new List<Vector3>();
-        Quaternion m_lastCameraRotation = Quaternion.Identity;
+        //Quaternion m_lastCameraRotation = Quaternion.Identity;
         private Vector3 m_userLookAt = Vector3.Zero;
         internal void ProcessSetCameraPos(Vector3 CameraRotation)
         {

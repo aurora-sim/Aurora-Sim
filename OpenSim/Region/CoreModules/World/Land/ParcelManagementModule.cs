@@ -383,7 +383,6 @@ namespace OpenSim.Region.CoreModules.World.Land
                 foreach (LandData parcel in m_TaintedLandData)
                 {
                     LandData p = parcel.Copy();
-                    Vector3 OldUserLocation = p.UserLocation;
                     if (p.UserLocation == Vector3.Zero)
                     {
                         //Set it to a position inside the parcel at the ground if it doesn't have one
@@ -1199,7 +1198,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 try
                 {
-                    int localID = m_landIDList[x / 4, y / 4];
                     return m_landList[m_landIDList[x / 4, y / 4]];
                 }
                 catch (IndexOutOfRangeException)

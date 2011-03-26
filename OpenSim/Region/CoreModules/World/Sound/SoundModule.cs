@@ -95,8 +95,6 @@ namespace OpenSim.Region.CoreModules.World.Sound
             if (part == null)
                 return;
 
-            ISceneEntity grp = part.ParentEntity;
-
             bool LocalOnly = false;
             ILandObject ILO = null;
             IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();

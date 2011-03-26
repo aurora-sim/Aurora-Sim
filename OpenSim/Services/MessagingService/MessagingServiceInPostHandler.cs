@@ -46,14 +46,12 @@ namespace OpenSim.Services.MessagingService
     public class MessagingServiceInPostHandler : BaseStreamHandler
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IRegistryCore m_registry;
         private MessagingServiceInHandler m_handler;
         private ulong m_ourRegionHandle;
 
         public MessagingServiceInPostHandler(string url, IRegistryCore registry, MessagingServiceInHandler handler, ulong handle) :
                 base("POST", url)
         {
-            m_registry = registry;
             m_handler = handler;
             m_ourRegionHandle = handle;
         }

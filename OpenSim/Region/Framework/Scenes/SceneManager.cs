@@ -522,8 +522,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public void CreateRegion(RegionInfo regionInfo, out IScene m_scene)
         {
-            int port = regionInfo.InternalEndPoint.Port;
-
             // set the initial ports
             regionInfo.HttpPort = MainServer.Instance.Port;
 
@@ -853,7 +851,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 RegionInfo regionInfo = presence.Scene.RegionInfo;
 
-                string param = string.Join(" ", cmdparams, 2, cmdparams.Length - 3);
                 if (presence.Name.Contains (cmdparams[2].ToLower ()))
                 {
                     m_log.Info (String.Format ("Kicking user: {0,-16}{1,-37} in region: {2,-16}", presence.Name, presence.UUID, regionInfo.RegionName));
@@ -936,8 +933,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             List<string> args = new List<string> (cmd);
             args.RemoveAt (0);
-            string[] cmdparams = args.ToArray ();
-
+            
             IRegionModulesController controller = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<IRegionModulesController> ();
             foreach (IRegionModuleBase irm in controller.AllModules)
             {

@@ -8884,8 +8884,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (idx < rules.Length)
                     face = (int)rules.GetLSLIntegerItem(idx++);
 
-                Primitive.TextureEntryFace texFace = tex.GetFace((uint)face);
-
                 if (code == (int)ScriptBaseClass.PRIM_NAME)
                 {
                     res.Add(new LSL_Integer(part.Name));
@@ -9107,7 +9105,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         return res;
 
                     face = (int)rules.GetLSLIntegerItem(idx++);
-                    texFace = tex.GetFace((uint)face);
 
                     if (face == ScriptBaseClass.ALL_SIDES)
                     {

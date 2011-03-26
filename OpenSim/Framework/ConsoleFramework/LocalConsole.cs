@@ -314,8 +314,6 @@ namespace OpenSim.Framework
                     int boxNum = 0;
                     foreach (string s in split)
                     {
-                        char currentchar = line[currentPos];
-                        char nextchar = line[currentPos + 1];
                         if (line[currentPos] == '[')
                         {
                             if (level == Level.Error)

@@ -37,7 +37,6 @@ namespace OpenSim.Framework
     public class EntityManager
     {
         private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
-        private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, EntityBase> m_entities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, EntityBase> ();
         private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, ISceneEntity> m_objectEntities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, ISceneEntity> ();
         private readonly Dictionary<UUID, IScenePresence> m_presenceEntities = new Dictionary<UUID, IScenePresence> ();
         private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID> m_child_2_parent_entities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID> ();

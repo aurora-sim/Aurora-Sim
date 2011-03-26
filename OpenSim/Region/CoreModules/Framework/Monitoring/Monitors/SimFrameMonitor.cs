@@ -34,7 +34,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
     {
         #region Declares
 
-        private readonly Scene m_scene;
         // saved last reported value so there is something available for llGetRegionFPS 
         private volatile float lastReportedSimFPS = 0;
         private volatile float simFPS;
@@ -48,7 +47,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public SimFrameMonitor(Scene scene)
         {
-            m_scene = scene;
         }
 
         #endregion

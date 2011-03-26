@@ -216,16 +216,6 @@ namespace OpenSim.Framework
             return false;
         }
 
-        public virtual void Combine(PhysicsScene pScene, Vector3 offset, Vector3 extents)
-        {
-            return;
-        }
-
-        public virtual void UnCombine(PhysicsScene pScene)
-        {
-            
-        }
-
         /// <summary>
         /// Queue a raycast against the physics scene.
         /// The provided callback method will be called when the raycast is complete

@@ -19,9 +19,6 @@ namespace Aurora.Services.DataService
 {
     public class SimianRegionConnector : IRegionConnector
     {
-        private static readonly ILog m_log =
-                LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
         private List<string> m_ServerURIs = new List<string>();
 
         public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)

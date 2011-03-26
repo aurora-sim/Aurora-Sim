@@ -59,7 +59,7 @@ namespace OpenSim.Services.Connectors
                     Dictionary<string, object> ar = abuse_report.ToKeyValuePairs();
                     ar.Add("METHOD", "AddAbuseReport");
 
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                    SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/abusereport",
                         WebUtils.BuildQueryString(ar));
                 }
@@ -123,7 +123,7 @@ namespace OpenSim.Services.Connectors
                 send.Add("Password", Password);
                 send.Add("METHOD", "AddAbuseReport");
                 List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                SynchronousRestFormsRequester.MakeRequest("POST",
                     m_ServerURIs[0] + "/abusereport",
                     WebUtils.BuildQueryString(send));
             }

@@ -327,7 +327,6 @@ namespace OpenSim.Services.LLLoginService
             IAgentInfo agent = null;
 
             IAgentConnector agentData = DataManager.RequestPlugin<IAgentConnector>("IAgentConnectorLocal");
-            IProfileConnector profileData = DataManager.RequestPlugin<IProfileConnector>("IProfileConnectorLocal");
             //Already tried to find it before this, so its not there at all.
             if (agentData != null)
             {
@@ -1119,7 +1118,7 @@ namespace OpenSim.Services.LLLoginService
             {
                 //Remove any previous users
                 string ServerCapsBase = CapsUtil.GetRandomCapsObjectPath();
-                string ServerCapsSeedPath = m_CapsService.CreateCAPS(aCircuit.AgentID, CapsUtil.GetCapsSeedPath(ServerCapsBase), region.RegionHandle, true, aCircuit);
+                m_CapsService.CreateCAPS(aCircuit.AgentID, CapsUtil.GetCapsSeedPath(ServerCapsBase), region.RegionHandle, true, aCircuit);
 
                 regionClientCaps = m_CapsService.GetClientCapsService(aCircuit.AgentID).GetCapsService(region.RegionHandle);
             }
@@ -1644,7 +1643,6 @@ namespace AvatarArchives
                 if (str != string.Empty)
                 {
                     string[] parts = str.Split(new char[] { ';' });
-                    Dictionary<string, object> dic = new Dictionary<string, object>();
                     foreach (string s in parts)
                     {
                         string[] parts2 = s.Split(new char[] { '*' });

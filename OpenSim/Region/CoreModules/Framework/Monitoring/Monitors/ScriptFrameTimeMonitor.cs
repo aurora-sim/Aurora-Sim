@@ -32,12 +32,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
     public class ScriptFrameTimeMonitor : ITimeMonitor
     {
-        private readonly Scene m_scene;
         private int MonitorScriptFrameTime;
 
         public ScriptFrameTimeMonitor(Scene scene)
         {
-            m_scene = scene;
         }
 
         #region Implementation of IMonitor

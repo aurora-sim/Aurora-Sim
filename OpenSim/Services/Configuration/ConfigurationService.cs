@@ -192,12 +192,10 @@ namespace OpenSim.Services.ConfigurationService
         {
             if (m_knownUsers.ContainsKey(userID))
             {
-                List<string> urls = new List<string>();
                 return FindValueOfFromOSDMap(key, m_knownUsers[userID]);
             }
             else if (m_allConfigs.ContainsKey(userID))
             {
-                List<string> urls = new List<string>();
                 return FindValueOfFromOSDMap(key, m_allConfigs[userID]);
             }
             else
@@ -217,24 +215,20 @@ namespace OpenSim.Services.ConfigurationService
         {
             if (m_knownUsers.ContainsKey(userID))
             {
-                List<string> urls = new List<string>();
                 return FindValueOfFromOSDMap(key, m_knownUsers[userID]);
             }
             else if (m_allConfigs.ContainsKey(userID))
             {
-                List<string> urls = new List<string>();
                 return FindValueOfFromOSDMap(key, m_allConfigs[userID]);
             }
             else
             {
                 if (m_knownUsers.ContainsKey(regionID))
                 {
-                    List<string> urls = new List<string>();
                     return FindValueOfFromOSDMap(key, m_knownUsers[regionID]);
                 }
                 else if (m_allConfigs.ContainsKey(regionID))
                 {
-                    List<string> urls = new List<string>();
                     return FindValueOfFromOSDMap(key, m_allConfigs[regionID]);
                 }
                 foreach (string name in m_allConfigs.Keys)

@@ -44,9 +44,6 @@ namespace OpenSim.Region.CoreModules.World.Serialiser
 {
     public class SerialiserModule : ISharedRegionModule, IRegionSerialiserModule
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         #region ISharedRegionModule Members
 
         public Type ReplaceableInterface

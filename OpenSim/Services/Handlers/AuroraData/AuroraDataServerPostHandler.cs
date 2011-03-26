@@ -440,7 +440,6 @@ namespace OpenSim.Services
 
     public class AgentInfoHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         IAgentConnector AgentConnector;
         public AgentInfoHandler()
         {
@@ -452,8 +451,6 @@ namespace OpenSim.Services
             UUID principalID = UUID.Zero;
             if (request.ContainsKey("PRINCIPALID"))
                 UUID.TryParse(request["PRINCIPALID"].ToString(), out principalID);
-            else
-                m_log.WarnFormat("[AuroraDataServerPostHandler]: no principalID in request to get agent");
 
             IAgentInfo Agent = AgentConnector.GetAgent(principalID);
             Dictionary<string, object> result = new Dictionary<string, object>();
@@ -470,7 +467,6 @@ namespace OpenSim.Services
 
     public class AssetHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         IAssetConnector AssetConnector;
         public AssetHandler()
         {
@@ -500,8 +496,6 @@ namespace OpenSim.Services
 
         public byte[] UpdateLSLData(Dictionary<string, object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
             string token = request["token"].ToString();
             string key = request["key"].ToString();
             string value = request["value"].ToString();
@@ -576,7 +570,6 @@ namespace OpenSim.Services
 
     public class GroupsServiceHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         IGroupsServiceConnector GroupsServiceConnector;
         public GroupsServiceHandler()
         {
@@ -585,8 +578,6 @@ namespace OpenSim.Services
 
         public byte[] CreateGroup(Dictionary<string, object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
             UUID groupID = UUID.Parse(request["groupID"].ToString());
             string name = request["name"].ToString();
             string charter = request["charter"].ToString();
@@ -609,8 +600,6 @@ namespace OpenSim.Services
 
         public byte[] AddGroupNotice(Dictionary<string, object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
             UUID requestingAgentID = UUID.Parse(request["requestingAgentID"].ToString());
             UUID groupID = UUID.Parse(request["groupID"].ToString());
             UUID noticeID = UUID.Parse(request["noticeID"].ToString());
@@ -629,8 +618,6 @@ namespace OpenSim.Services
 
         public byte[] SetAgentActiveGroup(Dictionary<string, object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
             UUID AgentID = UUID.Parse(request["AgentID"].ToString());
             UUID GroupID = UUID.Parse(request["GroupID"].ToString());
 
@@ -641,8 +628,6 @@ namespace OpenSim.Services
 
         public byte[] SetAgentGroupSelectedRole(Dictionary<string, object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
             UUID AgentID = UUID.Parse(request["AgentID"].ToString());
             UUID GroupID = UUID.Parse(request["GroupID"].ToString());
             UUID RoleID = UUID.Parse(request["RoleID"].ToString());
@@ -654,8 +639,6 @@ namespace OpenSim.Services
 
         public byte[] AddAgentToGroup(Dictionary<string, object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
             UUID AgentID = UUID.Parse(request["AgentID"].ToString());
             UUID GroupID = UUID.Parse(request["GroupID"].ToString());
             UUID RoleID = UUID.Parse(request["RoleID"].ToString());
@@ -668,8 +651,6 @@ namespace OpenSim.Services
 
         public byte[] AddRoleToGroup(Dictionary<string, object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
             UUID requestingAgentID = UUID.Parse(request["requestingAgentID"].ToString());
             UUID GroupID = UUID.Parse(request["GroupID"].ToString());
             UUID RoleID = UUID.Parse(request["RoleID"].ToString());
@@ -685,8 +666,6 @@ namespace OpenSim.Services
 
         public byte[] UpdateGroup(Dictionary<string, object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
             UUID requestingAgentID = UUID.Parse(request["requestingAgentID"].ToString());
             UUID groupID = UUID.Parse(request["groupID"].ToString());
             string charter = request["charter"].ToString();
@@ -704,8 +683,6 @@ namespace OpenSim.Services
 
         public byte[] RemoveRoleFromGroup(Dictionary<string, object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
             UUID requestingAgentID = UUID.Parse(request["requestingAgentID"].ToString());
             UUID RoleID = UUID.Parse(request["RoleID"].ToString());
             UUID GroupID = UUID.Parse(request["GroupID"].ToString());
@@ -717,8 +694,6 @@ namespace OpenSim.Services
 
         public byte[] UpdateRole(Dictionary<string, object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
             UUID requestingAgentID = UUID.Parse(request["requestingAgentID"].ToString());
             UUID GroupID = UUID.Parse(request["GroupID"].ToString());
             UUID RoleID = UUID.Parse(request["RoleID"].ToString());
@@ -734,8 +709,6 @@ namespace OpenSim.Services
 
         public byte[] SetAgentGroupInfo(Dictionary<string, object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
             UUID requestingAgentID = UUID.Parse(request["requestingAgentID"].ToString());
             UUID AgentID = UUID.Parse(request["AgentID"].ToString());
             UUID GroupID = UUID.Parse(request["GroupID"].ToString());
@@ -749,8 +722,6 @@ namespace OpenSim.Services
 
         public byte[] AddAgentGroupInvite(Dictionary<string, object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
             UUID requestingAgentID = UUID.Parse(request["requestingAgentID"].ToString());
             UUID inviteID = UUID.Parse(request["inviteID"].ToString());
             UUID GroupID = UUID.Parse(request["GroupID"].ToString());
@@ -765,8 +736,6 @@ namespace OpenSim.Services
 
         public byte[] RemoveAgentInvite(Dictionary<string, object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
             UUID requestingAgentID = UUID.Parse(request["requestingAgentID"].ToString());
             UUID inviteID = UUID.Parse(request["inviteID"].ToString());
 
@@ -777,8 +746,6 @@ namespace OpenSim.Services
 
         public byte[] AddAgentToRole(Dictionary<string, object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
             UUID requestingAgentID = UUID.Parse(request["requestingAgentID"].ToString());
             UUID AgentID = UUID.Parse(request["AgentID"].ToString());
             UUID GroupID = UUID.Parse(request["GroupID"].ToString());
@@ -791,8 +758,6 @@ namespace OpenSim.Services
 
         public byte[] RemoveAgentFromRole(Dictionary<string, object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
             UUID requestingAgentID = UUID.Parse(request["requestingAgentID"].ToString());
             UUID AgentID = UUID.Parse(request["AgentID"].ToString());
             UUID GroupID = UUID.Parse(request["GroupID"].ToString());
@@ -1184,7 +1149,6 @@ namespace OpenSim.Services
 
     public class DirectoryInfoHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         IDirectoryServiceConnector DirectoryServiceConnector;
         public DirectoryInfoHandler()
         {
@@ -1377,8 +1341,6 @@ namespace OpenSim.Services
 
         public byte[] AddLandObject(Dictionary<string, object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
             LandData land = new LandData();
             land.FromKVP(request);
             DirectoryServiceConnector.AddLandObject(land);
@@ -1451,7 +1413,6 @@ namespace OpenSim.Services
 
     public class EstateInfoHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         IEstateConnector EstateConnector;
         public EstateInfoHandler()
         {
@@ -1675,7 +1636,6 @@ namespace OpenSim.Services
 
     public class MuteInfoHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         IMuteListConnector MuteListConnector;
         public MuteInfoHandler()
         {
@@ -1704,8 +1664,6 @@ namespace OpenSim.Services
 
         public byte[] UpdateMute(Dictionary<string, object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
             MuteList mute = new MuteList();
             mute.FromKVP(request);
             UUID PRINCIPALID = UUID.Parse(request["PRINCIPALID"].ToString());
@@ -1716,8 +1674,6 @@ namespace OpenSim.Services
 
         public byte[] DeleteMute(Dictionary<string, object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
             UUID MUTEID = UUID.Parse(request["MUTEID"].ToString());
             UUID PRINCIPALID = UUID.Parse(request["PRINCIPALID"].ToString());
             MuteListConnector.DeleteMute(MUTEID, PRINCIPALID);
@@ -1804,7 +1760,6 @@ namespace OpenSim.Services
 
     public class OfflineMessagesInfoHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         IOfflineMessagesConnector OfflineMessagesConnector;
         public OfflineMessagesInfoHandler()
         {
@@ -1833,8 +1788,6 @@ namespace OpenSim.Services
 
         public byte[] AddOfflineMessage(Dictionary<string, object> request)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
             GridInstantMessage message = new GridInstantMessage();
             message.FromKVP(request);
             OfflineMessagesConnector.AddOfflineMessage(message);
@@ -1907,7 +1860,6 @@ namespace OpenSim.Services
 
     public class TelehubInfoHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         IRegionConnector GridConnector;
         public TelehubInfoHandler()
         {

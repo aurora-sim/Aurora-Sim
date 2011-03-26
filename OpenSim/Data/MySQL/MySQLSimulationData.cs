@@ -1560,8 +1560,9 @@ namespace OpenSim.Data.MySQL
             prim.SitTargetPositionLL = new Vector3(SitTargetOffsetX, SitTargetOffsetY, SitTargetOffsetZ);
             prim.SitTargetOrientationLL = new Quaternion(SitTargetOrientX, SitTargetOrientY, SitTargetOrientZ, SitTargetOrientW);
             prim.AngularVelocity = new Vector3(OmegaX, OmegaY, OmegaZ);
-            prim.CameraEyeOffset = new Vector3(CameraEyeOffsetX, CameraEyeOffsetY, CameraEyeOffsetZ);
-            prim.CameraAtOffset = new Vector3(CameraAtOffsetX, CameraAtOffsetY, CameraAtOffsetZ);
+            prim.CameraEyeOffset = new Vector3 (CameraEyeOffsetX, CameraEyeOffsetY, CameraEyeOffsetZ);
+            prim.CameraAtOffset = new Vector3 (CameraAtOffsetX, CameraAtOffsetY, CameraAtOffsetZ);
+            prim.Acceleration = new Vector3 (AccelerationX, AccelerationY, AccelerationZ);
 
             return prim;
         }

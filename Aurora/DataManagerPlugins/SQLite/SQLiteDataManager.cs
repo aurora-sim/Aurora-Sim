@@ -530,7 +530,6 @@ namespace Aurora.DataManager.SQLite
         public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
         {
             var cmd = new SqliteCommand();
-            Dictionary<string, object> parameters = new Dictionary<string, object>();
             string query = String.Format("update {0} set ", table);
             int i = 0;
             
@@ -643,9 +642,6 @@ namespace Aurora.DataManager.SQLite
                 }
             }
 
-            string columnDefinition = string.Empty;
-            /*var primaryColumns = (from cd in columns where cd.IsPrimary == true select cd);
-            bool multiplePrimary = primaryColumns.Count() > 1;*/
             string renamedTempTableColumnDefinition = string.Empty;
             string renamedTempTableColumn = string.Empty;
 

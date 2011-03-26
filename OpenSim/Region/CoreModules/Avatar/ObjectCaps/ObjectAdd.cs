@@ -47,8 +47,6 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 {
     public class ObjectAdd : INonSharedRegionModule
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Scene m_scene;
         
         #region IRegionModule Members

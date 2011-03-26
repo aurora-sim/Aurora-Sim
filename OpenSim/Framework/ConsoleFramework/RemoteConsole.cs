@@ -53,7 +53,6 @@ namespace OpenSim.Framework
     public class RemoteConsole : CommandConsole
     {
         private IHttpServer m_Server = null;
-        private IConfigSource m_Config = null;
 
         private List<string> m_Scrollback = new List<string>();
         private ManualResetEvent m_DataEvent = new ManualResetEvent(false);
@@ -71,7 +70,6 @@ namespace OpenSim.Framework
 
         public override void Initialize(string defaultPrompt, IConfigSource source, ISimulationBase baseOpenSim)
         {
-            m_Config = source;
             uint m_consolePort = 0;
 
             if (source.Configs["Console"] != null)

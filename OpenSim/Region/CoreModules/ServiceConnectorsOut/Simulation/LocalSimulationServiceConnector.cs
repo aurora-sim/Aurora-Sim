@@ -41,8 +41,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Simulation
 {
     public class LocalSimulationConnectorModule : ISharedRegionModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         #region ISharedRegionModule
 
         public void Initialise(IConfigSource config)

@@ -37,10 +37,7 @@ using OpenMetaverse;
 namespace OpenSim.Region.OptionalModules.Scripting.ScriptModuleComms
 {
     public class ScriptModuleCommsModule : INonSharedRegionModule, IScriptModuleComms
-    {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
+    {   
         private IScriptModule m_scriptModule = null;
 
         public event ScriptCommand OnScriptCommand;

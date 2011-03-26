@@ -332,7 +332,7 @@ namespace OpenSim.Services.CapsService
         {
             OSDMap body = new OSDMap();
             OSDMap sessionInfo = new OSDMap();
-            OSDMap infoDetail = new OSDMap();
+            //OSDMap infoDetail = new OSDMap();
             OSDMap moderatedMode = new OSDMap();
 
             moderatedMode.Add("voice", OSD.FromBoolean(true));

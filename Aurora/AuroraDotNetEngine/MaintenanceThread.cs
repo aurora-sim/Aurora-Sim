@@ -81,11 +81,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         private StartPerformanceQueue LUQueue = new StartPerformanceQueue();
 
-        /// <summary>
-        /// Queue containing scripts that need to have states saved or deleted.
-        /// </summary>
-        private Queue StateQueue = new Queue();
-
         private EventManager EventManager = null;
 
         #endregion

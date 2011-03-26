@@ -24,7 +24,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         // LIMIT_MOTOR_UP
         // LIMIT_ROLL_ONLY
         private VehicleFlag m_Hoverflags = (VehicleFlag)0;
-        private Vector3 m_BlockingEndPoint = Vector3.Zero;
+        //private Vector3 m_BlockingEndPoint = Vector3.Zero;
         private Quaternion m_RollreferenceFrame = Quaternion.Identity;
         // Linear properties
         private Vector3 m_linearMotorDirection = Vector3.Zero;          // velocity requested by LSL, decayed by time
@@ -294,12 +294,10 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
             m_dir.Z = m_prim.Velocity.Z; // Preserve the accumulated falling velocity
 
-            Vector3 accel = new Vector3(-(m_dir.X - m_lastLinearVelocityVector.X / 0.1f), -(m_dir.Y - m_lastLinearVelocityVector.Y / 0.1f), m_dir.Z - m_lastLinearVelocityVector.Z / 0.1f);
             Vector3 posChange = new Vector3();
             posChange.X = newpos.getX() - m_lastPositionVector.getX();
             posChange.Y = newpos.getY() - m_lastPositionVector.getY();
             posChange.Z = newpos.getZ() - m_lastPositionVector.getZ();
-            double Zchange = Math.Abs(posChange.Z);
             btQuaternion Orientation2 = m_body.getWorldTransform().getRotation();
             /*if (m_BlockingEndPoint != Vector3.Zero)
             {
@@ -539,7 +537,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                     // m_linearMotorOffset = new Vector3(pValue.X, pValue.Y, pValue.Z);
                     break;
                 case Vehicle.BLOCK_EXIT:
-                    m_BlockingEndPoint = new Vector3(pValue.X, pValue.Y, pValue.Z);
+                    //m_BlockingEndPoint = new Vector3(pValue.X, pValue.Y, pValue.Z);
                     break;
             }
         }//end ProcessVectorVehicleParam

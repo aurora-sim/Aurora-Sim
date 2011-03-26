@@ -34,7 +34,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
     {
         #region Declares
 
-        private readonly Scene m_scene;
         private volatile float primsLimited;
         private float LastPrimsLimited = 0;
 
@@ -46,7 +45,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public ObjectUpdateMonitor(Scene scene)
         {
-            m_scene = scene;
         }
 
         #endregion

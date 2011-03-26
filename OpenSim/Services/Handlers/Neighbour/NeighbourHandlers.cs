@@ -67,13 +67,11 @@ namespace OpenSim.Services
         /// </summary>
         private INeighborService m_NeighborService;
         private IAuthenticationService m_AuthenticationService;
-        private IConfigSource m_source;
         private NeighborThreatLevel m_threatLevel = NeighborThreatLevel.Low;
 
         public NeighborHandler(INeighborService service, IAuthenticationService authentication, IConfigSource config) :
             base("POST", "/region")
         {
-            m_source = config;
             m_NeighborService = service;
             m_AuthenticationService = authentication;
             IConfig neighborsConfig = config.Configs["NeighborService"];

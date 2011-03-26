@@ -41,9 +41,8 @@ using OpenSim.Region.Framework.Scenes;
 namespace OpenSim.Region.CoreModules.World.WorldMap
 {
     // Hue, Saturation, Value; used for color-interpolation
-    struct HSV {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
+    public struct HSV
+    {
         public float h;
         public float s;
         public float v;
@@ -290,8 +289,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         {
             BitmapProcessing.FastBitmap unsafeBMP = new BitmapProcessing.FastBitmap(mapbmp);
             unsafeBMP.LockBitmap();
-            DateTime start = DateTime.Now;
-            int tc = Environment.TickCount;
+            //DateTime start = DateTime.Now;
             //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Terrain");
 
             // These textures should be in the AssetCache anyway, as every client conneting to this
@@ -387,7 +385,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             if (m_mapping != null)
                 m_mapping.Clear();
             unsafeBMP.UnlockBitmap();
-            //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Done in " + (Environment.TickCount - tc) + " ms");
+            //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Done in " + (DateTime.Now - start).TotalSeconds + " ms");
             return unsafeBMP.Bitmap();
         }
     }

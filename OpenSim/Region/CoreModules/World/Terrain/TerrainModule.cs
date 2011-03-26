@@ -285,7 +285,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// <param name="RemoteClient">Client to send to</param>
         public void SendLayerData(IClientAPI RemoteClient)
         {
-            IScenePresence presence = m_scene.GetScenePresence (RemoteClient.AgentId);
             if (!m_sendTerrainUpdatesByViewDistance)
             {
                 //Default way, send the full terrain at once

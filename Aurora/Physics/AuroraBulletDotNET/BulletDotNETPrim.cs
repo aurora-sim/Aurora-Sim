@@ -44,7 +44,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private Vector3 _position;
-        private Vector3 m_zeroPosition;
+        //private Vector3 m_zeroPosition;
         private Vector3 _velocity;
         private Vector3 _torque;
         private Vector3 m_lastVelocity;
@@ -188,7 +188,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         private bool forceenable = false;
 
         private btGeneric6DofConstraint m_aMotor;
-        private Vector3 m_axislock;
+        //private Vector3 m_axislock;
         private bool m_frozen;
 
         public btRigidBody Body;
@@ -1701,13 +1701,11 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                         enableBodySoft();
                     }
                 }
-                else
+                /*else
                 {
-                    if (m_zeroPosition == null)
-                        m_zeroPosition = Vector3.Zero;
                     m_zeroPosition = _position;
                     return;
-                }
+                }*/
             }
         }
 
@@ -2784,7 +2782,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 AxisLockAngleHigh.Dispose();
 
 
-            m_axislock = axislock;
+            //m_axislock = axislock;
             m_aMotor = new btGeneric6DofConstraint(Body, _parent_scene.TerrainBody, _parent_scene.TransZero,
                                                    _parent_scene.TransZero, false);
 

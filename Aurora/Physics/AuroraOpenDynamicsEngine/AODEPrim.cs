@@ -1475,7 +1475,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     float m_mass = _mass;
                     d.Vector3 dcpos = d.BodyGetPosition(Body);
                     d.Vector3 vel = d.BodyGetLinearVel(Body);
-                    d.Vector3 angvel = d.BodyGetAngularVel(Body);
 
                     //KF: m_buoyancy should be set by llSetBuoyancy() for non-vehicle.
                     // would come from SceneObjectPart.cs, public void SetBuoyancy(float fvalue) , PhysActor.Buoyancy = fvalue; ??
@@ -2454,8 +2453,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             //  no lock; called from Simulate() -- if you call this from elsewhere, gotta lock or do Monitor.Enter/Exit!
             if (_parent == null)
                 {
-                Vector3 pv = Vector3.Zero;
-                bool lastZeroFlag = _zeroFlag;
                 if (Body != IntPtr.Zero && prim_geom != IntPtr.Zero) // FIXME -> or if it is a joint
                     {
                     d.Vector3 cpos = d.BodyGetPosition(Body); // object position ( center of mass)

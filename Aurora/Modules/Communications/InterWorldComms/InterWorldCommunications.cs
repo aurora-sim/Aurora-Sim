@@ -439,11 +439,11 @@ namespace Aurora.Modules
     public class IWCOutgoingConnections
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private InterWorldCommunications IWC;
+        //private InterWorldCommunications IWC;
 
         public IWCOutgoingConnections(InterWorldCommunications iwc)
         {
-            IWC = iwc;
+            //IWC = iwc;
         }
 
         /// <summary>

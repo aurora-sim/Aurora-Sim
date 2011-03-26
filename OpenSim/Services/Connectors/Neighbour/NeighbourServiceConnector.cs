@@ -407,7 +407,7 @@ namespace OpenSim.Services.Connectors
             args["METHOD"] = "inform_neighbors_of_chat_message";
 
             string queryString = WebUtils.BuildQueryString(args);
-            string reply = SynchronousRestFormsRequester.MakeRequest("POST", uri, queryString);
+            SynchronousRestFormsRequester.MakeRequest("POST", uri, queryString);
         }
 
         public virtual bool IsOutsideView(int x, int newRegionX, int y, int newRegionY)

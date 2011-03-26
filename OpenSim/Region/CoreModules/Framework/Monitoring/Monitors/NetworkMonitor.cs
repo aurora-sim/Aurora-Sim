@@ -32,7 +32,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
     public class NetworkMonitor : IMonitor, INetworkMonitor
     {
-        private readonly Scene m_scene;
         private volatile float inPacketsPerSecond;
         private volatile float outPacketsPerSecond;
         private volatile float unackedBytes;
@@ -47,7 +46,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public NetworkMonitor(Scene scene)
         {
-            m_scene = scene;
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
         }

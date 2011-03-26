@@ -69,9 +69,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private bool flying = false;
         private bool m_iscolliding = false;
         private bool m_iscollidingGround = false;
-        private bool m_wascollidingGround = false;
         private bool m_iscollidingObj = false;
-        private bool m_wascolliding = false;
 
         int m_colliderfilter = 0;
         int m_colliderGroundfilter = 0;
@@ -87,9 +85,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public bool m_isPhysical = false; // the current physical status
         public bool m_tainted_isPhysical = false; // set when the physical status is tainted (false=not existing in physics engine, true=existing)
         public float MinimumGroundFlightOffset = 3f;
-        private Vector2[] m_blockedPositions = new Vector2[0];
         
-         private float lastUnderwaterPush = 0;
+        private float lastUnderwaterPush = 0;
         private bool WasUnderWater = false;
         private bool ShouldBeWalking = true;
         private bool StartingUnderWater = true;
@@ -291,8 +288,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_colliderfilter = 0;
                 }
 
-            m_wascolliding = m_iscolliding;
-
             if (m_colliderfilter == 0)
                 m_iscolliding = false;
             else
@@ -324,8 +319,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (m_colliderGroundfilter < 0)
                         m_colliderGroundfilter = 0;
                     }
-
-                m_wascollidingGround = m_iscollidingGround;
 
                 if (m_colliderGroundfilter == 0)
                     m_iscollidingGround = false;
@@ -1190,9 +1183,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (vec.X < 100000000 && vec.Y < 10000000 && vec.Z < 10000000) //Checks for crazy, going to NaN us values
                 {
-                    d.Vector3 veloc = d.BodyGetLinearVel (Body);
+                    /*d.Vector3 veloc = d.BodyGetLinearVel (Body);
                     //Stop us from fidgiting if we have a small velocity
-                    /*
+                    
                                         if (_zeroFlag && ((Math.Abs(vec.X) < 0.09 && Math.Abs(vec.Y) < 0.09 && Math.Abs(vec.Z) < 0.03) && !flying && vec.Z != 0))
                                         {
                                             //m_log.Warn("Nulling Velo: " + vec.ToString());

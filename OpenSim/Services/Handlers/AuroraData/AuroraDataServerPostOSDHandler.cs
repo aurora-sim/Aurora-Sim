@@ -160,7 +160,6 @@ namespace OpenSim.Services
 
     public class ProfileInfoHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         IProfileConnector ProfileConnector;
         public ProfileInfoHandler()
         {

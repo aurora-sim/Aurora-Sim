@@ -147,6 +147,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             
             //Create the avatar attachments plugin for the av
             AvatarAttachments attachmentsPlugin = new AvatarAttachments(presence);
+            presence.RegisterModuleInterface <AvatarAttachments>(attachmentsPlugin);
 
             List<AvatarAttachment> attachments = appearance.Appearance.GetAttachments ();
             foreach (AvatarAttachment attach in attachments)
@@ -853,12 +854,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         private class AvatarAttachments
         {
             private List<ISceneEntity> m_attachments = new List<ISceneEntity> ();
-            private IScenePresence m_presence;
 
             public AvatarAttachments (IScenePresence SP)
             {
-                m_presence = SP;
-                m_presence.RegisterModuleInterface<AvatarAttachments>(this);
             }
 
             public void AddAttachment (ISceneEntity attachment)

@@ -47,8 +47,6 @@ namespace OpenSim.Framework
     }
     public class RegionInfo
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         public string RegionFile = String.Empty;
         public bool Disabled = false;
 

@@ -246,7 +246,7 @@ namespace OpenSim.Services.CapsService
                 OSDMap invFetch = (OSDMap)m;
                 OSDMap internalContents = new OSDMap();
 
-                UUID agent_id = invFetch["agent_id"].AsUUID();
+                //UUID agent_id = invFetch["agent_id"].AsUUID();
                 UUID owner_id = invFetch["owner_id"].AsUUID();
                 UUID folder_id = invFetch["folder_id"].AsUUID();
                 bool fetch_folders = invFetch["fetch_folders"].AsBoolean();

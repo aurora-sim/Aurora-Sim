@@ -224,9 +224,6 @@ namespace OpenSim.CoreApplicationPlugins
                 }
             }
 
-            IConfig modulesConfig =
-                    m_openSim.ConfigSource.Configs["Modules"];
-
             // Scan for, and load, nonshared modules
             List<INonSharedRegionModule> list = new List<INonSharedRegionModule>();
             /*foreach (TypeExtensionNode node in m_nonSharedModules)

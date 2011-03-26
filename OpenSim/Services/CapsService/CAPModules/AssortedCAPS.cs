@@ -24,9 +24,7 @@ namespace OpenSim.Services.CapsService
 {
     public class AssortedCAPS : ICapsServiceConnector
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IRegionClientCapsService m_service;
-        private IGridService m_gridService;
         private IAgentInfoService m_agentInfoService;
 
         #region ICapsServiceConnector Members
@@ -34,7 +32,6 @@ namespace OpenSim.Services.CapsService
         public void RegisterCaps(IRegionClientCapsService service)
         {
             m_service = service;
-            m_gridService = service.Registry.RequestModuleInterface<IGridService>();
             m_agentInfoService = service.Registry.RequestModuleInterface<IAgentInfoService>();
             
             GenericHTTPMethod method = delegate(Hashtable httpMethod)
@@ -80,7 +77,7 @@ namespace OpenSim.Services.CapsService
             Vector3 lookAt = new Vector3((float)lookat["X"].AsReal(),
                 (float)lookat["Y"].AsReal(),
                 (float)lookat["Z"].AsReal());
-            int locationID = HomeLocation["LocationId"].AsInteger();
+            //int locationID = HomeLocation["LocationId"].AsInteger();
 
             m_agentInfoService.SetHomePosition(agentID.ToString(), m_service.Region.RegionID, position, lookAt);
 

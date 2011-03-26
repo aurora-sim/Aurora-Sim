@@ -32,12 +32,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
     public class SleepFrameMonitor : ITimeMonitor
     {
-        private readonly Scene m_scene;
         private int SleepFrame;
 
         public SleepFrameMonitor(Scene scene)
         {
-            m_scene = scene;
         }
 
         #region Implementation of IMonitor

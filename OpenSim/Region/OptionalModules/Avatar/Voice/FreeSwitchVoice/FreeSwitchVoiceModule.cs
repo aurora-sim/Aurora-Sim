@@ -83,7 +83,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
         private static string m_freeSwitchUrlResetPassword;
         private uint m_freeSwitchServicePort;
         private string m_openSimWellKnownHTTPAddress;
-        private string m_freeSwitchContext;
+        //private string m_freeSwitchContext;
 
         private readonly Dictionary<string, string> m_UUIDName = new Dictionary<string, string>();
         private Dictionary<string, string> m_ParcelAddress = new Dictionary<string, string>();
@@ -134,7 +134,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
                     m_freeSwitchDefaultWellKnownIP = map["DefaultWellKnownIP"].AsString ();
                     m_freeSwitchDefaultTimeout = map["DefaultTimeout"].AsInteger ();
                     m_freeSwitchUrlResetPassword = String.Empty;
-                    m_freeSwitchContext = map["Context"].AsString ();
+                    //m_freeSwitchContext = map["Context"].AsString ();
 
                     if (String.IsNullOrEmpty (m_freeSwitchRealm) ||
                         String.IsNullOrEmpty (m_freeSwitchAPIPrefix))

@@ -16,7 +16,6 @@ namespace Aurora.Services.DataService
 {
     public class LocalDataService
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private string StorageProvider = "";
         private string ConnectionString = "";
 

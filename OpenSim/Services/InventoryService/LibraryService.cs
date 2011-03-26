@@ -48,8 +48,6 @@ namespace OpenSim.Services.InventoryService
     /// </summary>
     public class LibraryService : ILibraryService, IService
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private InventoryFolderImpl m_LibraryRootFolder;
 
         private UUID libOwner = new UUID("11111111-1111-0000-0000-000100bba000");
