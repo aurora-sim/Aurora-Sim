@@ -596,7 +596,10 @@ namespace OpenSim.Region.Framework.Scenes
         public bool IsChildAgent
         {
             get { return m_isChildAgent; }
-            set { m_isChildAgent = value; }
+            set 
+            { 
+                m_isChildAgent = value;
+            }
         }
 
         private UUID m_parentID;

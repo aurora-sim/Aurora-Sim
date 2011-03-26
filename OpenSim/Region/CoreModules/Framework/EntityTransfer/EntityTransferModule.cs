@@ -1099,7 +1099,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             IScenePresence sp = scene.GetScenePresence (id);
             if ((sp != null) && (!sp.IsChildAgent))
             {
-                sp.IsChildAgent = true;
                 AgentData data = new AgentData ();
                 sp.CopyTo (data);
                 agent = data;
