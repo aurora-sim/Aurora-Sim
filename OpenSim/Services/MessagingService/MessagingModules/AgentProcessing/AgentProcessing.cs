@@ -307,7 +307,7 @@ namespace OpenSim.Services.MessagingService
                 GridRegion ourRegion = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, x, y);
                 if (ourRegion == null)
                 {
-                    m_log.Info("[EQMService]: Failed to inform neighbors about new agent, could not find our region.");
+                    m_log.Info("[AgentProcessing]: Failed to inform neighbors about new agent, could not find our region.");
                     return false;
                 }
                 List<GridRegion> neighbors = neighborService.GetNeighbors(ourRegion, DrawDistance);

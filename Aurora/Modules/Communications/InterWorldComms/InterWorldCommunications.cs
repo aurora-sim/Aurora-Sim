@@ -103,13 +103,19 @@ namespace Aurora.Modules
 
         private void AddConnection(IWCCertificate c)
         {
-            if (!Connections.Contains(c))
+            IWCCertificate old = null;
+            foreach (IWCCertificate cert in Connections)
             {
-                Connections.Add(c);
-                IGenericsConnector genericsConnector = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-                if (genericsConnector != null)
-                    genericsConnector.AddGeneric (UUID.Zero, "InterWorldConnections", c.Connection.RecieverURL, c.ToOSD ());
+                if (cert.Connection.UserName == c.Connection.UserName)
+                    old = cert;
             }
+            if (old != null)
+                Connections.Remove (old);
+
+            Connections.Add (c);
+            IGenericsConnector genericsConnector = DataManager.DataManager.RequestPlugin<IGenericsConnector> ();
+            if (genericsConnector != null)
+                genericsConnector.AddGeneric (UUID.Zero, "InterWorldConnections", c.Connection.RecieverURL, c.ToOSD ());
         }
 
         private void RemoveConnection(IWCCertificate c)
@@ -407,7 +413,7 @@ namespace Aurora.Modules
                 c.Connection.RecieverURL = Url;
                 IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0);
                 c.Connection.SenderURL = server.HostName + ":" + server.Port + "/iwcconnection";
-                c.Connection.UserName = UUID.Random ().ToString ();
+                c.Connection.UserName = c.Connection.SenderURL;
 
                 //Add the certificate now
                 CertificateVerification.AddCertificate(c);
@@ -575,7 +581,13 @@ namespace Aurora.Modules
             if (incomingCertificate == null)
             {
                 incomingCertificate = new IWCCertificate ();
-                incomingCertificate.Connection = incomingConnectionRequest;
+                incomingCertificate.Connection = new IWCConnection (incomingConnectionRequest);
+                //Got to flip the URLs so that we send to the right place later
+                incomingCertificate.Connection.RecieverURL = incomingCertificate.Connection.SenderURL;
+                //And add our SenderURL to the connection
+                IHttpServer server = IWC.Registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (0);
+                incomingCertificate.Connection.SenderURL = server.HostName + ":" + server.Port + "/iwcconnection";
+
                 //If we don't know it, its the default trust level
                 incomingCertificate.ThreatLevel = IWC.m_untrustedConnectionsDefaultTrust;
                 incomingCertificate.Active = true;
@@ -591,6 +603,8 @@ namespace Aurora.Modules
             //Now send them back some URLs as well
             IWC.BuildSecureUrlsForConnection (incomingCertificate);
 
+            //Fix the SecureURLs
+            incomingConnectionRequest.SecureUrls = incomingCertificate.Connection.SecureUrls;
             OSDMap result = incomingConnectionRequest.ToOSD(false);
             result["Result"] = "Successful";
 
@@ -730,6 +744,23 @@ namespace Aurora.Modules
         /// The URL that is connecting to the target (us)
         /// </summary>
         public string SenderURL;
+
+        public IWCConnection ()
+        {
+        }
+        
+        /// <summary>
+        /// Copy the info into this one
+        /// </summary>
+        /// <param name="conn"></param>
+        public IWCConnection (IWCConnection conn)
+        {
+            this.Password = conn.Password;
+            this.RecieverURL = conn.RecieverURL;
+            this.SecureUrls = conn.SecureUrls;
+            this.SenderURL = conn.SenderURL;
+            this.UserName = conn.UserName;
+        }
 
         public override void FromOSD (OSDMap map)
         {

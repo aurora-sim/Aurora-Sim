@@ -109,7 +109,7 @@ namespace Aurora.Modules
         public string Store(AssetBase asset)
         {
             string retVal = m_localService.Store(asset);
-            m_remoteService.Store(asset);
+            //m_remoteService.Store(asset);
             return retVal;
         }
 
