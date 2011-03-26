@@ -27,9 +27,9 @@ namespace Aurora.Services.DataService
 
         public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
+            m_registry = simBase;
             if (source.Configs["AuroraConnectors"].GetString("ProfileConnector", "LocalConnector") == "RemoteConnector")
             {
-                m_registry = simBase;
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }
@@ -99,7 +99,7 @@ namespace Aurora.Services.DataService
             //No user creation from sims
         }
 
-        public void AddClassified (Classified classified)
+        public bool AddClassified (Classified classified)
         {
             try
             {
@@ -116,6 +116,7 @@ namespace Aurora.Services.DataService
             {
                 m_log.DebugFormat ("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.ToString ());
             }
+            return true;
         }
 
         public Classified GetClassified (UUID queryClassifiedID)
@@ -201,7 +202,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        public void AddPick (ProfilePickInfo pick)
+        public bool AddPick (ProfilePickInfo pick)
         {
             try
             {
@@ -218,6 +219,7 @@ namespace Aurora.Services.DataService
             {
                 m_log.DebugFormat ("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.ToString ());
             }
+            return true;
         }
 
         public ProfilePickInfo GetPick (UUID queryPickID)

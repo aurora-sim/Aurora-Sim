@@ -129,8 +129,10 @@ namespace Aurora.Services.DataService
             GD.Insert("userdata", values.ToArray());
 		}
 
-        public void AddClassified (Classified classified)
+        public bool AddClassified (Classified classified)
         {
+            if (GetUserProfile (classified.CreatorUUID) == null)
+                return false;
             //It might be updating, delete the old
             GD.Delete ("userclassifieds", new string[1] { "ClassifiedUUID" }, new object[1] { classified.ClassifiedUUID });
             List<object> values = new List<object>();
@@ -140,7 +142,7 @@ namespace Aurora.Services.DataService
             values.Add(classified.CreatorUUID);
             values.Add(classified.ClassifiedUUID);
             values.Add(OSDParser.SerializeJsonString(classified.ToOSD()));
-            GD.Insert("userclassifieds", values.ToArray());
+            return GD.Insert("userclassifieds", values.ToArray());
         }
 
         public List<Classified> GetClassifieds (UUID ownerID)
@@ -171,8 +173,11 @@ namespace Aurora.Services.DataService
             GD.Delete ("userclassifieds", new string[1] { "ClassifiedUUID" }, new object[1] { queryClassifiedID });
         }
 
-        public void AddPick (ProfilePickInfo pick)
+        public bool AddPick (ProfilePickInfo pick)
         {
+            if (GetUserProfile (pick.CreatorUUID) == null)
+                return false;
+
             //It might be updating, delete the old
             GD.Delete ("userpicks", new string[1] { "PickUUID" }, new object[1] { pick.PickUUID });
             List<object> values = new List<object> ();
@@ -181,7 +186,7 @@ namespace Aurora.Services.DataService
             values.Add (pick.CreatorUUID);
             values.Add (pick.PickUUID);
             values.Add (OSDParser.SerializeJsonString (pick.ToOSD ()));
-            GD.Insert ("userpicks", values.ToArray ());
+            return GD.Insert ("userpicks", values.ToArray ());
         }
 
         public ProfilePickInfo GetPick (UUID queryPickID)
