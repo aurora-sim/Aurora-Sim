@@ -116,6 +116,13 @@ namespace OpenSim.Services.Interfaces
         bool DeleteFolders(UUID userID, List<UUID> folderIDs);
 
         /// <summary>
+        /// Force Deletes a folder (LOCAL ONLY)
+        /// </summary>
+        /// <param name="folder"></param>
+        /// <returns></returns>
+        bool ForcePurgeFolder (InventoryFolderBase folder);
+
+        /// <summary>
         /// Purge an inventory folder of all its items and subfolders.
         /// </summary>
         /// <param name="folder"></param>

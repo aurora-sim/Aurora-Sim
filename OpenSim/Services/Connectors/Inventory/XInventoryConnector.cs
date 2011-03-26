@@ -265,6 +265,11 @@ namespace OpenSim.Services.Connectors
             return bool.Parse(ret["RESULT"].ToString());
         }
 
+        public bool ForcePurgeFolder (InventoryFolderBase folder)
+        {
+            return false;
+        }
+
         public virtual bool PurgeFolder(InventoryFolderBase folder)
         {
             if (folder == null)

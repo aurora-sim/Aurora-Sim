@@ -496,6 +496,24 @@ namespace OpenSim.Services.InventoryService
             return true;
         }
 
+        public virtual bool ForcePurgeFolder (InventoryFolderBase folder)
+        {
+            InventoryFolderBase[] subFolders = m_Database.GetFolders (
+                    new string[] { "parentFolderID" },
+                    new string[] { folder.ID.ToString () });
+
+            foreach (InventoryFolderBase x in subFolders)
+            {
+                PurgeFolder (x);
+                m_Database.DeleteFolders ("folderID", x.ID.ToString ());
+            }
+
+            m_Database.DeleteItems ("parentFolderID", folder.ID.ToString ());
+            m_Database.DeleteFolders ("folderID", folder.ID.ToString ());
+
+            return true;
+        }
+
         public virtual bool AddItem(InventoryItemBase item)
         {
 //            m_log.DebugFormat(

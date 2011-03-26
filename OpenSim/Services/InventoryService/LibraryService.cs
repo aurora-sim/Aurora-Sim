@@ -105,6 +105,11 @@ namespace OpenSim.Services.InventoryService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+            if (m_enabled)
+            {
+                MainConsole.Instance.Commands.AddCommand ("clear default inventory", "clear default inventory",
+                    "Clears the Default Inventory stored for this grid", ClearDefaultInventory);
+            }
         }
 
         public void FinishedStartup()
@@ -221,6 +226,26 @@ namespace OpenSim.Services.InventoryService
 
             folders.AddRange(subs);
             return folders;
+        }
+
+        private void ClearDefaultInventory (string module, string[] cmd)
+        {
+            string sure = MainConsole.Instance.CmdPrompt ("Are you sure you want to delete the default inventory?", "yes");
+            if (!sure.Equals ("yes", StringComparison.CurrentCultureIgnoreCase))
+                return;
+            IUserAccountService UserAccountService = m_registry.RequestModuleInterface<IUserAccountService>();
+            UserAccount uinfo = UserAccountService.GetUserAccount(UUID.Zero, LibraryOwner);
+            IInventoryService InventoryService = m_registry.RequestModuleInterface<IInventoryService> ();
+            if (uinfo != null)
+            {
+                //Delete the root folders
+                InventoryFolderBase root = InventoryService.GetRootFolder (uinfo.PrincipalID);
+                while (root != null)
+                {
+                    InventoryService.ForcePurgeFolder (root);
+                    root = InventoryService.GetRootFolder (uinfo.PrincipalID);
+                }
+            }
         }
     }
 }

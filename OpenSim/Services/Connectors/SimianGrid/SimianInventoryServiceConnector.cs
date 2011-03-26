@@ -455,6 +455,11 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return DeleteItems(userID, folderIDs);
         }
 
+        public bool ForcePurgeFolder (InventoryFolderBase folder)
+        {
+            return false;
+        }
+
         /// <summary>
         /// Delete an item from the user's inventory
         /// </summary>
