@@ -34,24 +34,10 @@ using OpenSim.Region.Framework.Scenes;
 using OpenSim.Framework.Client;
 using System.Diagnostics;
 using Aurora.Framework;
+using System.IO;
 
 namespace Aurora.BotManager
 {
-    /// <summary>
-    /// Created by RealXtend
-    /// </summary>
-	public interface IRexBot
-    {
-        void SetPath(NavMesh mesh, int startNode, bool reverse, int timeOut);
-        void PauseAutoMove();
-        void StopAutoMove();
-        void EnableAutoMove();
-        void UnpauseAutoMove();
-        void SetMovementSpeedMod(float speed);
-        void DisableWalk();
-        void EnableWalk();
-    }
-
     public class RexBot : IRexBot, IClientAPI, IClientCore
     {
         #region Declares
@@ -89,6 +75,30 @@ namespace Aurora.BotManager
         private System.Timers.Timer m_frames;
         private System.Timers.Timer m_walkTime;
         private System.Timers.Timer m_startTime;
+
+        #region Following declares
+
+        private const float followDistance = 2.5f;
+        public bool IsFollowing = false;
+        public IScenePresence FollowSP = null;
+        public string FollowName = "";
+        private const float FollowTimeBeforeUpdate = 10;
+        private float CurrentFollowTimeBeforeUpdate = 0;
+
+        #endregion
+
+        #region Path declares
+
+        public int cornerStoneX = 128;
+        public int cornerStoneY = 128;
+        int[,] currentMap = new int[5, 5];
+        public bool ShouldFly = false;
+
+        public bool IsOnAPath = false;
+        public List<Vector3> WayPoints = new List<Vector3> ();
+        public int CurrentWayPoint = 0;
+
+        #endregion
 
         private NavMeshInstance m_navMesh;
 
@@ -156,8 +166,6 @@ namespace Aurora.BotManager
             m_circuitData = data;
             m_scene = scene;
             m_navMesh = null;
-            
-            m_scene.EventManager.OnNewClient += eventManager_OnNewClient;
             
             m_circuitCode = UniqueId;
             m_frames = new System.Timers.Timer(100);
@@ -411,162 +419,18 @@ namespace Aurora.BotManager
 
         #region Chat interface
 
-        private void eventManager_OnNewClient(IClientAPI client)
+        public void SendChatMessage (int sayType, string message)
         {
-            if (client != this)
-                client.OnChatFromClient += client_OnChatFromViewer;
-        }
+            OSChatMessage args = new OSChatMessage ();
+            args.Message = message;
+            args.Channel = 0;
+            args.From = FirstName + " " + LastName;
+            args.Position = m_scenePresence.AbsolutePosition;
+            args.Sender = this;
+            args.Type = (ChatTypeEnum)sayType;
+            args.Scene = m_scene;
 
-        private void client_OnChatFromViewer(object sender, OSChatMessage e)
-        {
-            if (e.Message != null && e.Message.Length > 0)
-            {
-                if (e.Message.StartsWith("!"))
-                {
-                    string[] param = e.Message.Split(' ');
-
-                    switch (param[0])
-                    {
-                        case "!continue":
-                            break;
-                        case "!stop":
-                            m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
-                            State = RexBotState.Idle;
-                            break;
-                        case "!go":
-                            #region go
-                            if (param.Length > 1)
-                            {
-                                switch (param[1])
-                                {
-                                    case "left":
-                                        m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_TURN_LEFT |
-                                                   (uint)AgentManager.ControlFlags.AGENT_CONTROL_LEFT_POS;
-                                        break;
-                                    case "right":
-                                        m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_TURN_RIGHT |
-                                                   (uint)AgentManager.ControlFlags.AGENT_CONTROL_LEFT_NEG;
-                                        break;
-                                    case "forward":
-                                        m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
-                                        break;
-                                    case "back":
-                                        m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_NEG;
-                                        break;
-                                    default:
-                                        string[] xyz = param[1].Split(',');
-                                        if (xyz.Length == 3)
-                                        {
-                                            try
-                                            {
-                                                Vector3 pos = Vector3.Parse(param[1]);
-
-                                                SetDefaultWalktimeInterval();
-                                                m_walkTime.Start();
-                                                walkTo(pos);
-                                                State = RexBotState.Walking;
-                                                m_destination = pos;
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                System.Console.WriteLine(ex.ToString());
-                                            }
-                                        }
-                                        else if (xyz.Length == 4)
-                                        {
-                                            try
-                                            {
-                                                Vector3 pos = Vector3.Parse(param[1]);
-
-                                                m_walkTime.Interval = (Convert.ToDouble(xyz[3]) * 1000);
-                                                m_walkTime.Start();
-                                                walkTo(pos);
-                                                State = RexBotState.Walking;
-                                                m_destination = pos;
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                System.Console.WriteLine(ex.ToString());
-                                            }
-                                        }
-                                        break;
-                                }
-                            }
-                            break;
-                            #endregion
-                        case "!fly":
-                            if (param.Length >= 2)
-                            {
-                                string[] loc = param[1].Split(',');
-                                if (loc.Length > 2)
-                                {
-                                    try
-                                    {
-                                        Vector3 pos = Vector3.Parse(param[1]);
-                                        flyTo(pos);
-                                        m_destination = pos;
-                                        if (loc.Length == 4)
-                                        {
-                                            m_walkTime.Interval = (Convert.ToDouble(loc[3]) * 1000);
-                                        }
-                                        else
-                                        {
-                                            SetDefaultWalktimeInterval();
-                                        }
-                                        m_walkTime.Start();
-                                        State = RexBotState.Flying;
-                                    }
-                                    catch (Exception E)
-                                    {
-                                        System.Console.WriteLine(E.ToString());
-                                    }
-                                }
-                            }
-                            break;
-                        case "!teleport":
-                            #region teleport
-                            try
-                            {
-                                Vector3 pos = Vector3.Parse(param[1]);
-                                m_scenePresence.AbsolutePosition = pos;
-                            }
-                            catch (Exception ex)
-                            {
-                                OSChatMessage args = new OSChatMessage();
-                                args.Message = "Invalid message " + ex.Message;
-                                args.Channel = 0;
-                                args.From = FirstName + " " + LastName;
-                                args.Position = new Vector3(128, 128, 26);
-                                args.Sender = this;
-                                args.Type = ChatTypeEnum.Say;
-
-                                OnBotChatFromViewer(this, args);
-                            }
-                            #endregion
-                            break;
-                        default:
-                            if (!e.Message.Contains("!teleport"))
-                            {
-                                OSChatMessage args = new OSChatMessage();
-                                args.Message = "Sorry. Don't understand your message " + e.Message;
-                                args.Channel = 0;
-                                args.From = FirstName + " " + LastName;
-                                args.Position = new Vector3(128, 128, 26);
-                                args.Sender = this;
-                                args.Type = ChatTypeEnum.Shout;
-
-                                OnBotChatFromViewer(this, args);
-                            }
-                            break;
-                    }
-
-                    if (e.Message.StartsWith("!go ") && m_currentState != RexBotState.Walking)
-                    {
-                        OnBotAgentUpdate(m_movementFlag, m_bodyDirection);
-                        m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
-                    }
-                }
-            }
+            OnBotChatFromViewer (this, args);
         }
 
         #endregion
@@ -635,6 +499,83 @@ namespace Aurora.BotManager
 
         #endregion
 
+        #region AStarBot memebers
+
+        public void ReadMap (string map, int X, int Y, int CornerStoneX, int CornerStoneY)
+        {
+            cornerStoneX = CornerStoneX;
+            cornerStoneY = CornerStoneY;
+            currentMap = Games.Pathfinding.AStar2DTest.StartPath.ReadMap (map, X, Y);
+            if (currentMap[0, 0] == -99)
+            {
+                m_log.Warn ("The map was found but failed to load. Check the map.");
+            }
+        }
+
+        public void FindPath (Vector3 currentPos, Vector3 finishVector)
+        {
+            // Bot position converted to map coordinates -maybe here we can check if on Map
+            int startX = (int)currentPos.X - cornerStoneX;
+            int startY = (int)currentPos.Y - cornerStoneY;
+
+            m_log.Debug ("My Pos " + currentPos.ToString () + " , End Pos " + finishVector.ToString ());
+
+            // Goal position converted to map coordinates
+            int finishX = (int)finishVector.X - cornerStoneX;
+            int finishY = (int)finishVector.Y - cornerStoneY;
+            int finishZ = 25;
+
+            m_scenePresence.StandUp (); //Can't follow a path if sitting
+
+            IsFollowing = false; //Turn off following
+
+            CurrentWayPoint = 0; //Reset to the beginning of the list
+            List<string> points = Games.Pathfinding.AStar2DTest.StartPath.Path (startX, startY, finishX, finishY, finishZ, cornerStoneX, cornerStoneY);
+
+            if (points.Contains ("no_path"))
+            {
+                m_log.Debug ("I'm sorry I could not find a solution to that path. Teleporting instead");
+                m_scenePresence.Teleport (finishVector);
+                return;
+            }
+            else
+            {
+                IsOnAPath = true;
+            }
+
+            lock (WayPoints)
+            {
+                foreach (string s in points)
+                {
+                    m_log.Debug (s);
+                    string[] Vector = s.Split (',');
+
+                    if (Vector.Length != 3)
+                        continue;
+
+                    WayPoints.Add (new Vector3 (float.Parse (Vector[0]),
+                        float.Parse (Vector[1]),
+                        float.Parse (Vector[2])));
+                }
+            }
+        }
+
+        public void FollowAvatar (string avatarName)
+        {
+            m_scenePresence.StandUp (); //Can't follow if sitting
+            IsFollowing = true;
+            FollowName = avatarName;
+        }
+
+        public void StopFollowAvatar (string avatarName)
+        {
+            FollowSP = null; //null out everything
+            IsFollowing = false;
+            FollowName = "";
+        }
+
+        #endregion
+
         #region Update and move the bot
 
         private void GetNextDestination()
@@ -657,67 +598,112 @@ namespace Aurora.BotManager
         {
             if(m_scenePresence == null)
                 return;
-        
-            Vector3 diffPos = m_destination - m_scenePresence.AbsolutePosition;
-            switch (State)
+
+            if (IsFollowing)
             {
-                case RexBotState.Walking:
-                    if (Math.Abs(diffPos.X) < 1 && Math.Abs(diffPos.Y) < 1)
+                // FOLLOW an avatar - this is looking for an avatar UUID so wont follow a prim here  - yet
+                if (FollowSP == null)
+                {
+                    m_scenePresence.Scene.TryGetAvatarByName (FollowName, out FollowSP);
+                }
+                //If its still null, the person doesn't exist, cancel the follow and return
+                if (FollowSP == null)
+                {
+                    IsFollowing = false;
+                    m_log.Warn ("Could not find avatar " + FollowName);
+                }
+                else
+                {
+                    //Only check so many times
+                    CurrentFollowTimeBeforeUpdate++;
+                    if (CurrentFollowTimeBeforeUpdate == FollowTimeBeforeUpdate)
                     {
-                        State = RexBotState.Idle;
-                        m_walkTime.Stop();
-                        //                    GetNextDestination();
-                        m_startTime.Stop();
-                        if (m_autoMove)
+                        NavMesh mesh = new NavMesh ();
+
+                        mesh.AddEdge (0, 1, ShouldFly ? TravelMode.Fly : TravelMode.Walk);
+                        mesh.AddNode (m_scenePresence.AbsolutePosition); //Give it the current pos so that it will know where to start
+
+                        mesh.AddEdge (1, 2, ShouldFly ? TravelMode.Fly : TravelMode.Walk);
+                        mesh.AddNode (FollowSP.AbsolutePosition); //Give it the new point so that it will head toward it
+
+                        SetPath (mesh, 0, false, 10000); //Set and go
+                        //Reset the time
+                        CurrentFollowTimeBeforeUpdate = -1;
+                    }
+                }
+            }
+            else if (IsOnAPath)
+            {
+                lock (WayPoints)
+                {
+                    if (WayPoints[CurrentWayPoint].ApproxEquals (m_scenePresence.AbsolutePosition, 1)) //Are we about to the new position?
+                    {
+                        //We need to update the waypoint then and send the av to a new location
+                        CurrentWayPoint++;
+                        if (WayPoints.Count >= CurrentWayPoint)
                         {
-                            m_startTime.Start();
+                            //We are at the last point, end the path checking
+                            IsOnAPath = false;
+                            return;
                         }
+                        NavMesh mesh = new NavMesh ();
+                        //Build the next mesh to tell the bot where to go
+                        mesh.AddEdge (0, 1, ShouldFly ? TravelMode.Fly : TravelMode.Walk);
+                        mesh.AddNode (m_scenePresence.AbsolutePosition); //Give it the current pos so that it will know where to start
+                        mesh.AddEdge (1, 2, ShouldFly ? TravelMode.Fly : TravelMode.Walk);
+                        mesh.AddNode (WayPoints[CurrentWayPoint]); //Give it the new point so that it will head toward it
+                        SetPath (mesh, 0, false, 10000); //Set and go
                     }
-                    else
-                    {
-                        walkTo(m_destination);
-                    }
-                    break;
-
-                case RexBotState.Flying:
-                    if (Math.Abs(diffPos.X) < 1.5 && Math.Abs(diffPos.Y) < 1.5 && Math.Abs(diffPos.Z) < 1.5)
-                    {
-                        State = RexBotState.Idle;
-                        m_walkTime.Stop();
-                        //                    GetNextDestination();
-                        m_startTime.Stop();
-                        if (m_autoMove)
+                }
+            }
+            else
+            {
+                Vector3 diffPos = m_destination - m_scenePresence.AbsolutePosition;
+                switch (State)
+                {
+                    case RexBotState.Walking:
+                        if (Math.Abs (diffPos.X) < 1 && Math.Abs (diffPos.Y) < 1)
                         {
-                            m_startTime.Start();
+                            State = RexBotState.Idle;
+                            m_walkTime.Stop ();
+                            //                    GetNextDestination();
+                            m_startTime.Stop ();
+                            if (m_autoMove)
+                            {
+                                m_startTime.Start ();
+                            }
                         }
-                    }
-                    else
-                    {
-                        flyTo(m_destination);
-                    }
-                    break;
-            }
+                        else
+                        {
+                            walkTo (m_destination);
+                        }
+                        break;
 
-            if (State != RexBotState.Flying && State != RexBotState.Walking)
-            {
-                OnBotAgentUpdate(m_movementFlag, m_bodyDirection);
-            }
+                    case RexBotState.Flying:
+                        if (Math.Abs (diffPos.X) < 1.5 && Math.Abs (diffPos.Y) < 1.5 && Math.Abs (diffPos.Z) < 1.5)
+                        {
+                            State = RexBotState.Idle;
+                            m_walkTime.Stop ();
+                            //                    GetNextDestination();
+                            m_startTime.Stop ();
+                            if (m_autoMove)
+                            {
+                                m_startTime.Start ();
+                            }
+                        }
+                        else
+                        {
+                            flyTo (m_destination);
+                        }
+                        break;
+                }
 
-            if (m_frameCount >= 250)
-            {
-                OSChatMessage args = new OSChatMessage();
-                args.Message = DEFAULT_GREETING;
-                args.Channel = 0;
-                args.From = FirstName + " " + LastName;
-                args.Position = new Vector3(128, 128, 26);
-                args.Sender = this;
-                args.Type = ChatTypeEnum.Shout;
-                args.Scene = m_scene;
-
-                OnBotChatFromViewer(this, args);
-                m_frameCount = 0;
+                if (State != RexBotState.Flying && State != RexBotState.Walking)
+                {
+                    OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
+                }
+                m_frameCount++;
             }
-            m_frameCount++;
         }
 
         #endregion

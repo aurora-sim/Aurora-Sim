@@ -34,8 +34,9 @@ using LSL_List = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list;
 using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
 using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
+using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
 
-namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
+namespace Aurora.BotManager
 {
     public interface IBot_Api
     {
@@ -46,5 +47,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void botSetMap(string keyOfBot, LSL_List positions, LSL_List movementType);
         string botCreateBot(string FirstName, string LastName, string appearanceToClone);
         void botRemoveBot (string bot);
+        void botFollowAvatar (string bot, string avatarName);
+        void botStopFollowAvatar (string bot, string avatarName);
+        void botSetPathMap (string bot, string pathMap, int x, int y, int cornerstoneX, int cornerstoneY);
+        void botFindPath (string bot, LSL_Vector startPos, LSL_Vector endPos);
+        void botSendChatMessage (string bot, string message, int sayType);
     }
 }

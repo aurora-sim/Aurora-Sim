@@ -250,7 +250,7 @@ namespace Games.Pathfinding.AStar2DTest
         /// as well as print the map out in a console if we use console apps.
         /// </summary>
         [STAThread]
-        public static int[,] ReadMap(string fileName, int mapx, int mapy)
+        public static int[,] ReadMap (string map, int mapx, int mapy)
         {
             // This works because each character is internally represented by a number. 
             // The characters '0' to '9' are represented by consecutive numbers, so finding 
@@ -261,25 +261,19 @@ namespace Games.Pathfinding.AStar2DTest
 
             try
             {
-                using (StreamReader reader = new StreamReader(fileName))
+                string[] lines = map.Split ('\n');
+                for (int lineNum = 0; lineNum < lines.Length; lineNum++)
                 {
-                    int lineNum = 0;
-                    string line;
-                    int i = 0;
-
-                    while ((line = reader.ReadLine()) != null)
+                    string line = lines[lineNum];
+                    char[] each = line.ToCharArray ();
+                    for (int i = 0; i < each.Length; i++)
                     {
-                        char[] each = line.ToCharArray();
-                        for (i = 0; i < each.Length; i++)
+                        int fooBar = each[i] - '0';
+                        if (fooBar == 5)
                         {
-                            int fooBar = each[i] - '0';
-                            if (fooBar == 5)
-                            {
-                                fooBar = -1;
-                            }
-                            mapArray[i, lineNum] = fooBar;
+                            fooBar = -1;
                         }
-                        lineNum++;
+                        mapArray[i, lineNum] = fooBar;
                     }
                 }
                 currentMap = mapArray;

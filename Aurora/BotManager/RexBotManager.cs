@@ -43,7 +43,7 @@ namespace Aurora.BotManager
     /// <summary>
     /// Partially created by RealXtend
     /// </summary>
-    public class BotManager : ISharedRegionModule, IAStarBotManager
+    public class BotManager : ISharedRegionModule, IBotManager
     {
         #region IRegionModule Members
 
@@ -173,51 +173,6 @@ namespace Aurora.BotManager
         }
 
         /// <summary>
-        /// Creates a new bot inworld
-        /// </summary>
-        /// <param name="FirstName"></param>
-        /// <param name="LastName"></param>
-        /// <param name="cloneAppearanceFrom">UUID of the avatar whos appearance will be copied to give this bot an appearance</param>
-        /// <returns>ID of the bot</returns>
-        public UUID CreateAStarAvatar(string FirstName, string LastName, UUID cloneAppearanceFrom)
-        {
-            AgentCircuitData m_aCircuitData = new AgentCircuitData ();
-            m_aCircuitData.child = false;
-
-            //Add the circuit data so they can login
-            m_aCircuitData.circuitcode = (uint)Util.RandomClass.Next ();
-
-            m_aCircuitData.Appearance = GetAppearance (cloneAppearanceFrom);//Sets up appearance
-
-            //Create the new bot data
-            AStarBot m_character = new AStarBot (m_scene, m_aCircuitData);
-
-            m_character.FirstName = FirstName;
-            m_character.LastName = LastName;
-
-            m_scene.AuthenticateHandler.AgentCircuits.Add(m_character.CircuitCode, m_aCircuitData);
-            //This adds them to the scene and sets them inworld
-            m_scene.AddNewClient(m_character);
-
-            m_character.Initialize();
-
-            IScenePresence SP = m_scene.GetScenePresence(m_character.AgentId);
-            IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule> ();
-            appearance.Appearance.SetAppearance (appearance.Appearance.Texture, appearance.Appearance.VisualParams);
-            appearance.SendAppearanceToAllOtherAgents ();
-            appearance.SendAvatarDataToAllAgents ();
-            m_character.Initialize(SP);//Tell the bot about the SP
-
-            //Save them in the bots list
-            m_bots.Add(m_character.AgentId, m_character);
-
-            m_log.Info("[RexBotManager]: Added AStar bot " + m_character.Name + " to scene.");
-
-            //Return their UUID
-            return m_character.AgentId;
-        }
-
-        /// <summary>
         /// Sets up where the bot should be walking
         /// </summary>
         /// <param name="Bot">ID of the bot</param>
@@ -316,18 +271,13 @@ namespace Aurora.BotManager
         /// </summary>
         /// <param name="Bot"></param>
         /// <param name="modifier"></param>
-        public int[,] ReadMap(UUID botID, string filename, int X, int Y, int CornerStoneX, int CornerStoneY)
+        public void ReadMap(UUID botID, string map, int X, int Y, int CornerStoneX, int CornerStoneY)
         {
             IRexBot bot;
             if (m_bots.TryGetValue(botID, out bot))
             {
-                if (bot is IAStarBot)
-                {
-                    IAStarBot abot = bot as IAStarBot;
-                    return abot.ReadMap(filename, X, Y, CornerStoneX, CornerStoneY);
-                }
+                bot.ReadMap (map, X, Y, CornerStoneX, CornerStoneY);
             }
-            return new int[0, 0];
         }
 
         /// <summary>
@@ -340,11 +290,7 @@ namespace Aurora.BotManager
             IRexBot bot;
             if (m_bots.TryGetValue(botID, out bot))
             {
-                if (bot is IAStarBot)
-                {
-                    IAStarBot abot = bot as IAStarBot;
-                    abot.FindPath(currentPos, finishVector);
-                }
+                bot.FindPath(currentPos, finishVector);
             }
         }
 
@@ -353,16 +299,40 @@ namespace Aurora.BotManager
         /// </summary>
         /// <param name="Bot"></param>
         /// <param name="modifier"></param>
-        public void FollowAvatar(UUID botID, string avatarName)
+        public void FollowAvatar (UUID botID, string avatarName)
         {
             IRexBot bot;
-            if (m_bots.TryGetValue(botID, out bot))
+            if (m_bots.TryGetValue (botID, out bot))
             {
-                if (bot is IAStarBot)
-                {
-                    IAStarBot abot = bot as IAStarBot;
-                    abot.FollowAvatar(avatarName);
-                }
+                bot.FollowAvatar (avatarName);
+            }
+        }
+
+        /// <summary>
+        /// Stops following the given user
+        /// </summary>
+        /// <param name="Bot"></param>
+        /// <param name="modifier"></param>
+        public void StopFollowAvatar (UUID botID, string avatarName)
+        {
+            IRexBot bot;
+            if (m_bots.TryGetValue (botID, out bot))
+            {
+                bot.StopFollowAvatar (avatarName);
+            }
+        }
+
+        /// <summary>
+        /// Sends a chat message to all clients
+        /// </summary>
+        /// <param name="Bot"></param>
+        /// <param name="modifier"></param>
+        public void SendChatMessage (UUID botID, string message, int sayType)
+        {
+            IRexBot bot;
+            if (m_bots.TryGetValue (botID, out bot))
+            {
+                bot.SendChatMessage (sayType, message);
             }
         }
 
