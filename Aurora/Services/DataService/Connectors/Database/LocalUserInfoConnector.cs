@@ -81,27 +81,33 @@ namespace Aurora.Services.DataService
 
         public void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
         {
-            string[] keys = new string[3];
+            string[] keys = new string[5];
             keys[0] = "CurrentRegionID";
             keys[1] = "CurrentPosition";
             keys[2] = "CurrentLookat";
-            object[] values = new object[3];
+            keys[3] = "LastSeen";//Set the last seen and is online since if the user is moving, they are sending updates
+            keys[4] = "IsOnline";
+            object[] values = new object[5];
             values[0] = regionID;
             values[1] = lastPosition;
             values[2] = lastLookAt;
-            GD.Update(m_realm, values, keys, new string[1] { "UserID" }, new object[1] { userID });
+            values[3] = Util.ToUnixTime (DateTime.Now); //Convert to binary so that it can be converted easily
+            values[4] = 1;
+            GD.Update (m_realm, values, keys, new string[1] { "UserID" }, new object[1] { userID });
         }
 
         public void SetHomePosition(string userID, UUID regionID, Vector3 Position, Vector3 LookAt)
         {
-            string[] keys = new string[3];
+            string[] keys = new string[4];
             keys[0] = "HomeRegionID";
-            keys[1] = "HomePosition";
-            keys[2] = "HomeLookat";
-            object[] values = new object[3];
+            keys[1] = "LastSeen";
+            keys[2] = "HomePosition";
+            keys[3] = "HomeLookat";
+            object[] values = new object[4];
             values[0] = regionID;
-            values[1] = Position;
-            values[2] = LookAt;
+            values[1] = Util.ToUnixTime (DateTime.Now); //Convert to binary so that it can be converted easily
+            values[2] = Position;
+            values[3] = LookAt;
             GD.Update(m_realm, values, keys, new string[1] { "UserID" }, new object[1] { userID });
         }
 

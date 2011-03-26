@@ -27,6 +27,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Timers;
 
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
@@ -42,6 +43,8 @@ namespace OpenSim.Region.CoreModules
     public class ActivityDetector : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private Timer m_presenceUpdateTimer = null;
+        private List<Scene> m_scenes = new List<Scene> ();
         
         public void Initialise(IConfigSource source)
         {
@@ -68,11 +71,34 @@ namespace OpenSim.Region.CoreModules
                 syncMessage.Post(SyncMessageHelper.LogoutRegionAgents(scene.RegionInfo.RegionHandle), scene.RegionInfo.RegionHandle);
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
+            m_scenes.Remove (scene);
         }
 
         public void RegionLoaded(Scene scene)
         {
             scene.EventManager.OnStartupFullyComplete += EventManager_OnStartupFullyComplete;
+            m_scenes.Add (scene);
+            if (m_presenceUpdateTimer == null)
+            {
+                m_presenceUpdateTimer = new Timer ();
+                m_presenceUpdateTimer.Interval = 1000 * 60 * 58; //Bit less than an hour so that we have 2 minute to send all the updates and lag
+                m_presenceUpdateTimer.Elapsed += m_presenceUpdateTimer_Elapsed;
+            }
+        }
+
+        void m_presenceUpdateTimer_Elapsed (object sender, ElapsedEventArgs e)
+        {
+            IAgentInfoService service = m_scenes[0].RequestModuleInterface<IAgentInfoService> ();
+            if (service == null)
+                return;
+            foreach (Scene scene in m_scenes)
+            {
+                foreach (IScenePresence sp in scene.GetScenePresences ())
+                {
+                    //Setting the last position updates the 1 hour presence timer, so send this ~ every hour so that the agent does not get logged out
+                    service.SetLastPosition (sp.UUID.ToString (), scene.RegionInfo.RegionID, sp.AbsolutePosition, sp.Lookat);
+                }
+            }
         }
 
         void EventManager_OnStartupFullyComplete(IScene scene, List<string> data)
