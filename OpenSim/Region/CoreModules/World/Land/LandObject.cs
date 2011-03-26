@@ -946,7 +946,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                         //Only do all of this once
                         if (newlyAdded)
                         {
-                            if (LandData.GroupID == grp.OwnerID || grp.GroupID != UUID.Zero)
+                            if (grp.GroupID != UUID.Zero && grp.GroupID == grp.OwnerID)
                                 landObj.GroupOwned = true;
                             else
                                 landObj.GroupOwned = false;
