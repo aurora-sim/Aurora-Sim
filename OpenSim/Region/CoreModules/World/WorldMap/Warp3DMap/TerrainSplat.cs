@@ -233,7 +233,7 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
                     // Combine the current height, generated noise, start height, and height range parameters, then scale all of it 
                     float layer = ((height + noise - startHeight) / heightRange) * 4f;
                     if (Single.IsNaN(layer)) layer = 0f;
-                    layermap[y * 256 + x] = Utils.Clamp(layer, 0f, 3f);
+                    layermap[y * heightmap.Width + x] = Utils.Clamp (layer, 0f, 3f);
                 }
             }
 
@@ -263,11 +263,11 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
                     (datas[3].PixelFormat == PixelFormat.Format32bppArgb) ? 4 : 3
                 };
 
-                for (int y = 0; y < 256; y++)
+                for (int y = 0; y < heightmap.Height; y++)
                 {
-                    for (int x = 0; x < 256; x++)
+                    for (int x = 0; x < heightmap.Width; x++)
                     {
-                        float layer = layermap[y * 256 + x];
+                        float layer = layermap[y * heightmap.Width + x];
 
                         // Select two textures
                         int l0 = (int)Math.Floor(layer);

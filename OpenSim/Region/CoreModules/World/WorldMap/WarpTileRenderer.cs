@@ -156,8 +156,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private void CreateTerrain(WarpRenderer renderer, bool textureTerrain)
         {
             ITerrainChannel terrain = m_scene.RequestModuleInterface<ITerrainChannel>();
-            
-            warp_Object obj = new warp_Object(256 * 256, 255 * 255 * 2);
+
+            warp_Object obj = new warp_Object (m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeY, (m_scene.RegionInfo.RegionSizeX - 1) * (m_scene.RegionInfo.RegionSizeY - 1) * 2);
 
             for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
             {
@@ -166,34 +166,35 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     float height = terrain[x, y];
 
                     warp_Vector pos = ConvertVector(new Vector3(x, y, height));
-                    obj.addVertex(new warp_Vertex(pos, (float)x / 255f, (float)(255 - y) / 255f));
+                    obj.addVertex (new warp_Vertex (pos, (float)x / (m_scene.RegionInfo.RegionSizeX - 1), (float)((m_scene.RegionInfo.RegionSizeX - 1) - y) / (m_scene.RegionInfo.RegionSizeX - 1)));
                 }
             }
 
-            for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
+            float sizeRatio = (float)m_scene.RegionInfo.RegionSizeX / (float)Constants.RegionSize;
+            for (float y = 0; y < m_scene.RegionInfo.RegionSizeY; y += 1)
             {
-                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
+                for (float x = 0; x < m_scene.RegionInfo.RegionSizeX; x += 1)
                 {
                     if (x < m_scene.RegionInfo.RegionSizeX - 1 && y < m_scene.RegionInfo.RegionSizeY - 1)
                     {
-                        int v = y * m_scene.RegionInfo.RegionSizeX + x;
+                        float v = y * m_scene.RegionInfo.RegionSizeX + x;
 
                         // Normal
-                        warp_Vector norm = new warp_Vector(x, y, terrain.GetNormalizedGroundHeight(x, y));
+                        warp_Vector norm = new warp_Vector(x, y, terrain.GetNormalizedGroundHeight((int)x, (int)y));
                         norm = norm.reverse();
-                        obj.vertex(v).n = norm;
+                        obj.vertex ((int)v).n = norm;
 
                         // Triangle 1
                         obj.addTriangle(
-                            v,
-                            v + 1,
-                            v + m_scene.RegionInfo.RegionSizeX);
+                            (int)v,
+                            (int)v + 1,
+                            (int)v + m_scene.RegionInfo.RegionSizeX);
 
                         // Triangle 2
                         obj.addTriangle(
-                            v + m_scene.RegionInfo.RegionSizeX + 1,
-                            v + m_scene.RegionInfo.RegionSizeX,
-                            v + 1);
+                            (int)v + m_scene.RegionInfo.RegionSizeX + 1,
+                            (int)v + m_scene.RegionInfo.RegionSizeX,
+                            (int)v + 1);
                     }
                 }
             }

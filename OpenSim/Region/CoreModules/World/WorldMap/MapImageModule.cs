@@ -147,8 +147,12 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             if (drawPrimVolume && terrainBMP != null)
             {
-                mapBMP = new Bitmap(terrainBMP);
-                mapBMP = DrawObjectVolume(m_scene, mapBMP);
+                mapBMP = new Bitmap (terrainBMP);
+                mapBMP = DrawObjectVolume (m_scene, mapBMP);
+            }
+            else
+            {
+                mapBMP = new Bitmap (terrainBMP);
             }
 
             if(m_mapping != null)
