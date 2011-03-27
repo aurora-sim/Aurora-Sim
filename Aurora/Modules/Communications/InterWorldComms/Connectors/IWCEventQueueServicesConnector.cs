@@ -25,7 +25,7 @@ namespace Aurora.Modules
             get { return GetType().Name; }
         }
 
-        public virtual IEventQueueService InnerService
+        public override IEventQueueService InnerService
         {
             get { return this; }
         }

@@ -45,7 +45,6 @@ namespace Aurora.BotManager
 
         private static readonly log4net.ILog m_log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private Vector3 DEFAULT_START_POSITION = new Vector3(128, 128, 128);
-        private static string DEFAULT_GREETING = "Ready to serve, Master.";
 
         private static UInt32 UniqueId = 1;
 

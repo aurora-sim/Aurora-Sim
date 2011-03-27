@@ -57,6 +57,7 @@ namespace OpenSim.Framework.Servers.HttpServer
         {
             WebRequest request = WebRequest.Create(requestUrl);
             request.Method = verb;
+            request.Timeout = 10000;
             string respstring = String.Empty;
 
             using (MemoryStream buffer = new MemoryStream())
