@@ -197,11 +197,8 @@ namespace Aurora.BotManager
                         mesh.AddEdge(i, i + 1, mode[i]);
                     i++;
                 }
-                if (true)
-                {
-                }
                 //Tell the bot about it
-                bot.SetPath(mesh, 0, false, 100000);
+                bot.SetPath(mesh, 0, false, 100000, true);
             }
         }
 
@@ -333,6 +330,23 @@ namespace Aurora.BotManager
             if (m_bots.TryGetValue (botID, out bot))
             {
                 bot.SendChatMessage (sayType, message);
+            }
+        }
+
+        #endregion
+
+        #region IBotManager Members
+
+
+        public void SetBotShouldFly (UUID botID, bool shouldFly)
+        {
+            IRexBot bot;
+            if (m_bots.TryGetValue (botID, out bot))
+            {
+                if (shouldFly)
+                    bot.DisableWalk ();
+                else
+                    bot.EnableWalk ();
             }
         }
 

@@ -99,7 +99,8 @@ namespace Aurora.BotManager
                     return node;
                 }
             }
-            throw new Exception("Path node number " + previous.Index.ToString() + " does not exist for path " + Name + ".");
+            return previous; //Nothing more to do?
+            //throw new Exception("Path node number " + previous.Index.ToString() + " does not exist for path " + Name + ".");
         }
 
         // returns previous node

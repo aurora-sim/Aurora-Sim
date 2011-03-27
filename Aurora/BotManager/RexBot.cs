@@ -213,13 +213,14 @@ namespace Aurora.BotManager
 
         #region SetPath
 
-        public void SetPath(NavMesh mesh, int startNode, bool reverse, int timeOut)
+        public void SetPath(NavMesh mesh, int startNode, bool reverse, int timeOut, bool tpToStart)
         {
             m_navMesh = new NavMeshInstance(mesh, startNode, reverse, timeOut);
 
             SetDefaultWalktimeInterval();
 
-            m_scenePresence.Teleport(m_navMesh.GetNextNode().Position);
+            if(tpToStart)
+                m_scenePresence.Teleport(m_navMesh.GetNextNode().Position);
             GetNextDestination();
         }
 
@@ -564,6 +565,7 @@ namespace Aurora.BotManager
             m_scenePresence.StandUp (); //Can't follow if sitting
             IsFollowing = true;
             FollowName = avatarName;
+            m_autoMove = false;
         }
 
         public void StopFollowAvatar (string avatarName)
@@ -571,6 +573,7 @@ namespace Aurora.BotManager
             FollowSP = null; //null out everything
             IsFollowing = false;
             FollowName = "";
+            m_autoMove = true;
         }
 
         #endregion
@@ -593,9 +596,9 @@ namespace Aurora.BotManager
         /// <summary>
         /// This is called to make the bot walk nicely around every 100 milliseconds by m_frames timer
         /// </summary>
-        private void Update()
+        private void Update ()
         {
-            if(m_scenePresence == null)
+            if (m_scenePresence == null)
                 return;
 
             if (IsFollowing)
@@ -604,6 +607,17 @@ namespace Aurora.BotManager
                 if (FollowSP == null)
                 {
                     m_scenePresence.Scene.TryGetAvatarByName (FollowName, out FollowSP);
+                    if (FollowSP == null)
+                    {
+                        //Try by UUID then
+                        try
+                        {
+                            m_scenePresence.Scene.TryGetScenePresence (UUID.Parse (FollowName), out FollowSP);
+                        }
+                        catch
+                        {
+                        }
+                    }
                 }
                 //If its still null, the person doesn't exist, cancel the follow and return
                 if (FollowSP == null)
@@ -625,7 +639,17 @@ namespace Aurora.BotManager
                         mesh.AddEdge (1, 2, ShouldFly ? TravelMode.Fly : TravelMode.Walk);
                         mesh.AddNode (FollowSP.AbsolutePosition); //Give it the new point so that it will head toward it
 
-                        SetPath (mesh, 0, false, 10000); //Set and go
+
+                        Vector3 diffAbsPos = FollowSP.AbsolutePosition - m_scenePresence.AbsolutePosition;
+                        if (Math.Abs (diffAbsPos.X) > 1 || Math.Abs (diffAbsPos.Y) > 1)
+                            SetPath (mesh, 0, false, 10000, false); //Set and go
+                        else
+                        {
+                            //Stop the bot then
+                            State = RexBotState.Idle;
+                            m_walkTime.Stop ();
+                            m_startTime.Stop ();
+                        }
                         //Reset the time
                         CurrentFollowTimeBeforeUpdate = -1;
                     }
@@ -651,58 +675,43 @@ namespace Aurora.BotManager
                         mesh.AddNode (m_scenePresence.AbsolutePosition); //Give it the current pos so that it will know where to start
                         mesh.AddEdge (1, 2, ShouldFly ? TravelMode.Fly : TravelMode.Walk);
                         mesh.AddNode (WayPoints[CurrentWayPoint]); //Give it the new point so that it will head toward it
-                        SetPath (mesh, 0, false, 10000); //Set and go
+                        SetPath (mesh, 0, false, 10000, false); //Set and go
                     }
                 }
             }
-            else
+
+            if (State != RexBotState.Idle)
             {
                 Vector3 diffPos = m_destination - m_scenePresence.AbsolutePosition;
-                switch (State)
+                if (Math.Abs (diffPos.X) < 1 && Math.Abs (diffPos.Y) < 1)
                 {
-                    case RexBotState.Walking:
-                        if (Math.Abs (diffPos.X) < 1 && Math.Abs (diffPos.Y) < 1)
-                        {
-                            State = RexBotState.Idle;
-                            m_walkTime.Stop ();
-                            //                    GetNextDestination();
-                            m_startTime.Stop ();
-                            if (m_autoMove)
-                            {
-                                m_startTime.Start ();
-                            }
-                        }
-                        else
-                        {
+                    State = RexBotState.Idle;
+                    m_walkTime.Stop ();
+                    m_startTime.Stop ();
+                    if (m_autoMove)
+                        m_startTime.Start ();
+                }
+                else
+                {
+                    //Move to the position!
+                    switch (State)
+                    {
+                        case RexBotState.Walking:
                             walkTo (m_destination);
-                        }
-                        break;
+                            break;
 
-                    case RexBotState.Flying:
-                        if (Math.Abs (diffPos.X) < 1.5 && Math.Abs (diffPos.Y) < 1.5 && Math.Abs (diffPos.Z) < 1.5)
-                        {
-                            State = RexBotState.Idle;
-                            m_walkTime.Stop ();
-                            //                    GetNextDestination();
-                            m_startTime.Stop ();
-                            if (m_autoMove)
-                            {
-                                m_startTime.Start ();
-                            }
-                        }
-                        else
-                        {
+                        case RexBotState.Flying:
                             flyTo (m_destination);
-                        }
-                        break;
+                            break;
+                    }
                 }
-
-                if (State != RexBotState.Flying && State != RexBotState.Walking)
-                {
-                    OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
-                }
-                m_frameCount++;
             }
+
+            if (State != RexBotState.Flying && State != RexBotState.Walking)
+            {
+                OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
+            }
+            m_frameCount++;
         }
 
         #endregion

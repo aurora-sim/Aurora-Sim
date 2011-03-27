@@ -16,7 +16,7 @@ namespace Aurora.BotManager
         void StopAutoMove(UUID Bot);
         void EnableAutoMove(UUID Bot);
         void SetMovementSpeedMod(UUID Bot, float modifier);
-        void RemoveAvatar (UUID uUID, IScene iScene);
+        void RemoveAvatar (UUID Bot, IScene iScene);
 
         #region Path following
 
@@ -37,6 +37,8 @@ namespace Aurora.BotManager
         void SendChatMessage (UUID botID, string message, int sayType);
 
         #endregion
+
+        void SetBotShouldFly (UUID Bot, bool shouldFly);
     }
 
     /// <summary>
@@ -44,7 +46,7 @@ namespace Aurora.BotManager
     /// </summary>
     public interface IRexBot
     {
-        void SetPath (NavMesh mesh, int startNode, bool reverse, int timeOut);
+        void SetPath (NavMesh mesh, int startNode, bool reverse, int timeOut, bool teleportToStart);
         void PauseAutoMove ();
         void StopAutoMove ();
         void EnableAutoMove ();

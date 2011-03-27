@@ -149,6 +149,13 @@ namespace Aurora.BotManager
             return "";
         }
 
+        public void botSetShouldFly (string keyOfBot, int ShouldFly)
+        {
+            IBotManager manager = World.RequestModuleInterface<IBotManager> ();
+            if (manager != null)
+               manager.SetBotShouldFly (UUID.Parse(keyOfBot), ShouldFly == 1);
+        }
+
         public void botSetMap(string keyOfBot, LSL_List positions, LSL_List movementType)
         {
             List<Vector3> PositionsMap = new List<Vector3>();
