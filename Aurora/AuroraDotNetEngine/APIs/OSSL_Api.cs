@@ -2023,59 +2023,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return retVal;
         }
 
-        public LSL_Key osNpcCreate(string firstname, string lastname, LSL_Vector position, LSL_Key cloneFrom)
-        {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osNpcCreate", m_host, "OSSL");
-            //QueueUserWorkItem
-
-            INPCModule module = World.RequestModuleInterface<INPCModule>();
-            if (module != null)
-            {
-                UUID x = module.CreateNPC(firstname,
-                                          lastname,
-                                          new Vector3((float) position.x, (float) position.y, (float) position.z),
-                                          World,
-                                          new UUID(cloneFrom));
-
-                return new LSL_Key(x.ToString());
-            }
-            return new LSL_Key(UUID.Zero.ToString());
-        }
-
-        public void osNpcMoveTo(LSL_Key npc, LSL_Vector position)
-        {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osNpcMoveTo", m_host, "OSSL");
-
-            INPCModule module = World.RequestModuleInterface<INPCModule>();
-            if (module != null)
-            {
-                Vector3 pos = new Vector3((float) position.x, (float) position.y, (float) position.z);
-                module.Autopilot(new UUID(npc.m_string), World, pos);
-            }
-        }
-
-        public void osNpcSay(LSL_Key npc, string message)
-        {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osNpcSay", m_host, "OSSL");
-
-            INPCModule module = World.RequestModuleInterface<INPCModule>();
-            if (module != null)
-            {
-                module.Say(new UUID(npc.m_string), World, message);
-            }
-        }
-
-        public void osNpcRemove(LSL_Key npc)
-        {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osNpcRemove", m_host, "OSSL");
-
-            INPCModule module = World.RequestModuleInterface<INPCModule>();
-            if (module != null)
-            {
-                module.DeleteNPC(new UUID(npc.m_string), World);
-            }
-        }
-        
         /// <summary>
         /// Get current region's map texture UUID
         /// </summary>
