@@ -37,7 +37,6 @@ using Nini.Config;
 using OpenSim;
 using OpenSim.Framework;
 
-using OpenSim.Region.CoreModules.Avatar.NPC;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;

@@ -533,11 +533,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
         public override void SetTerrain(short[] shortheightMap)
         {
-            float[] heightMap = new float[shortheightMap.Length];
-            for (int i = 0; i < shortheightMap.Length; i++)
-            {
-                heightMap[i] = shortheightMap[i] / Constants.TerrainCompression;
-            }
             if (m_terrainShape != null)
                 DeleteTerrain();
 
@@ -551,9 +546,9 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             hfmin = 0;
             hfmax = 256;
 
-            m_terrainShape = new btHeightfieldTerrainShape(m_region.RegionSizeX, m_region.RegionSizeY, heightMap,
+            m_terrainShape = new btHeightfieldTerrainShape (m_region.RegionSizeX, m_region.RegionSizeY, shortheightMap,
                                                            1.0f, hfmin, hfmax, (int)btHeightfieldTerrainShape.UPAxis.Z,
-                                                           (int)btHeightfieldTerrainShape.PHY_ScalarType.PHY_FLOAT, false);
+                                                           (int)btHeightfieldTerrainShape.PHY_ScalarType.PHY_SHORT, false);
             float AabbCenterX = m_region.RegionSizeX / 2f;
             float AabbCenterY = m_region.RegionSizeY / 2f;
 
