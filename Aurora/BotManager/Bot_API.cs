@@ -97,6 +97,14 @@ namespace Aurora.BotManager
         }
 
         /// <summary>
+        /// We use "Aurora.BotManager", and that isn't a default namespace, so we need to add it
+        /// </summary>
+        public string[] NamespaceAdditions
+        {
+            get { return new string[1] { "Aurora.BotManager" }; }
+        }
+
+        /// <summary>
         /// Created by John Sibly @ http://stackoverflow.com/questions/52797/c-how-do-i-get-the-path-of-the-assembly-the-code-is-in
         /// </summary>
         static public string AssemblyFileName

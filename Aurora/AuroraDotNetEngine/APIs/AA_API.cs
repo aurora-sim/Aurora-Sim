@@ -89,6 +89,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             get { return new string[0]; }
         }
 
+        /// <summary>
+        /// We use the default namespace, so we don't have any to add
+        /// </summary>
+        public string[] NamespaceAdditions
+        {
+            get { return new string[0]; }
+        }
+
         public IScriptApi Copy()
         {
             return new AA_Api();

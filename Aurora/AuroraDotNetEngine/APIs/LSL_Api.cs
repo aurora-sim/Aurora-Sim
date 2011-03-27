@@ -94,7 +94,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         protected int m_scriptConsoleChannel = 0;
         protected bool m_scriptConsoleChannelEnabled = false;
         protected IUrlModule m_UrlModule = null;
-		internal ScriptProtectionModule ScriptProtection;
+        internal ScriptProtectionModule ScriptProtection;
         protected IWorldComm m_comms = null;
 
         // MUST be a ref type
@@ -141,21 +141,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string Name
         {
-        get { return "ll"; }
+            get { return "ll"; }
         }
 
         public string InterfaceName
-            {
+        {
             get { return "ILSL_Api"; }
-            }
+        }
 
         /// <summary>
         /// We don't have to add any assemblies here
         /// </summary>
         public string[] ReferencedAssemblies
-            {
+        {
             get { return new string[0]; }
-            }
+        }
+
+        /// <summary>
+        /// We use the default namespace, so we don't have any to add
+        /// </summary>
+        public string[] NamespaceAdditions
+        {
+            get { return new string[0]; }
+        }
 
         public void Dispose()
         {

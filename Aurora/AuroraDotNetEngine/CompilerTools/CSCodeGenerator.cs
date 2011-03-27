@@ -321,7 +321,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             compiledScript += "using System.Collections.Generic;\n";
             compiledScript += "using System.Collections;\n";
             compiledScript += "using System.Reflection;\n";
-            compiledScript += "using System.Timers;\n";          
+            compiledScript += "using System.Timers;\n";
+            foreach (IScriptApi api in m_apiFunctions.Values)
+            {
+                foreach (string nameSpace in api.NamespaceAdditions)
+                {
+                    compiledScript += "using " + nameSpace + ";\n";
+                }
+            }
 
             compiledScript += "namespace Script\n";
             compiledScript += "{\n";

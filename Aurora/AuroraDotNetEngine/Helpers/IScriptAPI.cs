@@ -61,5 +61,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// as shown in the Bot_API.cs in Aurora.BotManager.
         /// </summary>
         string[] ReferencedAssemblies { get; }
+
+        /// <summary>
+        /// If you do not use the standard namespaces for your API module, you will need to add them here 
+        /// As shown in the Bot_API.cs in Aurora.BotManager.
+        /// </summary>
+        string[] NamespaceAdditions { get; }
     }
 }
