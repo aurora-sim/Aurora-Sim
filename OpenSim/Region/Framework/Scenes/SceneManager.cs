@@ -850,8 +850,8 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (IScenePresence presence in agents)
             {
                 RegionInfo regionInfo = presence.Scene.RegionInfo;
-
-                if (presence.Name.Contains (cmdparams[2].ToLower ()))
+                string param = CombineParams (cmdparams, 2);
+                if (presence.Name.ToLower().Contains (param.ToLower ()))
                 {
                     m_log.Info (String.Format ("Kicking user: {0,-16}{1,-37} in region: {2,-16}", presence.Name, presence.UUID, regionInfo.RegionName));
 

@@ -212,6 +212,7 @@ namespace Aurora.BotManager
 
             m_frames.Stop();
             m_walkTime.Stop();
+            m_startTime.Stop ();
         }
 
         #endregion
@@ -1183,12 +1184,12 @@ namespace Aurora.BotManager
 
         public void Stop ()
         {
-            
+            Close ();
         }
 
         public void Kick (string message)
         {
-            
+            Close ();
         }
 
         public void SendWearables (AvatarWearable[] wearables, int serial)
