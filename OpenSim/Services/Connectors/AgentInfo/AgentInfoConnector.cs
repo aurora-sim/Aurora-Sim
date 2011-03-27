@@ -152,7 +152,7 @@ namespace OpenSim.Services.Connectors
         {
         }
 
-        public void SetLoggedIn(string userID, bool loggingIn)
+        public void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent)
         {
         }
 

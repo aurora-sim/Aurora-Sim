@@ -539,6 +539,8 @@ namespace OpenSim.Services.LLLoginService
                 //
                 GridRegion home = null;
                 UserInfo guinfo = m_agentInfoService.GetUserInfo(account.PrincipalID.ToString());
+                //Reset logged in to true if the user was crashed, but don't fire the logged in event yet
+                m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true, false);
                 if (guinfo != null && (guinfo.HomeRegionID != UUID.Zero) && m_GridService != null)
                 {
                     home = m_GridService.GetRegionByUUID(scopeID, guinfo.HomeRegionID);
@@ -674,9 +676,9 @@ namespace OpenSim.Services.LLLoginService
                     m_log.DebugFormat("[LLOGIN SERVICE]: Retrieved {0} friends", friendsList.Length);
                 }
 
-                //Set them as logged in now, they are ready
+                //Set them as logged in now, they are ready, and fire the logged in event now, as we're all done
                 m_agentInfoService.SetLastPosition(account.PrincipalID.ToString(), destination.RegionID, position, lookAt);
-                m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true);
+                m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true, true);
                 
                 //
                 // Finally, fill out the response and return it

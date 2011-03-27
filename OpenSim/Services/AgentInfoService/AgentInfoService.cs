@@ -125,7 +125,7 @@ namespace OpenSim.Services
             m_agentInfoConnector.SetLastPosition(userID, regionID, lastPosition, lastLookAt);
         }
 
-        public void SetLoggedIn(string userID, bool loggingIn)
+        public void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent)
         {
             UserInfo userInfo = GetUserInfo(userID);
             if (userInfo == null)
@@ -140,8 +140,11 @@ namespace OpenSim.Services
                 userInfo.LastLogout = DateTime.Now;
             Save(userInfo);
 
-            //Trigger an event so listeners know
-            m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("UserStatusChange", userInfo);
+            if (fireLoggedInEvent)
+            {
+                //Trigger an event so listeners know
+                m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("UserStatusChange", userInfo);
+            }
         }
 
         public void Save(UserInfo userInfo)

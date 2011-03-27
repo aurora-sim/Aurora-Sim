@@ -157,7 +157,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="part"></param>
         public void QueuePartForUpdate (ISceneChildEntity part, PrimUpdateFlags flags)
         {
-            if (!Culler.ShowEntityToClient(m_presence, part.ParentEntity))
+            if (Culler == null || !Culler.ShowEntityToClient(m_presence, part.ParentEntity))
                 return; // if 2 far ignore
 
             EntityUpdate o = new EntityUpdate (part, flags);

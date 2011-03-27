@@ -152,7 +152,8 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="userID"></param>
         /// <param name="loggingIn">Whether the user is logging in or out</param>
-        void SetLoggedIn(string userID, bool loggingIn);
+        /// <param name="fireLoggedInEvent">Fire the event to log a user in</param>
+        void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent);
 
         /// <summary>
         /// The local service (if one exists)
