@@ -103,22 +103,64 @@ namespace OpenSim.Services.GridService
 
                 if (MainConsole.Instance != null)
                 {
-                    MainConsole.Instance.Commands.AddCommand("grid", true,
-                            "show region",
+                    MainConsole.Instance.Commands.AddCommand("show region",
                             "show region [Region name]",
                             "Show details on a region",
-                            String.Empty,
                             HandleShowRegion);
 
-                    MainConsole.Instance.Commands.AddCommand("grid", true,
-                            "set region flags",
+                    MainConsole.Instance.Commands.AddCommand("set region flags",
                             "set region flags [Region name] [flags]",
                             "Set database flags for region",
-                            String.Empty,
                             HandleSetFlags);
+
+                    MainConsole.Instance.Commands.AddCommand("grid clear regions",
+                        "grid clear regions",
+                        "Clears all regions from the database",
+                        HandleClearAllRegions);
+
+                    MainConsole.Instance.Commands.AddCommand("grid clear down regions",
+                        "grid clear down regions",
+                        "Clears all regions that are offline from the database",
+                        HandleClearAllDownRegions);
+
+                    MainConsole.Instance.Commands.AddCommand("grid clear region",
+                        "grid clear region [RegionName]",
+                        "Clears the regions with the given name from the database",
+                        HandleClearRegion);
                 }
             }
             registry.RegisterModuleInterface<IGridService>(this);
+        }
+
+        private void HandleClearAllRegions(string module, string[] cmd)
+        {
+            //Delete everything... give no criteria to just do 'delete from gridregions'
+            m_Database.DeleteAll(new string[0], new object[0]);
+        }
+
+        private void HandleClearRegion(string module, string[] cmd)
+        {
+            if (cmd.Length <= 3)
+            {
+                m_log.Warn("Wrong syntax, please check the help function and try again");
+                return;
+            }
+
+            string regionName = Util.CombineParams(cmd, 3);
+            GridRegion r = GetRegionByName(UUID.Zero, cmd[3]);
+            if (r == null)
+            {
+                m_log.Warn("Region was not found");
+                return;
+            }
+            m_Database.Delete(r.RegionID);
+        }
+
+        private void HandleClearAllDownRegions(string module, string[] cmd)
+        {
+            //Delete any flags with (Flags & 254) == 254
+            m_Database.DeleteAll(new string[4] { "Flags", "Flags", "Flags", "Flags" },
+                new object[4] { 254, 267, 275, 296 });
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)

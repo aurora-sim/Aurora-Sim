@@ -184,6 +184,11 @@ namespace Aurora.Services.DataService
             return GD.Delete(m_realm, new string[1] { "RegionUUID" }, new object[1] { regionID });
         }
 
+        public bool DeleteAll(string[] criteriaKey, object[] criteriaValue)
+        {
+            return GD.Delete(m_realm, criteriaKey, criteriaValue);
+        }
+
         public List<GridRegion> GetDefaultRegions(UUID scopeID)
         {
             return Get((int)RegionFlags.DefaultRegion, scopeID);

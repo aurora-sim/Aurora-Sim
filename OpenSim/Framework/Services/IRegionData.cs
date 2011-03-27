@@ -46,6 +46,7 @@ namespace Aurora.Framework
         bool Store(GridRegion data);
 
         bool Delete(UUID regionID);
+        bool DeleteAll(string[] criteriaKey, object[] criteriaValue);
 
         List<GridRegion> GetDefaultRegions(UUID scopeID);
         List<GridRegion> GetFallbackRegions(UUID scopeID, int x, int y);

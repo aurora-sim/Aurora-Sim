@@ -231,13 +231,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
             else if (cmdparams.Length > 2 && isGeneral)
             {
                 // alert general <message>
-                message = CombineParams(cmdparams, 2);
+                message = Util.CombineParams(cmdparams, 2);
             }
             else if (cmdparams.Length > 3)
             {
                 // alert <first> <last> <message>
                 lastName = cmdparams[2];
-                message = CombineParams(cmdparams, 3);
+                message = Util.CombineParams(cmdparams, 3);
             }
             else
             {
@@ -259,17 +259,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
                     m_scene.RegionInfo.RegionName, firstName, lastName, message);
                 SendAlertToUser(firstName, lastName, message, false);
             }
-        }
-
-        private string CombineParams(string[] commandParams, int pos)
-        {
-            string result = string.Empty;
-            for (int i = pos; i < commandParams.Length; i++)
-            {
-                result += commandParams[i] + " ";
-            }
-            
-            return result;
         }
     }
 }

@@ -256,7 +256,7 @@ namespace Aurora.Modules
 
             if (cmdparams[1] == "general")
             {
-                string message = CombineParams(cmdparams, 2);
+                string message = Util.CombineParams(cmdparams, 2);
 
                 m_log.InfoFormat(
                     "[DIALOG]: Sending general alert in region {0} with message {1}", m_scene.RegionInfo.RegionName, message);
@@ -266,24 +266,13 @@ namespace Aurora.Modules
             {
                 string firstName = cmdparams[1];
                 string lastName = cmdparams[2];
-                string message = CombineParams(cmdparams, 3);
+                string message = Util.CombineParams(cmdparams, 3);
 
                 m_log.InfoFormat(
                     "[DIALOG]: Sending alert in region {0} to {1} {2} with message {3}",
                     m_scene.RegionInfo.RegionName, firstName, lastName, message);
                 SendAlertToUser(firstName, lastName, message, false);
             }
-        }
-
-        private string CombineParams(string[] commandParams, int pos)
-        {
-            string result = string.Empty;
-            for (int i = pos; i < commandParams.Length; i++)
-            {
-                result += commandParams[i] + " ";
-            }
-
-            return result;
         }
     }
 }

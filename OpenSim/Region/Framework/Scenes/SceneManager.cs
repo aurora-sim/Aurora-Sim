@@ -850,7 +850,7 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (IScenePresence presence in agents)
             {
                 RegionInfo regionInfo = presence.Scene.RegionInfo;
-                string param = CombineParams (cmdparams, 2);
+                string param = Util.CombineParams (cmdparams, 2);
                 if (presence.Name.ToLower().Contains (param.ToLower ()))
                 {
                     m_log.Info (String.Format ("Kicking user: {0,-16}{1,-37} in region: {2,-16}", presence.Name, presence.UUID, regionInfo.RegionName));
@@ -996,7 +996,7 @@ namespace OpenSim.Region.Framework.Scenes
                     break;
 
                 case "remove-region":
-                    string regRemoveName = CombineParams(cmdparams, 0);
+                    string regRemoveName = Util.CombineParams(cmdparams, 0);
 
                     Scene removeScene;
                     if (TryGetScene(regRemoveName, out removeScene))
@@ -1006,7 +1006,7 @@ namespace OpenSim.Region.Framework.Scenes
                     break;
 
                 case "delete-region":
-                    string regDeleteName = CombineParams(cmdparams, 0);
+                    string regDeleteName = Util.CombineParams(cmdparams, 0);
 
                     Scene killScene;
                     if (TryGetScene(regDeleteName, out killScene))
@@ -1029,7 +1029,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (cmdparams.Length > 2)
             {
-                string newRegionName = CombineParams(cmdparams, 2);
+                string newRegionName = Util.CombineParams(cmdparams, 2);
                 ChangeSelectedRegion(newRegionName);
             }
             else
@@ -1230,17 +1230,6 @@ namespace OpenSim.Region.Framework.Scenes
             IRegionArchiverModule archiver = CurrentOrFirstScene.RequestModuleInterface<IRegionArchiverModule>();
             if (archiver != null)
                 archiver.HandleSaveOarConsoleCommand(string.Empty, cmdparams);
-        }
-
-        private static string CombineParams(string[] commandParams, int pos)
-        {
-            string result = String.Empty;
-            for (int i = pos; i < commandParams.Length; i++)
-            {
-                result += commandParams[i] + " ";
-            }
-            result = result.TrimEnd(' ');
-            return result;
         }
 
         /// <summary>

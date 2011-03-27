@@ -1708,5 +1708,27 @@ namespace OpenSim.Framework
         {
             return Utils.UIntsToLong((uint)x, (uint)y);
         }
+
+        public static string CombineParams(string[] commandParams, int pos)
+        {
+            string result = string.Empty;
+            for (int i = pos; i < commandParams.Length; i++)
+            {
+                result += commandParams[i] + " ";
+            }
+
+            return result;
+        }
+
+        public static string CombineParams(string[] commandParams, int pos, int endPos)
+        {
+            string result = string.Empty;
+            for (int i = pos; i < endPos; i++)
+            {
+                result += commandParams[i] + " ";
+            }
+
+            return result;
+        }
     }
 }
