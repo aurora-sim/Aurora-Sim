@@ -2483,7 +2483,7 @@ namespace OpenSim.Region.Framework.Scenes
                 pVec.Z += m_avHeight;
 
             m_physicsActor = scene.AddAvatar(Name, pVec, Rotation,
-                                                 new Vector3 (0f, 0f, m_avHeight), isFlying);
+                                                 new Vector3 (0f, 0f, m_avHeight), isFlying, LocalId);
 
             scene.AddPhysicsActorTaint(m_physicsActor);
             m_physicsActor.OnRequestTerseUpdate += SendTerseUpdateToAllClients;
@@ -2493,7 +2493,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_physicsActor.OnOutOfBounds += OutOfBoundsCall; // Called for PhysicsActors when there's something wrong
             m_physicsActor.SubscribeEvents(500);
-            m_physicsActor.LocalID = LocalId;
             m_physicsActor.Orientation = Rotation;
 
             //Tell any events about it

@@ -1018,7 +1018,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     if (flying)
                     {
-                        // we're flyind
+                        // we're flying
                         vec.X = (_target_velocity.X * movementmult - vel.X) * PID_D * 0.75f;
                         vec.Y = (_target_velocity.Y * movementmult - vel.Y) * PID_D * 0.75f;
                     }

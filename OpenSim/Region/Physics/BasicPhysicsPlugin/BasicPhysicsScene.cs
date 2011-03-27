@@ -60,7 +60,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
         }
 
-        public override PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying)
+        public override PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying, uint localID)
         {
             BasicActor act = new BasicActor();
             act.Position = position;

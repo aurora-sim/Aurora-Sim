@@ -940,6 +940,8 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
             Vector3 vel = new Vector3(tempVector2.getX(), tempVector2.getY(), tempVector2.getZ());
 
+            vel *= 0.25f;
+
             float movementdivisor = 1f;
 
             if (!m_alwaysRun)
@@ -1003,8 +1005,8 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
                     // We don't want linear velocity to cause our avatar to bounce, so we check target Z and actual velocity X, Y
                     // rebound preventing
-                    if (m_target_velocity.Z < 0.025f && m_velocity.X < 0.25f && m_velocity.Y < 0.25f)
-                        m_zeroFlag = true;
+                    //if (m_target_velocity.Z < 0.025f && m_velocity.X < 0.25f && m_velocity.Y < 0.25f)
+                    //    m_zeroFlag = true;
                 }
 
                 if (m_iscolliding && !m_flying && m_target_velocity.Z > 0.0f)
@@ -1041,13 +1043,13 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
                 if (m_flying)
                 {
-                    vec.Z = (m_target_velocity.Z - vel.Z) * (PID_D);
+                    vec.Z = (m_target_velocity.Z - vel.Z) * (PID_D) * 10;
                 }
             }
             if (m_flying)
             {
                 // Slight PID correction
-                vec.Z += (((-1 * m_parent_scene.gravityz) * m_mass) * 0.16f);
+                vec.Z += (((-1 * m_parent_scene.gravityz) * m_mass) * 1.5f);
 
 
                 //auto fly height. Kitto Flora

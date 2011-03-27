@@ -229,7 +229,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             m_world.removeCollisionObject(body);
         }
 
-        public override PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying)
+        public override PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying, uint LocalID)
         {
             lock (BulletLock)
             {
@@ -237,6 +237,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                                                                       avCapRadius, avStandupTensor, avDensity,
                                                                       avHeightFudgeFactor, avMovementDivisorWalk,
                                                                       avMovementDivisorRun);
+                chr.LocalID = LocalID;
                 try
                 {
                     lock (m_characters)
@@ -259,10 +260,10 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         {
             lock (BulletLock)
             {
+                BulletDotNETCharacter chr = (BulletDotNETCharacter)actor;
+
                 if (!Locked)
                 {
-                    BulletDotNETCharacter chr = (BulletDotNETCharacter)actor;
-
                     chr.Remove();
                     AddPhysicsActorTaint(chr);
                     //chr = null;
@@ -271,6 +272,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 {
                     RemoveQueue.Add(actor);
                 }
+                m_charactersLocalID.Remove(chr.m_localID);
             }
         }
 
@@ -545,9 +547,15 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             hfmin = 0;
             hfmax = 256;
 
-            m_terrainShape = new btHeightfieldTerrainShape (m_region.RegionSizeX, m_region.RegionSizeY, shortheightMap,
+            float[] heightmap = new float[m_region.RegionSizeX * m_region.RegionSizeX];
+            for (int i = 0; i < shortheightMap.Length; i++)
+            {
+                heightmap[i] = shortheightMap[i] / Constants.TerrainCompression;
+            }
+
+            m_terrainShape = new btHeightfieldTerrainShape(m_region.RegionSizeX, m_region.RegionSizeY, heightmap,
                                                            1.0f, hfmin, hfmax, (int)btHeightfieldTerrainShape.UPAxis.Z,
-                                                           (int)btHeightfieldTerrainShape.PHY_ScalarType.PHY_SHORT, false);
+                                                           (int)btHeightfieldTerrainShape.PHY_ScalarType.PHY_FLOAT, false);
             float AabbCenterX = m_region.RegionSizeX / 2f;
             float AabbCenterY = m_region.RegionSizeY / 2f;
 
