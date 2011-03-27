@@ -1000,9 +1000,8 @@ namespace OpenSim.Region.CoreModules.World.Land
             IPrimCounts primCounts = primCountModule.GetPrimCounts(LandData.GlobalID);
             if (type == (uint)ObjectReturnType.Owner)
             {
-                foreach (SceneObjectPart child in primCounts.Objects)
+                foreach (ISceneEntity obj in primCounts.Objects)
                 {
-                    ISceneEntity obj = child.ParentGroup;
                     if (obj.OwnerID == m_landData.OwnerID)
                     {
                         if (!returns.ContainsKey(obj.OwnerID))
@@ -1015,9 +1014,8 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
             else if (type == (uint)ObjectReturnType.Group && m_landData.GroupID != UUID.Zero)
             {
-                foreach (SceneObjectPart child in primCounts.Objects)
+                foreach (ISceneEntity obj in primCounts.Objects)
                 {
-                    ISceneEntity obj = child.ParentGroup;
                     if (obj.GroupID == m_landData.GroupID)
                     {
                         if (!returns.ContainsKey(obj.OwnerID))
@@ -1030,9 +1028,8 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
             else if (type == (uint)ObjectReturnType.Other)
             {
-                foreach (SceneObjectPart child in primCounts.Objects)
+                foreach (ISceneEntity obj in primCounts.Objects)
                 {
-                    ISceneEntity obj = child.ParentGroup;
                     if (obj.OwnerID != m_landData.OwnerID &&
                         (obj.GroupID != m_landData.GroupID ||
                         m_landData.GroupID == UUID.Zero))
@@ -1049,9 +1046,8 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 List<UUID> ownerlist = new List<UUID>(owners);
 
-                foreach (SceneObjectPart child in primCounts.Objects)
+                foreach (ISceneEntity obj in primCounts.Objects)
                 {
-                    ISceneEntity obj = child.ParentGroup;
                     if (ownerlist.Contains(obj.OwnerID))
                     {
                         if (!returns.ContainsKey(obj.OwnerID))
