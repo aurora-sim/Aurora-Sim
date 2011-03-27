@@ -34,12 +34,12 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         public void Start(IConfigSource config, IRegistryCore registry)
         {
             m_registry = registry;
-            MainConsole.Instance.Commands.AddCommand("GridWideMessagingModule", true, "send grid alert",
-                "send grid alert <message>", "Sends a message to all users in the grid", SendGridAlert);
-            MainConsole.Instance.Commands.AddCommand("GridWideMessagingModule", true, "send grid message",
-                "send grid message <first> <last> <message>", "Sends a message to a user in the grid", SendGridMessage);
-            MainConsole.Instance.Commands.AddCommand("GridWideMessagingModule", true, "kick user",
-                "kick user <first> <last> <message>", "Kicks a user from the grid", KickUserMessage);
+            MainConsole.Instance.Commands.AddCommand ("GridWideMessagingModule", true, "grid send alert",
+                "grid send alert <message>", "Sends a message to all users in the grid", SendGridAlert);
+            MainConsole.Instance.Commands.AddCommand ("GridWideMessagingModule", true, "grid send message",
+                "grid send message <first> <last> <message>", "Sends a message to a user in the grid", SendGridMessage);
+            MainConsole.Instance.Commands.AddCommand("GridWideMessagingModule", true, "grid kick user",
+                "grid kick user <first> <last> <message>", "Kicks a user from the grid", KickUserMessage);
 
             //Also look for incoming messages to display
             registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
