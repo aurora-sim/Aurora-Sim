@@ -2124,6 +2124,9 @@ namespace OpenSim.Region.Framework.Scenes
                 m_scene.EventManager.TriggerSignificantClientMovement(m_controllingClient);
             }
 
+            if (m_sceneViewer == null)
+                return;
+
             // Minimum Draw distance is 64 meters, the Radius of the draw distance sphere is 32m
             double  tmpsq = m_sceneViewer.Prioritizer.ChildReprioritizationDistance;
             tmpsq *= tmpsq;

@@ -64,7 +64,11 @@ namespace Aurora.BotManager
         public RexBotState State
         {
             get { return m_currentState; }
-            set { m_previousState = m_currentState;  m_currentState = value; }
+            set 
+            { 
+                m_previousState = m_currentState;  
+                m_currentState = value;
+            }
         }
         private RexBotState m_previousState = RexBotState.Idle;
         
@@ -96,6 +100,7 @@ namespace Aurora.BotManager
         public bool IsOnAPath = false;
         public List<Vector3> WayPoints = new List<Vector3> ();
         public int CurrentWayPoint = 0;
+        private float m_closeToPoint = 1;
 
         #endregion
 
@@ -312,7 +317,9 @@ namespace Aurora.BotManager
         /// <param name="pos"></param>
         public void DisableWalk()
         {
+            ShouldFly = true;
             m_scenePresence.ForceFly = true;
+            m_closeToPoint = 1.5f;
         }
 
         /// <summary>
@@ -321,7 +328,9 @@ namespace Aurora.BotManager
         /// <param name="pos"></param>
         public void EnableWalk()
         {
+            ShouldFly = false;
             m_scenePresence.ForceFly = false;
+            m_closeToPoint = 1;
         }
 
         #endregion
@@ -631,18 +640,19 @@ namespace Aurora.BotManager
                     CurrentFollowTimeBeforeUpdate++;
                     if (CurrentFollowTimeBeforeUpdate == FollowTimeBeforeUpdate)
                     {
-                        NavMesh mesh = new NavMesh ();
-
-                        mesh.AddEdge (0, 1, ShouldFly ? TravelMode.Fly : TravelMode.Walk);
-                        mesh.AddNode (m_scenePresence.AbsolutePosition); //Give it the current pos so that it will know where to start
-
-                        mesh.AddEdge (1, 2, ShouldFly ? TravelMode.Fly : TravelMode.Walk);
-                        mesh.AddNode (FollowSP.AbsolutePosition); //Give it the new point so that it will head toward it
-
-
                         Vector3 diffAbsPos = FollowSP.AbsolutePosition - m_scenePresence.AbsolutePosition;
-                        if (Math.Abs (diffAbsPos.X) > 1 || Math.Abs (diffAbsPos.Y) > 1)
+                        if (Math.Abs (diffAbsPos.X) > m_closeToPoint || Math.Abs (diffAbsPos.Y) > m_closeToPoint)
+                        {
+                            NavMesh mesh = new NavMesh ();
+
+                            bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
+                            mesh.AddEdge (0, 1, fly ? TravelMode.Fly : TravelMode.Walk);
+                            mesh.AddNode (m_scenePresence.AbsolutePosition); //Give it the current pos so that it will know where to start
+
+                            mesh.AddEdge (1, 2, fly ? TravelMode.Fly : TravelMode.Walk);
+                            mesh.AddNode (FollowSP.AbsolutePosition); //Give it the new point so that it will head toward it
                             SetPath (mesh, 0, false, 10000, false); //Set and go
+                        }
                         else
                         {
                             //Stop the bot then
@@ -659,7 +669,7 @@ namespace Aurora.BotManager
             {
                 lock (WayPoints)
                 {
-                    if (WayPoints[CurrentWayPoint].ApproxEquals (m_scenePresence.AbsolutePosition, 1)) //Are we about to the new position?
+                    if (WayPoints[CurrentWayPoint].ApproxEquals (m_scenePresence.AbsolutePosition, m_closeToPoint)) //Are we about to the new position?
                     {
                         //We need to update the waypoint then and send the av to a new location
                         CurrentWayPoint++;
@@ -682,8 +692,10 @@ namespace Aurora.BotManager
 
             if (State != RexBotState.Idle)
             {
+                bool CheckFly = State == RexBotState.Flying;
                 Vector3 diffPos = m_destination - m_scenePresence.AbsolutePosition;
-                if (Math.Abs (diffPos.X) < 1 && Math.Abs (diffPos.Y) < 1)
+                if (Math.Abs (diffPos.X) < 1 && Math.Abs (diffPos.Y) < m_closeToPoint &&
+                    (!CheckFly || (ShouldFly && Math.Abs (diffPos.Z) < m_closeToPoint))) //If we are flying, Z checking matters
                 {
                     State = RexBotState.Idle;
                     m_walkTime.Stop ();
