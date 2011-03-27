@@ -172,6 +172,8 @@ namespace OpenSim.Framework
         void StandUp ();
 
         void SetHeight (float p);
+
+        void MakeRootAgent (bool p);
     }
 
     public interface IAvatarAppearanceModule

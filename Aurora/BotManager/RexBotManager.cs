@@ -138,10 +138,12 @@ namespace Aurora.BotManager
             scene.AuthenticateHandler.AgentCircuits.Add (m_character.CircuitCode, m_aCircuitData);
             //This adds them to the scene and sets them inworld
             scene.AddNewClient (m_character);
-
-            m_character.Initialize();
-
+            m_character.Initialize ();
+            m_character.SendRegionHandshake (scene.RegionInfo, null);
             IScenePresence SP = scene.GetScenePresence (m_character.AgentId);
+            SP.MakeRootAgent (false);
+
+
             IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule> ();
             appearance.Appearance.SetAppearance (appearance.Appearance.Texture, appearance.Appearance.VisualParams);
             appearance.SendAvatarDataToAllAgents ();
