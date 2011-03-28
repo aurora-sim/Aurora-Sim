@@ -457,5 +457,99 @@ namespace OpenSim.Framework
             set { m_LoadedCreationID = value; }
         }
 
+        public OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+
+            map["AgentLimit"] = this.AgentLimit;
+            map["AllowDamage"] = this.AllowDamage;
+            map["AllowLandJoinDivide"] = this.AllowLandJoinDivide;
+            map["AllowLandResell"] = this.AllowLandResell;
+            map["BlockFly"] = this.BlockFly;
+            map["BlockShowInSearch"] = this.BlockShowInSearch;
+            map["BlockTerraform"] = this.BlockTerraform;
+            map["Covenant"] = this.Covenant;
+            map["CovenantLastUpdated"] = this.CovenantLastUpdated;
+            map["DisableCollisions"] = this.DisableCollisions;
+            map["DisablePhysics"] = this.DisablePhysics;
+            map["DisableScripts"] = this.DisableScripts;
+            map["Elevation1NE"] = this.Elevation1NE;
+            map["Elevation1NW"] = this.Elevation1NW;
+            map["Elevation1SE"] = this.Elevation1SE;
+            map["Elevation1SW"] = this.Elevation1SW;
+            map["Elevation2NE"] = this.Elevation2NE;
+            map["Elevation2NW"] = this.Elevation2NW;
+            map["Elevation2SE"] = this.Elevation2SE;
+            map["Elevation2SW"] = this.Elevation2SW;
+            map["FixedSun"] = this.FixedSun;
+            map["Generic"] = this.Generic;
+            map["LoadedCreationDateTime"] = this.LoadedCreationDateTime;
+            map["LoadedCreationID"] = this.LoadedCreationID;
+            map["Maturity"] = this.Maturity;
+            map["MinimumAge"] = this.MinimumAge;
+            map["ObjectBonus"] = this.ObjectBonus;
+            map["RegionUUID"] = this.RegionUUID;
+            map["RestrictPushing"] = this.RestrictPushing;
+            map["Sandbox"] = this.Sandbox;
+            map["SunPosition"] = this.SunPosition;
+            map["SunVector"] = this.SunVector;
+            map["TerrainImageID"] = this.TerrainImageID;
+            map["TerrainLowerLimit"] = this.TerrainLowerLimit;
+            map["TerrainMapImageID"] = this.TerrainMapImageID;
+            map["TerrainRaiseLimit"] = this.TerrainRaiseLimit;
+            map["TerrainTexture1"] = this.TerrainTexture1;
+            map["TerrainTexture2"] = this.TerrainTexture2;
+            map["TerrainTexture3"] = this.TerrainTexture3;
+            map["TerrainTexture4"] = this.TerrainTexture4;
+            map["UseEstateSun"] = this.UseEstateSun;
+            map["WaterHeight"] = this.WaterHeight;
+
+            return map;
+        }
+
+        public void FromOSD(OSDMap map)
+        {
+            this.AgentLimit = map["AgentLimit"];
+            this.AllowLandJoinDivide = map["AllowLandJoinDivide"];
+            this.AllowLandResell = map["AllowLandResell"];
+            this.BlockFly = map["BlockFly"];
+            this.BlockShowInSearch = map["BlockShowInSearch"];
+            this.BlockTerraform = map["BlockTerraform"];
+            this.Covenant = map["Covenant"];
+            this.CovenantLastUpdated = map["CovenantLastUpdated"];
+            this.DisableCollisions = map["DisableCollisions"];
+            this.DisablePhysics = map["DisablePhysics"];
+            this.DisableScripts = map["DisableScripts"];
+            this.Elevation1NE = map["Elevation1NE"];
+            this.Elevation1NW = map["Elevation1NW"];
+            this.Elevation1SE = map["Elevation1SE"];
+            this.Elevation1SW = map["Elevation1SW"];
+            this.Elevation2NE = map["Elevation2NE"];
+            this.Elevation2NW = map["Elevation2NW"];
+            this.Elevation2SE = map["Elevation2SE"];
+            this.Elevation2SW = map["Elevation2SW"];
+            this.FixedSun = map["FixedSun"];
+            this.Generic = (OSDMap)map["Generic"];
+            this.LoadedCreationDateTime = map["LoadedCreationDateTime"];
+            this.LoadedCreationID = map["LoadedCreationID"];
+            this.Maturity = map["Maturity"];
+            this.MinimumAge = map["MinimumAge"];
+            this.ObjectBonus = map["ObjectBonus"];
+            this.RegionUUID = map["RegionUUID"];
+            this.RestrictPushing = map["RestrictPushing"];
+            this.Sandbox = map["Sandbox"];
+            this.SunPosition = map["SunPosition"];
+            this.SunVector = map["SunVector"];
+            this.TerrainImageID = map["TerrainImageID"];
+            this.TerrainLowerLimit = map["TerrainLowerLimit"];
+            this.TerrainMapImageID = map["TerrainMapImageID"];
+            this.TerrainRaiseLimit = map["TerrainRaiseLimit"];
+            this.TerrainTexture1 = map["TerrainTexture1"];
+            this.TerrainTexture2 = map["TerrainTexture2"];
+            this.TerrainTexture3 = map["TerrainTexture3"];
+            this.TerrainTexture4 = map["TerrainTexture4"];
+            this.UseEstateSun = map["UseEstateSun"];
+            this.WaterHeight = map["WaterHeight"];
+        }
     }
 }

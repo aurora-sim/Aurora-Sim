@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using OpenSim.Framework;
+using OpenSim.Framework.Serialization;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
@@ -12,12 +13,13 @@ using Nini.Config;
 using log4net;
 using Aurora.DataManager;
 using Aurora.Framework;
+using Aurora.Simulation.Base;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Region.CoreModules
 {
-    public class EstateInitializer : ISharedRegionStartupModule
+    public class EstateInitializer : ISharedRegionStartupModule, IAuroraBackupModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private string LastEstateName = "";
@@ -26,6 +28,7 @@ namespace OpenSim.Region.CoreModules
 
         public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
+            scene.StackModuleInterface<IAuroraBackupModule>(this);
         }
 
         private EstateSettings CreateEstateInfo(Scene scene)
@@ -297,6 +300,31 @@ namespace OpenSim.Region.CoreModules
                 m.FromOSD(ToOSD());
                 return m;
             }
+        }
+
+        public bool IsArchiving
+        {
+            get { return false; }
+        }
+
+        public void SaveModuleToArchive(TarArchiveWriter writer, IScene scene)
+        {
+            m_log.Info("[Archive]: Writing estates to archive");
+
+            writer.WriteDir("estate");
+            EstateSettings settings = scene.RegionInfo.EstateSettings;
+            string xmlData = WebUtils.BuildXmlResponse(settings.ToKeyValuePairs(true));
+            writer.WriteFile("estate/" + scene.RegionInfo.RegionName, xmlData);
+
+            m_log.Info("[Archive]: Finished writing estates to archive");
+            m_log.Info("[Archive]: Writing region info to archive");
+
+            writer.WriteDir("regioninfo");
+            RegionInfo regionInfo = scene.RegionInfo;
+
+            writer.WriteFile("regioninfo/" + scene.RegionInfo.RegionName, OSDParser.SerializeLLSDBinary(regionInfo.PackRegionInfoData(true)));
+
+            m_log.Info("[Archive]: Finished writing region info to archive");
         }
     }
 }

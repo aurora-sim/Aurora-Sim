@@ -363,8 +363,9 @@ namespace OpenSim.Framework
                 args["allow_script_crossing"] = OSD.FromBoolean(AllowScriptCrossing);
                 args["allow_physical_prims"] = OSD.FromBoolean (AllowPhysicalPrims);
                 args["number_startup"] = OSD.FromInteger (NumberStartup);
-                args["startupType"] = OSD.FromInteger ((int)Startup);
-                args["FindExternalIP"] = OSD.FromBoolean (FindExternalAutomatically);
+                args["startupType"] = OSD.FromInteger((int)Startup);
+                args["FindExternalIP"] = OSD.FromBoolean(FindExternalAutomatically);
+                args["RegionSettings"] = RegionSettings.ToOSD();
             }
             return args;
         }
@@ -436,9 +437,14 @@ namespace OpenSim.Framework
             if(args.ContainsKey("number_startup"))
                 NumberStartup = args["number_startup"].AsInteger();
             if (args.ContainsKey ("startupType"))
-                Startup = (StartupType)args["startupType"].AsInteger ();
-            if (args.ContainsKey ("FindExternalIP"))
-                FindExternalAutomatically = args["FindExternalIP"].AsBoolean ();
+                Startup = (StartupType)args["startupType"].AsInteger();
+            if (args.ContainsKey("FindExternalIP"))
+                FindExternalAutomatically = args["FindExternalIP"].AsBoolean();
+            if (args.ContainsKey("RegionSettings"))
+            {
+                RegionSettings = new RegionSettings();
+                RegionSettings.FromOSD((OSDMap)args["RegionSettings"]);
+            }
         }
     }
 }

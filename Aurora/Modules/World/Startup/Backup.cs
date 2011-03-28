@@ -12,9 +12,11 @@ using System.Xml;
 using Nini.Config;
 using log4net;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using Aurora.DataManager;
 using Aurora.Framework;
 using OpenSim.Framework;
+using OpenSim.Framework.Serialization;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
@@ -119,7 +121,7 @@ namespace Aurora.Modules
 
         #region Per region backup class
 
-        protected class InternalSceneBackup : IBackupModule
+        protected class InternalSceneBackup : IBackupModule, IAuroraBackupModule
         {
             #region Declares
 
@@ -158,6 +160,7 @@ namespace Aurora.Modules
             public InternalSceneBackup(Scene scene)
             {
                 m_scene = scene;
+                m_scene.StackModuleInterface<IAuroraBackupModule>(this);
                 m_scene.RegisterModuleInterface<IBackupModule>(this);
                 m_scene.EventManager.OnFrame += UpdateStorageBackup;
             }
@@ -782,6 +785,97 @@ namespace Aurora.Modules
 
                 //m_log.DebugFormat("[SCENE]: Exit DeleteSceneObject() for {0} {1}", group.Name, group.UUID);
                 return false;
+            }
+
+            #endregion
+
+            #region IAuroraBackupModule Methods
+
+            private bool m_isArchiving = false;
+            private List<UUID> m_missingAssets = new List<UUID>();
+
+            public bool IsArchiving
+            {
+                get { return m_isArchiving; }
+            }
+
+            public void SaveModuleToArchive(TarArchiveWriter writer, IScene scene)
+            {
+                m_isArchiving = true;
+
+                m_log.Info("[Archive]: Writing parcels to archive");
+
+                writer.WriteDir("parcels");
+
+                IParcelManagementModule module = scene.RequestModuleInterface<IParcelManagementModule>();
+                if (module != null)
+                {
+                    List<ILandObject> landObject = module.AllParcels();
+                    foreach (ILandObject parcel in landObject)
+                    {
+                        OSDMap parcelMap = parcel.LandData.ToOSD();
+                        writer.WriteFile("parcels/" + parcel.LandData.GlobalID.ToString(), OSDParser.SerializeLLSDBinary(parcelMap));
+                    }
+                }
+
+                m_log.Info("[Archive]: Finished writing parcels to archive");
+                m_log.Info("[Archive]: Writing entities to archive");
+                ISceneEntity[] entities = scene.Entities.GetEntities();
+                //Get all entities, then start writing them to the database
+                writer.WriteDir("entities");
+
+                IDictionary<UUID, AssetType> assets = new Dictionary<UUID, AssetType>();
+                UuidGatherer assetGatherer = new UuidGatherer(m_scene.AssetService);
+
+                foreach (ISceneEntity entity in entities)
+                {
+                    //Write all entities
+                    writer.WriteFile("entities/" + entity.UUID.ToString(), ((ISceneObject)entity).ToXml2());
+                    //Get all the assets too
+                    assetGatherer.GatherAssetUuids(entity, assets, scene);
+                }
+
+                m_log.Info("[Archive]: Finished writing entities to archive");
+                m_log.Info("[Archive]: Writing assets for entities to archive");
+
+                bool foundAllAssets = true;
+                foreach (UUID assetID in new List<UUID>(assets.Keys))
+                {
+                    AssetBase asset = m_scene.AssetService.GetCached(assetID.ToString());
+                    if (asset != null)
+                        WriteAsset(asset, writer); //Write it syncronously since we havn't 
+                    else
+                    {
+                        foundAllAssets = false; //Not all are cached
+                        m_missingAssets.Add(assetID);
+                        m_scene.AssetService.Get(assetID.ToString(), writer, RetrievedAsset);
+                    }
+                }
+                if (foundAllAssets)
+                    m_isArchiving = false; //We're done if all the assets were found
+
+                m_log.Info("[Archive]: Finished writing assets for entities to archive");
+            }
+
+            private void RetrievedAsset(string id, Object sender, AssetBase asset)
+            {
+                m_missingAssets.Remove(UUID.Parse(id));
+                TarArchiveWriter writer = (TarArchiveWriter)sender;
+                if (writer == null)
+                {
+                    if (m_missingAssets.Count == 0)
+                        m_isArchiving = false;
+                    return;
+                }
+                //Add the asset
+                WriteAsset(asset, writer);
+                if (m_missingAssets.Count == 0)
+                    m_isArchiving = false;
+            }
+
+            private void WriteAsset(AssetBase asset, TarArchiveWriter writer)
+            {
+                writer.WriteFile("assets", asset.Data);
             }
 
             #endregion

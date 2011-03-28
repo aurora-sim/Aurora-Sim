@@ -42,11 +42,6 @@ namespace OpenSim.Framework
     /// </summary>
     public class LandData : IDataTransferable
     {
-        // use only one serializer to give the runtime a chance to
-        // optimize it (it won't do that if you use a new instance
-        // every time)
-        private static XmlSerializer serializer = new XmlSerializer(typeof (LandData));
-        
         private Vector3 _AABBMax = new Vector3();
         private Vector3 _AABBMin = new Vector3();
         private int _area = 0;
@@ -765,23 +760,6 @@ namespace OpenSim.Framework
             }
 
             return landData;
-        }
-
-        public void ToXml(XmlWriter xmlWriter)
-        {
-            serializer.Serialize(xmlWriter, this);
-        }
-
-        /// <summary>
-        /// Restore a LandData object from the serialized xml representation.
-        /// </summary>
-        /// <param name="xmlReader"></param>
-        /// <returns></returns>
-        public static LandData FromXml(XmlReader xmlReader)
-        {
-            LandData land = (LandData)serializer.Deserialize(xmlReader);
-
-            return land;
         }
 
         public override Dictionary<string, object> ToKeyValuePairs()
