@@ -1893,13 +1893,12 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
 
             if (parcelID == UUID.Zero)
-            {
-                m_log.Warn ("[Land]: Failed to find parcel, " + request);
-            }
+                m_log.Warn("[RemoteParcelRequest]: Failed to find parcel, " + request);
 
             OSDMap res = new OSDMap();
             res["parcel_id"] = parcelID;
-            m_log.DebugFormat("[LAND] got parcelID {0}", parcelID);
+            if (parcelID != UUID.Zero)
+                m_log.DebugFormat("[RemoteParcelRequest]: Found parcelID {0}", parcelID);
 
             return OSDParser.SerializeLLSDXmlString(res);
         }

@@ -30,9 +30,8 @@ using System.IO;
 using System.Net;
 using OpenMetaverse;
 using OpenSim.Framework.Serialization;
-using OpenSim.Region.Framework.Scenes;
 
-namespace OpenSim.Region.CoreModules.World.Archiver
+namespace OpenSim.Framework.Serialization
 {
     /// <summary>
     /// Helper methods for archive manipulation
@@ -47,7 +46,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         /// <param name="uuid"></param>
         /// <param name="pos"></param>
         /// <returns></returns>
-        public static string CreateObjectFilename(SceneObjectGroup sog)
+        public static string CreateObjectFilename(ISceneEntity sog)
         {
             return ArchiveConstants.CreateOarObjectFilename(sog.Name, sog.UUID, sog.AbsolutePosition);
         }
@@ -59,7 +58,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         /// <param name="uuid"></param>
         /// <param name="pos"></param>
         /// <returns></returns>
-        public static string CreateObjectPath(SceneObjectGroup sog)
+        public static string CreateObjectPath(ISceneEntity sog)
         {
             return ArchiveConstants.CreateOarObjectPath(sog.Name, sog.UUID, sog.AbsolutePosition);
         }

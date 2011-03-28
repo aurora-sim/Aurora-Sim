@@ -7,6 +7,7 @@ using System.Text;
 using System.Reflection;
 using OpenSim.Framework;
 using OpenSim.Framework.Serialization;
+using OpenSim.Framework.Serialization.External;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Nini.Config;
@@ -57,6 +58,18 @@ namespace Aurora.Modules
 
         private void LoadAuroraArchive(string mod, string[] cmd)
         {
+            IScene scene = MainConsole.Instance.ConsoleScene;
+            if (scene == null)
+            {
+                m_log.Warn("Select a region first.");
+                return;
+            }
+
+            string fileName = MainConsole.Instance.CmdPrompt("What file name should we load?", scene.RegionInfo.RegionName + ".backup");
+
+            GZipStream m_loadStream = new GZipStream(ArchiveHelpers.GetStream(fileName), CompressionMode.Decompress);
+            TarArchiveReader reader = new TarArchiveReader(m_loadStream);
+            
         }
 
         private void SaveAuroraArchive(string mod, string[] cmd)

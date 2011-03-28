@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using OpenMetaverse;
 using Aurora.DataManager;
 using Aurora.Framework;
 using OpenSim.Framework;
+using log4net;
 using Nini.Config;
 using OpenMetaverse.StructuredData;
 using OpenSim.Services.Interfaces;
@@ -15,13 +17,17 @@ namespace Aurora.Services.DataService
 {
     public class LocalDirectoryServiceConnector : IDirectoryServiceConnector
     {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         private IGenericData GD = null;
         private int minTimeBeforeNextParcelUpdate = 60;
         private Dictionary<UUID, int> timeBeforeNextUpdate = new Dictionary<UUID, int>();
+        private IRegistryCore m_registry;
 
         public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
             GD = GenericData;
+            m_registry = simBase;
 
             if (source.Configs[Name] != null)
             {
@@ -155,9 +161,16 @@ namespace Aurora.Services.DataService
         public LandData GetParcelInfo(UUID InfoUUID)
         {
             //Split the InfoUUID so that we get the regions, we'll check for positions in a bit
+            uint RegionX, RegionY;
+            Util.FakeParcelIDToGlobalPosition(InfoUUID, out RegionX, out RegionY);
+            OpenSim.Services.Interfaces.GridRegion r = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)RegionX, (int)RegionY);
+            if (r == null)
+            {
+                m_log.Warn("[DirectoryService]: Could not find parcel for ParcelID: " + InfoUUID);
+                return null;
+            }
             //Get info about a specific parcel somewhere in the metaverse
-            string query = " InfoUUID LIKE '%" + InfoUUID.ToString().Remove(18, 18) + "%'";
-            List<string> Query = GD.Query(query, "searchparcel", "*");
+            List<string> Query = GD.Query("RegionID", r.RegionID, "searchparcel", "*");
             //Cant find it, return
             if (Query.Count == 0)
                 return null;
@@ -207,6 +220,8 @@ namespace Aurora.Services.DataService
                     break;
                 }
             }
+            if (LandData == null && Lands.Count != 0)
+                LandData = Lands[0];
             return LandData;
         }
 
