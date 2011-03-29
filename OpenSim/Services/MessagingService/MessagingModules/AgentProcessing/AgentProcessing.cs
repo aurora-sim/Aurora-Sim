@@ -282,9 +282,11 @@ namespace OpenSim.Services.MessagingService
                         if (usersInformed.Contains(regionClientCaps.AgentID)) //Only inform agents once
                             continue;
 
+                        AgentCircuitData regionCircuitData = regionClientCaps.CircuitData.Copy();
+                        regionCircuitData.child = true; //Fix child agent status
                         string reason; //Tell the region about it
                         if (!InformClientOfNeighbor(regionClientCaps.AgentID, requestingRegion.RegionHandle,
-                            regionClientCaps.CircuitData.Copy(), requestingRegion, (uint)TeleportFlags.Default, null, out reason))
+                            regionCircuitData, requestingRegion, (uint)TeleportFlags.Default, null, out reason))
                             informed = false;
                         else
                             usersInformed.Add(regionClientCaps.AgentID);
@@ -319,7 +321,9 @@ namespace OpenSim.Services.MessagingService
                     if (neighbor.RegionHandle != requestingRegion)
                     {
                         string reason;
-                        if (!InformClientOfNeighbor(AgentID, requestingRegion, circuit.Copy(), neighbor,
+                        AgentCircuitData regionCircuitData = circuit.Copy();
+                        regionCircuitData.child = true; //Fix child agent status
+                        if (!InformClientOfNeighbor(AgentID, requestingRegion, regionCircuitData, neighbor,
                             (uint)TeleportFlags.Default, null, out reason))
                             informed = false;
                     }
@@ -467,6 +471,7 @@ namespace OpenSim.Services.MessagingService
                     {
                         destination = GridService.GetRegionByUUID(UUID.Zero, destination.RegionID);
                         //Inform the client of the neighbor if needed
+                        circuit.child = false; //Force child status to the correct type
                         if (!InformClientOfNeighbor(AgentID, requestingRegion, circuit, destination, TeleportFlags,
                             agentData, out reason))
                         {
