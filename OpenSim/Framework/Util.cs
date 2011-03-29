@@ -1716,7 +1716,7 @@ namespace OpenSim.Framework
             {
                 result += commandParams[i] + " ";
             }
-
+            result = result.Remove(result.Length - 1, 1); //Remove the trailing space
             return result;
         }
 
