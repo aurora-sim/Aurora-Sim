@@ -240,29 +240,26 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             return null;
         }
 
-        public void RemoveCompletedRequest(UUID reqid)
+        public void RemoveCompletedRequest(IServiceRequest reqid)
         {
+            HttpRequestClass req = (HttpRequestClass)reqid;
             lock (HttpListLock)
             {
                 List<HttpRequestClass> tmpReqs;
-                UUID ItemID;
-                if (m_reqID2itemID.TryGetValue(reqid, out ItemID))
+                if (m_pendingRequests.TryGetValue(req.ItemID, out tmpReqs))
                 {
-                    if (m_pendingRequests.TryGetValue(ItemID, out tmpReqs))
+                    for (int i = 0; i < tmpReqs.Count; i++)
                     {
-                        for(int i = 0; i < tmpReqs.Count; i++)
+                        if (tmpReqs[i].ReqID == req.ReqID)
                         {
-                            if (tmpReqs[i].ReqID == reqid)
-                            {
-                                tmpReqs[i].Stop();
-                                tmpReqs.RemoveAt(i);
-                            }
+                            tmpReqs[i].Stop();
+                            tmpReqs.RemoveAt(i);
                         }
-                        if (tmpReqs.Count == 1)
-                            m_pendingRequests.Remove(ItemID);
-                        else
-                            m_pendingRequests[ItemID] = tmpReqs;
                     }
+                    if (tmpReqs.Count == 1)
+                        m_pendingRequests.Remove(req.ItemID);
+                    else
+                        m_pendingRequests[req.ItemID] = tmpReqs;
                 }
             }
         }

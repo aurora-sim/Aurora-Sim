@@ -44,6 +44,6 @@ namespace OpenSim.Region.Framework.Interfaces
         UUID StartHttpRequest(UUID primID, UUID itemID, string url, List<string> parameters, Dictionary<string, string> headers, string body);
         void StopHttpRequest(UUID m_primID, UUID m_itemID);
         IServiceRequest GetNextCompletedRequest();
-        void RemoveCompletedRequest(UUID id);
+        void RemoveCompletedRequest(IServiceRequest id);
     }
 }

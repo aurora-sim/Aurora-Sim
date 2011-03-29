@@ -72,7 +72,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
                     // Deliver data to prim's remote_data handler
 
-                    iHttpReq.RemoveCompletedRequest (info.ReqID);
+                    iHttpReq.RemoveCompletedRequest (info);
 
                     object[] resobj = new object[]
                 {
