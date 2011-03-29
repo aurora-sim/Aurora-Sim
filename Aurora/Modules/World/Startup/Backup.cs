@@ -819,6 +819,17 @@ namespace Aurora.Modules
                 }
 
                 m_log.Info("[Archive]: Finished writing parcels to archive");
+                m_log.Info("[Archive]: Writing terrain to archive");
+
+                writer.WriteDir("terrain");
+
+                ITerrainChannel terrain = scene.RequestModuleInterface<ITerrainChannel>();
+                if (terrain != null)
+                {
+                    writer.WriteFile("terrain/" + scene.RegionInfo.RegionID.ToString(), ShortToByte(terrain.GetSerialised(scene)));
+                }
+
+                m_log.Info("[Archive]: Finished writing terrain to archive");
                 m_log.Info("[Archive]: Writing entities to archive");
                 ISceneEntity[] entities = scene.Entities.GetEntities();
                 //Get all entities, then start writing them to the database
@@ -855,6 +866,18 @@ namespace Aurora.Modules
                     m_isArchiving = false; //We're done if all the assets were found
 
                 m_log.Info("[Archive]: Finished writing assets for entities to archive");
+            }
+
+            private byte[] ShortToByte(short[] ter)
+            {
+                byte[] heightmap = new byte[ter.Length * sizeof(short)];
+                int ii = 0;
+                for (int i = 0; i < ter.Length; i++)
+                {
+                    Utils.Int16ToBytes(ter[i], heightmap, ii);
+                    ii += 2;
+                }
+                return heightmap;
             }
 
             private void RetrievedAsset(string id, Object sender, AssetBase asset)
