@@ -115,13 +115,15 @@ namespace Aurora.Services.DataService
 
         public bool StoreFolder (InventoryFolderBase folder)
         {
-            return GD.Replace(m_foldersrealm, new string[6]{"folderName","type","version","folderID","agentID","parentFolderID"},
+            GD.Delete(m_foldersrealm, new string[1] { "folderID" }, new object[1] { folder.ID });
+            return GD.Insert(m_foldersrealm, new string[6]{"folderName","type","version","folderID","agentID","parentFolderID"},
                 new object[6]{folder.Name, folder.Type, folder.Version, folder.ID, folder.Owner, folder.ParentID});
         }
 
         public bool StoreItem (InventoryItemBase item)
         {
-            return GD.Replace (m_itemsrealm, new string[20]{"assetID","assetType","inventoryName","inventoryDescription",
+            GD.Delete(m_itemsrealm, new string[1] { "m_itemsrealm" }, new object[1] { item.ID });
+            return GD.Insert (m_itemsrealm, new string[20]{"assetID","assetType","inventoryName","inventoryDescription",
                 "inventoryNextPermissions","inventoryCurrentPermissions","invType","creatorID","inventoryBasePermissions",
                 "inventoryEveryOnePermissions","salePrice","saleType","creationDate","groupID","groupOwned",
                 "flags","inventoryID","avatarID","parentFolderID","inventoryGroupPermissions"}, new object[20]{
