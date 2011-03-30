@@ -117,9 +117,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
 
         public ITerrainChannel LoadStream (Stream s, IScene scene)
         {
-            TerrainChannel retval = new TerrainChannel (true, scene);
-
             BinaryReader bs = new BinaryReader(s);
+            int size = (int)System.Math.Sqrt(s.Length);
+            size = size > scene.RegionInfo.RegionSizeX ? scene.RegionInfo.RegionSizeX : size; //Chose the smaller of the two
+            TerrainChannel retval = new TerrainChannel(size, size, scene);
             int y;
             for (y = 0; y < retval.Height; y++)
             {
