@@ -122,7 +122,7 @@ namespace Aurora.Services.DataService
 
         public bool StoreItem (InventoryItemBase item)
         {
-            GD.Delete(m_itemsrealm, new string[1] { "m_itemsrealm" }, new object[1] { item.ID });
+            GD.Delete(m_itemsrealm, new string[1] { "inventoryID" }, new object[1] { item.ID });
             return GD.Insert (m_itemsrealm, new string[20]{"assetID","assetType","inventoryName","inventoryDescription",
                 "inventoryNextPermissions","inventoryCurrentPermissions","invType","creatorID","inventoryBasePermissions",
                 "inventoryEveryOnePermissions","salePrice","saleType","creationDate","groupID","groupOwned",
