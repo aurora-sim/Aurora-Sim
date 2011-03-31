@@ -402,7 +402,7 @@ namespace OpenSim.Framework
 
         void ScheduleUpdate (PrimUpdateFlags primUpdateFlags);
 
-        void ScheduleFullUpdate(PrimUpdateFlags updateFlags);
+        void ScheduleUpdate(PrimUpdateFlags updateFlags);
 
         string SitAnimation { get; set; }
 
