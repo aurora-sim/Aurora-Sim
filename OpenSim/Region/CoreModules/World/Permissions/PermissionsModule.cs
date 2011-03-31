@@ -2037,7 +2037,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 //                "[PERMISSIONS]: Checking CanControlPrimMedia for {0} on {1} face {2} with control permissions {3}", 
 //                agentID, primID, face, me.ControlPermissions);
             
-            return GenericObjectPermission(part.UUID, agentID, me.ControlPermissions);
+            return GenericObjectPermission(part.UUID, agentID, true);
         }
         
         private bool CanInteractWithPrimMedia(UUID agentID, UUID primID, int face)
