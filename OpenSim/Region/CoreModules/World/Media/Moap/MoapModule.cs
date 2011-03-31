@@ -201,22 +201,47 @@ namespace OpenSim.Region.CoreModules.Media.Moap
         public void SetMediaEntry (ISceneChildEntity part, int face, MediaEntry me)
         {
             CheckFaceParam(part, face);
-            
+
             if (null == part.Shape.Media)
-                part.Shape.Media = new PrimitiveBaseShape.MediaList(new MediaEntry[part.GetNumberOfSides()]);
-                
+            {
+                if (me == null)
+                    return;
+                else
+                    part.Shape.Media = new PrimitiveBaseShape.MediaList(new MediaEntry[part.GetNumberOfSides()]);
+            }
+
             lock (part.Shape.Media)
                 part.Shape.Media[face] = me;
-            
+
             UpdateMediaUrl(part, UUID.Zero);
-            part.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
+
+            SetPartMediaFlags(part, face, me != null);
+
+            part.ScheduleFullUpdate();
             part.TriggerScriptChangedEvent(Changed.MEDIA);
         }
 
         public void ClearMediaEntry (ISceneChildEntity part, int face)
         {
             SetMediaEntry(part, face, null);
-        }
+       }
+
+       /// <summary>
+       /// Set the media flags on the texture face of the given part.
+       /// </summary>
+       /// <remarks>
+       /// The fact that we need a separate function to do what should be a simple one line operation is BUTT UGLY.
+       /// </remarks>
+       /// <param name="part"></param>
+       /// <param name="face"></param>
+       /// <param name="flag"></param>
+       protected void SetPartMediaFlags(ISceneChildEntity part, int face, bool flag)
+       {
+           Primitive.TextureEntry te = part.Shape.Textures;
+           Primitive.TextureEntryFace teFace = te.CreateFace((uint)face);
+           teFace.MediaFlags = flag;
+           part.Shape.Textures = te;
+       }
         
         /// <summary>
         /// Sets or gets per face media textures.
@@ -342,10 +367,7 @@ namespace OpenSim.Region.CoreModules.Media.Moap
                         // FIXME: Race condition here since some other texture entry manipulator may overwrite/get
                         // overwritten.  Unfortunately, PrimitiveBaseShape does not allow us to change texture entry
                         // directly.
-                        Primitive.TextureEntry te = part.Shape.Textures;
-                        Primitive.TextureEntryFace face = te.CreateFace((uint)i);
-                        face.MediaFlags = true;
-                        part.Shape.Textures = te;
+                        SetPartMediaFlags(part, i, true);
 //                        m_log.DebugFormat(
 //                            "[MOAP]: Media flags for face {0} is {1}", 
 //                            i, part.Shape.Textures.FaceTextures[i].MediaFlags);
@@ -375,8 +397,7 @@ namespace OpenSim.Region.CoreModules.Media.Moap
                             if (null == media[i])
                                 continue;
                             
-                            Primitive.TextureEntryFace face = te.CreateFace((uint)i);
-                            face.MediaFlags = true;
+                            SetPartMediaFlags(part, i, true);
     
     //                        m_log.DebugFormat(
     //                            "[MOAP]: Media flags for face {0} is {1}", 
