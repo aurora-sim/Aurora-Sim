@@ -402,6 +402,8 @@ namespace OpenSim.Framework
 
         void ScheduleUpdate (PrimUpdateFlags primUpdateFlags);
 
+        void ScheduleFullUpdate(PrimUpdateFlags updateFlags);
+
         string SitAnimation { get; set; }
 
         Vector3 SitTargetPosition { get; set; }
