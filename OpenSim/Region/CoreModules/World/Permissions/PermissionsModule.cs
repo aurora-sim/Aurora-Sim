@@ -2013,7 +2013,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                     return false;
             return true;
         }
-		private bool CanControlPrimMedia(UUID agentID, UUID primID, int face)
+	
+        private bool CanControlPrimMedia(UUID agentID, UUID primID, int face)
         {
 //            m_log.DebugFormat(
 //                "[PERMISSONS]: Performing CanControlPrimMedia check with agentID {0}, primID {1}, face {2}",
@@ -2036,7 +2037,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 //                "[PERMISSIONS]: Checking CanControlPrimMedia for {0} on {1} face {2} with control permissions {3}", 
 //                agentID, primID, face, me.ControlPermissions);
             
-            return GenericPrimMediaPermission(part, agentID, me.ControlPermissions);
+            return GenericObjectPermission(part, agentID, me.ControlPermissions);
         }
         
         private bool CanInteractWithPrimMedia(UUID agentID, UUID primID, int face)
