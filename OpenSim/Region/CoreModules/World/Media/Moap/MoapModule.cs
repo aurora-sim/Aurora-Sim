@@ -217,7 +217,7 @@ namespace OpenSim.Region.CoreModules.Media.Moap
 
             SetPartMediaFlags(part, face, me != null);
 
-            part.ScheduleFullUpdate();
+            part.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
             part.TriggerScriptChangedEvent(Changed.MEDIA);
         }
 
