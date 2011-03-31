@@ -49,11 +49,15 @@ namespace OpenSim.Services
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private ISimulationService m_SimulationService;
+        private bool m_allowForeignIncomingObjects = false;
 
         public ObjectHandler() { }
 
-        public ObjectHandler(ISimulationService sim)
+        public ObjectHandler(ISimulationService sim, IConfigSource source)
         {
+            IConfig simulationConfig = source.Configs["Handlers"];
+            if(simulationConfig != null)
+                 m_allowForeignIncomingObjects = simulationConfig.GetBoolean("AllowIncomingForeignObjects", m_allowForeignIncomingObjects );
             m_SimulationService = sim;
         }
 
@@ -73,9 +77,9 @@ namespace OpenSim.Services
             UUID objectID;
             UUID regionID;
             string action;
-            if (!WebUtils.GetParams((string)request["uri"], out objectID, out regionID, out action))
+            if (!WebUtils.GetParams((string)request["uri"], out objectID, out regionID, out action) || m_allowForeignIncomingObjects )
             {
-                m_log.InfoFormat("[OBJECT HANDLER]: Invalid parameters for object message {0}", request["uri"]);
+                //m_log.InfoFormat("[OBJECT HANDLER]: Invalid parameters for object message {0}", request["uri"]);
                 responsedata["int_response_code"] = 404;
                 responsedata["str_response_string"] = "false";
 
