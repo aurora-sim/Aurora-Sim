@@ -11721,7 +11721,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     list.Add(result.Normal);
             }
 
-            list.Add(0); //The status code, either 0, RCERR_SIM_PERF_LOW, or RCERR_CAST_TIME_EXCEEDED
+            list.Add(results.Count); //The status code, either the # of contacts, RCERR_SIM_PERF_LOW, or RCERR_CAST_TIME_EXCEEDED
 
             return list;
         }

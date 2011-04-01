@@ -604,19 +604,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger PASS_ALWAYS = 1;
         public static readonly LSLInteger PASS_NEVER = 2;
 
-        public static readonly LSLInteger RC_REJECT_TYPES = 0;
-        public static readonly LSLInteger RC_DATA_FLAGS = 1;
-        public static readonly LSLInteger RC_MAX_HITS = 2;
-        public static readonly LSLInteger RC_DETECT_PHANTOM = 3;
+        public static readonly LSLInteger RC_REJECT_TYPES = 1;
+        public static readonly LSLInteger RC_DATA_FLAGS = 2;
+        public static readonly LSLInteger RC_MAX_HITS = 3;
+        public static readonly LSLInteger RC_DETECT_PHANTOM = 4;
 
-        public static readonly LSLInteger RC_REJECT_AGENTS = 0;
-        public static readonly LSLInteger RC_REJECT_PHYSICAL = 1;
-        public static readonly LSLInteger RC_REJECT_NONPHYSICAL = 2;
-        public static readonly LSLInteger RC_REJECT_LAND = 3;
+        public static readonly LSLInteger RC_REJECT_AGENTS = 1;
+        public static readonly LSLInteger RC_REJECT_PHYSICAL = 2;
+        public static readonly LSLInteger RC_REJECT_NONPHYSICAL = 3;
+        public static readonly LSLInteger RC_REJECT_LAND = 4;
 
-        public static readonly LSLInteger RC_GET_NORMAL = 0;
-        public static readonly LSLInteger RC_GET_ROOT_KEY = 1;
-        public static readonly LSLInteger RC_GET_LINK_NUM = 2;
+        public static readonly LSLInteger RC_GET_NORMAL = 1;
+        public static readonly LSLInteger RC_GET_ROOT_KEY = 2;
+        public static readonly LSLInteger RC_GET_LINK_NUM = 3;
 
         public static readonly LSLInteger RCERR_CAST_TIME_EXCEEDED = 1;
     }
