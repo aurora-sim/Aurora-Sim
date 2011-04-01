@@ -11696,7 +11696,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 distance = 0.001;
             Vector3 posToCheck = startvector;
             ITerrainChannel channel = World.RequestModuleInterface<ITerrainChannel>();
-            List<IScenePresence> presences = World.GetScenePresences();
+            List<IScenePresence> presences = World.Entities.GetPresences(startvector, (float)distance);
             bool checkTerrain = true;
             for (float i = 0; i <= distance; i += 0.1f)
             {
@@ -11711,8 +11711,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     results.Add(result);
                     checkTerrain = false;
                 }
-                foreach (IScenePresence sp in presences)
+                for(int presenceCount = 0; i < presences.Count; i++)
                 {
+                    IScenePresence sp = presences[presenceCount];
                     if (sp.AbsolutePosition.ApproxEquals(posToCheck, sp.PhysicsActor.Size.X * 2))
                     {
                         ContactResult result = new ContactResult();
@@ -11721,6 +11722,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         result.Normal = Vector3.Zero;
                         result.Pos = posToCheck;
                         results.Add(result);
+                        presences.RemoveAt(presenceCount);
+                        i--; //Reset its position since we removed this one
                     }
                 }
             }

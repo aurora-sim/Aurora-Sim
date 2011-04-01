@@ -136,15 +136,30 @@ namespace OpenSim.Framework
             }
         }
 
-        public IScenePresence[] GetPresences ()
+        public IScenePresence[] GetPresences()
         {
             lock (m_presenceEntities)
             {
-                return new List<IScenePresence> (m_presenceEntities.Values).ToArray ();
+                return new List<IScenePresence>(m_presenceEntities.Values).ToArray();
             }
         }
 
-        public ISceneEntity[] GetEntities ()
+        public IScenePresence[] GetPresences(Vector3 pos, float radius)
+        {
+            lock (m_presenceEntities)
+            {
+                List<IScenePresence> tmp = new List<IScenePresence>(m_presenceEntities.Count);
+
+                foreach(IScenePresence entity in m_presenceEntities.Values)
+                {
+                    if ((entity.AbsolutePosition - pos).LengthSquared() < radius * radius)
+                        tmp.Add(entity);
+                }
+                return tmp.ToArray();
+            }
+        }
+
+        public ISceneEntity[] GetEntities()
         {
             lock (m_objectEntities)
             {
