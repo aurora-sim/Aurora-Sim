@@ -11691,16 +11691,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             LSL_List list = new LSL_List();
             List<ContactResult> results = World.PhysicsScene.RaycastWorld(startvector, dir, dir.Length(), count);
 
-            double distance = Util.GetFlatDistanceTo(startvector, endvector);
+            double distance = Util.GetDistanceTo(startvector, endvector);
             if (distance == 0)
                 distance = 0.001;
             Vector3 posToCheck = startvector;
             ITerrainChannel channel = World.RequestModuleInterface<ITerrainChannel>();
             List<IScenePresence> presences = World.GetScenePresences();
+            bool checkTerrain = true;
             for (float i = 0; i <= distance; i += 0.1f)
             {
                 posToCheck += (dir * (i / (float)distance));
-                if (channel[(int)(posToCheck.X + startvector.X), (int)(posToCheck.Y + startvector.Y)] < posToCheck.Z)
+                if (checkTerrain && channel[(int)(posToCheck.X + startvector.X), (int)(posToCheck.Y + startvector.Y)] < posToCheck.Z)
                 {
                     ContactResult result = new ContactResult();
                     result.ConsumerID = 0;
@@ -11708,10 +11709,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     result.Normal = Vector3.Zero;
                     result.Pos = posToCheck;
                     results.Add(result);
-                    break;
+                    checkTerrain = false;
                 }
                 foreach (IScenePresence sp in presences)
                 {
+                    if (sp.AbsolutePosition.ApproxEquals(posToCheck, sp.PhysicsActor.Size.X * 2))
+                    {
+                        ContactResult result = new ContactResult();
+                        result.ConsumerID = sp.LocalId;
+                        result.Depth = 0;
+                        result.Normal = Vector3.Zero;
+                        result.Pos = posToCheck;
+                        results.Add(result);
+                    }
                 }
             }
             foreach (ContactResult result in results)
