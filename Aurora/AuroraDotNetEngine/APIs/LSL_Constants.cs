@@ -613,5 +613,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger RC_REJECT_PHYSICAL = 1;
         public static readonly LSLInteger RC_REJECT_NONPHYSICAL = 2;
         public static readonly LSLInteger RC_REJECT_LAND = 3;
+
+        public static readonly LSLInteger RC_GET_NORMAL = 0;
+        public static readonly LSLInteger RC_GET_ROOT_KEY = 1;
+        public static readonly LSLInteger RC_GET_LINK_NUM = 2;
     }
 }
