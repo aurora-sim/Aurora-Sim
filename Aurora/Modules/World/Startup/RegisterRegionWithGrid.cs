@@ -26,7 +26,7 @@ namespace Aurora.Modules
     public class RegisterRegionWithGridModule : ISharedRegionStartupModule, IGridRegisterModule
     {
         #region Declares
-
+        private IConfigSource m_config;
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private List<Scene> m_scenes = new List<Scene>();
         private Dictionary<string, string> genericInfo = new Dictionary<string, string>();
@@ -40,6 +40,7 @@ namespace Aurora.Modules
         {
             m_scenes.Add(scene);
             //Register the interface
+            m_config = source;
             scene.RegisterModuleInterface<IGridRegisterModule>(this);
             openSimBase.EventManager.OnGenericEvent += OnGenericEvent;
             //Now register our region with the grid
