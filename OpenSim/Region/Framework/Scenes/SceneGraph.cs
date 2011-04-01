@@ -395,6 +395,7 @@ namespace OpenSim.Region.Framework.Scenes
         public List<EntityIntersection> GetIntersectingPrims(Ray hray, bool frontFacesOnly, bool faceCenters)
         {
             // Primitive Ray Tracing
+            float closestDistance = 280f;
             List<EntityIntersection> result = new List<EntityIntersection>();
             ISceneEntity[] EntityList = Entities.GetEntities (hray.Origin, closestDistance);
             foreach (ISceneEntity ent in EntityList)
