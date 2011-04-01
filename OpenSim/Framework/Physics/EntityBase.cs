@@ -152,7 +152,7 @@ namespace OpenSim.Framework
         public Vector3 AAfaceNormal = new Vector3(0, 0, 0);
         public int face = -1;
         public bool HitTF = false;
-        public ISceneChildEntity obj;
+        public IEntity obj;
         public float distance = 0;
 
         public EntityIntersection()

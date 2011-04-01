@@ -669,6 +669,7 @@ namespace OpenSim.Framework
         uint AllocateLocalId ();
         int LinkSetSorter (ISceneChildEntity a, ISceneChildEntity b);
 
+        List<EntityIntersection> GetIntersectingPrims(Ray hray, float length, int count, bool frontFacesOnly, bool faceCenters, bool getAvatars, bool getLand, bool getPrims);
         void RegisterEntityCreatorModule (IEntityCreator entityCreator);
     }
 
