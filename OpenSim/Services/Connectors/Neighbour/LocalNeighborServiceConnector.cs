@@ -201,8 +201,8 @@ namespace OpenSim.Services.Connectors
                     if (!m_informedRegions.Contains(thisSceneInfo))
                     {
                         //Now check to see whether the incoming region should be a neighbor of this Scene
-                        if (!IsOutsideView(s.RegionInfo.RegionLocX, incomingRegion.RegionLocX,
-                            s.RegionInfo.RegionLocY, incomingRegion.RegionLocY))
+                        if (!IsOutsideView(s.RegionInfo.RegionLocX, incomingRegion.RegionLocX, s.RegionInfo.RegionSizeX, incomingRegion.RegionSizeX,
+                            s.RegionInfo.RegionLocY, incomingRegion.RegionLocY, s.RegionInfo.RegionSizeY, incomingRegion.RegionSizeY))
                         {
                             //Fix this regions neighbors now that it has a new one
                             if (m_KnownNeighbors.ContainsKey(s.RegionInfo.RegionID))
@@ -255,8 +255,13 @@ namespace OpenSim.Services.Connectors
         /// <returns></returns>
         private List<GridRegion> FindNewNeighbors(GridRegion region)
         {
-            int startX = (int)(region.RegionLocX - RegionViewSize);
-            int startY = (int)(region.RegionLocY - RegionViewSize);
+            int startX = (int)(region.RegionLocX - 8192); //Give 8196 by default so that we pick up neighbors next to us
+            int startY = (int)(region.RegionLocY - 8192);
+            if (m_gridService.MaxRegionSize != 0)
+            {
+                startX = (int)(region.RegionLocX - m_gridService.MaxRegionSize);
+                startY = (int)(region.RegionLocY - m_gridService.MaxRegionSize);
+            }
 
             //-1 so that we don't get size (256) + viewsize (256) and get a region two 256 blocks over
             int endX = ((int)region.RegionLocX + RegionViewSize + (int)region.RegionSizeX - 1);
@@ -273,7 +278,17 @@ namespace OpenSim.Services.Connectors
                         neighbors.Add(gregion);
                 }
             }
-            neighbors.RemoveAll(delegate(GridRegion r) { return r.RegionID == region.RegionID; });
+            neighbors.RemoveAll(delegate(GridRegion r)
+            {
+                if (r.RegionID == region.RegionID)
+                    return true;
+
+                if (r.RegionLocX < (region.RegionLocX - RegionViewSize) ||
+                    r.RegionLocY < (region.RegionLocY - RegionViewSize)) //Check for regions outside of the boundry (created above when checking for large regions next to us)
+                    return false;
+
+                return false;
+            });
             return neighbors;
         }
 
@@ -423,14 +438,34 @@ namespace OpenSim.Services.Connectors
         /// <param name="y">old Y pos (in meters)</param>
         /// <param name="newRegionY">new Y pos (in meters)</param>
         /// <returns></returns>
-        public bool IsOutsideView(int oldRegionX, int newRegionX, int oldRegionY, int newRegionY)
+        public bool IsOutsideView(int oldRegionX, int newRegionX, int oldRegionSizeX, int newRegionSizeX, int oldRegionY, int newRegionY, int oldRegionSizeY, int newRegionSizeY)
         {
             Scene scene = FindSceneByPosition(newRegionX, newRegionY);
             //Check whether it is a local region
             if (!CloseLocalRegions && scene != null)
                 return false;
 
-            return ((Math.Abs(oldRegionX - newRegionX) > RegionViewSize) || (Math.Abs(oldRegionY - newRegionY) > RegionViewSize));
+            if (!CheckViewSize(oldRegionX, newRegionX, oldRegionSizeX, newRegionSizeX))
+                return false;
+            if (!CheckViewSize(oldRegionY, newRegionY, oldRegionSizeY, newRegionSizeY))
+                return false;
+
+            return true;
+        }
+
+        private bool CheckViewSize(int oldr, int newr, int oldSize, int newSize)
+        {
+            if (oldr - newr < 0)
+            {
+                if (!(Math.Abs(oldr - newr + newSize) <= RegionViewSize))
+                    return false;
+            }
+            else
+            {
+                if (!(Math.Abs(newr - oldr + oldSize) <= RegionViewSize))
+                    return false;
+            }
+            return true;
         }
 
         public bool SendChatMessageToNeighbors(OSChatMessage message, ChatSourceType type, RegionInfo region)

@@ -62,6 +62,11 @@ namespace OpenSim.Services.GridService
         protected bool m_UseSessionID = true;
         protected int m_maxRegionSize = 0;
 
+        public int MaxRegionSize
+        {
+            get { return m_maxRegionSize; }
+        }
+
         public string Name
         {
             get { return GetType().Name; }

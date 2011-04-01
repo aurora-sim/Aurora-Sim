@@ -54,6 +54,11 @@ namespace OpenSim.Services.Connectors
             get { return this; }
         }
 
+        public int MaxRegionSize
+        {
+            get { return 0; }
+        }
+
         #region IGridService
 
         public virtual string RegisterRegion(GridRegion regionInfo, UUID SecureSessionID, out UUID SessionID)

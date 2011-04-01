@@ -60,6 +60,11 @@ namespace OpenSim.Services.Connectors.SimianGrid
         private string m_serverUrl = String.Empty;
         private Dictionary<UUID, Scene> m_scenes = new Dictionary<UUID, Scene>();
 
+        public int MaxRegionSize
+        {
+            get { return 0; }
+        }
+
         #region IService Members
 
         public virtual IGridService InnerService

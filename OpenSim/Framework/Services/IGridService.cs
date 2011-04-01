@@ -38,6 +38,12 @@ namespace OpenSim.Services.Interfaces
     public interface IGridService
     {
         IGridService InnerService { get; }
+
+        /// <summary>
+        /// The max size a region can be (meters)
+        /// </summary>
+        int MaxRegionSize { get; }
+
         /// <summary>
         /// Register a region with the grid service.
         /// </summary>

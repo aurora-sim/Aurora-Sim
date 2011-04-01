@@ -60,6 +60,11 @@ namespace Aurora.Modules
 
         #region IGridService Members
 
+        public int MaxRegionSize
+        {
+            get { return m_localService.MaxRegionSize; }
+        }
+
         public string RegisterRegion(GridRegion regionInfos, UUID oldSessionID, out UUID SessionID)
         {
             return m_localService.RegisterRegion(regionInfos, oldSessionID, out SessionID);

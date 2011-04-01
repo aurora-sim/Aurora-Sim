@@ -520,8 +520,8 @@ namespace OpenSim.Services.MessagingService
                         if (service != null)
                         {
                             //Close the agent at the place we just created if it isn't a neighbor
-                            if (service.IsOutsideView(regionCaps.RegionX, destination.RegionLocX,
-                                regionCaps.RegionY, destination.RegionLocY))
+                            if (service.IsOutsideView(regionCaps.RegionX, destination.RegionLocX, regionCaps.Region.RegionSizeX, destination.RegionSizeX,
+                                regionCaps.RegionY, destination.RegionLocY, regionCaps.Region.RegionSizeY, destination.RegionSizeY))
                                 SimulationService.CloseAgent(destination, AgentID);
                         }
                         clientCaps.RemoveCAPS(destination.RegionHandle);
@@ -588,7 +588,7 @@ namespace OpenSim.Services.MessagingService
 
                     foreach (GridRegion region in NeighborsOfCurrentRegion)
                     {
-                        if (service.IsOutsideView(region.RegionLocX, destination.RegionLocX, region.RegionLocY, destination.RegionLocY))
+                        if (service.IsOutsideView(region.RegionLocX, destination.RegionLocX, region.RegionSizeX, destination.RegionSizeX, region.RegionLocY, destination.RegionLocY, region.RegionSizeY, destination.RegionSizeY))
                         {
                             byebyeRegions.Add(region);
                         }

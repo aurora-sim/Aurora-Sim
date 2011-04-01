@@ -114,7 +114,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="y">old Y pos (in meters)</param>
         /// <param name="newRegionY">new Y pos (in meters)</param>
         /// <returns></returns>
-        bool IsOutsideView(int x, int newRegionX, int y, int newRegionY);
+        bool IsOutsideView(int x, int newRegionX, int oldRegionSizeX, int newRegionSizeX, int y, int newRegionY, int oldRegionSizeY, int newRegionSizeY);
 
         /// <summary>
         /// Remove the local region from the Neighbor service
