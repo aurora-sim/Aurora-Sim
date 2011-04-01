@@ -149,6 +149,7 @@ namespace OpenSim.Framework
         void ChildAgentDataUpdate (AgentData agentData);
         void ChildAgentDataUpdate (AgentPosition cAgentData, int tRegionX, int tRegionY, int p, int p_2);
         void CopyTo (AgentData agent);
+        void MakeRootAgent(bool isFlying);
         void MakeChildAgent ();
         void Close ();
 
@@ -172,8 +173,6 @@ namespace OpenSim.Framework
         void StandUp ();
 
         void SetHeight (float p);
-
-        void MakeRootAgent (bool p);
     }
 
     public interface IAvatarAppearanceModule
@@ -336,6 +335,11 @@ namespace OpenSim.Framework
         void UpdatePermissions (OpenMetaverse.UUID agentID, byte field, uint localId, uint mask, byte set);
 
         float BSphereRadiusSQ { get; }
+
+        /// <summary>
+        /// Prepares the object to be serialized
+        /// </summary>
+        void BackupPreparation();
     }
 
     public interface IEntity

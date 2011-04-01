@@ -574,10 +574,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         }
                     }
                 }
-                
+
                 agent.MakeChildAgent();
+                
                 //Revolution- We already were in this region... we don't need updates about the avatars we already know about, right?
-                // now we have a child agent in this region. Request and send all interesting data about (root) agents in the sim
+                // OLD: now we have a child agent in this region. Request and send all interesting data about (root) agents in the sim
                 //agent.SendOtherAgentsAvatarDataToMe();
                 //agent.SendOtherAgentsAppearanceToMe();
 

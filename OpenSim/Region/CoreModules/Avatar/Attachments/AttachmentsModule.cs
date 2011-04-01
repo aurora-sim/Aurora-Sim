@@ -811,6 +811,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     return;
                 }
 
+                //let things like state saves and another async things be performed before we serialize the object
+                grp.BackupPreparation();
+
                 m_log.InfoFormat(
                     "[ATTACHMENTS MODULE]: Updating asset for attachment {0}, attachpoint {1}",
                     grp.UUID, grp.GetAttachmentPoint());

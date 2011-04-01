@@ -221,8 +221,15 @@ namespace OpenSim.Framework
 
         uint MaskEffectivePermissions();
 
+        /// <summary>
+        /// Applies the next owner permissions
+        /// </summary>
         void ApplyNextOwnerPermissions();
 
+        /// <summary>
+        /// Applies the given permissions (forced)
+        /// </summary>
+        /// <param name="perms"></param>
         void ApplyGodPermissions(uint perms);
 
         /// <summary>
@@ -236,6 +243,14 @@ namespace OpenSim.Framework
         /// <returns></returns>
         List<UUID> GetInventoryList();
 
+        /// <summary>
+        /// Has the inventory in this object changed since the last backup?
+        /// </summary>
         bool HasInventoryChanged { get; set; }
+
+        /// <summary>
+        /// Save all script state saves for this object
+        /// </summary>
+        void SaveScriptStateSaves();
     }
 }

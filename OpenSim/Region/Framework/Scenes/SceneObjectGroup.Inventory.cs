@@ -55,6 +55,17 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public void BackupPreparation()
+        {
+            lock (m_partsLock)
+            {
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                    part.Inventory.SaveScriptStateSaves();
+                }
+            }
+        }
+
         /// <summary>
         /// Start the scripts contained in all the prims in this group.
         /// </summary>

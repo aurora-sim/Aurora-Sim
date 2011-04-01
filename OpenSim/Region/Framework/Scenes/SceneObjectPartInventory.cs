@@ -944,6 +944,29 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public void SaveScriptStateSaves()
+        {
+            IScriptModule[] engines = m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>();
+            if (engines != null)
+            {
+                List<TaskInventoryItem> items = GetInventoryItems();
+                foreach (TaskInventoryItem item in items)
+                {
+                    if (item.Type == (int)InventoryType.LSL)
+                    {
+                        foreach (IScriptModule engine in engines)
+                        {
+                            if (engine != null)
+                            {
+                                //NOTE: We will need to save the prim if we do this
+                                engine.SaveStateSave(item.ItemID, m_part.UUID);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         public class InventoryStringBuilder
         {
             public StringBuilder BuildString = new StringBuilder();
