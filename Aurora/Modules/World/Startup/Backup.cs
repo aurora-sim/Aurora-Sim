@@ -700,13 +700,16 @@ namespace Aurora.Modules
                 //SceneObjectGroup backup_group = (SceneObjectGroup)grp.Copy(true);
                 //Do this we don't try to re-persist to the DB
                 //backup_group.m_isLoaded = false;
-                m_scene.SimulationDataService.StoreObject(grp, m_scene.RegionInfo.RegionID);
 
                 //Backup inventory, no lock as this isn't added ANYWHERE but here
+                //NOTE: THIS MUST BE BEFORE THE PRIM ITSELF SAVES
+                // Script state saves are saved by this, and they are a part of the prim, so we need to save this sooner than the prim itself
                 foreach (SceneObjectPart part in grp.ChildrenList)
                 {
                     part.Inventory.ProcessInventoryBackup();
                 }
+
+                m_scene.SimulationDataService.StoreObject(grp, m_scene.RegionInfo.RegionID);
 
                 m_log.DebugFormat(
                         "[BackupModule]: Stored {0}, {1} in {2} at {3} in {4} seconds",

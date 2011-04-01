@@ -169,7 +169,6 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                     }*/
                     HasInventoryChanged = true;
-                    m_part.ParentGroup.HasGroupChanged = true;
                 }
             }
         }
@@ -235,7 +234,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             HasInventoryChanged = true;
-            m_part.ParentGroup.HasGroupChanged = true;
             List<TaskInventoryItem> items = GetInventoryItems();
             foreach (TaskInventoryItem item in items)
             {
@@ -264,7 +262,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             HasInventoryChanged = true;
-            m_part.ParentGroup.HasGroupChanged = true;
             List<TaskInventoryItem> items = GetInventoryItems();
             foreach (TaskInventoryItem item in items)
             {
@@ -282,7 +279,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (LSLItems.Count == 0)
                 return;
             HasInventoryChanged = true;
-            m_part.ParentGroup.HasGroupChanged = true;
 
             bool SendUpdate = m_part.AddFlag(PrimFlags.Scripted);
             m_part.ParentGroup.Scene.EventManager.TriggerRezScripts(
@@ -336,7 +332,6 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (TaskInventoryItem item in scripts)
                 RemoveScriptInstance(item.ItemID, sceneObjectBeingDeleted);
             HasInventoryChanged = true;
-            m_part.ParentGroup.HasGroupChanged = true;
         }
 
         /// <summary>
@@ -369,7 +364,6 @@ namespace OpenSim.Region.Framework.Scenes
                     m_part.ScheduleUpdate (PrimUpdateFlags.PrimFlags); //We only need to send a compressed
             }
             HasInventoryChanged = true;
-            m_part.ParentGroup.HasGroupChanged = true;
         }
 
         /// <summary>
@@ -413,7 +407,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
             HasInventoryChanged = true;
-            m_part.ParentGroup.HasGroupChanged = true;
         }
 
         /// <summary>
@@ -576,7 +569,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_inventorySerial++;
             //m_inventorySerial += 2;
             HasInventoryChanged = true;
-            m_part.ParentGroup.HasGroupChanged = true;
         }
 
         /// <summary>
@@ -746,7 +738,6 @@ namespace OpenSim.Region.Framework.Scenes
                     m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
 
                 HasInventoryChanged = true;
-                m_part.ParentGroup.HasGroupChanged = true;
                 return true;
             }
             else
@@ -782,7 +773,6 @@ namespace OpenSim.Region.Framework.Scenes
                 m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
 
                 HasInventoryChanged = true;
-                m_part.ParentGroup.HasGroupChanged = true;
 
                 if (!ContainsScripts())
                 {
@@ -927,9 +917,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="datastore"></param>
         public void ProcessInventoryBackup()
         {
-            ISimulationDataStore datastore = ((Scene)m_part.ParentGroup.Scene).SimulationDataService;
             if (HasInventoryChanged)
             {
+                ISimulationDataStore datastore = ((Scene)m_part.ParentGroup.Scene).SimulationDataService;
                 HasInventoryChanged = false;
                 List<TaskInventoryItem> items = GetInventoryItems ();
                 datastore.StorePrimInventory (m_part.UUID, items);
@@ -944,6 +934,7 @@ namespace OpenSim.Region.Framework.Scenes
                             {
                                 if (engine != null)
                                 {
+                                    //NOTE: We will need to save the prim if we do this
                                     engine.SaveStateSave (item.ItemID, m_part.UUID);
                                 }
                             }
