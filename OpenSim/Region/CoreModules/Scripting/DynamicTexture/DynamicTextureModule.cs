@@ -415,11 +415,11 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                 ManagedImage managedImage;
                 Image image;
 
-                if (OpenJPEG.DecodeToImage(frontImage, out managedImage, out image))
+                if (OpenJPEGDecoder.DecodeToImage(frontImage, out managedImage, out image))
                 {
                     Bitmap image1 = new Bitmap(image);
 
-                    if (OpenJPEG.DecodeToImage(backImage, out managedImage, out image))
+                    if (OpenJPEGDecoder.DecodeToImage(backImage, out managedImage, out image))
                     {
                         Bitmap image2 = new Bitmap(image);
 

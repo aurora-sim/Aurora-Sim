@@ -412,7 +412,7 @@ namespace OpenSim.Region.Physics.Meshing
                         try
                         {
                             OpenMetaverse.Imaging.ManagedImage unusedData;
-                            OpenMetaverse.Imaging.OpenJPEG.DecodeToImage(primShape.SculptData, out unusedData, out idata);
+                            OpenJPEGDecoder.DecodeToImage(primShape.SculptData, out unusedData, out idata);
                             unusedData = null;
 
                             //idata = CSJ2K.J2kImage.FromBytes(primShape.SculptData);

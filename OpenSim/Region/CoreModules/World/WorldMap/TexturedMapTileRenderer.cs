@@ -175,7 +175,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 {
                     if (asset.Data != null)
                     {
-                        if (OpenJPEG.DecodeToImage(asset.Data, out managedImage, out image))
+                        if (OpenJPEGDecoder.DecodeToImage(asset.Data, out managedImage, out image))
                         {
                             managedImage = null;
                             return new Bitmap(image);

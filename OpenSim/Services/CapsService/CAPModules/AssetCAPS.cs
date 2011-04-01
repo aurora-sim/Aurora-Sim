@@ -308,7 +308,7 @@ namespace OpenSim.Services.CapsService
                 imgstream = new MemoryStream();
 
                 // Decode image to System.Drawing.Image
-                if (OpenJPEG.DecodeToImage(texture.Data, out managedImage, out image))
+                if (OpenJPEGDecoder.DecodeToImage(texture.Data, out managedImage, out image))
                 {
                     // Save to bitmap
                     mTexture = new Bitmap(image);

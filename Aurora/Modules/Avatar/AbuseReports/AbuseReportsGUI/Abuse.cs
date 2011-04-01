@@ -134,7 +134,7 @@ namespace Aurora.Modules.AbuseReportsGUI
             ManagedImage managedImage;
             Image image;
 
-            if (asset != null && OpenJPEG.DecodeToImage(asset.Data, out managedImage, out image))
+            if (asset != null && OpenJPEGDecoder.DecodeToImage(asset.Data, out managedImage, out image))
                 return image;
             else
                 return new Bitmap(1, 1);
