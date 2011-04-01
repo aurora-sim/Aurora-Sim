@@ -11696,7 +11696,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 distance = 0.001;
             Vector3 posToCheck = startvector;
             ITerrainChannel channel = World.RequestModuleInterface<ITerrainChannel>();
-            List<IScenePresence> presences = World.Entities.GetPresences(startvector, (float)distance);
+            List<IScenePresence> presences = new List<IScenePresence>(World.Entities.GetPresences(startvector, (float)distance));
             bool checkTerrain = true;
             for (float i = 0; i <= distance; i += 0.1f)
             {
