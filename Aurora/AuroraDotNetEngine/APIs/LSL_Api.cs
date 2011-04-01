@@ -11660,6 +11660,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             Vector3 dir = new Vector3((float)(end-start).x, (float)(end-start).y, (float)(end-start).z);
             Vector3 startvector = new Vector3((float)start.x, (float)start.y, (float)start.z);
+            Vector3 endvector = new Vector3((float)end.x, (float)end.y, (float)end.z);
 
 
             int count = 0;
@@ -11689,6 +11690,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             LSL_List list = new LSL_List();
             List<ContactResult> results = World.PhysicsScene.RaycastWorld(startvector, dir, dir.Length(), count);
+
+            double distance = Util.GetFlatDistanceTo(startvector, endvector);
+            if (distance == 0)
+                distance = 0.001;
+            Vector3 posToCheck = startvector;
+            ITerrainChannel channel = World.RequestModuleInterface<ITerrainChannel>();
+            List<IScenePresence> presences = World.GetScenePresences();
+            for (float i = 0; i <= distance; i += 0.1f)
+            {
+                posToCheck += (dir * (i / (float)distance));
+                if (channel[(int)(posToCheck.X + startvector.X), (int)(posToCheck.Y + startvector.Y)] < posToCheck.Z)
+                {
+                    ContactResult result = new ContactResult();
+                    result.ConsumerID = 0;
+                    result.Depth = 0;
+                    result.Normal = Vector3.Zero;
+                    result.Pos = posToCheck;
+                    results.Add(result);
+                    break;
+                }
+                foreach (IScenePresence sp in presences)
+                {
+                }
+            }
             foreach (ContactResult result in results)
             {
                 if ((rejectTypes & ScriptBaseClass.RC_REJECT_LAND) == ScriptBaseClass.RC_REJECT_LAND &&
@@ -11699,7 +11724,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (entity == null && (rejectTypes & ScriptBaseClass.RC_REJECT_AGENTS) != ScriptBaseClass.RC_REJECT_AGENTS)
                     entity = World.GetScenePresence(result.ConsumerID); //Only check if we should be looking for agents
                 if (entity == null)
-                    continue; //Can't find it
+                {
+                    list.Add(UUID.Zero);
+                    if ((dataFlags & ScriptBaseClass.RC_GET_LINK_NUM) == ScriptBaseClass.RC_GET_LINK_NUM)
+                        list.Add(0);
+                    list.Add(result.Pos);
+                    if ((dataFlags & ScriptBaseClass.RC_GET_NORMAL) == ScriptBaseClass.RC_GET_NORMAL)
+                        list.Add(result.Normal);
+                    continue; //Can't find it, so add UUID.Zero
+                }
 
                 /*if (detectPhantom == 0 && intersection.obj is ISceneChildEntity &&
                     ((ISceneChildEntity)intersection.obj).PhysActor == null)
