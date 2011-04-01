@@ -617,5 +617,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger RC_GET_NORMAL = 0;
         public static readonly LSLInteger RC_GET_ROOT_KEY = 1;
         public static readonly LSLInteger RC_GET_LINK_NUM = 2;
+
+        public static readonly LSLInteger RCERR_CAST_TIME_EXCEEDED = 1;
     }
 }
