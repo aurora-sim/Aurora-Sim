@@ -118,12 +118,17 @@ namespace OpenSim.Region.CoreModules
                 }
                 else if (response == "yes")
                 {
-                    response = MainConsole.Instance.CmdPrompt("Estate name to join", LastEstateName);
-                    if (response == "None")
-                        continue;
-                    LastEstateName = response;
+                    if (ownerEstates.Count != 1)
+                    {
+                        response = MainConsole.Instance.CmdPrompt("Estate name to join", LastEstateName);
+                        if (response == "None")
+                            continue;
+                        LastEstateName = response;
+                    }
+                    else
+                        LastEstateName = ownerEstates[0].EstateName;
 
-                    List<int> estateIDs = EstateConnector.GetEstates(response);
+                    List<int> estateIDs = EstateConnector.GetEstates(LastEstateName);
                     if (estateIDs == null)
                     {
                         m_log.Warn("The connection to the server was broken, please try again soon.");
