@@ -11687,42 +11687,40 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
             }
 
-            List<EntityIntersection> collisions = World.SceneGraph.GetIntersectingPrims(new Ray(startvector, dir), dir.Length(), count, true, false,
-                (rejectTypes & ScriptBaseClass.RC_REJECT_AGENTS) == ScriptBaseClass.RC_REJECT_AGENTS,
-                (rejectTypes & ScriptBaseClass.RC_REJECT_LAND) == ScriptBaseClass.RC_REJECT_LAND,
-                true);
-
             LSL_List list = new LSL_List();
-            foreach (EntityIntersection intersection in collisions)
+            List<ContactResult> results = World.PhysicsScene.RaycastWorld(startvector, dir, dir.Length(), count);
+            foreach (ContactResult result in results)
             {
-                //Reject some types
-                if ((rejectTypes & ScriptBaseClass.RC_REJECT_NONPHYSICAL) == ScriptBaseClass.RC_REJECT_NONPHYSICAL &&
-                    intersection.obj is ISceneChildEntity && ((ISceneChildEntity)intersection.obj).PhysActor != null &&
-                    !((ISceneChildEntity)intersection.obj).PhysActor.IsPhysical)
-                    continue;
-                if ((rejectTypes & ScriptBaseClass.RC_REJECT_PHYSICAL) == ScriptBaseClass.RC_REJECT_PHYSICAL &&
-                    intersection.obj is ISceneChildEntity && ((ISceneChildEntity)intersection.obj).PhysActor != null &&
-                    ((ISceneChildEntity)intersection.obj).PhysActor.IsPhysical)
-                    continue;
-                if (detectPhantom == 0 && intersection.obj is ISceneChildEntity &&
-                    ((ISceneChildEntity)intersection.obj).PhysActor == null)
+                if ((rejectTypes & ScriptBaseClass.RC_REJECT_LAND) == ScriptBaseClass.RC_REJECT_LAND &&
+                    result.ConsumerID == 0)
                     continue;
 
-                if ((dataFlags & ScriptBaseClass.RC_GET_ROOT_KEY) == ScriptBaseClass.RC_GET_ROOT_KEY && intersection.obj is ISceneChildEntity)
-                    list.Add(((ISceneChildEntity)intersection.obj).ParentEntity.UUID);
+                IEntity entity = World.GetSceneObjectPart(result.ConsumerID);
+                if (entity == null && (rejectTypes & ScriptBaseClass.RC_REJECT_AGENTS) != ScriptBaseClass.RC_REJECT_AGENTS)
+                    entity = World.GetScenePresence(result.ConsumerID); //Only check if we should be looking for agents
+                if (entity == null)
+                    continue; //Can't find it
+
+                /*if (detectPhantom == 0 && intersection.obj is ISceneChildEntity &&
+                    ((ISceneChildEntity)intersection.obj).PhysActor == null)
+                    continue;*/ //Can't do this ATM, physics engine knows only of non phantom objects
+
+                if ((dataFlags & ScriptBaseClass.RC_GET_ROOT_KEY) == ScriptBaseClass.RC_GET_ROOT_KEY && entity is ISceneChildEntity)
+                    list.Add(((ISceneChildEntity)entity).ParentEntity.UUID);
                 else
-                    list.Add(intersection.obj.UUID);
+                    list.Add(entity.UUID);
 
                 if ((dataFlags & ScriptBaseClass.RC_GET_LINK_NUM) == ScriptBaseClass.RC_GET_LINK_NUM)
-                    if (intersection.obj is ISceneChildEntity)
-                        list.Add(((ISceneChildEntity)intersection.obj).LinkNum);
+                    if (entity is ISceneChildEntity)
+                        list.Add(((ISceneChildEntity)entity).LinkNum);
                     else
                         list.Add(0);
 
-                list.Add(intersection.ipoint);
+                list.Add(result.Pos);
                 if ((dataFlags & ScriptBaseClass.RC_GET_NORMAL) == ScriptBaseClass.RC_GET_NORMAL)
-                    list.Add(intersection.normal);
+                    list.Add(result.Normal);
             }
+
             list.Add(0); //The status code, either 0, RCERR_SIM_PERF_LOW, or RCERR_CAST_TIME_EXCEEDED
 
             return list;

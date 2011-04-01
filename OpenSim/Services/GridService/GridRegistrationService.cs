@@ -213,6 +213,8 @@ namespace OpenSim.Services.GridService
                 //Remove all the handlers from the HTTP Server
                 foreach (KeyValuePair<string, OSD> kvp in urls.URLS)
                 {
+                    if (!m_modules.ContainsKey(kvp.Key))
+                        continue;
                     IGridRegistrationUrlModule module = m_modules[kvp.Key];
                     IHttpServer server = m_simulationBase.GetHttpServer(module.Port);
                     server.RemoveHTTPHandler("POST", kvp.Value);

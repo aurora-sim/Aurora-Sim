@@ -421,7 +421,7 @@ namespace OpenSim.Region.Framework.Scenes
                     for (int i = 0; i < 100; i++)
                     {
                         newPos += ((Vector3.One * (length * (i / 100))) * hray.Direction);
-                        if (ent.AbsolutePosition.ApproxEquals(newPos, ent.PhysicsActor.Size.X))
+                        if (ent.AbsolutePosition.ApproxEquals(newPos, ent.PhysicsActor.Size.X * 2))
                         {
                             EntityIntersection intersection = new EntityIntersection();
                             intersection.distance = length * (i / 100);

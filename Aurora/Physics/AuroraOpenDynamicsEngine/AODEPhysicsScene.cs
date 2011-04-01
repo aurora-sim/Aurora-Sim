@@ -3882,6 +3882,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
+        public override List<ContactResult> RaycastWorld(Vector3 position, Vector3 direction, float length, int Count)
+        {
+            ContactResult[] ourResults = null;
+            RayCallback retMethod = delegate(List<ContactResult> results)
+            {
+                ourResults = new ContactResult[results.Count];
+                results.CopyTo(ourResults, 0);
+            };
+            m_rayCastManager.QueueRequest(position, direction, length, Count, retMethod);
+            while (ourResults == null)
+            {
+                Thread.Sleep(10);
+            }
+            return new List<ContactResult>(ourResults);
+        }
+
 #if USE_DRAWSTUFF
         // Keyboard callback
         public void command(int cmd)

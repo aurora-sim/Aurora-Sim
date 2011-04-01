@@ -255,6 +255,11 @@ namespace OpenSim.Framework
             if (retMethod != null)
                 retMethod(new List<ContactResult>());
         }
+
+        public virtual List<ContactResult> RaycastWorld(Vector3 position, Vector3 direction, float length, int Count)
+        {
+            return new List<ContactResult>();
+        }
     }
 
     public class NullPhysicsScene : PhysicsScene
