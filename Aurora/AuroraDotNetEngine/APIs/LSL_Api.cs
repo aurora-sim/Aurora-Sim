@@ -11656,6 +11656,41 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 });
         }
 
+        public LSL_List llCastRay(LSL_Vector start, LSL_Vector end, LSL_List options)
+        {
+            Vector3 dir = new Vector3((float)(end-start).x, (float)(end-start).y, (float)(end-start).z);
+            Vector3 startvector = new Vector3((float)start.x, (float)start.y, (float)start.z);
+
+
+            int count = 0;
+            int detectPhantom = 0;
+            int dataFlags = 0;
+
+            for (int i = 0; i < options.Length; i += 2)
+            {
+                if (options.GetLSLIntegerItem(i) == ScriptBaseClass.RC_MAX_HITS)
+                {
+                    count = options.GetLSLIntegerItem(i + 1);
+                }
+                else if (options.GetLSLIntegerItem(i) == ScriptBaseClass.RC_DETECT_PHANTOM)
+                {
+                    detectPhantom = options.GetLSLIntegerItem(i + 1);
+                }
+                else if (options.GetLSLIntegerItem(i) == ScriptBaseClass.RC_DATA_FLAGS)
+                {
+                    dataFlags = options.GetLSLIntegerItem(i + 1);
+                }
+            }
+
+            World.PhysicsScene.RaycastWorld(startvector, dir, dir.Length(), count, RayCastCameraCallback);
+
+            return new LSL_List();
+        }
+
+        public void RayCastCameraCallback(List<ContactResult> results)
+        {
+        }
+
         public LSL_Key llGetNumberOfNotecardLines(string name)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");

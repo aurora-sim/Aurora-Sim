@@ -34,6 +34,15 @@ using OpenMetaverse;
 namespace OpenSim.Framework
 {
     public delegate void RaycastCallback(bool hitYN, Vector3 collisionPoint, uint localid, float distance, Vector3 normal);
+    public delegate void RayCallback(List<ContactResult> list);
+
+    public struct ContactResult
+    {
+        public Vector3 Pos;
+        public float Depth;
+        public uint ConsumerID;
+        public Vector3 Normal;
+    }
 
     public abstract class PhysicsScene
     {
@@ -239,6 +248,12 @@ namespace OpenSim.Framework
         {
             if (retMethod != null)
                 retMethod(false, Vector3.Zero, 0, 999999999999f, Vector3.Zero);
+        }
+
+        public virtual void RaycastWorld(Vector3 position, Vector3 direction, float length, int Count, RayCallback retMethod)
+        {
+            if (retMethod != null)
+                retMethod(new List<ContactResult>());
         }
     }
 

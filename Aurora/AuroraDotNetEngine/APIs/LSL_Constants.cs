@@ -603,5 +603,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger PASS_IF_NOT_HANDLED = 0;
         public static readonly LSLInteger PASS_ALWAYS = 1;
         public static readonly LSLInteger PASS_NEVER = 2;
+
+        public static readonly LSLInteger RC_REJECT_TYPES = 0;
+        public static readonly LSLInteger RC_DATA_FLAGS = 1;
+        public static readonly LSLInteger RC_MAX_HITS = 2;
+        public static readonly LSLInteger RC_DETECT_PHANTOM = 3;
+
+        public static readonly LSLInteger RC_REJECT_AGENTS = 0;
+        public static readonly LSLInteger RC_REJECT_PHYSICAL = 1;
+        public static readonly LSLInteger RC_REJECT_NONPHYSICAL = 2;
+        public static readonly LSLInteger RC_REJECT_LAND = 3;
     }
 }

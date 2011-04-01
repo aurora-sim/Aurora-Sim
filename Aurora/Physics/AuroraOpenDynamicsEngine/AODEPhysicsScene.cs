@@ -3874,6 +3874,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
+        public override void RaycastWorld(Vector3 position, Vector3 direction, float length, int Count, RayCallback retMethod)
+        {
+            if (retMethod != null)
+            {
+                m_rayCastManager.QueueRequest(position, direction, length, Count, retMethod);
+            }
+        }
+
 #if USE_DRAWSTUFF
         // Keyboard callback
         public void command(int cmd)

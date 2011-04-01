@@ -409,5 +409,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void print(string str);
         LSL_String llGetDisplayName(string id);
         LSL_String llGetUsername(string id);
+        LSL_String llGetEnv(LSL_String name);
+        LSL_Key llRequestDisplayName(LSL_Key uuid);
+        LSL_Key llRequestUsername(LSL_Key uuid);
+        LSL_List llCastRay(LSL_Vector start, LSL_Vector end, LSL_List options);
     }
 }
