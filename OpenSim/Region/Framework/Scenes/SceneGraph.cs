@@ -389,6 +389,27 @@ namespace OpenSim.Region.Framework.Scenes
             return result;
         }
 
+        /// <summary>
+        /// Gets a list of scene object group that intersect with the given ray
+        /// </summary>
+        public List<EntityIntersection> GetIntersectingPrims(Ray hray, bool frontFacesOnly, bool faceCenters)
+        {
+            // Primitive Ray Tracing
+            List<EntityIntersection> result = new List<EntityIntersection>();
+            ISceneEntity[] EntityList = Entities.GetEntities (hray.Origin, closestDistance);
+            foreach (ISceneEntity ent in EntityList)
+            {
+                if (ent is SceneObjectGroup)
+                {
+                    SceneObjectGroup reportingG = (SceneObjectGroup)ent;
+                    EntityIntersection inter = reportingG.TestIntersection(hray, frontFacesOnly, faceCenters);
+                    if (inter.HitTF)
+                        result.Add(inter);
+                }
+            }
+            return result;
+        }
+
         #endregion
 
         #region ForEach* Methods
