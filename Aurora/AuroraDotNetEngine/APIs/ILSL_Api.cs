@@ -405,5 +405,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
        LSL_Integer llGetLinkNumberOfSides(int LinkNum);
 
         DateTime llRezPrim(string inventory, LSL_Types.Vector3 pos, LSL_Types.Vector3 vel, LSL_Types.Quaternion rot, int param, bool isRezAtRoot, bool doRecoil, bool SetDieAtEdge, bool CheckPos);
+
+        void print(string str);
+        LSL_String llGetDisplayName(string id);
+        LSL_String llGetUsername(string id);
     }
 }

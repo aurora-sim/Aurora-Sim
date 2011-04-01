@@ -6605,6 +6605,40 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_host.SoundRadius = radius;
         }
 
+        public LSL_String llGetDisplayName(string id)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+
+            UUID key = new UUID();
+            if (UUID.TryParse(id, out key))
+            {
+                IScenePresence presence = World.GetScenePresence(key);
+
+                if (presence != null)
+                {
+                    IProfileConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
+                    if (connector != null)
+                        return connector.GetUserProfile(presence.UUID).DisplayName;
+                }
+            }
+            return String.Empty;
+        }
+
+        public LSL_String llGetUsername(string id)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+
+            UUID key = new UUID();
+            if (UUID.TryParse(id, out key))
+            {
+                IScenePresence presence = World.GetScenePresence(key);
+
+                if (presence != null)
+                    return presence.Name;
+            }
+            return String.Empty;
+        }
+
         public LSL_String llKey2Name(string id)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
@@ -9912,10 +9946,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llRequestSecureURL()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
+
             if (m_UrlModule != null)
                 return m_UrlModule.RequestSecureURL(m_ScriptEngine.ScriptModule, m_host, m_itemID).ToString();
             return UUID.Zero.ToString();
+        }
+
+        public LSL_String llGetEnv(LSL_String name)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+
+            if (name == "sim_channel")
+                return "Aurora-Sim Server";
+            else if (name == "sim_version")
+                return World.RequestModuleInterface<ISimulationBase>().Version;
+            return "";
         }
 
         public LSL_Key llRequestSimulatorData(string simulator, int data)
@@ -11675,6 +11720,68 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return tid.ToString();
         }
 
+        public LSL_Key llRequestUsername(LSL_Key uuid)
+        {
+            UUID userID = UUID.Zero;
+
+            if (!UUID.TryParse(uuid, out userID))
+            {
+                // => complain loudly, as specified by the LSL docs
+                ShoutError("Failed to parse uuid for avatar.");
+
+                return (LSL_Key)UUID.Zero.ToString();
+            }
+
+            DataserverPlugin dataserverPlugin = (DataserverPlugin)m_ScriptEngine.GetScriptPlugin("Dataserver");
+            UUID tid = dataserverPlugin.RegisterRequest(m_host.UUID, m_itemID, uuid.ToString());
+
+            Util.FireAndForget(delegate(object o)
+            {
+                string name = "";
+                UserAccount info = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, userID);
+                if (info != null)
+                    name = info.Name;
+                dataserverPlugin.AddReply(uuid.ToString(),
+                    name, 100);
+            });
+
+            ScriptSleep(100);
+            return (LSL_Key)tid.ToString();
+        }
+
+        public LSL_Key llRequestDisplayName(LSL_Key uuid)
+        {
+            UUID userID = UUID.Zero;
+
+            if (!UUID.TryParse(uuid, out userID))
+            {
+                // => complain loudly, as specified by the LSL docs
+                ShoutError("Failed to parse uuid for avatar.");
+
+                return (LSL_Key)UUID.Zero.ToString();
+            }
+
+            DataserverPlugin dataserverPlugin = (DataserverPlugin)m_ScriptEngine.GetScriptPlugin("Dataserver");
+            UUID tid = dataserverPlugin.RegisterRequest(m_host.UUID, m_itemID, uuid.ToString());
+
+            Util.FireAndForget(delegate(object o)
+            {
+                string name = "";
+                IProfileConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
+                if (connector != null)
+                {
+                    IUserProfileInfo info = connector.GetUserProfile(userID);
+                    if (info != null)
+                        name = info.DisplayName;
+                }
+                dataserverPlugin.AddReply(uuid.ToString(),
+                    name, 100);
+            });
+
+            ScriptSleep(100);
+            return (LSL_Key)tid.ToString();
+        }
+
         public LSL_Key llGetNotecardLine(string name, int line)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
@@ -11761,6 +11868,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return new LSL_List();
 
             return GetLinkPrimitiveParams(obj, rules);
+        }
+
+        public void print(string str)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Severe, "print", m_host, "LSL");
+
+            if (m_ScriptEngine.Config.GetBoolean("AllowosConsoleCommand", false))
+            {
+                if (World.Permissions.CanRunConsoleCommand(m_host.OwnerID))
+                {
+                    // yes, this is a real LSL function. See: http://wiki.secondlife.com/wiki/Print
+                    MainConsole.Instance.Output("LSL print():" + str, Level.Info);
+                }
+            }
         }
     }
 
