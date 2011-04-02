@@ -165,10 +165,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private Dictionary<string, IScriptApi> m_apiFunctions = new Dictionary<string, IScriptApi>();
         private Compiler m_compiler;
 
-        private bool FuncCntr = false;
-
-        
-
         /// <summary>
         /// Creates an 'empty' CSCodeGenerator instance.
         /// </summary>
@@ -227,7 +223,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             OriginalScript = "";
             lock (FuncCalls)
                 FuncCalls.Clear();
-            FuncCntr = false;
             IsaGlobalVar = false;
             MethodsToAdd.Clear();
             LocalMethodArguements.Clear();

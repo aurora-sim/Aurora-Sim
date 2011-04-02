@@ -94,16 +94,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         private Dictionary<string, scriptEvents> m_stateEvents = new Dictionary<string, scriptEvents>();
         private Type m_scriptType;
 
-        private bool InTimeSlice = false;
-        private DateTime TimeSliceEnd = new DateTime();
-        private DateTime TimeSliceStart = new DateTime();
-
-        private Double MaxTimeSlice = 60;    // script timeslice execution time in ms , hardwired for now
-  
-
         public Executor(IScript script)
         {
-            InTimeSlice=false;
             m_Script = script;
             initEventFlags();
         }
@@ -150,27 +142,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return eventFlags;
         }
 
-        public void OpenTimeSlice(EnumeratorInfo Start)
-        {
-
-            TimeSliceStart = DateTime.Now;
-            if(Start==null)
-                TimeSliceEnd = TimeSliceStart.AddMilliseconds(MaxTimeSlice);
-            else
-                TimeSliceEnd = TimeSliceStart.AddMilliseconds(MaxTimeSlice/2);
-            InTimeSlice = true;
-        }
-
-        public void CloseTimeSlice()
-        {
-            InTimeSlice = false;
-        }
-
-        public bool CheckSlice()
-        {
-            return (DateTime.Now > TimeSliceEnd);
-        }
-
         public async void ExecuteEvent(string state, string FunctionName, object[] args)
         {
             // IMPORTANT: Types and MemberInfo-derived objects require a LOT of memory.
@@ -213,15 +184,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             }
             #endregion
 
-            await FireAsEnumerator(ev, args);
-        }
-
-        public async Task FireAsEnumerator(MethodInfo ev, object[] args)
-        {
             await TaskEx.Run(() =>
-                {
-                    ev.Invoke(m_Script, args);
-                });
+            {
+                ev.Invoke(m_Script, args);
+            });
         }
 
 

@@ -110,12 +110,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         {
             m_Executor.ExecuteEvent(state, FunctionName, args);
         }
-
-        public bool CheckSlice()
-            {
-            return m_Executor.CheckSlice();
-            }
-
         private Dictionary<string, object> m_InitialValues =
                 new Dictionary<string, object>();
         private Dictionary<string, FieldInfo> m_Fields =
@@ -133,10 +127,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public void UpdateInitialValues()
         {
             m_InitialValues = GetVars();
-        }
-
-        public virtual void StateChange(string newState)
-        {
         }
 
         public void Close()

@@ -44,7 +44,6 @@ using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading;
 using Aurora.Framework;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;

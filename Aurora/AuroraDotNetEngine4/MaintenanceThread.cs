@@ -47,7 +47,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private ScriptEngine m_ScriptEngine;
-        private bool FiredStartupEvent = false;
         public AuroraThreadPool threadpool = null;
         public AuroraThreadPool Scriptthreadpool = null;
         public bool ScriptChangeIsRunning = false;
