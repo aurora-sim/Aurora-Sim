@@ -294,7 +294,7 @@ namespace OpenSim.Services.LLLoginService
                 InventoryLibRoot = new ArrayList();
                 InventoryLibRoot.Add(InventoryLibRootHash);
 
-                InventoryLibraryOwner = GetLibraryOwner(libService.LibraryRootFolder);
+                InventoryLibraryOwner = GetLibraryOwner(libService);
                 InventoryLibrary = GetInventoryLibrary(libService);
             }
         }
@@ -761,7 +761,7 @@ namespace OpenSim.Services.LLLoginService
         protected virtual ArrayList GetInventoryLibrary(ILibraryService library)
         {
             Dictionary<UUID, InventoryFolderImpl> rootFolders = library.GetAllFolders();
-            m_log.DebugFormat("[LLOGIN]: Library has {0} folders", rootFolders.Count);
+            //m_log.DebugFormat("[LLOGIN]: Library has {0} folders", rootFolders.Count);
             //Dictionary<UUID, InventoryFolderImpl> rootFolders = new Dictionary<UUID,InventoryFolderImpl>();
             ArrayList folderHashes = new ArrayList();
 
@@ -783,11 +783,11 @@ namespace OpenSim.Services.LLLoginService
         ///
         /// </summary>
         /// <returns></returns>
-        protected virtual ArrayList GetLibraryOwner(InventoryFolderImpl libFolder)
+        protected virtual ArrayList GetLibraryOwner(ILibraryService libService)
         {
             //for now create random inventory library owner
             Hashtable TempHash = new Hashtable();
-            TempHash["agent_id"] = "11111111-1111-0000-0000-000100bba000"; // libFolder.Owner
+            TempHash["agent_id"] = libService.LibraryOwner; // libFolder.Owner
             ArrayList inventoryLibOwner = new ArrayList();
             inventoryLibOwner.Add(TempHash);
             return inventoryLibOwner;

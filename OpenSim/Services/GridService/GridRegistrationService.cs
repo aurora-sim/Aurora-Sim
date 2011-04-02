@@ -149,9 +149,7 @@ namespace OpenSim.Services.GridService
             {
                 //Fix the expiration time
                 url.Expiration = DateTime.Now.AddHours (m_timeBeforeTimeout);
-                //Now resave it to the database
-                m_genericsConnector.AddGeneric (UUID.Zero, "GridRegistrationUrls", url.RegionHandle.ToString(), url.ToOSD ());
-
+                
                 foreach (IGridRegistrationUrlModule module in m_modules.Values)
                 {
                     module.AddExistingUrlForClient(url.SessionID.ToString(), url.RegionHandle, url.URLS[module.UrlName]);
