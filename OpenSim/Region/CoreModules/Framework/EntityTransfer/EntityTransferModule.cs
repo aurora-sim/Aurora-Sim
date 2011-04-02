@@ -553,7 +553,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 agentCircuit.startpos = pos;
                 agentCircuit.child = false;
                 IAvatarAppearanceModule appearance = agent.RequestModuleInterface<IAvatarAppearanceModule> ();
-                agentCircuit.Appearance = appearance.Appearance;
+                if(appearance != null)
+                    agentCircuit.Appearance = appearance.Appearance;
 
                 IEventQueueService eq = agent.Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)

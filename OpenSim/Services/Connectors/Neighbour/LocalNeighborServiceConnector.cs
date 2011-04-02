@@ -446,11 +446,11 @@ namespace OpenSim.Services.Connectors
                 return false;
 
             if (!CheckViewSize(oldRegionX, newRegionX, oldRegionSizeX, newRegionSizeX))
-                return false;
+                return true;
             if (!CheckViewSize(oldRegionY, newRegionY, oldRegionSizeY, newRegionSizeY))
-                return false;
+                return true;
 
-            return true;
+            return false;
         }
 
         private bool CheckViewSize(int oldr, int newr, int oldSize, int newSize)
