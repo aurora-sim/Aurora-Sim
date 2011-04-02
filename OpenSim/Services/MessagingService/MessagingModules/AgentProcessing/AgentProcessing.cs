@@ -580,30 +580,31 @@ namespace OpenSim.Services.MessagingService
                     List<GridRegion> NeighborsOfCurrentRegion = service.GetNeighbors(oldRegion);
                     if (!NeighborsOfCurrentRegion.Contains(oldRegion))
                         NeighborsOfCurrentRegion.Add(oldRegion);
-                    List<GridRegion> byebyeRegions = new List<GridRegion>();
 
-                    m_log.InfoFormat(
-                        "[AgentProcessing]: Closing child agents. Checking {0} regions around {1}",
-                        NeighborsOfCurrentRegion.Count, oldRegion.RegionName);
+                    List<GridRegion> NeighborsOfDestinationRegion = service.GetNeighbors(destination);
 
-                    foreach (GridRegion region in NeighborsOfCurrentRegion)
+
+                    List<GridRegion> byebyeRegions = new List<GridRegion>(NeighborsOfCurrentRegion.Intersect(NeighborsOfDestinationRegion));
+                    
+                    byebyeRegions.RemoveAll(delegate(GridRegion r)
                     {
-                        if (service.IsOutsideView(region.RegionLocX, destination.RegionLocX, region.RegionSizeX, destination.RegionSizeX, region.RegionLocY, destination.RegionLocY, region.RegionSizeY, destination.RegionSizeY))
-                        {
-                            byebyeRegions.Add(region);
-                        }
-                    }
+                        if (r.RegionID == oldRegion.RegionID)
+                            return false;
+                        else if (r.RegionID == destination.RegionID)
+                            return false;
+                        return true;
+                    });
 
                     if (byebyeRegions.Count > 0)
                     {
-                        m_log.Info("[AgentProcessing]: Closing " + byebyeRegions.Count + " child agents");
+                        m_log.Info("[AgentProcessing]: Closing " + byebyeRegions.Count + " child agents around " + oldRegion.RegionName);
                         SendCloseChildAgent(AgentID, byebyeRegions);
                     }
                 }
             });
         }
 
-        protected void SendCloseChildAgent(UUID agentID, List<GridRegion> regionsToClose)
+        protected void SendCloseChildAgent(UUID agentID, IEnumerable<GridRegion> regionsToClose)
         {
             IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(agentID);
             //Close all agents that we've been given regions for

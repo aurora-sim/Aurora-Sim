@@ -264,8 +264,8 @@ namespace OpenSim.Services.Connectors
             }
 
             //-1 so that we don't get size (256) + viewsize (256) and get a region two 256 blocks over
-            int endX = ((int)region.RegionLocX + RegionViewSize + (int)region.RegionSizeX - 1);
-            int endY = ((int)region.RegionLocY + RegionViewSize + (int)region.RegionSizeY - 1);
+            int endX = (region.RegionLocX + RegionViewSize + region.RegionSizeX - 1);
+            int endY = (region.RegionLocY + RegionViewSize + region.RegionSizeY - 1);
 
             List<GridRegion> neighbors = m_gridService.GetRegionRange(region.ScopeID, startX, endX, startY, endY);
             //If we arn't supposed to close local regions, add all of the scene ones if they are not already there
@@ -283,8 +283,8 @@ namespace OpenSim.Services.Connectors
                 if (r.RegionID == region.RegionID)
                     return true;
 
-                if (r.RegionLocX < (region.RegionLocX - RegionViewSize) ||
-                    r.RegionLocY < (region.RegionLocY - RegionViewSize)) //Check for regions outside of the boundry (created above when checking for large regions next to us)
+                if (r.RegionLocX + r.RegionSizeX < (region.RegionLocX - RegionViewSize) ||
+                    r.RegionLocY + r.RegionSizeX < (region.RegionLocY - RegionViewSize)) //Check for regions outside of the boundry (created above when checking for large regions next to us)
                     return false;
 
                 return false;

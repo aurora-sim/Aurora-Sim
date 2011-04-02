@@ -525,12 +525,12 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 if (xOffset < 0)
                     pos.X += m_scene.RegionInfo.RegionSizeX;
                 else if (xOffset > 0)
-                    pos.X -= Constants.RegionSize;
+                    pos.X -= m_scene.RegionInfo.RegionSizeX;
 
                 if (yOffset < 0)
                     pos.Y += m_scene.RegionInfo.RegionSizeY;
                 else if (yOffset > 0)
-                    pos.Y -= Constants.RegionSize;
+                    pos.Y -= m_scene.RegionInfo.RegionSizeY;
 
                 //Make sure that they are within bounds (velocity can push it out of bounds)
                 if (pos.X < 0)
