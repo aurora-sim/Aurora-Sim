@@ -1621,7 +1621,7 @@
       </Files>
     </Project>
 
-    <Project frameworkVersion="v4_0" name="Aurora.ScriptEngine.AuroraDotNetEngine" path="Aurora/AuroraDotNetEngine" type="Library">
+    <Project frameworkVersion="v4_0" name="Aurora.ScriptEngine.AuroraDotNetEngine" path="Aurora/AuroraDotNetEngine4" type="Library">
       <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../bin/</OutputPath>
