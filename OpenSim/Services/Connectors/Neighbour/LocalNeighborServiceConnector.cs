@@ -148,23 +148,12 @@ namespace OpenSim.Services.Connectors
                 GridRegion thisSceneInfo = new GridRegion(s.RegionInfo);
 
                 //Make sure we don't already have this region in the neighbors
-                if (!m_informedRegions.Contains(thisSceneInfo))
+                if (m_KnownNeighbors[incomingRegion.RegionID].Contains(thisSceneInfo))
                 {
-                    //Now check to see whether the incoming region should be a neighbor of this Scene
-                    if (m_KnownNeighbors[incomingRegion.RegionID].Contains(thisSceneInfo))
-                    {
-                        //Fix this regions neighbors now that it has a new one
-                        if(m_KnownNeighbors.ContainsKey(s.RegionInfo.RegionID))
-                            m_KnownNeighbors[s.RegionInfo.RegionID].Add(incomingGridRegion);
-
-                        m_log.InfoFormat("[NeighborConnector]: HelloNeighbor from {0} to {1}.",
-                            incomingRegion.RegionName, s.RegionInfo.RegionName);
-
-                        //Tell this region about the original region
-                        IncomingHelloNeighbor(s, incomingGridRegion);
-                        //This region knows now, so add it to the list
-                        m_informedRegions.Add(thisSceneInfo);
-                    }
+                    m_KnownNeighbors[s.RegionInfo.RegionID] = FindNewNeighbors(thisSceneInfo);
+                    //Tell this region about the original region
+                    IncomingHelloNeighbor(s, incomingGridRegion);
+                    m_informedRegions.Add(thisSceneInfo);
                 }
             }
             int RegionsNotInformed = m_KnownNeighbors[incomingRegion.RegionID].Count - m_informedRegions.Count;
@@ -197,26 +186,10 @@ namespace OpenSim.Services.Connectors
 
                 if (neighborsOfIncomingRegion.Contains(thisSceneInfo))
                 {
-                    //Make sure we don't already have this region in the neighbors
-                    if (!m_informedRegions.Contains(thisSceneInfo))
-                    {
-                        //Now check to see whether the incoming region should be a neighbor of this Scene
-                        if (!IsOutsideView(s.RegionInfo.RegionLocX, incomingRegion.RegionLocX, s.RegionInfo.RegionSizeX, incomingRegion.RegionSizeX,
-                            s.RegionInfo.RegionLocY, incomingRegion.RegionLocY, s.RegionInfo.RegionSizeY, incomingRegion.RegionSizeY))
-                        {
-                            //Fix this regions neighbors now that it has a new one
-                            if (m_KnownNeighbors.ContainsKey(s.RegionInfo.RegionID))
-                                m_KnownNeighbors[s.RegionInfo.RegionID].Add(incomingGridRegion);
-
-                            m_log.InfoFormat("[NeighborConnector]: HelloNeighbor from {0} to {1}.",
-                                incomingRegion.RegionName, s.RegionInfo.RegionName);
-
-                            //Tell this region about the original region
-                            IncomingHelloNeighbor(s, incomingGridRegion);
-                            //This region knows now, so add it to the list
-                            m_informedRegions.Add(thisSceneInfo);
-                        }
-                    }
+                    m_KnownNeighbors[s.RegionInfo.RegionID] = FindNewNeighbors(thisSceneInfo);
+                    //Tell this region about the original region
+                    IncomingHelloNeighbor(s, incomingGridRegion);
+                    m_informedRegions.Add(thisSceneInfo);
                 }
             }
 
@@ -283,9 +256,9 @@ namespace OpenSim.Services.Connectors
                 if (r.RegionID == region.RegionID)
                     return true;
 
-                if (r.RegionLocX + r.RegionSizeX < (region.RegionLocX - RegionViewSize) ||
-                    r.RegionLocY + r.RegionSizeX < (region.RegionLocY - RegionViewSize)) //Check for regions outside of the boundry (created above when checking for large regions next to us)
-                    return false;
+                if (r.RegionLocX + r.RegionSizeX - 1 < (region.RegionLocX - RegionViewSize) ||
+                    r.RegionLocY + r.RegionSizeY - 1 < (region.RegionLocY - RegionViewSize)) //Check for regions outside of the boundry (created above when checking for large regions next to us)
+                    return true;
 
                 return false;
             });

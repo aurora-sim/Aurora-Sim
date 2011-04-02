@@ -577,22 +577,18 @@ namespace OpenSim.Services.MessagingService
                 INeighborService service = m_registry.RequestModuleInterface<INeighborService>();
                 if (service != null)
                 {
-                    List<GridRegion> NeighborsOfCurrentRegion = service.GetNeighbors(oldRegion);
-                    if (!NeighborsOfCurrentRegion.Contains(oldRegion))
-                        NeighborsOfCurrentRegion.Add(oldRegion);
-
+                    List<GridRegion> NeighborsOfOldRegion = service.GetNeighbors(oldRegion);
                     List<GridRegion> NeighborsOfDestinationRegion = service.GetNeighbors(destination);
 
-
-                    List<GridRegion> byebyeRegions = new List<GridRegion>(NeighborsOfCurrentRegion.Intersect(NeighborsOfDestinationRegion));
+                    List<GridRegion> byebyeRegions = new List<GridRegion>(NeighborsOfOldRegion.Intersect(NeighborsOfDestinationRegion));
                     
                     byebyeRegions.RemoveAll(delegate(GridRegion r)
                     {
                         if (r.RegionID == oldRegion.RegionID)
-                            return false;
+                            return true;
                         else if (r.RegionID == destination.RegionID)
-                            return false;
-                        return true;
+                            return true;
+                        return false;
                     });
 
                     if (byebyeRegions.Count > 0)
