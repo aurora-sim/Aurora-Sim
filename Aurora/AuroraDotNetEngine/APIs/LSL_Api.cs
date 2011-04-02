@@ -11942,19 +11942,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             WithNotecard(assetID, delegate(UUID id, AssetBase a)
                  {
                      if (a == null || a.Type != 7)
-                         {
+                     {
                          ShoutError("Notecard '" + name + "' could not be found.");
-                         }
+                     }
                      else
-                         {
+                     {
                          System.Text.UTF8Encoding enc =
                              new System.Text.UTF8Encoding();
                          string data = enc.GetString(a.Data);
                          //m_log.Debug(data);
                          NotecardCache.Cache(id, data);
-                         dataserverPlugin.AddReply(id.ToString(),
-                         NotecardCache.GetLine(id, line, m_notecardLineReadCharsMax), 100);
-                         }
+                         dataserverPlugin.AddReply(assetID.ToString(),
+                            NotecardCache.GetLine(id, line, m_notecardLineReadCharsMax), 100);
+                     }
                  });
 
             ScriptSleep(100);
