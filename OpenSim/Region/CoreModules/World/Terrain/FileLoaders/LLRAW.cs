@@ -138,7 +138,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
 
         public ITerrainChannel LoadStream (Stream s, IScene scene)
         {
-            int size = (int)System.Math.Sqrt(s.Length);
+            int size = (int)System.Math.Sqrt(s.Length / 13);
             TerrainChannel retval = new TerrainChannel(size, size, scene);
 
             BinaryReader bs = new BinaryReader(s);

@@ -119,12 +119,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
         {
             BinaryReader bs = new BinaryReader(s);
             int size = (int)System.Math.Sqrt(s.Length);
+            size /= sizeof(short);
             TerrainChannel retval = new TerrainChannel(size, size, scene);
-            int y;
-            for (y = 0; y < retval.Height; y++)
+            for (int y = 0; y < retval.Height; y++)
             {
-                int x;
-                for (x = 0; x < retval.Width; x++)
+                for (int x = 0; x < retval.Width; x++)
                 {
                     retval[x, y] = bs.ReadSingle();
                 }

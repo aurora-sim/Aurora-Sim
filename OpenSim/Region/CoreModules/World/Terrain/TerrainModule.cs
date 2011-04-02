@@ -702,6 +702,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                             if (m_channel.Height == channel.Height &&
                                     m_channel.Width == channel.Width)
                             {
+                                m_channel = channel;
+                                m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
                                 m_log.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width, channel.Height);
                             }
                             else
@@ -723,10 +725,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                             m_channel[x, y] = channel[x - offsetX, y - offsetY];
                                         }
                                     }
+                                    m_log.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width, channel.Height);
                                 }
                             }
-                            m_channel = channel;
-                            m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
                             UpdateRevertMap();
                         }
                         catch (NotImplementedException)
@@ -822,13 +823,30 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                 {
                                     m_channel = channel;
                                     m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
-                                    UpdateRevertMap();
                                 }
                                 else
                                 {
-                                    m_log.Warn("[TerrainModule]: Got request to load terrain that was not the correct size!");
-                                    return;
+                                    //Make sure it is in bounds
+                                    if ((channel.Width) > m_channel.Width ||
+                                            (channel.Height) > m_channel.Height)
+                                    {
+                                        m_log.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        //Merge the terrains together at the specified offset
+                                        for (int x = 0; x < channel.Width; x++)
+                                        {
+                                            for (int y = 0; y < channel.Height; y++)
+                                            {
+                                                m_channel[x, y] = channel[x, y];
+                                            }
+                                        }
+                                        m_log.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width, channel.Height);
+                                    }
                                 }
+                                UpdateRevertMap();
                             }
                         }
                         catch (NotImplementedException)
