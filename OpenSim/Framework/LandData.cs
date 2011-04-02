@@ -818,6 +818,7 @@ namespace OpenSim.Framework
             RegionID = map["RegionID"].AsUUID();
             GlobalID = map["GlobalID"].AsUUID();
             LocalID = map["LocalID"].AsInteger();
+            SalePrice = map["SalePrice"].AsInteger();
             UserLocation = map["UserLocation"].AsVector3();
             Name = map["Name"].AsString();
             Description = map["Description"].AsString();
