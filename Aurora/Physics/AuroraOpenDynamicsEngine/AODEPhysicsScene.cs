@@ -189,7 +189,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private readonly Dictionary<IntPtr, short[]> TerrainHeightFieldHeights = new Dictionary<IntPtr, short[]> ();
         private readonly Dictionary<IntPtr, short[]> ODETerrainHeightFieldHeights = new Dictionary<IntPtr, short[]> ();
         private readonly Dictionary<IntPtr, float[]> TerrainHeightFieldlimits = new Dictionary<IntPtr, float[]>();
-        private readonly Dictionary<UUID, short[]> WaterHeightFieldHeights = new Dictionary<UUID, short[]>();
+        private short[] WaterHeightFieldHeight;
         public bool m_EnableAutoConfig = true;
         public bool m_DisableSlowPrims = true;
 
@@ -3792,7 +3792,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public double GetWaterLevel(float x, float y)
         {
-            return WaterHeightFieldHeights[m_region.RegionID][(int)y * Region.RegionSizeX + (int)x];
+            return WaterHeightFieldHeight[(int)y * Region.RegionSizeX + (int)x];
         }
 
         public override bool SupportsCombining()
@@ -3802,8 +3802,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override void SetWaterLevel(short[] map)
         {
-            WaterHeightFieldHeights.Remove(m_region.RegionID);
-            WaterHeightFieldHeights.Add(m_region.RegionID, map);
+            WaterHeightFieldHeight = map;
         }
 
         public override void Dispose()

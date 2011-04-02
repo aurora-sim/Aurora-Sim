@@ -1140,7 +1140,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Under water physics
 
-            if (_parent_scene.AllowUnderwaterPhysics)
+            if (_parent_scene.AllowUnderwaterPhysics && (float)tempPos.X < _parent_scene.Region.RegionSizeX &&
+                (float)tempPos.Y < _parent_scene.Region.RegionSizeY)
             {
                 //Position plus height to av's shoulder (aprox) is just above water
                 if ((tempPos.Z + (CAPSULE_LENGTH / 3) - .25f) < _parent_scene.GetWaterLevel ((float)tempPos.X, (float)tempPos.Y))
