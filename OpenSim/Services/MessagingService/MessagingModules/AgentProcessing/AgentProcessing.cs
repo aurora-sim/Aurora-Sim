@@ -580,13 +580,14 @@ namespace OpenSim.Services.MessagingService
                     List<GridRegion> NeighborsOfOldRegion = service.GetNeighbors(oldRegion);
                     List<GridRegion> NeighborsOfDestinationRegion = service.GetNeighbors(destination);
 
-                    List<GridRegion> byebyeRegions = new List<GridRegion>(NeighborsOfOldRegion.Intersect(NeighborsOfDestinationRegion));
+                    List<GridRegion> byebyeRegions = new List<GridRegion>(NeighborsOfOldRegion);
+                    byebyeRegions.Add(oldRegion); //Add the old region, because it might need closed too
                     
                     byebyeRegions.RemoveAll(delegate(GridRegion r)
                     {
-                        if (r.RegionID == oldRegion.RegionID)
+                        if (r.RegionID == destination.RegionID)
                             return true;
-                        else if (r.RegionID == destination.RegionID)
+                        else if (NeighborsOfDestinationRegion.Contains(r))
                             return true;
                         return false;
                     });
