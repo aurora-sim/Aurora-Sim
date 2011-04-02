@@ -296,7 +296,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_SentInitialObjects = true;
                 //If they are not in this region, we check to make sure that we allow seeing into neighbors
-                if (!m_presence.IsChildAgent || (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor))
+                if (!m_presence.IsChildAgent || (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor) && Culler != null && m_prioritizer != null)
                 {
                     ISceneEntity[] entities = m_presence.Scene.Entities.GetEntities ();
                     PriorityQueue<EntityUpdate, double> m_entsqueue = new PriorityQueue<EntityUpdate, double> (entities.Length);
