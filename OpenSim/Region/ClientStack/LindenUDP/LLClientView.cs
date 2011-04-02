@@ -573,14 +573,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return AddLocalPacketHandler(packetType, handler, true);
         }
 
-        public bool AddLocalPacketHandler(PacketType packetType, PacketMethod handler, bool async)
+        public bool AddLocalPacketHandler(PacketType packetType, PacketMethod handler, bool runasync)
         {
             bool result = false;
             lock (m_packetHandlers)
             {
                 if (!m_packetHandlers.ContainsKey(packetType))
                 {
-                    m_packetHandlers.Add(packetType, new PacketProcessor() { method = handler, Async = async });
+                    m_packetHandlers.Add(packetType, new PacketProcessor() { method = handler, Async = runasync });
                     result = true;
                 }
             }

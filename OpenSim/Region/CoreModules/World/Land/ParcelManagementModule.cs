@@ -619,10 +619,10 @@ namespace OpenSim.Region.CoreModules.World.Land
                             m_log.Info ("[LandManagement]: Returning 1 object due to parcel auto return.");
 
                     }
-                    IAsyncSceneObjectGroupDeleter async = m_scene.RequestModuleInterface<IAsyncSceneObjectGroupDeleter> ();
-                    if (async != null)
+                    IAsyncSceneObjectGroupDeleter asyncDelete = m_scene.RequestModuleInterface<IAsyncSceneObjectGroupDeleter> ();
+                    if (asyncDelete != null)
                     {
-                        async.DeleteToInventory (
+                        asyncDelete.DeleteToInventory(
                                 DeRezAction.Return, ret.Value.Groups[0].RootChild.OwnerID, ret.Value.Groups, ret.Value.Groups[0].RootChild.OwnerID,
                                 true, true);
                     }

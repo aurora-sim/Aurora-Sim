@@ -176,6 +176,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             // IMPORTANT: Types and MemberInfo-derived objects require a LOT of memory.
             // Instead use RuntimeTypeHandle, RuntimeFieldHandle and RunTimeHandle (IntPtr) instead!
             string EventName = state + "_event_" + FunctionName;
+            if (state == "")
+                EventName = FunctionName;
 
             //#if DEBUG
             //m_log.Debug("ScriptEngine: Script event function name: " + EventName);

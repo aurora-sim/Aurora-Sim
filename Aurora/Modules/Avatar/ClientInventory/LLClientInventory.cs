@@ -443,10 +443,10 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            IAsyncSceneObjectGroupDeleter async = m_scene.RequestModuleInterface<IAsyncSceneObjectGroupDeleter>();
-            if (async != null)
+            IAsyncSceneObjectGroupDeleter asyncDelete = m_scene.RequestModuleInterface<IAsyncSceneObjectGroupDeleter>();
+            if (asyncDelete != null)
             {
-                async.DeleteToInventory(
+                asyncDelete.DeleteToInventory(
                        action, destinationID, deleteGroups, remoteClient == null ? UUID.Zero : remoteClient.AgentId,
                            permissionToDelete, permissionToTake);
             }

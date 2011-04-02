@@ -104,7 +104,7 @@ namespace OpenSim.Services.CapsService
             return true;
         }
 
-        private bool AddToQueue(OSD ev, UUID avatarID, ulong regionHandle, bool async)
+        private bool AddToQueue(OSD ev, UUID avatarID, ulong regionHandle, bool runasync)
         {
             //m_log.DebugFormat("[EVENTQUEUE]: Enqueuing event for {0} in region {1}", avatarID, m_scene.RegionInfo.RegionName);
             
@@ -124,7 +124,7 @@ namespace OpenSim.Services.CapsService
                 List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(avatarID.ToString(), regionHandle.ToString(), "EventQueueServiceURI");
                 foreach (string serverURI in serverURIs)
                 {
-                    if (async)
+                    if (runasync)
                     {
                         /*AsynchronousRestObjectRequester.MakeRequest("POST", serverURI + "/CAPS/EQMPOSTER",
                             OSDParser.SerializeJsonString(request),
