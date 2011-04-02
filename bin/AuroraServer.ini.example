@@ -61,6 +61,11 @@
 [AssetService]
     AllowRemoteDelete = true
     
+[VoiceIncludes]
+    ;; If you would like to set up voice for the entire grid, select one of these includes depending on which voice module you wish to set up
+    ;Include-Murmur = AuroraServerConfiguration/Murmur.ini
+    ;Include-FreeSwitch = AuroraServerConfiguration/FreeSwitch.ini
+    
 [Includes]
     ;;
     ;; Select only one of the next two
@@ -74,7 +79,6 @@
 	
     ;;Other .ini files to add...
     Include-Login = AuroraServerConfiguration/Login.ini
-    Include-FreeSwitch = AuroraServerConfiguration/FreeSwitch.ini
     Include-GridInfoService = AuroraServerConfiguration/GridInfoService.ini
     Include-AutoConfiguration = AuroraServerConfiguration/AutoConfiguration.ini
     Include-Data = AuroraServerConfiguration/Data/Data.ini
