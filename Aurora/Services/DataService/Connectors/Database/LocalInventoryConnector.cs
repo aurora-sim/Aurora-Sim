@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using Aurora.Framework;
@@ -47,23 +48,32 @@ namespace Aurora.Services.DataService
 
         #region IInventoryData Members
 
-        public InventoryFolderBase[] GetFolders (string[] fields, string[] vals)
+        public List<InventoryFolderBase> GetFolders(string[] fields, string[] vals)
         {
             Dictionary<string, List<string>> retVal = GD.QueryNames (fields, vals, m_foldersrealm, "*");
-            return ParseInventoryFolders (retVal);
+            return ParseInventoryFolders (ref retVal);
         }
 
-        public InventoryItemBase[] GetItems (string[] fields, string[] vals)
+        public List<InventoryItemBase> GetItems(string[] fields, string[] vals)
         {
-            Dictionary<string, List<string>> retVal = GD.QueryNames (fields, vals, m_itemsrealm, "*");
-            return ParseInventoryItems (retVal);
+            string query = "";
+            for(int i = 0; i < fields.Length; i++)
+            {
+                query += String.Format("{0} = '{1}' and ", fields[i], vals[i]);
+                i++;
+            }
+            query = query.Remove(query.Length - 5);
+            using (IDataReader reader = GD.QueryData(query, m_itemsrealm, "*"))
+            {
+                return ParseInventoryItems(reader);
+            }
         }
 
-        private InventoryFolderBase[] ParseInventoryFolders (Dictionary<string, List<string>> retVal)
+        private List<InventoryFolderBase> ParseInventoryFolders(ref Dictionary<string, List<string>> retVal)
         {
             List<InventoryFolderBase> folders = new List<InventoryFolderBase> ();
             if (retVal.Count == 0)
-                return folders.ToArray();
+                return folders;
             for (int i = 0; i < retVal.ElementAt(0).Value.Count; i++)
             {
                 InventoryFolderBase folder = new InventoryFolderBase ();
@@ -75,42 +85,43 @@ namespace Aurora.Services.DataService
                 folder.ParentID = UUID.Parse (retVal["parentFolderID"][i]);
                 folders.Add (folder);
             }
-
-            return folders.ToArray ();
+            retVal.Clear();
+            return folders;
         }
 
-        private InventoryItemBase[] ParseInventoryItems (Dictionary<string, List<string>> retVal)
+        private List<InventoryItemBase> ParseInventoryItems(IDataReader retVal)
         {
             List<InventoryItemBase> items = new List<InventoryItemBase> ();
-            if (retVal == null || retVal.Count == 0)
-                return items.ToArray ();
-            for (int i = 0; i < retVal.ElementAt (0).Value.Count; i++)
+            while (retVal.Read())
             {
-                InventoryItemBase item = new InventoryItemBase ();
-                item.AssetID = UUID.Parse (retVal["assetID"][i]);
-                item.AssetType = int.Parse (retVal["assetType"][i]);
-                item.Name = retVal["inventoryName"][i];
-                item.Description = retVal["inventoryDescription"][i];
-                item.NextPermissions = uint.Parse (retVal["inventoryNextPermissions"][i]);
-                item.CurrentPermissions = uint.Parse (retVal["inventoryCurrentPermissions"][i]);
-                item.InvType = int.Parse (retVal["invType"][i]);
-                item.CreatorId = retVal["creatorID"][i];
-                item.BasePermissions = uint.Parse (retVal["inventoryBasePermissions"][i]);
-                item.EveryOnePermissions = uint.Parse (retVal["inventoryEveryOnePermissions"][i]);
-                item.SalePrice = int.Parse (retVal["salePrice"][i]);
-                item.SaleType = byte.Parse (retVal["saleType"][i]);
-                item.CreationDate = int.Parse (retVal["creationDate"][i]);
-                item.GroupID = UUID.Parse (retVal["groupID"][i]);
-                item.GroupOwned = int.Parse (retVal["groupOwned"][i]) == 1;
-                item.Flags = uint.Parse (retVal["flags"][i]);
-                item.ID = UUID.Parse (retVal["inventoryID"][i]);
-                item.Owner = UUID.Parse (retVal["avatarID"][i]);
-                item.Folder = UUID.Parse (retVal["parentFolderID"][i]);
-                item.GroupPermissions = uint.Parse (retVal["inventoryGroupPermissions"][i]);
-                items.Add (item);
+                for (int i = 0; i < retVal.FieldCount; i++)
+                {
+                    InventoryItemBase item = new InventoryItemBase();
+                    item.AssetID = UUID.Parse(retVal["assetID"].ToString());
+                    item.AssetType = int.Parse(retVal["assetType"].ToString());
+                    item.Name = retVal["inventoryName"].ToString();
+                    item.Description = retVal["inventoryDescription"].ToString();
+                    item.NextPermissions = uint.Parse(retVal["inventoryNextPermissions"].ToString());
+                    item.CurrentPermissions = uint.Parse(retVal["inventoryCurrentPermissions"].ToString());
+                    item.InvType = int.Parse(retVal["invType"].ToString());
+                    item.CreatorId = retVal["creatorID"].ToString();
+                    item.BasePermissions = uint.Parse(retVal["inventoryBasePermissions"].ToString());
+                    item.EveryOnePermissions = uint.Parse(retVal["inventoryEveryOnePermissions"].ToString());
+                    item.SalePrice = int.Parse(retVal["salePrice"].ToString());
+                    item.SaleType = byte.Parse(retVal["saleType"].ToString());
+                    item.CreationDate = int.Parse(retVal["creationDate"].ToString());
+                    item.GroupID = UUID.Parse(retVal["groupID"].ToString());
+                    item.GroupOwned = int.Parse(retVal["groupOwned"].ToString()) == 1;
+                    item.Flags = uint.Parse(retVal["flags"].ToString());
+                    item.ID = UUID.Parse(retVal["inventoryID"].ToString());
+                    item.Owner = UUID.Parse(retVal["avatarID"].ToString());
+                    item.Folder = UUID.Parse(retVal["parentFolderID"].ToString());
+                    item.GroupPermissions = uint.Parse(retVal["inventoryGroupPermissions"].ToString());
+                    items.Add(item);
+                }
             }
-
-            return items.ToArray ();
+            retVal.Close();
+            return items;
         }
 
         public bool StoreFolder (InventoryFolderBase folder)
@@ -151,14 +162,17 @@ namespace Aurora.Services.DataService
 
         public InventoryItemBase[] GetActiveGestures (UUID principalID)
         {
-            Dictionary<string, List<string>> retVal = GD.QueryNames (new string[2] { "avatarID", "assetType" }, 
-                new object[2]{principalID, (int)AssetType.Gesture }, m_itemsrealm, "*");
-            List<InventoryItemBase> items = new List<InventoryItemBase>(ParseInventoryItems (retVal));
-            items.RemoveAll(delegate(InventoryItemBase item)
+            string query = String.Format("{0} = '{1}' and {2} = '{3}'", "avatarID", principalID, "assetType", (int)AssetType.Gesture);
+
+            using (IDataReader reader = GD.QueryData(query, m_itemsrealm, "*"))
             {
-                return !((item.Flags & 1) == 1); //1 means that it is active, so remove all ones that do not have a 1
-            });
-            return items.ToArray();
+                List<InventoryItemBase> items = ParseInventoryItems(reader);
+                items.RemoveAll(delegate(InventoryItemBase item)
+                {
+                    return !((item.Flags & 1) == 1); //1 means that it is active, so remove all ones that do not have a 1
+                });
+                return items.ToArray();
+            }
         }
 
         public int GetAssetPermissions (UUID principalID, UUID assetID)

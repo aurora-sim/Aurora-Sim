@@ -49,10 +49,12 @@ namespace OpenSim.Services.CapsService
 
         public void EnteringRegion()
         {
+            m_mapLayer.Clear();
         }
 
         public void DeregisterCaps()
         {
+            m_mapLayer.Clear();
         }
 
         /// <summary>
@@ -80,14 +82,9 @@ namespace OpenSim.Services.CapsService
             layerData.Add(GetOSDMapLayerResponse(bottom, left, right, top, new UUID("00000000-0000-1111-9999-000000000006")));
             OSDArray mapBlocksData = new OSDArray();
 
-            List<MapBlockData> mapBlocks = new List<MapBlockData>();
             if (m_allowCapsMessage)
             {
-                if (m_mapLayer != null && m_mapLayer.Count != 0)
-                {
-                    mapBlocks = m_mapLayer;
-                }
-                else
+                if (m_mapLayer == null || m_mapLayer.Count == 0)
                 {
                     List<GridRegion> regions = m_gridService.GetRegionRange (UUID.Zero,
                             left * (int)Constants.RegionSize,
@@ -97,11 +94,10 @@ namespace OpenSim.Services.CapsService
                     foreach (GridRegion r in regions)
                     {
                         if (flags == 0) //Map
-                            mapBlocks.Add (MapBlockFromGridRegion (r));
+                            m_mapLayer.Add(MapBlockFromGridRegion(r));
                         else
-                            mapBlocks.Add (TerrainBlockFromGridRegion (r));
+                            m_mapLayer.Add(TerrainBlockFromGridRegion(r));
                     }
-                    m_mapLayer = mapBlocks;
                 }
             }
             foreach (MapBlockData block in m_mapLayer)

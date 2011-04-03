@@ -35,14 +35,12 @@ namespace OpenSim.Services.Interfaces
 {
     public interface ILibraryService
     {
-        InventoryFolderImpl LibraryRootFolder { get; }
-
         UUID LibraryOwner { get; }
 
         string LibraryOwnerName { get; }
         string LibraryName { get; }
 
-        Dictionary<UUID, InventoryFolderImpl> GetAllFolders();
+        //Dictionary<UUID, InventoryFolderImpl> GetAllFolders();
         void AddToDefaultInventory(InventoryFolderImpl folder);
     }
 

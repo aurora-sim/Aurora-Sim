@@ -57,11 +57,6 @@ namespace OpenSim.Services.InventoryService
         private string pLibName = "Aurora Library";
         private bool m_enabled = false;
 
-        public InventoryFolderImpl LibraryRootFolder
-        {
-            get { return m_LibraryRootFolder; }
-        }
-
         public UUID LibraryOwner
         {
             get { return libOwner; }
@@ -91,14 +86,6 @@ namespace OpenSim.Services.InventoryService
 
             //m_log.Debug("[LIBRARY]: Starting library service...");
 
-            m_LibraryRootFolder = new InventoryFolderImpl();
-            m_LibraryRootFolder.Owner = libOwner;
-            m_LibraryRootFolder.ID = new UUID("00000112-000f-0000-0000-000100bba000");
-            m_LibraryRootFolder.Name = pLibName;
-            m_LibraryRootFolder.ParentID = UUID.Zero;
-            m_LibraryRootFolder.Type = (short)8;
-            m_LibraryRootFolder.Version = (ushort)1;
-
             registry.RegisterModuleInterface<ILibraryService>(this);
             m_registry = registry;
         }
@@ -127,7 +114,6 @@ namespace OpenSim.Services.InventoryService
 
         public void LoadLibraries(IRegistryCore registry)
         {
-            LoadPreviouslyLoadedArchives(registry);
             if (!m_enabled)
                 return;
             List<IDefaultLibraryLoader> Loaders = Aurora.Framework.AuroraModuleLoader.PickupModules<IDefaultLibraryLoader>();
@@ -145,87 +131,6 @@ namespace OpenSim.Services.InventoryService
             catch
             {
             }
-        }
-
-        private void LoadPreviouslyLoadedArchives(IRegistryCore registry)
-        {
-            IUserAccountService UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
-            UserAccount uinfo = UserAccountService.GetUserAccount(UUID.Zero, LibraryOwner);
-            IInventoryService InventoryService = registry.RequestModuleInterface<IInventoryService>();
-            //Make the user account for the default IAR
-            if (uinfo == null)
-            {
-                uinfo = new UserAccount(LibraryOwner);
-                uinfo.Name = LibraryOwnerName;
-                uinfo.Email = "";
-                uinfo.ServiceURLs = new Dictionary<string, object>();
-                uinfo.UserLevel = 0;
-                uinfo.UserFlags = 0;
-                uinfo.ScopeID = UUID.Zero;
-                uinfo.UserTitle = "";
-                UserAccountService.StoreUserAccount(uinfo);
-                InventoryService.CreateUserInventory(uinfo.PrincipalID);
-                uinfo = UserAccountService.GetUserAccount(UUID.Zero, LibraryOwner);
-                if (uinfo == null)
-                {
-                    //Grid mode, can't create the user... leave
-                    return;
-                }
-            }
-            InventoryCollection col = InventoryService.GetFolderContent(LibraryOwner, UUID.Zero);
-            foreach (InventoryFolderBase folder in col.Folders)
-            {
-                if (folder.Name == "My Inventory") continue; //Pass My Inventory by
-                InventoryFolderImpl f = new InventoryFolderImpl(folder);
-
-                TraverseFolders(f, folder.ID, InventoryService);
-                //This is our loaded folder
-                AddToDefaultInventory(f);
-            }
-        }
-
-        private void TraverseFolders(InventoryFolderImpl folderimp, UUID ID, IInventoryService InventoryService)
-        {
-            InventoryCollection col = InventoryService.GetFolderContent(LibraryOwner, ID);
-            foreach (InventoryItemBase item in col.Items)
-            {
-                folderimp.Items.Add(item.ID, item);
-            }
-            foreach (InventoryFolderBase folder in col.Folders)
-            {
-                InventoryFolderImpl childFolder = new InventoryFolderImpl(folder);
-                TraverseFolders(childFolder, folder.ID, InventoryService);
-                folderimp.AddChildFolder(childFolder);
-            }
-        }
-
-        /// <summary>
-        /// Looks like a simple getter, but is written like this for some consistency with the other Request
-        /// methods in the superclass
-        /// </summary>
-        /// <returns></returns>
-        public Dictionary<UUID, InventoryFolderImpl> GetAllFolders()
-        {
-            Dictionary<UUID, InventoryFolderImpl> fs = new Dictionary<UUID, InventoryFolderImpl>();
-            fs.Add(LibraryRootFolder.ID, LibraryRootFolder);
-            List<InventoryFolderImpl> fis = TraverseFolder(LibraryRootFolder);
-            foreach (InventoryFolderImpl f in fis)
-            {
-                fs.Add(f.ID, f);
-            }
-            //return libraryFolders;
-            return fs;
-        }
-
-        private List<InventoryFolderImpl> TraverseFolder(InventoryFolderImpl node)
-        {
-            List<InventoryFolderImpl> folders = node.RequestListOfFolderImpls();
-            List<InventoryFolderImpl> subs = new List<InventoryFolderImpl>();
-            foreach (InventoryFolderImpl f in folders)
-                subs.AddRange(TraverseFolder(f));
-
-            folders.AddRange(subs);
-            return folders;
         }
 
         private void ClearDefaultInventory (string module, string[] cmd)

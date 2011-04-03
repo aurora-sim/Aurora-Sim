@@ -360,6 +360,11 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return inventory;
         }
 
+        public virtual List<InventoryFolderBase> GetFolderFolders(UUID principalID, UUID folderID)
+        {
+            return new List<InventoryFolderBase>();
+        }
+
         /// <summary>
         /// Gets the items inside a folder
         /// </summary>

@@ -142,7 +142,7 @@ namespace OpenSim.Services.LLLoginService
     public class LLLoginResponse : OpenSim.Services.Interfaces.LoginResponse
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
+
         private Hashtable loginFlagsHash;
         private Hashtable uiConfigHash;
 
@@ -250,7 +250,7 @@ namespace OpenSim.Services.LLLoginService
             FillOutHomeData(pinfo, home);
             LookAt = String.Format("[r{0},r{1},r{2}]", lookAt.X, lookAt.Y, lookAt.Z);
 
-            FillOutRegionData (destination);
+            FillOutRegionData(destination);
             login = "true";
             ErrorMessage = "";
             ErrorReason = LoginResponseEnum.OK;
@@ -287,7 +287,7 @@ namespace OpenSim.Services.LLLoginService
             }
 
             // Inventory Library Section
-            if (libService != null && libService.LibraryRootFolder != null)
+            if (libService != null)
             {
                 Hashtable InventoryLibRootHash = new Hashtable();
                 InventoryLibRootHash["folder_id"] = "00000112-000f-0000-0000-000100bba000";
@@ -403,11 +403,11 @@ namespace OpenSim.Services.LLLoginService
                 responseData["agent_access_max"] = agentAccessMax;
                 responseData["udp_blacklist"] = udpBlackList;
 
-                if(AllowFirstLife != null)
+                if (AllowFirstLife != null)
                     uiConfigHash["allow_first_life"] = AllowFirstLife;
                 uiConfig.Add(uiConfigHash);
 
-                responseData["sim_port"] = (Int32) SimPort;
+                responseData["sim_port"] = (Int32)SimPort;
                 responseData["sim_ip"] = SimAddress;
                 responseData["http_port"] = (Int32)SimHttpPort;
 
@@ -415,7 +415,7 @@ namespace OpenSim.Services.LLLoginService
                 responseData["session_id"] = SessionID.ToString();
                 responseData["secure_session_id"] = SecureSessionID.ToString();
                 responseData["circuit_code"] = CircuitCode;
-                responseData["seconds_since_epoch"] = (Int32) (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
+                responseData["seconds_since_epoch"] = (Int32)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
                 responseData["login-flags"] = loginFlags;
                 responseData["seed_capability"] = seedCapability;
 
@@ -447,19 +447,19 @@ namespace OpenSim.Services.LLLoginService
 
                 #region Global Textures
 
-                ArrayList globalTextures = new ArrayList ();
-                Hashtable globalTexturesHash = new Hashtable ();
+                ArrayList globalTextures = new ArrayList();
+                Hashtable globalTexturesHash = new Hashtable();
                 globalTexturesHash["sun_texture_id"] = SunTexture;
                 globalTexturesHash["cloud_texture_id"] = CloudTexture;
                 globalTexturesHash["moon_texture_id"] = MoonTexture;
-                globalTextures.Add (globalTexturesHash);
+                globalTextures.Add(globalTexturesHash);
                 responseData["global-textures"] = globalTextures;
 
                 #endregion Global Textures
 
                 if (SearchURL != String.Empty)
                     responseData["search"] = SearchURL;
-                
+
                 if (MapTileURL != String.Empty)
                     responseData["map-server-url"] = MapTileURL;
 
@@ -486,13 +486,13 @@ namespace OpenSim.Services.LLLoginService
                 //Makes viewers crash...
                 if (VoiceServerType != String.Empty)
                 {
-                    Hashtable voice_config = new Hashtable ();
+                    Hashtable voice_config = new Hashtable();
                     voice_config["VoiceServerType"] = VoiceServerType;
-                    ArrayList list = new ArrayList ();
-                    list.Add (voice_config);
+                    ArrayList list = new ArrayList();
+                    list.Add(voice_config);
                     responseData["voice-config"] = list;
                 }
-                
+
                 if (m_buddyList != null)
                 {
                     responseData["buddy-list"] = m_buddyList.ToArray();
@@ -503,7 +503,7 @@ namespace OpenSim.Services.LLLoginService
                     // the ones expected by known viewers.
                     // hippo, imprudence, phoenix are known to work
                     IConfig gridInfo = m_source.Configs["GridInfoService"];
-                    if (gridInfo.GetBoolean("SendGridInfoToViewerOnLogin",false))
+                    if (gridInfo.GetBoolean("SendGridInfoToViewerOnLogin", false))
                     {
                         string tmp;
                         tmp = gridInfo.GetString("gridname", String.Empty);
@@ -561,8 +561,8 @@ namespace OpenSim.Services.LLLoginService
                 OSDMap map = new OSDMap();
 
                 map["first_name"] = OSD.FromString(Firstname);
-                map["last_name"] = OSD.FromString (Lastname);
-                map["display_name"] = OSD.FromString (DisplayName);
+                map["last_name"] = OSD.FromString(Lastname);
+                map["display_name"] = OSD.FromString(DisplayName);
                 map["agent_access"] = OSD.FromString(agentAccess);
                 map["agent_access_max"] = OSD.FromString(agentAccessMax);
 
@@ -606,8 +606,8 @@ namespace OpenSim.Services.LLLoginService
                 #region UI Config
 
                 OSDMap uiConfigLLSD = new OSDMap();
-                if(AllowFirstLife != null)
-                    uiConfigLLSD["allow_first_life"] = OSD.FromString (AllowFirstLife);
+                if (AllowFirstLife != null)
+                    uiConfigLLSD["allow_first_life"] = OSD.FromString(AllowFirstLife);
                 map["ui-config"] = WrapOSDMap(uiConfigLLSD);
 
                 #endregion UI Config
@@ -638,7 +638,7 @@ namespace OpenSim.Services.LLLoginService
                 map["region_y"] = OSD.FromInteger(RegionY);
 
                 if (MapTileURL != String.Empty)
-                    map["map-server-url"] = OSD.FromString (MapTileURL);
+                    map["map-server-url"] = OSD.FromString(MapTileURL);
 
                 if (WebProfileURL != String.Empty)
                     map["web_profile_url"] = WebProfileURL;
@@ -662,13 +662,13 @@ namespace OpenSim.Services.LLLoginService
 
                 if (VoiceServerType != String.Empty)
                 {
-                    OSDMap voice_config = new OSDMap ();
+                    OSDMap voice_config = new OSDMap();
                     voice_config["VoiceServerType"] = OSD.FromString(VoiceServerType);
                     map["voice-config"] = voice_config;
                 }
 
                 if (SearchURL != String.Empty)
-                    map["search"] = OSD.FromString (SearchURL);
+                    map["search"] = OSD.FromString(SearchURL);
 
                 if (m_buddyList != null)
                 {
@@ -760,12 +760,12 @@ namespace OpenSim.Services.LLLoginService
         /// <returns></returns>
         protected virtual ArrayList GetInventoryLibrary(ILibraryService library)
         {
-            Dictionary<UUID, InventoryFolderImpl> rootFolders = library.GetAllFolders();
+            //Dictionary<UUID, InventoryFolderImpl> rootFolders = library.GetAllFolders();
             //m_log.DebugFormat("[LLOGIN]: Library has {0} folders", rootFolders.Count);
             //Dictionary<UUID, InventoryFolderImpl> rootFolders = new Dictionary<UUID,InventoryFolderImpl>();
             ArrayList folderHashes = new ArrayList();
 
-            foreach (InventoryFolderBase folder in rootFolders.Values)
+            /*foreach (InventoryFolderBase folder in rootFolders.Values)
             {
                 Hashtable TempHash = new Hashtable();
                 TempHash["name"] = folder.Name;
@@ -774,7 +774,7 @@ namespace OpenSim.Services.LLLoginService
                 TempHash["type_default"] = (Int32)folder.Type;
                 TempHash["folder_id"] = folder.ID.ToString();
                 folderHashes.Add(TempHash);
-            }
+            }*/
 
             return folderHashes;
         }
@@ -1000,7 +1000,7 @@ namespace OpenSim.Services.LLLoginService
             get { return activeGestures; }
             set { activeGestures = value; }
         }
-                
+
         public string Home
         {
             get { return home; }
@@ -1009,81 +1009,81 @@ namespace OpenSim.Services.LLLoginService
 
         public string SunTexture
         {
-            get { return (string)LLLoginResponseRegister.GetValue ("SunTexture"); }
+            get { return (string)LLLoginResponseRegister.GetValue("SunTexture"); }
         }
 
         public string CloudTexture
         {
-            get { return (string)LLLoginResponseRegister.GetValue ("CloudTexture"); }
+            get { return (string)LLLoginResponseRegister.GetValue("CloudTexture"); }
         }
 
         public string MoonTexture
         {
-            get { return (string)LLLoginResponseRegister.GetValue ("MoonTexture"); }
+            get { return (string)LLLoginResponseRegister.GetValue("MoonTexture"); }
         }
 
         public string AllowFirstLife
         {
-            get { return (string)LLLoginResponseRegister.GetValue ("AllowFirstLife"); }
+            get { return (string)LLLoginResponseRegister.GetValue("AllowFirstLife"); }
         }
 
         public bool AllowExportPermission
         {
-            get { return (bool)LLLoginResponseRegister.GetValue ("AllowExportPermission"); }
+            get { return (bool)LLLoginResponseRegister.GetValue("AllowExportPermission"); }
         }
 
         public string OpenIDURL
         {
-            get { return (string)LLLoginResponseRegister.GetValue ("OpenIDURL"); }
+            get { return (string)LLLoginResponseRegister.GetValue("OpenIDURL"); }
         }
 
         public string SnapshotConfigURL
         {
-            get { return (string)LLLoginResponseRegister.GetValue ("SnapshotConfigURL"); }
+            get { return (string)LLLoginResponseRegister.GetValue("SnapshotConfigURL"); }
         }
 
         public string HelpURL
         {
-            get { return (string)LLLoginResponseRegister.GetValue ("HelpURL"); }
+            get { return (string)LLLoginResponseRegister.GetValue("HelpURL"); }
         }
 
         public int MaxAgentGroups
         {
-            get { return (int)LLLoginResponseRegister.GetValue ("MaxAgentGroups"); }
+            get { return (int)LLLoginResponseRegister.GetValue("MaxAgentGroups"); }
         }
 
         public string VoiceServerType
         {
-            get { return (string)LLLoginResponseRegister.GetValue ("VoiceServerType"); }
+            get { return (string)LLLoginResponseRegister.GetValue("VoiceServerType"); }
         }
 
         public string TutorialURL
         {
-            get { return (string)LLLoginResponseRegister.GetValue ("TutorialURL"); }
+            get { return (string)LLLoginResponseRegister.GetValue("TutorialURL"); }
         }
 
         public string MapTileURL
         {
-            get { return (string)LLLoginResponseRegister.GetValue ("MapTileURL"); }
+            get { return (string)LLLoginResponseRegister.GetValue("MapTileURL"); }
         }
 
         public string SearchURL
         {
-            get { return (string)LLLoginResponseRegister.GetValue ("SearchURL"); }
+            get { return (string)LLLoginResponseRegister.GetValue("SearchURL"); }
         }
 
         public string WebProfileURL
         {
-            get { return (string)LLLoginResponseRegister.GetValue ("WebProfileURL"); }
+            get { return (string)LLLoginResponseRegister.GetValue("WebProfileURL"); }
         }
 
         public string Message
         {
-            get 
+            get
             {
-                string retVal = (string)LLLoginResponseRegister.GetValue ("Message");
-                if (retVal.Contains ("<USERNAME>"))
-                    retVal = retVal.Replace ("<USERNAME>", firstname + " " + lastname);
+                string retVal = (string)LLLoginResponseRegister.GetValue("Message");
+                if (retVal.Contains("<USERNAME>"))
+                    retVal = retVal.Replace("<USERNAME>", firstname + " " + lastname);
                 return retVal;
             }
         }
@@ -1160,16 +1160,16 @@ namespace OpenSim.Services.LLLoginService
     /// </summary>
     public class LLLoginResponseRegister
     {
-        private static Dictionary<string, object> m_values = new Dictionary<string, object> ();
+        private static Dictionary<string, object> m_values = new Dictionary<string, object>();
 
-        public static void RegisterValue (string key, object value)
+        public static void RegisterValue(string key, object value)
         {
             m_values[key] = value;
         }
 
-        public static object GetValue (string key)
+        public static object GetValue(string key)
         {
-            if (m_values.ContainsKey (key))
+            if (m_values.ContainsKey(key))
                 return m_values[key];
             return null;
         }

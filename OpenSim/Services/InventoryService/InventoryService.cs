@@ -300,7 +300,7 @@ namespace OpenSim.Services.InventoryService
 
             InventoryFolderBase[] allFolders = m_Database.GetFolders (
                     new string[] { "agentID" },
-                    new string[] { principalID.ToString() });
+                    new string[] { principalID.ToString() }).ToArray();
 
             InventoryFolderBase[] sysFolders = Array.FindAll (
                     allFolders,
@@ -319,23 +319,23 @@ namespace OpenSim.Services.InventoryService
 
         public virtual List<InventoryFolderBase> GetInventorySkeleton(UUID principalID)
         {
-            InventoryFolderBase[] allFolders = m_Database.GetFolders (
+            List<InventoryFolderBase> allFolders = m_Database.GetFolders(
                     new string[] { "agentID" },
                     new string[] { principalID.ToString() });
 
-            if (allFolders.Length == 0)
+            if (allFolders.Count == 0)
                 return null;
 
-            return new List<InventoryFolderBase>(allFolders);
+            return allFolders;
         }
 
         public virtual InventoryFolderBase GetRootFolder(UUID principalID)
         {
-            InventoryFolderBase[] folders = m_Database.GetFolders (
+            List<InventoryFolderBase> folders = m_Database.GetFolders(
                     new string[] { "agentID", "parentFolderID"},
                     new string[] { principalID.ToString(), UUID.Zero.ToString() });
 
-            if (folders.Length == 0)
+            if (folders.Count == 0)
                 return null;
 
             InventoryFolderBase root = null;
@@ -352,11 +352,11 @@ namespace OpenSim.Services.InventoryService
         {
 //            m_log.DebugFormat("[XINVENTORY SERVICE]: Getting folder type {0} for user {1}", type, principalID);
 
-            InventoryFolderBase[] folders = m_Database.GetFolders (
+            List<InventoryFolderBase> folders = m_Database.GetFolders(
                     new string[] { "agentID", "type"},
                     new string[] { principalID.ToString(), ((int)type).ToString() });
 
-            if (folders.Length == 0)
+            if (folders.Count == 0)
             {
 //                m_log.WarnFormat("[XINVENTORY SERVICE]: Found no folder for type {0} for user {1}", type, principalID);
                 return null;
@@ -378,31 +378,40 @@ namespace OpenSim.Services.InventoryService
             m_log.DebugFormat("[XINVENTORY SERVICE]: Fetch contents for folder {0}", folderID.ToString());
             InventoryCollection inventory = new InventoryCollection();
             inventory.UserID = principalID;
-            inventory.Folders = new List<InventoryFolderBase>();
-            inventory.Items = new List<InventoryItemBase>();
 
-            inventory.Folders.AddRange(m_Database.GetFolders (
+            inventory.Folders = m_Database.GetFolders (
                     new string[] { "parentFolderID"},
-                    new string[] { folderID.ToString() }));
+                    new string[] { folderID.ToString() });
 
-            inventory.Items.AddRange(m_Database.GetItems (
+            inventory.Items = m_Database.GetItems (
                     new string[] { "parentFolderID"},
-                    new string[] { folderID.ToString() }));
+                    new string[] { folderID.ToString() });
 
             return inventory;
         }
-        
+
         public virtual List<InventoryItemBase> GetFolderItems(UUID principalID, UUID folderID)
         {
-//            m_log.DebugFormat("[XINVENTORY]: Fetch items for folder {0}", folderID);
-            
+            //            m_log.DebugFormat("[XINVENTORY]: Fetch items for folder {0}", folderID);
+
             // Since we probably don't get a valid principal here, either ...
             //
-            List<InventoryItemBase> invItems = new List<InventoryItemBase>();
+            List<InventoryItemBase> invItems = m_Database.GetItems(
+                    new string[] { "parentFolderID" },
+                    new string[] { folderID.ToString() });
 
-            invItems.AddRange(m_Database.GetItems (
-                    new string[] { "parentFolderID"},
-                    new string[] { folderID.ToString() }));
+            return invItems;
+        }
+
+        public virtual List<InventoryFolderBase> GetFolderFolders(UUID principalID, UUID folderID)
+        {
+            //            m_log.DebugFormat("[XINVENTORY]: Fetch folders for folder {0}", folderID);
+
+            // Since we probably don't get a valid principal here, either ...
+            //
+            List<InventoryFolderBase> invItems = m_Database.GetFolders(
+                    new string[] { "parentFolderID" },
+                    new string[] { folderID.ToString() });
 
             return invItems;
         }
@@ -439,11 +448,11 @@ namespace OpenSim.Services.InventoryService
 
         public virtual bool MoveFolder(InventoryFolderBase folder)
         {
-            InventoryFolderBase[] x = m_Database.GetFolders (
+            List<InventoryFolderBase> x = m_Database.GetFolders(
                     new string[] { "folderID" },
                     new string[] { folder.ID.ToString() });
 
-            if (x.Length == 0)
+            if (x.Count == 0)
                 return false;
 
             x[0].ParentID = folder.ParentID;
@@ -481,7 +490,7 @@ namespace OpenSim.Services.InventoryService
             if (!ParentIsTrash(folder.ID))
                 return false;
 
-            InventoryFolderBase[] subFolders = m_Database.GetFolders (
+            List<InventoryFolderBase> subFolders = m_Database.GetFolders(
                     new string[] { "parentFolderID" },
                     new string[] { folder.ID.ToString() });
 
@@ -498,7 +507,7 @@ namespace OpenSim.Services.InventoryService
 
         public virtual bool ForcePurgeFolder (InventoryFolderBase folder)
         {
-            InventoryFolderBase[] subFolders = m_Database.GetFolders (
+            List<InventoryFolderBase> subFolders = m_Database.GetFolders(
                     new string[] { "parentFolderID" },
                     new string[] { folder.ID.ToString () });
 
@@ -554,7 +563,7 @@ namespace OpenSim.Services.InventoryService
 
         public virtual InventoryItemBase GetItem(InventoryItemBase item)
         {
-            InventoryItemBase[] items = m_Database.GetItems (
+            List<InventoryItemBase> items = m_Database.GetItems(
                     new string[] { "inventoryID" },
                     new string[] { item.ID.ToString() });
 
@@ -594,7 +603,7 @@ namespace OpenSim.Services.InventoryService
                 }
             }
 
-            if (items.Length == 0)
+            if (items.Count == 0)
                 return null;
 
             return items[0];
@@ -602,11 +611,11 @@ namespace OpenSim.Services.InventoryService
 
         public virtual InventoryFolderBase GetFolder(InventoryFolderBase folder)
         {
-            InventoryFolderBase[] folders = m_Database.GetFolders (
+            List<InventoryFolderBase> folders = m_Database.GetFolders(
                     new string[] { "folderID"},
                     new string[] { folder.ID.ToString() });
 
-            if (folders.Length == 0)
+            if (folders.Count == 0)
                 return null;
 
             return folders[0];
@@ -634,8 +643,8 @@ namespace OpenSim.Services.InventoryService
 
         private bool ParentIsTrash(UUID folderID)
         {
-            InventoryFolderBase[] folder = m_Database.GetFolders(new string[] {"folderID"}, new string[] {folderID.ToString()});
-            if (folder.Length < 1)
+            List<InventoryFolderBase> folder = m_Database.GetFolders(new string[] { "folderID" }, new string[] { folderID.ToString() });
+            if (folder.Count < 1)
                 return false;
 
             if (folder[0].Type == (int)AssetType.TrashFolder)
@@ -645,8 +654,8 @@ namespace OpenSim.Services.InventoryService
 
             while (parentFolder != UUID.Zero)
             {
-                InventoryFolderBase[] parent = m_Database.GetFolders (new string[] { "folderID" }, new string[] { parentFolder.ToString () });
-                if (parent.Length < 1)
+                List<InventoryFolderBase> parent = m_Database.GetFolders(new string[] { "folderID" }, new string[] { parentFolder.ToString() });
+                if (parent.Count < 1)
                     return false;
 
                 if (parent[0].Type == (int)AssetType.TrashFolder)

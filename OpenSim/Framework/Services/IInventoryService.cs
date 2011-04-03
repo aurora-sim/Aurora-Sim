@@ -77,6 +77,14 @@ namespace OpenSim.Services.Interfaces
         /// <param name="folderID"></param>
         /// <returns></returns>
         InventoryCollection GetFolderContent(UUID userID, UUID folderID);
+
+        /// <summary>
+        /// Gets the folders inside a folder
+        /// </summary>
+        /// <param name="userID"></param>
+        /// <param name="folderID"></param>
+        /// <returns></returns>
+        List<InventoryFolderBase> GetFolderFolders(UUID userID, UUID folderID);
         
         /// <summary>
         /// Gets the items inside a folder
@@ -197,8 +205,8 @@ namespace OpenSim.Services.Interfaces
 
     public interface IInventoryData : IAuroraDataPlugin
     {
-        InventoryFolderBase[] GetFolders (string[] fields, string[] vals);
-        InventoryItemBase[] GetItems (string[] fields, string[] vals);
+        List<InventoryFolderBase> GetFolders(string[] fields, string[] vals);
+        List<InventoryItemBase> GetItems (string[] fields, string[] vals);
 
         bool StoreFolder (InventoryFolderBase folder);
         bool StoreItem (InventoryItemBase item);

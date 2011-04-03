@@ -107,7 +107,7 @@ namespace OpenSim.Services.CapsService
             {
                 //m_log.DebugFormat("[InventoryCAPS]: Received WebFetchInventoryDescendents request for {0}", AgentID);
 
-                OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
+                OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 
                 OSDArray foldersrequested = (OSDArray)map["folders"];
 
@@ -175,6 +175,7 @@ namespace OpenSim.Services.CapsService
                 map.Add("items", items);
 
                 response = OSDParser.SerializeLLSDXmlString(map);
+                map.Clear();
                 return response;
             }
             catch (Exception ex)
@@ -206,12 +207,11 @@ namespace OpenSim.Services.CapsService
                     UUID owner_id = requestedFolders["owner_id"].AsUUID();
                     UUID item_id = requestedFolders["item_id"].AsUUID();
                     InventoryItemBase item = null;
-                    if (m_libraryService != null && m_libraryService.LibraryRootFolder != null)
-                    {
-                        item = m_libraryService.LibraryRootFolder.FindItem(item_id);
-                    }
+
                     if (item == null) //Try normal inventory them
                         item = m_inventoryService.GetItem(new InventoryItemBase(item_id, owner_id));
+                    if (item == null && m_libraryService != null)
+                        item = m_inventoryService.GetItem(new InventoryItemBase(item_id, m_libraryService.LibraryOwner));
                     if (item != null)
                     {
                         items.Add(ConvertInventoryItem(item, owner_id));
@@ -220,6 +220,7 @@ namespace OpenSim.Services.CapsService
                 map.Add("items", items);
 
                 response = OSDParser.SerializeLLSDXmlString(map);
+                map.Clear();
                 return response;
             }
             catch (Exception ex)
@@ -240,11 +241,13 @@ namespace OpenSim.Services.CapsService
         {
             OSDMap contents = new OSDMap();
             OSDArray folders = new OSDArray();
+            OSDArray categories = new OSDArray();
+            OSDArray items = new OSDArray();
+            OSDMap internalContents = new OSDMap();
 
             foreach (OSD m in fetchRequest)
             {
                 OSDMap invFetch = (OSDMap)m;
-                OSDMap internalContents = new OSDMap();
 
                 //UUID agent_id = invFetch["agent_id"].AsUUID();
                 UUID owner_id = invFetch["owner_id"].AsUUID();
@@ -265,7 +268,6 @@ namespace OpenSim.Services.CapsService
                 int version = 0;
                 inv = HandleFetchInventoryDescendentsCAPS(AgentID, folder_id, owner_id, fetch_folders, fetch_items, sort_order, Library, out version);
 
-                OSDArray categories = new OSDArray();
                 if (inv.Folders != null)
                 {
                     foreach (InventoryFolderBase invFolder in inv.Folders)
@@ -275,25 +277,36 @@ namespace OpenSim.Services.CapsService
                 }
                 internalContents["categories"] = categories;
 
-                OSDArray items = new OSDArray();
                 if (inv.Items != null)
                 {
-                    foreach (InventoryItemBase invItem in inv.Items)
+                    for(int i = 0; i < inv.Items.Count; i++)
                     {
-                        items.Add(ConvertInventoryItem(invItem, AgentID));
+                        items.Add(ConvertInventoryItem(inv.Items[i], AgentID));
+                        inv.Items[i] = null;
                     }
                 }
                 internalContents["items"] = items;
-
                 internalContents["descendents"] = items.Count + categories.Count;
                 internalContents["version"] = version;
+
+                if (inv.Folders != null)
+                    inv.Folders.Clear();
+                if (inv.Items != null)
+                    inv.Items.Clear();
 
                 //Now add it to the folder array
                 folders.Add(internalContents);
             }
 
             contents["folders"] = folders;
-            return OSDParser.SerializeLLSDXmlString(contents);
+            string retVal = OSDParser.SerializeLLSDXmlString(contents);
+
+            items.Clear();
+            categories.Clear();
+            internalContents.Clear();
+            folders.Clear();
+            contents.Clear();
+            return retVal;
         }
 
         /// <summary>
@@ -385,31 +398,25 @@ namespace OpenSim.Services.CapsService
             InventoryFolderImpl fold;
 
             InventoryCollection contents = new InventoryCollection();
-            //if (Library)
-            // {
-            //version = 0;
-            if (m_libraryService != null && m_libraryService.LibraryRootFolder != null)
+            if (Library && m_libraryService != null)
             {
-                if ((fold = m_libraryService.LibraryRootFolder.FindFolder(folderID)) != null)
+                version = 0;
+                if (fetchFolders)
                 {
-                    version = 0;
-                    InventoryCollection ret = new InventoryCollection();
-                    ret.Folders = new List<InventoryFolderBase>();
-                    ret.Items = fold.RequestListOfItems();
-
-                    return ret;
+                    contents = m_inventoryService.GetFolderContent(m_libraryService.LibraryOwner, folderID);
                 }
+                else if (fetchItems)
+                {
+                    contents.Items = m_inventoryService.GetFolderItems(m_libraryService.LibraryOwner, folderID);
+                }
+                return contents;
             }
-            //return contents;
-            //}
 
-            //if (folderID != UUID.Zero)
-            //{
             if (fetchFolders)
             {
                 contents = m_inventoryService.GetFolderContent(agentID, folderID);
             }
-            if (fetchItems)
+            else if (fetchItems)
             {
                 contents.Items = m_inventoryService.GetFolderItems(agentID, folderID);
             }
@@ -421,12 +428,6 @@ namespace OpenSim.Services.CapsService
                 version = containingFolder.Version;
             else
                 version = 1;
-            //}
-            //else
-            //{
-            //    // Lost itemsm don't really need a version
-            //    version = 1;
-            //}
 
             return contents;
 

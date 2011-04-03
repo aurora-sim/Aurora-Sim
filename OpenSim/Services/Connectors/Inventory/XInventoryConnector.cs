@@ -160,6 +160,11 @@ namespace OpenSim.Services.Connectors
             return inventory;
         }
 
+        public virtual List<InventoryFolderBase> GetFolderFolders(UUID principalID, UUID folderID)
+        {
+            return new List<InventoryFolderBase>();
+        }
+
         public virtual List<InventoryItemBase> GetFolderItems(UUID principalID, UUID folderID)
         {
             Dictionary<string,object> ret = MakeRequest("GETFOLDERITEMS",

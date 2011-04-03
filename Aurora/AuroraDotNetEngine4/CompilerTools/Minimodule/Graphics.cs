@@ -65,7 +65,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             AssetBase bmp = m_scene.AssetService.Get(assetID.ToString());
             ManagedImage outimg;
             Image img;
-            OpenJPEGDecoder.DecodeToImage(bmp.Data, out outimg, out img);
+            OpenJPEG.DecodeToImage(bmp.Data, out outimg, out img);
 
             return new Bitmap(img);
         }
