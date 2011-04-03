@@ -5040,7 +5040,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             region = lm.Position + new Vector3(rx, ry, 0) - region;
 
                             string reply = region.ToString();
-                            dataserverPlugin.AddReply(i.ToString(),
+                            dataserverPlugin.AddReply(item.AssetID.ToString(),
                                                              reply, 1000);
                         });
 
@@ -11827,7 +11827,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         string data = enc.GetString(a.Data);
                         //m_log.Debug(data);
                         NotecardCache.Cache(id, data);
-                        dataserverPlugin.AddReply(id.ToString(),
+                        dataserverPlugin.AddReply(assetID.ToString(),
                                 NotecardCache.GetLines(id).ToString(), 100);
                         }
                 });

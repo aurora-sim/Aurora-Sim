@@ -159,10 +159,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             lock (DataserverRequests)
             {
                 DataserverRequest request = null;
-                DataserverRequests.TryGetValue(handle, out request);
-                //Wait for the value to be returned in LSL_Api
-                request.IsCompleteAt = DateTime.Now.AddSeconds(millisecondsToWait / 1000 + 0.1);
-                request.Reply = reply;
+                if (DataserverRequests.TryGetValue(handle, out request))
+                {
+                    //Wait for the value to be returned in LSL_Api
+                    request.IsCompleteAt = DateTime.Now.AddSeconds(millisecondsToWait / 1000 + 0.1);
+                    request.Reply = reply;
+                }
             }
         }
 
