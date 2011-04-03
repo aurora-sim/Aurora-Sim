@@ -299,12 +299,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public string State;
     }
 
-    public struct StateQueueItem
-    {
-        public ScriptData ID;
-        public bool Create;
-    }
-
     // Load/Unload structure
     public struct LUStruct
     {
@@ -320,42 +314,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         Reupload = 3
     }
 
-    public enum Trust : int
-    {
-        Full = 5,
-        Medium = 3,
-        Low = 1
-    }
-
-    public enum ScriptEventsState : int
-        {
-        Idle = 0,
-        Sleep = 1,
-        Suspended = 2,
-        Running = 3, //?
-        InExec = 4,
-        InExecAbort = 5,
-        Delete = 6,
-        Deleted = -1 //?
-        }
-
-    public class ScriptEventsProcData
-        {
-        public int State;
-        public bool IgnoreNew=false;
-        public QueueItemStruct CurExecQIS;
-        public Thread thread;
-        public DateTime TimeCheck;
-        public Queue EventsQueue = new Queue(10);
-        }
-
-    public enum LoadPriority : int
-    {
-        FirstStart = 0,
-        Restart = 1,
-        Stop = 2
-    }
-
     public enum StateSource
     {
         NewRez = 0,
@@ -364,50 +322,50 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         AttachedRez = 3
     }
 
-    //////////////////////////////////////////////////////////////
-    //
-    // Level description
-    //
-    // None     - Function is no threat at all. It doesn't constitute
-    //            an threat to either users or the system and has no
-    //            known side effects
-    //
-    // Nuisance - Abuse of this command can cause a nuisance to the
-    //            region operator, such as log message spew
-    //
-    // VeryLow  - Extreme levels ob abuse of this function can cause
-    //            impaired functioning of the region, or very gullible
-    //            users can be tricked into experiencing harmless effects
-    //
-    // Low      - Intentional abuse can cause crashes or malfunction
-    //            under certain circumstances, which can easily be rectified,
-    //            or certain users can be tricked into certain situations
-    //            in an avoidable manner.
-    //
-    // Moderate - Intentional abuse can cause denial of service and crashes
-    //            with potential of data or state loss, or trusting users
-    //            can be tricked into embarrassing or uncomfortable
-    //            situationsa.
-    //
-    // High     - Casual abuse can cause impaired functionality or temporary
-    //            denial of service conditions. Intentional abuse can easily
-    //            cause crashes with potential data loss, or can be used to
-    //            trick experienced and cautious users into unwanted situations,
-    //            or changes global data permanently and without undo ability
-    //            Malicious scripting can allow theft of content
-    //
-    // VeryHigh - Even normal use may, depending on the number of instances,
-    //            or frequency of use, result in severe service impairment
-    //            or crash with loss of data, or can be used to cause
-    //            unwanted or harmful effects on users without giving the
-    //            user a means to avoid it.
-    //
-    // Severe   - Even casual use is a danger to region stability, or function
-    //            allows console or OS command execution, or function allows
-    //            taking money without consent, or allows deletion or
-    //            modification of user data, or allows the compromise of
-    //            sensitive data by design.
-
+    /// <summary>
+    ///
+    /// Level description
+    ///
+    /// None     - Function is no threat at all. It doesn't constitute
+    ///            an threat to either users or the system and has no
+    ///            known side effects
+    ///
+    /// Nuisance - Abuse of this command can cause a nuisance to the
+    ///            region operator, such as log message spew
+    ///
+    /// VeryLow  - Extreme levels ob abuse of this function can cause
+    ///            impaired functioning of the region, or very gullible
+    ///            users can be tricked into experiencing harmless effects
+    ///
+    /// Low      - Intentional abuse can cause crashes or malfunction
+    ///            under certain circumstances, which can easily be rectified,
+    ///            or certain users can be tricked into certain situations
+    ///            in an avoidable manner.
+    ///
+    /// Moderate - Intentional abuse can cause denial of service and crashes
+    ///            with potential of data or state loss, or trusting users
+    ///            can be tricked into embarrassing or uncomfortable
+    ///            situationsa.
+    ///
+    /// High     - Casual abuse can cause impaired functionality or temporary
+    ///            denial of service conditions. Intentional abuse can easily
+    ///            cause crashes with potential data loss, or can be used to
+    ///            trick experienced and cautious users into unwanted situations,
+    ///            or changes global data permanently and without undo ability
+    ///            Malicious scripting can allow theft of content
+    ///
+    /// VeryHigh - Even normal use may, depending on the number of instances,
+    ///            or frequency of use, result in severe service impairment
+    ///            or crash with loss of data, or can be used to cause
+    ///            unwanted or harmful effects on users without giving the
+    ///            user a means to avoid it.
+    ///
+    /// Severe   - Even casual use is a danger to region stability, or function
+    ///            allows console or OS command execution, or function allows
+    ///            taking money without consent, or allows deletion or
+    ///            modification of user data, or allows the compromise of
+    ///            sensitive data by design.
+    /// </summary>
     public enum ThreatLevel
     {
         None = 0,

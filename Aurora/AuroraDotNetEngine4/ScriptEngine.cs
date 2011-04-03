@@ -938,7 +938,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             id.World = id.Part.ParentEntity.Scene;
             ls.ID = id;
             ScriptProtection.AddNewScript(id);
-            MaintenanceThread.AddScriptChange(new LUStruct[] { ls }, LoadPriority.Restart);
+            MaintenanceThread.AddScriptChange(new LUStruct[] { ls });
         }
 
         public void SaveStateSaves (UUID PrimID)
@@ -976,7 +976,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ls.ID = data;
             ls.Action = LUType.Unload;
 
-            MaintenanceThread.AddScriptChange(new LUStruct[] { ls }, LoadPriority.Stop);
+            MaintenanceThread.AddScriptChange(new LUStruct[] { ls });
 
             //Disconnect from other modules
             ObjectRemoved handlerObjectRemoved = OnObjectRemoved;

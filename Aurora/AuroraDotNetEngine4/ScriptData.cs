@@ -155,10 +155,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool MovingInQueue = false;
         public bool TargetOmegaWasSet = false;
 
-        public int EventsProcDataLocked = 0;
-        public bool InEventsProcData = false;
-        public ScriptEventsProcData EventsProcData = new ScriptEventsProcData();
-
         #endregion
 
         #region Close Script

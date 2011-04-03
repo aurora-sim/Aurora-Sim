@@ -789,7 +789,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     ItemsToStart.Add(itemToQueue);
             }
             if (ItemsToStart.Count != 0)
-                m_scriptEngine.MaintenanceThread.AddScriptChange(ItemsToStart.ToArray(), LoadPriority.FirstStart);
+                m_scriptEngine.MaintenanceThread.AddScriptChange(ItemsToStart.ToArray());
         }
         
         /// <summary>

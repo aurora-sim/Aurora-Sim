@@ -129,7 +129,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Add
 
-        public async Task AddScriptChange(LUStruct[] items, LoadPriority priority)
+        public async Task AddScriptChange(LUStruct[] items)
         {
             await TaskEx.Run(() =>
                 {
@@ -197,7 +197,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ScriptData ID;
 
             ID = QIS.ID;
-            if (ID == null || ID.EventsProcData.IgnoreNew)
+            if (ID == null)
                 return;
 
             if (!QIS.ID.SetEventParams(QIS.functionName, QIS.llDetectParams)) // check events delay rules
