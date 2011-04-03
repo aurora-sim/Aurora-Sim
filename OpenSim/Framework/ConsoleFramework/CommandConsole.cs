@@ -32,6 +32,9 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+#if NET_4_0
+using System.Threading.Tasks;
+#endif
 using log4net;
 using Nini.Config;
 using log4net.Core;
@@ -1014,18 +1017,20 @@ namespace OpenSim.Framework
         {
         }
 
-        public bool Processing = true;
 
         public void EndConsoleProcessing()
         {
             Processing = false;
         }
 
+        public bool Processing = true;
+#if !NET_4_0
         private delegate void PromptEvent();
         private IAsyncResult result = null;
         private PromptEvent action = null;
         private Object m_consoleLock = new Object();
         private bool m_calledEndInvoke = false;
+#endif
 
         /// <summary>
         /// Starts the prompt for the console. This will never stop until the region is closed.
@@ -1034,6 +1039,7 @@ namespace OpenSim.Framework
         {
             while (true)
             {
+#if !NET_4_0
                 if (!Processing)
                 {
                     throw new Exception ("Restart");
@@ -1071,6 +1077,16 @@ namespace OpenSim.Framework
                         result = null;
                     }
                 }
+#else
+                Task prompt = TaskEx.Run(() => { Prompt(); });
+                if (!Processing)
+                    throw new Exception("Restart");
+                while (!Task.WaitAll(new Task[1] { prompt }, 1000))
+                {
+                    if (!Processing)
+                        throw new Exception("Restart");
+                }
+#endif
             }
         }
     }
