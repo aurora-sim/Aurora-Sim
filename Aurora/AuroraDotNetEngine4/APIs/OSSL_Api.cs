@@ -177,13 +177,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// </summary>
         /// <param name="delay"></param>
         /// <returns></returns>
-        protected DateTime PScriptSleep(int delay)
+        protected void ScriptSleep(int delay)
         {
             delay = (int)((float)delay * m_ScriptDelayFactor);
             if (delay == 0)
-                return DateTime.Now;
+                return;
 
-            return DateTime.Now.AddMilliseconds(delay);
+            Thread.Sleep(delay);
         }
 
         //
@@ -628,7 +628,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public DateTime TeleportAgent(UUID agentID, ulong regionHandle, Vector3 position, Vector3 lookAt)
+        public void TeleportAgent(UUID agentID, ulong regionHandle, Vector3 position, Vector3 lookAt)
         {
             IScenePresence presence = World.GetScenePresence (agentID);
             if (presence != null)
@@ -641,7 +641,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                             presence.AbsolutePosition.X, presence.AbsolutePosition.Y).LandData.OwnerID &&
                         !World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false))
                     {
-                        return DateTime.Now;
+                        return;
                     }
                 }
                 presence.ControllingClient.SendTeleportStart((uint)TeleportFlags.ViaLocation);
@@ -655,12 +655,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         lookAt, (uint)TeleportFlags.ViaLocation);
                 }
 
-                return PScriptSleep(5000);
+                ScriptSleep(5000);
             }
-            return DateTime.Now;
         }
 
-        public DateTime osTeleportOwner(string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
+        public void osTeleportOwner(string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
         {
             // Threat level None because this is what can already be done with the World Map in the viewer
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osTeleportOwner", m_host, "OSSL");
@@ -673,18 +672,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 regInfo = regions[0];
 
                 ulong regionHandle = regInfo.RegionHandle;
-                return TeleportAgent(m_host.OwnerID, regionHandle, new Vector3((float)position.x, (float)position.y, (float)position.z),
+                TeleportAgent(m_host.OwnerID, regionHandle, new Vector3((float)position.x, (float)position.y, (float)position.z),
                             new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
             }
-            return DateTime.Now;
         }
 
-        public DateTime osTeleportOwner(LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
+        public void osTeleportOwner(LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
         {
-            return osTeleportOwner(World.RegionInfo.RegionName, position, lookat);
+            osTeleportOwner(World.RegionInfo.RegionName, position, lookat);
         }
 
-        public DateTime osTeleportOwner(int regionX, int regionY, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
+        public void osTeleportOwner(int regionX, int regionY, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osTeleportOwner", m_host, "OSSL");
 
@@ -693,14 +691,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (regInfo != null)
             {
                 ulong regionHandle = regInfo.RegionHandle;
-                return TeleportAgent(m_host.OwnerID, regionHandle, new Vector3((float)position.x, (float)position.y, (float)position.z),
+                TeleportAgent(m_host.OwnerID, regionHandle, new Vector3((float)position.x, (float)position.y, (float)position.z),
                             new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
             }
-            return DateTime.Now;
         }
 
         // Teleport functions
-        public DateTime osTeleportAgent(string agent, string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
+        public void osTeleportAgent(string agent, string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
         {
             // High because there is no security check. High griefer potential
             //
@@ -717,15 +714,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     regInfo = regions[0];
 
                     ulong regionHandle = regInfo.RegionHandle;
-                    return TeleportAgent(AgentID, regionHandle, new Vector3((float)position.x, (float)position.y, (float)position.z),
+                    TeleportAgent(AgentID, regionHandle, new Vector3((float)position.x, (float)position.y, (float)position.z),
                                 new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
                 }
             }
-            return DateTime.Now;
         }
 
         // Teleport functions
-        public DateTime osTeleportAgent(string agent, int regionX, int regionY, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
+        public void osTeleportAgent(string agent, int regionX, int regionY, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
         {
             // High because there is no security check. High griefer potential
             //
@@ -737,15 +733,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID agentId = new UUID();
             if (UUID.TryParse(agent, out agentId))
             {
-                return TeleportAgent(agentId, regionHandle, new Vector3((float)position.x, (float)position.y, (float)position.z),
+                TeleportAgent(agentId, regionHandle, new Vector3((float)position.x, (float)position.y, (float)position.z),
                                 new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
             }
-            return DateTime.Now;
         }
 
-        public DateTime osTeleportAgent(string agent, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
+        public void osTeleportAgent(string agent, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
         {
-            return osTeleportAgent(agent, World.RegionInfo.RegionName, position, lookat);
+            osTeleportAgent(agent, World.RegionInfo.RegionName, position, lookat);
         }
 
         // Functions that get information from the agent itself.
@@ -2249,9 +2244,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return 1;
         }
 
-        public DateTime osRezObject(string inventory, LSL_Types.Vector3 pos, LSL_Types.Vector3 vel, LSL_Types.Quaternion rot, int param, LSL_Integer isRezAtRoot, LSL_Integer doRecoil, LSL_Integer SetDieAtEdge, LSL_Integer CheckPos)
+        public void osRezObject(string inventory, LSL_Types.Vector3 pos, LSL_Types.Vector3 vel, LSL_Types.Quaternion rot, int param, LSL_Integer isRezAtRoot, LSL_Integer doRecoil, LSL_Integer SetDieAtEdge, LSL_Integer CheckPos)
         {
-            return m_LSL_Api.llRezPrim(inventory, pos, vel, rot, param, isRezAtRoot == 1, doRecoil == 1, SetDieAtEdge == 1, CheckPos == 1);
+            m_LSL_Api.llRezPrim(inventory, pos, vel, rot, param, isRezAtRoot == 1, doRecoil == 1, SetDieAtEdge == 1, CheckPos == 1);
         }
 
         /// <summary>

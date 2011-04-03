@@ -1489,7 +1489,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             retstr.Append(GenerateLine(")"));
 
             retstr.Append(GenerateLine("{"));
-            retstr.Append(GenerateLine("System.Threading.Thread.Sleep(3);"));
+            retstr.Append(GenerateLine("CheckSleep();"));
 
             foreach (SYMBOL kid in remainingKids)
                 retstr.Append(GenerateNode(kid));
@@ -2138,7 +2138,7 @@ default
             retstr += GenerateLine(")");
 
             retstr += GenerateLine("{");
-            retstr += GenerateLine("System.Threading.Thread.Sleep(3);");
+            retstr += GenerateLine("CheckSleep();");
 
             // CompoundStatement handles indentation itself but we need to do it
             // otherwise.
@@ -2165,7 +2165,7 @@ default
             tmpstr += GenerateIndentedLine("do", dws);
 
             retstr += GenerateLine("{");
-            retstr += GenerateLine("System.Threading.Thread.Sleep(3);");
+            retstr += GenerateLine("CheckSleep();");
             // CompoundStatement handles indentation itself but we need to do it
             // otherwise.
             bool indentHere = dws.kids.Top is Statement;

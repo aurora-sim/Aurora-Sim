@@ -45,6 +45,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
     public partial class ScriptBaseClass : MarshalByRefObject, IScript, IDisposable
     {
         private ScriptSponsor m_sponser;
+        private const int m_TimeToSleepInLoops = 3;
 
         public ISponsor Sponsor
         {
@@ -517,6 +518,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             // Does what is says on the packet. Nowt, nada, nothing.
             // Required for insertion after a jump label to do what it says on the packet!
             // With a bit of luck the compiler may even optimize it out.
+        }
+
+        public void CheckSleep()
+        {
+            Thread.Sleep(m_TimeToSleepInLoops);
         }
 
         public string Name 
