@@ -1184,8 +1184,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (Math.Abs (vec.Z) < 0.001)
                         vec.Z = 0;
 
-
-                    doForce (vec);
+                    if (vec == Vector3.Zero) //if we arn't moving, STOP
+                        d.BodySetLinearVel(Body, vec.X, vec.Y, vec.Z);
+                    else
+                        doForce (vec);
 
                     //When falling, we keep going faster and faster, and eventually, the client blue screens (blue is all you see).
                     // The speed that does this is slightly higher than -30, so we cap it here so we never do that during falling.
@@ -1567,7 +1569,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 d.BodyAddForce(Body, force.X, force.Y, force.Z);
                 //d.BodySetRotation(Body, ref m_StandUpRotation);
                 //standupStraight();
-
             }
         }
 
