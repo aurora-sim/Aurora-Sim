@@ -90,7 +90,6 @@ namespace OpenSim.Services.CapsService
 
             if (m_assetService == null)
             {
-                m_log.Error("[GETTEXTURE]: Cannot fetch texture " + textureStr + " without an asset service");
                 httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
                 return null;
             }
@@ -206,6 +205,11 @@ namespace OpenSim.Services.CapsService
                 }
                 else // it was on the cache
                 {
+                    if (texture.Type != (sbyte)AssetType.Texture)
+                    {
+                        httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
+                        return true;
+                    }
                     //m_log.DebugFormat("[GETTEXTURE]: texture was in the cache");
                     WriteTextureData(httpRequest, httpResponse, texture, format);
                     return true;
@@ -217,7 +221,6 @@ namespace OpenSim.Services.CapsService
             m_log.Warn("[GETTEXTURE]: Texture " + textureID + " not found");
             httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
             return true;
-
         }
 
         private void WriteTextureData(OSHttpRequest request, OSHttpResponse response, AssetBase texture, string format)
@@ -308,7 +311,7 @@ namespace OpenSim.Services.CapsService
                 imgstream = new MemoryStream();
 
                 // Decode image to System.Drawing.Image
-                if (OpenJPEGDecoder.DecodeToImage(texture.Data, out managedImage, out image))
+                if (OpenJPEG.DecodeToImage(texture.Data, out managedImage, out image))
                 {
                     // Save to bitmap
                     mTexture = new Bitmap(image);

@@ -576,7 +576,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             try
             {
-                if (OpenJPEGDecoder.DecodeToImage(asset.Data, out managedImage, out image))
+                if (OpenJPEG.DecodeToImage(asset.Data, out managedImage, out image))
                     return new Bitmap(image);
             }
             catch (DllNotFoundException)

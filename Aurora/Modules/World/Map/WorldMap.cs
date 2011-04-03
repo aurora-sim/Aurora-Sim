@@ -674,7 +674,7 @@ namespace Aurora.Modules
                     AssetBase mapasset = m_scene.AssetService.Get(m_scene.RegionInfo.RegionSettings.TerrainImageID.ToString());
 
                     // Decode image to System.Drawing.Image
-                    if (OpenJPEGDecoder.DecodeToImage(mapasset.Data, out managedImage, out image))
+                    if (OpenJPEG.DecodeToImage(mapasset.Data, out managedImage, out image))
                     {
                         // Save to bitmap
                         mapTexture = new Bitmap(image);
@@ -787,7 +787,7 @@ namespace Aurora.Modules
                 ManagedImage managedImage;
                 Image image;
 
-                if (OpenJPEGDecoder.DecodeToImage(asset.Data, out managedImage, out image))
+                if (OpenJPEG.DecodeToImage(asset.Data, out managedImage, out image))
                     bitImages.Add(image);
             }
 
@@ -1005,7 +1005,7 @@ namespace Aurora.Modules
                 imgstream = new MemoryStream();
 
                 // Decode image to System.Drawing.Image
-                if (OpenJPEGDecoder.DecodeToImage(data, out managedImage, out image))
+                if (OpenJPEG.DecodeToImage(data, out managedImage, out image))
                 {
                     // Save to bitmap
                     mapTexture = new Bitmap(image);
