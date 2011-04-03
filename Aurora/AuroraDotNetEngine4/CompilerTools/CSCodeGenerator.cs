@@ -1488,8 +1488,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             retstr.Append(GenerateLine(")"));
 
+            retstr.Append(GenerateLine("{"));
+            retstr.Append(GenerateLine("System.Threading.Thread.Sleep(3);"));
+
             foreach (SYMBOL kid in remainingKids)
                 retstr.Append(GenerateNode(kid));
+
+            retstr.Append(GenerateLine("}"));
 
             return retstr.ToString();
         }
@@ -2127,13 +2132,13 @@ default
         private string GenerateWhileStatement(WhileStatement ws)
         {
             string retstr = "";
-            string tmpstr = "";
 
-            tmpstr += GenerateIndented("while (", ws);
-            tmpstr += GenerateNode((SYMBOL)ws.kids.Pop());
-            tmpstr += GenerateLine(")");
+            retstr += GenerateIndented("while (", ws);
+            retstr += GenerateNode((SYMBOL)ws.kids.Pop());
+            retstr += GenerateLine(")");
 
-            retstr += tmpstr.ToString();
+            retstr += GenerateLine("{");
+            retstr += GenerateLine("System.Threading.Thread.Sleep(3);");
 
             // CompoundStatement handles indentation itself but we need to do it
             // otherwise.
@@ -2141,6 +2146,8 @@ default
             if (indentHere) m_braceCount++;
                 retstr += GenerateNode((SYMBOL)ws.kids.Pop());
             if (indentHere) m_braceCount--;
+
+            retstr += GenerateLine("}");
 
             return retstr.ToString();
         }
@@ -2156,12 +2163,17 @@ default
             string tmpstr = "";
 
             tmpstr += GenerateIndentedLine("do", dws);
+
+            retstr += GenerateLine("{");
+            retstr += GenerateLine("System.Threading.Thread.Sleep(3);");
             // CompoundStatement handles indentation itself but we need to do it
             // otherwise.
             bool indentHere = dws.kids.Top is Statement;
             if (indentHere) m_braceCount++;
             tmpstr += GenerateNode((SYMBOL)dws.kids.Pop());
             if (indentHere) m_braceCount--;
+
+            retstr += GenerateLine("}");
 
             //Forces all functions to use MoveNext() instead of .Current, as it never changes otherwise, and the loop runs infinitely
 
