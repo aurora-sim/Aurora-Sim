@@ -99,7 +99,7 @@ namespace Aurora.Modules
         {
             m_manager.ForEachCurrentScene(delegate(Scene scene)
                     {
-                        m_backup[scene].ProcessPrimBackupTaints(true, args.Count == 1);
+                        m_backup[scene].ProcessPrimBackupTaints(true, cmdparams.Length == 1);
                     });
         }
 
