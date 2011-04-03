@@ -14,8 +14,8 @@ namespace Aurora.Framework
     {
         public ThreadPriority priority;
         public int Threads = 0;
-        public int InitialSleepTime = 5;
-        public int MaxSleepTime = 300;
+        public int InitialSleepTime = 10;
+        public int MaxSleepTime = 100;
     }
 
     public class AuroraThreadPool
@@ -38,7 +38,7 @@ namespace Aurora.Framework
             Sleeping = new int[m_info.Threads];
             nthreads = 0;
             nSleepingthreads = 0;
-            SleepTimeStep = m_info.MaxSleepTime / 3;
+            SleepTimeStep = m_info.MaxSleepTime;
                 // lets threads check for work a bit faster in case we have all sleeping and awake interrupt fails
             }
 

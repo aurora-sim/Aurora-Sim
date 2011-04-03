@@ -183,28 +183,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         }
 
-       protected virtual void ScriptSleep(int delay)
+        protected virtual void ScriptSleep(int delay)
         {
             delay = (int)((float)delay * m_ScriptDelayFactor);
             if (delay == 0)
                 return;
 
             System.Threading.Thread.Sleep(delay);
-        }
-
-        /// <summary>
-        /// This is the new sleep implementation that allows for us to not freeze the script thread while we run
-        /// </summary>
-        /// <param name="delay"></param>
-        /// <returns></returns>
-        protected DateTime PScriptSleep(int delay)
-        {
-            double dly = ((float)delay * m_ScriptDelayFactor);
-            if (dly == 0.0)
-                return DateTime.Now;
-
-            DateTime timeToStopSleeping = DateTime.Now.AddMilliseconds(dly);
-            return timeToStopSleeping;
         }
 
         public IScene World
@@ -1978,25 +1963,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public DateTime llSetTexture(string texture, int face)
+        public void llSetTexture(string texture, int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             SetTexture(m_host, texture, face);
-            return PScriptSleep(200);
+            ScriptSleep(200);
         }
 
-        public DateTime llSetLinkTexture(int linknumber, string texture, int face)
+        public void llSetLinkTexture(int linknumber, string texture, int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
 
-            List<ISceneChildEntity> parts = GetLinkParts (linknumber);
+            List<ISceneChildEntity> parts = GetLinkParts(linknumber);
 
             foreach (ISceneChildEntity part in parts)
-              SetTexture(part, texture, face);
+                SetTexture(part, texture, face);
 
-            return PScriptSleep(100);
+            ScriptSleep(100);
         }
 
         protected void SetTexture (ISceneChildEntity part, string texture, int face)
@@ -2036,13 +2021,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public DateTime llScaleTexture(double u, double v, int face)
+        public void llScaleTexture(double u, double v, int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
 
             ScaleTexture(m_host, u, v, face);
-            return PScriptSleep(200);
+            ScriptSleep(200);
         }
 
         protected void ScaleTexture (ISceneChildEntity part, double u, double v, int face)
@@ -2075,12 +2060,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public DateTime llOffsetTexture(double u, double v, int face)
+        public void llOffsetTexture(double u, double v, int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             OffsetTexture(m_host, u, v, face);
-            return PScriptSleep(200);
+            ScriptSleep(200);
         }
 
         protected void OffsetTexture (ISceneChildEntity part, double u, double v, int face)
@@ -2113,12 +2098,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public DateTime llRotateTexture(double rotation, int face)
+        public void llRotateTexture(double rotation, int face)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             RotateTexture(m_host, rotation, face);
-            return PScriptSleep(200);
+            ScriptSleep(200);
         }
 
         protected void RotateTexture(ISceneChildEntity part, double rotation, int face)
@@ -2180,14 +2165,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public DateTime llSetPos(LSL_Vector pos)
+        public void llSetPos(LSL_Vector pos)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
 
             SetPos(m_host, pos);
 
-            return PScriptSleep(200);
+            ScriptSleep(200);
         }
 
         // Capped movemment if distance > 10m (http://wiki.secondlife.com/wiki/LlSetPos)
@@ -2295,7 +2280,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public DateTime llSetRot(LSL_Rotation rot)
+        public void llSetRot(LSL_Rotation rot)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -2319,15 +2304,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
             }
-            return PScriptSleep(200);
+            ScriptSleep(200);
         }
 
-        public DateTime llSetLocalRot(LSL_Rotation rot)
+        public void llSetLocalRot(LSL_Rotation rot)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             SetRot(m_host, Rot2Quaternion(rot));
-            return PScriptSleep(200);
+            ScriptSleep(200);
         }
 
         protected void SetRot(ISceneChildEntity part, Quaternion rot)
@@ -2727,12 +2712,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public DateTime llPreloadSound(string sound)
+        public void llPreloadSound(string sound)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             m_host.PreloadSound(sound);
-            return PScriptSleep(1000);
+            ScriptSleep(1000);
         }
 
         /// <summary>
@@ -3026,7 +3011,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return 0;
         }
 
-        public DateTime llMakeExplosion(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
+        public void llMakeExplosion(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -3098,10 +3083,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             llParticleSystem(new LSL_Types.list(list.ToArray()));
 
-            return PScriptSleep(100);
+            ScriptSleep(100);
         }
 
-        public DateTime llMakeFountain(int particles, double scale, double vel, double lifetime, double arc, int bounce, string texture, LSL_Vector offset, double bounce_offset)
+        public void llMakeFountain(int particles, double scale, double vel, double lifetime, double arc, int bounce, string texture, LSL_Vector offset, double bounce_offset)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -3173,10 +3158,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             llParticleSystem(new LSL_Types.list(list.ToArray()));
 
-            return PScriptSleep(100);
+            ScriptSleep(100);
         }
 
-        public DateTime llMakeSmoke(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
+        public void llMakeSmoke(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -3245,10 +3230,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             list.Add(new LSL_Vector(0, 0, 0));
 
             llParticleSystem(new LSL_Types.list(list.ToArray()));
-            return PScriptSleep(100);
+            ScriptSleep(100);
         }
 
-        public DateTime llMakeFire(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
+        public void llMakeFire(int particles, double scale, double vel, double lifetime, double arc, string texture, LSL_Vector offset)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -3319,12 +3304,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             list.Add(new LSL_Vector(0, 0, 0));
 
             llParticleSystem(new LSL_Types.list(list.ToArray()));
-            return PScriptSleep(100);
+            ScriptSleep(100);
         }
 
-        public DateTime llRezAtRoot(string inventory, LSL_Vector pos, LSL_Vector vel, LSL_Rotation rot, int param)
+        public void llRezAtRoot(string inventory, LSL_Vector pos, LSL_Vector vel, LSL_Rotation rot, int param)
         {
-            return llRezPrim(inventory, pos, vel, rot, param, true, true, true, true);
+            llRezPrim(inventory, pos, vel, rot, param, true, true, true, true);
         }
 
         /// <summary>
@@ -3337,20 +3322,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <param name="param"></param>
         /// <param name="isRezAtRoot"></param>
         /// <returns></returns>
-        public DateTime llRezPrim(string inventory, LSL_Types.Vector3 pos, LSL_Types.Vector3 vel, LSL_Types.Quaternion rot, int param, bool isRezAtRoot, bool doRecoil, bool SetDieAtEdge, bool CheckPos)
+        public void llRezPrim(string inventory, LSL_Types.Vector3 pos, LSL_Types.Vector3 vel, LSL_Types.Quaternion rot, int param, bool isRezAtRoot, bool doRecoil, bool SetDieAtEdge, bool CheckPos)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "LSL", m_host, "LSL");
 
             if (m_ScriptEngine.Config.GetBoolean("AllowllRezObject", true))
             {
                 if (Double.IsNaN(rot.x) || Double.IsNaN(rot.y) || Double.IsNaN(rot.z) || Double.IsNaN(rot.s))
-                    return DateTime.Now;
+                    return;
                 if (CheckPos)
                 {
                     float dist = (float)llVecDist(llGetPos(), pos);
 
                     if (dist > m_ScriptDistanceFactor * 10.0f)
-                        return DateTime.Now;
+                        return;
                 }
 
                 TaskInventoryDictionary partInventory = (TaskInventoryDictionary)m_host.TaskInventory.Clone();
@@ -3363,7 +3348,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         if (inv.Value.InvType != (int)InventoryType.Object)
                         {
                             llSay(0, "Unable to create requested object. Object is missing from database.");
-                            return DateTime.Now;
+                            return;
                         }
 
                         Vector3 llpos = new Vector3((float)pos.x, (float)pos.y, (float)pos.z);
@@ -3413,13 +3398,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         }
 
                         // Variable script delay? (see (http://wiki.secondlife.com/wiki/LSL_Delay)
-                        return PScriptSleep((int)((groupmass * velmag) / 10) + 100);
+                        ScriptSleep((int)((groupmass * velmag) / 10) + 100);
                     }
                 }
 
                 llSay(0, "Could not find object " + inventory);
             }
-            return DateTime.Now;
         }
 
         /// <summary>
@@ -3592,9 +3576,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return null;
         }
 
-        public DateTime llRezObject(string inventory, LSL_Vector pos, LSL_Vector vel, LSL_Rotation rot, int param)
+        public void llRezObject(string inventory, LSL_Vector pos, LSL_Vector vel, LSL_Rotation rot, int param)
         {
-            return llRezPrim(inventory, pos, vel, rot, param, false, true, true, true);
+            llRezPrim(inventory, pos, vel, rot, param, false, true, true, true);
         }
 
         public void llLookAt(LSL_Vector target, double strength, double damping)
@@ -3651,11 +3635,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             timerPlugin.SetTimerEvent(m_host.UUID, m_itemID, sec);
         }
 
-        public virtual DateTime llSleep(double sec)
+        public virtual void llSleep(double sec)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
-            return PScriptSleep((int)(sec * 1000));
+            ScriptSleep((int)(sec * 1000));
         }
 
         public LSL_Float llGetObjectMass(string id)
@@ -3889,7 +3873,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return m_host.OwnerID.ToString();
         }
 
-        public DateTime llInstantMessage(string user, string message)
+        public void llInstantMessage(string user, string message)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -3931,10 +3915,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 m_TransferModule.SendInstantMessage(msg, delegate(bool success) {});
             }
-            return PScriptSleep(2000);
+            ScriptSleep(2000);
       }
 
-        public DateTime llEmail(string address, string subject, string message)
+        public void llEmail(string address, string subject, string message)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "llEmail", m_host, "LSL");
             
@@ -3942,11 +3926,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (emailModule == null)
             {
                 ShoutError("llEmail: email module not configured");
-                return DateTime.Now;
+                return;
             }
 
             emailModule.SendEmail(m_host.UUID, address, subject, message);
-            return PScriptSleep(20000);
+            ScriptSleep(20000);
         }
 
         public void llGetNextEmail(string address, string subject)
@@ -4473,7 +4457,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 part.SetFaceColor(new Vector3((float)color.x, (float)color.y, (float)color.z), face);
         }
 
-        public DateTime llCreateLink(string target, int parent)
+        public void llCreateLink(string target, int parent)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -4481,7 +4465,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID targetID;
 
             if (!UUID.TryParse(target, out targetID))
-                return DateTime.Now;
+                return;
 
             TaskInventoryItem item;
             lock (m_host.TaskInventory)
@@ -4493,7 +4477,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 && !m_automaticLinkPermission)
             {
                 ShoutError("Script trying to link but PERMISSION_CHANGE_LINKS permission not set!");
-                return DateTime.Now;
+                return;
             }
 
             IClientAPI client = null;
@@ -4504,7 +4488,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ISceneChildEntity targetPart = World.GetSceneObjectPart (targetID);
 
             if (targetPart.ParentEntity.RootChild.AttachmentPoint != 0)
-                return DateTime.Now; ; // Fail silently if attached
+                return; ; // Fail silently if attached
             ISceneEntity parentPrim = null, childPrim = null;
 
             if (targetPart != null)
@@ -4532,7 +4516,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (client != null)
                 parentPrim.GetProperties(client);
 
-            return PScriptSleep(1000);
+            ScriptSleep(1000);
         }
 
         public void llBreakLink(int linknum)
@@ -4800,7 +4784,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return 1.0f;
         }
 
-        public DateTime llGiveInventory(string destination, string inventory)
+        public void llGiveInventory(string destination, string inventory)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -4813,7 +4797,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!UUID.TryParse(destination, out destId))
             {
                 llSay(0, "Could not parse key " + destination);
-                return DateTime.Now;
+                return;
             }
 
             // move the first object found with this inventory name
@@ -4850,7 +4834,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     agentItem = inventoryModule.MoveTaskInventoryItemToUserInventory(destId, UUID.Zero, m_host, objId);
 
                 if (agentItem == null)
-                    return DateTime.Now;
+                    return;
 
                 byte[] bucket = new byte[17];
                 bucket[0] = (byte)assetType;
@@ -4877,7 +4861,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (inventoryModule != null)
                     inventoryModule.MoveTaskInventoryItemToObject(destId, m_host, objId);
             }
-            return PScriptSleep(3000);
+            ScriptSleep(3000);
         }
 
         public void llRemoveInventory(string name)
@@ -5059,7 +5043,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_host.ParentEntity.Damage = (float)damage;
         }
 
-        public DateTime llTeleportAgentHome(LSL_Key _agent)
+        public void llTeleportAgentHome(LSL_Key _agent)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
@@ -5079,7 +5063,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             presence.AbsolutePosition.X, presence.AbsolutePosition.Y).LandData.OwnerID &&
                             !World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false))
                         {
-                            return PScriptSleep(5000);
+                            ScriptSleep(5000);
                         }
                     }
 
@@ -5092,15 +5076,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         presence.ControllingClient.SendTeleportFailed("Unable to perform teleports on this simulator.");
                 }
             }
-            return PScriptSleep(5000);
+            ScriptSleep(5000);
         }
 
-        public DateTime llTextBox(string agent, string message, int chatChannel)
+        public void llTextBox(string agent, string message, int chatChannel)
         {
             IDialogModule dm = World.RequestModuleInterface<IDialogModule>();
 
             if (dm == null)
-                return DateTime.Now;
+                return;
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
@@ -5108,14 +5092,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!UUID.TryParse(agent, out av))
             {
                 LSLError("First parameter to llDialog needs to be a key");
-                return DateTime.Now;
+                return;
             }
 
             if (message != null && message.Length > 1024)
                 message = message.Substring(0, 1024);
 
             dm.SendTextBoxToUser(av, message, chatChannel, m_host.Name, m_host.UUID, m_host.OwnerID);
-            return PScriptSleep(1000);
+            ScriptSleep(1000);
         }
 
         public void llModifyLand(int action, int brush)
@@ -6583,12 +6567,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return "en-us";
         }
 
-        public DateTime llAdjustSoundVolume(double volume)
+        public void llAdjustSoundVolume(double volume)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             m_host.AdjustSoundGain(volume);
-            return PScriptSleep(100);
+            ScriptSleep(100);
         }
 
         public void llSetSoundQueueing(int queue)
@@ -6714,7 +6698,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_host.SendSound(KeyOrName(sound).ToString(), volume, true, 0, radius, false, false);
         }
 
-        public DateTime llEjectFromLand(string pest)
+        public void llEjectFromLand(string pest)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -6732,7 +6716,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                        presence.AbsolutePosition.X, presence.AbsolutePosition.Y).LandData.OwnerID &&
                             !World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false))
                         {
-                            return PScriptSleep(5000);
+                            ScriptSleep(5000);
                         }
                     }
                     IEntityTransferModule transferModule = World.RequestModuleInterface<IEntityTransferModule>();
@@ -6742,7 +6726,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         presence.ControllingClient.SendTeleportFailed("Unable to perform teleports on this simulator.");
                 }
             }
-            return PScriptSleep(5000);
+            ScriptSleep(5000);
         }
 
         public LSL_Integer llOverMyLand(string id)
@@ -7492,7 +7476,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return ScriptBaseClass.NULL_KEY;
         }
 
-        public DateTime llAddToLandPassList(string avatar, double hours)
+        public void llAddToLandPassList(string avatar, double hours)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -7513,7 +7497,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
             }
-            return PScriptSleep(100);
+            ScriptSleep(100);
         }
 
         public void llSetTouchText(string text)
@@ -7576,12 +7560,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public DateTime llDialog(string avatar, string message, LSL_List buttons, int chat_channel)
+        public void llDialog(string avatar, string message, LSL_List buttons, int chat_channel)
         {
             IDialogModule dm = World.RequestModuleInterface<IDialogModule>();
 
             if (dm == null)
-                return DateTime.Now;
+                return;
 
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -7590,12 +7574,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 //Silently accepted in in SL NOTE: it does sleep though!
                 //LSLError("First parameter to llDialog needs to be a key");
-                return PScriptSleep(1000);
+                ScriptSleep(1000);
             }
             if (buttons.Length > 12)
             {
                 LSLError("No more than 12 buttons can be shown");
-                return DateTime.Now;
+                return;
             }
             string[] buts = new string[buttons.Length];
             for (int i = 0; i < buttons.Length; i++)
@@ -7603,12 +7587,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (buttons.Data[i].ToString() == String.Empty)
                 {
                     LSLError("button label cannot be blank");
-                    return DateTime.Now;
+                    return;
                 }
                 if (buttons.Data[i].ToString().Length > 24)
                 {
                     LSLError("button label cannot be longer than 24 characters");
-                    return DateTime.Now;
+                    return;
                 }
                 buts[i] = buttons.Data[i].ToString();
             }
@@ -7619,7 +7603,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 av, m_host.Name, m_host.UUID, m_host.OwnerID,
                 message, new UUID("00000000-0000-2222-3333-100000001000"), chat_channel, buts);
 
-            return PScriptSleep(1000);
+            ScriptSleep(1000);
         }
 
         public void llVolumeDetect(int detect)
@@ -7640,13 +7624,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// invoking it in SL
         /// </summary>
 
-        public DateTime llRemoteLoadScript(string target, string name, int running, int start_param)
+        public void llRemoteLoadScript(string target, string name, int running, int start_param)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
             // Report an error as it does in SL
             ShoutError("Deprecated. Please use llRemoteLoadScriptPin instead.");
-            return PScriptSleep(3000);
+            ScriptSleep(3000);
         }
 
         public void llSetRemoteScriptAccessPin(int pin)
@@ -7656,7 +7640,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_host.ScriptAccessPin = pin;
         }
 
-        public DateTime llRemoteLoadScriptPin(string target, string name, int pin, int running, int start_param)
+        public void llRemoteLoadScriptPin(string target, string name, int pin, int running, int start_param)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -7667,14 +7651,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!UUID.TryParse(target, out destId))
             {
                 llSay(0, "Could not parse key " + target);
-                return DateTime.Now;
+                return;
             }
 
             // target must be a different prim than the one containing the script
             if (m_host.UUID == destId)
-            {
-                return DateTime.Now;
-            }
+                return;
 
             // copy the first script found with this inventory name
             lock (m_host.TaskInventory)
@@ -7697,7 +7679,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!found)
             {
                 llSay(0, "Could not find script " + name);
-                return DateTime.Now;
+                return;
             }
 
             // the rest of the permission checks are done in RezScript, so check the pin there as well
@@ -7705,10 +7687,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (inventoryModule != null)
                 inventoryModule.RezScript(srcId, m_host, destId, pin, running, start_param);
             // this will cause the delay even if the script pin or permissions were wrong - seems ok
-            return PScriptSleep(3000); 
+            ScriptSleep(3000); 
         }
 
-        public DateTime llOpenRemoteDataChannel()
+        public void llOpenRemoteDataChannel()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -7737,7 +7719,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, new EventParams("remote_data", resobj,
                                                                          new DetectParams[0]));
             }
-            return PScriptSleep(1000);
+            ScriptSleep(1000);
         }
 
         public LSL_Key llSendRemoteData(string channel, string dest, int idata, string sdata)
@@ -7749,22 +7731,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return (LSL_Key)(xmlrpcMod.SendRemoteData(m_host.UUID, m_itemID, channel, dest, idata, sdata)).ToString();
         }
 
-        public DateTime llRemoteDataReply(string channel, string message_id, string sdata, int idata)
+        public void llRemoteDataReply(string channel, string message_id, string sdata, int idata)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
             IXMLRPC xmlrpcMod = World.RequestModuleInterface<IXMLRPC>();
             xmlrpcMod.RemoteDataReply(channel, message_id, sdata, idata);
-            return PScriptSleep(100);
+            ScriptSleep(100);
         }
 
-        public DateTime llCloseRemoteDataChannel(object _channel)
+        public void llCloseRemoteDataChannel(object _channel)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
             IXMLRPC xmlrpcMod = World.RequestModuleInterface<IXMLRPC>();
             xmlrpcMod.CloseXMLRPCChannel(UUID.Parse(_channel.ToString()));
-            return PScriptSleep(100); 
+            ScriptSleep(100); 
         }
 
         public LSL_String llMD5String(string src, int nonce)
@@ -8675,7 +8657,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return l;
         }
 
-        public DateTime llSetParcelMusicURL(string url)
+        public void llSetParcelMusicURL(string url)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -8685,15 +8667,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 ILandObject land = parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
 
                 if (land == null)
-                    return DateTime.Now;
+                    return;
 
                 if (!World.Permissions.CanEditParcel(m_host.OwnerID, land))
-                    return DateTime.Now;
+                    return;
 
                 land.SetMusicUrl(url);
             }
 
-            return PScriptSleep(2000); 
+            ScriptSleep(2000); 
         }
 
         public LSL_Vector llGetRootPosition()
@@ -10137,7 +10119,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public DateTime llLoadURL(string avatar_id, string message, string url)
+        public void llLoadURL(string avatar_id, string message, string url)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -10147,10 +10129,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 dm.SendUrlToUser(
                     new UUID(avatar_id), m_host.Name, m_host.UUID, m_host.OwnerID, false, message, url);
 
-            return PScriptSleep(10000);
+            ScriptSleep(10000);
         }
 
-        public DateTime llParcelMediaCommandList(LSL_List commandList)
+        public void llParcelMediaCommandList(LSL_List commandList)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -10162,9 +10144,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 ILandObject landObject = parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
                 if(landObject == null)
-                    return DateTime.Now;
+                    return;
                 if (!World.Permissions.CanEditParcel(m_host.OwnerID, landObject)) 
-                    return DateTime.Now;
+                    return;
 
                 bool update = false; // send a ParcelMediaUpdate (and possibly change the land's media URL)?
                 byte loop = 0;
@@ -10417,7 +10399,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
             }
-            return PScriptSleep(2000);
+            ScriptSleep(2000);
         }
 
         public LSL_List llParcelMediaQuery(LSL_List aList)
@@ -10812,23 +10794,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// The SL implementation does nothing, it is deprecated
         /// This duplicates SL
         /// </summary>
-        public DateTime llSetPrimURL(string url)
+        public void llSetPrimURL(string url)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
-            return PScriptSleep(2000);
+            ScriptSleep(2000);
         }
 
         /// <summary>
         /// The SL implementation shouts an error, it is deprecated
         /// This duplicates SL
         /// </summary>
-        public DateTime llRefreshPrimURL()
+        public void llRefreshPrimURL()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
             Deprecated("llRefreshPrimURL");
-            return PScriptSleep(20000);
+            ScriptSleep(20000);
         }
 
         public LSL_String llEscapeURL(string url)
@@ -10859,7 +10841,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public DateTime llMapDestination(string simname, LSL_Vector pos, LSL_Vector lookAt)
+        public void llMapDestination(string simname, LSL_Vector pos, LSL_Vector lookAt)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
@@ -10867,7 +10849,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_host.UUID, m_itemID, 0);
             // only works on the first detected avatar
             //This only works in touch events or if the item is attached to the avatar
-            if (detectedParams == null && !m_host.IsAttachment) return DateTime.Now; 
+            if (detectedParams == null && !m_host.IsAttachment)
+                return; 
 
             if (detectedParams != null)
                 avatarID = detectedParams.Key;
@@ -10882,17 +10865,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     foreach (Aurora.Framework.MuteList mute in module.GetMutes(avatar.UUID, out cached))
                     {
                         if (mute.MuteID == m_host.OwnerID)
-                            return DateTime.Now;//If the avatar is muted, they don't get any contact from the muted av
+                            return;//If the avatar is muted, they don't get any contact from the muted av
                     }
                 }
                 avatar.ControllingClient.SendScriptTeleportRequest(m_host.Name, simname,
                                                                    new Vector3((float)pos.x, (float)pos.y, (float)pos.z),
                                                                    new Vector3((float)lookAt.x, (float)lookAt.y, (float)lookAt.z));
             }
-            return PScriptSleep(1000);
+            ScriptSleep(1000);
         }
 
-        public DateTime llAddToLandBanList(string avatar, double hours)
+        public void llAddToLandBanList(string avatar, double hours)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -10913,10 +10896,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
             }
-            return PScriptSleep(100);
+            ScriptSleep(100);
         }
 
-        public DateTime llRemoveFromLandPassList(string avatar)
+        public void llRemoveFromLandPassList(string avatar)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -10940,10 +10923,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
             }
-            return PScriptSleep(100);
+            ScriptSleep(100);
         }
 
-        public DateTime llRemoveFromLandBanList(string avatar)
+        public void llRemoveFromLandBanList(string avatar)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -10967,7 +10950,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
             }
-            return PScriptSleep(100);
+            ScriptSleep(100);
         }
 
         public void llSetCameraParams(LSL_List rules)
@@ -11224,7 +11207,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 m_UrlModule.HttpResponse(new UUID(id), status,body);
         }
 
-        public DateTime llResetLandBanList()
+        public void llResetLandBanList()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -11243,10 +11226,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
             }
-            return PScriptSleep(100);
+            ScriptSleep(100);
         }
 
-        public DateTime llResetLandPassList()
+        public void llResetLandPassList()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -11265,7 +11248,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
             }
-            return PScriptSleep(100);
+            ScriptSleep(100);
         }
 
         public LSL_Integer llGetParcelPrimCount(LSL_Vector pos, int category, int sim_wide)

@@ -48,18 +48,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private ScriptEngine m_ScriptEngine;
         public AuroraThreadPool threadpool = null;
-        public AuroraThreadPool Scriptthreadpool = null;
-        public bool ScriptChangeIsRunning = false;
-        public bool EventProcessorIsRunning = false;
-        public bool RunInMainProcessingThread = false;
         public bool m_Started = false;
-
-        public int MaxScriptThreads = 1;
-        private class WorkersLockClk
-        {
-            public int nWorkers = 0;
-        }
-        private WorkersLockClk WorkersLock = new WorkersLockClk();
 
         public bool Started
         {
@@ -67,8 +56,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             set
             {
                 m_Started = true;
-
-                WorkersLock.nWorkers = 0;
 
                 //Start the queue because it can't start itself
                 threadpool.QueueEvent(CmdHandlerQueue, 2);
@@ -86,10 +73,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_ScriptEngine = Engine;
             EventManager = Engine.EventManager;
 
-            RunInMainProcessingThread = Engine.Config.GetBoolean("RunInMainProcessingThread", false);
-
-            RunInMainProcessingThread = false; // temporary false until code is fix to work with true
-
             //There IS a reason we start this, even if RunInMain is enabled
             // If this isn't enabled, we run into issues with the CmdHandlerQueue,
             // as it always must be async, so we must run the pool anyway
@@ -97,16 +80,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             info.priority = ThreadPriority.Normal;
             info.Threads = 4;
             info.MaxSleepTime = Engine.Config.GetInt("SleepTime", 300);
+            info.Threads = 1;
             threadpool = new AuroraThreadPool(info);
 
-
-            MaxScriptThreads = Engine.Config.GetInt("Threads", 100); // leave control threads out of user option
-            AuroraThreadPoolStartInfo sinfo = new AuroraThreadPoolStartInfo();
-            sinfo.priority = ThreadPriority.Normal;
-            sinfo.Threads = MaxScriptThreads + 1;
-            sinfo.MaxSleepTime = Engine.Config.GetInt("SleepTime", 300);
-            Scriptthreadpool = new AuroraThreadPool(sinfo);
-            
             AppDomain.CurrentDomain.AssemblyResolve += m_ScriptEngine.AssemblyResolver.OnAssemblyResolve;
         }
 
@@ -136,7 +112,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 m_log.WarnFormat("[{0}]: Error in CmdHandlerPass, {1}", m_ScriptEngine.ScriptEngineName, ex);
             }
-            Thread.Sleep(10); // don't burn cpu
 
             if (module != null)
             {
@@ -216,7 +191,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             AddEventSchQIS(QIS);
         }
-
 
         public void AddEventSchQIS(QueueItemStruct QIS)
         {

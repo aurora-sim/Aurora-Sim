@@ -447,9 +447,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     + "\nNumber of app domains: " + AppDomainManager.NumberOfAppDomains
                     + "\nPermission level of app domains: " + AppDomainManager.PermissionLevel
                     + "\nNumber Engine threads/sleeping: " + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.threadpool.nthreads).ToString ()
-                    + "/" + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.threadpool.nSleepingthreads).ToString ()
-                    + "\nNumber Script threads: " + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.Scriptthreadpool.nthreads).ToString ()
-                    + "/" + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.Scriptthreadpool.nSleepingthreads).ToString ());
+                    + "/" + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.threadpool.nSleepingthreads).ToString ());
         }
 
         protected void AuroraDotNetDisable (string module, string[] cmdparams)
