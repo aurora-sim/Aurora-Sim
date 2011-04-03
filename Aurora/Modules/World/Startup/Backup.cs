@@ -97,24 +97,10 @@ namespace Aurora.Modules
         /// <param name="cmdparams">Additional arguments passed to the command</param>
         public void RunCommand(string module, string[] cmdparams)
         {
-            List<string> args = new List<string>(cmdparams);
-            if (args.Count < 1)
-                return;
-
-            string command = args[0];
-            args.RemoveAt(0);
-
-            cmdparams = args.ToArray();
-
-            switch (command)
-            {
-                case "backup":
-                    m_manager.ForEachCurrentScene(delegate(Scene scene)
+            m_manager.ForEachCurrentScene(delegate(Scene scene)
                     {
-                        m_backup[scene].ProcessPrimBackupTaints(true,args.Count == 1);
+                        m_backup[scene].ProcessPrimBackupTaints(true, args.Count == 1);
                     });
-                    break;
-            }
         }
 
         #endregion

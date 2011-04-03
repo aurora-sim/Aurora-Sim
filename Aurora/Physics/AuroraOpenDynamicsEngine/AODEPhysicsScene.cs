@@ -3367,19 +3367,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             if (ActiveCollisionQueue.Count > 0)
             {
-                foreach (PhysicsActor actor in ActiveCollisionQueue.Keys)
+                foreach (KeyValuePair<PhysicsActor, bool> actor in ActiveCollisionQueue)
                 {
-                    if (ActiveCollisionQueue[actor])
+                    if (actor.Value)
                     {
                         //add
-                        if (!_collisionEventPrim.Contains(actor))
-                            _collisionEventPrim.Add(actor);
+                        if (!_collisionEventPrim.Contains(actor.Key))
+                            _collisionEventPrim.Add(actor.Key);
                     }
                     else
                     {
                         //remove
-                        if (_collisionEventPrim.Contains(actor))
-                            _collisionEventPrim.Remove(actor);
+                        if (_collisionEventPrim.Contains(actor.Key))
+                            _collisionEventPrim.Remove(actor.Key);
                     }
                 }
                 ActiveCollisionQueue.Clear();

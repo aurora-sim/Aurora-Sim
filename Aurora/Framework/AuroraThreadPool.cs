@@ -97,15 +97,15 @@ namespace Aurora.Framework
                         // so to release the thread sooner, like .net and mono can now do.
                         // This control loop whould then have to look for those delayed requests.
                         // UBIT
-                        bool Rest = false;
-                        OurSleepTime = 0;
+                        OurSleepTime = m_info.InitialSleepTime;
                         if (item != null)
-                            Rest = item.Invoke();
+                            item.Invoke();
                         else
-                            Rest = (o[0] as QueueItem2).Invoke(o[1]);
+                            (o[0] as QueueItem2).Invoke(o[1]);
                         }
                     }
                 catch { }
+                Thread.Sleep(OurSleepTime);
             }
         }
 
