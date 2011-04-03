@@ -1056,11 +1056,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 // This is a test to try and rate limit packet handling on Mono.
                 // If it works, a more elegant solution can be devised
-                if (Util.FireAndForgetCount() < 2)
+                if (Environment.OSVersion.Platform == PlatformID.Unix && Util.FireAndForgetCount() < 2)
                 {
                     //m_log.Debug("[LLUDPSERVER]: Incoming packet handler is sleeping");
-                    if (Environment.OSVersion.Platform == PlatformID.Unix)
-                        Thread.Sleep(30);
+                    Thread.Sleep(30);
                 }
 
                 if (packetInbox.Dequeue(100, ref incomingPacket))

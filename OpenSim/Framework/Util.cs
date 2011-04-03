@@ -49,6 +49,9 @@ using Nwc.XmlRpc;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Amib.Threading;
+#if NET_4_0
+using System.Threading.Tasks;
+#endif
 
 namespace OpenSim.Framework
 {
@@ -62,6 +65,9 @@ namespace OpenSim.Framework
         BeginInvoke,
         SmartThreadPool,
         Thread,
+#if NET_4_0
+        Await
+#endif
     }
 
     /// <summary>
@@ -88,7 +94,7 @@ namespace OpenSim.Framework
         public static readonly Regex UUIDPattern 
             = new Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
-        public static FireAndForgetMethod FireAndForgetMethod = FireAndForgetMethod.UnsafeQueueUserWorkItem;
+        public static FireAndForgetMethod FireAndForgetMethod = FireAndForgetMethod.SmartThreadPool;
         private volatile static bool m_threadPoolRunning = false;
 
         /// <summary>
@@ -1462,6 +1468,9 @@ namespace OpenSim.Framework
                 case FireAndForgetMethod.UnsafeQueueUserWorkItem:
                 case FireAndForgetMethod.QueueUserWorkItem:
                 case FireAndForgetMethod.BeginInvoke:
+#if NET_4_0
+                case FireAndForgetMethod.Await:
+#endif
                     int workerThreads, iocpThreads;
                     ThreadPool.GetAvailableThreads(out workerThreads, out iocpThreads);
                     return workerThreads;
@@ -1500,10 +1509,25 @@ namespace OpenSim.Framework
                     Thread thread = new Thread(delegate(object o) { callback(o); });
                     thread.Start(obj);
                     break;
+#if NET_4_0
+                case FireAndForgetMethod.Await:
+                    AwaitCallback(callback, obj);
+                    break;
+#endif
                 default:
                     throw new NotImplementedException();
             }
         }
+        
+#if NET_4_0
+        private static async void AwaitCallback(WaitCallback callback, object o)
+        {
+            await TaskEx.Run(() =>
+                {
+                    callback(o);
+                });
+        }
+#endif
 
         private static object SmartThreadPoolCallback(object o)
         {
