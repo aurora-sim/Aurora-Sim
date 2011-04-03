@@ -623,7 +623,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, new EventParams(
                     "run_time_permissions", new Object[] {
                     new LSL_Integer(answer) },
-                    new DetectParams[0]), EventPriority.FirstStart);
+                    new DetectParams[0]));
         }
 
         public void aaSetCharacterStat(string UUIDofAv, string StatName, float statValue)

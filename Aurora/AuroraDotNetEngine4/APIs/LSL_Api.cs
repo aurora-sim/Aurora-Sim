@@ -4282,7 +4282,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, new EventParams(
                         "run_time_permissions", new Object[] {
                         new LSL_Integer(0) },
-                        new DetectParams[0]), EventPriority.FirstStart);
+                        new DetectParams[0]));
 
                 return;
             }
@@ -4312,7 +4312,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, new EventParams(
                             "run_time_permissions", new Object[] {
                             new LSL_Integer(perm) },
-                            new DetectParams[0]), EventPriority.FirstStart);
+                            new DetectParams[0]));
 
                     return;
                 }
@@ -4336,7 +4336,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, new EventParams(
                             "run_time_permissions", new Object[] {
                             new LSL_Integer(perm) },
-                            new DetectParams[0]), EventPriority.FirstStart);
+                            new DetectParams[0]));
 
                     return;
                 }
@@ -4378,7 +4378,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, new EventParams(
                     "run_time_permissions", new Object[] {
                     new LSL_Integer(0) },
-                    new DetectParams[0]), EventPriority.FirstStart);
+                    new DetectParams[0]));
         }
 
         void handleScriptAnswer(IClientAPI client, UUID taskID, UUID itemID, int answer)
@@ -4405,7 +4405,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, new EventParams(
                     "run_time_permissions", new Object[] {
                     new LSL_Integer(answer) },
-                    new DetectParams[0]), EventPriority.FirstStart);
+                    new DetectParams[0]));
         }
 
         public LSL_String llGetPermissionsKey()
@@ -5216,7 +5216,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                         m_ScriptEngine.PostScriptEvent(partItemID, part.UUID,
                                 new EventParams("link_message",
-                                resobj, new DetectParams[0]), EventPriority.FirstStart);
+                                resobj, new DetectParams[0]));
                     }
                 }
             }
@@ -7735,7 +7735,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         new LSL_String(String.Empty) 
                     };
                 m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, new EventParams("remote_data", resobj,
-                                                                         new DetectParams[0]), EventPriority.FirstStart);
+                                                                         new DetectParams[0]));
             }
             return PScriptSleep(1000);
         }

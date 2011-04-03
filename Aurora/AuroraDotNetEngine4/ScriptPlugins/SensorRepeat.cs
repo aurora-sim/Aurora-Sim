@@ -233,7 +233,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     // Add it to queue
                     m_ScriptEngine.PostScriptEvent(ts.itemID, ts.objectID,
                             new EventParams("no_sensor", new Object[0],
-                            new DetectParams[0]), EventPriority.Suspended);
+                            new DetectParams[0]));
                 }
                 else
                 {
@@ -263,14 +263,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                         // difficulty during the Populate above so fire a no_sensor event
                         m_ScriptEngine.PostScriptEvent(ts.itemID, ts.objectID,
                                 new EventParams("no_sensor", new Object[0],
-                                new DetectParams[0]), EventPriority.Suspended);
+                                new DetectParams[0]));
                     }
                     else
                     {
                         m_ScriptEngine.PostScriptEvent(ts.itemID, ts.objectID,
                                 new EventParams("sensor",
                                 new Object[] {new LSL_Types.LSLInteger(detected.Count) },
-                                detected.ToArray()), EventPriority.Suspended);
+                                detected.ToArray()));
                     }
                 }
             }

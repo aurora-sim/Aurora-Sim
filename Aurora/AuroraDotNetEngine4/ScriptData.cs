@@ -314,7 +314,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_ScriptEngine.RemoveScript(Part.UUID, ItemID);
 
             //Fire state_entry
-            m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { });
+            m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, new object[] { });
 
             m_ScriptEngine.StateSave.SaveStateTo (this);
             m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Reset Script " + ItemID);
@@ -325,7 +325,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (State != state)
             {
                 m_ScriptEngine.MaintenanceThread.AddEventSchQueue (this, "state_exit",
-                    new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0] { });
+                    new DetectParams[0], VersionID, new object[0] { });
 
                 State = state;
 
@@ -343,7 +343,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 ScriptEngine.ScriptProtection.AddNewScript (this);
 
                 m_ScriptEngine.MaintenanceThread.AddEventSchQueue (this, "state_entry",
-                    new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0] { });
+                    new DetectParams[0], VersionID, new object[0] { });
                 //Save a state save after a state change, its a large change in the script's function
                 m_ScriptEngine.StateSave.SaveStateTo (this);
             }
@@ -431,25 +431,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (StartedFromSavedState)
             {
                 if (PostOnRez)
-                    m_ScriptEngine.AddToScriptQueue(this, "on_rez", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { new LSL_Types.LSLInteger(StartParam) });
+                    m_ScriptEngine.AddToScriptQueue(this, "on_rez", new DetectParams[0], VersionID, new object[] { new LSL_Types.LSLInteger(StartParam) });
 
                 if (stateSource == StateSource.AttachedRez)
-                    m_ScriptEngine.AddToScriptQueue(this, "attach", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { new LSL_Types.LSLString(Part.AttachedAvatar.ToString()) });
+                    m_ScriptEngine.AddToScriptQueue(this, "attach", new DetectParams[0], VersionID, new object[] { new LSL_Types.LSLString(Part.AttachedAvatar.ToString()) });
                 else if (stateSource == StateSource.NewRez)
-                    m_ScriptEngine.AddToScriptQueue(this, "changed", new DetectParams[0], VersionID, EventPriority.FirstStart, new Object[] { new LSL_Types.LSLInteger(256) });
+                    m_ScriptEngine.AddToScriptQueue(this, "changed", new DetectParams[0], VersionID, new Object[] { new LSL_Types.LSLInteger(256) });
                 else if (stateSource == StateSource.PrimCrossing)
                     // CHANGED_REGION
-                    m_ScriptEngine.AddToScriptQueue(this, "changed", new DetectParams[0], VersionID, EventPriority.FirstStart, new Object[] { new LSL_Types.LSLInteger(512) });
+                    m_ScriptEngine.AddToScriptQueue(this, "changed", new DetectParams[0], VersionID, new Object[] { new LSL_Types.LSLInteger(512) });
             }
             else
             {
-                m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0]);
+                m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, new object[0]);
 
                 if (PostOnRez)
-                    m_ScriptEngine.AddToScriptQueue(this, "on_rez", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { new LSL_Types.LSLInteger(StartParam) });
+                    m_ScriptEngine.AddToScriptQueue(this, "on_rez", new DetectParams[0], VersionID, new object[] { new LSL_Types.LSLInteger(StartParam) });
 
                 if (stateSource == StateSource.AttachedRez)
-                    m_ScriptEngine.AddToScriptQueue(this, "attach", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { new LSL_Types.LSLString(Part.AttachedAvatar.ToString()) });
+                    m_ScriptEngine.AddToScriptQueue(this, "attach", new DetectParams[0], VersionID, new object[] { new LSL_Types.LSLString(Part.AttachedAvatar.ToString()) });
             }
         }
 

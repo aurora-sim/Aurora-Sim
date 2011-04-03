@@ -327,13 +327,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         Low = 1
     }
 
-    public enum EventPriority : int
-    {
-        FirstStart = 0,
-        Suspended = 1,
-        Continued = 2
-    }
-
     public enum ScriptEventsState : int
         {
         Idle = 0,

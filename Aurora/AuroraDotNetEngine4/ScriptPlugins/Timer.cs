@@ -124,7 +124,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                         // Add it to queue
                         m_ScriptEngine.PostScriptEvent(ts.itemID, ts.ID,
                                 new EventParams("timer", new Object[0],
-                                new DetectParams[0]), EventPriority.Continued);
+                                new DetectParams[0]));
                         // set next interval
 
                         ts.next = TickCount + ts.interval;

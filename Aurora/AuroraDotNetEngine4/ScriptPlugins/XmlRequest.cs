@@ -83,7 +83,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     m_ScriptEngine.PostScriptEvent (
                                 rInfo.GetItemID (), rInfo.GetPrimID (), new EventParams (
                                     "remote_data", resobj,
-                                    new DetectParams[0]), EventPriority.Suspended);
+                                    new DetectParams[0]));
 
                     rInfo = (RPCRequestInfo)xmlrpc.GetNextCompletedRequest ();
                 }
@@ -106,7 +106,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     m_ScriptEngine.PostScriptEvent (
                                 srdInfo.ItemID, srdInfo.PrimID, new EventParams (
                                     "remote_data", resobj,
-                                    new DetectParams[0]), EventPriority.Suspended);
+                                    new DetectParams[0]));
 
                     srdInfo = (SendRemoteDataRequest)xmlrpc.GetNextCompletedSRDRequest ();
                 }

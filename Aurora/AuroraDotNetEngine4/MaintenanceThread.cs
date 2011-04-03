@@ -191,11 +191,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 });
         }
 
-        public void AddEvent(QueueItemStruct QIS, EventPriority priority)
-        {
-            AddEventSchQIS(QIS);
-        }
-
         #endregion
 
         #region Remove
@@ -209,7 +204,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Scripts events scheduler control
 
-        public void AddEventSchQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, int VersionID, EventPriority priority, params object[] param)
+        public void AddEventSchQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, int VersionID, params object[] param)
         {
             QueueItemStruct QIS = new QueueItemStruct();
             QIS.ID = ID;

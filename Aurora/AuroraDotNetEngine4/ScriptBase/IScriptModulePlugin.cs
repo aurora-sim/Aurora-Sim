@@ -19,7 +19,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         IScriptModule ScriptModule { get; }
 
-        bool PostScriptEvent(UUID m_itemID, UUID uUID, EventParams EventParams, EventPriority EventPriority);
+        bool PostScriptEvent(UUID m_itemID, UUID uUID, EventParams EventParams);
 
         void SetState(UUID m_itemID, string newState);
 

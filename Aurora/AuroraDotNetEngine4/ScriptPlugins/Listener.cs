@@ -78,7 +78,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                         m_ScriptEngine.PostScriptEvent (
                                     lInfo.GetItemID (), lInfo.GetHostID (), new EventParams (
                                     "listen", resobj,
-                                    new DetectParams[0]), EventPriority.Suspended);
+                                    new DetectParams[0]));
                     }
                 }
             }
