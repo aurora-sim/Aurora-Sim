@@ -294,7 +294,10 @@ namespace OpenSim.Region.Framework.Scenes.Components
             OSDMap map;
             try
             {
-                map = (OSDMap)OSDParser.DeserializeJson(serialized);
+                if (serialized == "")
+                    map = new OSDMap();
+                else
+                    map = (OSDMap)OSDParser.DeserializeJson(serialized);
             }
             catch
             {
@@ -313,6 +316,8 @@ namespace OpenSim.Region.Framework.Scenes.Components
                     component.SetState(obj.UUID, kvp.Value);
                 }
             }
+            map.Clear();
+            map = null;
         }
 
         /// <summary>

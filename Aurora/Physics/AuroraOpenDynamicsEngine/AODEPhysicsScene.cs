@@ -550,13 +550,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             AvatarMovementprimContact.surface.mu = mAvatarObjectContactFriction;
             AvatarMovementprimContact.surface.bounce = mAvatarObjectContactBounce;
 
-            // Terrain contact friction bounce and various error correcting calculations
-            // Use this when an avatar is in contact with the terrain and moving.
-//            AvatarMovementTerrainContact.surface.mu = mTerrainContactFriction;
-//            AvatarMovementTerrainContact.surface.bounce = mTerrainContactBounce;
-//            AvatarMovementTerrainContact.surface.soft_erp = mTerrainContactERP;
-
-
             /*
                 <summary></summary>
                 Stone = 0,
@@ -891,11 +884,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             #region Contact Loop
 
             for (int i = 0; i < count; i++)
-                {
+            {
                 d.ContactGeom curContact = contacts[i];
 
                 if (curContact.depth > maxDepthContact.PenetrationDepth)
-                    {
+                {
                     maxDepthContact.PenetrationDepth = curContact.depth;
                     maxDepthContact.Position.X = curContact.pos.X;
                     maxDepthContact.Position.Y = curContact.pos.Y;
@@ -903,12 +896,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     maxDepthContact.SurfaceNormal.X = curContact.normal.X;
                     maxDepthContact.SurfaceNormal.Y = curContact.normal.Y;
                     maxDepthContact.SurfaceNormal.Z = curContact.normal.Z;
-//                    maxDepthContact = new ContactPoint(
-//                        new Vector3((float)curContact.pos.X, (float)curContact.pos.Y, (float)curContact.pos.Z),
-//                        new Vector3((float)curContact.normal.X, (float)curContact.normal.Y, (float)curContact.normal.Z),
-//                        (float)curContact.depth
-//                    );
-                    }
+                    //                    maxDepthContact = new ContactPoint(
+                    //                        new Vector3((float)curContact.pos.X, (float)curContact.pos.Y, (float)curContact.pos.Z),
+                    //                        new Vector3((float)curContact.normal.X, (float)curContact.normal.Y, (float)curContact.normal.Z),
+                    //                        (float)curContact.depth
+                    //                    );
+                }
 
                 //m_log.Warn("[CCOUNT]: " + count);
                 IntPtr joint;
@@ -920,7 +913,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 #region InterPenetration Handling - Unintended physics explosions
                 #region disabled code1
 
-/*
+                /*
 
                 if (curContact.depth >= 0.08f)
                     {
@@ -974,116 +967,116 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                      
                     }
 */
-                    // If you interpenetrate a prim with another prim
-                    /*
-                        if (p1.PhysicsActorType == (int) ActorTypes.Prim && p2.PhysicsActorType == (int) ActorTypes.Prim)
-                        {
-                            #region disabledcode2
-                            //OdePrim op1 = (OdePrim)p1;
-                            //OdePrim op2 = (OdePrim)p2;
-                            //op1.m_collisionscore++;
-                            //op2.m_collisionscore++;
+                // If you interpenetrate a prim with another prim
+                /*
+                    if (p1.PhysicsActorType == (int) ActorTypes.Prim && p2.PhysicsActorType == (int) ActorTypes.Prim)
+                    {
+                        #region disabledcode2
+                        //OdePrim op1 = (OdePrim)p1;
+                        //OdePrim op2 = (OdePrim)p2;
+                        //op1.m_collisionscore++;
+                        //op2.m_collisionscore++;
 
-                            //if (op1.m_collisionscore > 8000 || op2.m_collisionscore > 8000)
+                        //if (op1.m_collisionscore > 8000 || op2.m_collisionscore > 8000)
+                        //{
+                            //op1.m_taintdisable = true;
+                            //AddPhysicsActorTaint(p1);
+                            //op2.m_taintdisable = true;
+                            //AddPhysicsActorTaint(p2);
+                        //}
+
+                        //if (contact.depth >= 0.25f)
+                        //{
+                            // Don't collide, one or both prim will expld.
+
+                            //op1.m_interpenetrationcount++;
+                            //op2.m_interpenetrationcount++;
+                            //interpenetrations_before_disable = 200;
+                            //if (op1.m_interpenetrationcount >= interpenetrations_before_disable)
                             //{
                                 //op1.m_taintdisable = true;
                                 //AddPhysicsActorTaint(p1);
-                                //op2.m_taintdisable = true;
+                            //}
+                            //if (op2.m_interpenetrationcount >= interpenetrations_before_disable)
+                            //{
+                               // op2.m_taintdisable = true;
                                 //AddPhysicsActorTaint(p2);
                             //}
 
-                            //if (contact.depth >= 0.25f)
-                            //{
-                                // Don't collide, one or both prim will expld.
-
-                                //op1.m_interpenetrationcount++;
-                                //op2.m_interpenetrationcount++;
-                                //interpenetrations_before_disable = 200;
-                                //if (op1.m_interpenetrationcount >= interpenetrations_before_disable)
-                                //{
-                                    //op1.m_taintdisable = true;
-                                    //AddPhysicsActorTaint(p1);
-                                //}
-                                //if (op2.m_interpenetrationcount >= interpenetrations_before_disable)
-                                //{
-                                   // op2.m_taintdisable = true;
-                                    //AddPhysicsActorTaint(p2);
-                                //}
-
-                                //contact.depth = contact.depth / 8f;
-                                //contact.normal = new d.Vector3(0, 0, 1);
-                            //}
-                            //if (op1.m_disabled || op2.m_disabled)
-                            //{
-                                //Manually disabled objects stay disabled
-                                //contact.depth = 0f;
-                            //}
-                            #endregion
-                        }
+                            //contact.depth = contact.depth / 8f;
+                            //contact.normal = new d.Vector3(0, 0, 1);
+                        //}
+                        //if (op1.m_disabled || op2.m_disabled)
+                        //{
+                            //Manually disabled objects stay disabled
+                            //contact.depth = 0f;
+                        //}
+                        #endregion
+                    }
                         
 //                    if (curContact.depth >= 1.0f)
+                    {
+                    //m_log.Info("[P]: " + contact.depth.ToString());
+                    if ((p2.PhysicsActorType == (int)ActorTypes.Agent &&
+                         p1.PhysicsActorType == (int)ActorTypes.Ground) ||
+                        (p1.PhysicsActorType == (int)ActorTypes.Agent &&
+                         p2.PhysicsActorType == (int)ActorTypes.Ground))
                         {
-                        //m_log.Info("[P]: " + contact.depth.ToString());
-                        if ((p2.PhysicsActorType == (int)ActorTypes.Agent &&
-                             p1.PhysicsActorType == (int)ActorTypes.Ground) ||
-                            (p1.PhysicsActorType == (int)ActorTypes.Agent &&
-                             p2.PhysicsActorType == (int)ActorTypes.Ground))
+                        if (p2.PhysicsActorType == (int)ActorTypes.Agent)
                             {
-                            if (p2.PhysicsActorType == (int)ActorTypes.Agent)
+                            if (p2 is AuroraODECharacter)
                                 {
-                                if (p2 is AuroraODECharacter)
+                                AuroraODECharacter character = (AuroraODECharacter)p2;
+
+                                //p2.CollidingObj = true;
+                                if (p2.Position.Z < curContact.pos.Z) // don't colide from underside
                                     {
-                                    AuroraODECharacter character = (AuroraODECharacter)p2;
+                                    p2.CollidingGround = false;
+                                    p2.CollidingGround = false;
+                                    continue;
+                                    }
 
-                                    //p2.CollidingObj = true;
-                                    if (p2.Position.Z < curContact.pos.Z) // don't colide from underside
-                                        {
-                                        p2.CollidingGround = false;
-                                        p2.CollidingGround = false;
-                                        continue;
-                                        }
-
-                                    curContact.depth = 0.00000003f;
+                                curContact.depth = 0.00000003f;
  
-                                    p2.Velocity = p2.Velocity + new Vector3(0f, 0f, 1.5f);
-                                    curContact.pos =
-                                                  new d.Vector3(curContact.pos.X + (p2.Size.X / 2),
-                                                                  curContact.pos.Y + (p2.Size.Y / 2),
-                                                                  curContact.pos.Z + (p2.Size.Z / 2));
-                                    character.SetPidStatus(true);
+                                p2.Velocity = p2.Velocity + new Vector3(0f, 0f, 1.5f);
+                                curContact.pos =
+                                              new d.Vector3(curContact.pos.X + (p2.Size.X / 2),
+                                                              curContact.pos.Y + (p2.Size.Y / 2),
+                                                              curContact.pos.Z + (p2.Size.Z / 2));
+                                character.SetPidStatus(true);
 
-                                    }
-                                }
-
-                            if (p1.PhysicsActorType == (int)ActorTypes.Agent)
-                                {
-                                if (p1 is AuroraODECharacter)
-                                    {
-                                    AuroraODECharacter character = (AuroraODECharacter)p1;
-
-                                    //p2.CollidingObj = true;
-                                    if (p1.Position.Z < curContact.pos.Z)
-                                        {
-                                        p1.CollidingGround = false;
-                                        p1.CollidingGround = false;
-                                        continue;
-                                        }
-
-                                    curContact.depth = 0.00000003f;
-                                    p1.Velocity = p1.Velocity + new Vector3(0f, 0f, 0.5f);
-                                    curContact.pos =
-                                                    new d.Vector3(curContact.pos.X + (p1.Size.X / 2),
-                                                                  curContact.pos.Y + (p1.Size.Y / 2),
-                                                                  curContact.pos.Z + (p1.Size.Z / 2));
-                                    character.SetPidStatus(true);
-
-                                    }
                                 }
                             }
 
+                        if (p1.PhysicsActorType == (int)ActorTypes.Agent)
+                            {
+                            if (p1 is AuroraODECharacter)
+                                {
+                                AuroraODECharacter character = (AuroraODECharacter)p1;
+
+                                //p2.CollidingObj = true;
+                                if (p1.Position.Z < curContact.pos.Z)
+                                    {
+                                    p1.CollidingGround = false;
+                                    p1.CollidingGround = false;
+                                    continue;
+                                    }
+
+                                curContact.depth = 0.00000003f;
+                                p1.Velocity = p1.Velocity + new Vector3(0f, 0f, 0.5f);
+                                curContact.pos =
+                                                new d.Vector3(curContact.pos.X + (p1.Size.X / 2),
+                                                              curContact.pos.Y + (p1.Size.Y / 2),
+                                                              curContact.pos.Z + (p1.Size.Z / 2));
+                                character.SetPidStatus(true);
+
+                                }
+                            }
                         }
 
                     }
+
+                }
 */
                 #endregion
                 #endregion
@@ -1110,43 +1103,43 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 joint = IntPtr.Zero;
 
                 if (!skipThisContact)
-                    {
+                {
                     // If we're colliding against terrain
                     if (p1.PhysicsActorType == (int)ActorTypes.Ground)
-                        {
-/*
-                        if (p2.PhysicsActorType == (int)ActorTypes.Agent)
-                            {
-                            if (Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f)
-                                {
-                                // Use the movement terrain contact
-                                AvatarMovementTerrainContact.geom = curContact;
-                                if (m_filterCollisions)
-                                    _perloopContact.Add(curContact);
-                                if (m_global_contactcount < maxContactsbeforedeath)
-                                    {
-                                    joint = d.JointCreateContact(world, contactgroup, ref AvatarMovementTerrainContact);
-                                    m_global_contactcount++;
-                                    }
-                                }
-                            else
-                                {
-                                // Use the non moving terrain contact
-                                TerrainContact.geom = curContact;
-                                if (m_filterCollisions)
-                                    _perloopContact.Add(curContact);
-                                if (m_global_contactcount < maxContactsbeforedeath)
-                                    {
-                                    joint = d.JointCreateContact(world, contactgroup, ref TerrainContact);
-                                    m_global_contactcount++;
-                                    }
-                                }
-                            }
+                    {
+                        /*
+                                                if (p2.PhysicsActorType == (int)ActorTypes.Agent)
+                                                    {
+                                                    if (Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f)
+                                                        {
+                                                        // Use the movement terrain contact
+                                                        AvatarMovementTerrainContact.geom = curContact;
+                                                        if (m_filterCollisions)
+                                                            _perloopContact.Add(curContact);
+                                                        if (m_global_contactcount < maxContactsbeforedeath)
+                                                            {
+                                                            joint = d.JointCreateContact(world, contactgroup, ref AvatarMovementTerrainContact);
+                                                            m_global_contactcount++;
+                                                            }
+                                                        }
+                                                    else
+                                                        {
+                                                        // Use the non moving terrain contact
+                                                        TerrainContact.geom = curContact;
+                                                        if (m_filterCollisions)
+                                                            _perloopContact.Add(curContact);
+                                                        if (m_global_contactcount < maxContactsbeforedeath)
+                                                            {
+                                                            joint = d.JointCreateContact(world, contactgroup, ref TerrainContact);
+                                                            m_global_contactcount++;
+                                                            }
+                                                        }
+                                                    }
 
-                        else
- */
-                         if (p2.PhysicsActorType == (int)ActorTypes.Prim)
-                            {
+                                                else
+                         */
+                        if (p2.PhysicsActorType == (int)ActorTypes.Prim)
+                        {
                             // prim terrain contact
                             // int pj294950 = 0;
                             int movintYN = 0;
@@ -1165,13 +1158,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 _perloopContact.Add(curContact);
 
                             if (m_global_contactcount < maxContactsbeforedeath)
-                                {
+                            {
                                 joint = d.JointCreateContact(world, contactgroup, ref m_materialContacts[material, movintYN]);
                                 m_global_contactcount++;
-                                }
                             }
+                        }
                         else
-                            {
+                        {
                             int movintYN = 0;
                             // unknown terrain contact
                             if (Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f)
@@ -1187,47 +1180,47 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 _perloopContact.Add(curContact);
 
                             if (m_global_contactcount < maxContactsbeforedeath)
-                                {
+                            {
                                 joint = d.JointCreateContact(world, contactgroup, ref m_materialContacts[material, movintYN]);
                                 m_global_contactcount++;
-                                }
                             }
                         }
+                    }
 
                     else
-                        {
+                    {
                         // we're colliding with prim or avatar
                         // check if we're moving
                         if ((p2.PhysicsActorType == (int)ActorTypes.Agent))
-                            {
+                        {
                             if ((Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f))
-                                {
+                            {
                                 // Use the Movement prim contact
                                 AvatarMovementprimContact.geom = curContact;
                                 if (m_filterCollisions)
                                     _perloopContact.Add(curContact);
                                 if (m_global_contactcount < maxContactsbeforedeath)
-                                    {
+                                {
                                     joint = d.JointCreateContact(world, contactgroup, ref AvatarMovementprimContact);
                                     m_global_contactcount++;
-                                    }
                                 }
+                            }
                             else
-                                {
+                            {
                                 // Use the non movement contact
                                 contact.geom = curContact;
                                 if (m_filterCollisions)
                                     _perloopContact.Add(curContact);
 
                                 if (m_global_contactcount < maxContactsbeforedeath)
-                                    {
+                                {
                                     joint = d.JointCreateContact(world, contactgroup, ref contact);
                                     m_global_contactcount++;
-                                    }
                                 }
                             }
+                        }
                         else if (p2.PhysicsActorType == (int)ActorTypes.Prim)
-                            {
+                        {
                             //p1.PhysicsActorType
                             int material = (int)Material.Wood;
 
@@ -1240,22 +1233,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 _perloopContact.Add(curContact);
 
                             if (m_global_contactcount < maxContactsbeforedeath)
-                                {
+                            {
                                 joint = d.JointCreateContact(world, contactgroup, ref m_materialContacts[material, 0]);
                                 m_global_contactcount++;
-                                }
                             }
                         }
+                    }
 
                     if (m_global_contactcount < maxContactsbeforedeath && joint != IntPtr.Zero) // stack collide!
-                        {                     
+                    {
                         d.JointAttach(joint, b1, b2);
                         m_global_contactcount++;
-                        }
                     }
+                }
                 //m_log.Debug(count.ToString());
                 //m_log.Debug("near: A collision was detected between {1} and {2}", 0, name1, name2);
-                }
+            }
 
             #endregion
 

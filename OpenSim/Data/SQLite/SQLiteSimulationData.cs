@@ -928,6 +928,7 @@ namespace OpenSim.Data.SQLite
                                     map[ii] = Utils.BytesToInt16(heightmap, i);
                                     ii++;
                                 }
+                                heightmap = null;
                                 return map;
                             }
                         }
