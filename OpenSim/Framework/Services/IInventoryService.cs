@@ -230,5 +230,7 @@ namespace OpenSim.Services.Interfaces
         bool MoveItem (string id, string newParent);
         InventoryItemBase[] GetActiveGestures (UUID principalID);
         int GetAssetPermissions (UUID principalID, UUID assetID);
+
+        byte[] FetchInventoryReply(OSDArray fetchRequest, UUID AgentID);
     }
 }

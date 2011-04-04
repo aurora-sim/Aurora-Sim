@@ -108,10 +108,10 @@ namespace OpenSim.Services.CapsService
                 //m_log.DebugFormat("[InventoryCAPS]: Received WebFetchInventoryDescendents request for {0}", AgentID);
 
                 OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
-
                 OSDArray foldersrequested = (OSDArray)map["folders"];
 
-                return FetchInventoryReply(foldersrequested, AgentID, false);
+                return Aurora.DataManager.DataManager.RequestPlugin<IInventoryData>().FetchInventoryReply(foldersrequested, AgentID);
+                //return FetchInventoryReply(foldersrequested, AgentID, false);
             }
             catch(Exception ex)
             {
