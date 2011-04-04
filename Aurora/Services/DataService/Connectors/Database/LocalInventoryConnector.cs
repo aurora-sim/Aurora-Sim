@@ -263,17 +263,17 @@ namespace Aurora.Services.DataService
             contents.WriteEndArray(); //end array folders
             contents.WriteEndMap(/*"llsd"*/); //end llsd
 
-            return Encoding.UTF8.GetBytes(contents.GetSerializer());
+            return contents.GetSerializer();
         }
 
         public class LLSDSerializationDictionary
         {
-            private StringWriter sw = new StringWriter();
+            private MemoryStream sw = new MemoryStream();
             private XmlTextWriter writer;
 
             public LLSDSerializationDictionary()
             {
-                writer = new XmlTextWriter(sw);
+                writer = new XmlTextWriter(sw, Encoding.UTF8);
                 writer.Formatting = Formatting.None;
                 writer.WriteStartElement(String.Empty, "llsd", String.Empty);
             }
@@ -459,12 +459,12 @@ namespace Aurora.Services.DataService
                 }
             }
 
-            public string GetSerializer()
+            public byte[] GetSerializer()
             {
                 writer.WriteEndElement();
                 writer.Close();
 
-                return sw.ToString();
+                return sw.ToArray();
             }
 
             private string AsString(DateTime value)

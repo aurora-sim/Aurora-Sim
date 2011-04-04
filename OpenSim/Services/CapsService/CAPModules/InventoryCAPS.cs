@@ -111,7 +111,6 @@ namespace OpenSim.Services.CapsService
                 OSDArray foldersrequested = (OSDArray)map["folders"];
 
                 return Aurora.DataManager.DataManager.RequestPlugin<IInventoryData>().FetchInventoryReply(foldersrequested, AgentID);
-                //return FetchInventoryReply(foldersrequested, AgentID, false);
             }
             catch(Exception ex)
             {
@@ -132,7 +131,7 @@ namespace OpenSim.Services.CapsService
 
                 OSDArray foldersrequested = (OSDArray)map["folders"];
 
-                return FetchInventoryReply(foldersrequested, AgentID, true);
+                return Aurora.DataManager.DataManager.RequestPlugin<IInventoryData>().FetchInventoryReply(foldersrequested, AgentID);
             }
             catch (Exception ex)
             {
@@ -146,8 +145,8 @@ namespace OpenSim.Services.CapsService
         public byte[] HandleFetchInventory(string request, UUID AgentID)
         {
             try
-            {
-                //m_log.DebugFormat("[InventoryCAPS]: Received FetchInventory request for {0}", AgentID);
+            { 
+                m_log.DebugFormat("[InventoryCAPS]: Received FetchInventory request for {0}", AgentID);
 
                 OSDMap requestmap = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
 
@@ -219,126 +218,6 @@ namespace OpenSim.Services.CapsService
             return OSDParser.SerializeLLSDXmlBytes(rmap);
         }
 
-        /// <summary>
-        /// Construct an LLSD reply packet to a CAPS inventory request
-        /// </summary>
-        /// <param name="invFetch"></param>
-        /// <returns></returns>
-        private byte[] FetchInventoryReply(OSDArray fetchRequest, UUID AgentID, bool Library)
-        {
-            OSDMap contents = new OSDMap();
-            OSDArray folders = new OSDArray();
-            OSDArray categories = new OSDArray();
-            OSDArray items = new OSDArray();
-            OSDMap internalContents = new OSDMap();
-
-            foreach (OSD m in fetchRequest)
-            {
-                OSDMap invFetch = (OSDMap)m;
-
-                //UUID agent_id = invFetch["agent_id"].AsUUID();
-                UUID owner_id = invFetch["owner_id"].AsUUID();
-                UUID folder_id = invFetch["folder_id"].AsUUID();
-                bool fetch_folders = invFetch["fetch_folders"].AsBoolean();
-                bool fetch_items = invFetch["fetch_items"].AsBoolean();
-                int sort_order = invFetch["sort_order"].AsInteger();
-
-                //Set the normal stuff
-                internalContents["agent_id"] = AgentID;
-                internalContents["owner_id"] = owner_id;
-                internalContents["folder_id"] = folder_id;
-
-
-                int version = 0;
-                items = HandleFetchInventoryDescendentsCAPS(AgentID, folder_id, owner_id, fetch_folders, fetch_items, sort_order, Library, out version);
-
-                internalContents["categories"] = categories;
-                internalContents["items"] = items;
-                internalContents["descendents"] = items.Count + categories.Count;
-                internalContents["version"] = version;
-
-                //Now add it to the folder array
-                folders.Add(internalContents);
-            }
-
-            contents["folders"] = folders;
-            byte[] retVal = OSDParser.SerializeLLSDXmlBytes(contents);
-
-            foreach (OSD o in items)
-            {
-                ((OSDMap)o).Clear();
-            }
-            items.Clear();
-            categories.Clear();
-            internalContents.Clear();
-            folders.Clear();
-            contents.Clear();
-            return retVal;
-        }
-
-        /// <summary>
-        /// Convert an internal inventory folder object into an LLSD object.
-        /// </summary>
-        /// <param name="invFolder"></param>
-        /// <returns></returns>
-        private OSDMap ConvertInventoryFolder(InventoryFolderBase invFolder)
-        {
-            OSDMap folder = new OSDMap();
-            folder["folder_id"] = invFolder.ID;
-            folder["parent_id"] = invFolder.ParentID;
-            folder["name"] = invFolder.Name;
-            if (invFolder.Type < 0 || invFolder.Type >= TaskInventoryItem.Types.Length)
-                folder["type"] = "0";
-            else
-                folder["type"] = TaskInventoryItem.Types[invFolder.Type];
-            folder["preferred_type"] = "0";
-
-            return folder;
-        }
-
-        public OSDArray HandleFetchInventoryDescendentsCAPS(UUID agentID, UUID folderID, UUID ownerID,
-                                                   bool fetchFolders, bool fetchItems, int sortOrder, bool Library, out int version)
-        {
-            // FIXME MAYBE: We're not handling sortOrder!
-
-            OSDArray items = new OSDArray();
-            if (Library && m_libraryService != null)
-            {
-                InventoryCollection contents = new InventoryCollection();
-                version = 0;
-                /*if (fetchFolders)
-                {
-                    contents = m_inventoryService.GetFolderContent(m_libraryService.LibraryOwner, folderID);
-                }
-                else */
-                if (fetchItems)
-                {
-                    items = m_inventoryService.GetLLSDFolderItems(m_libraryService.LibraryOwner, folderID);
-                }
-                return items;
-            }
-
-            //The viewer already has all the folders (from login response), don't send it any more!
-            /*if (fetchFolders)
-            {
-                //contents.Folders = m_inventoryService.GetFolderFolders(agentID, folderID);
-            }*/
-            if (fetchItems)
-            {
-                items = m_inventoryService.GetLLSDFolderItems(agentID, folderID);
-            }
-            InventoryFolderBase containingFolder = new InventoryFolderBase();
-            containingFolder.ID = folderID;
-            containingFolder.Owner = agentID;
-            containingFolder = m_inventoryService.GetFolder(containingFolder);
-            if (containingFolder != null)
-                version = containingFolder.Version;
-            else
-                version = 1;
-
-            return items;
-
-        }
         #endregion
 
         #region Inventory upload
