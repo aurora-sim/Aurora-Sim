@@ -164,13 +164,11 @@ namespace OpenSim.Services.CapsService
                 for (int i = 0; i < foldersrequested.Count; i++)
                 {
                     OSDMap requestedFolders = (OSDMap)foldersrequested[i];
-                    UUID owner_id = requestedFolders["owner_id"].AsUUID();
+                    //UUID owner_id = requestedFolders["owner_id"].AsUUID();
                     UUID item_id = requestedFolders["item_id"].AsUUID();
-                    InventoryItemBase item = m_inventoryService.GetItem(new InventoryItemBase(item_id, owner_id));
-                    if (item != null)
-                    {
-                        items.Add(ConvertInventoryItem(item, owner_id));
-                    }
+                    OSDArray item = m_inventoryService.GetItem(item_id);
+                    if (item != null && item.Count > 0)
+                        items.Add(item[0]);
                 }
                 map.Add("items", items);
 
@@ -204,18 +202,11 @@ namespace OpenSim.Services.CapsService
                 for (int i = 0; i < foldersrequested.Count; i++)
                 {
                     OSDMap requestedFolders = (OSDMap)foldersrequested[i];
-                    UUID owner_id = requestedFolders["owner_id"].AsUUID();
+                    //UUID owner_id = requestedFolders["owner_id"].AsUUID();
                     UUID item_id = requestedFolders["item_id"].AsUUID();
-                    InventoryItemBase item = null;
-
-                    if (item == null) //Try normal inventory them
-                        item = m_inventoryService.GetItem(new InventoryItemBase(item_id, owner_id));
-                    if (item == null && m_libraryService != null)
-                        item = m_inventoryService.GetItem(new InventoryItemBase(item_id, m_libraryService.LibraryOwner));
-                    if (item != null)
-                    {
-                        items.Add(ConvertInventoryItem(item, owner_id));
-                    }
+                    OSDArray item = m_inventoryService.GetItem(item_id);
+                    if(item != null && item.Count > 0)
+                        items.Add(item[0]);
                 }
                 map.Add("items", items);
 
@@ -262,37 +253,13 @@ namespace OpenSim.Services.CapsService
                 internalContents["folder_id"] = folder_id;
 
 
-                InventoryCollection inv = new InventoryCollection();
-                inv.Folders = new List<InventoryFolderBase>();
-                inv.Items = new List<InventoryItemBase>();
                 int version = 0;
-                inv = HandleFetchInventoryDescendentsCAPS(AgentID, folder_id, owner_id, fetch_folders, fetch_items, sort_order, Library, out version);
+                items = HandleFetchInventoryDescendentsCAPS(AgentID, folder_id, owner_id, fetch_folders, fetch_items, sort_order, Library, out version);
 
-                if (inv.Folders != null)
-                {
-                    foreach (InventoryFolderBase invFolder in inv.Folders)
-                    {
-                        categories.Add(ConvertInventoryFolder(invFolder));
-                    }
-                }
                 internalContents["categories"] = categories;
-
-                if (inv.Items != null)
-                {
-                    for(int i = 0; i < inv.Items.Count; i++)
-                    {
-                        items.Add(ConvertInventoryItem(inv.Items[i], AgentID));
-                        inv.Items[i] = null;
-                    }
-                }
                 internalContents["items"] = items;
                 internalContents["descendents"] = items.Count + categories.Count;
                 internalContents["version"] = version;
-
-                if (inv.Folders != null)
-                    inv.Folders.Clear();
-                if (inv.Items != null)
-                    inv.Items.Clear();
 
                 //Now add it to the folder array
                 folders.Add(internalContents);
@@ -301,6 +268,10 @@ namespace OpenSim.Services.CapsService
             contents["folders"] = folders;
             string retVal = OSDParser.SerializeLLSDXmlString(contents);
 
+            foreach (OSD o in items)
+            {
+                ((OSDMap)o).Clear();
+            }
             items.Clear();
             categories.Clear();
             internalContents.Clear();
@@ -329,96 +300,36 @@ namespace OpenSim.Services.CapsService
             return folder;
         }
 
-        /// <summary>
-        /// Convert an internal inventory item object into an LLSD object.
-        /// </summary>
-        /// <param name="invItem"></param>
-        /// <returns></returns>
-        private OSDMap ConvertInventoryItem(InventoryItemBase invItem, UUID AgentID)
-        {
-            OSDMap item = new OSDMap();
-            item["agent_id"] = AgentID;
-            item["asset_id"] = invItem.AssetID;
-            item["created_at"] = invItem.CreationDate;
-            item["desc"] = invItem.Description;
-            item["flags"] = invItem.Flags;
-            item["item_id"] = invItem.ID;
-            item["name"] = invItem.Name;
-            item["parent_id"] = invItem.Folder;
-            try
-            {
-                // TODO reevaluate after upgrade to libomv >= r2566. Probably should use UtilsConversions.
-                item["type"] = Utils.AssetTypeToString((AssetType)invItem.AssetType);
-                item["inv_type"] = Utils.InventoryTypeToString((InventoryType)invItem.InvType);
-            }
-            catch (Exception e)
-            {
-                m_log.Error("[CAPS]: Problem setting asset/inventory type while converting inventory item " + invItem.Name + " to LLSD:", e);
-            }
-            OSDMap permissions = new OSDMap();
-            permissions["creator_id"] = invItem.CreatorIdAsUuid;
-            permissions["base_mask"] = (int)invItem.CurrentPermissions;
-            permissions["everyone_mask"] = (int)invItem.EveryOnePermissions;
-            permissions["group_id"] = invItem.GroupID;
-            permissions["group_mask"] = (int)invItem.GroupPermissions;
-            permissions["is_owner_group"] = invItem.GroupOwned;
-            permissions["next_owner_mask"] = (int)invItem.NextPermissions;
-            permissions["last_owner_id"] = invItem.Owner; //Err... can't set this?
-            permissions["owner_id"] = AgentID;
-            permissions["owner_mask"] = (int)invItem.CurrentPermissions;
-            item["permissions"] = permissions;
-
-            OSDMap sale_info = new OSDMap();
-            sale_info["sale_price"] = invItem.SalePrice;
-            switch (invItem.SaleType)
-            {
-                default:
-                    sale_info["sale_type"] = "not";
-                    break;
-                case 1:
-                    sale_info["sale_type"] = "original";
-                    break;
-                case 2:
-                    sale_info["sale_type"] = "copy";
-                    break;
-                case 3:
-                    sale_info["sale_type"] = "contents";
-                    break;
-            }
-            item["sale_info"] = sale_info;
-
-            return item;
-        }
-
-        public InventoryCollection HandleFetchInventoryDescendentsCAPS(UUID agentID, UUID folderID, UUID ownerID,
+        public OSDArray HandleFetchInventoryDescendentsCAPS(UUID agentID, UUID folderID, UUID ownerID,
                                                    bool fetchFolders, bool fetchItems, int sortOrder, bool Library, out int version)
         {
             // FIXME MAYBE: We're not handling sortOrder!
 
-            InventoryFolderImpl fold;
-
-            InventoryCollection contents = new InventoryCollection();
+            OSDArray items = new OSDArray();
             if (Library && m_libraryService != null)
             {
+                InventoryCollection contents = new InventoryCollection();
                 version = 0;
-                if (fetchFolders)
+                /*if (fetchFolders)
                 {
                     contents = m_inventoryService.GetFolderContent(m_libraryService.LibraryOwner, folderID);
                 }
-                else if (fetchItems)
+                else */
+                if (fetchItems)
                 {
-                    contents.Items = m_inventoryService.GetFolderItems(m_libraryService.LibraryOwner, folderID);
+                    items = m_inventoryService.GetLLSDFolderItems(m_libraryService.LibraryOwner, folderID);
                 }
-                return contents;
+                return items;
             }
 
-            if (fetchFolders)
+            //The viewer already has all the folders (from login response), don't send it any more!
+            /*if (fetchFolders)
             {
-                contents = m_inventoryService.GetFolderContent(agentID, folderID);
-            }
-            else if (fetchItems)
+                //contents.Folders = m_inventoryService.GetFolderFolders(agentID, folderID);
+            }*/
+            if (fetchItems)
             {
-                contents.Items = m_inventoryService.GetFolderItems(agentID, folderID);
+                items = m_inventoryService.GetLLSDFolderItems(agentID, folderID);
             }
             InventoryFolderBase containingFolder = new InventoryFolderBase();
             containingFolder.ID = folderID;
@@ -429,7 +340,7 @@ namespace OpenSim.Services.CapsService
             else
                 version = 1;
 
-            return contents;
+            return items;
 
         }
         #endregion

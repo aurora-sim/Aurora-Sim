@@ -185,6 +185,11 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
         }
 
+        public virtual List<InventoryFolderBase> GetRootFolders(UUID principalID)
+        {
+            return new List<InventoryFolderBase>(new InventoryFolderBase[1] { GetRootFolder(principalID) });
+        }
+
         /// <summary>
         /// Retrieve the root inventory folder for the given user.
         /// </summary>

@@ -89,6 +89,11 @@ namespace OpenSim.Services.Connectors
             return folders;
         }
 
+        public virtual List<InventoryFolderBase> GetRootFolders(UUID principalID)
+        {
+            return new List<InventoryFolderBase>(new InventoryFolderBase[1] { GetRootFolder(principalID) });
+        }
+
         public virtual InventoryFolderBase GetRootFolder(UUID principalID)
         {
             Dictionary<string,object> ret = MakeRequest("GETROOTFOLDER",

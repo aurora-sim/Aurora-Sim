@@ -48,8 +48,6 @@ namespace OpenSim.Services.InventoryService
     /// </summary>
     public class LibraryService : ILibraryService, IService
     {
-        private InventoryFolderImpl m_LibraryRootFolder;
-
         private UUID libOwner = new UUID("11111111-1111-0000-0000-000100bba000");
 
         private string libOwnerName = "Library Owner";
@@ -102,14 +100,6 @@ namespace OpenSim.Services.InventoryService
         public void FinishedStartup()
         {
             LoadLibraries(m_registry);
-        }
-
-        public void AddToDefaultInventory(InventoryFolderImpl folder)
-        {
-            foreach (InventoryFolderImpl f in folder.RequestListOfFolderImpls())
-                m_LibraryRootFolder.AddChildFolder(f);
-            foreach (InventoryItemBase i in folder.RequestListOfItems())
-                m_LibraryRootFolder.Items.Add(i.ID, i);
         }
 
         public void LoadLibraries(IRegistryCore registry)

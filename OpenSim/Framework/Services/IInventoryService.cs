@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using Aurora.Framework;
 using OpenSim.Framework;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.Interfaces
 {
@@ -61,6 +62,13 @@ namespace OpenSim.Services.Interfaces
         /// <param name="userID"></param>
         /// <returns>null if no root folder was found</returns>
         InventoryFolderBase GetRootFolder(UUID userID);
+
+        /// <summary>
+        /// Retrieve the root inventory folder for the given user.
+        /// </summary>
+        /// <param name="userID"></param>
+        /// <returns>null if no root folder was found</returns>
+        List<InventoryFolderBase> GetRootFolders(UUID userID);
 
         /// <summary>
         /// Gets the user folder for the given folder-type
@@ -201,12 +209,17 @@ namespace OpenSim.Services.Interfaces
         /// <returns>The permissions or 0 if no such asset is found in 
         /// the user's inventory</returns>
         int GetAssetPermissions(UUID userID, UUID assetID);
+
+
+        OSDArray GetLLSDFolderItems(UUID principalID, UUID folderID);
+        OSDArray GetItem(UUID itemID);
     }
 
     public interface IInventoryData : IAuroraDataPlugin
     {
         List<InventoryFolderBase> GetFolders(string[] fields, string[] vals);
         List<InventoryItemBase> GetItems (string[] fields, string[] vals);
+        OSDArray GetLLSDItems(string[] fields, string[] vals);
 
         bool StoreFolder (InventoryFolderBase folder);
         bool StoreItem (InventoryItemBase item);

@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using log4net;
 using Nini.Config;
 using System.Reflection;
@@ -329,6 +330,13 @@ namespace OpenSim.Services.InventoryService
             return allFolders;
         }
 
+        public virtual List<InventoryFolderBase> GetRootFolders(UUID principalID)
+        {
+            return m_Database.GetFolders(
+                    new string[] { "agentID", "parentFolderID" },
+                    new string[] { principalID.ToString(), UUID.Zero.ToString() });
+        }
+
         public virtual InventoryFolderBase GetRootFolder(UUID principalID)
         {
             List<InventoryFolderBase> folders = m_Database.GetFolders(
@@ -396,11 +404,20 @@ namespace OpenSim.Services.InventoryService
 
             // Since we probably don't get a valid principal here, either ...
             //
-            List<InventoryItemBase> invItems = m_Database.GetItems(
-                    new string[] { "parentFolderID" },
-                    new string[] { folderID.ToString() });
+            return m_Database.GetItems(
+                    new string[] { "parentFolderID", "avatarID" },
+                    new string[] { folderID.ToString(), principalID.ToString() });
+        }
 
-            return invItems;
+        public virtual OSDArray GetFolderItems(UUID principalID, UUID folderID)
+        {
+            //            m_log.DebugFormat("[XINVENTORY]: Fetch items for folder {0}", folderID);
+
+            // Since we probably don't get a valid principal here, either ...
+            //
+            return m_Database.GetLLSDItems(
+                    new string[] { "parentFolderID", "avatarID" },
+                    new string[] { folderID.ToString(), principalID.ToString() });
         }
 
         public virtual List<InventoryFolderBase> GetFolderFolders(UUID principalID, UUID folderID)
@@ -607,6 +624,13 @@ namespace OpenSim.Services.InventoryService
                 return null;
 
             return items[0];
+        }
+
+        public virtual OSDArray GetItem(UUID itemID)
+        {
+            return m_Database.GetLLSDItems(
+                    new string[1] { "inventoryID" },
+                    new string[1] { itemID.ToString() });
         }
 
         public virtual InventoryFolderBase GetFolder(InventoryFolderBase folder)

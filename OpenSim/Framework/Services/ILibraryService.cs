@@ -39,9 +39,6 @@ namespace OpenSim.Services.Interfaces
 
         string LibraryOwnerName { get; }
         string LibraryName { get; }
-
-        //Dictionary<UUID, InventoryFolderImpl> GetAllFolders();
-        void AddToDefaultInventory(InventoryFolderImpl folder);
     }
 
 }

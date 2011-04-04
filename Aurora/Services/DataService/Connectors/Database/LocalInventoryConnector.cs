@@ -57,7 +57,7 @@ namespace Aurora.Services.DataService
         public List<InventoryItemBase> GetItems(string[] fields, string[] vals)
         {
             string query = "";
-            for(int i = 0; i < fields.Length; i++)
+            for (int i = 0; i < fields.Length; i++)
             {
                 query += String.Format("{0} = '{1}' and ", fields[i], vals[i]);
                 i++;
@@ -67,6 +67,81 @@ namespace Aurora.Services.DataService
             {
                 return ParseInventoryItems(reader);
             }
+        }
+
+        public OSDArray GetLLSDItems(string[] fields, string[] vals)
+        {
+            string query = "";
+            for (int i = 0; i < fields.Length; i++)
+            {
+                query += String.Format("{0} = '{1}' and ", fields[i], vals[i]);
+                i++;
+            }
+            query = query.Remove(query.Length - 5);
+            using (IDataReader reader = GD.QueryData(query, m_itemsrealm, "*"))
+            {
+                return ParseLLSDInventoryItems(reader);
+            }
+        }
+
+        private OSDArray ParseLLSDInventoryItems(IDataReader retVal)
+        {
+            OSDArray array = new OSDArray();
+
+            while (retVal.Read())
+            {
+                for (int i = 0; i < retVal.FieldCount; i++)
+                {
+                    OSDMap item = new OSDMap();
+                    OSDMap permissions = new OSDMap();
+                    item["asset_id"] = UUID.Parse(retVal["assetID"].ToString());
+                    item["name"] = retVal["inventoryName"].ToString();
+                    item["desc"] = retVal["inventoryDescription"].ToString();
+                    permissions["next_owner_mask"] = uint.Parse(retVal["inventoryNextPermissions"].ToString());
+                    permissions["owner_mask"] = uint.Parse(retVal["inventoryCurrentPermissions"].ToString());
+                    permissions["creator_id"] = UUID.Parse(retVal["creatorID"].ToString());
+                    permissions["base_mask"] = uint.Parse(retVal["inventoryBasePermissions"].ToString());
+                    permissions["everyone_mask"] = uint.Parse(retVal["inventoryEveryOnePermissions"].ToString());
+                    OSDMap sale_info = new OSDMap();
+                    sale_info["sale_price"] = int.Parse(retVal["salePrice"].ToString());
+                    switch (byte.Parse(retVal["saleType"].ToString()))
+                    {
+                        default:
+                            sale_info["sale_type"] = "not";
+                            break;
+                        case 1:
+                            sale_info["sale_type"] = "original";
+                            break;
+                        case 2:
+                            sale_info["sale_type"] = "copy";
+                            break;
+                        case 3:
+                            sale_info["sale_type"] = "contents";
+                            break;
+                    }
+                    item["sale_info"] = sale_info;
+                    item["created_at"] = int.Parse(retVal["creationDate"].ToString());
+                    permissions["group_id"] = UUID.Parse(retVal["groupID"].ToString());
+                    permissions["is_owner_group"] = int.Parse(retVal["groupOwned"].ToString()) == 1;
+                    item["flags"] = uint.Parse(retVal["flags"].ToString());
+                    item["item_id"] = UUID.Parse(retVal["inventoryID"].ToString());
+                    item["parent_id"] = UUID.Parse(retVal["parentFolderID"].ToString());
+                    permissions["group_mask"] = uint.Parse(retVal["inventoryGroupPermissions"].ToString());
+                    item["agent_id"] = UUID.Parse(retVal["avatarID"].ToString());
+                    permissions["owner_id"] = item["agent_id"];
+                    permissions["last_owner_id"] = item["agent_id"];
+
+                    item["type"] = Utils.AssetTypeToString((AssetType)int.Parse(retVal["assetType"].ToString()));
+                    item["inv_type"] = Utils.InventoryTypeToString((InventoryType)int.Parse(retVal["invType"].ToString()));
+
+                    item["permissions"] = permissions;
+
+                    array.Add(item);
+                }
+            }
+            retVal.Close();
+
+            return array;
         }
 
         private List<InventoryFolderBase> ParseInventoryFolders(ref Dictionary<string, List<string>> retVal)

@@ -220,7 +220,7 @@ namespace OpenSim.Services.LLLoginService
         }
 
         public LLLoginResponse(UserAccount account, AgentCircuitData aCircuit, OpenSim.Services.Interfaces.UserInfo pinfo,
-            GridRegion destination, List<InventoryFolderBase> invSkel, FriendInfo[] friendsList, ILibraryService libService,
+            GridRegion destination, List<InventoryFolderBase> invSkel, FriendInfo[] friendsList, IInventoryService invService, ILibraryService libService,
             string where, string startlocation, Vector3 position, Vector3 lookAt, List<InventoryItemBase> gestures,
             GridRegion home, IPEndPoint clientIP, string AdultMax, string AdultRating,
             ArrayList eventValues, ArrayList classifiedValues, string seedCap, IConfigSource source, string DisplayName)
@@ -229,7 +229,7 @@ namespace OpenSim.Services.LLLoginService
             m_source = source;
             SeedCapability = seedCap;
 
-            FillOutInventoryData(invSkel, libService);
+            FillOutInventoryData(invSkel, libService, invService);
 
             FillOutActiveGestures(gestures);
 
@@ -258,7 +258,7 @@ namespace OpenSim.Services.LLLoginService
 
         #region FillOutData
 
-        private void FillOutInventoryData(List<InventoryFolderBase> invSkel, ILibraryService libService)
+        private void FillOutInventoryData(List<InventoryFolderBase> invSkel, ILibraryService libService, IInventoryService invService)
         {
             InventoryData inventData = null;
 
@@ -295,7 +295,7 @@ namespace OpenSim.Services.LLLoginService
                 InventoryLibRoot.Add(InventoryLibRootHash);
 
                 InventoryLibraryOwner = GetLibraryOwner(libService);
-                InventoryLibrary = GetInventoryLibrary(libService);
+                InventoryLibrary = GetInventoryLibrary(libService, invService);
             }
         }
 
@@ -758,14 +758,29 @@ namespace OpenSim.Services.LLLoginService
         /// Converts the inventory library skeleton into the form required by the rpc request.
         /// </summary>
         /// <returns></returns>
-        protected virtual ArrayList GetInventoryLibrary(ILibraryService library)
+        protected virtual ArrayList GetInventoryLibrary(ILibraryService library, IInventoryService invService)
         {
             //Dictionary<UUID, InventoryFolderImpl> rootFolders = library.GetAllFolders();
             //m_log.DebugFormat("[LLOGIN]: Library has {0} folders", rootFolders.Count);
             //Dictionary<UUID, InventoryFolderImpl> rootFolders = new Dictionary<UUID,InventoryFolderImpl>();
+            List<InventoryFolderBase> folders = invService.GetInventorySkeleton(library.LibraryOwner);
+            List<InventoryFolderBase> rootFolders = invService.GetRootFolders(library.LibraryOwner);
             ArrayList folderHashes = new ArrayList();
 
-            /*foreach (InventoryFolderBase folder in rootFolders.Values)
+            foreach (InventoryFolderBase rootFolder in rootFolders)
+            {
+                if (rootFolder.Name != "My Inventory")
+                {
+                    Hashtable RootHash = new Hashtable();
+                    RootHash["name"] = rootFolder.Name;
+                    RootHash["parent_id"] = rootFolder.ParentID.ToString();
+                    RootHash["version"] = (Int32)rootFolder.Version;
+                    RootHash["type_default"] = (Int32)rootFolder.Type;
+                    RootHash["folder_id"] = rootFolder.ID.ToString();
+                    folderHashes.Add(RootHash);
+                }
+            }
+            foreach (InventoryFolderBase folder in folders)
             {
                 Hashtable TempHash = new Hashtable();
                 TempHash["name"] = folder.Name;
@@ -774,7 +789,7 @@ namespace OpenSim.Services.LLLoginService
                 TempHash["type_default"] = (Int32)folder.Type;
                 TempHash["folder_id"] = folder.ID.ToString();
                 folderHashes.Add(TempHash);
-            }*/
+            }
 
             return folderHashes;
         }

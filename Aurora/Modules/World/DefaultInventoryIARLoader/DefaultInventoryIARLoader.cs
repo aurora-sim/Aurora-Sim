@@ -137,7 +137,6 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
                 f.Name = iarFileName;
                 f.ParentID = UUID.Zero;
                 m_MockScene.InventoryService.UpdateFolder(f);
-                m_service.AddToDefaultInventory(f);
             }
             catch (Exception e)
             {
@@ -154,7 +153,7 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
             InventoryCollection col = m_MockScene.InventoryService.GetFolderContent(m_service.LibraryOwner, ID);
             foreach (InventoryItemBase item in col.Items)
             {
-                folderimp.Items.Add(item.ID, item);
+                folderimp.Items[item.ID] = item;
             }
             foreach (InventoryFolderBase folder in col.Folders)
             {
