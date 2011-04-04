@@ -409,7 +409,7 @@ namespace OpenSim.Services.InventoryService
                     new string[] { folderID.ToString(), principalID.ToString() });
         }
 
-        public virtual OSDArray GetFolderItems(UUID principalID, UUID folderID)
+        public virtual OSDArray GetLLSDFolderItems(UUID principalID, UUID folderID)
         {
             //            m_log.DebugFormat("[XINVENTORY]: Fetch items for folder {0}", folderID);
 

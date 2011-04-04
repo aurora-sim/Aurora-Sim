@@ -39,13 +39,13 @@ namespace OpenSim.Services.CapsService
             m_inventoryService = service.Registry.RequestModuleInterface<IInventoryService>();
             m_libraryService = service.Registry.RequestModuleInterface<ILibraryService>();
 
-            RestMethod method = delegate(string request, string path, string param,
+            RestBytesMethod method = delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
                 return HandleWebFetchInventoryDescendents(request, m_service.AgentID);
             };
             service.AddStreamHandler("WebFetchInventoryDescendents",
-                new RestStreamHandler("POST", service.CreateCAPS("WebFetchInventoryDescendents", ""),
+                new RestBytesStreamHandler("POST", service.CreateCAPS("WebFetchInventoryDescendents", ""),
                                                       method));
 
             method = delegate(string request, string path, string param,
@@ -54,7 +54,7 @@ namespace OpenSim.Services.CapsService
                 return HandleFetchLibDescendents(request, m_service.AgentID);
             };
             service.AddStreamHandler("FetchLibDescendents",
-                new RestStreamHandler("POST", service.CreateCAPS("FetchLibDescendents", ""),
+                new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLibDescendents", ""),
                                                       method));
 
             method = delegate(string request, string path, string param,
@@ -63,7 +63,7 @@ namespace OpenSim.Services.CapsService
                 return HandleFetchInventory(request, m_service.AgentID);
             };
             service.AddStreamHandler("FetchInventory",
-                new RestStreamHandler("POST", service.CreateCAPS("FetchInventory", ""),
+                new RestBytesStreamHandler("POST", service.CreateCAPS("FetchInventory", ""),
                                                       method));
 
             method = delegate(string request, string path, string param,
@@ -72,21 +72,21 @@ namespace OpenSim.Services.CapsService
                 return HandleFetchLib(request, m_service.AgentID);
             };
             service.AddStreamHandler("FetchLib",
-                new RestStreamHandler("POST", service.CreateCAPS("FetchLib", ""),
+                new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLib", ""),
                                                       method));
 
             service.AddStreamHandler("NewFileAgentInventory",
                 new RestStreamHandler("POST", service.CreateCAPS("NewFileAgentInventory", m_newInventory),
                                                       NewAgentInventoryRequest));
 
-            method = delegate(string request, string path, string param,
+            /*method = delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
                 return HandleInventoryItemCreate(request, m_service.AgentID);
             };
             service.AddStreamHandler("InventoryItemCreate",
-                new RestStreamHandler("POST", service.CreateCAPS("InventoryItemCreate", ""),
-                                                      method));
+                new RestBytesStreamHandler("POST", service.CreateCAPS("InventoryItemCreate", ""),
+                                                      method));*/
         }
 
         public void EnteringRegion()
@@ -101,7 +101,7 @@ namespace OpenSim.Services.CapsService
         
         #region Inventory
 
-        public string HandleWebFetchInventoryDescendents(string request, UUID AgentID)
+        public byte[] HandleWebFetchInventoryDescendents(string request, UUID AgentID)
         {
             try
             {
@@ -111,8 +111,7 @@ namespace OpenSim.Services.CapsService
 
                 OSDArray foldersrequested = (OSDArray)map["folders"];
 
-                string response = FetchInventoryReply(foldersrequested, AgentID, false);
-                return response;
+                return FetchInventoryReply(foldersrequested, AgentID, false);
             }
             catch(Exception ex)
             {
@@ -120,10 +119,10 @@ namespace OpenSim.Services.CapsService
             }
             OSDMap rmap = new OSDMap();
             rmap["folders"] = new OSDArray();
-            return OSDParser.SerializeLLSDXmlString(rmap);
+            return OSDParser.SerializeLLSDXmlBytes(rmap);
         }
 
-        public string HandleFetchLibDescendents(string request, UUID AgentID)
+        public byte[] HandleFetchLibDescendents(string request, UUID AgentID)
         {
             try
             {
@@ -133,8 +132,7 @@ namespace OpenSim.Services.CapsService
 
                 OSDArray foldersrequested = (OSDArray)map["folders"];
 
-                string response = FetchInventoryReply(foldersrequested, AgentID, true);
-                return response;
+                return FetchInventoryReply(foldersrequested, AgentID, true);
             }
             catch (Exception ex)
             {
@@ -142,10 +140,10 @@ namespace OpenSim.Services.CapsService
             }
             OSDMap rmap = new OSDMap();
             rmap["folders"] = new OSDArray();
-            return OSDParser.SerializeLLSDXmlString(rmap);
+            return OSDParser.SerializeLLSDXmlBytes(rmap);
         }
 
-        public string HandleFetchInventory(string request, UUID AgentID)
+        public byte[] HandleFetchInventory(string request, UUID AgentID)
         {
             try
             {
@@ -155,7 +153,6 @@ namespace OpenSim.Services.CapsService
 
                 OSDArray foldersrequested = (OSDArray)requestmap["items"];
 
-                string response = "";
                 OSDMap map = new OSDMap();
                 //We have to send the agent_id in the main map as well as all the items
                 map.Add("agent_id", OSD.FromUUID(AgentID));
@@ -172,7 +169,7 @@ namespace OpenSim.Services.CapsService
                 }
                 map.Add("items", items);
 
-                response = OSDParser.SerializeLLSDXmlString(map);
+                byte[] response = OSDParser.SerializeLLSDXmlBytes(map);
                 map.Clear();
                 return response;
             }
@@ -182,10 +179,10 @@ namespace OpenSim.Services.CapsService
             }
             OSDMap rmap = new OSDMap();
             rmap["items"] = new OSDArray();
-            return OSDParser.SerializeLLSDXmlString(rmap);
+            return OSDParser.SerializeLLSDXmlBytes(rmap);
         }
 
-        public string HandleFetchLib(string request, UUID AgentID)
+        public byte[] HandleFetchLib(string request, UUID AgentID)
         {
             try
             {
@@ -195,7 +192,6 @@ namespace OpenSim.Services.CapsService
 
                 OSDArray foldersrequested = (OSDArray)requestmap["items"];
 
-                string response = "";
                 OSDMap map = new OSDMap();
                 map.Add("agent_id", OSD.FromUUID(AgentID));
                 OSDArray items = new OSDArray();
@@ -210,7 +206,7 @@ namespace OpenSim.Services.CapsService
                 }
                 map.Add("items", items);
 
-                response = OSDParser.SerializeLLSDXmlString(map);
+                byte[] response = OSDParser.SerializeLLSDXmlBytes(map);
                 map.Clear();
                 return response;
             }
@@ -219,8 +215,8 @@ namespace OpenSim.Services.CapsService
                 m_log.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex.ToString());
             }
             OSDMap rmap = new OSDMap();
-            rmap["folders"] = new OSDArray();
-            return OSDParser.SerializeLLSDXmlString(rmap);
+            rmap["items"] = new OSDArray();
+            return OSDParser.SerializeLLSDXmlBytes(rmap);
         }
 
         /// <summary>
@@ -228,7 +224,7 @@ namespace OpenSim.Services.CapsService
         /// </summary>
         /// <param name="invFetch"></param>
         /// <returns></returns>
-        private string FetchInventoryReply(OSDArray fetchRequest, UUID AgentID, bool Library)
+        private byte[] FetchInventoryReply(OSDArray fetchRequest, UUID AgentID, bool Library)
         {
             OSDMap contents = new OSDMap();
             OSDArray folders = new OSDArray();
@@ -266,7 +262,7 @@ namespace OpenSim.Services.CapsService
             }
 
             contents["folders"] = folders;
-            string retVal = OSDParser.SerializeLLSDXmlString(contents);
+            byte[] retVal = OSDParser.SerializeLLSDXmlBytes(contents);
 
             foreach (OSD o in items)
             {

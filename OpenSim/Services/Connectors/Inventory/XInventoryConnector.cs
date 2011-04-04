@@ -36,6 +36,7 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using Aurora.Simulation.Base;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.Connectors
 {
@@ -501,6 +502,16 @@ namespace OpenSim.Services.Connectors
                 return 0;
 
             return int.Parse(ret["RESULT"].ToString());
+        }
+
+        public OSDArray GetItem(UUID ItemID)
+        {
+            return null;
+        }
+
+        public OSDArray GetLLSDFolderItems(UUID folderID, UUID parentID)
+        {
+            return null;
         }
 
         /// <summary>

@@ -99,7 +99,11 @@ namespace Aurora.Services.DataService
                     item["desc"] = retVal["inventoryDescription"].ToString();
                     permissions["next_owner_mask"] = uint.Parse(retVal["inventoryNextPermissions"].ToString());
                     permissions["owner_mask"] = uint.Parse(retVal["inventoryCurrentPermissions"].ToString());
-                    permissions["creator_id"] = UUID.Parse(retVal["creatorID"].ToString());
+                    UUID creator;
+                    if(UUID.TryParse(retVal["creatorID"].ToString(), out creator))
+                        permissions["creator_id"] = creator;
+                    else
+                        permissions["creator_id"] = UUID.Zero;
                     permissions["base_mask"] = uint.Parse(retVal["inventoryBasePermissions"].ToString());
                     permissions["everyone_mask"] = uint.Parse(retVal["inventoryEveryOnePermissions"].ToString());
                     OSDMap sale_info = new OSDMap();

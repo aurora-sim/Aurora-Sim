@@ -190,6 +190,16 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return new List<InventoryFolderBase>(new InventoryFolderBase[1] { GetRootFolder(principalID) });
         }
 
+        public OSDArray GetItem(UUID ItemID)
+        {
+            return null;
+        }
+
+        public OSDArray GetLLSDFolderItems(UUID folderID, UUID parentID)
+        {
+            return null;
+        }
+
         /// <summary>
         /// Retrieve the root inventory folder for the given user.
         /// </summary>

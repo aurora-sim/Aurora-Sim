@@ -58,4 +58,32 @@ namespace OpenSim.Framework.Servers.HttpServer
             m_restMethod = restMethod;
         }
     }
+
+    public class RestBytesStreamHandler : BaseStreamHandler
+    {
+        private RestBytesMethod m_restMethod;
+
+        public RestBytesMethod Method
+        {
+            get { return m_restMethod; }
+        }
+
+        public override byte[] Handle(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        {
+            Encoding encoding = Encoding.UTF8;
+            StreamReader streamReader = new StreamReader(request, encoding);
+
+            string requestBody = streamReader.ReadToEnd();
+            streamReader.Close();
+
+            string param = GetParam(path);
+            return m_restMethod(requestBody, path, param, httpRequest, httpResponse);
+        }
+
+        public RestBytesStreamHandler(string httpMethod, string path, RestBytesMethod restMethod)
+            : base(httpMethod, path)
+        {
+            m_restMethod = restMethod;
+        }
+    }
 }
