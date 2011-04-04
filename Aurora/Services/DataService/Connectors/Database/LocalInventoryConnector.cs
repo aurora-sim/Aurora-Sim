@@ -153,14 +153,15 @@ namespace Aurora.Services.DataService
 
         public byte[] FetchInventoryReply(OSDArray fetchRequest, UUID AgentID)
         {
-            Dictionary<string, object> contents = new Dictionary<string, object>();
-            List<object> folders = new List<object>();
-            List<object> categories = new List<object>();
-            List<object> items = new List<object>();
-            Dictionary<string, object> internalContents = new Dictionary<string, object>();
+            LLSDSerializationDictionary contents = new LLSDSerializationDictionary();
+            contents.WriteStartMap("llsd"); //Start llsd
+
+            contents.WriteKey("folders"); //Start array items
+            contents.WriteStartArray("folders"); //Start array folders
 
             foreach (OSD m in fetchRequest)
             {
+                contents.WriteStartMap("internalContents"); //Start internalContents kvp
                 OSDMap invFetch = (OSDMap)m;
 
                 //UUID agent_id = invFetch["agent_id"].AsUUID();
@@ -171,10 +172,13 @@ namespace Aurora.Services.DataService
                 int sort_order = invFetch["sort_order"].AsInteger();
 
                 //Set the normal stuff
-                internalContents["agent_id"] = AgentID;
-                internalContents["owner_id"] = owner_id;
-                internalContents["folder_id"] = folder_id;
+                contents["agent_id"] = AgentID;
+                contents["owner_id"] = owner_id;
+                contents["folder_id"] = folder_id;
 
+                contents.WriteKey("items"); //Start array items
+                contents.WriteStartArray("items"); 
+                int count = 0;
                 string query = String.Format("{0} = '{1}'", "parentFolderID", folder_id);
                 using (IDataReader retVal = GD.QueryData(query, m_itemsrealm, "*"))
                 {
@@ -182,216 +186,296 @@ namespace Aurora.Services.DataService
                     {
                         for (int i = 0; i < retVal.FieldCount; i++)
                         {
-                            Dictionary<string, object> item = new Dictionary<string, object>();
-                            Dictionary<string, object> permissions = new Dictionary<string, object>();
-                            item["asset_id"] = UUID.Parse(retVal["assetID"].ToString());
-                            item["name"] = retVal["inventoryName"].ToString();
-                            item["desc"] = retVal["inventoryDescription"].ToString();
-                            permissions["next_owner_mask"] = uint.Parse(retVal["inventoryNextPermissions"].ToString());
-                            permissions["owner_mask"] = uint.Parse(retVal["inventoryCurrentPermissions"].ToString());
+                            contents.WriteStartMap("item"); //Start item kvp
+                            contents["asset_id"] = UUID.Parse(retVal["assetID"].ToString());
+                            contents["name"] = retVal["inventoryName"].ToString();
+                            contents["desc"] = retVal["inventoryDescription"].ToString();
+
+
+                            contents.WriteKey("permissions"); //Start permissions kvp
+                            contents.WriteStartMap("permissions");
+                            contents["group_id"] = UUID.Parse(retVal["groupID"].ToString());
+                            contents["is_owner_group"] = int.Parse(retVal["groupOwned"].ToString()) == 1;
+                            contents["group_mask"] = uint.Parse(retVal["inventoryGroupPermissions"].ToString());
+                            contents["owner_id"] = UUID.Parse(retVal["avatarID"].ToString());
+                            contents["last_owner_id"] = UUID.Parse(retVal["avatarID"].ToString());
+                            contents["next_owner_mask"] = uint.Parse(retVal["inventoryNextPermissions"].ToString());
+                            contents["owner_mask"] = uint.Parse(retVal["inventoryCurrentPermissions"].ToString());
                             UUID creator;
                             if (UUID.TryParse(retVal["creatorID"].ToString(), out creator))
-                                permissions["creator_id"] = creator;
+                                contents["creator_id"] = creator;
                             else
-                                permissions["creator_id"] = UUID.Zero;
-                            permissions["base_mask"] = uint.Parse(retVal["inventoryBasePermissions"].ToString());
-                            permissions["everyone_mask"] = uint.Parse(retVal["inventoryEveryOnePermissions"].ToString());
-                            Dictionary<string, object> sale_info = new Dictionary<string, object>();
-                            sale_info["sale_price"] = int.Parse(retVal["salePrice"].ToString());
+                                contents["creator_id"] = UUID.Zero;
+                            contents["base_mask"] = uint.Parse(retVal["inventoryBasePermissions"].ToString());
+                            contents["everyone_mask"] = uint.Parse(retVal["inventoryEveryOnePermissions"].ToString());
+                            contents.WriteEndMap(/*Permissions*/);
+
+                            contents.WriteKey("sale_info"); //Start permissions kvp
+                            contents.WriteStartMap("sale_info"); //Start sale_info kvp
+                            contents["sale_price"] = int.Parse(retVal["salePrice"].ToString());
                             switch (byte.Parse(retVal["saleType"].ToString()))
                             {
                                 default:
-                                    sale_info["sale_type"] = "not";
+                                    contents["sale_type"] = "not";
                                     break;
                                 case 1:
-                                    sale_info["sale_type"] = "original";
+                                    contents["sale_type"] = "original";
                                     break;
                                 case 2:
-                                    sale_info["sale_type"] = "copy";
+                                    contents["sale_type"] = "copy";
                                     break;
                                 case 3:
-                                    sale_info["sale_type"] = "contents";
+                                    contents["sale_type"] = "contents";
                                     break;
                             }
-                            item["sale_info"] = sale_info;
-                            item["created_at"] = int.Parse(retVal["creationDate"].ToString());
-                            permissions["group_id"] = UUID.Parse(retVal["groupID"].ToString());
-                            permissions["is_owner_group"] = int.Parse(retVal["groupOwned"].ToString()) == 1;
-                            item["flags"] = uint.Parse(retVal["flags"].ToString());
-                            item["item_id"] = UUID.Parse(retVal["inventoryID"].ToString());
-                            item["parent_id"] = UUID.Parse(retVal["parentFolderID"].ToString());
-                            permissions["group_mask"] = uint.Parse(retVal["inventoryGroupPermissions"].ToString());
-                            item["agent_id"] = UUID.Parse(retVal["avatarID"].ToString());
-                            permissions["owner_id"] = item["agent_id"];
-                            permissions["last_owner_id"] = item["agent_id"];
+                            contents.WriteEndMap(/*sale_info*/);
 
-                            item["type"] = Utils.AssetTypeToString((AssetType)int.Parse(retVal["assetType"].ToString()));
-                            item["inv_type"] = Utils.InventoryTypeToString((InventoryType)int.Parse(retVal["invType"].ToString()));
 
-                            item["permissions"] = permissions;
+                            contents["created_at"] = int.Parse(retVal["creationDate"].ToString());
+                            contents["flags"] = uint.Parse(retVal["flags"].ToString());
+                            contents["item_id"] = UUID.Parse(retVal["inventoryID"].ToString());
+                            contents["parent_id"] = UUID.Parse(retVal["parentFolderID"].ToString());
+                            contents["agent_id"] = UUID.Parse(retVal["avatarID"].ToString());
 
-                            items.Add(item);
+                            contents["type"] = Utils.AssetTypeToString((AssetType)int.Parse(retVal["assetType"].ToString()));
+                            contents["inv_type"] = Utils.InventoryTypeToString((InventoryType)int.Parse(retVal["invType"].ToString()));
+
+                            count++;
+                            contents.WriteEndMap(/*"item"*/); //end array items
                         }
                     }
                     retVal.Close();
                 }
+                contents.WriteEndArray(/*"items"*/); //end array items
 
+                //TODO!
                 int version = 0;
-                
-                internalContents["categories"] = categories;
-                internalContents["items"] = items;
-                internalContents["descendents"] = items.Count + categories.Count;
-                internalContents["version"] = version;
+
+                contents.WriteStartArray("categories"); //We don't send any folders
+                contents.WriteEndArray(/*"categories"*/);
+                contents["descendents"] = count;
+                contents["version"] = version;
 
                 //Now add it to the folder array
-                folders.Add(internalContents);
+                contents.WriteEndMap(); //end array internalContents
             }
 
-            contents["folders"] = folders;
+            contents.WriteEndArray(); //end array folders
+            contents.WriteEndMap(/*"llsd"*/); //end llsd
 
-            return Encoding.UTF8.GetBytes(SerializeLLSDXmlString(contents));
+            return Encoding.UTF8.GetBytes(contents.GetSerializer());
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public string SerializeLLSDXmlString(object data)
+        public class LLSDSerializationDictionary
         {
-            StringWriter sw = new StringWriter();
-            XmlTextWriter writer = new XmlTextWriter(sw);
-            writer.Formatting = Formatting.None;
+            private StringWriter sw = new StringWriter();
+            private XmlTextWriter writer;
 
-            writer.WriteStartElement(String.Empty, "llsd", String.Empty);
-            SerializeLLSDXmlElement(writer, data);
-            writer.WriteEndElement();
-
-            writer.Close();
-
-            return sw.ToString();
-        }
-
-        public void SerializeLLSDXmlElement(XmlTextWriter writer, object data)
-        {
-            Type t = data.GetType();
-            if(t == typeof(bool))
+            public LLSDSerializationDictionary()
             {
+                writer = new XmlTextWriter(sw);
+                writer.Formatting = Formatting.None;
+                writer.WriteStartElement(String.Empty, "llsd", String.Empty);
+            }
+
+            public void WriteStartMap(string name)
+            {
+                writer.WriteStartElement(String.Empty, "map", String.Empty);
+            }
+
+            public void WriteEndMap()
+            {
+                writer.WriteEndElement();
+            }
+
+            public void WriteStartArray(string name)
+            {
+                writer.WriteStartElement(String.Empty, "array", String.Empty);
+            }
+
+            public void WriteEndArray()
+            {
+                writer.WriteEndElement();
+            }
+
+            public void WriteKey(string key)
+            {
+                writer.WriteStartElement(String.Empty, "key", String.Empty);
+                writer.WriteString(key);
+                writer.WriteEndElement();
+            }
+
+            public void WriteElement(object value)
+            {
+                Type t = value.GetType();
+                if (t == typeof(bool))
+                {
                     writer.WriteStartElement(String.Empty, "boolean", String.Empty);
-                    writer.WriteValue(data);
+                    writer.WriteValue(value);
                     writer.WriteEndElement();
-            }
-            else if (t == typeof(int))
-            {
-                writer.WriteStartElement(String.Empty, "integer", String.Empty);
-                writer.WriteValue(data);
-                writer.WriteEndElement();
-            }
-            else if (t == typeof(int))
-            {
-                writer.WriteStartElement(String.Empty, "integer", String.Empty);
-                writer.WriteValue(data);
-                writer.WriteEndElement();
-            }
-            else if (t == typeof(uint))
-            {
-                writer.WriteStartElement(String.Empty, "integer", String.Empty);
-                writer.WriteValue(data);
-                writer.WriteEndElement();
-            }
-            else if(t ==  typeof(float))
-            {
+                }
+                else if (t == typeof(int))
+                {
+                    writer.WriteStartElement(String.Empty, "integer", String.Empty);
+                    writer.WriteValue(value);
+                    writer.WriteEndElement();
+                }
+                else if (t == typeof(int))
+                {
+                    writer.WriteStartElement(String.Empty, "integer", String.Empty);
+                    writer.WriteValue(value);
+                    writer.WriteEndElement();
+                }
+                else if (t == typeof(uint))
+                {
+                    writer.WriteStartElement(String.Empty, "integer", String.Empty);
+                    writer.WriteValue(value);
+                    writer.WriteEndElement();
+                }
+                else if (t == typeof(float))
+                {
                     writer.WriteStartElement(String.Empty, "real", String.Empty);
-                    writer.WriteValue(data);
+                    writer.WriteValue(value);
                     writer.WriteEndElement();
-            }
-            else if(t ==  typeof(double))
-            {
+                }
+                else if (t == typeof(double))
+                {
                     writer.WriteStartElement(String.Empty, "real", String.Empty);
-                    writer.WriteValue(data);
+                    writer.WriteValue(value);
                     writer.WriteEndElement();
-            }
-            else if(t ==  typeof(string))
-            {
+                }
+                else if (t == typeof(string))
+                {
                     writer.WriteStartElement(String.Empty, "string", String.Empty);
-                    writer.WriteValue(data);
+                    writer.WriteValue(value);
                     writer.WriteEndElement();
-            }
-            else if(t ==  typeof(UUID))
-            {
+                }
+                else if (t == typeof(UUID))
+                {
                     writer.WriteStartElement(String.Empty, "uuid", String.Empty);
-                    writer.WriteValue(data.ToString()); //UUID has to be string!
+                    writer.WriteValue(value.ToString()); //UUID has to be string!
                     writer.WriteEndElement();
-            }
-            else if(t ==  typeof(DateTime))
-            {
+                }
+                else if (t == typeof(DateTime))
+                {
                     writer.WriteStartElement(String.Empty, "date", String.Empty);
-                    writer.WriteValue(AsString((DateTime)data));
+                    writer.WriteValue(AsString((DateTime)value));
                     writer.WriteEndElement();
-            }
-            else if(t ==  typeof(Uri))
-            {
+                }
+                else if (t == typeof(Uri))
+                {
                     writer.WriteStartElement(String.Empty, "uri", String.Empty);
-                    writer.WriteValue(((Uri)data).ToString());//URI has to be string
+                    writer.WriteValue(((Uri)value).ToString());//URI has to be string
                     writer.WriteEndElement();
-            }
-            else if(t ==  typeof(byte[]))
-            {
+                }
+                else if (t == typeof(byte[]))
+                {
                     writer.WriteStartElement(String.Empty, "binary", String.Empty);
                     writer.WriteStartAttribute(String.Empty, "encoding", String.Empty);
                     writer.WriteString("base64");
                     writer.WriteEndAttribute();
-                    writer.WriteValue(Convert.ToBase64String((byte[])data)); //Has to be base64
+                    writer.WriteValue(Convert.ToBase64String((byte[])value)); //Has to be base64
                     writer.WriteEndElement();
+                }
             }
-            else if (t == typeof(Dictionary<string, object>))
+
+            public object this[string name]
             {
-                Dictionary<string, object> map = (Dictionary<string, object>)data;
-                writer.WriteStartElement(String.Empty, "map", String.Empty);
-                foreach (KeyValuePair<string, object> kvp in map)
+                set
                 {
                     writer.WriteStartElement(String.Empty, "key", String.Empty);
-                    writer.WriteString(kvp.Key);
+                    writer.WriteString(name);
                     writer.WriteEndElement();
+                    Type t = value.GetType();
+                    if (t == typeof(bool))
+                    {
+                        writer.WriteStartElement(String.Empty, "boolean", String.Empty);
+                        writer.WriteValue(value);
+                        writer.WriteEndElement();
+                    }
+                    else if (t == typeof(int))
+                    {
+                        writer.WriteStartElement(String.Empty, "integer", String.Empty);
+                        writer.WriteValue(value);
+                        writer.WriteEndElement();
+                    }
+                    else if (t == typeof(int))
+                    {
+                        writer.WriteStartElement(String.Empty, "integer", String.Empty);
+                        writer.WriteValue(value);
+                        writer.WriteEndElement();
+                    }
+                    else if (t == typeof(uint))
+                    {
+                        writer.WriteStartElement(String.Empty, "integer", String.Empty);
+                        writer.WriteValue(value);
+                        writer.WriteEndElement();
+                    }
+                    else if (t == typeof(float))
+                    {
+                        writer.WriteStartElement(String.Empty, "real", String.Empty);
+                        writer.WriteValue(value);
+                        writer.WriteEndElement();
+                    }
+                    else if (t == typeof(double))
+                    {
+                        writer.WriteStartElement(String.Empty, "real", String.Empty);
+                        writer.WriteValue(value);
+                        writer.WriteEndElement();
+                    }
+                    else if (t == typeof(string))
+                    {
+                        writer.WriteStartElement(String.Empty, "string", String.Empty);
+                        writer.WriteValue(value);
+                        writer.WriteEndElement();
+                    }
+                    else if (t == typeof(UUID))
+                    {
+                        writer.WriteStartElement(String.Empty, "uuid", String.Empty);
+                        writer.WriteValue(value.ToString()); //UUID has to be string!
+                        writer.WriteEndElement();
+                    }
+                    else if (t == typeof(DateTime))
+                    {
+                        writer.WriteStartElement(String.Empty, "date", String.Empty);
+                        writer.WriteValue(AsString((DateTime)value));
+                        writer.WriteEndElement();
+                    }
+                    else if (t == typeof(Uri))
+                    {
+                        writer.WriteStartElement(String.Empty, "uri", String.Empty);
+                        writer.WriteValue(((Uri)value).ToString());//URI has to be string
+                        writer.WriteEndElement();
+                    }
+                    else if (t == typeof(byte[]))
+                    {
+                        writer.WriteStartElement(String.Empty, "binary", String.Empty);
+                        writer.WriteStartAttribute(String.Empty, "encoding", String.Empty);
+                        writer.WriteString("base64");
+                        writer.WriteEndAttribute();
+                        writer.WriteValue(Convert.ToBase64String((byte[])value)); //Has to be base64
+                        writer.WriteEndElement();
+                    }
+                }
+            }
 
-                    SerializeLLSDXmlElement(writer, kvp.Value);
-                }
-                map.Clear();
-                map = null;
-                writer.WriteEndElement();
-            }
-            else if (t == typeof(object[]))
+            public string GetSerializer()
             {
-                object[] array = (object[])data;
-                writer.WriteStartElement(String.Empty, "array", String.Empty);
-                for (int i = 0; i < array.Length; i++)
-                {
-                    SerializeLLSDXmlElement(writer, array[i]);
-                }
-                array = null;
                 writer.WriteEndElement();
-            }
-            else if (t == typeof(List<object>))
-            {
-                object[] array = ((List<object>)data).ToArray();
-                writer.WriteStartElement(String.Empty, "array", String.Empty);
-                for (int i = 0; i < array.Length; i++)
-                {
-                    SerializeLLSDXmlElement(writer, array[i]);
-                }
-                array = null;
-                writer.WriteEndElement();
-            }
-        }
+                writer.Close();
 
-        public string AsString(DateTime value)
-        {
-            string format;
-            if (value.Millisecond > 0)
-                format = "yyyy-MM-ddTHH:mm:ss.ffZ";
-            else
-                format = "yyyy-MM-ddTHH:mm:ssZ";
-            return value.ToUniversalTime().ToString(format);
+                return sw.ToString();
+            }
+
+            private string AsString(DateTime value)
+            {
+                string format;
+                if (value.Millisecond > 0)
+                    format = "yyyy-MM-ddTHH:mm:ss.ffZ";
+                else
+                    format = "yyyy-MM-ddTHH:mm:ssZ";
+                return value.ToUniversalTime().ToString(format);
+            }
         }
 
         private List<InventoryFolderBase> ParseInventoryFolders(ref Dictionary<string, List<string>> retVal)

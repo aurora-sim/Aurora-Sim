@@ -505,11 +505,10 @@ namespace OpenSim.Framework.Servers.HttpServer
                     {
                         m_log.WarnFormat("[BASE HTTP SERVER]: HTTP request abnormally terminated.");
                     }
-                    //response.OutputStream.Close();
+                    //
                     try
                     {
                         response.Send();
-                        //response.FreeContext();
                     }
                     catch (SocketException e)
                     {
@@ -519,6 +518,16 @@ namespace OpenSim.Framework.Servers.HttpServer
                     catch (IOException e)
                     {
                         m_log.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e.ToString());
+                    }
+                    try
+                    {
+                        //Clean up after ourselves
+                        response.OutputStream.Close();
+                        response.FreeContext();
+                    }
+                    catch(Exception ex)
+                    {
+                        m_log.ErrorFormat("[BASE HTTP SERVER]: ISSUE WITH CLEANUP {0}", ex.ToString());
                     }
                     return;
                 }

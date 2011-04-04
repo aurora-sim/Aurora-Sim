@@ -807,12 +807,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 permission = true;
             }
 
-            if (IsEstateManager(user))
-            {
-                permission = true;
-            }
-
-            if (IsAdministrator(user))
+            if (GenericEstatePermission(user))
             {
                 permission = true;
             }
@@ -822,9 +817,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
         public bool SetHomePoint(UUID userID)
         {
-            if (IsAdministrator(userID))
-                return true;
-
             if (GenericEstatePermission(userID))
                 return true;
 
@@ -881,40 +873,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            return GenericParcelOwnerPermission(user, parcel, (ulong)p);
+            return GenericParcelPermission(user, parcel, (ulong)p);
         }
     
-        protected bool GenericParcelOwnerPermission(UUID user, ILandObject parcel, ulong groupPowers)
-        {
-            if (parcel == null)
-                return false;
-
-            if (parcel.LandData.OwnerID == user)
-            {
-                // Returning immediately so that group deeded objects on group deeded land don't trigger a NRE on
-                // the subsequent redundant checks when using lParcelMediaCommandList()
-                // See http://opensimulator.org/mantis/view.php?id=3999 for more details
-                return true;
-            }
-
-            if (parcel.LandData.IsGroupOwned && IsGroupMember(parcel.LandData.GroupID, user, groupPowers))
-            {
-                return true;
-            }
-    
-            if (IsEstateManager(user))
-            {
-                return true;
-            }
-
-            if (IsAdministrator(user))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
         protected bool GenericParcelPermission(UUID user, Vector3 pos, ulong groupPowers)
         {
             if (m_parcelManagement == null)
@@ -931,8 +892,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         {
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
-        
-            return GenericParcelOwnerPermission(user, parcel, (ulong)GroupPowers.LandRelease);
+
+            return GenericParcelPermission(user, parcel, (ulong)GroupPowers.LandRelease);
         }
 
         private bool CanReclaimParcel (UUID user, ILandObject parcel, IScene scene)
@@ -940,7 +901,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            return GenericParcelOwnerPermission(user, parcel, (ulong)OpenMetaverse.GroupPowers.LandRelease);
+            return GenericParcelPermission(user, parcel, (ulong)OpenMetaverse.GroupPowers.LandRelease);
         }
 
         private bool CanDeedParcel (UUID user, ILandObject parcel, IScene scene)
@@ -951,7 +912,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (parcel.LandData.OwnerID != user) // Only the owner can deed!
                 return false;
 
-            return GenericParcelOwnerPermission(user, parcel, (ulong)GroupPowers.LandDeed);
+            return GenericParcelPermission(user, parcel, (ulong)GroupPowers.LandDeed);
         }
 
         private bool CanDeedObject(UUID user, UUID group, IScene scene)
@@ -1057,7 +1018,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            return GenericParcelOwnerPermission(user, parcel, (ulong)GroupPowers.LandChangeIdentity);
+            return GenericParcelPermission(user, parcel, (ulong)GroupPowers.LandChangeIdentity);
         }
 
         private bool CanSubdivideParcel (UUID user, ILandObject parcel, IScene scene)
@@ -1065,7 +1026,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            return GenericParcelOwnerPermission(user, parcel, (ulong)GroupPowers.LandDivideJoin);
+            return GenericParcelPermission(user, parcel, (ulong)GroupPowers.LandDivideJoin);
         }
 
         /// <summary>
@@ -1469,10 +1430,10 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if ((parcel.LandData.Flags & (int)ParcelFlags.AllowGroupScripts) == 0)
             {
                 //Only owner can run then
-                return GenericParcelOwnerPermission(user, parcel, 0);
+                return GenericParcelPermission(user, parcel, 0);
             }
 
-            return GenericParcelOwnerPermission(user, parcel, (ulong)GroupPowers.None);
+            return GenericParcelPermission(user, parcel, (ulong)GroupPowers.None);
         }
 
         private bool CanSellParcel (UUID user, ILandObject parcel, IScene scene)
@@ -1480,7 +1441,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            return GenericParcelOwnerPermission(user, parcel, (ulong)GroupPowers.LandSetSale);
+            return GenericParcelPermission(user, parcel, (ulong)GroupPowers.LandSetSale);
         }
 
         private bool CanTakeObject (UUID objectID, UUID stealer, IScene scene)
@@ -1885,7 +1846,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 if ((parcel.LandData.Flags & (int)ParcelFlags.AllowLandmark) != 0)
                     return true;
                 else
-                    return GenericParcelOwnerPermission(userID, parcel, (uint)GroupPowers.AllowLandmark);
+                    return GenericParcelPermission(userID, parcel, (uint)GroupPowers.AllowLandmark);
                 
             }
             
@@ -1989,15 +1950,15 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             //This is used to check who is pusing objects in the parcel
             //When this is called, the AllowPushObject flag has already been checked
 
-            return GenericParcelOwnerPermission(userID, parcel, (ulong)GroupPowers.ObjectManipulate);
+            return GenericParcelPermission(userID, parcel, (ulong)GroupPowers.ObjectManipulate);
         }
 
         private bool CanViewObjectOwners(UUID userID, ILandObject parcel)
         {
             //If you have none of the three return flags, you cannot view object owners in the return menu
-            if (!GenericParcelOwnerPermission(userID, parcel, (ulong)GroupPowers.ReturnNonGroup))
-                if (!GenericParcelOwnerPermission(userID, parcel, (ulong)GroupPowers.ReturnGroupSet))
-                    if (!GenericParcelOwnerPermission(userID, parcel, (ulong)GroupPowers.ReturnGroupOwned))
+            if (!GenericParcelPermission(userID, parcel, (ulong)GroupPowers.ReturnNonGroup))
+                if (!GenericParcelPermission(userID, parcel, (ulong)GroupPowers.ReturnGroupSet))
+                    if (!GenericParcelPermission(userID, parcel, (ulong)GroupPowers.ReturnGroupOwned))
                         return false;
             return true;
         }
@@ -2006,10 +1967,10 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         {
             AccessList AccessFlag = (AccessList)flags;
             if(AccessFlag == AccessList.Access)
-                if (!GenericParcelOwnerPermission(userID, parcel, (ulong)GroupPowers.LandManageAllowed))
+                if (!GenericParcelPermission(userID, parcel, (ulong)GroupPowers.LandManageAllowed))
                     return false;
             else if (AccessFlag == AccessList.Ban)
-                if (!GenericParcelOwnerPermission(userID, parcel, (ulong)(GroupPowers.LandManageAllowed | GroupPowers.LandManageBanned)))
+                    if (!GenericParcelPermission(userID, parcel, (ulong)(GroupPowers.LandManageAllowed | GroupPowers.LandManageBanned)))
                     return false;
             return true;
         }
