@@ -123,23 +123,23 @@ namespace OpenSim.Services.InventoryService
             }
         }
 
-        private void ClearDefaultInventory (string module, string[] cmd)
+        private void ClearDefaultInventory(string module, string[] cmd)
         {
-            string sure = MainConsole.Instance.CmdPrompt ("Are you sure you want to delete the default inventory?", "yes");
-            if (!sure.Equals ("yes", StringComparison.CurrentCultureIgnoreCase))
+            string sure = MainConsole.Instance.CmdPrompt("Are you sure you want to delete the default inventory?", "yes");
+            if (!sure.Equals("yes", StringComparison.CurrentCultureIgnoreCase))
                 return;
-            IUserAccountService UserAccountService = m_registry.RequestModuleInterface<IUserAccountService>();
-            UserAccount uinfo = UserAccountService.GetUserAccount(UUID.Zero, LibraryOwner);
-            IInventoryService InventoryService = m_registry.RequestModuleInterface<IInventoryService> ();
-            if (uinfo != null)
+            IInventoryService InventoryService = m_registry.RequestModuleInterface<IInventoryService>();
+            //Delete the root folders
+            InventoryFolderBase root = InventoryService.GetRootFolder(LibraryOwner);
+            while (root != null)
             {
-                //Delete the root folders
-                InventoryFolderBase root = InventoryService.GetRootFolder (uinfo.PrincipalID);
-                while (root != null)
-                {
-                    InventoryService.ForcePurgeFolder (root);
-                    root = InventoryService.GetRootFolder (uinfo.PrincipalID);
-                }
+                InventoryService.ForcePurgeFolder(root);
+                root = InventoryService.GetRootFolder(LibraryOwner);
+            }
+            List<InventoryFolderBase> rootFolders = InventoryService.GetRootFolders(LibraryOwner);
+            foreach(InventoryFolderBase rFolder in rootFolders)
+            {
+                InventoryService.ForcePurgeFolder(rFolder);
             }
         }
     }

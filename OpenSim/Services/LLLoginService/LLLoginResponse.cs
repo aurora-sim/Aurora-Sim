@@ -289,13 +289,12 @@ namespace OpenSim.Services.LLLoginService
             // Inventory Library Section
             if (libService != null)
             {
-                Hashtable InventoryLibRootHash = new Hashtable();
-                InventoryLibRootHash["folder_id"] = "00000112-000f-0000-0000-000100bba000";
-                InventoryLibRoot = new ArrayList();
-                InventoryLibRoot.Add(InventoryLibRootHash);
-
                 InventoryLibraryOwner = GetLibraryOwner(libService);
                 InventoryLibrary = GetInventoryLibrary(libService, invService);
+                Hashtable InventoryLibRootHash = new Hashtable();
+                InventoryLibRootHash["folder_id"] = "00000112-000f-0000-0000-000100bba000"; ;
+                InventoryLibRoot = new ArrayList();
+                InventoryLibRoot.Add(InventoryLibRootHash);
             }
         }
 
@@ -763,35 +762,53 @@ namespace OpenSim.Services.LLLoginService
             //Dictionary<UUID, InventoryFolderImpl> rootFolders = library.GetAllFolders();
             //m_log.DebugFormat("[LLOGIN]: Library has {0} folders", rootFolders.Count);
             //Dictionary<UUID, InventoryFolderImpl> rootFolders = new Dictionary<UUID,InventoryFolderImpl>();
-            List<InventoryFolderBase> folders = invService.GetInventorySkeleton(library.LibraryOwner);
             List<InventoryFolderBase> rootFolders = invService.GetRootFolders(library.LibraryOwner);
             ArrayList folderHashes = new ArrayList();
 
+            Hashtable TempHash = new Hashtable();
+            TempHash["name"] = library.LibraryName;
+            TempHash["parent_id"] = UUID.Zero.ToString();
+            TempHash["version"] = (Int32)1;
+            TempHash["type_default"] = (Int32)9;
+            TempHash["folder_id"] = "00000112-000f-0000-0000-000100bba000";
+            folderHashes.Add(TempHash);
+
+            List<UUID> rootFolderUUIDs = new List<UUID>();
             foreach (InventoryFolderBase rootFolder in rootFolders)
             {
                 if (rootFolder.Name != "My Inventory")
                 {
-                    Hashtable RootHash = new Hashtable();
-                    RootHash["name"] = rootFolder.Name;
-                    RootHash["parent_id"] = rootFolder.ParentID.ToString();
-                    RootHash["version"] = (Int32)rootFolder.Version;
-                    RootHash["type_default"] = (Int32)rootFolder.Type;
-                    RootHash["folder_id"] = rootFolder.ID.ToString();
-                    folderHashes.Add(RootHash);
+                    rootFolderUUIDs.Add(rootFolder.ID);
                 }
             }
+
+            if (rootFolderUUIDs.Count == 0)
+                return folderHashes; //No default inventory
+
+            foreach (UUID rootID in rootFolderUUIDs)
+            {
+                TraverseFolder(library.LibraryOwner, rootID, invService, true, ref folderHashes);
+            }
+            return folderHashes;
+        }
+
+        private void TraverseFolder(UUID agentID, UUID folderID, IInventoryService invService, bool rootFolder, ref ArrayList table)
+        {
+            List<InventoryFolderBase> folders = invService.GetFolderFolders(agentID, folderID);
             foreach (InventoryFolderBase folder in folders)
             {
                 Hashtable TempHash = new Hashtable();
                 TempHash["name"] = folder.Name;
-                TempHash["parent_id"] = folder.ParentID.ToString();
+                if (rootFolder)
+                    TempHash["parent_id"] = "00000112-000f-0000-0000-000100bba000";
+                else
+                    TempHash["parent_id"] = folder.ParentID.ToString();
                 TempHash["version"] = (Int32)folder.Version;
-                TempHash["type_default"] = (Int32)folder.Type;
+                TempHash["type_default"] = (Int32)8;
                 TempHash["folder_id"] = folder.ID.ToString();
-                folderHashes.Add(TempHash);
+                table.Add(TempHash);
+                TraverseFolder(agentID, folder.ID, invService, false, ref table);
             }
-
-            return folderHashes;
         }
 
         /// <summary>
