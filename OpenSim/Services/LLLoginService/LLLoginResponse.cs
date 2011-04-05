@@ -264,7 +264,7 @@ namespace OpenSim.Services.LLLoginService
 
             try
             {
-                inventData = GetInventorySkeleton(invSkel);
+                inventData = GetInventorySkeleton(libService, invService, invSkel);
             }
             catch (Exception e)
             {
@@ -729,7 +729,7 @@ namespace OpenSim.Services.LLLoginService
             return buddylistreturn;
         }
 
-        private InventoryData GetInventorySkeleton(List<InventoryFolderBase> folders)
+        private InventoryData GetInventorySkeleton(ILibraryService library, IInventoryService inventoryService, List<InventoryFolderBase> folders)
         {
             UUID rootID = UUID.Zero;
             ArrayList AgentInventoryArray = new ArrayList();
@@ -749,6 +749,31 @@ namespace OpenSim.Services.LLLoginService
                 AgentInventoryArray.Add(TempHash);
             }
 
+            List<InventoryFolderBase> rootFolders = inventoryService.GetRootFolders(library.LibraryOwner);
+            Hashtable RootHash = new Hashtable();
+            RootHash["name"] = library.LibraryName;
+            RootHash["parent_id"] = UUID.Zero.ToString();
+            RootHash["version"] = (Int32)1;
+            RootHash["type_default"] = (Int32)9;
+            RootHash["folder_id"] = "00000112-000f-0000-0000-000100bba000";
+            AgentInventoryArray.Add(RootHash);
+
+            List<UUID> rootFolderUUIDs = new List<UUID>();
+            foreach (InventoryFolderBase rootFolder in rootFolders)
+            {
+                if (rootFolder.Name != "My Inventory")
+                {
+                    rootFolderUUIDs.Add(rootFolder.ID);
+                }
+            }
+
+            if (rootFolderUUIDs.Count != 0)
+            {
+                foreach (UUID rootfolderID in rootFolderUUIDs)
+                {
+                    TraverseFolder(library.LibraryOwner, rootfolderID, inventoryService, true, ref AgentInventoryArray);
+                }
+            }
             return new InventoryData(AgentInventoryArray, rootID);
 
         }
@@ -762,9 +787,9 @@ namespace OpenSim.Services.LLLoginService
             //Dictionary<UUID, InventoryFolderImpl> rootFolders = library.GetAllFolders();
             //m_log.DebugFormat("[LLOGIN]: Library has {0} folders", rootFolders.Count);
             //Dictionary<UUID, InventoryFolderImpl> rootFolders = new Dictionary<UUID,InventoryFolderImpl>();
-            List<InventoryFolderBase> rootFolders = invService.GetRootFolders(library.LibraryOwner);
             ArrayList folderHashes = new ArrayList();
 
+            /*List<InventoryFolderBase> rootFolders = invService.GetRootFolders(library.LibraryOwner);
             Hashtable TempHash = new Hashtable();
             TempHash["name"] = library.LibraryName;
             TempHash["parent_id"] = UUID.Zero.ToString();
@@ -788,7 +813,7 @@ namespace OpenSim.Services.LLLoginService
             foreach (UUID rootID in rootFolderUUIDs)
             {
                 TraverseFolder(library.LibraryOwner, rootID, invService, true, ref folderHashes);
-            }
+            }*/
             return folderHashes;
         }
 
@@ -804,7 +829,7 @@ namespace OpenSim.Services.LLLoginService
                 else
                     TempHash["parent_id"] = folder.ParentID.ToString();
                 TempHash["version"] = (Int32)folder.Version;
-                TempHash["type_default"] = (Int32)8;
+                TempHash["type_default"] = (Int32)folder.Type;
                 TempHash["folder_id"] = folder.ID.ToString();
                 table.Add(TempHash);
                 TraverseFolder(agentID, folder.ID, invService, false, ref table);
