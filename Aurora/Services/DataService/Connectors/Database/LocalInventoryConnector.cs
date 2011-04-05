@@ -248,8 +248,10 @@ namespace Aurora.Services.DataService
                 }
                 contents.WriteEndArray(/*"items"*/); //end array items
 
-                //TODO!
                 int version = 0;
+                List<string> versionRetVal = GD.Query("folderID", folder_id, m_foldersrealm, "version");
+                if(versionRetVal.Count > 0)
+                    version = int.Parse(versionRetVal[0]);
 
                 contents.WriteStartArray("categories"); //We don't send any folders
                 contents.WriteEndArray(/*"categories"*/);
