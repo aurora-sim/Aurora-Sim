@@ -322,16 +322,10 @@ namespace Aurora.Services.DataService
                     writer.WriteValue(value);
                     writer.WriteEndElement();
                 }
-                else if (t == typeof(int))
-                {
-                    writer.WriteStartElement(String.Empty, "integer", String.Empty);
-                    writer.WriteValue(value);
-                    writer.WriteEndElement();
-                }
                 else if (t == typeof(uint))
                 {
                     writer.WriteStartElement(String.Empty, "integer", String.Empty);
-                    writer.WriteValue(value);
+                    writer.WriteValue(value.ToString());
                     writer.WriteEndElement();
                 }
                 else if (t == typeof(float))
@@ -401,16 +395,10 @@ namespace Aurora.Services.DataService
                         writer.WriteValue(value);
                         writer.WriteEndElement();
                     }
-                    else if (t == typeof(int))
-                    {
-                        writer.WriteStartElement(String.Empty, "integer", String.Empty);
-                        writer.WriteValue(value);
-                        writer.WriteEndElement();
-                    }
                     else if (t == typeof(uint))
                     {
                         writer.WriteStartElement(String.Empty, "integer", String.Empty);
-                        writer.WriteValue(value);
+                        writer.WriteValue(value.ToString());
                         writer.WriteEndElement();
                     }
                     else if (t == typeof(float))
