@@ -896,7 +896,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     //Log it for the user
                     else if (!(ex is EventAbortException) &&
                         !(ex is MinEventDelayException))
-                        QIS.ID.DisplayUserNotification(ex.ToString(), "", false, true);
+                        QIS.ID.DisplayUserNotification(ex.ToString(), "executing", false, true);
                     return false;
                 }
                 else if (Running != null)
