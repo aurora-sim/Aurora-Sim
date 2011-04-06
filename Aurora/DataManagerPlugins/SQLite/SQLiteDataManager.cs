@@ -61,6 +61,28 @@ namespace Aurora.DataManager.SQLite
             return null;
         }
 
+        protected void PrepReader(ref SqliteCommand cmd)
+        {
+            try
+            {
+                var newConnection =
+                    (SqliteConnection)((ICloneable)m_Connection).Clone();
+                if (newConnection.State != ConnectionState.Open)
+                    newConnection.Open();
+                cmd.Connection = newConnection;
+            }
+            catch (Mono.Data.Sqlite.SqliteException ex)
+            {
+                m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " + ex);
+                //throw ex;
+            }
+            catch (Exception ex)
+            {
+                m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " + ex);
+                throw ex;
+            }
+        }
+
         protected int ExecuteNonQuery(SqliteCommand cmd)
         {
             try
@@ -113,28 +135,30 @@ namespace Aurora.DataManager.SQLite
                                       wantedValue, table, keyRow, keyValue.ToString());
             }
             cmd.CommandText = query;
-            IDataReader reader = GetReader(cmd);
-            var RetVal = new List<string>();
-            try
+            PrepReader(ref cmd);
+            using (IDataReader reader = cmd.ExecuteReader())
             {
-                while (reader.Read())
+                var RetVal = new List<string>();
+                try
                 {
-                    for (int i = 0; i < reader.FieldCount; i++)
+                    while (reader.Read())
                     {
-                        if (reader[i] is byte[])
-                            RetVal.Add(OpenMetaverse.Utils.BytesToString((byte[])reader[i]));
-                        else
-                            RetVal.Add(reader[i].ToString());
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            if (reader[i] is byte[])
+                                RetVal.Add(OpenMetaverse.Utils.BytesToString((byte[])reader[i]));
+                            else
+                                RetVal.Add(reader[i].ToString());
+                        }
                     }
+                    reader.Close();
+                    CloseReaderCommand(cmd);
                 }
-                reader.Close();
-                CloseReaderCommand(cmd);
+                catch
+                {
+                }
+                return RetVal;
             }
-            catch
-            {
-            }
-
-            return RetVal;
         }
 
         public override IDataReader QueryReader(string keyRow, object keyValue, string table, string wantedValue)
@@ -162,19 +186,22 @@ namespace Aurora.DataManager.SQLite
             query = String.Format("select {0} from {1} where {2}",
                                       wantedValue, table, whereClause);
             cmd.CommandText = query;
-            IDataReader reader = GetReader(cmd);
-            var RetVal = new List<string>();
-            while (reader.Read())
+            PrepReader(ref cmd);
+            using (IDataReader reader = cmd.ExecuteReader())
             {
-                for (int i = 0; i < reader.FieldCount; i++)
+                var RetVal = new List<string>();
+                while (reader.Read())
                 {
-                    RetVal.Add(reader[i].ToString());
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        RetVal.Add(reader[i].ToString());
+                    }
                 }
-            }
-            reader.Close();
-            CloseReaderCommand(cmd);
+                reader.Close();
+                CloseReaderCommand(cmd);
 
-            return RetVal;
+                return RetVal;
+            }
         }
 
         public override List<string> QueryFullData(string whereClause, string table, string wantedValue)
@@ -184,22 +211,23 @@ namespace Aurora.DataManager.SQLite
             query = String.Format("select {0} from {1} {2}",
                                       wantedValue, table, whereClause);
             cmd.CommandText = query;
-            IDataReader reader = GetReader(cmd);
-            var RetVal = new List<string>();
-            while (reader.Read())
+            PrepReader(ref cmd);
+            using (IDataReader reader = cmd.ExecuteReader())
             {
-                for (int i = 0; i < reader.FieldCount; i++)
+                var RetVal = new List<string>();
+                while (reader.Read())
                 {
-                    RetVal.Add(reader.GetValue(i).ToString());
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        RetVal.Add(reader.GetValue(i).ToString());
+                    }
                 }
+                reader.Close();
+                CloseReaderCommand(cmd);
+
+                return RetVal;
             }
-            reader.Close();
-            CloseReaderCommand(cmd);
-
-            return RetVal;
         }
-
-
 
         public override IDataReader QueryDataFull(string whereClause, string table, string wantedValue)
         {
@@ -237,27 +265,30 @@ namespace Aurora.DataManager.SQLite
                                       wantedValue, table, keyRow, keyValue.ToString());
             }
             cmd.CommandText = query + Order;
-            IDataReader reader = GetReader(cmd);
-            var RetVal = new List<string>();
-            try
+            PrepReader(ref cmd);
+            using (IDataReader reader = cmd.ExecuteReader())
             {
-                while (reader.Read())
+                var RetVal = new List<string>();
+                try
                 {
-                    for (int i = 0; i < reader.FieldCount; i++)
+                    while (reader.Read())
                     {
-                        Type r = reader[i].GetType();
-                        if (r == typeof(DBNull))
-                            RetVal.Add(null);
-                        else
-                            RetVal.Add(reader.GetString(i));
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            Type r = reader[i].GetType();
+                            if (r == typeof(DBNull))
+                                RetVal.Add(null);
+                            else
+                                RetVal.Add(reader.GetString(i));
+                        }
                     }
                 }
-            }
-            catch { }
-            reader.Close();
-            CloseReaderCommand(cmd);
+                catch { }
+                reader.Close();
+                CloseReaderCommand(cmd);
 
-            return RetVal;
+                return RetVal;
+            }
         }
 
         public override List<string> Query (string[] keyRow, object[] keyValue, string table, string wantedValue)
@@ -273,23 +304,26 @@ namespace Aurora.DataManager.SQLite
             }
             query = query.Remove (query.Length - 5);
             cmd.CommandText = query;
-            IDataReader reader = GetReader (cmd);
-            var RetVal = new List<string> ();
-            while (reader.Read ())
+            PrepReader(ref cmd);
+            using (IDataReader reader = cmd.ExecuteReader())
             {
-                for (i = 0; i < reader.FieldCount; i++)
+                var RetVal = new List<string>();
+                while (reader.Read())
                 {
-                    Type r = reader[i].GetType ();
-                    if (r == typeof (DBNull))
-                        RetVal.Add (null);
-                    else
-                        RetVal.Add (reader[i].ToString ());
+                    for (i = 0; i < reader.FieldCount; i++)
+                    {
+                        Type r = reader[i].GetType();
+                        if (r == typeof(DBNull))
+                            RetVal.Add(null);
+                        else
+                            RetVal.Add(reader[i].ToString());
+                    }
                 }
-            }
-            reader.Close ();
-            CloseReaderCommand (cmd);
+                reader.Close();
+                CloseReaderCommand(cmd);
 
-            return RetVal;
+                return RetVal;
+            }
         }
 
         public override Dictionary<string, List<string>> QueryNames (string[] keyRow, object[] keyValue, string table, string wantedValue)
@@ -305,23 +339,26 @@ namespace Aurora.DataManager.SQLite
             }
             query = query.Remove (query.Length - 5);
             cmd.CommandText = query;
-            IDataReader reader = GetReader (cmd);
-            var RetVal = new Dictionary<string, List<string>> ();
-            while (reader.Read ())
+            PrepReader(ref cmd);
+            using (IDataReader reader = cmd.ExecuteReader())
             {
-                for (i = 0; i < reader.FieldCount; i++)
+                var RetVal = new Dictionary<string, List<string>>();
+                while (reader.Read())
                 {
-                    Type r = reader[i].GetType ();
-                    if (r == typeof (DBNull))
-                        AddValueToList (ref RetVal, reader.GetName (i), null);
-                    else
-                        AddValueToList (ref RetVal, reader.GetName (i), reader[i].ToString ());
+                    for (i = 0; i < reader.FieldCount; i++)
+                    {
+                        Type r = reader[i].GetType();
+                        if (r == typeof(DBNull))
+                            AddValueToList(ref RetVal, reader.GetName(i), null);
+                        else
+                            AddValueToList(ref RetVal, reader.GetName(i), reader[i].ToString());
+                    }
                 }
-            }
-            reader.Close ();
-            CloseReaderCommand (cmd);
+                reader.Close();
+                CloseReaderCommand(cmd);
 
-            return RetVal;
+                return RetVal;
+            }
         }
 
         private void AddValueToList (ref Dictionary<string, List<string>> dic, string key, string value)
@@ -564,16 +601,19 @@ namespace Aurora.DataManager.SQLite
         {
             var cmd = new SqliteCommand();
             cmd.CommandText = "SELECT name FROM sqlite_master WHERE name='" + tableName + "'";
-            IDataReader rdr = ExecuteReader(cmd);
-            if (rdr.Read())
+            PrepReader(ref cmd);
+            using (IDataReader rdr = cmd.ExecuteReader())
             {
-                CloseReaderCommand(cmd);
-                return true;
-            }
-            else
-            {
-                CloseReaderCommand(cmd);
-                return false;
+                if (rdr.Read())
+                {
+                    CloseReaderCommand(cmd);
+                    return true;
+                }
+                else
+                {
+                    CloseReaderCommand(cmd);
+                    return false;
+                }
             }
         }
 
@@ -799,15 +839,18 @@ namespace Aurora.DataManager.SQLite
 
             var cmd = new SqliteCommand();
             cmd.CommandText = string.Format("PRAGMA table_info({0})", tableName);
-            IDataReader rdr = ExecuteReader(cmd);
-            while (rdr.Read())
+            PrepReader(ref cmd);
+            using (IDataReader rdr = cmd.ExecuteReader())
             {
-                var name = rdr["name"];
-                var pk = rdr["pk"];
-                var type = rdr["type"];
-                defs.Add(new ColumnDefinition {Name = name.ToString(), IsPrimary = (int.Parse(pk.ToString()) > 0), Type = ConvertTypeToColumnType(type.ToString())});
+                while (rdr.Read())
+                {
+                    var name = rdr["name"];
+                    var pk = rdr["pk"];
+                    var type = rdr["type"];
+                    defs.Add(new ColumnDefinition { Name = name.ToString(), IsPrimary = (int.Parse(pk.ToString()) > 0), Type = ConvertTypeToColumnType(type.ToString()) });
+                }
+                rdr.Close();
             }
-            rdr.Close();
             CloseReaderCommand(cmd);
 
             return defs;
