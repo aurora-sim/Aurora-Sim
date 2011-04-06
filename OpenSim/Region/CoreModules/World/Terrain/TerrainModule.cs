@@ -1080,11 +1080,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_painteffects[StandardTerrainEffects.Smooth] = new SmoothSphere();
             m_painteffects[StandardTerrainEffects.Noise] = new NoiseSphere();
             m_painteffects[StandardTerrainEffects.Flatten] = new FlattenSphere();
-            //m_painteffects[StandardTerrainEffects.Revert] = new RevertSphere(this);
+            m_painteffects[StandardTerrainEffects.Revert] = new RevertSphere(this);
             m_painteffects[StandardTerrainEffects.Erode] = new ErodeSphere();
             m_painteffects[StandardTerrainEffects.Weather] = new WeatherSphere();
             m_painteffects[StandardTerrainEffects.Paint] = new PaintSphere();
-            //m_painteffects[StandardTerrainEffects.Revert] = new PaintSphere();
+            if(m_scene.RegionInfo.RegionSettings.UsePaintableTerrain)
+                m_painteffects[StandardTerrainEffects.Revert] = new PaintSphere();
 
             // Area of effect selection effects
             m_floodeffects[StandardTerrainEffects.Raise] = new RaiseArea();
