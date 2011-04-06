@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using OpenSim.Framework;
 using System.Runtime.Remoting.Lifetime;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
@@ -32,5 +33,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         
         void Close();
         string Name { get; }
+        void SetSceneRefs(IScene scene, ISceneChildEntity child);
     }
 }

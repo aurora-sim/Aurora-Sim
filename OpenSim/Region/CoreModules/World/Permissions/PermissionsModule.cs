@@ -98,6 +98,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         private Dictionary<string, bool> GrantVB = new Dictionary<string, bool>();
         private Dictionary<string, bool> GrantJS = new Dictionary<string, bool>();
         private Dictionary<string, bool> GrantYP = new Dictionary<string, bool>();
+        private Dictionary<string, bool> GrantAScript = new Dictionary<string, bool>();
         private IGroupsModule m_groupsModule;
         private IMoapModule m_moapModule;
         private IParcelManagementModule m_parcelManagement;
@@ -267,6 +268,16 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 {
                     string uuid = uuidl.Trim(" \t".ToCharArray());
                     GrantYP.Add(uuid, true);
+                }
+            }
+
+            grant = PermissionsConfig.GetString("GrantAScript", "");
+            if (grant.Length > 0)
+            {
+                foreach (string uuidl in grant.Split(','))
+                {
+                    string uuid = uuidl.Trim(" \t".ToCharArray());
+                    GrantAScript.Add(uuid, true);
                 }
             }
         }
@@ -1937,6 +1948,12 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                     break;
                 case "yp":
                     if (GrantYP.Count == 0 || GrantYP.ContainsKey(ownerUUID.ToString()))
+                    {
+                        return (true);
+                    }
+                    break;
+                case "ascript":
+                    if (GrantAScript.Count == 0 || GrantAScript.ContainsKey(ownerUUID.ToString()))
                     {
                         return (true);
                     }

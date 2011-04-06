@@ -126,12 +126,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private CSharpCodeProvider CScodeProvider = new CSharpCodeProvider();
 
         public string DefaultState { get { return ""; } }
-        public List<string> m_includedDefines = new List<string>();d
+        public List<string> m_includedDefines = new List<string>();
         public bool m_addLSLAPI = false;
         public bool m_allowUnsafe = false;
+        private Compiler m_compiler;
 
         public void Initialise(Compiler compiler)
         {
+            m_compiler = compiler;
         }
 
         public void Convert(string Script, out string CompiledScript, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)
@@ -144,9 +146,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         {
             get { return "ascript"; }
         }
+
         public void Dispose()
         {
         }
+
         private string CreateCompilerScript(string compileScript)
         {
             bool newLine = true;
@@ -167,42 +171,41 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                      reading = false;
                      continue;
                   }
-                  if(!reading && compileScript[i] != '#')
+                  if (compileScript.Length <= i + 2)
+                      continue;
+                  if (!reading && !(compileScript[i+1] == '#' || (compileScript[i+1] == '/' && compileScript[i+2] == '/')))
                   {
                      newLine = false;
                      continue;
                   }
                   reading = true;
-                  lastLine += compileScript[i];
-                  compileScript.RemoveAt(i);
+                  if(compileScript[i] != '\n')
+                     lastLine += compileScript[i];
+                  compileScript = compileScript.Remove(i, 1);
                   i--;//Removed a letter, remove a char here as well
             }
-            compileScript = compileScript.Replace("multithreaded", 
-                    "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString");
 
-            compileScript = compileScript.Replace("integer", 
-                    "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger");
-
-            compileScript = compileScript.Replace("float", 
-                    "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat");
-
-            compileScript = compileScript.Replace("list",
-                    "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list");
-
-            compileScript = compileScript.Replace("rotation",
-                    "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion");
-
-            compileScript = compileScript.Replace("vector",
-                    "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3");
+            if (m_addLSLAPI)
+            {
+                foreach (IScriptApi api in m_compiler.ScriptEngine.GetAPIs())
+                {
+                    foreach (string functionName in m_compiler.ScriptEngine.GetFunctionNames(api))
+                    {
+                        compileScript = compileScript.Replace(functionName, "((" + api.InterfaceName + ")m_apis[\"" + api.Name + "\"])." + functionName);
+                    }
+                }
+            }
+            
             string compiledScript = "";
             compiledScript = String.Empty +
                 "using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;\n" +
                 "using Aurora.ScriptEngine.AuroraDotNetEngine;\n" +
-                "using Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types;\n" +
+                "using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;\n" +
                 "using OpenSim.Framework;\n" +
                 "using OpenSim.Services.Interfaces;\n" +
                 "using OpenSim.Region.Framework.Interfaces;\n" +
                 "using OpenSim.Region.Framework.Scenes;\n" +
+                "using OpenMetaverse;\n" +
                 "using System;\n" +
                 "using System.Collections.Generic;\n" +
                 "using System.Collections;\n" +
@@ -223,26 +226,37 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         private void ReadLine(string line)
         {
-              if(line.StartsWith("#include"))
-              {
-                    line = line.Replace("#include", "");
-                    m_includedDefines.Add(line); //TODO: Add a check here
-              }
-              else if(line.StartsWith("#threaded"))
-              {
-              }
-              else if(line.StartsWith("#useLSLAPI"))
-              {
-                    m_addLSLAPI = true;
-              }
-              else if(line.StartsWith("#allowUnsafe"))
-              {
-                    m_allowUnsafe = true;
-              }
+            if (line.StartsWith("#include"))
+            {
+                line = line.Replace("#include", "");
+                m_includedDefines.Add(line); //TODO: Add a check here
+            }
+            else if (line.StartsWith("#threaded"))
+            {
+            }
+            else if (line.StartsWith("#useLSLAPI"))
+            {
+                m_addLSLAPI = true;
+            }
+            else if (line.StartsWith("#allowUnsafe"))
+            {
+                m_allowUnsafe = true;
+            }
         }
 
         public CompilerResults Compile(CompilerParameters parameters, string Script)
         {
+            string rootPath =
+                            Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+
+            parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
+                    "OpenSim.Region.Framework.dll"));
+            parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
+                    "OpenMetaverse.dll"));
+            parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
+                    "OpenMetaverseTypes.dll"));
+            parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
+                    "OpenMetaverse.StructuredData.dll"));
             bool complete = false;
             bool retried = false;
             CompilerResults results;
@@ -281,6 +295,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public void FinishCompile (IScriptModulePlugin plugin, ScriptData data, IScript Script)
         {
+            Script.SetSceneRefs(data.World, data.Part);
         }
     }
 }

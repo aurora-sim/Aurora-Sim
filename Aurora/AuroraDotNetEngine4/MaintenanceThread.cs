@@ -210,6 +210,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             try
             {
+                if(QIS.ID.Script == null)
+                    return false;
                 QIS.ID.Script.ExecuteEvent(QIS.State,
                             QIS.functionName,
                             QIS.param);

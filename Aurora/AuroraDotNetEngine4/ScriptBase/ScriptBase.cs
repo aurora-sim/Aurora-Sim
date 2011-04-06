@@ -35,6 +35,7 @@ using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using log4net;
+using OpenSim.Framework;
 using Aurora.ScriptEngine.AuroraDotNetEngine;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
@@ -53,6 +54,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             {
                 return m_sponser;
             }
+        }
+
+        public IScene Scene = null;
+        public ISceneChildEntity Object = null;
+
+        public void SetSceneRefs(IScene scene, ISceneChildEntity child)
+        {
+            Scene = scene;
+            Object = child;
         }
 
         public override Object InitializeLifetimeService()
@@ -111,6 +121,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         {
             m_Executor.ExecuteEvent(state, FunctionName, args);
         }
+
         private Dictionary<string, object> m_InitialValues =
                 new Dictionary<string, object>();
         private Dictionary<string, FieldInfo> m_Fields =
