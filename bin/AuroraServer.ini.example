@@ -14,9 +14,12 @@
     ;; The syntax is: Region_<RegionName> = "<flags>"
     ;; or:            Region_<RegionID> = "<flags>"
     ;; where <flags> can be DefaultRegion, FallbackRegion, NoDirectLogin, Persistent, LockedOut,Reservation,NoMove,Authenticate
-    ;; For example:
+    ;; For example if your RegionName is "Welcome Area" you have 
     ;; Region_Welcome_Area = "DefaultRegion, FallbackRegion"
-    ;; (replace spaces with underscore)
+    ;; (replacing spaces with underscores)
+
+    Region_RegionName = "DefaultRegion, FallbackRegion"
+	
     AllowDuplicateNames = false
     
     ;; Disable the checking of session ID's in the Grid Service
