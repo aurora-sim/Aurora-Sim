@@ -1268,10 +1268,34 @@ namespace OpenSim.Region.CoreModules.World.Estate
             args.terrainBase2 = UUID.Zero;
             args.terrainBase3 = UUID.Zero;
 
-            args.terrainDetail0 = m_scene.RegionInfo.RegionSettings.TerrainTexture1;
-            args.terrainDetail1 = m_scene.RegionInfo.RegionSettings.TerrainTexture2;
-            args.terrainDetail2 = m_scene.RegionInfo.RegionSettings.TerrainTexture3;
-            args.terrainDetail3 = m_scene.RegionInfo.RegionSettings.TerrainTexture4;
+            if (!m_scene.RegionInfo.RegionSettings.UsePaintableTerrain)
+            {
+                args.terrainDetail0 = m_scene.RegionInfo.RegionSettings.TerrainTexture1;
+                args.terrainDetail1 = m_scene.RegionInfo.RegionSettings.TerrainTexture2;
+                args.terrainDetail2 = m_scene.RegionInfo.RegionSettings.TerrainTexture3;
+                args.terrainDetail3 = m_scene.RegionInfo.RegionSettings.TerrainTexture4;
+            }
+            else
+            {
+                args.terrainDetail0 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
+                args.terrainDetail1 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
+                args.terrainDetail2 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
+                args.terrainDetail3 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
+
+                AssetBase paintAsset = m_scene.AssetService.Get(m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture.ToString());
+                if (paintAsset == null)
+                {
+                    paintAsset = new AssetBase(m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture, "PaintableTerrainTexture-" + m_scene.RegionInfo.RegionID, (sbyte)AssetType.Texture, UUID.Zero.ToString());
+                    paintAsset.Flags = AssetFlags.Deletable;
+                    AssetBase defaultTexture = m_scene.AssetService.Get(RegionSettings.DEFAULT_TERRAIN_TEXTURE_2.ToString());//Nice grass
+                    if (defaultTexture == null)
+                        //Erm... what to do!
+                        return;
+
+                    paintAsset.Data = defaultTexture.Data;//Eventually we need to replace this with an interpolation of the existing textures!
+                    m_scene.AssetService.Store(paintAsset);
+                }
+            }
             args.RegionType = Utils.StringToBytes(m_scene.RegionInfo.RegionType);
 
             remoteClient.SendRegionHandshake(m_scene.RegionInfo,args);

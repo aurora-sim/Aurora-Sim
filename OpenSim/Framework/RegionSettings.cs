@@ -45,6 +45,10 @@ namespace OpenSim.Framework
         public static readonly UUID DEFAULT_TERRAIN_TEXTURE_2 = new UUID("abb783e6-3e93-26c0-248a-247666855da3");
         public static readonly UUID DEFAULT_TERRAIN_TEXTURE_3 = new UUID("179cdabd-398a-9b6b-1391-4dc333ba321f");
         public static readonly UUID DEFAULT_TERRAIN_TEXTURE_4 = new UUID("beb169c7-11ea-fff2-efe5-0f24dc881df2");
+        public bool UsePaintableTerrain
+        {
+            get { return false; }
+        }
 
         public void Save()
         {
@@ -164,6 +168,38 @@ namespace OpenSim.Framework
             set { m_DisablePhysics = value; }
         }
 
+        private int m_MinimumAge = 0;
+        public int MinimumAge
+        {
+            get
+            {
+                return m_MinimumAge;
+            }
+            set
+            {
+                m_MinimumAge = value;
+            }
+        }
+
+        private UUID m_PaintTerrainTexture = UUID.Zero;
+
+        public UUID PaintableTerrainTexture
+        {
+            get
+            {
+                if (m_PaintTerrainTexture == UUID.Zero)
+                    m_PaintTerrainTexture = UUID.Random();
+                return m_PaintTerrainTexture;
+            }
+            set
+            {
+                if (value == UUID.Zero)
+                    m_PaintTerrainTexture = UUID.Random();
+                else
+                    m_PaintTerrainTexture = value;
+            }
+        }
+
         private UUID m_TerrainTexture1 = UUID.Zero;
 
         public UUID TerrainTexture1
@@ -175,19 +211,6 @@ namespace OpenSim.Framework
                     m_TerrainTexture1 = DEFAULT_TERRAIN_TEXTURE_1;
                 else
                     m_TerrainTexture1 = value;
-            }
-        }
-
-        private int m_MinimumAge = 0;
-        public int MinimumAge
-        {
-            get
-            {
-                return m_MinimumAge;
-            }
-            set
-            {
-                m_MinimumAge = value;
             }
         }
 
@@ -501,6 +524,7 @@ namespace OpenSim.Framework
             map["TerrainTexture2"] = this.TerrainTexture2;
             map["TerrainTexture3"] = this.TerrainTexture3;
             map["TerrainTexture4"] = this.TerrainTexture4;
+            map["PaintableTerrainTexture"] = this.PaintableTerrainTexture;
             map["UseEstateSun"] = this.UseEstateSun;
             map["WaterHeight"] = this.WaterHeight;
 
@@ -548,6 +572,7 @@ namespace OpenSim.Framework
             this.TerrainTexture2 = map["TerrainTexture2"];
             this.TerrainTexture3 = map["TerrainTexture3"];
             this.TerrainTexture4 = map["TerrainTexture4"];
+            this.PaintableTerrainTexture = map["PaintableTerrainTexture"];
             this.UseEstateSun = map["UseEstateSun"];
             this.WaterHeight = map["WaterHeight"];
         }
