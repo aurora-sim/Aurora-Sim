@@ -416,7 +416,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (m_ScriptEngine.DisplayErrorsOnConsole)
             {
                 string consoletext = IsError ? "Error " : "Warning ";
-                consoletext += stage + " script:\n" + message + " itemID: " + ItemID + ", CompiledFile: " + AssemblyName;
+                consoletext += stage + " script:\n" + message + " prim name: " + Part.Name + "@ " + Part.AbsolutePosition + " itemID: " + ItemID + ", CompiledFile: " + AssemblyName;
                 m_log.Error(consoletext);
             }
 
