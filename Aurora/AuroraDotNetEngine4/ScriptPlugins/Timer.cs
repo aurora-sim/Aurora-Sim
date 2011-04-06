@@ -155,6 +155,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             ts.ID = objectID;
             ts.itemID = itemID;
             ts.interval = (long)save["Interval"].AsReal ();
+            if (ts.interval == 0)
+                return;
             ts.next = Environment.TickCount + (long)save["Next"].AsReal ();
 
             lock (TimerListLock)

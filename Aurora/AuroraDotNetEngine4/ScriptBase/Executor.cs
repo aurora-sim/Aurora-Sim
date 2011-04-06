@@ -119,11 +119,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 foreach (KeyValuePair<string, scriptEvents> kvp in m_eventFlagsMap)
                 {
                     MethodInfo ev = null;
-                    string evname = state + "_event_" + kvp.Key;
+                    string evname = state == "" ? "" : state + "_event_";
+                    evname += kvp.Key;
                     //m_log.Debug("Trying event "+evname);
 
-                    if (!Events.TryGetValue(evname, out ev))
-                        ev = m_scriptType.GetMethod(evname);
+                    ev = m_scriptType.GetMethod(evname);
                     if (ev != null)
                         //m_log.Debug("Found handler for " + kvp.Key);
                         eventFlags |= kvp.Value;
