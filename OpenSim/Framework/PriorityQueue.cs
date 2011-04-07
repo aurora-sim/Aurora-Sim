@@ -259,6 +259,26 @@ namespace Mischel.Collections
 
         /// <summary>
         /// Removes the item with the specified value from the queue.
+        /// The passed equality comparison is used.
+        /// </summary>
+        /// <param name="item">The item to be removed.</param>
+        /// <param name="comp">An object that implements the IEqualityComparer interface
+        /// for the type of item in the collection.</param>
+        public TValue Find(TValue item, IComparer<TValue> comparer)
+        {
+            // need to find the PriorityQueueItem that has the Data value of o
+            for (int index = 0; index < numItems; ++index)
+            {
+                if (comparer.Compare(item, items[index].Value) > 1)
+                {
+                    return items[index].Value;
+                }
+            }
+            return default(TValue);
+        }
+
+        /// <summary>
+        /// Removes the item with the specified value from the queue.
         /// The default type comparison function is used.
         /// </summary>
         /// <param name="item">The item to be removed.</param>

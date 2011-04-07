@@ -168,14 +168,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             int StartTime = Util.EnvironmentTickCount();
 
             int packetsSent = 0;
-
+            List<J2KImage> imagesToReAdd = new List<J2KImage>();
             while (packetsSent < packetsToSend)
             {
                 J2KImage image = GetHighestPriorityImage();
 
                 // If null was returned, the texture priority queue is currently empty
                 if (image == null)
-                    return false;
+                    break; //Break so that we add any images back that we might remove because they arn't finished decoding
 
                 if (image.IsDecoded)
                 {
@@ -189,11 +189,24 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 else
                 {
+                    //Add it to the other queue and delete it from the top
+                    imagesToReAdd.Add(image);
+                    m_priorityQueue.DeleteMax();
+                    packetsSent++; //We tried to send one
                     // TODO: This is a limitation of how LLImageManager is currently
                     // written. Undecoded textures should not be going into the priority
                     // queue, because a high priority undecoded texture will clog up the
                     // pipeline for a client
-                    return true;
+                    //return true;
+                }
+            }
+
+            //Add all the ones we removed so that we wouldn't block the queue
+            if(imagesToReAdd.Count != 0)
+            {
+                foreach(J2KImage image in imagesToReAdd)
+                {
+                    this.AddImageToQueue(image);
                 }
             }
 
