@@ -396,24 +396,25 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public bool IsRestrictedFromLand(UUID avatar)
         {
-            if (m_scene.Permissions.IsAdministrator(avatar))
+            if (m_scene.Permissions.GenericParcelPermission(avatar, this, (ulong)GroupPowers.LandManageAllowed))
                 return false;
 
             if ((LandData.Flags & (uint) ParcelFlags.UseAccessList) > 0)
             {
                 ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
-                entry.AgentID = avatar;
-                entry.Flags = AccessList.Access;
-                entry.Time = new DateTime();
-                entry = LandData.ParcelAccessList.Find(delegate(ParcelManager.ParcelAccessEntry pae)
+                bool found = false;
+                foreach (ParcelManager.ParcelAccessEntry pae in LandData.ParcelAccessList)
                 {
-                    if (entry.AgentID == pae.AgentID && entry.Flags == pae.Flags)
-                        return true;
-                    return false;
-                });
+                    if (avatar == pae.AgentID && AccessList.Access == pae.Flags)
+                    {
+                        found = true;
+                        entry = pae;
+                        break;
+                    }
+                }
 
                 //If they are not on the access list and are not the owner
-                if (entry.AgentID == avatar && LandData.OwnerID != avatar)
+                if (!found)
                 {
                     if ((LandData.Flags & (uint)ParcelFlags.UseAccessGroup) > 0)
                     {
@@ -438,13 +439,6 @@ namespace OpenSim.Region.CoreModules.World.Land
                 else
                 {
                     //If it does, we need to check the time
-                    entry = LandData.ParcelAccessList.Find(delegate (ParcelManager.ParcelAccessEntry item)
-                    {
-                        if(item.AgentID == entry.AgentID && item.Flags == entry.Flags)
-                            return true;
-                        return false;
-                    });
-
                     if (entry.Time.Ticks < DateTime.Now.Ticks)
                     {
                         //Time expired, remove them
