@@ -59,30 +59,30 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
     #endregion Delegates
 
-	    public class UDPprioQueue
-        {
+    public class UDPprioQueue
+    {
         public OpenSim.Framework.LocklessQueue<object>[] queues;
         public int[] promotioncntr;
         public int count;
         public int promotionratemask;
         public int nlevels;
 
-        public UDPprioQueue(int NumberOfLevels,int PromRateMask)
-            {
+        public UDPprioQueue(int NumberOfLevels, int PromRateMask)
+        {
             // PromRatemask:  0x03 promotes on each 4 calls, 0x1 on each 2 calls etc
             nlevels = NumberOfLevels;
             queues = new OpenSim.Framework.LocklessQueue<object>[nlevels];
             promotioncntr = new int[nlevels];
             for (int i = 0; i < nlevels; i++)
-                {
+            {
                 queues[i] = new OpenSim.Framework.LocklessQueue<object>();
                 promotioncntr[i] = 0;
-                }
-            promotionratemask = PromRateMask;
             }
+            promotionratemask = PromRateMask;
+        }
 
         public bool Enqueue(int prio, object o) // object so it can be a complex info with methods to call etc to get packets on dequeue 
-            {
+        {
             if (prio < 0 || prio >= nlevels) // safe than sorrow
                 return false;
 
@@ -94,43 +94,43 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if ((promotioncntr[prio] & promotionratemask) == 0)
             // time to move objects up in priority
             // so they don't get stalled if high trafic on higher levels               
-                {
+            {
                 object ob;
                 int i = prio;
 
                 while (--i >= 0)
-                    {
+                {
                     if (queues[i].Dequeue(out ob))
-                        queues[i+1].Enqueue(ob);
-                    }
+                        queues[i + 1].Enqueue(ob);
                 }
-
-            return true;
             }
 
+            return true;
+        }
+
         public bool Dequeue(out OutgoingPacket pack)
-            {
+        {
             object o;
             int i = nlevels;
 
             while (--i >= 0) // go down levels looking for data
-                {
+            {
                 if (queues[i].Dequeue(out o))
-                    {
+                {
                     if (o is OutgoingPacket)
-                        {
+                    {
                         pack = (OutgoingPacket)o;
                         Interlocked.Decrement(ref count);
                         return true;
-                        }
-                    // else  do call to a funtion that will return the packet or whatever
                     }
+                    // else  do call to a funtion that will return the packet or whatever
                 }
-               
-            pack=null;
-            return false;
             }
+
+            pack = null;
+            return false;
         }
+    }
 
     /// <summary>
     /// Tracks state for a client UDP connection and provides client-specific methods
@@ -389,8 +389,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // avatar info cames out from state
             int avatarinfo = (int)((float)state * AVATAR_INFO_STATE_PERCENTAGE);
             state -= avatarinfo;
-
-
 
 //            int total = resend + land + wind + cloud + task + texture + asset + state + avatarinfo;
 

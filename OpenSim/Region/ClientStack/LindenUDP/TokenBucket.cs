@@ -87,9 +87,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     tokensPerMS = 0;
                 else
                 {
-                    int bpms = (int)((float)value / 1000.0f);
+                    float bpms = value / 1000.0f;
 
-                    if (bpms <= 0)
+                    if (bpms <= 0.5f)
                         tokensPerMS = .5f; // .5 byte/ms is the minimum granularity
                     else
                         tokensPerMS = bpms;
@@ -188,7 +188,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <returns>True if tokens were added to the bucket, otherwise false</returns>
         public bool Drip()
         {
-            if (tokensPerMS == 0)
+            if (tokensPerMS <= 0)
             {
                 content = maxBurst;
                 return true;
@@ -198,22 +198,25 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 int now = Environment.TickCount & Int32.MaxValue;
                 int deltaMS = now - lastDrip;
 
-                if (deltaMS <= 0)
+                if (deltaMS < 0)
                 {
-                    if (deltaMS < 0)
-                        lastDrip = now;
+                    lastDrip = now;
                     return false;
                 }
 
+                //deltaMS is always positive, from above, and tokensPerMS is > 0.5f, so the the result is always positive..
                 int dripAmount = (int)(deltaMS * tokensPerMS);
 
+                //Therefore, content can never be negative,
+                // because maxBurst isn't <= 0, since it wouldn't have ever made it this far in the check
                 content = Math.Min(content + dripAmount, maxBurst);
                 lastDrip = now;
 
-                if (dripAmount < 0 || content < 0)
+                //See comments above as to why this check is useless
+                /*if (dripAmount < 0 || content < 0)
                     // sim has been idle for too long, integer has overflown
                     // previous calculation is meaningless, let's put it at correct max
-                    content = maxBurst;
+                    content = maxBurst;*/
 
                 return true;
             }
