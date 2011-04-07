@@ -185,9 +185,12 @@ namespace OpenSim.Framework
                     }
                     else
                     {
+                        string cmdToExecute = commandPath[0];
+                        if (cmdToExecute == "help")
+                            cmdToExecute = commandPath[1];
                         //Its down the tree somewhere
                         CommandSet downTheTree;
-                        if (commandsets.TryGetValue (commandPath[0], out downTheTree))
+                        if (commandsets.TryGetValue(cmdToExecute, out downTheTree))
                         {
                             return downTheTree.ExecuteCommand (commandPath);
                         }
