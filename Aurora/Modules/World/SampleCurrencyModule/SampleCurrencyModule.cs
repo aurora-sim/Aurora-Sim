@@ -72,11 +72,26 @@ namespace Aurora.OptionalModules
 
         public event ObjectPaid OnObjectPaid;
         public event PostObjectPaid OnPostObjectPaid;
-
-        public void FireObjectPaid (UUID objectID, UUID agentID, int amount)
+        public bool Transfer(UUID toID, UUID fromID, int amount, string description)
         {
-            if (OnObjectPaid != null)
-                OnObjectPaid (objectID, agentID, amount);
+            return true;
+        }
+
+        public bool Transfer(UUID toID, UUID fromID, int amount, string description, TransactionType type)
+        {
+            return true;
+        }
+
+        public bool Transfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, int amount, string description, TransactionType type)
+        {
+            if ((type == TransactionType.ObjectPay) && (OnObjectPaid != null))
+                OnObjectPaid((fromObjectID == UUID.Zero) ? toObjectID : fromObjectID, fromID, amount);
+            return true;
+        }
+
+        public void Transfer (UUID objectID, UUID agentID, int amount)
+        {
+            
         }
 
 #pragma warning restore 67
@@ -146,12 +161,12 @@ namespace Aurora.OptionalModules
 
         #endregion
 
-        public int GetBalance(IClientAPI client)
+        public int Balance(IClientAPI client)
         {
             return 0;
         }
 
-        public bool ApplyCharge(UUID agentID, int amount, string text)
+        public bool Charge(UUID agentID, int amount, string text)
         {
             return true;
         }
@@ -325,7 +340,7 @@ namespace Aurora.OptionalModules
                                      0, 0);
         }
 
-        public bool AmountCovered(IClientAPI client, int amount)
+        public bool Charge(IClientAPI client, int amount)
         {
             return true;
         }

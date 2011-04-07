@@ -1118,7 +1118,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             IMoneyModule module = m_scene.RequestModuleInterface<IMoneyModule>();
             if (module != null)
-                if (!module.ApplyCharge(client.AgentId, landObject.LandData.PassPrice, "Parcel Pass"))
+                if (!module.Transfer(landObject.LandData.OwnerID, client.AgentId, landObject.LandData.PassPrice, "Parcel Pass"))
                 {
                     client.SendAlertMessage("You do not have enough funds to complete this transaction.");
                     return;
