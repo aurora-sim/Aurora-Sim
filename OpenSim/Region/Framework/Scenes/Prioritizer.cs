@@ -133,6 +133,7 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                     }
                 }
+                //We need to add the offset so that we can check from the right place in child regions
                 if (m_cachedXOffset < 0)
                     posToCheckFrom.X = client.Scene.RegionInfo.RegionSizeX - (client.Scene.RegionInfo.RegionSizeX + client.AbsolutePosition.X + m_cachedXOffset);
                 if (m_cachedYOffset < 0)

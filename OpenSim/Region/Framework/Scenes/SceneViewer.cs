@@ -263,8 +263,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
             entities = null;
-            //Keep all of them in view, the viewer doesn't lose them once it wanders out of range
-            //lastGrpsInView.Clear ();
+            lastGrpsInView.Clear ();
             lastGrpsInView.UnionWith (NewGrpsInView);
             NewGrpsInView.Clear ();
 
@@ -340,14 +339,15 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
+            int numberSent = 0;
+            int presenceNumToSend = (int)(numUpdates * PresenceSendPercentage);
             lock (m_presenceUpdatesToSend)
             {
-                int numToSend = (int)(numUpdates * PresenceSendPercentage);
                 //Send the numUpdates of them if that many
                 // if we don't have that many, we send as many as possible, then switch to objects
                 if (m_presenceUpdatesToSend.Count != 0)
                 {
-                    int count = m_presenceUpdatesToSend.Count > numToSend ? numToSend : m_presenceUpdatesToSend.Count;
+                    int count = m_presenceUpdatesToSend.Count > presenceNumToSend ? presenceNumToSend : m_presenceUpdatesToSend.Count;
                     List<EntityUpdate> updates = new List<EntityUpdate> ();
                     for (int i = 0; i < count; i++)
                     {
@@ -362,7 +362,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             lock (m_objectUpdatesToSend)
             {
-                int numToSend = (int)(numUpdates * PrimSendPercentage);
+                numberSent = presenceNumToSend - numberSent;
+                int numToSend = (int)(numUpdates * PrimSendPercentage) + numberSent; //If we didn't send that many presence updates, send a few more
                 if (m_objectUpdatesToSend.Count != 0)
                 {
                     int count = m_objectUpdatesToSend.Count > numToSend ? numToSend : m_objectUpdatesToSend.Count;
@@ -388,6 +389,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             PriorityQueueItem<EntityUpdate, double> up;
 
+            //Enqueue them all
             while (m_entsqueue.TryDequeue (out up))
             {
                 QueueEntityUpdate (up.Value);
