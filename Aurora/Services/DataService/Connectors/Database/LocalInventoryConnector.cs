@@ -493,31 +493,28 @@ namespace Aurora.Services.DataService
             List<InventoryItemBase> items = new List<InventoryItemBase> ();
             while (retVal.Read())
             {
-                for (int i = 0; i < retVal.FieldCount; i++)
-                {
-                    InventoryItemBase item = new InventoryItemBase();
-                    item.AssetID = UUID.Parse(retVal["assetID"].ToString());
-                    item.AssetType = int.Parse(retVal["assetType"].ToString());
-                    item.Name = retVal["inventoryName"].ToString();
-                    item.Description = retVal["inventoryDescription"].ToString();
-                    item.NextPermissions = uint.Parse(retVal["inventoryNextPermissions"].ToString());
-                    item.CurrentPermissions = uint.Parse(retVal["inventoryCurrentPermissions"].ToString());
-                    item.InvType = int.Parse(retVal["invType"].ToString());
-                    item.CreatorId = retVal["creatorID"].ToString();
-                    item.BasePermissions = uint.Parse(retVal["inventoryBasePermissions"].ToString());
-                    item.EveryOnePermissions = uint.Parse(retVal["inventoryEveryOnePermissions"].ToString());
-                    item.SalePrice = int.Parse(retVal["salePrice"].ToString());
-                    item.SaleType = byte.Parse(retVal["saleType"].ToString());
-                    item.CreationDate = int.Parse(retVal["creationDate"].ToString());
-                    item.GroupID = UUID.Parse(retVal["groupID"].ToString());
-                    item.GroupOwned = int.Parse(retVal["groupOwned"].ToString()) == 1;
-                    item.Flags = uint.Parse(retVal["flags"].ToString());
-                    item.ID = UUID.Parse(retVal["inventoryID"].ToString());
-                    item.Owner = UUID.Parse(retVal["avatarID"].ToString());
-                    item.Folder = UUID.Parse(retVal["parentFolderID"].ToString());
-                    item.GroupPermissions = uint.Parse(retVal["inventoryGroupPermissions"].ToString());
-                    items.Add(item);
-                }
+                InventoryItemBase item = new InventoryItemBase();
+                item.AssetID = UUID.Parse(retVal["assetID"].ToString());
+                item.AssetType = int.Parse(retVal["assetType"].ToString());
+                item.Name = retVal["inventoryName"].ToString();
+                item.Description = retVal["inventoryDescription"].ToString();
+                item.NextPermissions = uint.Parse(retVal["inventoryNextPermissions"].ToString());
+                item.CurrentPermissions = uint.Parse(retVal["inventoryCurrentPermissions"].ToString());
+                item.InvType = int.Parse(retVal["invType"].ToString());
+                item.CreatorId = retVal["creatorID"].ToString();
+                item.BasePermissions = uint.Parse(retVal["inventoryBasePermissions"].ToString());
+                item.EveryOnePermissions = uint.Parse(retVal["inventoryEveryOnePermissions"].ToString());
+                item.SalePrice = int.Parse(retVal["salePrice"].ToString());
+                item.SaleType = byte.Parse(retVal["saleType"].ToString());
+                item.CreationDate = int.Parse(retVal["creationDate"].ToString());
+                item.GroupID = UUID.Parse(retVal["groupID"].ToString());
+                item.GroupOwned = int.Parse(retVal["groupOwned"].ToString()) == 1;
+                item.Flags = uint.Parse(retVal["flags"].ToString());
+                item.ID = UUID.Parse(retVal["inventoryID"].ToString());
+                item.Owner = UUID.Parse(retVal["avatarID"].ToString());
+                item.Folder = UUID.Parse(retVal["parentFolderID"].ToString());
+                item.GroupPermissions = uint.Parse(retVal["inventoryGroupPermissions"].ToString());
+                items.Add(item);
             }
             retVal.Close();
             return items;
