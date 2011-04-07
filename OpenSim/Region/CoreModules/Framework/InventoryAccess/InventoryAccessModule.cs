@@ -469,16 +469,22 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 objectGroups[0].OwnerID.ToString());
             m_scene.AssetService.Store(asset);
             assetID = asset.FullID;
+            item.AssetID = assetID;
+            if (DeRezAction.SaveToExistingUserInventoryItem != action)
+            {
+                item.Description = asset.Description;
+                item.Name = asset.Name;
+                item.AssetType = asset.Type;
+            }
+            AssetXML = null;
+            asset = null;
 
             if (DeRezAction.SaveToExistingUserInventoryItem == action)
             {
-                item.AssetID = asset.FullID;
                 m_scene.InventoryService.UpdateItem(item);
             }
             else
             {
-                item.AssetID = asset.FullID;
-
                 if (SP != null && SP.ControllingClient != null && (SP.ControllingClient.AgentId != objectGroups[0].OwnerID) && m_scene.Permissions.PropagatePermissions())
                 {
                     foreach (SceneObjectGroup group in objectGroups)
@@ -540,9 +546,6 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 if(objectGroups.Count != 1)
                     item.Flags |= (uint)OpenMetaverse.InventoryItemFlags.ObjectHasMultipleItems;
                 item.CreationDate = Util.UnixTimeSinceEpoch();
-                item.Description = asset.Description;
-                item.Name = asset.Name;
-                item.AssetType = asset.Type;
 
                 m_LLCLientInventoryModule.AddInventoryItem(item);
 

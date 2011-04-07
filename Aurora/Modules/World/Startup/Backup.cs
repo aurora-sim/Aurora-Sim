@@ -356,25 +356,30 @@ namespace Aurora.Modules
                 //We are doing a heavy operation, suspend backup
                 m_backingup = true;
 
-                List<SceneObjectGroup> groups = new List<SceneObjectGroup>();
-                lock (m_scene.Entities)
+                try
                 {
-                    ISceneEntity[] entities = m_scene.Entities.GetEntities ();
-                    foreach (ISceneEntity entity in entities)
+                    List<SceneObjectGroup> groups = new List<SceneObjectGroup>();
+                    lock (m_scene.Entities)
                     {
-                        if(entity is SceneObjectGroup && !((SceneObjectGroup)entity).IsAttachment)
-                            groups.Add((SceneObjectGroup)entity);
+                        ISceneEntity[] entities = m_scene.Entities.GetEntities();
+                        foreach (ISceneEntity entity in entities)
+                        {
+                            if (entity is SceneObjectGroup && !((SceneObjectGroup)entity).IsAttachment)
+                                groups.Add((SceneObjectGroup)entity);
+                        }
                     }
+                    //Delete all the groups now
+                    DeleteSceneObjects(groups.ToArray(), true);
+
+                    //Clear the queue so that we don't try to remove the prims twice
+                    ClearDeleteFromStorage();
+
+                    //Now remove the entire region at once
+                    m_scene.SimulationDataService.RemoveRegion(m_scene.RegionInfo.RegionID);
                 }
-                //Delete all the groups now
-                DeleteSceneObjects(groups.ToArray(), true);
-
-                //Clear the queue so that we don't try to remove the prims twice
-                ClearDeleteFromStorage();
-
-                //Now remove the entire region at once
-                m_scene.SimulationDataService.RemoveRegion(m_scene.RegionInfo.RegionID);
-
+                catch
+                {
+                }
                 //All clear, let backup go
                 m_backingup = false;
             }
@@ -393,31 +398,36 @@ namespace Aurora.Modules
                 //We are doing a heavy operation, suspend backup
                 m_backingup = true;
 
-                //Clear the queue so that we don't try to remove the prims twice
-                ClearDeleteFromStorage ();
-
-                lock (m_scene.Entities)
+                try
                 {
-                    ISceneEntity[] entities = m_scene.Entities.GetEntities ();
-                    foreach (ISceneEntity entity in entities)
+                    //Clear the queue so that we don't try to remove the prims twice
+                    ClearDeleteFromStorage();
+
+                    lock (m_scene.Entities)
                     {
-                        if (entity is SceneObjectGroup && !((SceneObjectGroup)entity).IsAttachment)
+                        ISceneEntity[] entities = m_scene.Entities.GetEntities();
+                        foreach (ISceneEntity entity in entities)
                         {
-                            List<SceneObjectPart> parts = new List<SceneObjectPart> ();
-                            SceneObjectGroup grp = entity as SceneObjectGroup;
-                            parts.AddRange (grp.ChildrenList);
-                            DeleteSceneObject (grp, true, false); //Don't remove from the database
-                            m_scene.ForEachScenePresence (delegate (IScenePresence avatar)
+                            if (entity is SceneObjectGroup && !((SceneObjectGroup)entity).IsAttachment)
                             {
-                                avatar.ControllingClient.SendKillObject (m_scene.RegionInfo.RegionHandle, parts.ToArray ());
-                            });
-                        } 
+                                List<SceneObjectPart> parts = new List<SceneObjectPart>();
+                                SceneObjectGroup grp = entity as SceneObjectGroup;
+                                parts.AddRange(grp.ChildrenList);
+                                DeleteSceneObject(grp, true, false); //Don't remove from the database
+                                m_scene.ForEachScenePresence(delegate(IScenePresence avatar)
+                                {
+                                    avatar.ControllingClient.SendKillObject(m_scene.RegionInfo.RegionHandle, parts.ToArray());
+                                });
+                            }
+                        }
                     }
+
+                    //Clear the queue so that we don't try to remove the prims twice
+                    ClearDeleteFromStorage();
                 }
-
-                //Clear the queue so that we don't try to remove the prims twice
-                ClearDeleteFromStorage ();
-
+                catch
+                {
+                }
                 //All clear, let backup go
                 m_backingup = false;
 
