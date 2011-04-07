@@ -538,49 +538,52 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             bool packetSent = false;
             ThrottleOutPacketTypeFlags emptyCategories = 0;
 
-            if (m_nextOutPackets != null)
+            for (int i = 0; i < MaxNPacks; i++)
             {
-                OutgoingPacket nextPacket = m_nextOutPackets;
-                if (m_throttle.RemoveTokens (nextPacket.Buffer.DataLength))
+                if (m_nextOutPackets != null)
                 {
-                    // Send the packet
-                    m_udpServer.SendPacketFinal (nextPacket);
-                    m_nextOutPackets = null;
-                    packetSent = true;
-                    this.PacketsSent++;
-                }
-            }
-            else
-            {
-                // No dequeued packet waiting to be sent, try to pull one off
-                // this queue
-                if (m_outbox.Dequeue (out packet))
-                {
-                    // A packet was pulled off the queue. See if we have
-                    // enough tokens in the bucket to send it out
-                    if (packet.Category == ThrottleOutPacketType.OutBand || m_throttle.RemoveTokens (packet.Buffer.DataLength))
+                    OutgoingPacket nextPacket = m_nextOutPackets;
+                    if (m_throttle.RemoveTokens(nextPacket.Buffer.DataLength))
                     {
                         // Send the packet
-                        m_udpServer.SendPacketFinal (packet);
+                        m_udpServer.SendPacketFinal(nextPacket);
+                        m_nextOutPackets = null;
                         packetSent = true;
-
-                        if (m_throttle.MaxBurst < TotalRateRequested)
-                        {
-                            float tmp = (float)m_throttle.MaxBurst * 1.005f;
-                            m_throttle.DripRate = (int)tmp;
-                            m_throttle.MaxBurst = (int)tmp;
-                        }
-
                         this.PacketsSent++;
-                    }
-                    else
-                    {
-                        m_nextOutPackets = packet;
                     }
                 }
                 else
                 {
-                    emptyCategories = (ThrottleOutPacketTypeFlags)0xffff;
+                    // No dequeued packet waiting to be sent, try to pull one off
+                    // this queue
+                    if (m_outbox.Dequeue(out packet))
+                    {
+                        // A packet was pulled off the queue. See if we have
+                        // enough tokens in the bucket to send it out
+                        if (packet.Category == ThrottleOutPacketType.OutBand || m_throttle.RemoveTokens(packet.Buffer.DataLength))
+                        {
+                            // Send the packet
+                            m_udpServer.SendPacketFinal(packet);
+                            packetSent = true;
+
+                            if (m_throttle.MaxBurst < TotalRateRequested)
+                            {
+                                float tmp = (float)m_throttle.MaxBurst * 1.005f;
+                                m_throttle.DripRate = (int)tmp;
+                                m_throttle.MaxBurst = (int)tmp;
+                            }
+
+                            this.PacketsSent++;
+                        }
+                        else
+                        {
+                            m_nextOutPackets = packet;
+                        }
+                    }
+                    else
+                    {
+                        emptyCategories = (ThrottleOutPacketTypeFlags)0xffff;
+                    }
                 }
             }
 
@@ -589,18 +592,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 emptyCategories = (ThrottleOutPacketTypeFlags)0xffff;
                 BeginFireQueueEmpty (emptyCategories);
             }
-            /*
-                        if (emptyCategories != 0)
-                            BeginFireQueueEmpty(emptyCategories);
-                        else
-                            {
-                            int i = MapCatsToPriority[(int)ThrottleOutPacketType.Texture]; // hack to keep textures flowing for now
-                            if (m_outbox.queues[i].Count < 30)
-                                {
-                                emptyCategories |= ThrottleOutPacketTypeFlags.Texture;
-                                }
-                            }
-            */
 
             //m_log.Info("[LLUDPCLIENT]: Queues: " + queueDebugOutput); // Serious debug business
             return packetSent;

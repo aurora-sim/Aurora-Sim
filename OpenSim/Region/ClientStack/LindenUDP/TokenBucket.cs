@@ -186,7 +186,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// call to Drip
         /// </summary>
         /// <returns>True if tokens were added to the bucket, otherwise false</returns>
-        public bool Drip()
+        private bool Drip()
         {
             if (tokensPerMS <= 0)
             {
@@ -198,6 +198,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 int now = Environment.TickCount & Int32.MaxValue;
                 int deltaMS = now - lastDrip;
 
+                //If the time is less than the last time we set the time (unclear how this is possible), we don't send
                 if (deltaMS < 0)
                 {
                     lastDrip = now;
