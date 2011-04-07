@@ -225,13 +225,13 @@ namespace OpenSim.Framework
                     string[] commandPath = innerPath.Split (new string[1] { " " }, StringSplitOptions.RemoveEmptyEntries);
                     if ((commandPath.Length == 1 || !m_allowSubSets))
                     {
-                        string fullcommand = string.Join (" ", command);
+                        string fullcommand = string.Join(" ", command, 0, 2 > command.Length ? command.Length : 2);
                         foreach (KeyValuePair<string, CommandInfo> cmd in commands)
                         {
                             //If it starts with it, execute it (eg. q for quit)
                             if (cmd.Key.StartsWith (fullcommand))
                             {
-                                values.Add (cmd.Key);
+                                values.Add (cmd.Value.commandHelp);
                             }
                         }
                         if (commandPath.Length != 0)
