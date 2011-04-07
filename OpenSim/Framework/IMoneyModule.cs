@@ -35,14 +35,24 @@ namespace OpenSim.Framework
     // For DTL money module.
     public delegate bool PostObjectPaid(uint localID, ulong regionHandle, UUID agentID, int amount);
 
+    public enum TransactionType
+    {
+        SystemGenerated = 0,
+        RegionMoneyRequest = 1,
+        Gift = 2,
+        Purchase = 3,
+        Upload = 4,
+        ObjectPay = 5008
+    }
+
     public interface IMoneyModule
     {
         bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID,
                 int amount);
 
-        int GetBalance(IClientAPI client);
-        bool AmountCovered(IClientAPI client, int amount);
-        bool ApplyCharge(UUID agentID, int amount, string text);
+        int Balance(IClientAPI client);
+        bool Charge(IClientAPI client, int amount);
+        bool Charge(UUID agentID, int amount, string text);
 
         int UploadCharge { get; }
         int GroupCreationCharge { get; }
@@ -50,6 +60,8 @@ namespace OpenSim.Framework
         event ObjectPaid OnObjectPaid;
         event PostObjectPaid OnPostObjectPaid;
 
-        void FireObjectPaid (UUID uUID, UUID uUID_2, int p);
+        bool Transfer(UUID toID, UUID fromID, int amount, string description);
+        bool Transfer(UUID toID, UUID fromID, int amount, string description, TransactionType type);
+        bool Transfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, int amount, string description, TransactionType type);
     }
 }

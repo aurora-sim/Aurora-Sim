@@ -126,7 +126,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
             {
                 if (m_scene.TryGetClient(agentID, out client))
                 {
-                    if (!mm.ApplyCharge(agentID, mm.UploadCharge, "Asset upload"))
+                    if (!mm.Charge(agentID, mm.UploadCharge, "Asset upload"))
                     {
                         if (client != null)
                             client.SendAgentAlertMessage("Unable to upload asset. Insufficient funds.", false);

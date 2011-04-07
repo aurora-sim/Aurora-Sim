@@ -307,7 +307,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
                 if (mm != null)
                 {
-                    if (!mm.AmountCovered(remoteClient, mm.UploadCharge))
+                    if (!mm.Charge(remoteClient, mm.UploadCharge))
                     {
                         remoteClient.SendAgentAlertMessage("Unable to upload asset. Insufficient funds.", false);
                         return;

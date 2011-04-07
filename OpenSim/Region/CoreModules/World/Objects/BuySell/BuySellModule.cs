@@ -157,7 +157,7 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
             IMoneyModule moneyMod = remoteClient.Scene.RequestModuleInterface<IMoneyModule>();
             if (moneyMod != null)
             {
-                if (!moneyMod.ApplyCharge(remoteClient.AgentId, part.SalePrice, "Object Purchase"))
+                if (!moneyMod.Transfer(part.OwnerID, remoteClient.AgentId, part.ParentUUID, UUID.Zero, part.SalePrice, "Object Purchase", TransactionType.ObjectPay))
                 {
                     remoteClient.SendAgentAlertMessage("You do not have enough money to buy this object.", false);
                     return;

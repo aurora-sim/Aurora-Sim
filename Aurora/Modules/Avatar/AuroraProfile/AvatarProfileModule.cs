@@ -243,7 +243,7 @@ namespace Aurora.Modules
             IMoneyModule money = p.Scene.RequestModuleInterface<IMoneyModule>();
             if (money != null)
             {
-                if (!money.ApplyCharge(remoteClient.AgentId, queryclassifiedPrice, "Add Classified"))
+                if (!money.Charge(remoteClient.AgentId, queryclassifiedPrice, "Add Classified"))
                 {
                     remoteClient.SendAlertMessage("You do not have enough money to complete this upload.");
                     return;
