@@ -189,8 +189,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                     if (image.Layers == null)
                     {
+                        //We don't have it, tell the client that it doesn't exist
                         m_client.SendAssetUploadCompleteMessage((sbyte)AssetType.Texture, false, image.TextureID);
                         RemoveImageFromQueue(image);
+                        packetsSent++;
                     }
                     else
                     {
@@ -209,7 +211,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     imagesToReAdd.Add(image);
                     m_priorityQueue.DeleteMax();
                     packetsSent++; //We tried to send one
-                    // TODO: This is a limitation of how LLImageManager is currently
+                    // UNTODO: This was a limitation of how LLImageManager is currently
                     // written. Undecoded textures should not be going into the priority
                     // queue, because a high priority undecoded texture will clog up the
                     // pipeline for a client
