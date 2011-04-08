@@ -109,7 +109,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             MaxScriptThreads = Engine.Config.GetInt("Threads", 1); // leave control threads out of user option
             AuroraThreadPoolStartInfo sinfo = new AuroraThreadPoolStartInfo();
             sinfo.priority = ThreadPriority.Normal;
-            sinfo.Threads = MaxScriptThreads + 1;
+            sinfo.Threads = MaxScriptThreads;
             sinfo.MaxSleepTime = Engine.Config.GetInt("SleepTime", 300);
             Scriptthreadpool = new AuroraThreadPool(sinfo);
             

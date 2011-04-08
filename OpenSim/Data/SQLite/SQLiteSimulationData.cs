@@ -633,6 +633,8 @@ namespace OpenSim.Data.SQLite
                             {
                                 prim = buildPrim(primRow, scene);
                                 prim.Shape = findPrimShape(uuid);
+                                if (prim.Shape == null)
+                                    continue;
 
                                 SceneObjectGroup group = new SceneObjectGroup(prim, scene);
                                 createdObjects[group.UUID] = group;

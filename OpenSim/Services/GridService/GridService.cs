@@ -335,7 +335,7 @@ namespace OpenSim.Services.GridService
             if (region != null)
             {
                 //If we already have a session, we need to check it
-                if (m_UseSessionID && region.SessionID != oldSessionID)
+                if (!VerifyRegionSessionID(region, oldSessionID))
                 {
                     m_log.WarnFormat("[GRID SERVICE]: Region {0} called register, but the sessionID they provided is wrong!", region.RegionName);
                     return "Wrong Session ID";
@@ -373,12 +373,19 @@ namespace OpenSim.Services.GridService
             return "Failed to save region into the database.";
         }
 
+        public bool VerifyRegionSessionID(GridRegion r, UUID SessionID)
+        {
+            if (m_UseSessionID && r.SessionID != SessionID)
+                return false;
+            return true;
+        }
+
         public string UpdateMap(GridRegion gregion, UUID sessionID)
         {
             GridRegion region = m_Database.Get(gregion.RegionID, gregion.ScopeID);
             if (region != null)
             {
-                if (m_UseSessionID && region.SessionID != sessionID)
+                if (!VerifyRegionSessionID(region, sessionID))
                 {
                     m_log.Warn("[GRID SERVICE]: Region called UpdateMap, but provided incorrect SessionID! Possible attempt to disable a region!!");
                     return "Wrong Session ID";
@@ -422,7 +429,7 @@ namespace OpenSim.Services.GridService
             if (region == null)
                 return false;
 
-            if (m_UseSessionID && region.SessionID != SessionID)
+            if (!VerifyRegionSessionID(region, SessionID))
             {
                 m_log.Warn("[GRID SERVICE]: Region called deregister, but provided incorrect SessionID! Possible attempt to disable a region!!");
                 return false;

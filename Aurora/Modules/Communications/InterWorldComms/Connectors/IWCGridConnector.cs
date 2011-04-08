@@ -194,6 +194,11 @@ namespace Aurora.Modules
             return r;
         }
 
+        public bool VerifyRegionSessionID(GridRegion r, UUID SessionID)
+        {
+            return m_localService.VerifyRegionSessionID(r, SessionID);
+        }
+
         #endregion
     }
 }

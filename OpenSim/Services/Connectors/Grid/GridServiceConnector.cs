@@ -755,6 +755,11 @@ namespace OpenSim.Services.Connectors
             return null;
         }
 
+        public bool VerifyRegionSessionID(GridRegion r, UUID SessionID)
+        {
+            return r.SessionID == SessionID;
+        }
+
         public virtual void SetRegionUnsafe(UUID regionID)
         {
         }

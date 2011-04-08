@@ -165,6 +165,14 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="RegionID"></param>
         void SetRegionUnsafe(UUID RegionID);
+
+        /// <summary>
+        /// Verify the given SessionID for the given region
+        /// </summary>
+        /// <param name="r"></param>
+        /// <param name="SessionID"></param>
+        /// <returns></returns>
+        bool VerifyRegionSessionID(GridRegion r, UUID SessionID);
     }
 
     public class GridRegion

@@ -8,6 +8,7 @@ using Aurora.Framework;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using Nini.Config;
+using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.MessagingService
@@ -21,7 +22,7 @@ namespace OpenSim.Services.MessagingService
         protected IRegistryCore m_registry;
         protected IAsyncMessageRecievedService m_asyncReceiverService;
 
-        protected Dictionary<ulong, List<OSDMap>> m_regionMessages = new Dictionary<ulong, List<OSDMap>>();
+        protected Dictionary<ulong, OSDArray> m_regionMessages = new Dictionary<ulong, OSDArray>();
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -57,17 +58,34 @@ namespace OpenSim.Services.MessagingService
             {
                 try
                 {
+                    IGridService service = m_registry.RequestModuleInterface<IGridService>();
                     OSDMap response = new OSDMap();
-                    OSDArray array = new OSDArray();
-                    if (m_regionMessages.ContainsKey(message["RegionHandle"].AsULong()))
+                    OSDMap mapresponse = new OSDMap();
+
+                    if (message.ContainsKey("RegionHandles"))
                     {
-                        foreach (OSDMap asyncMess in m_regionMessages[message["RegionHandle"].AsULong()])
+                        OSDArray handles = (OSDArray)message["RegionHandles"];
+
+                        for (int i = 0; i < handles.Count; i += 2)
                         {
-                            array.Add(asyncMess);
+                            ulong regionHandle = handles[i].AsULong();
+                            int x, y;
+                            Util.UlongToInts(regionHandle, out x, out y);
+                            bool verified = service.VerifyRegionSessionID(service.GetRegionByPosition(UUID.Zero, x, y), handles[i+1].AsUUID());
+                            if (verified)
+                            {
+                                if (m_regionMessages.ContainsKey(regionHandle))
+                                {
+                                    //Get the array, then remove it
+                                    OSDArray array = m_regionMessages[regionHandle];
+                                    m_regionMessages.Remove(regionHandle);
+                                    mapresponse[regionHandle.ToString()] = array;
+                                }
+                            }
                         }
-                        m_regionMessages.Remove(message["RegionHandle"].AsULong());
                     }
-                    response["Messages"] = array;
+
+                    response["Messages"] = mapresponse;
                     return response;
                 }
                 catch
@@ -85,7 +103,7 @@ namespace OpenSim.Services.MessagingService
         public void Post(ulong RegionHandle, OSDMap request)
         {
             if (!m_regionMessages.ContainsKey(RegionHandle))
-                m_regionMessages.Add(RegionHandle, new List<OSDMap>());
+                m_regionMessages.Add(RegionHandle, new OSDArray());
 
             m_regionMessages[RegionHandle].Add(request);
         }
