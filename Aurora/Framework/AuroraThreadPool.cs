@@ -32,52 +32,52 @@ namespace Aurora.Framework
         private int SleepTimeStep;
 
         public AuroraThreadPool(AuroraThreadPoolStartInfo info)
-            {
+        {
             m_info = info;
             Threads = new Thread[m_info.Threads];
             Sleeping = new int[m_info.Threads];
             nthreads = 0;
             nSleepingthreads = 0;
             SleepTimeStep = m_info.MaxSleepTime;
-                // lets threads check for work a bit faster in case we have all sleeping and awake interrupt fails
-            }
+            // lets threads check for work a bit faster in case we have all sleeping and awake interrupt fails
+        }
 
         private void ThreadStart(object number)
-            {
+        {
             int OurSleepTime = 0;
 
             int[] numbers = number as int[];
             int ThreadNumber = numbers[0];
 
             while (true)
-                {
+            {
                 try
-                    {
+                {
                     QueueItem item = null;
                     object[] o = null;
                     lock (queue)
-                        {
+                    {
                         if (queue.Count != 0)
-                            {
+                        {
                             object queueItem = queue.Dequeue();
                             if (queueItem is QueueItem)
                                 item = queueItem as QueueItem;
                             else
                                 o = queueItem as object[];
-                            }
                         }
+                    }
 
                     if (item == null && o == null)
-                        {
+                    {
                         OurSleepTime += SleepTimeStep;
                         if (OurSleepTime > m_info.MaxSleepTime)
-                            {
+                        {
                             Threads[ThreadNumber] = null;
                             Interlocked.Decrement(ref nthreads);
                             break;
-                            }
+                        }
                         else
-                            {
+                        {
                             Interlocked.Exchange(ref Sleeping[ThreadNumber], 1);
                             Interlocked.Increment(ref nSleepingthreads);
                             try { Thread.Sleep(m_info.MaxSleepTime); }
@@ -85,10 +85,10 @@ namespace Aurora.Framework
                             Interlocked.Decrement(ref nSleepingthreads);
                             Interlocked.Exchange(ref Sleeping[ThreadNumber], 0);
                             continue;
-                            }
                         }
+                    }
                     else
-                        {
+                    {
                         // workers have no business on pool waiting times
                         // that whould make interrelations very hard to debug
                         // If a worker wants to delay its requeue, then he should for now sleep before
@@ -102,10 +102,9 @@ namespace Aurora.Framework
                             item.Invoke();
                         else
                             (o[0] as QueueItem2).Invoke(o[1]);
-                        }
                     }
+                }
                 catch { }
-                Thread.Sleep(OurSleepTime);
             }
         }
 

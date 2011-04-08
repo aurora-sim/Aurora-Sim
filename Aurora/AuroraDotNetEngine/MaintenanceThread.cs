@@ -101,12 +101,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             // as it always must be async, so we must run the pool anyway
             AuroraThreadPoolStartInfo info = new AuroraThreadPoolStartInfo();
             info.priority = ThreadPriority.Normal;
-            info.Threads = 4;
+            info.Threads = 2;
             info.MaxSleepTime = Engine.Config.GetInt("SleepTime", 300);
             threadpool = new AuroraThreadPool(info);
 
 
-            MaxScriptThreads = Engine.Config.GetInt("Threads", 100); // leave control threads out of user option
+            MaxScriptThreads = Engine.Config.GetInt("Threads", 1); // leave control threads out of user option
             AuroraThreadPoolStartInfo sinfo = new AuroraThreadPoolStartInfo();
             sinfo.priority = ThreadPriority.Normal;
             sinfo.Threads = MaxScriptThreads + 1;
