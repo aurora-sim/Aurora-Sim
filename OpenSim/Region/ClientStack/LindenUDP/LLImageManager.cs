@@ -87,8 +87,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 J2KImage imgrequest;
 
                 // Do a linear search for this texture download
-                lock (m_syncRoot)
-                    m_priorityQueue.Find(delegate(J2KImage img) { return img.TextureID == newRequest.RequestedAssetID; }, out imgrequest);
+                imgrequest = FindImage(newRequest);
 
                 if (imgrequest != null)
                 {
@@ -134,6 +133,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                     if (newRequest.DiscardLevel == -1 && newRequest.Priority == 0f)
                     {
+                        //m_log.Debug("[TEX]: (CAN) ID=" + newRequest.RequestedAssetID);
                         //m_log.DebugFormat("[TEX]: (IGN) ID={0}: D={1}, S={2}, P={3}",
                         //    newRequest.RequestedAssetID, newRequest.DiscardLevel, newRequest.PacketNumber, newRequest.Priority);
                     }
@@ -163,6 +163,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
         }
 
+        private J2KImage FindImage(TextureRequestArgs newRequest)
+        {
+            J2KImage imgrequest;
+            lock (m_syncRoot)
+                m_priorityQueue.Find(delegate(J2KImage img) { return img.TextureID == newRequest.RequestedAssetID; }, out imgrequest);
+            return imgrequest;
+        }
+
         public bool ProcessImageQueue(int packetsToSend)
         {
             int StartTime = Util.EnvironmentTickCount();
@@ -182,6 +190,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     if (image.Layers == null)
                     {
                         m_client.SendAssetUploadCompleteMessage((sbyte)AssetType.Texture, false, image.TextureID);
+                        RemoveImageFromQueue(image);
                     }
                     else
                     {

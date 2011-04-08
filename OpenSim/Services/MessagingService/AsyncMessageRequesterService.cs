@@ -24,6 +24,7 @@ namespace OpenSim.Services.MessagingService
         #region Declares
 
         protected List<IScene> m_scenes = new List<IScene>();
+        protected volatile bool m_locked = false;
 
         #endregion
 
@@ -80,6 +81,9 @@ namespace OpenSim.Services.MessagingService
 
         void requestAsyncMessages(object sender, ElapsedEventArgs e)
         {
+            if (m_locked)
+                return;
+            m_locked = true;
             OSDMap message = CreateWebRequest();
             List<string> serverURIs = m_scenes[0].RequestModuleInterface<IConfigurationService>().FindValueOf(m_scenes[0].RegionInfo.RegionHandle.ToString(), "MessagingServerURI");
             foreach (string host in serverURIs)
@@ -106,6 +110,7 @@ namespace OpenSim.Services.MessagingService
                     }
                 }
             }
+            m_locked = false;
         }
 
         private IScene GetScene(ulong regionHandle)
