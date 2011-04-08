@@ -294,7 +294,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     OSDMap map = syncPoster.Get(SyncMessageHelper.TeleportAgent((int)sp.DrawDistance,
                         agentCircuit, agent, teleportFlags, finalDestination, sp.Scene.RegionInfo.RegionHandle), 
                         sp.Scene.RegionInfo.RegionHandle);
-                    bool result =  map["Success"].AsBoolean();
+                    bool result = false;
+                    if(map != null)
+                        result = map["Success"].AsBoolean();
                     if (!result)
                     {
                         // Fix the agent status
@@ -495,11 +497,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         {
             Vector3 newposition = new Vector3(agent.AbsolutePosition.X, agent.AbsolutePosition.Y, agent.AbsolutePosition.Z);;
 
-            CrossAgentToNewRegionDelegate d = CrossAgentToNewRegionAsync;
-            d.BeginInvoke(agent, newposition, crossingRegion, isFlying, CrossAgentToNewRegionCompleted, d);
+            Util.FireAndForget(delegate(object o)
+            {
+                CrossAgentToNewRegionAsync(agent, newposition, crossingRegion, isFlying);
+            });
         }
-
-        public delegate IScenePresence CrossAgentToNewRegionDelegate(IScenePresence agent, Vector3 pos, GridRegion crossingRegion, bool isFlying);
 
         /// <summary>
         /// This Closes child agents on neighboring regions
@@ -567,10 +569,22 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         OSDMap map = syncPoster.Get(SyncMessageHelper.CrossAgent(crossingRegion, pos,
                             agent.Velocity, agentCircuit, cAgent, agent.Scene.RegionInfo.RegionHandle),
                             agent.Scene.RegionInfo.RegionHandle);
-                        bool result =  map["Success"].AsBoolean();
+                        bool result = false;
+                        if(map != null)
+                            result =  map["Success"].AsBoolean();
                         if (!result)
                         {
                             agent.ControllingClient.SendTeleportFailed(map["Reason"].AsString());
+                            // If the cross was successful, this agent is a child agent
+                            // Otherwise, put them back in the scene
+                            if (!agent.IsChildAgent)
+                            {
+                                bool m_flying = ((agent.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
+                                agent.AddToPhysicalScene(m_flying, false);
+                            }
+
+                            // In any case
+                            agent.NotInTransit();
                             return agent;
                         }
                     }
@@ -587,6 +601,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 //  and stay in the sim, they'll get readded below into the new sim
                 KillAttachments(agent);
             }
+            // In any case
+            agent.NotInTransit();
             return agent;
         }
 
@@ -608,25 +624,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         backup.DeleteFromStorage(grp.UUID);
                 }
             }
-        }
-
-        protected void CrossAgentToNewRegionCompleted(IAsyncResult iar)
-        {
-            CrossAgentToNewRegionDelegate icon = (CrossAgentToNewRegionDelegate)iar.AsyncState;
-            IScenePresence agent = icon.EndInvoke(iar);
-
-            // If the cross was successful, this agent is a child agent
-            // Otherwise, put them back in the scene
-            if (!agent.IsChildAgent)
-            {
-                bool m_flying = ((agent.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
-                agent.AddToPhysicalScene(m_flying, false);
-            }
-
-            // In any case
-            agent.NotInTransit();
-
-            //m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Crossing agent {0} {1} completed.", agent.Firstname, agent.Lastname);
         }
 
         #endregion
