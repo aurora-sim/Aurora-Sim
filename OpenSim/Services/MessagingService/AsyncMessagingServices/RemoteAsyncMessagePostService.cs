@@ -58,7 +58,7 @@ namespace OpenSim.Services.MessagingService
             {
                 try
                 {
-                    IGridService service = m_registry.RequestModuleInterface<IGridService>();
+                    ICapsService service = m_registry.RequestModuleInterface<ICapsService>();
                     OSDMap response = new OSDMap();
                     OSDMap mapresponse = new OSDMap();
 
@@ -69,17 +69,19 @@ namespace OpenSim.Services.MessagingService
                         for (int i = 0; i < handles.Count; i += 2)
                         {
                             ulong regionHandle = handles[i].AsULong();
-                            int x, y;
-                            Util.UlongToInts(regionHandle, out x, out y);
-                            bool verified = service.VerifyRegionSessionID(service.GetRegionByPosition(UUID.Zero, x, y), handles[i+1].AsUUID());
-                            if (verified)
+                            IRegionCapsService region = service.GetCapsForRegion(regionHandle);
+                            if (region != null)
                             {
-                                if (m_regionMessages.ContainsKey(regionHandle))
+                                bool verified = (region.Region.SessionID == handles[i + 1].AsUUID());
+                                if (verified)
                                 {
-                                    //Get the array, then remove it
-                                    OSDArray array = m_regionMessages[regionHandle];
-                                    m_regionMessages.Remove(regionHandle);
-                                    mapresponse[regionHandle.ToString()] = array;
+                                    if (m_regionMessages.ContainsKey(regionHandle))
+                                    {
+                                        //Get the array, then remove it
+                                        OSDArray array = m_regionMessages[regionHandle];
+                                        m_regionMessages.Remove(regionHandle);
+                                        mapresponse[regionHandle.ToString()] = array;
+                                    }
                                 }
                             }
                         }
