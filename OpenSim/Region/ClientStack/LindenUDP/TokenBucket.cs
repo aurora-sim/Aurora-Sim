@@ -175,9 +175,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 return true;
             }
             else
-            {
                 return false;
-            }
         }
 
         /// <summary>
@@ -199,7 +197,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 int deltaMS = now - lastDrip;
 
                 //If the time is less than the last time we set the time (unclear how this is possible), we don't send
-                if (deltaMS < 0)
+                if (deltaMS <= 0)
                 {
                     lastDrip = now;
                     return false;
@@ -208,16 +206,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 //deltaMS is always positive, from above, and tokensPerMS is > 0.5f, so the the result is always positive..
                 int dripAmount = (int)(deltaMS * tokensPerMS);
 
-                //Therefore, content can never be negative,
-                // because maxBurst isn't <= 0, since it wouldn't have ever made it this far in the check
+                //Content CAN be negative... it removes tokens from the bucket above
                 content = Math.Min(content + dripAmount, maxBurst);
                 lastDrip = now;
 
-                //See comments above as to why this check is useless
-                /*if (dripAmount < 0 || content < 0)
+                if (dripAmount < 0 || content < 0)
                     // sim has been idle for too long, integer has overflown
                     // previous calculation is meaningless, let's put it at correct max
-                    content = maxBurst;*/
+                    content = maxBurst;
 
                 return true;
             }

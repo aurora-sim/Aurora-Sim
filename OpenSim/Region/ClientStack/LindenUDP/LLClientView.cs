@@ -3759,7 +3759,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket (packet, ThrottleOutPacketType.OutBand, true);
+                OutPacket (packet, ThrottleOutPacketType.Immediate, true);
             }
 
             if (compressedUpdateBlocks.IsValueCreated)
@@ -3774,7 +3774,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket (packet, ThrottleOutPacketType.OutBand, true);
+                OutPacket(packet, ThrottleOutPacketType.Immediate, true);
             }
 
             if (cachedUpdateBlocks.IsValueCreated)
@@ -3789,7 +3789,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket (packet, ThrottleOutPacketType.OutBand, true);
+                OutPacket(packet, ThrottleOutPacketType.Immediate, true);
             }
 
             if (terseUpdateBlocks.IsValueCreated)
@@ -3804,7 +3804,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket (packet, ThrottleOutPacketType.OutBand, true);
+                OutPacket(packet, ThrottleOutPacketType.Immediate, true);
             }
         }
 

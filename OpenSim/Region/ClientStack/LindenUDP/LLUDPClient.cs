@@ -583,6 +583,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     else
                     {
                         emptyCategories = (ThrottleOutPacketTypeFlags)0xffff;
+                        break;
                     }
                 }
             }
