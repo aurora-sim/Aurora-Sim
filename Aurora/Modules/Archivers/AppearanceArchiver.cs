@@ -255,6 +255,7 @@ namespace Aurora.Modules
                     if (w.AssetID != UUID.Zero)
                     {
                         SaveItem(w.ItemID, items, assets);
+                        SaveAsset(w.AssetID, assets);
                     }
                 }
             }
@@ -263,7 +264,8 @@ namespace Aurora.Modules
             {
             	if (a.AssetID != UUID.Zero)
             	{
-                SaveItem(a.ItemID, items, assets);
+                    SaveItem(a.ItemID, items, assets);
+                    SaveAsset(a.AssetID, assets);
                 }
             }
             map.Add("Body", body);
@@ -278,19 +280,26 @@ namespace Aurora.Modules
 
         private void SaveAsset(UUID AssetID, OSDMap assetMap)
         {
-            AssetBase asset = AssetService.Get(AssetID.ToString());
-            if (asset != null)
+            try
             {
-                OSDMap assetData = new OSDMap();
-                m_log.Info("[AvatarArchive]: Saving asset " + asset.ID);
-                CreateMetaDataMap(asset.Metadata, assetData);
-                assetData.Add("AssetData", OSD.FromBinary(asset.Data));
-                assetMap.Add(asset.ID, assetData);
+                AssetBase asset = AssetService.Get(AssetID.ToString());
+                if (asset != null)
+                {
+                    OSDMap assetData = new OSDMap();
+                    m_log.Info("[AvatarArchive]: Saving asset " + asset.ID);
+                    CreateMetaDataMap(asset.Metadata, assetData);
+                    assetData.Add("AssetData", OSD.FromBinary(asset.Data));
+                    assetMap.Add(asset.ID, assetData);
+                }
+                else
+                {
+                    m_log.Warn("[AvatarArchive]: Could not find asset to save: " + AssetID.ToString());
+                    return;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                m_log.Warn("[AvatarArchive]: Could not find asset to save: " + AssetID.ToString());
-                return;
+                m_log.Warn("[AvatarArchive]: Could not save asset: " + AssetID.ToString() + ", " + ex.ToString());
             }
         }
 
