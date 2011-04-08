@@ -179,13 +179,20 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 if (image.IsDecoded)
                 {
-                    int sent;
-                    bool imageDone = image.SendPackets(m_client, packetsToSend - packetsSent, out sent);
-                    packetsSent += sent;
+                    if (image.Layers == null)
+                    {
+                        m_client.SendAssetUploadCompleteMessage((sbyte)AssetType.Texture, false, image.TextureID);
+                    }
+                    else
+                    {
+                        int sent;
+                        bool imageDone = image.SendPackets(m_client, packetsToSend - packetsSent, out sent);
+                        packetsSent += sent;
 
-                    // If the send is complete, destroy any knowledge of this transfer
-                    if (imageDone)
-                        RemoveImageFromQueue(image);
+                        // If the send is complete, destroy any knowledge of this transfer
+                        if (imageDone)
+                            RemoveImageFromQueue(image);
+                    }
                 }
                 else
                 {

@@ -174,6 +174,11 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
         /// <param name="j2kData">JPEG2000 data</param>
         private bool DoJ2KDecode(UUID assetID, byte[] j2kData)
         {
+            return DoJ2KDecode(assetID, j2kData, m_useCSJ2K);
+        }
+        
+        private bool DoJ2KDecode(UUID assetID, byte[] j2kData, bool m_useCSJ2K)
+        {
             //int DecodeTime = 0;
             //DecodeTime = Environment.TickCount;
             OpenJPEG.J2KLayerInfo[] layers;
@@ -224,10 +229,32 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
 
                 if (layers == null || layers.Length == 0)
                 {
-                    m_log.Warn("[J2KDecoderModule]: Failed to decode layer data (" + (m_useCSJ2K ? "CSJ2K" : "OpenJPEG") + ") for texture " + assetID + ", length " + j2kData.Length + " guessing sane defaults");
-                    // Layer decoding completely failed. Guess at sane defaults for the layer boundaries
-                    layers = CreateDefaultLayers(j2kData.Length);
-                    return false;
+                    if (m_useCSJ2K == this.m_useCSJ2K)
+                    {
+                        m_log.Warn("[J2KDecoderModule]: Failed to decode layer data with (" + (m_useCSJ2K ? "CSJ2K" : "OpenJPEG") + ") for texture " + assetID + ", length " + j2kData.Length + " trying " + (!m_useCSJ2K ? "CSJ2K" : "OpenJPEG"));
+                        DoJ2KDecode(assetID, j2kData, !m_useCSJ2K);
+                    }
+                    else
+                    {
+                        //Second attempt at decode with the other j2k decoder, give up
+                        m_log.Warn("[J2KDecoderModule]: Failed to decode layer data (" + (m_useCSJ2K ? "CSJ2K" : "OpenJPEG") + ") for texture " + assetID + ", length " + j2kData.Length + " guessing sane defaults");
+                        // Layer decoding completely failed. Guess at sane defaults for the layer boundaries
+                        layers = CreateDefaultLayers(j2kData.Length);
+                        // Notify Interested Parties
+                        lock (m_notifyList)
+                        {
+                            if (m_notifyList.ContainsKey(assetID))
+                            {
+                                foreach (DecodedCallback d in m_notifyList[assetID])
+                                {
+                                    if (d != null)
+                                        d.DynamicInvoke(assetID, layers);
+                                }
+                                m_notifyList.Remove(assetID);
+                            }
+                        }
+                        return false;
+                    }
                 }
                 else //Don't save the corrupt texture!
                 {
