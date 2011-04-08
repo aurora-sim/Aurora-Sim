@@ -108,7 +108,7 @@ namespace Aurora.Services.DataService
             for(int i = 0; i < Query.Count; i += 3)
             {
                 entry.AgentID = UUID.Parse(Query[i]);
-                entry.Flags = (AccessList)int.Parse(Query[i+1]);
+                entry.Flags = (AccessList)Enum.Parse(typeof(AccessList), Query[i + 1]);
                 entry.Time = new DateTime(long.Parse(Query[i+2]));
                 LandData.ParcelAccessList.Add(entry);
                 entry = new ParcelManager.ParcelAccessEntry();

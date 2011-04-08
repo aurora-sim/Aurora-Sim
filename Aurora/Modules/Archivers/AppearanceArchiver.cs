@@ -37,7 +37,7 @@ namespace Aurora.Modules
             if (m_scene == null)
                 m_scene = scene;
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto>", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word)", HandleSaveAvatarArchive);
+            MainConsole.Instance.Commands.AddCommand("region", false, "save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto>", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word. Put all attachments in BodyParts folder before to save the archive)", HandleSaveAvatarArchive);
             MainConsole.Instance.Commands.AddCommand("region", false, "load avatar archive", "load avatar archive <First> <Last> <Filename>", "Loads appearance from an avatar archive archive", HandleLoadAvatarArchive);
         }
 
@@ -254,16 +254,17 @@ namespace Aurora.Modules
                     WearableItem w = wear[i];
                     if (w.AssetID != UUID.Zero)
                     {
-                        SaveAsset(w.AssetID, assets);
-                        SaveItem(w.ItemID, items);
+                        SaveItem(w.ItemID, items, assets);
                     }
                 }
             }
             List<AvatarAttachment> attachments = appearance.GetAttachments();
             foreach (AvatarAttachment a in attachments)
             {
-                SaveAsset(a.AssetID, assets);
-                SaveItem(a.ItemID, items);
+            	if (a.AssetID != UUID.Zero)
+            	{
+                SaveItem(a.ItemID, items, assets);
+                }
             }
             map.Add("Body", body);
             map.Add("Assets", assets);
@@ -327,7 +328,7 @@ namespace Aurora.Modules
             return asset;
         }
 
-        private void SaveItem(UUID ItemID, OSDMap itemMap)
+        private void SaveItem(UUID ItemID, OSDMap itemMap, OSDMap assets)
         {
             InventoryItemBase saveItem = InventoryService.GetItem(new InventoryItemBase(ItemID));
             if (saveItem == null)
