@@ -22,6 +22,7 @@ namespace OpenSim.Services.GridService
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected Dictionary<string, IGridRegistrationUrlModule> m_modules = new Dictionary<string, IGridRegistrationUrlModule>();
+        protected Dictionary<ulong, ThreatLevel> m_cachedThreatLevels = new Dictionary<ulong, ThreatLevel>();
         protected LoadBalancerUrls m_loadBalancer = new LoadBalancerUrls();
         protected IGenericsConnector m_genericsConnector;
         protected ISimulationBase m_simulationBase;
@@ -133,11 +134,25 @@ namespace OpenSim.Services.GridService
             m_defaultRegionThreatLevel = (ThreatLevel)Enum.Parse(typeof(ThreatLevel), config.GetString("DefaultRegionThreatLevel", m_defaultRegionThreatLevel.ToString()));
         }
 
-        private GridRegion FindRegion(ulong RegionHandle)
+        private ThreatLevel FindRegionThreatLevel(ulong RegionHandle)
         {
+            ThreatLevel regionThreatLevel = m_defaultRegionThreatLevel;
+            if (m_cachedThreatLevels.TryGetValue(RegionHandle, out regionThreatLevel))
+                return regionThreatLevel;
+            regionThreatLevel = m_defaultRegionThreatLevel;
             int x, y;
             Util.UlongToInts(RegionHandle, out x, out y);
-            return m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, x, y);
+            GridRegion region = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, x, y);
+            if (region == null)
+                regionThreatLevel = ThreatLevel.None;
+            else
+            {
+                string rThreat = region.GenericMap["ThreatLevel"].AsString();
+                if (rThreat != "")
+                    regionThreatLevel = (ThreatLevel)Enum.Parse(typeof(ThreatLevel), rThreat);
+            }
+            m_cachedThreatLevels[RegionHandle] = regionThreatLevel;
+            return regionThreatLevel;
         }
 
         protected void LoadFromDatabase()
@@ -258,13 +273,7 @@ namespace OpenSim.Services.GridService
                 ThreatLevel functionThreatLevel = PermissionSet.FindThreatLevelForFunction(function, defaultThreatLevel);
                 //Now find the permission for that threat level
                 //else, check it against the threat level that the region has
-                GridRegion region = FindRegion(RegionHandle);
-                if (region == null)
-                    return false;
-                string rThreat = region.GenericMap["ThreatLevel"].AsString();
-                ThreatLevel regionThreatLevel = m_defaultRegionThreatLevel;
-                if (rThreat != "")
-                    regionThreatLevel = (ThreatLevel)Enum.Parse(typeof(ThreatLevel), rThreat);
+                ThreatLevel regionThreatLevel = FindRegionThreatLevel(RegionHandle);
                 //Return whether the region threat level is higher than the function threat level
                 return functionThreatLevel <= regionThreatLevel;
             }
