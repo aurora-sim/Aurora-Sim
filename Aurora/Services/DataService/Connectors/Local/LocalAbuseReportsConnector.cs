@@ -83,29 +83,35 @@ namespace Aurora.Services.DataService
 
         public List<AbuseReport> GetAbuseReports(int start, int count, string filter)
         {
+            List<AbuseReport> rv = new List<AbuseReport> ();
             System.Data.IDbCommand cmd = GD.QueryDataFull ("where CONVERT(number, UNSIGNED) >= " + start.ToString () + " and " + filter + " LIMIT 0, 10", "abusereports", "*");
-            List<AbuseReport> rv = new List<AbuseReport>();
-            System.Data.IDataReader dr = cmd.ExecuteReader();
-            while (dr.Read ())
+            try
             {
-                AbuseReport report = new AbuseReport();
-                report.Category = dr[0].ToString();
-                report.ReporterName = dr[1].ToString();
-                report.ObjectName = dr[2].ToString();
-                report.ObjectUUID = new UUID(dr[3].ToString());
-                report.AbuserName = dr[4].ToString();
-                report.AbuseLocation = dr[5].ToString();
-                report.AbuseDetails = dr[6].ToString();
-                report.ObjectPosition = dr[7].ToString();
-                report.RegionName = dr[8].ToString();
-                report.ScreenshotID = new UUID(dr[9].ToString());
-                report.AbuseSummary = dr[10].ToString();
-                report.Number = int.Parse(dr[11].ToString());
-                report.AssignedTo = dr[12].ToString();
-                report.Active = int.Parse(dr[13].ToString()) == 1;
-                report.Checked = int.Parse(dr[14].ToString()) == 1;
-                report.Notes = dr[15].ToString();
-                rv.Add(report);
+                System.Data.IDataReader dr = cmd.ExecuteReader ();
+                while (dr.Read ())
+                {
+                    AbuseReport report = new AbuseReport ();
+                    report.Category = dr[0].ToString ();
+                    report.ReporterName = dr[1].ToString ();
+                    report.ObjectName = dr[2].ToString ();
+                    report.ObjectUUID = new UUID (dr[3].ToString ());
+                    report.AbuserName = dr[4].ToString ();
+                    report.AbuseLocation = dr[5].ToString ();
+                    report.AbuseDetails = dr[6].ToString ();
+                    report.ObjectPosition = dr[7].ToString ();
+                    report.RegionName = dr[8].ToString ();
+                    report.ScreenshotID = new UUID (dr[9].ToString ());
+                    report.AbuseSummary = dr[10].ToString ();
+                    report.Number = int.Parse (dr[11].ToString ());
+                    report.AssignedTo = dr[12].ToString ();
+                    report.Active = int.Parse (dr[13].ToString ()) == 1;
+                    report.Checked = int.Parse (dr[14].ToString ()) == 1;
+                    report.Notes = dr[15].ToString ();
+                    rv.Add (report);
+                }
+            }
+            catch
+            {
             }
             GD.CloseDatabase ();
             return rv;

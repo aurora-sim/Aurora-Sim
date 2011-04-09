@@ -310,25 +310,26 @@ namespace Aurora.Simulation.Base
             string errorMessage = "unknown error";
             int tickstart = Util.EnvironmentTickCount();
             int tickdata = 0;
+            int tickserialize = 0;
 
             if(url == "")
                 return ErrorResponseMap("No URL given.");
 
             try
             {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create (url);
                 request.Method = method;
                 request.Timeout = timeout;
                 request.KeepAlive = false;
                 request.MaximumAutomaticRedirections = 10;
                 request.ReadWriteTimeout = timeout / 4;
-                request.Headers[OSHeaderRequestID] = reqnum.ToString();
+                request.Headers[OSHeaderRequestID] = reqnum.ToString ();
 
                 // If there is some input, write it into the request
                 if (data != null)
                 {
-                    string strBuffer = OSDParser.SerializeJsonString(data);
-                    byte[] buffer = System.Text.Encoding.UTF8.GetBytes(strBuffer);
+                    string strBuffer = OSDParser.SerializeJsonString (data);
+                    byte[] buffer = System.Text.Encoding.UTF8.GetBytes (strBuffer);
 
                     if (buffer.Length <= 0)
                     {
@@ -337,23 +338,26 @@ namespace Aurora.Simulation.Base
                     {
                         request.ContentType = "application/json";
                         request.ContentLength = buffer.Length;   //Count bytes to send
-                        using (Stream requestStream = request.GetRequestStream())
-                            requestStream.Write(buffer, 0, buffer.Length);         //Send it
+                        using (Stream requestStream = request.GetRequestStream ())
+                            requestStream.Write (buffer, 0, buffer.Length);         //Send it
                     }
                 }
 
                 // capture how much time was spent writing, this may seem silly
                 // but with the number concurrent requests, this often blocks
-                tickdata = Util.EnvironmentTickCountSubtract(tickstart);
+                tickdata = Util.EnvironmentTickCountSubtract (tickstart);
 
-                using (WebResponse response = request.GetResponse())
+                using (WebResponse response = request.GetResponse ())
                 {
-                    using (Stream responseStream = response.GetResponseStream())
+                    using (Stream responseStream = response.GetResponseStream ())
                     {
+                        // capture how much time was spent writing, this may seem silly
+                        // but with the number concurrent requests, this often blocks
+                        tickserialize = Util.EnvironmentTickCountSubtract (tickstart);
                         string responseStr = null;
-                        responseStr = responseStream.GetStreamString();
+                        responseStr = responseStream.GetStreamString ();
                         // m_log.DebugFormat("[WEB UTIL]: <{0}> response is <{1}>",reqnum,responseStr);
-                        return CanonicalizeResults(responseStr);
+                        return CanonicalizeResults (responseStr);
                     }
                 }
             }
@@ -363,7 +367,7 @@ namespace Aurora.Simulation.Base
                 if (we.Status == WebExceptionStatus.ProtocolError)
                 {
                     HttpWebResponse webResponse = (HttpWebResponse)we.Response;
-                    errorMessage = String.Format("[{0}] {1}", webResponse.StatusCode, webResponse.StatusDescription);
+                    errorMessage = String.Format ("[{0}] {1}", webResponse.StatusCode, webResponse.StatusDescription);
                 }
             }
             catch (Exception ex)
@@ -373,10 +377,18 @@ namespace Aurora.Simulation.Base
             finally
             {
                 // This just dumps a warning for any operation that takes more than 100 ms
-                int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
-                if (tickdiff > LongCallTime)
-                    m_log.InfoFormat("[WebUtils]: osd request <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing",
-                                     reqnum, url, method, tickdiff, tickdata);
+                int tickdiff = Util.EnvironmentTickCountSubtract (tickstart);
+                if (m_log.IsEnabled (log4net.Core.Level.Trace))
+                {
+                    m_log.TraceFormat ("[WebUtils]: osd request <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing, {5}ms deserializing",
+                                     reqnum, url, method, tickdiff, tickdata, tickserialize);
+                }
+                else
+                {
+                    if (tickdiff > LongCallTime)
+                        m_log.InfoFormat ("[WebUtils]: osd request took too long <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing, {5}ms deserializing",
+                                         reqnum, url, method, tickdiff, tickdata, tickserialize);
+                }
             }
 
             m_log.WarnFormat("[WebUtils] <{0}> osd request failed: {1} to {2}, data {3}", reqnum, errorMessage, url, data != null ? data.AsString() : "");

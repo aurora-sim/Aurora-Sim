@@ -519,6 +519,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                     {
                         m_log.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e.ToString());
                     }
+                    //This makes timeouts VERY bad if enabled
                     /*try
                     {
                         //Clean up after ourselves

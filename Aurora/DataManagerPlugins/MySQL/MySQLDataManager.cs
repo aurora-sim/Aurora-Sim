@@ -46,12 +46,9 @@ namespace Aurora.DataManager.MySQL
                 m_connection.InfoMessage += new MySqlInfoMessageEventHandler (m_connection_InfoMessage);
                 m_connection.Open();
             }
-            else if (m_needsStateChange)
-            {
-                CheckConnection ();
-            }
             else
             {
+                CheckConnection ();
                 m_connection.Ping();
             }
             return m_connection;
@@ -107,13 +104,13 @@ namespace Aurora.DataManager.MySQL
             MySqlCommand dbcommand;
             try
             {
-                dbcommand = (MySqlCommand)dbcon.CreateCommand();
+                dbcommand = dbcon.CreateCommand();
                 dbcommand.CommandText = sql;
                 foreach (System.Collections.Generic.KeyValuePair<string, object> param in parameters)
                 {
                     dbcommand.Parameters.AddWithValue(param.Key, param.Value);
                 }
-                return (IDbCommand)dbcommand;
+                return dbcommand;
             }
             catch (Exception)
             {

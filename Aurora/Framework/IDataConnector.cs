@@ -15,11 +15,6 @@ namespace Aurora.Framework
     public interface IDataConnector : IGenericData
     {
         /// <summary>
-        /// Closes the database
-        /// </summary>
-        void CloseDatabase();
-
-        /// <summary>
         /// Checks to see if table 'table' exists
         /// </summary>
         /// <param name="table"></param>
