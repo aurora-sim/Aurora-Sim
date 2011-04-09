@@ -1906,7 +1906,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             switch (priority)
             {
                 case LogPrio.Trace:
-                    m_log.DebugFormat("[{0}]: {1}", source, message);
+                    MainConsole.Instance.Output(string.Format("[{0}]: {1}", source, message), log4net.Core.Level.Trace);
                     break;
                 case LogPrio.Debug:
                     m_log.DebugFormat("[{0}]: {1}", source, message);

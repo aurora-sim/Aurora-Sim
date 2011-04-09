@@ -93,58 +93,55 @@ namespace Aurora.Services.DataService
 
             while (retVal.Read())
             {
-                for (int i = 0; i < retVal.FieldCount; i++)
+                OSDMap item = new OSDMap();
+                OSDMap permissions = new OSDMap();
+                item["asset_id"] = UUID.Parse(retVal["assetID"].ToString());
+                item["name"] = retVal["inventoryName"].ToString();
+                item["desc"] = retVal["inventoryDescription"].ToString();
+                permissions["next_owner_mask"] = uint.Parse(retVal["inventoryNextPermissions"].ToString());
+                permissions["owner_mask"] = uint.Parse(retVal["inventoryCurrentPermissions"].ToString());
+                UUID creator;
+                if (UUID.TryParse(retVal["creatorID"].ToString(), out creator))
+                    permissions["creator_id"] = creator;
+                else
+                    permissions["creator_id"] = UUID.Zero;
+                permissions["base_mask"] = uint.Parse(retVal["inventoryBasePermissions"].ToString());
+                permissions["everyone_mask"] = uint.Parse(retVal["inventoryEveryOnePermissions"].ToString());
+                OSDMap sale_info = new OSDMap();
+                sale_info["sale_price"] = int.Parse(retVal["salePrice"].ToString());
+                switch (byte.Parse(retVal["saleType"].ToString()))
                 {
-                    OSDMap item = new OSDMap();
-                    OSDMap permissions = new OSDMap();
-                    item["asset_id"] = UUID.Parse(retVal["assetID"].ToString());
-                    item["name"] = retVal["inventoryName"].ToString();
-                    item["desc"] = retVal["inventoryDescription"].ToString();
-                    permissions["next_owner_mask"] = uint.Parse(retVal["inventoryNextPermissions"].ToString());
-                    permissions["owner_mask"] = uint.Parse(retVal["inventoryCurrentPermissions"].ToString());
-                    UUID creator;
-                    if(UUID.TryParse(retVal["creatorID"].ToString(), out creator))
-                        permissions["creator_id"] = creator;
-                    else
-                        permissions["creator_id"] = UUID.Zero;
-                    permissions["base_mask"] = uint.Parse(retVal["inventoryBasePermissions"].ToString());
-                    permissions["everyone_mask"] = uint.Parse(retVal["inventoryEveryOnePermissions"].ToString());
-                    OSDMap sale_info = new OSDMap();
-                    sale_info["sale_price"] = int.Parse(retVal["salePrice"].ToString());
-                    switch (byte.Parse(retVal["saleType"].ToString()))
-                    {
-                        default:
-                            sale_info["sale_type"] = "not";
-                            break;
-                        case 1:
-                            sale_info["sale_type"] = "original";
-                            break;
-                        case 2:
-                            sale_info["sale_type"] = "copy";
-                            break;
-                        case 3:
-                            sale_info["sale_type"] = "contents";
-                            break;
-                    }
-                    item["sale_info"] = sale_info;
-                    item["created_at"] = int.Parse(retVal["creationDate"].ToString());
-                    permissions["group_id"] = UUID.Parse(retVal["groupID"].ToString());
-                    permissions["is_owner_group"] = int.Parse(retVal["groupOwned"].ToString()) == 1;
-                    item["flags"] = uint.Parse(retVal["flags"].ToString());
-                    item["item_id"] = UUID.Parse(retVal["inventoryID"].ToString());
-                    item["parent_id"] = UUID.Parse(retVal["parentFolderID"].ToString());
-                    permissions["group_mask"] = uint.Parse(retVal["inventoryGroupPermissions"].ToString());
-                    item["agent_id"] = UUID.Parse(retVal["avatarID"].ToString());
-                    permissions["owner_id"] = item["agent_id"];
-                    permissions["last_owner_id"] = item["agent_id"];
-
-                    item["type"] = Utils.AssetTypeToString((AssetType)int.Parse(retVal["assetType"].ToString()));
-                    item["inv_type"] = Utils.InventoryTypeToString((InventoryType)int.Parse(retVal["invType"].ToString()));
-
-                    item["permissions"] = permissions;
-
-                    array.Add(item);
+                    default:
+                        sale_info["sale_type"] = "not";
+                        break;
+                    case 1:
+                        sale_info["sale_type"] = "original";
+                        break;
+                    case 2:
+                        sale_info["sale_type"] = "copy";
+                        break;
+                    case 3:
+                        sale_info["sale_type"] = "contents";
+                        break;
                 }
+                item["sale_info"] = sale_info;
+                item["created_at"] = int.Parse(retVal["creationDate"].ToString());
+                permissions["group_id"] = UUID.Parse(retVal["groupID"].ToString());
+                permissions["is_owner_group"] = int.Parse(retVal["groupOwned"].ToString()) == 1;
+                item["flags"] = uint.Parse(retVal["flags"].ToString());
+                item["item_id"] = UUID.Parse(retVal["inventoryID"].ToString());
+                item["parent_id"] = UUID.Parse(retVal["parentFolderID"].ToString());
+                permissions["group_mask"] = uint.Parse(retVal["inventoryGroupPermissions"].ToString());
+                item["agent_id"] = UUID.Parse(retVal["avatarID"].ToString());
+                permissions["owner_id"] = item["agent_id"];
+                permissions["last_owner_id"] = item["agent_id"];
+
+                item["type"] = Utils.AssetTypeToString((AssetType)int.Parse(retVal["assetType"].ToString()));
+                item["inv_type"] = Utils.InventoryTypeToString((InventoryType)int.Parse(retVal["invType"].ToString()));
+
+                item["permissions"] = permissions;
+
+                array.Add(item);
             }
             retVal.Close();
 
@@ -184,65 +181,63 @@ namespace Aurora.Services.DataService
                 {
                     while (retVal.Read())
                     {
-                        for (int i = 0; i < retVal.FieldCount; i++)
+                        contents.WriteStartMap("item"); //Start item kvp
+                        contents["asset_id"] = UUID.Parse(retVal["assetID"].ToString());
+                        contents["name"] = retVal["inventoryName"].ToString();
+                        contents["desc"] = retVal["inventoryDescription"].ToString();
+
+
+                        contents.WriteKey("permissions"); //Start permissions kvp
+                        contents.WriteStartMap("permissions");
+                        contents["group_id"] = UUID.Parse(retVal["groupID"].ToString());
+                        contents["is_owner_group"] = int.Parse(retVal["groupOwned"].ToString()) == 1;
+                        contents["group_mask"] = uint.Parse(retVal["inventoryGroupPermissions"].ToString());
+                        contents["owner_id"] = UUID.Parse(retVal["avatarID"].ToString());
+                        contents["last_owner_id"] = UUID.Parse(retVal["avatarID"].ToString());
+                        contents["next_owner_mask"] = uint.Parse(retVal["inventoryNextPermissions"].ToString());
+                        contents["owner_mask"] = uint.Parse(retVal["inventoryCurrentPermissions"].ToString());
+                        UUID creator;
+                        if (UUID.TryParse(retVal["creatorID"].ToString(), out creator))
+                            contents["creator_id"] = creator;
+                        else
+                            contents["creator_id"] = UUID.Zero;
+                        contents["base_mask"] = uint.Parse(retVal["inventoryBasePermissions"].ToString());
+                        contents["everyone_mask"] = uint.Parse(retVal["inventoryEveryOnePermissions"].ToString());
+                        contents.WriteEndMap(/*Permissions*/);
+
+                        contents.WriteKey("sale_info"); //Start permissions kvp
+                        contents.WriteStartMap("sale_info"); //Start sale_info kvp
+                        contents["sale_price"] = int.Parse(retVal["salePrice"].ToString());
+                        switch (byte.Parse(retVal["saleType"].ToString()))
                         {
-                            contents.WriteStartMap("item"); //Start item kvp
-                            contents["asset_id"] = UUID.Parse(retVal["assetID"].ToString());
-                            contents["name"] = retVal["inventoryName"].ToString();
-                            contents["desc"] = retVal["inventoryDescription"].ToString();
-
-
-                            contents.WriteKey("permissions"); //Start permissions kvp
-                            contents.WriteStartMap("permissions");
-                            contents["group_id"] = UUID.Parse(retVal["groupID"].ToString());
-                            contents["is_owner_group"] = int.Parse(retVal["groupOwned"].ToString()) == 1;
-                            contents["group_mask"] = uint.Parse(retVal["inventoryGroupPermissions"].ToString());
-                            contents["owner_id"] = UUID.Parse(retVal["avatarID"].ToString());
-                            contents["last_owner_id"] = UUID.Parse(retVal["avatarID"].ToString());
-                            contents["next_owner_mask"] = uint.Parse(retVal["inventoryNextPermissions"].ToString());
-                            contents["owner_mask"] = uint.Parse(retVal["inventoryCurrentPermissions"].ToString());
-                            UUID creator;
-                            if (UUID.TryParse(retVal["creatorID"].ToString(), out creator))
-                                contents["creator_id"] = creator;
-                            else
-                                contents["creator_id"] = UUID.Zero;
-                            contents["base_mask"] = uint.Parse(retVal["inventoryBasePermissions"].ToString());
-                            contents["everyone_mask"] = uint.Parse(retVal["inventoryEveryOnePermissions"].ToString());
-                            contents.WriteEndMap(/*Permissions*/);
-
-                            contents.WriteKey("sale_info"); //Start permissions kvp
-                            contents.WriteStartMap("sale_info"); //Start sale_info kvp
-                            contents["sale_price"] = int.Parse(retVal["salePrice"].ToString());
-                            switch (byte.Parse(retVal["saleType"].ToString()))
-                            {
-                                default:
-                                    contents["sale_type"] = "not";
-                                    break;
-                                case 1:
-                                    contents["sale_type"] = "original";
-                                    break;
-                                case 2:
-                                    contents["sale_type"] = "copy";
-                                    break;
-                                case 3:
-                                    contents["sale_type"] = "contents";
-                                    break;
-                            }
-                            contents.WriteEndMap(/*sale_info*/);
-
-
-                            contents["created_at"] = int.Parse(retVal["creationDate"].ToString());
-                            contents["flags"] = uint.Parse(retVal["flags"].ToString());
-                            contents["item_id"] = UUID.Parse(retVal["inventoryID"].ToString());
-                            contents["parent_id"] = UUID.Parse(retVal["parentFolderID"].ToString());
-                            contents["agent_id"] = UUID.Parse(retVal["avatarID"].ToString());
-
-                            contents["type"] = Utils.AssetTypeToString((AssetType)int.Parse(retVal["assetType"].ToString()));
-                            contents["inv_type"] = Utils.InventoryTypeToString((InventoryType)int.Parse(retVal["invType"].ToString()));
-
-                            count++;
-                            contents.WriteEndMap(/*"item"*/); //end array items
+                            default:
+                                contents["sale_type"] = "not";
+                                break;
+                            case 1:
+                                contents["sale_type"] = "original";
+                                break;
+                            case 2:
+                                contents["sale_type"] = "copy";
+                                break;
+                            case 3:
+                                contents["sale_type"] = "contents";
+                                break;
                         }
+                        contents.WriteEndMap(/*sale_info*/);
+
+
+                        contents["created_at"] = int.Parse(retVal["creationDate"].ToString());
+                        contents["flags"] = uint.Parse(retVal["flags"].ToString());
+                        UUID inventoryID = UUID.Parse(retVal["inventoryID"].ToString());
+                        contents["item_id"] = inventoryID;
+                        contents["parent_id"] = UUID.Parse(retVal["parentFolderID"].ToString());
+                        contents["agent_id"] = UUID.Parse(retVal["avatarID"].ToString());
+
+                        contents["type"] = Utils.AssetTypeToString((AssetType)int.Parse(retVal["assetType"].ToString()));
+                        contents["inv_type"] = Utils.InventoryTypeToString((InventoryType)int.Parse(retVal["invType"].ToString()));
+
+                        count++;
+                        contents.WriteEndMap(/*"item"*/); //end array items
                     }
                     retVal.Close();
                 }
