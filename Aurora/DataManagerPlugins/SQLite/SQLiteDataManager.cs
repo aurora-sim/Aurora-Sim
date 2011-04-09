@@ -161,7 +161,7 @@ namespace Aurora.DataManager.SQLite
             }
         }
 
-        public override IDataReader QueryReader(string keyRow, object keyValue, string table, string wantedValue)
+        public override IDbCommand QueryReader(string keyRow, object keyValue, string table, string wantedValue)
         {
             var cmd = new SqliteCommand();
             string query = "";
@@ -176,7 +176,7 @@ namespace Aurora.DataManager.SQLite
                                       wantedValue, table, keyRow, keyValue.ToString());
             }
             cmd.CommandText = query;
-            return GetReader(cmd);
+            return cmd;
         }
 
         public override List<string> Query(string whereClause, string table, string wantedValue)
@@ -229,25 +229,24 @@ namespace Aurora.DataManager.SQLite
             }
         }
 
-        public override IDataReader QueryDataFull(string whereClause, string table, string wantedValue)
+        public override IDbCommand QueryDataFull(string whereClause, string table, string wantedValue)
         {
             var cmd = new SqliteCommand();
             string query = "";
             query = String.Format("select {0} from {1} {2}",
                                       wantedValue, table, whereClause);
             cmd.CommandText = query;
-            return GetReader(cmd);
+            return cmd;
         }
 
-        public override IDataReader QueryData(string whereClause, string table, string wantedValue)
+        public override IDbCommand QueryData(string whereClause, string table, string wantedValue)
         {
             var cmd = new SqliteCommand();
             string query = "";
             query = String.Format("select {0} from {1} where {2}",
                                       wantedValue, table, whereClause);
             cmd.CommandText = query;
-            IDataReader reader = GetReader(cmd);
-            return reader;
+            return cmd;
         }
 
         public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order)

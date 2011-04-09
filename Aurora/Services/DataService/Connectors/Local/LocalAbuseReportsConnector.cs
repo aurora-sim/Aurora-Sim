@@ -83,9 +83,10 @@ namespace Aurora.Services.DataService
 
         public List<AbuseReport> GetAbuseReports(int start, int count, string filter)
         {
-            System.Data.IDataReader dr = GD.QueryDataFull ("where CONVERT(number, UNSIGNED) >= " + start.ToString() + " and " + filter + " LIMIT 0, 10", "abusereports", "*");
+            System.Data.IDbCommand cmd = GD.QueryDataFull ("where CONVERT(number, UNSIGNED) >= " + start.ToString () + " and " + filter + " LIMIT 0, 10", "abusereports", "*");
             List<AbuseReport> rv = new List<AbuseReport>();
-            while (dr.Read())
+            System.Data.IDataReader dr = cmd.ExecuteReader();
+            while (dr.Read ())
             {
                 AbuseReport report = new AbuseReport();
                 report.Category = dr[0].ToString();

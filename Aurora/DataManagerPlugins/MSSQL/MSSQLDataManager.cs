@@ -137,11 +137,9 @@ namespace Aurora.DataManager.MSSQL
             }
         }
 
-        public override IDataReader QueryReader(string keyRow, object keyValue, string table, string wantedValue)
+        public override IDbCommand QueryReader(string keyRow, object keyValue, string table, string wantedValue)
         {
             SqlConnection dbcon = GetLockedConnection();
-            IDbCommand result = null;
-            IDataReader reader = null;
             string query = "";
             if (keyRow == "")
             {
@@ -153,11 +151,7 @@ namespace Aurora.DataManager.MSSQL
                 query = String.Format("select {0} from {1} where {2} = '{3}'",
                                       wantedValue, table, keyRow, keyValue.ToString());
             }
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
-            {
-                reader = result.ExecuteReader();
-                return reader;
-            }
+            return Query (query, new Dictionary<string, object> (), dbcon);
         }
 
         public override List<string> Query(string whereClause, string table, string wantedValue)
@@ -230,28 +224,20 @@ namespace Aurora.DataManager.MSSQL
             }
         }
 
-        public override IDataReader QueryDataFull(string whereClause, string table, string wantedValue)
+        public override IDbCommand QueryDataFull(string whereClause, string table, string wantedValue)
         {
-            SqlConnection dbcon = GetLockedConnection();
-            IDbCommand result;
-            string query = String.Format("select {0} from {1} {2}",
+            SqlConnection dbcon = GetLockedConnection ();
+            string query = String.Format ("select {0} from {1} {2}",
                                       wantedValue, table, whereClause);
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
-            {
-                return result.ExecuteReader();
-            }
+            return Query (query, new Dictionary<string, object> (), dbcon);
         }
 
-        public override IDataReader QueryData(string whereClause, string table, string wantedValue)
+        public override IDbCommand QueryData(string whereClause, string table, string wantedValue)
         {
             SqlConnection dbcon = GetLockedConnection();
-            IDbCommand result;
             string query = String.Format("select {0} from {1} where {2}",
                                       wantedValue, table, whereClause);
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
-            {
-                return result.ExecuteReader();
-            }
+            return Query (query, new Dictionary<string, object> (), dbcon);
         }
 
         public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string order)

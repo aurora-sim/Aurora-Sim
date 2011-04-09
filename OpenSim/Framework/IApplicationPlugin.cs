@@ -97,12 +97,12 @@ namespace Aurora.Framework
         /// <summary>
         /// select 'wantedValue' from 'table' 'whereClause'
         /// </summary>
-        IDataReader QueryDataFull(string whereClause, string table, string wantedValue);
+        IDbCommand QueryDataFull(string whereClause, string table, string wantedValue);
 
         /// <summary>
         /// select 'wantedValue' from 'table' where 'whereClause'
         /// </summary>
-        IDataReader QueryData(string whereClause, string table, string wantedValue);
+        IDbCommand QueryData(string whereClause, string table, string wantedValue);
 
         /// <summary>
         /// select 'wantedValue' from 'table' where 'keyRow' = 'keyValue' 'Order'
@@ -123,7 +123,7 @@ namespace Aurora.Framework
         /// <summary>
         /// select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
         /// </summary>
-        IDataReader QueryReader(string keyRow, object keyValue, string table, string wantedValue);
+        IDbCommand QueryReader(string keyRow, object keyValue, string table, string wantedValue);
 
         /// <summary>
         /// insert into 'table' values ('values')

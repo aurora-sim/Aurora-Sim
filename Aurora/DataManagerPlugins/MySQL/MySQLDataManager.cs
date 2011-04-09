@@ -19,6 +19,8 @@ namespace Aurora.DataManager.MySQL
     {
         private string connectionString = "";
         private MySqlConnection m_connection = null;
+        private volatile bool m_locked = false;
+        private volatile bool m_needsStateChange = false;
 
         public override string Identifier
         {
@@ -27,19 +29,47 @@ namespace Aurora.DataManager.MySQL
 
         public MySqlConnection GetLockedConnection()
         {
+            m_locked = true;
             if (m_connection == null)
             {
                 m_connection = new MySqlConnection(connectionString);
+                m_connection.StateChange += new StateChangeEventHandler(m_connection_StateChange);
                 m_connection.Open();
-                return m_connection;
+            }
+            else if (m_needsStateChange)
+            {
+                //We need to reopen the connection, it timed out
+                if(m_connection.State != ConnectionState.Open)
+                    m_connection.Open();
             }
             else
             {
-                MySqlConnection clone = (MySqlConnection)((ICloneable)m_connection).Clone();
-                //MySqlConnection clone = m_connection.Clone();
-                clone.Open();
-                return clone;
+                m_connection.Ping();
             }
+            return m_connection;
+        }
+
+        void m_connection_StateChange(object sender, StateChangeEventArgs e)
+        {
+            if (e.CurrentState == ConnectionState.Closed || e.CurrentState == ConnectionState.Broken)
+            {
+                //It closed or timed out, we need to restart it
+                m_needsStateChange = true;
+            }
+        }
+
+        public void CloseDatabase(MySqlConnection connection)
+        {
+            m_locked = false;
+            //connection.Close();
+            //connection.Dispose();
+        }
+
+        public override void CloseDatabase()
+        {
+            m_locked = false;
+            //m_connection.Close();
+            //m_connection.Dispose();
         }
 
         public IDbCommand Query(string sql, Dictionary<string, object> parameters, MySqlConnection dbcon)
@@ -75,7 +105,6 @@ namespace Aurora.DataManager.MySQL
 
         public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue)
         {
-            MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result = null;
             IDataReader reader = null;
             List<string> RetVal = new List<string>();
@@ -90,63 +119,62 @@ namespace Aurora.DataManager.MySQL
                 query = String.Format("select {0} from {1} where {2} = '{3}'",
                                       wantedValue, table, keyRow, keyValue.ToString());
             }
-            try
+            using (MySqlConnection dbcon = GetLockedConnection ())
             {
-                using (result = Query(query, new Dictionary<string, object>(), dbcon))
+                try
                 {
-                    using (reader = result.ExecuteReader())
+                    using (result = Query (query, new Dictionary<string, object> (), dbcon))
                     {
-                        while (reader.Read())
+                        using (reader = result.ExecuteReader ())
                         {
-                            for (int i = 0; i < reader.FieldCount; i++)
+                            while (reader.Read ())
                             {
-                                if (reader[i] is byte[])
-                                    RetVal.Add(OpenMetaverse.Utils.BytesToString((byte[])reader[i]));
-                                else
-                                    RetVal.Add(reader.GetString(i));
+                                for (int i = 0; i < reader.FieldCount; i++)
+                                {
+                                    if (reader[i] is byte[])
+                                        RetVal.Add (OpenMetaverse.Utils.BytesToString ((byte[])reader[i]));
+                                    else
+                                        RetVal.Add (reader.GetString (i));
+                                }
                             }
+                            return RetVal;
                         }
-                        return RetVal;
                     }
                 }
-            }
-            catch
-            {
-                return RetVal;
-            }
-            finally
-            {
-                if (reader != null)
+                catch
                 {
-                    reader.Close();
-                    reader.Dispose();
+                    return RetVal;
                 }
-                result.Dispose();
-                CloseDatabase(dbcon);
+                finally
+                {
+                    if (reader != null)
+                    {
+                        reader.Close ();
+                        reader.Dispose ();
+                    }
+                    result.Dispose ();
+                    CloseDatabase (dbcon);
+                }
             }
         }
 
-        public override IDataReader QueryReader(string keyRow, object keyValue, string table, string wantedValue)
+        public override IDbCommand QueryReader(string keyRow, object keyValue, string table, string wantedValue)
         {
-            MySqlConnection dbcon = GetLockedConnection();
-            IDbCommand result = null;
-            IDataReader reader = null;
             string query = "";
             if (keyRow == "")
             {
-                query = String.Format("select {0} from {1}",
+                query = String.Format ("select {0} from {1}",
                                       wantedValue, table);
             }
             else
             {
-                query = String.Format("select {0} from {1} where {2} = '{3}'",
-                                      wantedValue, table, keyRow, keyValue.ToString());
+                query = String.Format ("select {0} from {1} where {2} = '{3}'",
+                                      wantedValue, table, keyRow, keyValue.ToString ());
             }
+            MySqlConnection dbcon = GetLockedConnection ();
             try
             {
-                result = Query(query, new Dictionary<string, object>(), dbcon);
-                    reader = result.ExecuteReader();
-                    return reader;
+                return Query (query, new Dictionary<string, object> (), dbcon);
             }
             catch
             {
@@ -154,42 +182,45 @@ namespace Aurora.DataManager.MySQL
             }
             finally
             {
+                CloseDatabase (dbcon);
             }
         }
 
         public override List<string> Query(string whereClause, string table, string wantedValue)
         {
-            MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;
             List<string> RetVal = new List<string>();
             string query = String.Format("select {0} from {1} where {2}",
                                       wantedValue, table, whereClause);
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            using (MySqlConnection dbcon = GetLockedConnection ())
             {
-                using (reader = result.ExecuteReader())
+                using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
-                    try
+                    using (reader = result.ExecuteReader ())
                     {
-                        while (reader.Read())
+                        try
                         {
-                            for (int i = 0; i < reader.FieldCount; i++)
+                            while (reader.Read ())
                             {
-                                if(reader[i] != DBNull.Value)
-                                    RetVal.Add(reader.GetString(i));
+                                for (int i = 0; i < reader.FieldCount; i++)
+                                {
+                                    if (reader[i] != DBNull.Value)
+                                        RetVal.Add (reader.GetString (i));
+                                }
                             }
+                            return RetVal;
                         }
-                        return RetVal;
-                    }
-                    finally
-                    {
-                        if (reader != null)
+                        finally
                         {
-                            reader.Close();
-                            reader.Dispose();
+                            if (reader != null)
+                            {
+                                reader.Close ();
+                                reader.Dispose ();
+                            }
+                            result.Dispose ();
+                            CloseDatabase (dbcon);
                         }
-                        result.Dispose();
-                        CloseDatabase(dbcon);
                     }
                 }
             }
@@ -197,68 +228,77 @@ namespace Aurora.DataManager.MySQL
 
         public override List<string> QueryFullData(string whereClause, string table, string wantedValue)
         {
-            MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;
-            List<string> RetVal = new List<string>();
-            string query = String.Format("select {0} from {1} {2}",
+            List<string> RetVal = new List<string> ();
+            string query = String.Format ("select {0} from {1} {2}",
                                       wantedValue, table, whereClause);
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            using (MySqlConnection dbcon = GetLockedConnection ())
             {
-                using (reader = result.ExecuteReader())
+                using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
-                    try
+                    using (reader = result.ExecuteReader ())
                     {
-                        while (reader.Read())
+                        try
                         {
-                            for (int i = 0; i < reader.FieldCount; i++)
+                            while (reader.Read ())
                             {
-                                RetVal.Add(reader.GetString(i));
+                                for (int i = 0; i < reader.FieldCount; i++)
+                                {
+                                    RetVal.Add (reader.GetString (i));
+                                }
                             }
+                            return RetVal;
                         }
-                        return RetVal;
-                    }
-                    finally
-                    {
-                        if (reader != null)
+                        finally
                         {
-                            reader.Close();
-                            reader.Dispose();
+                            if (reader != null)
+                            {
+                                reader.Close ();
+                                reader.Dispose ();
+                            }
+                            result.Dispose ();
+                            CloseDatabase (dbcon);
                         }
-                        result.Dispose();
-                        CloseDatabase(dbcon);
                     }
                 }
             }
         }
 
-        public override IDataReader QueryDataFull(string whereClause, string table, string wantedValue)
+        public override IDbCommand QueryDataFull(string whereClause, string table, string wantedValue)
         {
-            MySqlConnection dbcon = GetLockedConnection();
-            IDbCommand result;
             string query = String.Format("select {0} from {1} {2}",
                                       wantedValue, table, whereClause);
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            using (MySqlConnection dbcon = GetLockedConnection ())
             {
-                return result.ExecuteReader();
+                try
+                {
+                    return Query (query, new Dictionary<string, object> (), dbcon);
+                }
+                finally
+                {
+                    CloseDatabase (dbcon);
+                }
             }
         }
 
-        public override IDataReader QueryData(string whereClause, string table, string wantedValue)
+        public override IDbCommand QueryData(string whereClause, string table, string wantedValue)
         {
-            MySqlConnection dbcon = GetLockedConnection();
-            IDbCommand result;
             string query = String.Format("select {0} from {1} where {2}",
                                       wantedValue, table, whereClause);
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            MySqlConnection dbcon = GetLockedConnection ();
+            try
             {
-                return result.ExecuteReader();
+                return Query (query, new Dictionary<string, object> (), dbcon);
+            }
+            finally
+            {
+                CloseDatabase (dbcon);
             }
         }
 
         public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string order)
         {
-            MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;
             List<string> RetVal = new List<string>();
@@ -273,38 +313,41 @@ namespace Aurora.DataManager.MySQL
                 query = String.Format("select {0} from {1} where {2} = '{3}'",
                                       wantedValue, table, keyRow, keyValue);
             }
-            using (result = Query(query + order, new Dictionary<string, object>(), dbcon))
+            using (MySqlConnection dbcon = GetLockedConnection ())
             {
-                using (reader = result.ExecuteReader())
+                using (result = Query (query + order, new Dictionary<string, object> (), dbcon))
                 {
-                    try
+                    using (reader = result.ExecuteReader ())
                     {
-                        while (reader.Read())
+                        try
                         {
-                            for (int i = 0; i < reader.FieldCount; i++)
+                            while (reader.Read ())
                             {
-                                Type r = reader[i].GetType();
-                                if (r == typeof(DBNull))
-                                    RetVal.Add(null);
-                                else
-                                    RetVal.Add(reader.GetString(i));
+                                for (int i = 0; i < reader.FieldCount; i++)
+                                {
+                                    Type r = reader[i].GetType ();
+                                    if (r == typeof (DBNull))
+                                        RetVal.Add (null);
+                                    else
+                                        RetVal.Add (reader.GetString (i));
+                                }
                             }
+                            return RetVal;
                         }
-                        return RetVal;
-                    }
-                    catch (Exception)
-                    {
-                        return new List<string>();
-                    }
-                    finally
-                    {
-                        if (reader != null)
+                        catch (Exception)
                         {
-                            reader.Close();
-                            reader.Dispose();
+                            return new List<string> ();
                         }
-                        result.Dispose();
-                        CloseDatabase(dbcon);
+                        finally
+                        {
+                            if (reader != null)
+                            {
+                                reader.Close ();
+                                reader.Dispose ();
+                            }
+                            result.Dispose ();
+                            CloseDatabase (dbcon);
+                        }
                     }
                 }
             }
@@ -312,7 +355,6 @@ namespace Aurora.DataManager.MySQL
 
         public override List<string> Query (string[] keyRow, object[] keyValue, string table, string wantedValue)
         {
-            MySqlConnection dbcon = GetLockedConnection ();
             IDbCommand result;
             IDataReader reader;
             List<string> RetVal = new List<string> ();
@@ -327,38 +369,41 @@ namespace Aurora.DataManager.MySQL
             query = query.Remove (query.Length - 5);
 
 
-            using (result = Query (query, new Dictionary<string, object> (), dbcon))
+            using (MySqlConnection dbcon = GetLockedConnection())
             {
-                using (reader = result.ExecuteReader ())
+                using (result = Query(query, new Dictionary<string, object>(), dbcon))
                 {
-                    try
+                    using (reader = result.ExecuteReader())
                     {
-                        while (reader.Read ())
+                        try
                         {
-                            for (i = 0; i < reader.FieldCount; i++)
+                            while (reader.Read())
                             {
-                                Type r = reader[i].GetType ();
-                                if (r == typeof (DBNull))
-                                    RetVal.Add (null);
-                                else
-                                    RetVal.Add (reader.GetString (i));
+                                for (i = 0; i < reader.FieldCount; i++)
+                                {
+                                    Type r = reader[i].GetType();
+                                    if (r == typeof(DBNull))
+                                        RetVal.Add(null);
+                                    else
+                                        RetVal.Add(reader.GetString(i));
+                                }
                             }
+                            return RetVal;
                         }
-                        return RetVal;
-                    }
-                    catch
-                    {
-                        return null;
-                    }
-                    finally
-                    {
-                        if (reader != null)
+                        catch
                         {
-                            reader.Close ();
-                            reader.Dispose ();
+                            return null;
                         }
-                        result.Dispose ();
-                        CloseDatabase (dbcon);
+                        finally
+                        {
+                            if (reader != null)
+                            {
+                                reader.Close();
+                                reader.Dispose();
+                            }
+                            result.Dispose();
+                            CloseDatabase(dbcon);
+                        }
                     }
                 }
             }
@@ -366,7 +411,6 @@ namespace Aurora.DataManager.MySQL
 
         public override Dictionary<string, List<string>> QueryNames (string[] keyRow, object[] keyValue, string table, string wantedValue)
         {
-            MySqlConnection dbcon = GetLockedConnection ();
             IDbCommand result;
             IDataReader reader;
             Dictionary<string, List<string>> RetVal = new Dictionary<string, List<string>> ();
@@ -380,39 +424,41 @@ namespace Aurora.DataManager.MySQL
             }
             query = query.Remove (query.Length - 5);
 
-
-            using (result = Query (query, new Dictionary<string, object> (), dbcon))
+            using (MySqlConnection dbcon = GetLockedConnection ())
             {
-                using (reader = result.ExecuteReader ())
+                using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
-                    try
+                    using (reader = result.ExecuteReader ())
                     {
-                        while (reader.Read ())
+                        try
                         {
-                            for (i = 0; i < reader.FieldCount; i++)
+                            while (reader.Read ())
                             {
-                                Type r = reader[i].GetType ();
-                                if (r == typeof (DBNull))
-                                    AddValueToList (ref RetVal, reader.GetName (i), null);
-                                else
-                                    AddValueToList (ref RetVal, reader.GetName (i), reader[i].ToString ());
+                                for (i = 0; i < reader.FieldCount; i++)
+                                {
+                                    Type r = reader[i].GetType ();
+                                    if (r == typeof (DBNull))
+                                        AddValueToList (ref RetVal, reader.GetName (i), null);
+                                    else
+                                        AddValueToList (ref RetVal, reader.GetName (i), reader[i].ToString ());
+                                }
                             }
+                            return RetVal;
                         }
-                        return RetVal;
-                    }
-                    catch
-                    {
-                        return null;
-                    }
-                    finally
-                    {
-                        if (reader != null)
+                        catch
                         {
-                            reader.Close ();
-                            reader.Dispose ();
+                            return null;
                         }
-                        result.Dispose ();
-                        CloseDatabase (dbcon);
+                        finally
+                        {
+                            if (reader != null)
+                            {
+                                reader.Close ();
+                                reader.Dispose ();
+                            }
+                            result.Dispose ();
+                            CloseDatabase (dbcon);
+                        }
                     }
                 }
             }
@@ -428,7 +474,6 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
         {
-            MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;
             string query = String.Format("update {0} set ", table);
@@ -452,31 +497,33 @@ namespace Aurora.DataManager.MySQL
                 i++;
             }
             query = query.Remove(query.Length - 5);
-            try
+            using (MySqlConnection dbcon = GetLockedConnection ())
             {
-                using (result = Query(query, parameters, dbcon))
+                try
                 {
-                    using (reader = result.ExecuteReader())
+                    using (result = Query (query, parameters, dbcon))
                     {
-                        if (reader != null)
+                        using (reader = result.ExecuteReader ())
                         {
-                            reader.Close();
-                            reader.Dispose();
+                            if (reader != null)
+                            {
+                                reader.Close ();
+                                reader.Dispose ();
+                            }
+                            result.Dispose ();
+                            CloseDatabase (dbcon);
                         }
-                        result.Dispose();
-                        CloseDatabase(dbcon);
                     }
                 }
-            }
-            catch (MySqlException)
-            {
+                catch (MySqlException)
+                {
+                }
             }
             return true;
         }
 
         public override bool Insert(string table, object[] values)
         {
-            MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;
 
@@ -488,29 +535,31 @@ namespace Aurora.DataManager.MySQL
             query = query.Remove(query.Length - 1);
             query += ")";
 
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            using (MySqlConnection dbcon = GetLockedConnection ())
             {
-                try
+                using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
-                    using (reader = result.ExecuteReader())
+                    try
                     {
-                        if (reader != null)
+                        using (reader = result.ExecuteReader ())
                         {
-                            reader.Close();
-                            reader.Dispose();
+                            if (reader != null)
+                            {
+                                reader.Close ();
+                                reader.Dispose ();
+                            }
+                            result.Dispose ();
+                            CloseDatabase (dbcon);
                         }
-                        result.Dispose();
-                        CloseDatabase(dbcon);
                     }
+                    catch { }
                 }
-                catch { }
             }
             return true;
         }
 
         public override bool Insert(string table, string[] keys, object[] values)
         {
-            MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
 
             string query = String.Format("insert into {0} (", table);
@@ -533,24 +582,26 @@ namespace Aurora.DataManager.MySQL
             query = query.Remove(query.Length - 1);
             query += ")";
 
-            using (result = Query(query, param, dbcon))
+            using (MySqlConnection dbcon = GetLockedConnection ())
             {
-                try
+                using (result = Query (query, param, dbcon))
                 {
-                    using (result.ExecuteReader())
+                    try
                     {
-                        result.Dispose();
-                        CloseDatabase(dbcon);
+                        using (result.ExecuteReader ())
+                        {
+                            result.Dispose ();
+                            CloseDatabase (dbcon);
+                        }
                     }
+                    catch { }
                 }
-                catch { }
             }
             return true;
         }
 
         public override bool Replace(string table, string[] keys, object[] values)
         {
-            MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             
             string query = String.Format("replace into {0} (", table);
@@ -580,19 +631,22 @@ namespace Aurora.DataManager.MySQL
             query = query.Remove(query.Length - 1);
             query += ")";
 
-            using (result = Query(query, param, dbcon))
+            using (MySqlConnection dbcon = GetLockedConnection ())
             {
-                try
+                using (result = Query (query, param, dbcon))
                 {
-                    using (result.ExecuteReader())
+                    try
                     {
-                        result.Dispose();
-                        CloseDatabase(dbcon);
+                        using (result.ExecuteReader ())
+                        {
+                            result.Dispose ();
+                            CloseDatabase (dbcon);
+                        }
                     }
-                }
-                catch
-                {
-                    return false;
+                    catch
+                    {
+                        return false;
+                    }
                 }
             }
             return true;
@@ -600,7 +654,6 @@ namespace Aurora.DataManager.MySQL
 
         public override bool DirectReplace(string table, string[] keys, object[] values)
         {
-            MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             
             string query = String.Format("replace into {0} (", table);
@@ -627,19 +680,22 @@ namespace Aurora.DataManager.MySQL
             query = query.Remove(query.Length - 1);
             query += ")";
 
-            using (result = Query(query, param, dbcon))
+            using (MySqlConnection dbcon = GetLockedConnection ())
             {
-                try
+                using (result = Query (query, param, dbcon))
                 {
-                    using (result.ExecuteReader())
+                    try
                     {
-                        result.Dispose();
-                        CloseDatabase(dbcon);
+                        using (result.ExecuteReader ())
+                        {
+                            result.Dispose ();
+                            CloseDatabase (dbcon);
+                        }
                     }
-                }
-                catch
-                {
-                    return false;
+                    catch
+                    {
+                        return false;
+                    }
                 }
             }
             return true;
@@ -647,7 +703,6 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Insert(string table, object[] values, string updateKey, object updateValue)
         {
-            MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             string query = String.Format("insert into {0} VALUES('", table);
             foreach (object value in values)
@@ -656,12 +711,15 @@ namespace Aurora.DataManager.MySQL
             }
             query = query.Remove(query.Length - 2);
             query += String.Format(") ON DUPLICATE KEY UPDATE {0} = '{1}'", updateKey, updateValue);
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            using (MySqlConnection dbcon = GetLockedConnection ())
             {
-                using (result.ExecuteReader())
+                using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
-                    result.Dispose();
-                    CloseDatabase(dbcon);
+                    using (result.ExecuteReader ())
+                    {
+                        result.Dispose ();
+                        CloseDatabase (dbcon);
+                    }
                 }
             }
             return true;
@@ -669,7 +727,6 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Delete(string table, string[] keys, object[] values)
         {
-            MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             string query = "delete from " + table + (keys.Length > 0 ? " WHERE " : "");
             int i = 0;
@@ -680,14 +737,17 @@ namespace Aurora.DataManager.MySQL
             }
             if(keys.Length > 0)
                 query = query.Remove(query.Length - 5);
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            using (MySqlConnection dbcon = GetLockedConnection ())
             {
-                using (result.ExecuteReader())
+                using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
-                    result.Dispose();
+                    using (result.ExecuteReader ())
+                    {
+                        result.Dispose ();
+                    }
                 }
+                CloseDatabase (dbcon);
             }
-            CloseDatabase(dbcon);
             return true;
         }
 
@@ -715,46 +775,38 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Delete(string table, string whereclause)
         {
-            MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             string query = "delete from " + table + " WHERE " + whereclause;
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            using (MySqlConnection dbcon = GetLockedConnection ())
             {
-                using (result.ExecuteReader ())
+                using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
-                    result.Dispose();
+                    using (result.ExecuteReader ())
+                    {
+                        result.Dispose ();
+                    }
                 }
+                CloseDatabase (dbcon);
             }
-            CloseDatabase(dbcon);
             return true;
         }
 
         public override bool DeleteByTime(string table, string key)
         {
-            MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             string query = "delete from " + table + " WHERE '" + key + "' < now()";
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
+            using (MySqlConnection dbcon = GetLockedConnection ())
             {
-                using (result.ExecuteReader ())
+                using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
-                    result.Dispose();
+                    using (result.ExecuteReader ())
+                    {
+                        result.Dispose ();
+                    }
                 }
+                CloseDatabase (dbcon);
             }
-            CloseDatabase(dbcon);
             return true;
-        }
-
-        public void CloseDatabase(MySqlConnection connection)
-        {
-            connection.Close();
-            connection.Dispose();
-        }
-
-        public override void CloseDatabase()
-        {
-            m_connection.Close();
-            m_connection.Dispose();
         }
 
         public override void CreateTable(string table, ColumnDefinition[] columns)
@@ -795,11 +847,15 @@ namespace Aurora.DataManager.MySQL
 
             string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition, multiplePrimaryString);
 
-            MySqlConnection dbcon = GetLockedConnection();
-            MySqlCommand dbcommand = dbcon.CreateCommand();
-            dbcommand.CommandText = query;
-            dbcommand.ExecuteNonQuery();
-            CloseDatabase(dbcon);
+            using (MySqlConnection dbcon = GetLockedConnection ())
+            {
+                using (MySqlCommand dbcommand = dbcon.CreateCommand ())
+                {
+                    dbcommand.CommandText = query;
+                    dbcommand.ExecuteNonQuery ();
+                }
+                CloseDatabase (dbcon);
+            }
         }
 
         public override void UpdateTable(string table, ColumnDefinition[] columns)
@@ -839,53 +895,55 @@ namespace Aurora.DataManager.MySQL
             string addedColumnsQuery = "";
             string modifiedColumnsQuery = "";
             string droppedColumnsQuery = "";
-            MySqlConnection dbcon = GetLockedConnection();
-            foreach (ColumnDefinition column in addedColumns.Values)
+            using (MySqlConnection dbcon = GetLockedConnection ())
             {
-                addedColumnsQuery = "add " + column.Name + " " + GetColumnTypeStringSymbol(column.Type) + " ";
-                string query = string.Format("alter table " + table + " " + addedColumnsQuery);
+                foreach (ColumnDefinition column in addedColumns.Values)
+                {
+                    addedColumnsQuery = "add " + column.Name + " " + GetColumnTypeStringSymbol (column.Type) + " ";
+                    string query = string.Format ("alter table " + table + " " + addedColumnsQuery);
 
-                MySqlCommand dbcommand = dbcon.CreateCommand();
-                dbcommand.CommandText = query;
-                try
-                {
-                    dbcommand.ExecuteNonQuery();
+                    MySqlCommand dbcommand = dbcon.CreateCommand ();
+                    dbcommand.CommandText = query;
+                    try
+                    {
+                        dbcommand.ExecuteNonQuery ();
+                    }
+                    catch
+                    {
+                    }
                 }
-                catch
+                foreach (ColumnDefinition column in modifiedColumns.Values)
                 {
-                }
-            }
-            foreach (ColumnDefinition column in modifiedColumns.Values)
-            {
-                modifiedColumnsQuery = "modify column " + column.Name + " " + GetColumnTypeStringSymbol(column.Type) + " ";
-                string query = string.Format("alter table " + table + " " + modifiedColumnsQuery);
+                    modifiedColumnsQuery = "modify column " + column.Name + " " + GetColumnTypeStringSymbol (column.Type) + " ";
+                    string query = string.Format ("alter table " + table + " " + modifiedColumnsQuery);
 
-                MySqlCommand dbcommand = dbcon.CreateCommand();
-                dbcommand.CommandText = query;
-                try
-                {
-                    dbcommand.ExecuteNonQuery();
+                    MySqlCommand dbcommand = dbcon.CreateCommand ();
+                    dbcommand.CommandText = query;
+                    try
+                    {
+                        dbcommand.ExecuteNonQuery ();
+                    }
+                    catch
+                    {
+                    }
                 }
-                catch
+                foreach (ColumnDefinition column in removedColumns.Values)
                 {
-                }
-            }
-            foreach (ColumnDefinition column in removedColumns.Values)
-            {
-                droppedColumnsQuery = "drop " + column.Name + " ";
-                string query = string.Format("alter table " + table + " " + droppedColumnsQuery);
+                    droppedColumnsQuery = "drop " + column.Name + " ";
+                    string query = string.Format ("alter table " + table + " " + droppedColumnsQuery);
 
-                MySqlCommand dbcommand = dbcon.CreateCommand();
-                dbcommand.CommandText = query;
-                try
-                {
-                    dbcommand.ExecuteNonQuery();
+                    MySqlCommand dbcommand = dbcon.CreateCommand ();
+                    dbcommand.CommandText = query;
+                    try
+                    {
+                        dbcommand.ExecuteNonQuery ();
+                    }
+                    catch
+                    {
+                    }
                 }
-                catch
-                {
-                }
+                CloseDatabase (dbcon);
             }
-            CloseDatabase(dbcon);
         }
 
         public override string GetColumnTypeStringSymbol(ColumnTypes type)
@@ -948,74 +1006,88 @@ namespace Aurora.DataManager.MySQL
         public override void DropTable(string tableName)
         {
             tableName = tableName.ToLower();
-            MySqlConnection dbcon = GetLockedConnection();
-            MySqlCommand dbcommand = dbcon.CreateCommand();
-            dbcommand.CommandText = string.Format("drop table {0}", tableName);
-            dbcommand.ExecuteNonQuery();
-            CloseDatabase(dbcon);
+            using (MySqlConnection dbcon = GetLockedConnection ())
+            {
+                using (MySqlCommand dbcommand = dbcon.CreateCommand ())
+                {
+                    dbcommand.CommandText = string.Format ("drop table {0}", tableName);
+                    dbcommand.ExecuteNonQuery ();
+                }
+                CloseDatabase (dbcon);
+            }
         }
 
         public override void ForceRenameTable(string oldTableName, string newTableName)
         {
             newTableName = newTableName.ToLower();
-            MySqlConnection dbcon = GetLockedConnection();
-            MySqlCommand dbcommand = dbcon.CreateCommand();
-            dbcommand.CommandText = string.Format("RENAME TABLE {0} TO {1}", oldTableName, newTableName);
-            dbcommand.ExecuteNonQuery();
-            CloseDatabase(dbcon);
+            using (MySqlConnection dbcon = GetLockedConnection ())
+            {
+                using (MySqlCommand dbcommand = dbcon.CreateCommand ())
+                {
+                    dbcommand.CommandText = string.Format ("RENAME TABLE {0} TO {1}", oldTableName, newTableName);
+                    dbcommand.ExecuteNonQuery ();
+                }
+                CloseDatabase (dbcon);
+            }
         }
 
         protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
         {
             sourceTableName = sourceTableName.ToLower();
             destinationTableName = destinationTableName.ToLower();
-            MySqlConnection dbcon = GetLockedConnection();
-            MySqlCommand dbcommand = dbcon.CreateCommand();
-            dbcommand.CommandText = string.Format("insert into {0} select * from {1}", destinationTableName, sourceTableName);
-            dbcommand.ExecuteNonQuery();
-            CloseDatabase(dbcon);
+            using (MySqlConnection dbcon = GetLockedConnection ())
+            {
+                using (MySqlCommand dbcommand = dbcon.CreateCommand ())
+                {
+                    dbcommand.CommandText = string.Format ("insert into {0} select * from {1}", destinationTableName, sourceTableName);
+                    dbcommand.ExecuteNonQuery ();
+                }
+                CloseDatabase (dbcon);
+            }
         }
 
         public override bool TableExists(string table)
         {
             table = table.ToLower();
             var ret = false;
-            MySqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;
             List<string> RetVal = new List<string>();
-            using (result = Query("show tables", new Dictionary<string, object>(), dbcon))
+            using (MySqlConnection dbcon = GetLockedConnection ())
             {
-                using (reader = result.ExecuteReader())
+                using (result = Query ("show tables", new Dictionary<string, object> (), dbcon))
                 {
-                    try
+                    using (reader = result.ExecuteReader ())
                     {
-                        while (reader.Read())
+                        try
                         {
-                            for (int i = 0; i < reader.FieldCount; i++)
+                            while (reader.Read ())
                             {
-                                RetVal.Add(reader.GetString(i));
+                                for (int i = 0; i < reader.FieldCount; i++)
+                                {
+                                    RetVal.Add (reader.GetString (i));
+                                }
                             }
                         }
-                    }
-                    catch
-                    {
-                    }
-                    finally
-                    {
-                        if (reader != null)
+                        catch
                         {
-                            reader.Close();
-                            reader.Dispose();
                         }
-                        result.Dispose();
-                        CloseDatabase(dbcon);
+                        finally
+                        {
+                            if (reader != null)
+                            {
+                                reader.Close ();
+                                reader.Dispose ();
+                            }
+                            result.Dispose ();
+                            CloseDatabase (dbcon);
+                        }
                     }
                 }
-            }
-            if (RetVal.Contains(table))
-            {
-                ret = true;
+                if (RetVal.Contains (table))
+                {
+                    ret = true;
+                }
             }
             return ret;
         }
@@ -1025,21 +1097,23 @@ namespace Aurora.DataManager.MySQL
             var defs = new List<ColumnDefinition>();
             tableName = tableName.ToLower();
 
-            MySqlConnection dbcon = GetLockedConnection();
-            MySqlCommand dbcommand = dbcon.CreateCommand();
-            dbcommand.CommandText = string.Format("desc {0}", tableName);
-            var rdr = dbcommand.ExecuteReader();
-            while (rdr.Read())
+            using (MySqlConnection dbcon = GetLockedConnection ())
             {
-                var name = rdr["Field"];
-                var pk = rdr["Key"];
-                var type = rdr["Type"];
-                defs.Add(new ColumnDefinition { Name = name.ToString(), IsPrimary = pk.ToString()=="PRI", Type = ConvertTypeToColumnType(type.ToString()) });
+                MySqlCommand dbcommand = dbcon.CreateCommand ();
+                dbcommand.CommandText = string.Format ("desc {0}", tableName);
+                var rdr = dbcommand.ExecuteReader ();
+                while (rdr.Read ())
+                {
+                    var name = rdr["Field"];
+                    var pk = rdr["Key"];
+                    var type = rdr["Type"];
+                    defs.Add (new ColumnDefinition { Name = name.ToString (), IsPrimary = pk.ToString () == "PRI", Type = ConvertTypeToColumnType (type.ToString ()) });
+                }
+                rdr.Close ();
+                rdr.Dispose ();
+                dbcommand.Dispose ();
+                CloseDatabase (dbcon);
             }
-            rdr.Close();
-            rdr.Dispose();
-            dbcommand.Dispose();
-            CloseDatabase(dbcon);
             return defs;
         }
 
