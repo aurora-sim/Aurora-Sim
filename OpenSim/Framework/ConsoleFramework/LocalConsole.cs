@@ -316,12 +316,14 @@ namespace OpenSim.Framework
                     {
                         if (line[currentPos] == '[')
                         {
-                            if (level == Level.Error)
-                                WriteColorText (ConsoleColor.Red, "[");
-                            else if (level == Level.Warn)
+                            if (level == Level.Alert)
+                                WriteColorText(ConsoleColor.Magenta, "[");
+                            else if (level.Value >= Level.Fatal.Value)
+                                WriteColorText(ConsoleColor.White, "[");
+                            else if (level.Value >= Level.Error.Value)
+                                WriteColorText(ConsoleColor.Red, "[");
+                            else if (level.Value >= Level.Warn.Value)
                                 WriteColorText (ConsoleColor.Yellow, "[");
-                            else if (level == Level.Alert)
-                                WriteColorText (ConsoleColor.Magenta, "[");
                             else
                                 WriteColorText (ConsoleColor.Gray, "[");
                             boxNum++;

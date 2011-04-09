@@ -467,11 +467,19 @@ namespace Aurora.Simulation.Base
             if (consoleLevel != null)
                 m_consoleAppender.Threshold = consoleLevel;
             else
-                m_log.Fatal ((
+            {
+                string forms = "";
+                for(int i = 0; i < repository.LevelMap.AllLevels.Count; i++)
+                {
+                    forms += repository.LevelMap.AllLevels[i].Name;
+                    if(i + 1 != repository.LevelMap.AllLevels.Count)
+                        forms += ", ";
+                }
+                m_log.Fatal (
                     String.Format(
-                        "{0} is not a valid logging level.  Valid logging levels are ALL, DEBUG, INFO, WARN, ERROR, FATAL, OFF",
-                        rawLevel)));
-
+                        "{0} is not a valid logging level.  Valid logging levels are " + forms,
+                        rawLevel));
+            }
             m_log.Fatal (String.Format ("Console log level is {0}", m_consoleAppender.Threshold));
         }
 
