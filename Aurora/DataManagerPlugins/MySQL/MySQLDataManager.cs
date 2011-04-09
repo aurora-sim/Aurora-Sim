@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using C5;
@@ -12,6 +13,7 @@ using Aurora.Framework;
 using OpenSim.Framework;
 using OpenMetaverse;
 using Aurora.DataManager.Migration;
+using log4net;
 
 namespace Aurora.DataManager.MySQL
 {
@@ -21,6 +23,9 @@ namespace Aurora.DataManager.MySQL
         private MySqlConnection m_connection = null;
         private volatile bool m_locked = false;
         private volatile bool m_needsStateChange = false;
+        private static readonly ILog m_log =
+                LogManager.GetLogger (
+                MethodBase.GetCurrentMethod ().DeclaringType);
 
         public override string Identifier
         {
@@ -29,11 +34,16 @@ namespace Aurora.DataManager.MySQL
 
         public MySqlConnection GetLockedConnection()
         {
+            while (m_locked)
+            {
+                Thread.Sleep (0);
+            }
             m_locked = true;
             if (m_connection == null)
             {
                 m_connection = new MySqlConnection(connectionString);
                 m_connection.StateChange += new StateChangeEventHandler(m_connection_StateChange);
+                m_connection.InfoMessage += new MySqlInfoMessageEventHandler (m_connection_InfoMessage);
                 m_connection.Open();
             }
             else if (m_needsStateChange)
@@ -47,6 +57,17 @@ namespace Aurora.DataManager.MySQL
                 m_connection.Ping();
             }
             return m_connection;
+        }
+
+        void m_connection_InfoMessage(object sender, MySqlInfoMessageEventArgs args)
+        {
+            if (args.errors != null)
+            {
+                foreach(MySqlError error in args.errors)
+                {
+                    m_log.DebugFormat ("[MySQLError]: Level: {0}, Message: {1}, Code: {2}", error.Level, error.Message, error.Code);
+                }
+            }
         }
 
         void m_connection_StateChange(object sender, StateChangeEventArgs e)
