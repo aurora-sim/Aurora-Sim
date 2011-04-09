@@ -404,19 +404,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             string go = MainConsole.Instance.CmdPrompt ("Are you sure you want to restart all scripts? (This also wipes the script state saves database, which could cause loss of information in your scripts)", "no");
             if (go.Equals ("yes", StringComparison.CurrentCultureIgnoreCase))
             {
-                //Delete all assemblies
-                Compiler.RecreateDirectory ();
                 ScriptData[] scripts = ScriptProtection.GetAllScripts ();
                 ScriptProtection.Reset (true);
                 foreach (ScriptData ID in scripts)
                 {
+                    ID.CloseAndDispose (false);
+                    //Remove the state save
+                    StateSave.DeleteFrom (ID);
+                    //Reset this every time so that we don't reuse any compiled scripts
+                    ScriptProtection.Reset (false);
+                }
+                ScriptProtection.Reset (true);
+                //Delete all assemblies
+                Compiler.RecreateDirectory ();
+                foreach (ScriptData ID in scripts)
+                {
                     try
                     {
-                        //Remove the state save
-                        StateSave.DeleteFrom (ID);
                         ID.Start (false);
-                        //Reset this every time so that we don't reuse any compiled scripts
-                        ScriptProtection.Reset (false);
                     }
                     catch (Exception) { }
                 }

@@ -433,22 +433,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             e.ToString());
                     return;
                 }
+            }
 
-                // DEBUG - write source to disk
-                if (WriteScriptSourceToDebugFile)
+            // DEBUG - write source to disk
+            string srcFileName = Path.Combine (m_scriptEngine.ScriptEnginesPath,
+                        Path.GetFileNameWithoutExtension (assembly) + ext);
+            if (WriteScriptSourceToDebugFile)
+            {
+                try
                 {
-                    string srcFileName = Path.GetFileNameWithoutExtension(assembly) + ext;
-                    try
-                    {
-                        File.WriteAllText(Path.Combine(m_scriptEngine.ScriptEnginesPath,
-                            srcFileName), Script);
-                    }
-                    catch (Exception ex) //NOTLEGIT - Should be just FileIOException
-                    {
-                        m_log.Error("[Compiler]: Exception while " +
-                                    "trying to write script source to file \"" +
-                                    srcFileName + "\": " + ex.ToString());
-                    }
+                    File.WriteAllText (srcFileName, Script);
+                }
+                catch (Exception ex) //NOTLEGIT - Should be just FileIOException
+                {
+                    m_log.Error ("[Compiler]: Exception while " +
+                                "trying to write script source to file \"" +
+                                srcFileName + "\": " + ex.ToString ());
                 }
             }
 
@@ -481,7 +481,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             //parameters.WarningLevel = 1; // Should be 4?
             parameters.TreatWarningsAsErrors = false;
 
-            CompilerResults results = converter.Compile(parameters, Script);
+            CompilerResults results = converter.Compile (parameters, WriteScriptSourceToDebugFile, WriteScriptSourceToDebugFile ? srcFileName : Script);
             parameters = null;
             //
             // WARNINGS AND ERRORS
@@ -489,12 +489,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             if (results.Errors.Count > 0)
             {
-                string srcFileName = FilePrefix + "_source_" +
-                        Path.GetFileNameWithoutExtension(assembly) + ext;
                 try
                 {
-                    File.WriteAllText(Path.Combine(m_scriptEngine.ScriptEnginesPath,
-                        srcFileName), Script);
+                    File.WriteAllText(srcFileName, Script);
                 }
                 catch (Exception ex) //NOTLEGIT - Should be just FileIOException
                 {

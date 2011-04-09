@@ -53,7 +53,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             return script;
         }
 
-        public CompilerResults Compile(CompilerParameters parameters, string Script)
+        public CompilerResults Compile(CompilerParameters parameters, bool isFile, string Script)
         {
             List<string> libraries = new List<string> ();
             string[] lines = Script.Split (new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
@@ -85,8 +85,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 lock (CScodeProvider)
                 {
-                    results = CScodeProvider.CompileAssemblyFromSource(
-                        parameters, Script);
+                    if (isFile)
+                        results = CScodeProvider.CompileAssemblyFromFile (
+                            parameters, Script);
+                    else
+                        results = CScodeProvider.CompileAssemblyFromSource (
+                            parameters, Script);
                 }
                 // Deal with an occasional segv in the compiler.
                 // Rarely, if ever, occurs twice in succession.

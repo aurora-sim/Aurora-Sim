@@ -165,14 +165,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         /// This closes the scrpit, removes it from any known spots, and disposes of itself.
         /// </summary>
-        /// <param name="Silent">Should we back up this script and fire state_exit?</param>
-        public void CloseAndDispose(bool Silent)
+        /// <param name="shouldbackup">Should we back up this script and fire state_exit?</param>
+        public void CloseAndDispose(bool shouldbackup)
         {
 
 // this is still broken ?
             m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this,true);
 
-            if (!Silent)
+            if (shouldbackup)
             {
                 if (Script != null)
                 {
@@ -204,7 +204,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             // Tell script not to accept new requests
             //These are fine to set as the state wont be saved again
-            if (!Silent)
+            if (shouldbackup)
             {
                 Running = false;
                 Disabled = true;

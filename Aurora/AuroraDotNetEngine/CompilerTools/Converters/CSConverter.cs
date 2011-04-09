@@ -87,8 +87,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 lock (CScodeProvider)
                 {
-                    results = CScodeProvider.CompileAssemblyFromSource(
-                        parameters, Script);
+                    if (isFile)
+                        results = CScodeProvider.CompileAssemblyFromFile (
+                            parameters, Script);
+                    else
+                        results = CScodeProvider.CompileAssemblyFromSource (
+                            parameters, Script);
                 }
                 // Deal with an occasional segv in the compiler.
                 // Rarely, if ever, occurs twice in succession.
@@ -244,7 +248,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
         }
 
-        public CompilerResults Compile(CompilerParameters parameters, string Script)
+        public CompilerResults Compile(CompilerParameters parameters, bool isFile, string Script)
         {
             string rootPath =
                             Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
@@ -264,8 +268,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 lock (CScodeProvider)
                 {
-                    results = CScodeProvider.CompileAssemblyFromSource(
-                        parameters, Script);
+                    if (isFile)
+                        results = CScodeProvider.CompileAssemblyFromFile (
+                            parameters, Script);
+                    else
+                        results = CScodeProvider.CompileAssemblyFromSource(
+                            parameters, Script);
                 }
                 // Deal with an occasional segv in the compiler.
                 // Rarely, if ever, occurs twice in succession.

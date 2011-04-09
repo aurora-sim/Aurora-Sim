@@ -50,7 +50,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             return compileScript;
         }
 
-        public CompilerResults Compile(CompilerParameters parameters, string Script)
+        public CompilerResults Compile(CompilerParameters parameters, bool isFile, string Script)
         {
             bool complete = false;
             bool retried = false;
@@ -59,8 +59,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 lock (VBcodeProvider)
                 {
-                    results = VBcodeProvider.CompileAssemblyFromSource(
-                        parameters, Script);
+                    if (isFile)
+                        results = VBcodeProvider.CompileAssemblyFromFile (
+                            parameters, Script);
+                    else
+                        results = VBcodeProvider.CompileAssemblyFromSource(
+                            parameters, Script);
                 }
                 // Deal with an occasional segv in the compiler.
                 // Rarely, if ever, occurs twice in succession.

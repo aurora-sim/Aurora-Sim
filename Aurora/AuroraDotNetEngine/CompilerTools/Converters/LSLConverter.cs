@@ -59,8 +59,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 lock (CScodeProvider)
                 {
-                    results = CScodeProvider.CompileAssemblyFromSource(
-                        parameters, Script);
+                    if (isFile)
+                        results = CScodeProvider.CompileAssemblyFromFile (
+                            parameters, Script);
+                    else
+                        results = CScodeProvider.CompileAssemblyFromSource (
+                            parameters, Script);
                 }
                 // Deal with an occasional segv in the compiler.
                 // Rarely, if ever, occurs twice in succession.

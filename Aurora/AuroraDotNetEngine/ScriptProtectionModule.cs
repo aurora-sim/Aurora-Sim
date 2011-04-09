@@ -324,12 +324,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             lock (Scripts)
             {
                 Dictionary<UUID, ScriptData> Instances = new Dictionary<UUID, ScriptData>();
-                if (Scripts.ContainsKey(Data.Part.UUID))
+                if (Scripts.TryGetValue (Data.Part.UUID, out Instances))
                 {
-                    Instances = Scripts[Data.Part.UUID];
-                    Instances.Remove(Data.ItemID);
+                    Instances.Remove (Data.ItemID);
+                    if (Instances.Count > 0)
+                        Scripts[Data.Part.UUID] = Instances;
+                    else
+                        Scripts.Remove (Data.Part.UUID);
                 }
-                Scripts[Data.Part.UUID] = Instances;
             }
         }
         
