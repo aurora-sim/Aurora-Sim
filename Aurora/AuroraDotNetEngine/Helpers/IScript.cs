@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Runtime.Remoting.Lifetime;
+using OpenSim.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
@@ -32,5 +33,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         
         void Close();
         string Name { get; }
+
+        void SetSceneRefs(IScene iScene, ISceneChildEntity iSceneChildEntity);
     }
 }

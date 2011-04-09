@@ -130,5 +130,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         }
 
         #endregion
+
+
+        public void SetSceneRefs(OpenSim.Framework.IScene iScene, OpenSim.Framework.ISceneChildEntity iSceneChildEntity)
+        {
+        }
     }
 }
