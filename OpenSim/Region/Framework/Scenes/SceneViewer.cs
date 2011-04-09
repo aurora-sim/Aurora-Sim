@@ -111,7 +111,8 @@ namespace OpenSim.Region.Framework.Scenes
 
                 //Draw Distance chagned, force a cull check
                 m_forceCullCheck = true;
-                SignificantClientMovement (m_presence.ControllingClient);
+                //Don't do this immediately
+                //SignificantClientMovement (m_presence.ControllingClient);
             }
             return null;
         }
