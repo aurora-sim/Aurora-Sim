@@ -53,8 +53,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             m_modules.Add(scene.RequestModuleInterface<IHttpRequestModule> ());
         }
 
-        public void Check()
+        public bool Check()
         {
+            bool didAnything = false;
             foreach (IHttpRequestModule iHttpReq in m_modules)
             {
                 IServiceRequest httpInfo = null;
@@ -63,7 +64,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     httpInfo = iHttpReq.GetNextCompletedRequest ();
 
                 if (httpInfo == null)
-                    return;
+                    continue;
 
                 while (httpInfo != null)
                 {
@@ -85,7 +86,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     m_ScriptEngine.AddToObjectQueue (info.PrimID, "http_response", new DetectParams[0], -1, resobj);
                     httpInfo = iHttpReq.GetNextCompletedRequest ();
                 }
+                didAnything = true;
             }
+            return didAnything;
         }
 
         public string Name

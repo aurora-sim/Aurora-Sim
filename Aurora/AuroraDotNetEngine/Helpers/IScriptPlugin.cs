@@ -14,7 +14,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     {
         void Initialize (ScriptEngine engine);
         void AddRegion (Scene scene);
-        void Check();
+        bool Check();
         OSD GetSerializationData (UUID itemID, UUID primID);
         void CreateFromData (UUID itemID, UUID objectID, OSD data);
         void RemoveScript(UUID primID, UUID itemID);

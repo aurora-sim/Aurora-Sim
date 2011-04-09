@@ -48,15 +48,24 @@ namespace Aurora.DataManager.MySQL
             }
             else if (m_needsStateChange)
             {
-                //We need to reopen the connection, it timed out
-                if(m_connection.State != ConnectionState.Open)
-                    m_connection.Open();
+                CheckConnection ();
             }
             else
             {
                 m_connection.Ping();
             }
             return m_connection;
+        }
+
+        private void CheckConnection()
+        {
+            if (m_needsStateChange)
+            {
+                //We need to reopen the connection, it timed out
+                if (m_connection.State != ConnectionState.Open)
+                    m_connection.Open ();
+                m_needsStateChange = false;
+            }
         }
 
         void m_connection_InfoMessage(object sender, MySqlInfoMessageEventArgs args)
@@ -116,12 +125,14 @@ namespace Aurora.DataManager.MySQL
         public override void ConnectToDatabase(string connectionstring, string migratorName, bool validateTables)
         {
             connectionString = connectionstring;
-            MySqlConnection dbcon = GetLockedConnection();
-            CloseDatabase(dbcon);
+            using (MySqlConnection dbcon = GetLockedConnection ())
+            {
+                CloseDatabase (dbcon);
 
-            var migrationManager = new MigrationManager(this, migratorName, validateTables);
-            migrationManager.DetermineOperation();
-            migrationManager.ExecuteOperation();
+                var migrationManager = new MigrationManager (this, migratorName, validateTables);
+                migrationManager.DetermineOperation ();
+                migrationManager.ExecuteOperation ();
+            }
         }
 
         public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue)
@@ -146,6 +157,7 @@ namespace Aurora.DataManager.MySQL
                 {
                     using (result = Query (query, new Dictionary<string, object> (), dbcon))
                     {
+                        CheckConnection ();
                         using (reader = result.ExecuteReader ())
                         {
                             while (reader.Read ())
@@ -218,6 +230,7 @@ namespace Aurora.DataManager.MySQL
             {
                 using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
+                    CheckConnection ();
                     using (reader = result.ExecuteReader ())
                     {
                         try
@@ -258,6 +271,7 @@ namespace Aurora.DataManager.MySQL
             {
                 using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
+                    CheckConnection ();
                     using (reader = result.ExecuteReader ())
                     {
                         try
@@ -338,6 +352,7 @@ namespace Aurora.DataManager.MySQL
             {
                 using (result = Query (query + order, new Dictionary<string, object> (), dbcon))
                 {
+                    CheckConnection ();
                     using (reader = result.ExecuteReader ())
                     {
                         try
@@ -394,6 +409,7 @@ namespace Aurora.DataManager.MySQL
             {
                 using (result = Query(query, new Dictionary<string, object>(), dbcon))
                 {
+                    CheckConnection ();
                     using (reader = result.ExecuteReader())
                     {
                         try
@@ -449,6 +465,7 @@ namespace Aurora.DataManager.MySQL
             {
                 using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
+                    CheckConnection ();
                     using (reader = result.ExecuteReader ())
                     {
                         try
@@ -524,6 +541,7 @@ namespace Aurora.DataManager.MySQL
                 {
                     using (result = Query (query, parameters, dbcon))
                     {
+                        CheckConnection ();
                         using (reader = result.ExecuteReader ())
                         {
                             if (reader != null)
@@ -562,6 +580,7 @@ namespace Aurora.DataManager.MySQL
                 {
                     try
                     {
+                        CheckConnection ();
                         using (reader = result.ExecuteReader ())
                         {
                             if (reader != null)
@@ -607,6 +626,7 @@ namespace Aurora.DataManager.MySQL
             {
                 using (result = Query (query, param, dbcon))
                 {
+                    CheckConnection ();
                     try
                     {
                         using (result.ExecuteReader ())
@@ -658,6 +678,7 @@ namespace Aurora.DataManager.MySQL
                 {
                     try
                     {
+                        CheckConnection ();
                         using (result.ExecuteReader ())
                         {
                             result.Dispose ();
@@ -736,6 +757,7 @@ namespace Aurora.DataManager.MySQL
             {
                 using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
+                    CheckConnection ();
                     using (result.ExecuteReader ())
                     {
                         result.Dispose ();
@@ -762,6 +784,7 @@ namespace Aurora.DataManager.MySQL
             {
                 using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
+                    CheckConnection ();
                     using (result.ExecuteReader ())
                     {
                         result.Dispose ();
@@ -802,6 +825,7 @@ namespace Aurora.DataManager.MySQL
             {
                 using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
+                    CheckConnection ();
                     using (result.ExecuteReader ())
                     {
                         result.Dispose ();
@@ -820,6 +844,7 @@ namespace Aurora.DataManager.MySQL
             {
                 using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
+                    CheckConnection ();
                     using (result.ExecuteReader ())
                     {
                         result.Dispose ();
@@ -872,6 +897,7 @@ namespace Aurora.DataManager.MySQL
             {
                 using (MySqlCommand dbcommand = dbcon.CreateCommand ())
                 {
+                    CheckConnection ();
                     dbcommand.CommandText = query;
                     dbcommand.ExecuteNonQuery ();
                 }
@@ -927,6 +953,7 @@ namespace Aurora.DataManager.MySQL
                     dbcommand.CommandText = query;
                     try
                     {
+                        CheckConnection ();
                         dbcommand.ExecuteNonQuery ();
                     }
                     catch
@@ -942,6 +969,7 @@ namespace Aurora.DataManager.MySQL
                     dbcommand.CommandText = query;
                     try
                     {
+                        CheckConnection ();
                         dbcommand.ExecuteNonQuery ();
                     }
                     catch
@@ -957,6 +985,7 @@ namespace Aurora.DataManager.MySQL
                     dbcommand.CommandText = query;
                     try
                     {
+                        CheckConnection ();
                         dbcommand.ExecuteNonQuery ();
                     }
                     catch
@@ -1031,6 +1060,7 @@ namespace Aurora.DataManager.MySQL
             {
                 using (MySqlCommand dbcommand = dbcon.CreateCommand ())
                 {
+                    CheckConnection ();
                     dbcommand.CommandText = string.Format ("drop table {0}", tableName);
                     dbcommand.ExecuteNonQuery ();
                 }
@@ -1045,6 +1075,7 @@ namespace Aurora.DataManager.MySQL
             {
                 using (MySqlCommand dbcommand = dbcon.CreateCommand ())
                 {
+                    CheckConnection ();
                     dbcommand.CommandText = string.Format ("RENAME TABLE {0} TO {1}", oldTableName, newTableName);
                     dbcommand.ExecuteNonQuery ();
                 }
@@ -1060,6 +1091,7 @@ namespace Aurora.DataManager.MySQL
             {
                 using (MySqlCommand dbcommand = dbcon.CreateCommand ())
                 {
+                    CheckConnection ();
                     dbcommand.CommandText = string.Format ("insert into {0} select * from {1}", destinationTableName, sourceTableName);
                     dbcommand.ExecuteNonQuery ();
                 }
@@ -1078,6 +1110,7 @@ namespace Aurora.DataManager.MySQL
             {
                 using (result = Query ("show tables", new Dictionary<string, object> (), dbcon))
                 {
+                    CheckConnection ();
                     using (reader = result.ExecuteReader ())
                     {
                         try
@@ -1122,6 +1155,7 @@ namespace Aurora.DataManager.MySQL
             {
                 MySqlCommand dbcommand = dbcon.CreateCommand ();
                 dbcommand.CommandText = string.Format ("desc {0}", tableName);
+                CheckConnection ();
                 var rdr = dbcommand.ExecuteReader ();
                 while (rdr.Read ())
                 {

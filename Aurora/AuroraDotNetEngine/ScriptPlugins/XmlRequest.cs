@@ -51,17 +51,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             m_modules.Add (scene.RequestModuleInterface<IXMLRPC> ());
         }
 
-        public void Check()
+        public bool Check()
         {
+            bool didAnything = false;
             foreach (IXMLRPC xmlrpc in m_modules)
             {
                 if (xmlrpc == null)
-                    return;
+                    continue;
                 RPCRequestInfo rInfo = (RPCRequestInfo)xmlrpc.GetNextCompletedRequest ();
                 SendRemoteDataRequest srdInfo = (SendRemoteDataRequest)xmlrpc.GetNextCompletedSRDRequest ();
 
                 if (rInfo == null && srdInfo == null)
-                    return;
+                    continue;
 
                 while (rInfo != null)
                 {
@@ -110,7 +111,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
                     srdInfo = (SendRemoteDataRequest)xmlrpc.GetNextCompletedSRDRequest ();
                 }
+                didAnything = true;
             }
+            return didAnything;
         }
 
         public string Name

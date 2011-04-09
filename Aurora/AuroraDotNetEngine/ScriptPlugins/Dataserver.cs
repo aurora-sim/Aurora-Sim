@@ -89,6 +89,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 DataserverRequests[identifier] = ds;
             }
 
+            //Make sure that the cmd handler thread is running
+            m_ScriptEngine.MaintenanceThread.PokeThreads ();
+
             return ds.ID;
         }
 
@@ -129,12 +132,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
         }
 
-        public void Check()
+        public bool Check()
         {
             lock (DataserverRequests)
             {
                 if (DataserverRequests.Count == 0)
-                    return;
+                    return false;
                 List<DataserverRequest> ToRemove = new List<DataserverRequest>();
                 foreach (DataserverRequest ds in DataserverRequests.Values)
                 {
@@ -151,6 +154,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 {
                     DataserverRequests.Remove(re.handle);
                 }
+                return true;
             }
         }
 
@@ -166,6 +170,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     request.Reply = reply;
                 }
             }
+
+            //Make sure that the cmd handler thread is running
+            m_ScriptEngine.MaintenanceThread.PokeThreads ();
         }
 
         public string Name

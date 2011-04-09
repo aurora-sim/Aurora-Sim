@@ -1211,15 +1211,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void DoOneScriptPluginPass()
+        public bool DoOneScriptPluginPass()
         {
+            bool didAnything = false;
             lock (ScriptPlugins)
             {
                 foreach (IScriptPlugin plugin in ScriptPlugins)
                 {
-                    plugin.Check();
+                    if (didAnything)
+                        plugin.Check ();
+                    else
+                        didAnything = plugin.Check ();
                 }
             }
+            return didAnything;
         }
 
         /// <summary>
@@ -1271,6 +1276,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     plugin.CreateFromData (itemID, hostID, kvp.Value);
                 }
             }
+        }
+
+        /// <summary>
+        /// Make sure that the threads are running
+        /// </summary>
+        public void PokeThreads()
+        {
+            MaintenanceThread.PokeThreads ();
         }
 
         #endregion

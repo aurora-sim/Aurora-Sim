@@ -156,5 +156,10 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="RegionID"></param>
         /// <returns></returns>
         Dictionary<uint, float> GetTopScripts(UUID RegionID);
+
+        /// <summary>
+        /// This makes sure that the cmd handler (for long running events like timers/listeners) is running
+        /// </summary>
+        void PokeThreads();
     }
 }

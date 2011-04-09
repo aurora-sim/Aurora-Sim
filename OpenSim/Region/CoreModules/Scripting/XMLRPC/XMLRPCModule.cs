@@ -228,6 +228,9 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
                 }
             }
 
+            //Make sure that the cmd handler thread is running
+            m_scenes[0].RequestModuleInterface<IScriptModule>().PokeThreads ();
+
             return newChannel;
         }
 
@@ -254,6 +257,9 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
                         m_openChannels.Remove((UUID) tmpEnumerator.Current);
                 }
             }
+
+            //Make sure that the cmd handler thread is running
+            m_scenes[0].RequestModuleInterface<IScriptModule> ().PokeThreads ();
         }
 
         /**********************************************
@@ -292,6 +298,9 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
             {
                 m_log.Warn("[XML RPC MODULE]: Channel or message_id not found");
             }
+
+            //Make sure that the cmd handler thread is running
+            m_scenes[0].RequestModuleInterface<IScriptModule> ().PokeThreads ();
         }
 
         /**********************************************
@@ -359,7 +368,10 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
                 primID, itemID, channel, dest, idata, sdata
                 );
             m_pendingSRDResponses.Add(req.GetReqID(), req);
-            req.Process();
+            req.Process ();
+
+            //Make sure that the cmd handler thread is running
+            m_scenes[0].RequestModuleInterface<IScriptModule> ().PokeThreads ();
             return req.ReqID;
         }
 
@@ -467,6 +479,9 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
                     response.SetFault(-1, "Invalid channel");
                 }
             }
+
+            //Make sure that the cmd handler thread is running
+            m_scenes[0].RequestModuleInterface<IScriptModule> ().PokeThreads ();
 
             return response;
         }

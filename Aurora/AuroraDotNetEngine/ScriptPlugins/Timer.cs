@@ -94,6 +94,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 // Adds if timer doesn't exist, otherwise replaces with new timer
                 Timers[key] = ts;
             }
+
+            //Make sure that the cmd handler thread is running
+            m_ScriptEngine.MaintenanceThread.PokeThreads ();
         }
 
         public void RemoveScript(UUID m_ID, UUID m_itemID)
@@ -106,11 +109,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
         }
 
-        public void Check()
+        public bool Check()
         {
             // Nothing to do here?
             if (Timers.Count == 0)
-                return;
+                return false;
 
             lock (TimerListLock)
             {
@@ -131,6 +134,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     }
                 }
             }
+            return true;
         }
 
         public OSD GetSerializationData (UUID itemID, UUID primID)
@@ -164,6 +168,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             {
                 Timers[MakeTimerKey (objectID, itemID)] = ts;
             }
+
+            //Make sure that the cmd handler thread is running
+            m_ScriptEngine.MaintenanceThread.PokeThreads ();
         }
 
         public string Name

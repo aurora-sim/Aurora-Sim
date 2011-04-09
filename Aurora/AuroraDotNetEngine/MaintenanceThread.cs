@@ -51,6 +51,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public AuroraThreadPool Scriptthreadpool = null;
         public bool ScriptChangeIsRunning = false;
         public bool EventProcessorIsRunning = false;
+        public bool CmdHandlerQueueIsRunning = false;
         public bool RunInMainProcessingThread = false;
         public bool m_Started = false;
 
@@ -214,7 +215,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool CmdHandlerQueue()
         {
             if (m_ScriptEngine.Worlds.Count == 0)
+            {
+                CmdHandlerQueueIsRunning = false;
                 return false;
+            }
+            CmdHandlerQueueIsRunning = true;
             IMonitorModule module = m_ScriptEngine.Worlds[0].RequestModuleInterface<IMonitorModule>();
             int StartTime = Util.EnvironmentTickCount();
 
@@ -225,9 +230,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return true;
 
             //Check timers, etc
+            bool didAnything = false;
             try
             {
-                m_ScriptEngine.DoOneScriptPluginPass();
+                didAnything = m_ScriptEngine.DoOneScriptPluginPass ();
             }
             catch (Exception ex)
             {
@@ -244,7 +250,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
             }
 
-            threadpool.QueueEvent(CmdHandlerQueue, 2);
+            if (didAnything)
+            {
+                CmdHandlerQueueIsRunning = true;
+                threadpool.QueueEvent (CmdHandlerQueue, 2);
+            }
+            else
+                CmdHandlerQueueIsRunning = false;
             return false;
         }
         #endregion
@@ -322,6 +334,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 threadpool.QueueEvent(ScriptChangeQueue, 2);
             }
+            else if (thread == "CmdHandlerQueue")
+            {
+                threadpool.QueueEvent (CmdHandlerQueue, 2);
+            }
         }
 
         #endregion
@@ -331,8 +347,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         public void PokeThreads()
         {
-            if (LUQueue.Count() != 0 && !ScriptChangeIsRunning)
-                StartThread("Change");
+            if (LUQueue.Count () != 0 && !ScriptChangeIsRunning)
+                StartThread ("Change");
+            if (!CmdHandlerQueueIsRunning)
+                StartThread ("CmdHandlerQueue");
             // if (!EventProcessorIsRunning) //Can't check the count on this one, so poke it anyway
             // StartThread("Event");
         }

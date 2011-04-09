@@ -113,6 +113,8 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
 
         public UUID MakeHttpRequest(string url, string parameters, string body)
         {
+            //Make sure that the cmd handler thread is running
+            m_scene.RequestModuleInterface<IScriptModule> ().PokeThreads ();
             return UUID.Zero;
         }
 
@@ -197,13 +199,17 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             }
 
             if(ShouldProcess)
-                htc.Process();
+                htc.Process ();
+            //Make sure that the cmd handler thread is running
+            m_scene.RequestModuleInterface<IScriptModule> ().PokeThreads ();
 
             return reqID;
         }
 
         public void StopHttpRequest(UUID primID, UUID m_itemID)
         {
+            //Make sure that the cmd handler thread is running
+            m_scene.RequestModuleInterface<IScriptModule> ().PokeThreads ();
             //Kill all requests and return
             if (m_pendingRequests != null)
             {

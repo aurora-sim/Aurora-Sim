@@ -140,6 +140,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             {
                 SenseRepeaters.Add(ts);
             }
+
+            //Make sure that the cmd handler thread is running
+            m_ScriptEngine.MaintenanceThread.PokeThreads ();
         }
 
         public void RemoveScript(UUID objectID, UUID m_itemID)
@@ -160,11 +163,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
         }
 
-        public void Check()
+        public bool Check()
         {
             // Nothing to do here?
             if (SenseRepeaters.Count == 0)
-                return;
+                return false;
 
             lock (SenseRepeatListLock)
             {
@@ -181,6 +184,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     }
                 }
             } // lock
+            return true;
         }
 
         public void SenseOnce(UUID objectID, UUID m_itemID,
@@ -201,7 +205,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 ts.range = range;
             ts.arc = arc;
             ts.host = host;
-            SensorSweep(ts);
+            SensorSweep (ts);
+
+            //Make sure that the cmd handler thread is running
+            m_ScriptEngine.MaintenanceThread.PokeThreads ();
         }
 
         private void SensorSweep(SenseRepeatClass ts)
@@ -571,6 +578,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
                 SenseRepeaters.Add(ts);
             }
+
+            //Make sure that the cmd handler thread is running
+            m_ScriptEngine.MaintenanceThread.PokeThreads ();
         }
 
         public Scene findPrimsScene(UUID objectID)

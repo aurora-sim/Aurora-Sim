@@ -56,8 +56,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             m_modules.Add (scene.RequestModuleInterface<IWorldComm> ());
         }
 
-        public void Check()
+        public bool Check()
         {
+            bool didAnything = false;
             foreach (IWorldComm comms in m_modules)
             {
                 if (comms.HasMessages ())
@@ -80,8 +81,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                                     "listen", resobj,
                                     new DetectParams[0]), EventPriority.Suspended);
                     }
+                    didAnything = true;
                 }
             }
+            return didAnything;
         }
 
         public OSD GetSerializationData (UUID itemID, UUID primID)
@@ -102,6 +105,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             {
                 comms.CreateFromData (itemID, hostID, data);
             }
+
+            //Make sure that the cmd handler thread is running
+            m_ScriptEngine.MaintenanceThread.PokeThreads ();
         }
 
         public string Name
