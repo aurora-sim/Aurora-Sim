@@ -243,6 +243,11 @@ namespace Aurora.Simulation.Base
                 // If there is no threshold set then the threshold is effectively everything.
                 if (null == m_consoleAppender.Threshold)
                     m_consoleAppender.Threshold = Level.All;
+                repository.Threshold = m_consoleAppender.Threshold;
+                foreach (ILogger log in repository.GetCurrentLoggers())
+                {
+                    log.Level = m_consoleAppender.Threshold;
+                }
                 m_log.Fatal (String.Format ("[Console]: Console log level is {0}", m_consoleAppender.Threshold));
             }
 
@@ -463,19 +468,25 @@ namespace Aurora.Simulation.Base
 
             ILoggerRepository repository = LogManager.GetRepository();
             Level consoleLevel = repository.LevelMap[rawLevel];
-
             if (consoleLevel != null)
+            {
                 m_consoleAppender.Threshold = consoleLevel;
+                repository.Threshold = consoleLevel;
+                foreach (ILogger log in repository.GetCurrentLoggers())
+                {
+                    log.Level = consoleLevel;
+                }
+            }
             else
             {
                 string forms = "";
-                for(int i = 0; i < repository.LevelMap.AllLevels.Count; i++)
+                for (int i = 0; i < repository.LevelMap.AllLevels.Count; i++)
                 {
                     forms += repository.LevelMap.AllLevels[i].Name;
-                    if(i + 1 != repository.LevelMap.AllLevels.Count)
+                    if (i + 1 != repository.LevelMap.AllLevels.Count)
                         forms += ", ";
                 }
-                m_log.Fatal (
+                m_log.Fatal(
                     String.Format(
                         "{0} is not a valid logging level.  Valid logging levels are " + forms,
                         rawLevel));
