@@ -50,7 +50,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         {
         }
 
-        public CompilerResults Compile(CompilerParameters parameters, string Script)
+        public CompilerResults Compile(CompilerParameters parameters, bool isFile, string Script)
         {
             bool complete = false;
             bool retried = false;
