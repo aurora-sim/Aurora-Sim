@@ -289,7 +289,6 @@ namespace Aurora.Simulation.Base
         /// <returns></returns>
         public IHttpServer GetHttpServer(uint port, bool UsesSSL, uint sslPort, string sslCN)
         {
-            m_log.DebugFormat("[Server]: Requested port {0}", port);
             if ((port == m_Port || port == 0) && HttpServer != null)
                 return HttpServer;
 

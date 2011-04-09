@@ -436,6 +436,7 @@ namespace OpenSim.Framework
             prompt = p;
             echo = e;
             int historyLine = history.Count;
+            bool allSelected = false;
 
             SetCursorLeft(0); // Needed for mono
             System.Console.Write(" "); // Needed for mono
@@ -474,42 +475,77 @@ namespace OpenSim.Framework
                     case ConsoleKey.Backspace:
                         if (cp == 0)
                             break;
-                        cmdline.Remove(cp-1, 1);
-                        cp--;
+                        string toReplace = " ";
+                        if (allSelected)
+                        {
+                            for (int i = 0; i < cmdline.Length; i++)
+                            {
+                                toReplace += " ";
+                            }
+                            cmdline.Remove (0, cmdline.Length);
+                            cp = 0;
+                            allSelected = false;
+                        }
+                        else
+                        {
+                            cmdline.Remove (cp - 1, 1);
+                            cp--;
+                        }
 
                         SetCursorLeft(0);
                         y = SetCursorTop(y);
 
                         if (echo) //This space makes the last line part disappear
-                            System.Console.Write("{0}{1}", prompt, cmdline + " ");
+                            System.Console.Write ("{0}{1}", prompt, cmdline + toReplace);
                         else
                             System.Console.Write("{0}", prompt);
 
                         break;
+                    case ConsoleKey.A:
+                        if ((key.Modifiers | ConsoleModifiers.Control) == ConsoleModifiers.Control)
+                            allSelected = true;
+                        break;
                     case ConsoleKey.Delete:
                         if (cp == cmdline.Length || cp < 0)
                             break;
-                        cmdline.Remove (cp, 1);
-                        cp--;
+                        string stringToReplace = " ";
+                        if (allSelected)
+                        {
+                            for (int i = 0; i < cmdline.Length; i++)
+                            {
+                                stringToReplace += " ";
+                            }
+                            cmdline.Remove (0, cmdline.Length);
+                            cp = 0;
+                            allSelected = false; //All done
+                        }
+                        else
+                        {
+                            cmdline.Remove (cp, 1);
+                            cp--;
+                        }
 
                         SetCursorLeft (0);
                         y = SetCursorTop (y);
 
                         if (echo) //This space makes the last line part disappear
-                            System.Console.Write ("{0}{1}", prompt, cmdline + " ");
+                            System.Console.Write ("{0}{1}", prompt, cmdline + stringToReplace);
                         else
                             System.Console.Write ("{0}", prompt);
 
                         break;
                     case ConsoleKey.End:
                         cp = cmdline.Length;
+                        allSelected = false;
                         break;
                     case ConsoleKey.Home:
                         cp = 0;
+                        allSelected = false;
                         break;
                     case ConsoleKey.UpArrow:
                         if (historyLine < 1)
                             break;
+                        allSelected = false;
                         historyLine--;
                         LockOutput();
                         cmdline.Remove(0, cmdline.Length);
@@ -520,6 +556,7 @@ namespace OpenSim.Framework
                     case ConsoleKey.DownArrow:
                         if (historyLine >= history.Count)
                             break;
+                        allSelected = false;
                         historyLine++;
                         LockOutput();
                         if (historyLine == history.Count)
@@ -537,15 +574,19 @@ namespace OpenSim.Framework
                     case ConsoleKey.LeftArrow:
                         if (cp > 0)
                             cp--;
+                        allSelected = false;
                         break;
                     case ConsoleKey.RightArrow:
                         if (cp < cmdline.Length)
                             cp++;
+                        allSelected = false;
                         break;
                     case ConsoleKey.Tab:
                         ContextHelp ();
+                        allSelected = false;
                         break;
                     case ConsoleKey.Enter:
+                        allSelected = false;
                         SetCursorLeft(0);
                         y = SetCursorTop(y);
 
@@ -590,6 +631,7 @@ namespace OpenSim.Framework
 
                         return cmdline.ToString();
                     default:
+                        allSelected = false;
                         break;
                     }
                 }
