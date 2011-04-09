@@ -301,7 +301,7 @@ namespace OpenSim.Services
             OSDMap resultMap = new OSDMap();
             resultMap["Result"] = result;
 
-            return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(resultMap));
+            return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(OSD.FromBoolean(true)));
         }
 
         private byte[] Deregister(Dictionary<string, object> request)

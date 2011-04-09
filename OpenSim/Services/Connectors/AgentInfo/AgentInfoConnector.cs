@@ -64,7 +64,7 @@ namespace OpenSim.Services.Connectors
                     OSDMap request = new OSDMap();
                     request["userID"] = userID;
                     request["Method"] = "GetUserInfo";
-                    OSDMap result = WebUtils.PostToService(url, request);
+                    OSDMap result = WebUtils.PostToService(url, request, true, false);
                     OSD r = OSDParser.DeserializeJson(result["_RawResult"]);
                     if (r is OSDMap)
                     {
@@ -97,7 +97,7 @@ namespace OpenSim.Services.Connectors
                 }
                 request["userIDs"] = requestArray;
                 request["Method"] = "GetUserInfos";
-                OSDMap result = WebUtils.PostToService(url, request);
+                OSDMap result = WebUtils.PostToService(url, request, true, false);
                 OSD r = OSDParser.DeserializeJson(result["_RawResult"]);
                 if (r is OSDMap)
                 {
@@ -128,7 +128,7 @@ namespace OpenSim.Services.Connectors
                 }
                 request["userIDs"] = requestArray;
                 request["Method"] = "GetAgentsLocations";
-                OSDMap result = WebUtils.PostToService(url, request);
+                OSDMap result = WebUtils.PostToService(url, request, true, false);
                 OSD r = OSDParser.DeserializeJson(result["_RawResult"]);
                 if (r is OSDMap)
                 {

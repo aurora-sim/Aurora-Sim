@@ -60,7 +60,7 @@ namespace OpenSim.Services.MessagingService
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(RegionHandle.ToString(), "MessagingServerURI");
             foreach (string host in serverURIs)
             {
-                retval = WebUtils.PostToService(host, message);
+                retval = WebUtils.PostToService (host, message, true, false);
             }
             return CreateWebResponse(retval);
         }

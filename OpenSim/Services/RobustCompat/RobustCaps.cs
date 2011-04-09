@@ -43,7 +43,7 @@ namespace OpenSim.Services.RobustCompat
         {
             if ((presence.CallbackURI != null) && !presence.CallbackURI.Equals(""))
             {
-                WebUtils.ServiceOSDRequest(presence.CallbackURI, null, "DELETE", 10000);
+                WebUtils.ServiceOSDRequest(presence.CallbackURI, null, "DELETE", 10000, false, false);
                 presence.CallbackURI = null;
             }
         }

@@ -88,7 +88,7 @@ namespace OpenSim.Services.MessagingService
             List<string> serverURIs = m_scenes[0].RequestModuleInterface<IConfigurationService>().FindValueOf(m_scenes[0].RegionInfo.RegionHandle.ToString(), "MessagingServerURI");
             foreach (string host in serverURIs)
             {
-                OSDMap retval = WebUtils.PostToService(host, message);
+                OSDMap retval = WebUtils.PostToService (host, message, true, false);
                 //Clean it up
                 retval = CreateWebResponse(retval);
                 OSD response = retval["Response"];

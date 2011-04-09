@@ -55,7 +55,7 @@ namespace Aurora.Services.DataService
                     OSDMap map = new OSDMap();
                     map["Method"] = "getprofile";
                     map["PrincipalID"] = PrincipalID;
-                    OSDMap response = WebUtils.PostToService (url + "osd", map);
+                    OSDMap response = WebUtils.PostToService (url + "osd", map, true, true);
                     if (response["_Result"].Type == OSDType.Map)
                     {
                         OSDMap responsemap = (OSDMap)response["_Result"];
@@ -83,7 +83,7 @@ namespace Aurora.Services.DataService
                     OSDMap map = new OSDMap ();
                     map["Method"] = "updateprofile";
                     map["Profile"] = Profile.ToOSD();
-                    WebUtils.PostToService (url + "osd", map);
+                    WebUtils.PostToService (url + "osd", map, false, false);
                 }
                 return true;
             }
@@ -109,7 +109,7 @@ namespace Aurora.Services.DataService
                     OSDMap map = new OSDMap ();
                     map["Method"] = "addclassified";
                     map["Classified"] = classified.ToOSD ();
-                    WebUtils.PostToService (url + "osd", map);
+                    WebUtils.PostToService (url + "osd", map, false, false);
                 }
             }
             catch (Exception e)
@@ -129,7 +129,7 @@ namespace Aurora.Services.DataService
                     OSDMap map = new OSDMap ();
                     map["Method"] = "getclassified";
                     map["ClassifiedUUID"] = queryClassifiedID;
-                    OSDMap response = WebUtils.PostToService (url + "osd", map);
+                    OSDMap response = WebUtils.PostToService (url + "osd", map, true, true);
                     if (response["_Result"].Type == OSDType.Map)
                     {
                         OSDMap responsemap = (OSDMap)response["_Result"];
@@ -156,7 +156,7 @@ namespace Aurora.Services.DataService
                     OSDMap map = new OSDMap ();
                     map["Method"] = "getclassifieds";
                     map["PrincipalID"] = ownerID;
-                    OSDMap response = WebUtils.PostToService (url + "osd", map);
+                    OSDMap response = WebUtils.PostToService (url + "osd", map, true, true);
                     if (response["_Result"].Type == OSDType.Map)
                     {
                         OSDMap responsemap = (OSDMap)response["_Result"];
@@ -193,7 +193,7 @@ namespace Aurora.Services.DataService
                     OSDMap map = new OSDMap ();
                     map["Method"] = "removeclassified";
                     map["ClassifiedUUID"] = queryClassifiedID;
-                    WebUtils.PostToService (url + "osd", map);
+                    WebUtils.PostToService (url + "osd", map, false, false);
                 }
             }
             catch (Exception e)
@@ -212,7 +212,7 @@ namespace Aurora.Services.DataService
                     OSDMap map = new OSDMap ();
                     map["Method"] = "addpick";
                     map["Pick"] = pick.ToOSD ();
-                    WebUtils.PostToService (url + "osd", map);
+                    WebUtils.PostToService (url + "osd", map, false, false);
                 }
             }
             catch (Exception e)
@@ -232,7 +232,7 @@ namespace Aurora.Services.DataService
                     OSDMap map = new OSDMap ();
                     map["Method"] = "getpick";
                     map["PickUUID"] = queryPickID;
-                    OSDMap response = WebUtils.PostToService (url + "osd", map);
+                    OSDMap response = WebUtils.PostToService (url + "osd", map, true, true);
                     if (response["_Result"].Type == OSDType.Map)
                     {
                         OSDMap responsemap = (OSDMap)response["_Result"];
@@ -259,7 +259,7 @@ namespace Aurora.Services.DataService
                     OSDMap map = new OSDMap ();
                     map["Method"] = "getpicks";
                     map["PrincipalID"] = ownerID;
-                    OSDMap response = WebUtils.PostToService (url + "osd", map);
+                    OSDMap response = WebUtils.PostToService (url + "osd", map, true, true);
                     if (response["_Result"].Type == OSDType.Map)
                     {
                         OSDMap responsemap = (OSDMap)response["_Result"];
@@ -296,7 +296,7 @@ namespace Aurora.Services.DataService
                     OSDMap map = new OSDMap ();
                     map["Method"] = "removepick";
                     map["PickUUID"] = queryPickID;
-                    WebUtils.PostToService (url + "osd", map);
+                    WebUtils.PostToService (url + "osd", map, false, false);
                 }
             }
             catch (Exception e)

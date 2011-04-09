@@ -461,7 +461,7 @@ namespace Aurora.Modules
         {
             OSDMap request = connection.ToOSD(false);
             request["Method"] = "Query";
-            OSDMap reply = WebUtils.PostToService(connection.RecieverURL, request);
+            OSDMap reply = WebUtils.PostToService (connection.RecieverURL, request, true, true);
             if (reply["Success"].AsBoolean())
             {
                 if (reply["_Result"].Type != OSDType.Map)
@@ -498,7 +498,7 @@ namespace Aurora.Modules
         {
             OSDMap request = connection.ToOSD(false);
             request["Method"] = "Delete";
-            OSDMap reply = WebUtils.PostToService (connection.Connection.RecieverURL, request);
+            OSDMap reply = WebUtils.PostToService (connection.Connection.RecieverURL, request, true, false);
             if (!reply["Success"].AsBoolean())
             {
                 m_log.Warn ("[IWC]: Failed to delete remote host @ " + connection.Connection.RecieverURL);

@@ -283,26 +283,26 @@ namespace Aurora.Simulation.Base
         /// PUT JSON-encoded data to a web service that returns LLSD or
         /// JSON data
         /// </summary>
-        public static OSDMap PutToService(string url, OSDMap data)
+        public static OSDMap PutToService(string url, OSDMap data, bool careAboutResponse, bool deserializeResponse)
         {
-            return ServiceOSDRequest(url, data, "PUT", m_defaultTimeout);
+            return ServiceOSDRequest (url, data, "PUT", m_defaultTimeout, careAboutResponse, deserializeResponse);
         }
 
         /// <summary>
         /// POST URL-encoded form data to a web service that returns LLSD or
         /// JSON data
         /// </summary>
-        public static OSDMap PostToService(string url, OSDMap data)
+        public static OSDMap PostToService(string url, OSDMap data, bool careAboutResponse, bool deserializeResponse)
         {
-            return ServiceOSDRequest(url, data, "POST", m_defaultTimeout);
+            return ServiceOSDRequest (url, data, "POST", m_defaultTimeout, careAboutResponse, deserializeResponse);
         }
 
-        public static OSDMap GetFromService(string url)
+        public static OSDMap GetFromService(string url, bool careAboutResponse, bool deserializeResponse)
         {
-            return ServiceOSDRequest(url, null, "GET", m_defaultTimeout);
+            return ServiceOSDRequest(url, null, "GET", m_defaultTimeout, careAboutResponse, deserializeResponse);
         }
 
-        public static OSDMap ServiceOSDRequest(string url, OSDMap data, string method, int timeout)
+        public static OSDMap ServiceOSDRequest(string url, OSDMap data, string method, int timeout, bool careAboutResponse, bool deserializeResponse)
         {
             int reqnum = m_requestNumber++;
             // m_log.DebugFormat("[WEB UTIL]: <{0}> start osd request for {1}, method {2}",reqnum,url,method);
@@ -354,10 +354,15 @@ namespace Aurora.Simulation.Base
                         // capture how much time was spent writing, this may seem silly
                         // but with the number concurrent requests, this often blocks
                         tickserialize = Util.EnvironmentTickCountSubtract (tickstart);
-                        string responseStr = null;
-                        responseStr = responseStream.GetStreamString ();
-                        // m_log.DebugFormat("[WEB UTIL]: <{0}> response is <{1}>",reqnum,responseStr);
-                        return CanonicalizeResults (responseStr);
+                        if (careAboutResponse)
+                        {
+                            string responseStr = null;
+                            responseStr = responseStream.GetStreamString ();
+                            // m_log.DebugFormat("[WEB UTIL]: <{0}> response is <{1}>",reqnum,responseStr);
+                            return CanonicalizeResults (responseStr, deserializeResponse);
+                        }
+                        else
+                            return new OSDMap ();
                     }
                 }
             }
@@ -376,7 +381,7 @@ namespace Aurora.Simulation.Base
             }
             finally
             {
-                // This just dumps a warning for any operation that takes more than 100 ms
+                // This just dumps a warning for any operation that takes more than 500 ms
                 int tickdiff = Util.EnvironmentTickCountSubtract (tickstart);
                 if (m_log.IsEnabled (log4net.Core.Level.Trace))
                 {
@@ -403,7 +408,7 @@ namespace Aurora.Simulation.Base
         ///     _RawResult == the raw string that came back
         ///     _Result == the OSD unpacked string
         /// </summary>
-        private static OSDMap CanonicalizeResults(string response)
+        private static OSDMap CanonicalizeResults(string response, bool deserializeResponse)
         {
             OSDMap result = new OSDMap();
 
@@ -423,19 +428,22 @@ namespace Aurora.Simulation.Base
                 return result;
             }
 
-            try
+            if (deserializeResponse)
             {
-                OSD responseOSD = OSDParser.Deserialize(response);
-                if (responseOSD.Type == OSDType.Map)
+                try
                 {
-                    result["_Result"] = (OSDMap)responseOSD;
-                    return result;
+                    OSD responseOSD = OSDParser.Deserialize (response);
+                    if (responseOSD.Type == OSDType.Map)
+                    {
+                        result["_Result"] = (OSDMap)responseOSD;
+                        return result;
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                // don't need to treat this as an error... we're just guessing anyway
-                m_log.DebugFormat("[WebUtils] couldn't decode <{0}>: {1}", response, e.Message);
+                catch (Exception e)
+                {
+                    // don't need to treat this as an error... we're just guessing anyway
+                    m_log.InfoFormat ("[WebUtils] couldn't decode <{0}>: {1}", response, e.Message);
+                }
             }
 
             return result;

@@ -93,7 +93,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 if(data != null)
                     args["agent_data"] = data.Pack();
 
-                OSDMap result = WebUtils.PostToService(uri, args);
+                OSDMap result = WebUtils.PostToService (uri, args, true, false);
                 OSDMap results = WebUtils.GetOSDMap(result["_RawResult"].AsString());
                 //Pull out the result and set it as the reason
                 if (results == null)
@@ -176,7 +176,7 @@ namespace OpenSim.Services.Connectors.Simulation
                     args["destination_name"] = OSD.FromString(destination.RegionName);
                     args["destination_uuid"] = OSD.FromString(destination.RegionID.ToString());
 
-                    OSDMap result = WebUtils.PutToService(uri, args);
+                    OSDMap result = WebUtils.PutToService(uri, args, true, true);
                     if (!result["Success"].AsBoolean())
                     {
                         //add it to the blacklist
@@ -215,11 +215,11 @@ namespace OpenSim.Services.Connectors.Simulation
 
                 try
                 {
-                    OSDMap result = WebUtils.GetFromService(uri);
+                    OSDMap result = WebUtils.GetFromService(uri, true, false);
                     if (result["Success"].AsBoolean())
                     {
                         agent = new AgentData();
-                        agent.Unpack(result);
+                        agent.Unpack((OSDMap)result["_Result"]);
                         return true;
                     }
                 }
@@ -247,7 +247,7 @@ namespace OpenSim.Services.Connectors.Simulation
 
                 try
                 {
-                    WebUtils.ServiceOSDRequest(uri, null, "DELETE", 10000);
+                    WebUtils.ServiceOSDRequest(uri, null, "DELETE", 10000, false, false);
                 }
                 catch (Exception e)
                 {
@@ -294,7 +294,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 args["destination_name"] = OSD.FromString(destination.RegionName);
                 args["destination_uuid"] = OSD.FromString(destination.RegionID.ToString());
 
-                OSDMap result = WebUtils.PostToService(uri, args);
+                OSDMap result = WebUtils.PostToService (uri, args, true, false);
                 if (bool.TryParse(result["_RawResult"], out successful))
                     return successful;
             }
@@ -326,7 +326,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 args["destination_name"] = OSD.FromString(destination.RegionName);
                 args["destination_uuid"] = OSD.FromString(destination.RegionID.ToString());
 
-                OSDMap result = WebUtils.PostToService(uri, args);
+                OSDMap result = WebUtils.PostToService (uri, args, true, false);
                 if(bool.TryParse(result["_RawResult"], out successful))
                     return successful;
             }
