@@ -519,7 +519,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                     {
                         m_log.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e.ToString());
                     }
-                    try
+                    /*try
                     {
                         //Clean up after ourselves
                         response.OutputStream.Close();
@@ -528,7 +528,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                     catch(Exception ex)
                     {
                         m_log.ErrorFormat("[BASE HTTP SERVER]: ISSUE WITH CLEANUP {0}", ex.ToString());
-                    }
+                    }*/
                     return;
                 }
 
