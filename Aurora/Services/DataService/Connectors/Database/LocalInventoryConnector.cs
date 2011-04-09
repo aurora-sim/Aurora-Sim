@@ -580,8 +580,8 @@ namespace Aurora.Services.DataService
                 {
                     return !((item.Flags & 1) == 1); //1 means that it is active, so remove all ones that do not have a 1
                 });
-                return items.ToArray ();
                 GD.CloseDatabase ();
+                return items.ToArray ();
             }
         }
 
