@@ -617,9 +617,11 @@ namespace OpenSim.Framework.Servers.HttpServer
             }
             finally
             {
+                int tickdiff = Environment.TickCount - tickstart;
+                if (m_log.IsEnabled(log4net.Core.Level.Trace))
+                    m_log.TraceFormat("[BASE HTTP SERVER]: request for {0},{2} took {1} ms", RawUrl, tickdiff, HTTPMethod);
                 // Every month or so this will wrap and give bad numbers, not really a problem
                 // since its just for reporting, 500ms limit can be adjusted
-                int tickdiff = Environment.TickCount - tickstart;
                 if (tickdiff > 500)
                     m_log.InfoFormat("[BASE HTTP SERVER]: slow request <{0}> for {1},{3} took {2} ms", reqnum, RawUrl, tickdiff, HTTPMethod);
             }
