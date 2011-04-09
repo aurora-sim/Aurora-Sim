@@ -107,6 +107,7 @@ namespace Aurora.Services.DataService
                 report.Notes = dr[15].ToString();
                 rv.Add(report);
             }
+            GD.CloseDatabase ();
             return rv;
         }
 

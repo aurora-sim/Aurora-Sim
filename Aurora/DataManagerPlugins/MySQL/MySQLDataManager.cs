@@ -205,18 +205,7 @@ namespace Aurora.DataManager.MySQL
                                       wantedValue, table, keyRow, keyValue.ToString ());
             }
             MySqlConnection dbcon = GetLockedConnection ();
-            try
-            {
-                return Query (query, new Dictionary<string, object> (), dbcon);
-            }
-            catch
-            {
-                return null;
-            }
-            finally
-            {
-                CloseDatabase (dbcon);
-            }
+            return Query (query, new Dictionary<string, object> (), dbcon);
         }
 
         public override List<string> Query(string whereClause, string table, string wantedValue)
@@ -306,14 +295,7 @@ namespace Aurora.DataManager.MySQL
                                       wantedValue, table, whereClause);
             using (MySqlConnection dbcon = GetLockedConnection ())
             {
-                try
-                {
-                    return Query (query, new Dictionary<string, object> (), dbcon);
-                }
-                finally
-                {
-                    CloseDatabase (dbcon);
-                }
+                 return Query (query, new Dictionary<string, object> (), dbcon);
             }
         }
 
@@ -322,14 +304,7 @@ namespace Aurora.DataManager.MySQL
             string query = String.Format("select {0} from {1} where {2}",
                                       wantedValue, table, whereClause);
             MySqlConnection dbcon = GetLockedConnection ();
-            try
-            {
-                return Query (query, new Dictionary<string, object> (), dbcon);
-            }
-            finally
-            {
-                CloseDatabase (dbcon);
-            }
+            return Query (query, new Dictionary<string, object> (), dbcon);
         }
 
         public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string order)

@@ -67,6 +67,7 @@ namespace Aurora.Services.DataService
                 Archive.IsPublic = int.Parse(RetVal["IsPublic"].ToString());
                 returnValue.Add(Archive);
             }
+            GD.CloseDatabase ();
             return returnValue;
         }
 		public void SaveAvatarArchive(AvatarArchive archive)

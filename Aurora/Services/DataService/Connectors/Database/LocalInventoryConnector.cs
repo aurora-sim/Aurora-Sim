@@ -68,7 +68,14 @@ namespace Aurora.Services.DataService
             query = query.Remove(query.Length - 5);
             using (IDbCommand reader = GD.QueryData (query, m_itemsrealm, "*"))
             {
-                return ParseInventoryItems(reader.ExecuteReader());
+                try
+                {
+                    return ParseInventoryItems (reader.ExecuteReader ());
+                }
+                finally
+                {
+                    GD.CloseDatabase ();
+                }
             }
         }
 
@@ -83,7 +90,14 @@ namespace Aurora.Services.DataService
             query = query.Remove(query.Length - 5);
             using (IDbCommand reader = GD.QueryData (query, m_itemsrealm, "*"))
             {
-                return ParseLLSDInventoryItems(reader.ExecuteReader());
+                try
+                {
+                    return ParseLLSDInventoryItems (reader.ExecuteReader ());
+                }
+                finally
+                {
+                    GD.CloseDatabase ();
+                }
             }
         }
 
@@ -243,6 +257,7 @@ namespace Aurora.Services.DataService
                         }
                         retVal.Close ();
                     }
+                    GD.CloseDatabase ();
                 }
                 contents.WriteEndArray(/*"items"*/); //end array items
 
@@ -565,7 +580,8 @@ namespace Aurora.Services.DataService
                 {
                     return !((item.Flags & 1) == 1); //1 means that it is active, so remove all ones that do not have a 1
                 });
-                return items.ToArray();
+                return items.ToArray ();
+                GD.CloseDatabase ();
             }
         }
 

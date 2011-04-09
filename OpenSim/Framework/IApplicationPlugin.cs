@@ -215,6 +215,11 @@ namespace Aurora.Framework
         IGenericData Copy();
 
         /// <summary>
+        /// Close the given database connection
+        /// </summary>
+        void CloseDatabase();
+
+        /// <summary>
         /// Returns alternative value if field is null
         /// </summary>
         /// <param name="Field"></param>
