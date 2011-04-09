@@ -80,6 +80,7 @@ namespace Aurora.Services.DataService
                     GD.CloseDatabase ();
                 }
             }
+            return null;
         }
 
         public OSDArray GetLLSDItems(string[] fields, string[] vals)
@@ -105,6 +106,7 @@ namespace Aurora.Services.DataService
                     GD.CloseDatabase ();
                 }
             }
+            return null;
         }
 
         private OSDArray ParseLLSDInventoryItems(IDataReader retVal)
