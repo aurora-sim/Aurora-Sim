@@ -868,5 +868,11 @@ COMMIT;
 :VERSION 44         #---------------------
 
 BEGIN;
-alter table prims change column `Generic` `Generic` Text NOT NULL default '';
+alter table prims change column `Generic` `Generic` Text NOT NULL;
+COMMIT;
+
+:VERSION 45         #---------------------
+
+BEGIN;
+alter table prims change column `Generic` `Generic` Text NOT NULL;
 COMMIT;
