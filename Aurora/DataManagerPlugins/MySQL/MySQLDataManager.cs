@@ -30,20 +30,34 @@ namespace Aurora.DataManager.MySQL
         {
             while (m_locked)
             {
-                Thread.Sleep (0);
+                Thread.Sleep(0);
             }
+
             m_locked = true;
             if (m_connection == null)
             {
                 m_connection = new MySqlConnection(m_connectionString);
                 m_connection.StateChange += new StateChangeEventHandler(ConnectionStateChange);
-                m_connection.InfoMessage += new MySqlInfoMessageEventHandler (ConnectionInfoMessage);
+                m_connection.InfoMessage += new MySqlInfoMessageEventHandler(ConnectionInfoMessage);
                 m_connection.Open();
             }
             else
             {
-                CheckConnection ();
-                m_connection.Ping();
+                try
+                {
+                    CheckConnection();
+                    m_connection.Ping();
+                }
+                catch (MySqlException e)
+                {
+                    try
+                    {
+                        m_connection.Close();
+                    }
+                    catch { }
+                    m_locked = false;
+                    return GetLockedConnection();
+                }
             }
             return m_connection;
         }
