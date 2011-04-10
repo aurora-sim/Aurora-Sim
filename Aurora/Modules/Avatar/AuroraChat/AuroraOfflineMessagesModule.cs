@@ -36,6 +36,7 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Services.Interfaces;
 using Aurora.Framework;
 
 namespace Aurora.Modules
@@ -49,6 +50,7 @@ namespace Aurora.Modules
         IMessageTransferModule m_TransferModule = null;
         private bool m_ForwardOfflineGroupMessages = true;
         private IOfflineMessagesConnector OfflineMessagesConnector;
+        private bool m_SendOfflineMessagesToEmail = false;
 
         public void Initialise(IConfigSource config)
         {
@@ -65,7 +67,8 @@ namespace Aurora.Modules
                 return;
             }
 
-            m_ForwardOfflineGroupMessages = cnf.GetBoolean("ForwardOfflineGroupMessages", m_ForwardOfflineGroupMessages);
+            m_ForwardOfflineGroupMessages = cnf.GetBoolean ("ForwardOfflineGroupMessages", m_ForwardOfflineGroupMessages);
+            m_SendOfflineMessagesToEmail = cnf.GetBoolean ("SendOfflineMessagesToEmail", m_SendOfflineMessagesToEmail);
         }
 
         public void AddRegion(Scene scene)
@@ -211,6 +214,23 @@ namespace Aurora.Modules
                         im = module.BuildOfflineGroupNotice(im);
                 }
                 OfflineMessagesConnector.AddOfflineMessage(im);
+
+                IEmailModule emailModule = m_SceneList[0].RequestModuleInterface<IEmailModule> ();
+                if (emailModule != null && m_SendOfflineMessagesToEmail)
+                {
+                    IUserProfileInfo profile = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector> ().GetUserProfile (UUID.Parse (im.toAgentID.ToString ()));
+                    if (profile.IMViaEmail)
+                    {
+                        UserAccount account = m_SceneList[0].UserAccountService.GetUserAccount (UUID.Zero, UUID.Parse (im.toAgentID.ToString ()));
+                        if (account != null && account.Email != "" && account.Email != null)
+                        {
+                            emailModule.SendEmail (UUID.Zero, account.Email, string.Format ("Offline Message from {0}", im.fromAgentName),
+                                string.Format ("Time: {0}\n", Util.ToDateTime (im.timestamp).ToShortDateString ()) +
+                                string.Format ("From: {0}\n", im.fromAgentName) +
+                                string.Format ("Message: {0}\n", im.message));
+                        }
+                    }
+                }
 
                 if (im.dialog == (byte)InstantMessageDialog.MessageFromAgent)
                 {
