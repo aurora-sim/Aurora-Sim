@@ -864,7 +864,8 @@ namespace OpenSim.Services
             UUID inviteID = UUID.Parse(request["inviteID"].ToString());
 
             GroupInviteInfo r = GroupsServiceConnector.GetAgentToGroupInvite(requestingAgentID, inviteID);
-            result.Add("A", r.ToKeyValuePairs());
+            if(r != null)
+                result.Add("A", r.ToKeyValuePairs());
 
             string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);

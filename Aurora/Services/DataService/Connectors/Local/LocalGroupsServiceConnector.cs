@@ -455,6 +455,8 @@ namespace Aurora.Services.DataService
 				requestingAgentID,
 				inviteID
 			}, "osgroupinvite", "*");
+            if (groupInvite.Count == 0)
+                return null;
 			invite.AgentID = UUID.Parse(groupInvite[3]);
 			invite.GroupID = UUID.Parse(groupInvite[1]);
 			invite.InviteID = UUID.Parse(groupInvite[0]);
