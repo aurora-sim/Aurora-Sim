@@ -148,15 +148,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (item.Action == LUType.Unload)
                     {
                         //Close
-                        item.ID.CloseAndDispose(false);
+                        item.ID.CloseAndDispose(true);
                     }
                     else if (item.Action == LUType.Load)
                     {
                         try
                         {
                             //Start
-                            item.ID.Start(false);
-                            NeedsFired.Add(item);
+                            if(item.ID.Start(false))
+                                NeedsFired.Add(item);
                         }
                         catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
                     }
@@ -165,8 +165,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         try
                         {
                             //Start, but don't add to the queue's again
-                            item.ID.Start(true);
-                            NeedsFired.Add(item);
+                            if(item.ID.Start(true))
+                                NeedsFired.Add(item);
                         }
                         catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
                     }
@@ -272,14 +272,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     if (item.Action == LUType.Unload)
                     {
-                        item.ID.CloseAndDispose(false);
+                        item.ID.CloseAndDispose (true);
                     }
                     else if (item.Action == LUType.Load)
                     {
                         try
                         {
-                            item.ID.Start(false);
-                            NeedsFired.Add(item);
+                            if(item.ID.Start(false))
+                                NeedsFired.Add(item);
                         }
                         catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
                     }
@@ -287,8 +287,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     {
                         try
                         {
-                            item.ID.Start(true);
-                            NeedsFired.Add(item);
+                            if(item.ID.Start(true))
+                                NeedsFired.Add(item);
                         }
                         catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
                     }

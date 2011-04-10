@@ -482,7 +482,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// This starts the script and sets up the variables.
         /// </summary>
         /// <returns></returns>
-        public void Start(bool reupload)
+        public bool Start(bool reupload)
         {
             DateTime StartTime = DateTime.Now.ToUniversalTime();
 
@@ -524,7 +524,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         "Couldn't start script {0}, {1} at {2} in {3} since asset ID {4} could not be found",
                         InventoryItem.Name, InventoryItem.ItemID, Part.AbsolutePosition,
                         Part.ParentEntity.Scene.RegionInfo.RegionName, InventoryItem.AssetID);
-                    return;
+                    return false;
                 }
                 Source = Utils.BytesToString (asset.Data);
             }
@@ -535,7 +535,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     "Couldn't start script {0}, {1} at {2} in {3} since asset ID {4} could not be found",
                     InventoryItem.Name, InventoryItem.ItemID, Part.AbsolutePosition,
                     Part.ParentEntity.Scene.RegionInfo.RegionName, InventoryItem.AssetID);
-                return;
+                return false;
             }
 
             #region HTML Reader
@@ -587,7 +587,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (reupload)
                 {
                     //Close the previous script
-                    CloseAndDispose(true);
+                    CloseAndDispose(false); //We don't want to back it up
 
                     //Increment this so that we clear out the previous upload
                     VersionID++;
@@ -616,7 +616,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                 error += compileerror;
                             }
                             DisplayUserNotification(error, "compiling", reupload, true);
-                            return;
+                            return false;
                         }
 
                         #endregion
@@ -635,7 +635,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                     error += compileerror;
                                 }
                                 DisplayUserNotification(error, "compiling", reupload, false);
-                                return;
+                                return false;
                             }
                         }
 
@@ -647,7 +647,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     {
                         //LEAVE IT AS ToString() SO THAT WE GET THE STACK TRACE TOO
                         DisplayUserNotification(ex.ToString(), "(exception) compiling", reupload, true);
-                        return;
+                        return false;
                     }
                 }
             }
@@ -668,13 +668,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: File not found in app domain creation. Corrupt state save! " + AssemblyName);
                 ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
-                Start(reupload); // Lets restart the script if this happens
-                return;
+                return Start(reupload); // Lets restart the script if this happens
             }
             catch (Exception ex)
             {
                 DisplayUserNotification(ex.ToString(), "app domain creation", reupload, true);
-                return;
+                return false;
             }
 
             ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as MarshalByRefObject);
@@ -726,6 +725,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     (presence != null ? " by " + presence.Name : "") + 
                     " in region " + Part.ParentEntity.Scene.RegionInfo.RegionName +
                     " in " + time.TotalSeconds + " seconds.");
+            return true;
         }
 
         #endregion

@@ -200,7 +200,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             // We are shutting down
             foreach (ScriptData ID in ScriptProtection.GetAllScripts())
             {
-                 ID.CloseAndDispose(false);
+                ID.CloseAndDispose (true);
             }
         }
 
@@ -408,7 +408,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 ScriptProtection.Reset (true);
                 foreach (ScriptData ID in scripts)
                 {
-                    ID.CloseAndDispose (false);
+                    ID.CloseAndDispose (false); //We don't want to backup
                     //Remove the state save
                     StateSave.DeleteFrom (ID);
                     //Reset this every time so that we don't reuse any compiled scripts
@@ -421,7 +421,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     try
                     {
-                        ID.Start (false);
+                        if(ID.Start (false))
+                            ID.FireEvents ();
                     }
                     catch (Exception) { }
                 }
@@ -478,7 +479,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             foreach (ScriptData ID in ScriptProtection.GetAllScripts())
             {
-                ID.CloseAndDispose(false);
+                ID.CloseAndDispose (true);
             }
         }
 
