@@ -218,6 +218,7 @@ namespace Aurora.DataManager.SQLite
             query = String.Format("select {0} from {1} {2}",
                                       wantedValue, table, whereClause);
             cmd.CommandText = query;
+            PrepReader (ref cmd);
             return cmd;
         }
 
