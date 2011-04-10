@@ -85,7 +85,7 @@ namespace Aurora.Modules
             {
                 //Read the website once!
                 if (m_map == null)
-                    m_map = (OSDMap)OSDParser.Deserialize (Utilities.ReadExternalWebsite ());
+                    m_map = (OSDMap)OSDParser.Deserialize (Utilities.ReadExternalWebsite (m_viewerTagURL));
                 
                 //This is the givaway texture!
                 for (int i = 0; i < textureEntry.FaceTextures.Length; i++)
