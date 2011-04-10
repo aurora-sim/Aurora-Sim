@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
@@ -468,18 +469,44 @@ namespace Aurora.Framework
         public static string ReadExternalWebsite(string URL)
         {
             String website = "";
-            UTF8Encoding utf8 = new UTF8Encoding();
+            UTF8Encoding utf8 = new UTF8Encoding ();
 
-            WebClient webClient = new WebClient();
+            WebClient webClient = new WebClient ();
             try
             {
-                website = utf8.GetString(webClient.DownloadData(URL));
+                byte[] bytes = webClient.DownloadData (URL);
+                if (webClient.ResponseHeaders["Content-Encoding"] == "gzip")
+                    website = utf8.GetString (UnGzip (bytes, 0));
+                else
+                    website = utf8.GetString (bytes);
             }
             catch (Exception)
             {
             }
             return website;
         }
+
+        private static byte[] UnGzip(byte[] data, int start)
+        {
+            int size = BitConverter.ToInt32 (data, data.Length - 4);
+            byte[] uncompressedData = new byte[size];
+            MemoryStream memStream = new MemoryStream (data, start, (data.Length - start));
+            memStream.Position = 0;
+            GZipStream gzStream = new GZipStream (memStream, CompressionMode.Decompress);
+
+            try
+            {
+                gzStream.Read (uncompressedData, 0, size);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            gzStream.Close ();
+            return uncompressedData;
+        }
+
 
         /// <summary>
         /// Download the file from downloadLink and save it to Aurora + Version + 
