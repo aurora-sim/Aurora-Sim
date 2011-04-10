@@ -551,7 +551,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                             OutgoingInstantMessage(msg, inviteInfo.AgentID);
 
                             //WTH??? noone but the invitee needs to know
-                            //UpdateAllClientsWithGroupInfo(inviteInfo.AgentID);
+                            //The other client wants to know too...
+                            UpdateAllClientsWithGroupInfo(inviteInfo.AgentID);
                             SendAgentGroupDataUpdate(remoteClient);
                             // XTODO: If the inviter is still online, they need an agent dataupdate 
                             // and maybe group membership updates for the invitee
