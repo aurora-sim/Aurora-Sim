@@ -68,7 +68,12 @@ namespace Aurora.DataManager.MySQL
             {
                 //We need to reopen the connection, it timed out
                 if (m_connection.State != ConnectionState.Open)
+                {
+                    m_connection = new MySqlConnection (m_connectionString);
+                    m_connection.StateChange += new StateChangeEventHandler (ConnectionStateChange);
+                    m_connection.InfoMessage += new MySqlInfoMessageEventHandler (ConnectionInfoMessage);
                     m_connection.Open ();
+                }
                 m_needsStateChange = false;
             }
         }

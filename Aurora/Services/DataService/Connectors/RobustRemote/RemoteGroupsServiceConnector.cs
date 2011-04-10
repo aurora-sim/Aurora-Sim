@@ -365,7 +365,7 @@ namespace Aurora.Services.DataService
                 List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                    SynchronousRestFormsRequester.MakeRequest("POST",
                            m_ServerURI,
                            reqString);
                 }
@@ -391,7 +391,7 @@ namespace Aurora.Services.DataService
                 List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                    SynchronousRestFormsRequester.MakeRequest ("POST",
                            m_ServerURI,
                            reqString);
                 }
