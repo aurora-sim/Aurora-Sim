@@ -15,7 +15,7 @@ namespace Aurora.DataManager.MySQL
     {
         private string m_connectionString = "";
         private MySqlConnection m_connection = null;
-        private volatile bool m_locked = false;
+        private int m_locked = 0;
         private volatile bool m_needsStateChange = false;
         private static readonly ILog m_log =
                 LogManager.GetLogger (
@@ -28,12 +28,12 @@ namespace Aurora.DataManager.MySQL
 
         public MySqlConnection GetLockedConnection()
         {
-            while (m_locked)
+            while (Interlocked.CompareExchange (ref m_locked, m_locked, 1) != 0)
             {
                 Thread.Sleep(0);
             }
-
-            m_locked = true;
+            
+            Interlocked.Increment (ref m_locked);
             if (m_connection == null)
             {
                 m_connection = new MySqlConnection(m_connectionString);
@@ -55,7 +55,7 @@ namespace Aurora.DataManager.MySQL
                         m_connection.Close();
                     }
                     catch { }
-                    m_locked = false;
+                    Interlocked.Decrement (ref m_locked);
                     return GetLockedConnection();
                 }
             }
@@ -95,14 +95,14 @@ namespace Aurora.DataManager.MySQL
 
         public void CloseDatabase(MySqlConnection connection)
         {
-            m_locked = false;
+            Interlocked.Decrement (ref m_locked);
             //connection.Close();
             //connection.Dispose();
         }
 
         public override void CloseDatabase()
         {
-            m_locked = false;
+            Interlocked.Decrement (ref m_locked);
             //m_connection.Close();
             //m_connection.Dispose();
         }
