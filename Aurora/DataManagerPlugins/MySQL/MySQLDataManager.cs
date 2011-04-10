@@ -196,23 +196,6 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
-        public override IDbCommand QueryReader(string keyRow, object keyValue, string table, string wantedValue)
-        {
-            string query;
-            if (keyRow == "")
-            {
-                query = String.Format ("select {0} from {1}",
-                                      wantedValue, table);
-            }
-            else
-            {
-                query = String.Format ("select {0} from {1} where {2} = '{3}'",
-                                      wantedValue, table, keyRow, keyValue.ToString ());
-            }
-            MySqlConnection dbcon = GetLockedConnection ();
-            return Query (query, new Dictionary<string, object> (), dbcon);
-        }
-
         public override List<string> Query(string whereClause, string table, string wantedValue)
         {
             IDbCommand result = null;
@@ -301,17 +284,9 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
-        public override IDbCommand QueryDataFull(string whereClause, string table, string wantedValue)
-        {
-            string query = String.Format ("select {0} from {1} {2}",
-                                      wantedValue, table, whereClause);
-            MySqlConnection dbcon = GetLockedConnection ();
-            return Query (query, new Dictionary<string, object> (), dbcon);
-        }
-
         public override IDbCommand QueryData(string whereClause, string table, string wantedValue)
         {
-            string query = String.Format("select {0} from {1} where {2}",
+            string query = String.Format("select {0} from {1} {2}",
                                       wantedValue, table, whereClause);
             MySqlConnection dbcon = GetLockedConnection ();
             return Query (query, new Dictionary<string, object> (), dbcon);
@@ -502,7 +477,6 @@ namespace Aurora.DataManager.MySQL
         public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
         {
             IDbCommand result = null;
-            IDataReader reader = null;
             string query = String.Format("update {0} set ", table);
             int i = 0;
             Dictionary<string, object> parameters = new Dictionary<string, object>();
@@ -530,7 +504,7 @@ namespace Aurora.DataManager.MySQL
                 using (result = Query (query, parameters, dbcon))
                 {
                     CheckConnection ();
-                    reader = result.ExecuteReader ();
+                    result.ExecuteNonQuery ();
                 }
             }
             catch (MySqlException)
@@ -540,11 +514,6 @@ namespace Aurora.DataManager.MySQL
             {
                 try
                 {
-                    if (reader != null)
-                    {
-                        reader.Close ();
-                        reader.Dispose ();
-                    }
                     if (result != null) result.Dispose ();
                 }
                 catch { }
@@ -556,7 +525,6 @@ namespace Aurora.DataManager.MySQL
         public override bool Insert(string table, object[] values)
         {
             IDbCommand result = null;
-            IDataReader reader = null;
 
             string query = String.Format("insert into {0} values (", table);
             query = values.Aggregate(query, (current, value) => current + String.Format("'{0}',", value));
@@ -569,7 +537,7 @@ namespace Aurora.DataManager.MySQL
                 using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
                     CheckConnection ();
-                    reader = result.ExecuteReader ();
+                    result.ExecuteNonQuery ();
                 }
             }
             catch
@@ -580,11 +548,6 @@ namespace Aurora.DataManager.MySQL
             {
                 try
                 {
-                    if (reader != null)
-                    {
-                        reader.Close ();
-                        reader.Dispose ();
-                    }
                     if (result != null) result.Dispose ();
                 }
                 catch { }
@@ -595,7 +558,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Insert(string table, string[] keys, object[] values)
         {
-            IDbCommand result;
+            IDbCommand result = null;
 
             string query = String.Format("insert into {0} (", table);
             Dictionary<string, object> param = new Dictionary<string, object>();
@@ -620,15 +583,19 @@ namespace Aurora.DataManager.MySQL
                 using (result = Query (query, param, dbcon))
                 {
                     CheckConnection ();
-                    result.ExecuteReader ();
+                    result.ExecuteNonQuery ();
                 }
-                result.Dispose ();
             }
             catch
             {
             }
             finally
             {
+                try
+                {
+                    if (result != null) result.Dispose ();
+                }
+                catch { }
                 CloseDatabase (dbcon);
             }
             return true;
@@ -636,7 +603,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Replace(string table, string[] keys, object[] values)
         {
-            IDbCommand result;
+            IDbCommand result = null;
             
             string query = String.Format("replace into {0} (", table);
             Dictionary<string, object> param = new Dictionary<string, object>();
@@ -671,9 +638,8 @@ namespace Aurora.DataManager.MySQL
                 using (result = Query (query, param, dbcon))
                 {
                     CheckConnection ();
-                    result.ExecuteReader ();
+                    result.ExecuteNonQuery ();
                 }
-                result.Dispose ();
             }
             catch
             {
@@ -681,6 +647,11 @@ namespace Aurora.DataManager.MySQL
             }
             finally
             {
+                try
+                {
+                    if (result != null) result.Dispose ();
+                }
+                catch { }
                 CloseDatabase (dbcon);
             }
             return true;
@@ -688,7 +659,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool DirectReplace(string table, string[] keys, object[] values)
         {
-            IDbCommand result;
+            IDbCommand result = null;
             
             string query = String.Format("replace into {0} (", table);
             Dictionary<string, object> param = new Dictionary<string, object>();
@@ -713,9 +684,8 @@ namespace Aurora.DataManager.MySQL
             {
                 using (result = Query (query, param, dbcon))
                 {
-                    result.ExecuteReader ();
+                    result.ExecuteNonQuery ();
                 }
-                result.Dispose ();
             }
             catch
             {
@@ -723,6 +693,11 @@ namespace Aurora.DataManager.MySQL
             }
             finally
             {
+                try
+                {
+                    if (result != null) result.Dispose ();
+                }
+                catch { }
                 CloseDatabase (dbcon);
             }
             return true;
@@ -730,7 +705,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Insert(string table, object[] values, string updateKey, object updateValue)
         {
-            IDbCommand result;
+            IDbCommand result = null;
             string query = String.Format("insert into {0} VALUES('", table);
             query = values.Aggregate(query, (current, value) => current + (value + "','"));
             query = query.Remove(query.Length - 2);
@@ -741,9 +716,8 @@ namespace Aurora.DataManager.MySQL
                 using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
                     CheckConnection ();
-                    result.ExecuteReader ();
+                    result.ExecuteNonQuery ();
                 }
-                result.Dispose ();
             }
             catch
             {
@@ -751,6 +725,11 @@ namespace Aurora.DataManager.MySQL
             }
             finally
             {
+                try
+                {
+                    if (result != null) result.Dispose ();
+                }
+                catch { }
                 CloseDatabase (dbcon);
             }
             return true;
@@ -758,7 +737,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Delete(string table, string[] keys, object[] values)
         {
-            IDbCommand result;
+            IDbCommand result = null;
             string query = "delete from " + table + (keys.Length > 0 ? " WHERE " : "");
             int i = 0;
             foreach (object value in values)
@@ -774,9 +753,8 @@ namespace Aurora.DataManager.MySQL
                 using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
                     CheckConnection ();
-                    result.ExecuteReader ();
+                    result.ExecuteNonQuery ();
                 }
-                result.Dispose ();
             }
             catch
             {
@@ -784,6 +762,11 @@ namespace Aurora.DataManager.MySQL
             }
             finally
             {
+                try
+                {
+                    if (result != null) result.Dispose ();
+                }
+                catch { }
                 CloseDatabase (dbcon);
             }
             return true;
@@ -809,7 +792,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Delete(string table, string whereclause)
         {
-            IDbCommand result;
+            IDbCommand result = null;
             string query = "delete from " + table + " WHERE " + whereclause;
             MySqlConnection dbcon = GetLockedConnection();
             try
@@ -817,9 +800,8 @@ namespace Aurora.DataManager.MySQL
                 using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
                     CheckConnection ();
-                    result.ExecuteReader ();
+                    result.ExecuteNonQuery ();
                 }
-                result.Dispose ();
             }
             catch
             {
@@ -827,6 +809,11 @@ namespace Aurora.DataManager.MySQL
             }
             finally
             {
+                try
+                {
+                    if (result != null) result.Dispose ();
+                }
+                catch { }
                 CloseDatabase (dbcon);
             }
             return true;
@@ -834,7 +821,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool DeleteByTime(string table, string key)
         {
-            IDbCommand result;
+            IDbCommand result = null;
             string query = "delete from " + table + " WHERE '" + key + "' < now()";
             MySqlConnection dbcon = GetLockedConnection ();
             try
@@ -842,9 +829,8 @@ namespace Aurora.DataManager.MySQL
                 using (result = Query (query, new Dictionary<string, object> (), dbcon))
                 {
                     CheckConnection ();
-                    result.ExecuteReader ();
+                    result.ExecuteNonQuery ();
                 }
-                result.Dispose ();
             }
             catch
             {
@@ -852,6 +838,11 @@ namespace Aurora.DataManager.MySQL
             }
             finally
             {
+                try
+                {
+                    if (result != null) result.Dispose ();
+                }
+                catch { }
                 CloseDatabase (dbcon);
             }
             return true;

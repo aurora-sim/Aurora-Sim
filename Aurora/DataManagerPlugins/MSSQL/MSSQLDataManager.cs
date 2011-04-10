@@ -137,23 +137,6 @@ namespace Aurora.DataManager.MSSQL
             }
         }
 
-        public override IDbCommand QueryReader(string keyRow, object keyValue, string table, string wantedValue)
-        {
-            SqlConnection dbcon = GetLockedConnection();
-            string query = "";
-            if (keyRow == "")
-            {
-                query = String.Format("select {0} from {1}",
-                                      wantedValue, table);
-            }
-            else
-            {
-                query = String.Format("select {0} from {1} where {2} = '{3}'",
-                                      wantedValue, table, keyRow, keyValue.ToString());
-            }
-            return Query (query, new Dictionary<string, object> (), dbcon);
-        }
-
         public override List<string> Query(string whereClause, string table, string wantedValue)
         {
             SqlConnection dbcon = GetLockedConnection();
@@ -224,18 +207,10 @@ namespace Aurora.DataManager.MSSQL
             }
         }
 
-        public override IDbCommand QueryDataFull(string whereClause, string table, string wantedValue)
-        {
-            SqlConnection dbcon = GetLockedConnection ();
-            string query = String.Format ("select {0} from {1} {2}",
-                                      wantedValue, table, whereClause);
-            return Query (query, new Dictionary<string, object> (), dbcon);
-        }
-
         public override IDbCommand QueryData(string whereClause, string table, string wantedValue)
         {
             SqlConnection dbcon = GetLockedConnection();
-            string query = String.Format("select {0} from {1} where {2}",
+            string query = String.Format("select {0} from {1} {2}",
                                       wantedValue, table, whereClause);
             return Query (query, new Dictionary<string, object> (), dbcon);
         }

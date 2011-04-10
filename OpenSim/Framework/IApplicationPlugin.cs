@@ -95,11 +95,6 @@ namespace Aurora.Framework
         List<string> QueryFullData(string whereClause, string table, string wantedValue);
 
         /// <summary>
-        /// select 'wantedValue' from 'table' 'whereClause'
-        /// </summary>
-        IDbCommand QueryDataFull(string whereClause, string table, string wantedValue);
-
-        /// <summary>
         /// select 'wantedValue' from 'table' where 'whereClause'
         /// </summary>
         IDbCommand QueryData(string whereClause, string table, string wantedValue);
@@ -119,11 +114,6 @@ namespace Aurora.Framework
         /// This gives the row names as well as the values
         /// </summary>
         Dictionary<string, List<string>> QueryNames (string[] keyRow, object[] keyValue, string table, string wantedValue);
-
-        /// <summary>
-        /// select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
-        /// </summary>
-        IDbCommand QueryReader(string keyRow, object keyValue, string table, string wantedValue);
 
         /// <summary>
         /// insert into 'table' values ('values')

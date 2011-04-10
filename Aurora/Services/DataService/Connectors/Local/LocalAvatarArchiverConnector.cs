@@ -59,7 +59,7 @@ namespace Aurora.Services.DataService
             List<AvatarArchive> returnValue = new List<AvatarArchive>();
             try
             {
-                System.Data.IDbCommand cmd = GD.QueryDataFull ("where IsPublic = 1", "avatararchives", "Name, Snapshot, IsPublic");
+                System.Data.IDbCommand cmd = GD.QueryData ("where IsPublic = 1", "avatararchives", "Name, Snapshot, IsPublic");
                 System.Data.IDataReader RetVal = cmd.ExecuteReader ();
                 while (RetVal.Read ())
                 {
@@ -69,6 +69,9 @@ namespace Aurora.Services.DataService
                     Archive.IsPublic = int.Parse (RetVal["IsPublic"].ToString ());
                     returnValue.Add (Archive);
                 }
+                RetVal.Close ();
+                RetVal.Dispose ();
+                cmd.Dispose ();
             }
             catch
             {

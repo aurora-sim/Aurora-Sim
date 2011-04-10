@@ -62,21 +62,32 @@ namespace Aurora.Services.DataService
             string query = "";
             for (int i = 0; i < fields.Length; i++)
             {
-                query += String.Format("{0} = '{1}' and ", fields[i], vals[i]);
+                query += String.Format ("where {0} = '{1}' and ", fields[i], vals[i]);
                 i++;
             }
             query = query.Remove(query.Length - 5);
-            using (IDbCommand reader = GD.QueryData (query, m_itemsrealm, "*"))
+            using (IDbCommand cmd = GD.QueryData (query, m_itemsrealm, "*"))
             {
+                IDataReader reader = cmd.ExecuteReader ();
                 try
                 {
-                    return ParseInventoryItems (reader.ExecuteReader ());
+                    return ParseInventoryItems (reader);
                 }
                 catch
                 {
                 }
                 finally
                 {
+                    try
+                    {
+                        if (reader != null)
+                        {
+                            reader.Close ();
+                            reader.Dispose ();
+                        }
+                        if (cmd != null) cmd.Dispose ();
+                    }
+                    catch { }
                     GD.CloseDatabase ();
                 }
             }
@@ -88,21 +99,32 @@ namespace Aurora.Services.DataService
             string query = "";
             for (int i = 0; i < fields.Length; i++)
             {
-                query += String.Format("{0} = '{1}' and ", fields[i], vals[i]);
+                query += String.Format ("where {0} = '{1}' and ", fields[i], vals[i]);
                 i++;
             }
             query = query.Remove(query.Length - 5);
-            using (IDbCommand reader = GD.QueryData (query, m_itemsrealm, "*"))
+            using (IDbCommand cmd = GD.QueryData (query, m_itemsrealm, "*"))
             {
+                IDataReader reader = cmd.ExecuteReader ();
                 try
                 {
-                    return ParseLLSDInventoryItems (reader.ExecuteReader ());
+                    return ParseLLSDInventoryItems (reader);
                 }
                 catch
                 {
                 }
                 finally
                 {
+                    try
+                    {
+                        if (reader != null)
+                        {
+                            reader.Close ();
+                            reader.Dispose ();
+                        }
+                        if (cmd != null) cmd.Dispose ();
+                    }
+                    catch { }
                     GD.CloseDatabase ();
                 }
             }
@@ -198,80 +220,91 @@ namespace Aurora.Services.DataService
                 contents.WriteKey("items"); //Start array items
                 contents.WriteStartArray("items"); 
                 int count = 0;
-                string query = String.Format("{0} = '{1}'", "parentFolderID", folder_id);
+                string query = String.Format("where {0} = '{1}'", "parentFolderID", folder_id);
                 using (IDbCommand command = GD.QueryData (query, m_itemsrealm, "*"))
                 {
+                    IDataReader retVal = null;
                     try
                     {
-                        using (IDataReader retVal = command.ExecuteReader ())
+                        retVal = command.ExecuteReader ();
+                        while (retVal.Read ())
                         {
-                            while (retVal.Read ())
+                            contents.WriteStartMap ("item"); //Start item kvp
+                            contents["asset_id"] = UUID.Parse (retVal["assetID"].ToString ());
+                            contents["name"] = retVal["inventoryName"].ToString ();
+                            contents["desc"] = retVal["inventoryDescription"].ToString ();
+
+
+                            contents.WriteKey ("permissions"); //Start permissions kvp
+                            contents.WriteStartMap ("permissions");
+                            contents["group_id"] = UUID.Parse (retVal["groupID"].ToString ());
+                            contents["is_owner_group"] = int.Parse (retVal["groupOwned"].ToString ()) == 1;
+                            contents["group_mask"] = uint.Parse (retVal["inventoryGroupPermissions"].ToString ());
+                            contents["owner_id"] = UUID.Parse (retVal["avatarID"].ToString ());
+                            contents["last_owner_id"] = UUID.Parse (retVal["avatarID"].ToString ());
+                            contents["next_owner_mask"] = uint.Parse (retVal["inventoryNextPermissions"].ToString ());
+                            contents["owner_mask"] = uint.Parse (retVal["inventoryCurrentPermissions"].ToString ());
+                            UUID creator;
+                            if (UUID.TryParse (retVal["creatorID"].ToString (), out creator))
+                                contents["creator_id"] = creator;
+                            else
+                                contents["creator_id"] = UUID.Zero;
+                            contents["base_mask"] = uint.Parse (retVal["inventoryBasePermissions"].ToString ());
+                            contents["everyone_mask"] = uint.Parse (retVal["inventoryEveryOnePermissions"].ToString ());
+                            contents.WriteEndMap (/*Permissions*/);
+
+                            contents.WriteKey ("sale_info"); //Start permissions kvp
+                            contents.WriteStartMap ("sale_info"); //Start sale_info kvp
+                            contents["sale_price"] = int.Parse (retVal["salePrice"].ToString ());
+                            switch (byte.Parse (retVal["saleType"].ToString ()))
                             {
-                                contents.WriteStartMap ("item"); //Start item kvp
-                                contents["asset_id"] = UUID.Parse (retVal["assetID"].ToString ());
-                                contents["name"] = retVal["inventoryName"].ToString ();
-                                contents["desc"] = retVal["inventoryDescription"].ToString ();
-
-
-                                contents.WriteKey ("permissions"); //Start permissions kvp
-                                contents.WriteStartMap ("permissions");
-                                contents["group_id"] = UUID.Parse (retVal["groupID"].ToString ());
-                                contents["is_owner_group"] = int.Parse (retVal["groupOwned"].ToString ()) == 1;
-                                contents["group_mask"] = uint.Parse (retVal["inventoryGroupPermissions"].ToString ());
-                                contents["owner_id"] = UUID.Parse (retVal["avatarID"].ToString ());
-                                contents["last_owner_id"] = UUID.Parse (retVal["avatarID"].ToString ());
-                                contents["next_owner_mask"] = uint.Parse (retVal["inventoryNextPermissions"].ToString ());
-                                contents["owner_mask"] = uint.Parse (retVal["inventoryCurrentPermissions"].ToString ());
-                                UUID creator;
-                                if (UUID.TryParse (retVal["creatorID"].ToString (), out creator))
-                                    contents["creator_id"] = creator;
-                                else
-                                    contents["creator_id"] = UUID.Zero;
-                                contents["base_mask"] = uint.Parse (retVal["inventoryBasePermissions"].ToString ());
-                                contents["everyone_mask"] = uint.Parse (retVal["inventoryEveryOnePermissions"].ToString ());
-                                contents.WriteEndMap (/*Permissions*/);
-
-                                contents.WriteKey ("sale_info"); //Start permissions kvp
-                                contents.WriteStartMap ("sale_info"); //Start sale_info kvp
-                                contents["sale_price"] = int.Parse (retVal["salePrice"].ToString ());
-                                switch (byte.Parse (retVal["saleType"].ToString ()))
-                                {
-                                    default:
-                                        contents["sale_type"] = "not";
-                                        break;
-                                    case 1:
-                                        contents["sale_type"] = "original";
-                                        break;
-                                    case 2:
-                                        contents["sale_type"] = "copy";
-                                        break;
-                                    case 3:
-                                        contents["sale_type"] = "contents";
-                                        break;
-                                }
-                                contents.WriteEndMap (/*sale_info*/);
-
-
-                                contents["created_at"] = int.Parse (retVal["creationDate"].ToString ());
-                                contents["flags"] = uint.Parse (retVal["flags"].ToString ());
-                                UUID inventoryID = UUID.Parse (retVal["inventoryID"].ToString ());
-                                contents["item_id"] = inventoryID;
-                                contents["parent_id"] = UUID.Parse (retVal["parentFolderID"].ToString ());
-                                contents["agent_id"] = UUID.Parse (retVal["avatarID"].ToString ());
-
-                                contents["type"] = Utils.AssetTypeToString ((AssetType)int.Parse (retVal["assetType"].ToString ()));
-                                contents["inv_type"] = Utils.InventoryTypeToString ((InventoryType)int.Parse (retVal["invType"].ToString ()));
-
-                                count++;
-                                contents.WriteEndMap (/*"item"*/); //end array items
+                                default:
+                                    contents["sale_type"] = "not";
+                                    break;
+                                case 1:
+                                    contents["sale_type"] = "original";
+                                    break;
+                                case 2:
+                                    contents["sale_type"] = "copy";
+                                    break;
+                                case 3:
+                                    contents["sale_type"] = "contents";
+                                    break;
                             }
-                            retVal.Close ();
+                            contents.WriteEndMap (/*sale_info*/);
+
+
+                            contents["created_at"] = int.Parse (retVal["creationDate"].ToString ());
+                            contents["flags"] = uint.Parse (retVal["flags"].ToString ());
+                            UUID inventoryID = UUID.Parse (retVal["inventoryID"].ToString ());
+                            contents["item_id"] = inventoryID;
+                            contents["parent_id"] = UUID.Parse (retVal["parentFolderID"].ToString ());
+                            contents["agent_id"] = UUID.Parse (retVal["avatarID"].ToString ());
+
+                            contents["type"] = Utils.AssetTypeToString ((AssetType)int.Parse (retVal["assetType"].ToString ()));
+                            contents["inv_type"] = Utils.InventoryTypeToString ((InventoryType)int.Parse (retVal["invType"].ToString ()));
+
+                            count++;
+                            contents.WriteEndMap (/*"item"*/); //end array items
                         }
                     }
                     catch
                     {
                     }
-                    GD.CloseDatabase ();
+                    finally
+                    {
+                        try
+                        {
+                            if (retVal != null)
+                            {
+                                retVal.Close ();
+                                retVal.Dispose ();
+                            }
+                            if (command != null) command.Dispose ();
+                        }
+                        catch { }
+                        GD.CloseDatabase ();
+                    }
                 }
                 contents.WriteEndArray(/*"items"*/); //end array items
 
@@ -585,14 +618,16 @@ namespace Aurora.Services.DataService
 
         public InventoryItemBase[] GetActiveGestures (UUID principalID)
         {
-            string query = String.Format("{0} = '{1}' and {2} = '{3}'", "avatarID", principalID, "assetType", (int)AssetType.Gesture);
+            string query = String.Format ("where {0} = '{1}' and {2} = '{3}'", "avatarID", principalID, "assetType", (int)AssetType.Gesture);
 
-            using (IDbCommand reader = GD.QueryData (query, m_itemsrealm, "*"))
+            using (IDbCommand cmd = GD.QueryData (query, m_itemsrealm, "*"))
             {
                 List<InventoryItemBase> items = new List<InventoryItemBase>();
+                IDataReader reader = null;
                 try
                 {
-                    items = ParseInventoryItems (reader.ExecuteReader ());
+                    reader = cmd.ExecuteReader ();
+                    items = ParseInventoryItems (reader);
                     items.RemoveAll (delegate (InventoryItemBase item)
                     {
                         return !((item.Flags & 1) == 1); //1 means that it is active, so remove all ones that do not have a 1
@@ -600,6 +635,19 @@ namespace Aurora.Services.DataService
                 }
                 catch
                 {
+                }
+                finally
+                {
+                    try
+                    {
+                        if (reader != null)
+                        {
+                            reader.Close ();
+                            reader.Dispose ();
+                        }
+                        if (cmd != null) cmd.Dispose ();
+                    }
+                    catch { }
                 }
                 GD.CloseDatabase ();
                 return items.ToArray ();

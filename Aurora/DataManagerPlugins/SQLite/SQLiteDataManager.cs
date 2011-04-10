@@ -161,24 +161,6 @@ namespace Aurora.DataManager.SQLite
             }
         }
 
-        public override IDbCommand QueryReader(string keyRow, object keyValue, string table, string wantedValue)
-        {
-            var cmd = new SqliteCommand();
-            string query = "";
-            if (keyRow == "")
-            {
-                query = String.Format("select {0} from {1}",
-                                      wantedValue, table);
-            }
-            else
-            {
-                query = String.Format("select {0} from {1} where {2} = '{3}'",
-                                      wantedValue, table, keyRow, keyValue.ToString());
-            }
-            cmd.CommandText = query;
-            return cmd;
-        }
-
         public override List<string> Query(string whereClause, string table, string wantedValue)
         {
             var cmd = new SqliteCommand();
@@ -229,21 +211,11 @@ namespace Aurora.DataManager.SQLite
             }
         }
 
-        public override IDbCommand QueryDataFull(string whereClause, string table, string wantedValue)
-        {
-            var cmd = new SqliteCommand();
-            string query = "";
-            query = String.Format("select {0} from {1} {2}",
-                                      wantedValue, table, whereClause);
-            cmd.CommandText = query;
-            return cmd;
-        }
-
         public override IDbCommand QueryData(string whereClause, string table, string wantedValue)
         {
             var cmd = new SqliteCommand();
             string query = "";
-            query = String.Format("select {0} from {1} where {2}",
+            query = String.Format("select {0} from {1} {2}",
                                       wantedValue, table, whereClause);
             cmd.CommandText = query;
             return cmd;
