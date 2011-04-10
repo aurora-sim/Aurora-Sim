@@ -62,7 +62,7 @@ namespace OpenSim.Services.MessagingService
             ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
             if (capsService == null)
             {
-                m_log.Info("[AgentProcessing]: Failed OnMessageReceived ICapsService is null");
+                //m_log.Info("[AgentProcessing]: Failed OnMessageReceived ICapsService is null");
                 return new OSDMap();
             }
             IClientCapsService clientCaps = capsService.GetClientCapsService(AgentID);
