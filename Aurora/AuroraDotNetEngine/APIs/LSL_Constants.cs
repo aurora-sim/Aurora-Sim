@@ -53,6 +53,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger STATUS_CAST_SHADOWS = 512;
 
         public static readonly LSLInteger AGENT = 1;
+        public static readonly LSLInteger AGENT_BY_LEGACY_NAME = 1;
+        public static readonly LSLInteger AGENT_BY_USERNAME = 0x10;
         public static readonly LSLInteger ACTIVE = 2;
         public static readonly LSLInteger PASSIVE = 4;
         public static readonly LSLInteger SCRIPTED = 8;
