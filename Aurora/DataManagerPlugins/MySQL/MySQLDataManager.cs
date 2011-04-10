@@ -36,8 +36,8 @@ namespace Aurora.DataManager.MySQL
             if (m_connection == null)
             {
                 m_connection = new MySqlConnection(m_connectionString);
-                m_connection.StateChange += new StateChangeEventHandler(m_connection_StateChange);
-                m_connection.InfoMessage += new MySqlInfoMessageEventHandler (m_connection_InfoMessage);
+                m_connection.StateChange += new StateChangeEventHandler(ConnectionStateChange);
+                m_connection.InfoMessage += new MySqlInfoMessageEventHandler (ConnectionInfoMessage);
                 m_connection.Open();
             }
             else
@@ -59,7 +59,7 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
-        void m_connection_InfoMessage(object sender, MySqlInfoMessageEventArgs args)
+        void ConnectionInfoMessage(object sender, MySqlInfoMessageEventArgs args)
         {
             if (args.errors != null)
             {
@@ -70,7 +70,7 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
-        void m_connection_StateChange(object sender, StateChangeEventArgs e)
+        void ConnectionStateChange(object sender, StateChangeEventArgs e)
         {
             if (e.CurrentState == ConnectionState.Closed || e.CurrentState == ConnectionState.Broken)
             {
@@ -131,7 +131,7 @@ namespace Aurora.DataManager.MySQL
             IDbCommand result = null;
             IDataReader reader = null;
             List<string> retVal = new List<string>();
-            string query = "";
+            string query;
             if (keyRow == "")
             {
                 query = String.Format("select {0} from {1}",
@@ -171,12 +171,15 @@ namespace Aurora.DataManager.MySQL
                 }
                 finally
                 {
-                    if (reader != null)
+                    try
                     {
-                        reader.Close();
-                        reader.Dispose();
-                    }
-                    if (result != null) result.Dispose();
+                        if (reader != null)
+                        {
+                            reader.Close();
+                            reader.Dispose();
+                        }
+                        if (result != null) result.Dispose();
+                    }catch{}
                     CloseDatabase (dbcon);
                 }
             }
@@ -184,7 +187,7 @@ namespace Aurora.DataManager.MySQL
 
         public override IDbCommand QueryReader(string keyRow, object keyValue, string table, string wantedValue)
         {
-            string query = "";
+            string query;
             if (keyRow == "")
             {
                 query = String.Format ("select {0} from {1}",
@@ -230,12 +233,15 @@ namespace Aurora.DataManager.MySQL
                 }
                 finally
                 {
-                    if (reader != null)
+                    try
                     {
-                        reader.Close();
-                        reader.Dispose();
-                    }
-                    if (result != null) result.Dispose();
+                        if (reader != null)
+                        {
+                            reader.Close();
+                            reader.Dispose();
+                        }
+                        if (result != null) result.Dispose();
+                    }catch{}
                     CloseDatabase(dbcon);
                 }
             }
@@ -272,12 +278,15 @@ namespace Aurora.DataManager.MySQL
                 }
                 finally
                 {
-                    if (reader != null)
+                    try
                     {
-                        reader.Close();
-                        reader.Dispose();
-                    }
-                    if (result != null) result.Dispose();
+                        if (reader != null)
+                        {
+                            reader.Close();
+                            reader.Dispose();
+                        }
+                        if (result != null) result.Dispose();
+                    }catch{}
                     CloseDatabase(dbcon);
                 }
             }
@@ -346,12 +355,15 @@ namespace Aurora.DataManager.MySQL
                 }
                 finally
                 {
-                    if (reader != null)
+                    try
                     {
-                        reader.Close();
-                        reader.Dispose();
-                    }
-                    if (result != null) result.Dispose();
+                        if (reader != null)
+                        {
+                            reader.Close();
+                            reader.Dispose();
+                        }
+                        if (result != null) result.Dispose();
+                    }catch{}
                     CloseDatabase(dbcon);
                 }
             }
@@ -402,12 +414,15 @@ namespace Aurora.DataManager.MySQL
                 }
                 finally
                 {
-                    if (reader != null)
+                    try
                     {
-                        reader.Close();
-                        reader.Dispose();
-                    }
-                    if (result != null) result.Dispose();
+                        if (reader != null)
+                        {
+                            reader.Close();
+                            reader.Dispose();
+                        }
+                        if (result != null) result.Dispose();
+                    }catch{}
                     CloseDatabase(dbcon);
                 }
             }
@@ -458,12 +473,15 @@ namespace Aurora.DataManager.MySQL
                 }
                 finally
                 {
-                    if (reader != null)
+                    try
                     {
-                        reader.Close();
-                        reader.Dispose();
-                    }
-                    if (result != null) result.Dispose();
+                        if (reader != null)
+                        {
+                            reader.Close();
+                            reader.Dispose();
+                        }
+                        if (result != null) result.Dispose();
+                    }catch{}
                     CloseDatabase(dbcon);
                 }
             }
@@ -517,12 +535,16 @@ namespace Aurora.DataManager.MySQL
                 }
                 finally
                 {
-                    if (reader != null)
+                    try
                     {
-                        reader.Close();
-                        reader.Dispose();
+                        if (reader != null)
+                        {
+                            reader.Close();
+                            reader.Dispose();
+                        }
+                        if (result != null) result.Dispose();
                     }
-                    if (result != null) result.Dispose();
+                    catch{}
                     CloseDatabase(dbcon);
                 }
             }
@@ -555,12 +577,15 @@ namespace Aurora.DataManager.MySQL
                 }
                 finally
                 {
-                    if (reader != null)
+                    try
                     {
-                        reader.Close();
-                        reader.Dispose();
-                    }
-                    if (result != null) result.Dispose();
+                        if (reader != null)
+                        {
+                            reader.Close();
+                            reader.Dispose();
+                        }
+                        if (result != null) result.Dispose();
+                    }catch{}
                     CloseDatabase(dbcon);
                 }
             }
@@ -569,7 +594,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Insert(string table, string[] keys, object[] values)
         {
-            IDbCommand result = null;
+            IDbCommand result;
 
             string query = String.Format("insert into {0} (", table);
             Dictionary<string, object> param = new Dictionary<string, object>();
@@ -597,13 +622,13 @@ namespace Aurora.DataManager.MySQL
                         CheckConnection();
                         result.ExecuteReader();
                     }
+                    result.Dispose();
                 }
                 catch
                 {
                 }
                 finally
                 {
-                    if (result != null) result.Dispose();
                     CloseDatabase(dbcon);
                 }
             }
@@ -612,7 +637,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Replace(string table, string[] keys, object[] values)
         {
-            IDbCommand result = null;
+            IDbCommand result;
             
             string query = String.Format("replace into {0} (", table);
             Dictionary<string, object> param = new Dictionary<string, object>();
@@ -650,6 +675,7 @@ namespace Aurora.DataManager.MySQL
                         CheckConnection();
                         result.ExecuteReader();
                     }
+                    result.Dispose();
                 }
                 catch
                 {
@@ -657,7 +683,6 @@ namespace Aurora.DataManager.MySQL
                 }
                 finally
                 {
-                    if (result != null) result.Dispose();
                     CloseDatabase(dbcon);
                 }
             }
@@ -666,12 +691,11 @@ namespace Aurora.DataManager.MySQL
 
         public override bool DirectReplace(string table, string[] keys, object[] values)
         {
-            IDbCommand result = null;
+            IDbCommand result;
             
             string query = String.Format("replace into {0} (", table);
             Dictionary<string, object> param = new Dictionary<string, object>();
 
-            int i = 0;
             foreach (string key in keys)
             {
                 string kkey = key;
@@ -679,7 +703,6 @@ namespace Aurora.DataManager.MySQL
                     kkey = key.Replace("`", ""); //Remove them
 
                 query += "`" + kkey + "`" + ",";
-                i++;
             }
             query = query.Remove(query.Length - 1);
             query += ") values (";
@@ -696,6 +719,7 @@ namespace Aurora.DataManager.MySQL
                     {
                         result.ExecuteReader();
                     }
+                    result.Dispose();
                 }
                 catch
                 {
@@ -703,7 +727,6 @@ namespace Aurora.DataManager.MySQL
                 }
                 finally
                 {
-                    if (result != null) result.Dispose();
                     CloseDatabase(dbcon);
                 }
             }
@@ -712,7 +735,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Insert(string table, object[] values, string updateKey, object updateValue)
         {
-            IDbCommand result = null;
+            IDbCommand result;
             string query = String.Format("insert into {0} VALUES('", table);
             query = values.Aggregate(query, (current, value) => current + (value + "','"));
             query = query.Remove(query.Length - 2);
@@ -726,6 +749,7 @@ namespace Aurora.DataManager.MySQL
                         CheckConnection();
                         result.ExecuteReader();
                     }
+                    result.Dispose();
                 }
                 catch
                 {
@@ -733,7 +757,6 @@ namespace Aurora.DataManager.MySQL
                 }
                 finally
                 {
-                    if (result != null) result.Dispose();
                     CloseDatabase(dbcon);
                 }
             }
@@ -742,7 +765,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Delete(string table, string[] keys, object[] values)
         {
-            IDbCommand result = null;
+            IDbCommand result;
             string query = "delete from " + table + (keys.Length > 0 ? " WHERE " : "");
             int i = 0;
             foreach (object value in values)
@@ -761,6 +784,7 @@ namespace Aurora.DataManager.MySQL
                         CheckConnection();
                         result.ExecuteReader();
                     }
+                    result.Dispose();
                 }
                 catch
                 {
@@ -768,7 +792,6 @@ namespace Aurora.DataManager.MySQL
                 }
                 finally
                 {
-                    if (result != null) result.Dispose();
                     CloseDatabase(dbcon);
                 }
             }
@@ -795,7 +818,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Delete(string table, string whereclause)
         {
-            IDbCommand result = null;
+            IDbCommand result;
             string query = "delete from " + table + " WHERE " + whereclause;
             using (MySqlConnection dbcon = GetLockedConnection())
             {
@@ -806,6 +829,7 @@ namespace Aurora.DataManager.MySQL
                         CheckConnection();
                         result.ExecuteReader();
                     }
+                    result.Dispose();
                 }
                 catch
                 {
@@ -813,7 +837,6 @@ namespace Aurora.DataManager.MySQL
                 }
                 finally
                 {
-                    if (result != null) result.Dispose();
                     CloseDatabase(dbcon);
                 }
             }
@@ -822,7 +845,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool DeleteByTime(string table, string key)
         {
-            IDbCommand result = null;
+            IDbCommand result;
             string query = "delete from " + table + " WHERE '" + key + "' < now()";
             using (MySqlConnection dbcon = GetLockedConnection ())
             {
@@ -833,6 +856,7 @@ namespace Aurora.DataManager.MySQL
                         CheckConnection();
                         result.ExecuteReader();
                     }
+                    result.Dispose();
                 }
                 catch
                 {
@@ -840,7 +864,6 @@ namespace Aurora.DataManager.MySQL
                 }
                 finally
                 {
-                    if (result != null) result.Dispose();
                     CloseDatabase(dbcon);
                 }
             }
@@ -1160,13 +1183,17 @@ namespace Aurora.DataManager.MySQL
                 }
                 finally
                 {
-                    if (reader != null)
+                    try
                     {
-                        reader.Close();
-                        reader.Dispose();
+                        if (reader != null)
+                        {
+                            reader.Close();
+                            reader.Dispose();
+                        }
+                        if (result != null)
+                            result.Dispose();
                     }
-                    if (result != null)
-                        result.Dispose();
+                    catch{}
                     CloseDatabase(dbcon);
                 }
                 if (retVal.Contains(table))
@@ -1204,12 +1231,15 @@ namespace Aurora.DataManager.MySQL
                 }
                 finally
                 {
-                    if (rdr != null)
+                    try
                     {
-                        rdr.Close();
-                        rdr.Dispose();
-                    }
-                    if (dbcommand != null) dbcommand.Dispose();
+                        if (rdr != null)
+                        {
+                            rdr.Close();
+                            rdr.Dispose();
+                        }
+                        if (dbcommand != null) dbcommand.Dispose();
+                    }catch{}
                     CloseDatabase(dbcon);
                 }
                 
