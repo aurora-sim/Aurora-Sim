@@ -48,13 +48,17 @@ namespace Aurora.DataManager.MySQL
                     CheckConnection();
                     m_connection.Ping();
                 }
-                catch (MySqlException)
+                catch (MySqlException ee)
                 {
+                    m_log.Debug("[MySQLDataLoader] Query", ee);
                     try
                     {
                         m_connection.Close();
                     }
-                    catch { }
+                    catch(Exception e)
+                    {
+                        m_log.Debug("[MySQLDataLoader] GetLockedConnection", e);
+                    }
                     m_locked = false;
                     return GetLockedConnection();
                 }
@@ -66,10 +70,25 @@ namespace Aurora.DataManager.MySQL
         {
             if (m_needsStateChange)
             {
-                //We need to reopen the connection, it timed out
-                if (m_connection.State != ConnectionState.Open)
-                    m_connection.Open ();
-                m_needsStateChange = false;
+                try
+                {
+                    if (m_connection.State == ConnectionState.Broken)
+                    {
+                        m_log.Info("[MySQLDataLoader] Connection state is broken.");
+                        try
+                        {
+                            m_connection.Close();
+                        }
+                        catch (Exception e) { m_log.Debug("[MySQLDataLoader] CheckConnection", e); }
+                    }
+                    if (m_connection.State == ConnectionState.Closed)
+                        m_connection.Open();
+                    m_needsStateChange = false;
+                }
+                catch (Exception e)
+                {
+                    m_log.Debug("[MySQLDataLoader] CheckConnection", e);
+                }
             }
         }
 
@@ -120,9 +139,9 @@ namespace Aurora.DataManager.MySQL
                 }
                 return dbcommand;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                // Return null if it fails.
+                m_log.Debug("[MySQLDataLoader] CloseDatabase", e);
                 return null;
             }
         }
@@ -191,7 +210,7 @@ namespace Aurora.DataManager.MySQL
                     }
                     if (result != null) result.Dispose ();
                 }
-                catch { }
+                catch (Exception e) { m_log.Debug("[MySQLDataLoader] Query", e); }
                 CloseDatabase (dbcon);
             }
         }
@@ -235,7 +254,7 @@ namespace Aurora.DataManager.MySQL
                     }
                     if (result != null) result.Dispose ();
                 }
-                catch { }
+                catch (Exception e) { m_log.Debug("[MySQLDataLoader] Query", e); }
                 CloseDatabase (dbcon);
             }
         }
@@ -279,7 +298,7 @@ namespace Aurora.DataManager.MySQL
                     }
                     if (result != null) result.Dispose ();
                 }
-                catch { }
+                catch (Exception e) { m_log.Debug("[MySQLDataLoader] QueryFullData", e); }
                 CloseDatabase (dbcon);
             }
         }
@@ -330,8 +349,9 @@ namespace Aurora.DataManager.MySQL
 
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                m_log.Debug("[MySQLDataLoader] Query", e);
                 return new List<string> ();
             }
             finally
@@ -345,7 +365,7 @@ namespace Aurora.DataManager.MySQL
                     }
                     if (result != null) result.Dispose ();
                 }
-                catch { }
+                catch (Exception e) { m_log.Debug("[MySQLDataLoader] Query", e); }
                 CloseDatabase (dbcon);
             }
         }
@@ -388,8 +408,9 @@ namespace Aurora.DataManager.MySQL
                     }
                 }
             }
-            catch
+            catch(Exception e)
             {
+                m_log.Debug("[MySQLDataLoader] Query", e);
                 return null;
             }
             finally
@@ -403,7 +424,7 @@ namespace Aurora.DataManager.MySQL
                     }
                     if (result != null) result.Dispose ();
                 }
-                catch { }
+                catch (Exception e) { m_log.Debug("[MySQLDataLoader] Query", e); }
                 CloseDatabase (dbcon);
             }
         }
@@ -446,8 +467,9 @@ namespace Aurora.DataManager.MySQL
                     }
                 }
             }
-            catch
+            catch(Exception e)
             {
+                m_log.Debug("[MySQLDataLoader] QueryNames", e);
                 return null;
             }
             finally
@@ -461,7 +483,7 @@ namespace Aurora.DataManager.MySQL
                     }
                     if (result != null) result.Dispose ();
                 }
-                catch { }
+                catch (Exception e) { m_log.Debug("[MySQLDataLoader] QueryNames", e); }
                 CloseDatabase (dbcon);
             }
         }
@@ -507,8 +529,9 @@ namespace Aurora.DataManager.MySQL
                     result.ExecuteNonQuery ();
                 }
             }
-            catch (MySqlException)
+            catch (MySqlException e)
             {
+                m_log.Debug("[MySQLDataLoader] Update", e);
             }
             finally
             {
@@ -516,7 +539,7 @@ namespace Aurora.DataManager.MySQL
                 {
                     if (result != null) result.Dispose ();
                 }
-                catch { }
+                catch (Exception e) { m_log.Debug("[MySQLDataLoader] Update", e); }
                 CloseDatabase (dbcon);
             }
             return true;
@@ -540,9 +563,9 @@ namespace Aurora.DataManager.MySQL
                     result.ExecuteNonQuery ();
                 }
             }
-            catch
+            catch(Exception e)
             {
-
+                m_log.Debug("[MySQLDataLoader] Insert", e);
             }
             finally
             {
@@ -550,7 +573,7 @@ namespace Aurora.DataManager.MySQL
                 {
                     if (result != null) result.Dispose ();
                 }
-                catch { }
+                catch (Exception e) { m_log.Debug("[MySQLDataLoader] Insert", e); }
                 CloseDatabase (dbcon);
             }
             return true;
@@ -586,8 +609,9 @@ namespace Aurora.DataManager.MySQL
                     result.ExecuteNonQuery ();
                 }
             }
-            catch
+            catch(Exception e)
             {
+                m_log.Debug("[MySQLDataLoader] Insert", e);
             }
             finally
             {
@@ -595,7 +619,7 @@ namespace Aurora.DataManager.MySQL
                 {
                     if (result != null) result.Dispose ();
                 }
-                catch { }
+                catch (Exception e) { m_log.Debug("[MySQLDataLoader] Insert", e); }
                 CloseDatabase (dbcon);
             }
             return true;
@@ -641,8 +665,9 @@ namespace Aurora.DataManager.MySQL
                     result.ExecuteNonQuery ();
                 }
             }
-            catch
+            catch(Exception e)
             {
+                m_log.Debug("[MySQLDataLoader] Replace", e);
                 return false;
             }
             finally
@@ -651,7 +676,7 @@ namespace Aurora.DataManager.MySQL
                 {
                     if (result != null) result.Dispose ();
                 }
-                catch { }
+                catch (Exception e) { m_log.Debug("[MySQLDataLoader] Replace", e); }
                 CloseDatabase (dbcon);
             }
             return true;
@@ -687,8 +712,9 @@ namespace Aurora.DataManager.MySQL
                     result.ExecuteNonQuery ();
                 }
             }
-            catch
+            catch(Exception e)
             {
+                m_log.Debug("[MySQLDataLoader] DirectReplace", e);
                 return false;
             }
             finally
@@ -697,7 +723,7 @@ namespace Aurora.DataManager.MySQL
                 {
                     if (result != null) result.Dispose ();
                 }
-                catch { }
+                catch (Exception e) { m_log.Debug("[MySQLDataLoader] DirectReplace", e); }
                 CloseDatabase (dbcon);
             }
             return true;
@@ -719,8 +745,9 @@ namespace Aurora.DataManager.MySQL
                     result.ExecuteNonQuery ();
                 }
             }
-            catch
+            catch(Exception e)
             {
+                m_log.Debug("[MySQLDataLoader] Insert", e);
                 return false;
             }
             finally
@@ -729,7 +756,7 @@ namespace Aurora.DataManager.MySQL
                 {
                     if (result != null) result.Dispose ();
                 }
-                catch { }
+                catch (Exception e) { m_log.Debug("[MySQLDataLoader] Insert", e); }
                 CloseDatabase (dbcon);
             }
             return true;
@@ -756,8 +783,9 @@ namespace Aurora.DataManager.MySQL
                     result.ExecuteNonQuery ();
                 }
             }
-            catch
+            catch(Exception e)
             {
+                m_log.Debug("[MySQLDataLoader] Delete", e);
                 return false;
             }
             finally
@@ -766,7 +794,7 @@ namespace Aurora.DataManager.MySQL
                 {
                     if (result != null) result.Dispose ();
                 }
-                catch { }
+                catch (Exception e) { m_log.Debug("[MySQLDataLoader] Delete", e); }
                 CloseDatabase (dbcon);
             }
             return true;
@@ -803,8 +831,9 @@ namespace Aurora.DataManager.MySQL
                     result.ExecuteNonQuery ();
                 }
             }
-            catch
+            catch(Exception e)
             {
+                m_log.Debug("[MySQLDataLoader] Delete", e);
                 return false;
             }
             finally
@@ -813,7 +842,7 @@ namespace Aurora.DataManager.MySQL
                 {
                     if (result != null) result.Dispose ();
                 }
-                catch { }
+                catch (Exception e) { m_log.Debug("[MySQLDataLoader] Delete", e); }
                 CloseDatabase (dbcon);
             }
             return true;
@@ -832,8 +861,9 @@ namespace Aurora.DataManager.MySQL
                     result.ExecuteNonQuery ();
                 }
             }
-            catch
+            catch(Exception e)
             {
+                m_log.Debug("[MySQLDataLoader] DeleteByTime", e);
                 return false;
             }
             finally
@@ -842,7 +872,7 @@ namespace Aurora.DataManager.MySQL
                 {
                     if (result != null) result.Dispose ();
                 }
-                catch { }
+                catch (Exception e) { m_log.Debug("[MySQLDataLoader] DeleteByTime", e); }
                 CloseDatabase (dbcon);
             }
             return true;
@@ -896,9 +926,9 @@ namespace Aurora.DataManager.MySQL
                     dbcommand.ExecuteNonQuery ();
                 }
             }
-            catch
+            catch(Exception e)
             {
-
+                m_log.Debug("[MySQLDataLoader] CreateTable", e);
             }
             finally
             {
@@ -945,8 +975,9 @@ namespace Aurora.DataManager.MySQL
                         CheckConnection ();
                         dbcommand.ExecuteNonQuery ();
                     }
-                    catch
+                    catch(Exception e)
                     {
+                        m_log.Debug("[MySQLDataLoader] UpdateTable", e);
                     }
                 }
                 foreach (ColumnDefinition column in modifiedColumns.Values)
@@ -961,8 +992,9 @@ namespace Aurora.DataManager.MySQL
                         CheckConnection ();
                         dbcommand.ExecuteNonQuery ();
                     }
-                    catch
+                    catch(Exception e)
                     {
+                        m_log.Debug("[MySQLDataLoader] UpdateTable", e);
                     }
                 }
                 foreach (ColumnDefinition column in removedColumns.Values)
@@ -977,14 +1009,15 @@ namespace Aurora.DataManager.MySQL
                         CheckConnection ();
                         dbcommand.ExecuteNonQuery ();
                     }
-                    catch
+                    catch(Exception e)
                     {
+                        m_log.Debug("[MySQLDataLoader] UpdateTable", e);
                     }
                 }
             }
-            catch
+            catch(Exception e)
             {
-
+                m_log.Debug("[MySQLDataLoader] UpdateTable", e);
             }
             finally
             {
@@ -1062,9 +1095,9 @@ namespace Aurora.DataManager.MySQL
                     dbcommand.ExecuteNonQuery ();
                 }
             }
-            catch
+            catch(Exception e)
             {
-
+                m_log.Debug("[MySQLDataLoader] DropTable", e);
             }
             finally
             {
@@ -1085,9 +1118,9 @@ namespace Aurora.DataManager.MySQL
                     dbcommand.ExecuteNonQuery ();
                 }
             }
-            catch
+            catch(Exception e)
             {
-
+                m_log.Debug("[MySQLDataLoader] ForceRenameTable", e);                
             }
             finally
             {
@@ -1110,9 +1143,9 @@ namespace Aurora.DataManager.MySQL
                     dbcommand.ExecuteNonQuery ();
                 }
             }
-            catch
+            catch(Exception e)
             {
-
+                m_log.Debug("[MySQLDataLoader] CopyAllDataBetweenMatchingTables", e);
             }
             finally
             {
@@ -1145,9 +1178,7 @@ namespace Aurora.DataManager.MySQL
                     }
                 }
             }
-            catch
-            {
-            }
+            catch (Exception e) { m_log.Debug("[MySQLDataLoader] TableExists", e); }
             finally
             {
                 try
@@ -1160,7 +1191,7 @@ namespace Aurora.DataManager.MySQL
                     if (result != null)
                         result.Dispose ();
                 }
-                catch { }
+                catch (Exception e) { m_log.Debug("[MySQLDataLoader] TableExists", e); }
                 CloseDatabase (dbcon);
             }
             if (retVal.Contains (table))
@@ -1191,8 +1222,9 @@ namespace Aurora.DataManager.MySQL
                     defs.Add (new ColumnDefinition { Name = name.ToString (), IsPrimary = pk.ToString () == "PRI", Type = ConvertTypeToColumnType (type.ToString ()) });
                 }
             }
-            catch
+            catch(Exception e)
             {
+                m_log.Debug("[MySQLDataLoader] ExtractColumnsFromTable", e);
             }
             finally
             {
@@ -1205,7 +1237,7 @@ namespace Aurora.DataManager.MySQL
                     }
                     if (dbcommand != null) dbcommand.Dispose ();
                 }
-                catch { }
+                catch (Exception e) { m_log.Debug("[MySQLDataLoader] ExtractColumnsFromTable", e); }
                 CloseDatabase (dbcon);
             }
             return defs;
