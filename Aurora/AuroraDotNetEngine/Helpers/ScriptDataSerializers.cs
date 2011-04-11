@@ -67,6 +67,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void SaveStateTo (ScriptData script)
         {
+            if (!script.Script.NeedsStateSaved)
+                return; //If it doesn't need a state save, don't save one
+            script.Script.NeedsStateSaved = false;
             StateSave stateSave = new StateSave ();
             stateSave.State = script.State;
             stateSave.ItemID = script.ItemID;

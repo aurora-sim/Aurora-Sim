@@ -55,6 +55,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             }
         }
 
+        public bool NeedsStateSaved
+        {
+            get
+            {
+                if (m_lastStateSaveValues == null)
+                    m_lastStateSaveValues = m_InitialValues;
+                Dictionary<string, object> vars = GetVars ();
+                foreach (KeyValuePair<string, object> kvp in vars)
+                {
+                    if (m_lastStateSaveValues[kvp.Key].ToString() != kvp.Value.ToString()) //Something changed!
+                        return true;
+                }
+                return false;
+            }
+            set
+            {
+                //Besides setting the value, if we don't need one, save the vars we have for the last state save as well
+                if(!value)
+                    m_lastStateSaveValues = GetVars ();
+            }
+        }
+
+        private Dictionary<string, object> m_lastStateSaveValues = null;
         public IScene Scene = null;
         public ISceneChildEntity Object = null;
 
@@ -122,9 +145,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         }
 
         public bool CheckSlice()
-            {
-            return m_Executor.CheckSlice();
-            }
+        {
+            return m_Executor.CheckSlice ();
+        }
 
         private Dictionary<string, object> m_InitialValues =
                 new Dictionary<string, object>();

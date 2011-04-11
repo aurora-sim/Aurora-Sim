@@ -34,6 +34,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         void Close();
         string Name { get; }
 
+        /// <summary>
+        /// Gives a ref to the scene the script is in and its parent object
+        /// </summary>
+        /// <param name="iScene"></param>
+        /// <param name="iSceneChildEntity"></param>
         void SetSceneRefs(IScene iScene, ISceneChildEntity iSceneChildEntity);
+
+        /// <summary>
+        /// Whether this script needs a state save performed
+        /// </summary>
+        bool NeedsStateSaved { get; set; }
     }
 }

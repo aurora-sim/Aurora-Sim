@@ -90,6 +90,7 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
         private Dictionary<UUID, RPCRequestInfo> m_rpcPending;
         private Dictionary<UUID, RPCRequestInfo> m_rpcPendingResponses;
         private List<Scene> m_scenes = new List<Scene>();
+        private IScriptModule m_scriptModule;
         private int RemoteReplyScriptTimeout = 9000;
         private int RemoteReplyScriptWait = 300;
         private object XMLRPCListLock = new object();
@@ -120,6 +121,7 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
                 m_scenes.Add(scene);
 
                 scene.RegisterModuleInterface<IXMLRPC>(this);
+                m_scriptModule = scene.RequestModuleInterface<IScriptModule> ();
             }
         }
 
@@ -229,7 +231,7 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
             }
 
             //Make sure that the cmd handler thread is running
-            m_scenes[0].RequestModuleInterface<IScriptModule>().PokeThreads ();
+            m_scriptModule.PokeThreads ();
 
             return newChannel;
         }
@@ -259,7 +261,7 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
             }
 
             //Make sure that the cmd handler thread is running
-            m_scenes[0].RequestModuleInterface<IScriptModule> ().PokeThreads ();
+            m_scriptModule.PokeThreads ();
         }
 
         /**********************************************
@@ -300,7 +302,7 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
             }
 
             //Make sure that the cmd handler thread is running
-            m_scenes[0].RequestModuleInterface<IScriptModule> ().PokeThreads ();
+            m_scriptModule.PokeThreads ();
         }
 
         /**********************************************
@@ -371,7 +373,7 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
             req.Process ();
 
             //Make sure that the cmd handler thread is running
-            m_scenes[0].RequestModuleInterface<IScriptModule> ().PokeThreads ();
+            m_scriptModule.PokeThreads ();
             return req.ReqID;
         }
 
@@ -481,7 +483,7 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
             }
 
             //Make sure that the cmd handler thread is running
-            m_scenes[0].RequestModuleInterface<IScriptModule> ().PokeThreads ();
+            m_scriptModule.PokeThreads ();
 
             return response;
         }

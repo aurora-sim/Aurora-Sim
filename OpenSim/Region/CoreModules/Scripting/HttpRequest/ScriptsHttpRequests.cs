@@ -98,6 +98,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
         // <reqID, itemID>
         private Dictionary<UUID, UUID> m_reqID2itemID = new Dictionary<UUID, UUID>();
         private Scene m_scene;
+        private IScriptModule m_scriptModule;
         public class HTTPMax
         {
             public int Number = 0;
@@ -132,7 +133,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
         public UUID MakeHttpRequest(string url, string parameters, string body)
         {
             //Make sure that the cmd handler thread is running
-            m_scene.RequestModuleInterface<IScriptModule> ().PokeThreads ();
+            m_scriptModule.PokeThreads ();
             return UUID.Zero;
         }
 
@@ -219,7 +220,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             if(ShouldProcess)
                 htc.Process ();
             //Make sure that the cmd handler thread is running
-            m_scene.RequestModuleInterface<IScriptModule> ().PokeThreads ();
+            m_scriptModule.PokeThreads ();
 
             return reqID;
         }
@@ -227,7 +228,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
         public void StopHttpRequest(UUID primID, UUID m_itemID)
         {
             //Make sure that the cmd handler thread is running
-            m_scene.RequestModuleInterface<IScriptModule> ().PokeThreads ();
+            m_scriptModule.PokeThreads ();
             //Kill all requests and return
             if (m_pendingRequests != null)
             {
@@ -304,6 +305,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
         {
             m_scene = scene;
 
+            m_scriptModule = scene.RequestModuleInterface<IScriptModule> ();
             m_scene.RegisterModuleInterface<IHttpRequestModule>(this);
         }
 

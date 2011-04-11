@@ -135,5 +135,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         public void SetSceneRefs(OpenSim.Framework.IScene iScene, OpenSim.Framework.ISceneChildEntity iSceneChildEntity)
         {
         }
+
+        public bool NeedsStateSaved
+        {
+            get { return false; } 
+            set { }
+        }
     }
 }
