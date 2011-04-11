@@ -66,9 +66,8 @@ namespace Aurora.Services.DataService
                 i++;
             }
             query = query.Remove(query.Length - 5);
-            using (IDbCommand cmd = GD.QueryData (query, m_itemsrealm, "*"))
+            using (IDataReader reader = GD.QueryData (query, m_itemsrealm, "*"))
             {
-                IDataReader reader = cmd.ExecuteReader ();
                 try
                 {
                     return ParseInventoryItems (reader);
@@ -85,7 +84,6 @@ namespace Aurora.Services.DataService
                             reader.Close ();
                             reader.Dispose ();
                         }
-                        if (cmd != null) cmd.Dispose ();
                     }
                     catch { }
                     GD.CloseDatabase ();
@@ -103,9 +101,8 @@ namespace Aurora.Services.DataService
                 i++;
             }
             query = query.Remove(query.Length - 5);
-            using (IDbCommand cmd = GD.QueryData (query, m_itemsrealm, "*"))
+            using (IDataReader reader = GD.QueryData (query, m_itemsrealm, "*"))
             {
-                IDataReader reader = cmd.ExecuteReader ();
                 try
                 {
                     return ParseLLSDInventoryItems (reader);
@@ -122,7 +119,6 @@ namespace Aurora.Services.DataService
                             reader.Close ();
                             reader.Dispose ();
                         }
-                        if (cmd != null) cmd.Dispose ();
                     }
                     catch { }
                     GD.CloseDatabase ();
@@ -221,12 +217,10 @@ namespace Aurora.Services.DataService
                 contents.WriteStartArray("items"); 
                 int count = 0;
                 string query = String.Format("where {0} = '{1}'", "parentFolderID", folder_id);
-                using (IDbCommand command = GD.QueryData (query, m_itemsrealm, "*"))
+                using (IDataReader retVal = GD.QueryData (query, m_itemsrealm, "*"))
                 {
-                    IDataReader retVal = null;
                     try
                     {
-                        retVal = command.ExecuteReader ();
                         while (retVal.Read ())
                         {
                             contents.WriteStartMap ("item"); //Start item kvp
@@ -300,7 +294,6 @@ namespace Aurora.Services.DataService
                                 retVal.Close ();
                                 retVal.Dispose ();
                             }
-                            if (command != null) command.Dispose ();
                         }
                         catch { }
                         GD.CloseDatabase ();
@@ -620,13 +613,11 @@ namespace Aurora.Services.DataService
         {
             string query = String.Format ("where {0} = '{1}' and {2} = '{3}'", "avatarID", principalID, "assetType", (int)AssetType.Gesture);
 
-            using (IDbCommand cmd = GD.QueryData (query, m_itemsrealm, "*"))
+            using (IDataReader reader = GD.QueryData (query, m_itemsrealm, "*"))
             {
                 List<InventoryItemBase> items = new List<InventoryItemBase>();
-                IDataReader reader = null;
                 try
                 {
-                    reader = cmd.ExecuteReader ();
                     items = ParseInventoryItems (reader);
                     items.RemoveAll (delegate (InventoryItemBase item)
                     {
@@ -645,7 +636,6 @@ namespace Aurora.Services.DataService
                             reader.Close ();
                             reader.Dispose ();
                         }
-                        if (cmd != null) cmd.Dispose ();
                     }
                     catch { }
                 }

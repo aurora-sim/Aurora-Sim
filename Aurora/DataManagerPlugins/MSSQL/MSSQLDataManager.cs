@@ -207,12 +207,12 @@ namespace Aurora.DataManager.MSSQL
             }
         }
 
-        public override IDbCommand QueryData(string whereClause, string table, string wantedValue)
+        public override IDataReader QueryData(string whereClause, string table, string wantedValue)
         {
             SqlConnection dbcon = GetLockedConnection();
             string query = String.Format("select {0} from {1} {2}",
                                       wantedValue, table, whereClause);
-            return Query (query, new Dictionary<string, object> (), dbcon);
+            return Query (query, new Dictionary<string, object> (), dbcon).ExecuteReader();
         }
 
         public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string order)

@@ -59,8 +59,7 @@ namespace Aurora.Services.DataService
             List<AvatarArchive> returnValue = new List<AvatarArchive>();
             try
             {
-                System.Data.IDbCommand cmd = GD.QueryData ("where IsPublic = 1", "avatararchives", "Name, Snapshot, IsPublic");
-                System.Data.IDataReader RetVal = cmd.ExecuteReader ();
+                System.Data.IDataReader RetVal = GD.QueryData ("where IsPublic = 1", "avatararchives", "Name, Snapshot, IsPublic");
                 while (RetVal.Read ())
                 {
                     AvatarArchive Archive = new AvatarArchive ();
@@ -71,7 +70,6 @@ namespace Aurora.Services.DataService
                 }
                 RetVal.Close ();
                 RetVal.Dispose ();
-                cmd.Dispose ();
             }
             catch
             {

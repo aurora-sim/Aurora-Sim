@@ -97,7 +97,7 @@ namespace Aurora.Framework
         /// <summary>
         /// select 'wantedValue' from 'table' where 'whereClause'
         /// </summary>
-        IDbCommand QueryData(string whereClause, string table, string wantedValue);
+        IDataReader QueryData(string whereClause, string table, string wantedValue);
 
         /// <summary>
         /// select 'wantedValue' from 'table' where 'keyRow' = 'keyValue' 'Order'

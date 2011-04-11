@@ -24,7 +24,7 @@ namespace Aurora.DataManager
         public abstract List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
         public abstract List<string> Query(string whereClause, string table, string wantedValue);
         public abstract List<string> QueryFullData(string whereClause, string table, string wantedValue);
-        public abstract IDbCommand QueryData(string whereClause, string table, string wantedValue);
+        public abstract IDataReader QueryData(string whereClause, string table, string wantedValue);
         public abstract List<string> Query (string keyRow, object keyValue, string table, string wantedValue);
         public abstract List<string> Query (string[] keyRow, object[] keyValue, string table, string wantedValue);
         public abstract Dictionary<string, List<string>> QueryNames (string[] keyRow, object[] keyValue, string table, string wantedValue);
