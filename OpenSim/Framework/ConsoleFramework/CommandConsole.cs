@@ -43,6 +43,8 @@ namespace OpenSim.Framework
 {
     public class Commands
     {
+        public const bool _ConsoleIsCaseSensitive = false;
+
         /// <summary>
         /// Encapsulates a command that can be invoked from the console
         /// </summary>
@@ -88,6 +90,9 @@ namespace OpenSim.Framework
 
             public void AddCommand (CommandInfo info)
             {
+                if (!_ConsoleIsCaseSensitive) //Force to all lowercase
+                    info.command = info.command.ToLower ();
+
                 //If our path is "", we can't replace, otherwise we just get ""
                 string innerPath = info.command;
                 if (ourPath != "")
@@ -120,6 +125,8 @@ namespace OpenSim.Framework
                 if (command.Length != 0)
                 {
                     string innerPath = string.Join (" ", command);
+                    if (!_ConsoleIsCaseSensitive)
+                        innerPath = innerPath.ToLower ();
                     if (ourPath != "")
                         innerPath = innerPath.Replace (ourPath, "");
                     if (innerPath.StartsWith (" "))
@@ -188,6 +195,8 @@ namespace OpenSim.Framework
                         string cmdToExecute = commandPath[0];
                         if (cmdToExecute == "help")
                             cmdToExecute = commandPath[1];
+                        if (!_ConsoleIsCaseSensitive)
+                            cmdToExecute = cmdToExecute.ToLower ();
                         //Its down the tree somewhere
                         CommandSet downTheTree;
                         if (commandsets.TryGetValue(cmdToExecute, out downTheTree))
@@ -218,6 +227,8 @@ namespace OpenSim.Framework
                 if (command.Length != 0)
                 {
                     string innerPath = string.Join (" ", command);
+                    if (!_ConsoleIsCaseSensitive)
+                        innerPath = innerPath.ToLower ();
                     if (ourPath != "")
                         innerPath = innerPath.Replace (ourPath, "");
                     if (innerPath.StartsWith (" "))
@@ -236,8 +247,13 @@ namespace OpenSim.Framework
                         }
                         if (commandPath.Length != 0)
                         {
+                            string cmdToExecute = commandPath[0];
+                            if (cmdToExecute == "help")
+                                cmdToExecute = commandPath[1];
+                            if (!_ConsoleIsCaseSensitive)
+                                cmdToExecute = cmdToExecute.ToLower ();
                             CommandSet downTheTree;
-                            if (commandsets.TryGetValue (commandPath[0], out downTheTree))
+                            if (commandsets.TryGetValue (cmdToExecute, out downTheTree))
                             {
                                 values.AddRange(downTheTree.FindCommands (commandPath));
                             }
@@ -247,7 +263,7 @@ namespace OpenSim.Framework
                                 foreach (KeyValuePair<string, CommandSet> cmd in commandsets)
                                 {
                                     //If it starts with it, execute it (eg. q for quit)
-                                    if (cmd.Key.StartsWith (commandPath[0]))
+                                    if (cmd.Key.StartsWith (cmdToExecute))
                                     {
                                         values.AddRange (cmd.Value.FindCommands (commandPath));
                                     }
@@ -257,9 +273,14 @@ namespace OpenSim.Framework
                     }
                     else if(commandPath.Length != 0)
                     {
+                        string cmdToExecute = commandPath[0];
+                        if (cmdToExecute == "help")
+                            cmdToExecute = commandPath[1];
+                        if (!_ConsoleIsCaseSensitive)
+                            cmdToExecute = cmdToExecute.ToLower ();
                         //Its down the tree somewhere
                         CommandSet downTheTree;
-                        if (commandsets.TryGetValue (commandPath[0], out downTheTree))
+                        if (commandsets.TryGetValue (cmdToExecute, out downTheTree))
                         {
                             return downTheTree.FindCommands (commandPath);
                         }
@@ -269,7 +290,7 @@ namespace OpenSim.Framework
                             foreach (KeyValuePair<string, CommandSet> cmd in commandsets)
                             {
                                 //If it starts with it, execute it (eg. q for quit)
-                                if (cmd.Key.StartsWith (commandPath[0]))
+                                if (cmd.Key.StartsWith (cmdToExecute))
                                 {
                                     return cmd.Value.FindCommands (commandPath);
                                 }
