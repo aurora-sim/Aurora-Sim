@@ -124,7 +124,8 @@ namespace OpenSim.Services.MessagingService
                 if (regionCaps == null || clientCaps == null)
                     return null;
                 //Only the region the client is root in can do this
-                if (clientCaps.GetRootCapsService().RegionHandle == regionCaps.RegionHandle)
+                IRegionClientCapsService rootCaps = clientCaps.GetRootCapsService ();
+                if (rootCaps != null && rootCaps.RegionHandle == regionCaps.RegionHandle)
                 {
                     //The user has requested to cancel the teleport, stop them.
                     clientCaps.RequestToCancelTeleport = true;
@@ -146,7 +147,8 @@ namespace OpenSim.Services.MessagingService
             {
                 if (regionCaps == null || clientCaps == null)
                     return null;
-                if (clientCaps.GetRootCapsService().RegionHandle == regionCaps.RegionHandle)
+                IRegionClientCapsService rootCaps = clientCaps.GetRootCapsService ();
+                if (rootCaps != null && rootCaps.RegionHandle == regionCaps.RegionHandle)
                 {
                     OSDMap body = ((OSDMap)message["Message"]);
 
@@ -161,7 +163,8 @@ namespace OpenSim.Services.MessagingService
             {
                 if (regionCaps == null || clientCaps == null)
                     return null;
-                if (clientCaps.GetRootCapsService().RegionHandle == regionCaps.RegionHandle)
+                IRegionClientCapsService rootCaps = clientCaps.GetRootCapsService ();
+                if (rootCaps != null && rootCaps.RegionHandle == regionCaps.RegionHandle)
                 {
                     OSDMap body = ((OSDMap)message["Message"]);
 

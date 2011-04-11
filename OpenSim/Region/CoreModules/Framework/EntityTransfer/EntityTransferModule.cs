@@ -301,7 +301,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     {
                         // Fix the agent status
                         sp.IsChildAgent = false;
-                        sp.ControllingClient.SendTeleportFailed(map["Reason"].AsString());
+                        if(map != null)
+                            sp.ControllingClient.SendTeleportFailed(map["Reason"].AsString());
                         return;
                     }
                 }

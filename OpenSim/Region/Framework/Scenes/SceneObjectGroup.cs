@@ -3497,6 +3497,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         public virtual void ExtraFromXmlString(string xmlstr)
         {
+            if (xmlstr == "")
+                return;
             string id = xmlstr.Substring(xmlstr.IndexOf("<ExtraFromItemID>"));
             id = xmlstr.Replace("<ExtraFromItemID>", "");
             id = id.Replace("</ExtraFromItemID>", "");

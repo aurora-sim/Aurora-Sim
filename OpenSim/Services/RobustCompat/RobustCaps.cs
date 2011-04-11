@@ -45,6 +45,19 @@ namespace OpenSim.Services.RobustCompat
             {
                 WebUtils.ServiceOSDRequest(presence.CallbackURI, null, "DELETE", 10000, false, false);
                 presence.CallbackURI = null;
+                ICapsService service = m_scene.RequestModuleInterface<ICapsService>();
+                if (service != null)
+                {
+                    IClientCapsService clientCaps = service.GetClientCapsService (presence.UUID);
+                    if (clientCaps != null)
+                    {
+                        IRegionClientCapsService regionCaps = clientCaps.GetCapsService (m_scene.RegionInfo.RegionHandle);
+                        if (regionCaps != null)
+                        {
+                            regionCaps.RootAgent = true;
+                        }
+                    }
+                }
             }
         }
 
