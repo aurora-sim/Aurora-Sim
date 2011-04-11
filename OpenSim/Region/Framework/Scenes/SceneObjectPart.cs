@@ -5418,7 +5418,7 @@ namespace OpenSim.Region.Framework.Scenes
                 ParentGroup.RootPart.Rezzed = DateTime.UtcNow;
 
             ParentGroup.HasGroupChanged = true;
-            ScheduleUpdate(PrimUpdateFlags.Shape);
+            ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }
 
         /// <summary>
