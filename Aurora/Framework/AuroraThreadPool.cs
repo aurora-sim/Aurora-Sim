@@ -105,6 +105,7 @@ namespace Aurora.Framework
                     }
                 }
                 catch { }
+                Thread.Sleep(OurSleepTime);
             }
         }
 
