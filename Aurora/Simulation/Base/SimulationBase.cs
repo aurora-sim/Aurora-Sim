@@ -297,6 +297,12 @@ namespace Aurora.Simulation.Base
 
             string hostName =
                 m_config.Configs["Network"].GetString("HostName", "http://127.0.0.1");
+            //Clean it up a bit
+            if (!hostName.StartsWith ("http://") && !hostName.StartsWith ("https://"))
+                hostName = "http://" + hostName;
+            if (hostName.EndsWith ("/"))
+                hostName = hostName.Remove (hostName.Length - 1, 1);
+
             m_Servers[port] = new BaseHttpServer(port, UsesSSL, sslPort, sslCN, hostName);
 
             try
