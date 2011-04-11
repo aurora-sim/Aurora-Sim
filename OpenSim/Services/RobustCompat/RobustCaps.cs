@@ -55,6 +55,11 @@ namespace OpenSim.Services.RobustCompat
                         if (regionCaps != null)
                         {
                             regionCaps.RootAgent = true;
+                            foreach (IRegionClientCapsService regionClientCaps in clientCaps.GetCapsServices ())
+                            {
+                                if (regionCaps.RegionHandle != regionClientCaps.RegionHandle)
+                                    regionClientCaps.RootAgent = false; //Reset any other agents that we might have
+                            }
                         }
                     }
                 }
@@ -86,11 +91,12 @@ namespace OpenSim.Services.RobustCompat
                 ICapsService service = m_scene.RequestModuleInterface<ICapsService>();
                 if (service != null)
                 {
-                    OSDMap param = (OSDMap)parameters;
-                    AgentCircuitData circuit = new AgentCircuitData();
-                    circuit.UnpackAgentCircuitData((OSDMap)param["Agent"]);
+                    object[] obj = (object[])parameters;
+                    OSDMap param = (OSDMap)obj[0];
+                    AgentCircuitData circuit = (AgentCircuitData)obj[1];
+                    circuit.child = false;//ONLY USE ROOT AGENTS
                     service.CreateCAPS(circuit.AgentID, CapsUtil.GetCapsSeedPath(circuit.CapsPath),
-                        m_scene.RegionInfo.RegionHandle, !circuit.child, circuit);
+                        m_scene.RegionInfo.RegionHandle, true, circuit); //We ONLY use root agents because of OpenSim's inability to send the correct data
                     IClientCapsService clientCaps = service.GetClientCapsService(circuit.AgentID);
                     if (clientCaps != null)
                     {

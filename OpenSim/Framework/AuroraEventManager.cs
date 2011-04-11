@@ -43,7 +43,7 @@ namespace Aurora.Framework
         /// PreRegisterRegion - A region is about to be registered
         ///      param is a GridRegion
         /// NewUserConnection - A new user has been added to the scene (child or root)
-        ///      param is the OSDMap that will be returned to the server
+        ///      param is an object[], with o[0] OSDMap that will be returned to the server, and o[1] the AgentCircuitData that will be added to the region
         /// EstateUpdated - An estate has been updated
         ///      param is the EstateSettings of the changed estate
         /// GridRegionRegistered - New Region has been registered with remote grid service

@@ -989,12 +989,15 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             // In all cases, add or update the circuit data with the new agent circuit data and teleport flags
             agent.teleportFlags = teleportFlags;
 
-            //Add the circuit at the end
-            scene.AuthenticateHandler.AddNewCircuit (agent.circuitcode, agent);
-
             responseMap["Agent"] = agent.PackAgentCircuitData ();
 
-            scene.AuroraEventManager.FireGenericEventHandler ("NewUserConnection", responseMap);
+            object[] obj = new object[2];
+            obj[0] = responseMap;
+            obj[1] = agent;
+            scene.AuroraEventManager.FireGenericEventHandler ("NewUserConnection", obj);
+
+            //Add the circuit at the end
+            scene.AuthenticateHandler.AddNewCircuit (agent.circuitcode, agent);
 
             m_log.InfoFormat (
                 "[ConnectionBegin]: Region {0} authenticated and authorized incoming {1} agent {2} (circuit code {3})",

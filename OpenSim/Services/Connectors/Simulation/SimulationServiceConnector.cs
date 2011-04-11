@@ -351,10 +351,13 @@ namespace OpenSim.Services.Connectors.Simulation
         {
             if (isAgent && destination.GenericMap.ContainsKey("SimulationAgent"))
                 return destination.ServerURI + destination.GenericMap["SimulationAgent"].AsString();
-            if (!isAgent && destination.GenericMap.ContainsKey("SimulationObject"))
-                return destination.ServerURI + destination.GenericMap["SimulationObject"].AsString();
+            if (!isAgent && destination.GenericMap.ContainsKey ("SimulationObject"))
+                return destination.ServerURI + destination.GenericMap["SimulationObject"].AsString ();
             else
-                return destination.ServerURI + (isAgent ? AgentPath() : ObjectPath());
+            {
+                string url = destination.ServerURI.EndsWith ("/") ? destination.ServerURI.Remove (destination.ServerURI.Length - 1, 1) : destination.ServerURI;
+                return url + (isAgent ? AgentPath () : ObjectPath ());
+            }
         }
 
         #endregion
