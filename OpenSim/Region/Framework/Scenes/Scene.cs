@@ -612,7 +612,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             catch (Exception e)
             {
-                m_log.Error ("[SCENE] Scene.cs:RemoveClient exception: " + e.ToString ());
+                m_log.Error ("[SCENE] Scene.cs:RemoveClient:Presence.Close exception: " + e.ToString ());
             }
 
             //Remove any interfaces it might have stored

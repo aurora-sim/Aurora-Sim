@@ -966,6 +966,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 // Or the same user is trying to be root twice here, won't work.
                 // Kill it.
                 m_log.InfoFormat ("[Scene]: Zombie scene presence detected for {0} in {1}", agent.AgentID, scene.RegionInfo.RegionName);
+                IActivityDetector[] activityDetectors = scene.RequestModuleInterfaces<IActivityDetector> ();
+                foreach (IActivityDetector det in activityDetectors)
+                {
+                    det.AgentIsAZombie (sp.UUID);
+                }
                 scene.RemoveAgent (sp);
                 sp = null;
             }

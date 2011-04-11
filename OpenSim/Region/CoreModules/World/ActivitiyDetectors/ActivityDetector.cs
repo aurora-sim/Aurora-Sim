@@ -40,11 +40,12 @@ using Nini.Config;
 
 namespace OpenSim.Region.CoreModules
 {
-    public class ActivityDetector : ISharedRegionModule
+    public class ActivityDetector : ISharedRegionModule, IActivityDetector
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Timer m_presenceUpdateTimer = null;
         private List<Scene> m_scenes = new List<Scene> ();
+        private List<UUID> m_zombieAgents = new List<UUID> ();
         
         public void Initialise(IConfigSource source)
         {
@@ -106,7 +107,6 @@ namespace OpenSim.Region.CoreModules
             //Just send the RegionIsOnline message, it will log out all the agents for the region as well
             ISyncMessagePosterService syncMessage = scene.RequestModuleInterface<ISyncMessagePosterService>();
             if (syncMessage != null)
-            //    syncMessage.Post(SyncMessageHelper.LogoutRegionAgents(scene.RegionInfo.RegionHandle), scene.RegionInfo.RegionHandle);
                 syncMessage.Post(SyncMessageHelper.RegionIsOnline(scene.RegionInfo.RegionHandle), scene.RegionInfo.RegionHandle);
         }
 
@@ -130,6 +130,11 @@ namespace OpenSim.Region.CoreModules
             client.OnConnectionClosed -= OnConnectionClose;
         }
 
+        public void AgentIsAZombie(UUID agentID)
+        {
+            m_zombieAgents.Add (agentID);
+        }
+
         public void OnConnectionClose(IClientAPI client)
         {
             IScenePresence sp = null;
@@ -140,6 +145,11 @@ namespace OpenSim.Region.CoreModules
             
                 //Inform the grid service about it
 
+                if (m_zombieAgents.Contains (client.AgentId))
+                {
+                    m_zombieAgents.Remove (client.AgentId);
+                    return; //They are a known zombie, just clear them out and go on with life!
+                }
                 client.Scene.RequestModuleInterface<ISyncMessagePosterService>().Get(SyncMessageHelper.AgentLoggedOut(client.AgentId, client.Scene.RegionInfo.RegionHandle), client.Scene.RegionInfo.RegionHandle);
             }
         }
