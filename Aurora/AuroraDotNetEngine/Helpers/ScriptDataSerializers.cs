@@ -67,6 +67,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void SaveStateTo (ScriptData script)
         {
+            if (script.Script == null)
+                return; //If it didn't compile correctly, this happens
             if (!script.Script.NeedsStateSaved)
                 return; //If it doesn't need a state save, don't save one
             script.Script.NeedsStateSaved = false;
