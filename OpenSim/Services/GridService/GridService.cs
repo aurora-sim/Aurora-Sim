@@ -140,7 +140,8 @@ namespace OpenSim.Services.GridService
         private void HandleClearAllRegions(string module, string[] cmd)
         {
             //Delete everything... give no criteria to just do 'delete from gridregions'
-            m_Database.DeleteAll(new string[0], new object[0]);
+            m_Database.DeleteAll (new string[0], new object[0]);
+            m_log.Warn ("Cleared all regions");
         }
 
         private void HandleClearRegion(string module, string[] cmd)
@@ -152,7 +153,7 @@ namespace OpenSim.Services.GridService
             }
 
             string regionName = Util.CombineParams(cmd, 3);
-            GridRegion r = GetRegionByName(UUID.Zero, cmd[3]);
+            GridRegion r = GetRegionByName (UUID.Zero, regionName);
             if (r == null)
             {
                 m_log.Warn("Region was not found");
@@ -166,6 +167,7 @@ namespace OpenSim.Services.GridService
             //Delete any flags with (Flags & 254) == 254
             m_Database.DeleteAll(new string[4] { "Flags", "Flags", "Flags", "Flags" },
                 new object[4] { 254, 267, 275, 296 });
+            m_log.Warn ("Cleared all down regions");
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
