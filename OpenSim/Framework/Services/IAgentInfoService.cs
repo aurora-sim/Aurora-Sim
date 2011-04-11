@@ -156,6 +156,13 @@ namespace OpenSim.Services.Interfaces
         void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent);
 
         /// <summary>
+        /// This is used in grid mode so that the sim cannot influence the login status
+        /// </summary>
+        /// <param name="userID"></param>
+        /// <param name="locked">Whether to lock or unlock the user</param>
+        void LockLoggedInStatus(string userID, bool locked);
+
+        /// <summary>
         /// The local service (if one exists)
         /// </summary>
         IAgentInfoService InnerService { get; }

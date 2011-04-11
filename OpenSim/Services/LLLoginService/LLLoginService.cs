@@ -441,9 +441,9 @@ namespace OpenSim.Services.LLLoginService
 
             m_log.InfoFormat("[LLOGIN SERVICE]: Login request for {0} from {1} with user agent {2} starting in {3}",
                 Name, clientIP.Address.ToString(), clientVersion, startLocation);
+            UserAccount account = m_UserAccountService.GetUserAccount (scopeID, Name);
             try
             {
-                UserAccount account = m_UserAccountService.GetUserAccount(scopeID, Name);
                 string DisplayName = account.Name;
                 IAgentInfo agent = null;
 
@@ -541,6 +541,8 @@ namespace OpenSim.Services.LLLoginService
                 UserInfo guinfo = m_agentInfoService.GetUserInfo(account.PrincipalID.ToString());
                 //Reset logged in to true if the user was crashed, but don't fire the logged in event yet
                 m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true, false);
+                //Lock it as well
+                m_agentInfoService.LockLoggedInStatus (account.PrincipalID.ToString (), true);
                 if (guinfo != null && (guinfo.HomeRegionID != UUID.Zero) && m_GridService != null)
                 {
                     home = m_GridService.GetRegionByUUID(scopeID, guinfo.HomeRegionID);
@@ -677,7 +679,8 @@ namespace OpenSim.Services.LLLoginService
                 }
 
                 //Set them as logged in now, they are ready, and fire the logged in event now, as we're all done
-                m_agentInfoService.SetLastPosition(account.PrincipalID.ToString(), destination.RegionID, position, lookAt);
+                m_agentInfoService.SetLastPosition (account.PrincipalID.ToString (), destination.RegionID, position, lookAt);
+                m_agentInfoService.LockLoggedInStatus (account.PrincipalID.ToString (), false); //Unlock it now
                 m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true, true);
                 
                 //
@@ -711,7 +714,13 @@ namespace OpenSim.Services.LLLoginService
             }
             catch (Exception e)
             {
-                m_log.WarnFormat("[LLOGIN SERVICE]: Exception processing login for {0} : {1}", Name, e.ToString());
+                m_log.WarnFormat ("[LLOGIN SERVICE]: Exception processing login for {0} : {1}", Name, e.ToString ());
+                if (account != null)
+                {
+                    //Revert their logged in status if we got that far
+                    m_agentInfoService.LockLoggedInStatus (account.PrincipalID.ToString (), false); //Unlock it now
+                    m_agentInfoService.SetLoggedIn (account.PrincipalID.ToString (), false, false);
+                }
                 return LLFailedLoginResponse.InternalError;
             }
             

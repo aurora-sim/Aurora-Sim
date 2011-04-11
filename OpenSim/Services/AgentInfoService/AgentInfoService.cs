@@ -47,6 +47,7 @@ namespace OpenSim.Services
 
         protected IAgentInfoConnector m_agentInfoConnector;
         protected IRegistryCore m_registry;
+        protected List<string> m_lockedUsers = new List<string>();
 
         #endregion
 
@@ -125,8 +126,18 @@ namespace OpenSim.Services
             m_agentInfoConnector.SetLastPosition(userID, regionID, lastPosition, lastLookAt);
         }
 
+        public void LockLoggedInStatus(string userID, bool locked)
+        {
+            if(locked && !m_lockedUsers.Contains(userID))
+                m_lockedUsers.Add(userID);
+            else
+                m_lockedUsers.Remove(userID);
+        }
+
         public void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent)
         {
+            if (m_lockedUsers.Contains (userID))
+                return; //User is locked, leave them alone
             UserInfo userInfo = GetUserInfo(userID);
             if (userInfo == null)
             {

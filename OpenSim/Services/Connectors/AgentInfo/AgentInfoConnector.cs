@@ -156,6 +156,10 @@ namespace OpenSim.Services.Connectors
         {
         }
 
+        public void LockLoggedInStatus(string userID, bool locked)
+        {
+        }
+
         #endregion
     }
 }

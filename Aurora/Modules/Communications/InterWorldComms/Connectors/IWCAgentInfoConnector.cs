@@ -94,7 +94,12 @@ namespace Aurora.Modules
 
         public void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent)
         {
-            m_localService.SetLoggedIn(userID, loggingIn, fireLoggedInEvent);
+            m_localService.SetLoggedIn (userID, loggingIn, fireLoggedInEvent);
+        }
+
+        public void LockLoggedInStatus(string userID, bool locked)
+        {
+            m_localService.LockLoggedInStatus (userID, locked);
         }
 
         #endregion
