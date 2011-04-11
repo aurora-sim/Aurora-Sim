@@ -279,6 +279,24 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
             return true;
         }
 
+        public Image DecodeToImage(byte[] j2kData)
+        {
+            if (m_useCSJ2K)
+                return CSJ2K.J2kImage.FromBytes (j2kData);
+            else
+            {
+                ManagedImage mimage;
+                Image image;
+                if (OpenJPEG.DecodeToImage (j2kData, out mimage, out image))
+                {
+                    mimage = null;
+                    return image;
+                }
+                else
+                    return null;
+            }
+        }
+
         private OpenJPEG.J2KLayerInfo[] CreateDefaultLayers(int j2kLength)
         {
             OpenJPEG.J2KLayerInfo[] layers = new OpenJPEG.J2KLayerInfo[5];

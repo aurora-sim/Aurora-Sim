@@ -661,7 +661,6 @@ namespace Aurora.Modules
             {
                 MemoryStream imgstream = new MemoryStream();
                 Bitmap mapTexture = new Bitmap(1, 1);
-                ManagedImage managedImage;
                 Image image = (Image)mapTexture;
 
                 try
@@ -673,8 +672,9 @@ namespace Aurora.Modules
                     // non-async because we know we have the asset immediately.
                     AssetBase mapasset = m_scene.AssetService.Get(m_scene.RegionInfo.RegionSettings.TerrainImageID.ToString());
 
+                    image = m_scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage (mapasset.Data);
                     // Decode image to System.Drawing.Image
-                    if (OpenJPEG.DecodeToImage(mapasset.Data, out managedImage, out image))
+                    if (image != null)
                     {
                         // Save to bitmap
                         mapTexture = new Bitmap(image);
@@ -784,10 +784,9 @@ namespace Aurora.Modules
 
             foreach (AssetBase asset in textures)
             {
-                ManagedImage managedImage;
                 Image image;
 
-                if (OpenJPEG.DecodeToImage(asset.Data, out managedImage, out image))
+                if ((image = m_scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage(asset.Data)) != null)
                     bitImages.Add(image);
             }
 
@@ -995,7 +994,6 @@ namespace Aurora.Modules
         {
             MemoryStream imgstream = new MemoryStream();
             Bitmap mapTexture = new Bitmap(1, 1);
-            ManagedImage managedImage;
             Image image = (Image)mapTexture;
 
             try
@@ -1004,8 +1002,9 @@ namespace Aurora.Modules
 
                 imgstream = new MemoryStream();
 
+                image = m_scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage (data);
                 // Decode image to System.Drawing.Image
-                if (OpenJPEG.DecodeToImage(data, out managedImage, out image))
+                if (image != null)
                 {
                     // Save to bitmap
                     mapTexture = new Bitmap(image);

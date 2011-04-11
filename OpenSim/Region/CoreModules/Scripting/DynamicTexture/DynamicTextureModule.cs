@@ -320,7 +320,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                         oldAsset = scene.AssetService.Get(defaultFace.TextureID.ToString());
 
                         if (oldAsset != null)
-                            assetData = BlendTextures(data, oldAsset.Data, SetNewFrontAlpha, FrontAlpha);
+                            assetData = BlendTextures(data, oldAsset.Data, SetNewFrontAlpha, FrontAlpha, scene);
                     }
                 }
 
@@ -410,16 +410,16 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                 }
             }
 
-            private byte[] BlendTextures(byte[] frontImage, byte[] backImage, bool setNewAlpha, byte newAlpha)
+            private byte[] BlendTextures(byte[] frontImage, byte[] backImage, bool setNewAlpha, byte newAlpha, Scene scene)
             {
-                ManagedImage managedImage;
-                Image image;
+                Image image = scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage(frontImage);
 
-                if (OpenJPEG.DecodeToImage(frontImage, out managedImage, out image))
+                if (image != null)
                 {
                     Bitmap image1 = new Bitmap(image);
 
-                    if (OpenJPEG.DecodeToImage(backImage, out managedImage, out image))
+                    image = scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage (backImage);
+                    if (image != null)
                     {
                         Bitmap image2 = new Bitmap(image);
 

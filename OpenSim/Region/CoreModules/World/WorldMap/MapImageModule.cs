@@ -571,13 +571,11 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             //m_log.DebugFormat("Fetched texture {0}, found: {1}", id, asset != null);
             if (asset == null) return null;
 
-            ManagedImage managedImage;
-            Image image;
-
             try
             {
-                if (OpenJPEG.DecodeToImage(asset.Data, out managedImage, out image))
-                    return new Bitmap(image);
+                Image i = m_scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage (asset.Data);
+                if(i != null)
+                    return new Bitmap(i);
             }
             catch (DllNotFoundException)
             {
@@ -587,7 +585,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             catch (IndexOutOfRangeException)
             {
                 m_log.ErrorFormat("[TexturedMapTileRenderer]: OpenJpeg was unable to encode this.   Asset Data is emtpy for {0}", id);
-
             }
             catch (Exception)
             {

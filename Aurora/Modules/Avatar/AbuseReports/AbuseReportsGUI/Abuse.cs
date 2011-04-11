@@ -20,10 +20,12 @@ namespace Aurora.Modules.AbuseReportsGUI
         private string Password;
         private AbuseReport CurrentReport = null;
         private IAssetService m_assetService;
+        private IJ2KDecoder m_decoder;
 
-        public Abuse(IAssetService assetService)
+        public Abuse(IAssetService assetService, IJ2KDecoder j2k)
         {
             InitializeComponent();
+            m_decoder = j2k;
             m_assetService = assetService;
             AbuseReportsConnector = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
             Password = "";
@@ -131,10 +133,10 @@ namespace Aurora.Modules.AbuseReportsGUI
                 TextureID = Util.BLANK_TEXTURE_UUID;
 
             AssetBase asset = m_assetService.Get(TextureID.ToString());
-            ManagedImage managedImage;
-            Image image;
-
-            if (asset != null && OpenJPEG.DecodeToImage(asset.Data, out managedImage, out image))
+            if (asset == null)
+                return new Bitmap (1, 1);
+            Image image = m_decoder.DecodeToImage (asset.Data);
+            if (image != null)
                 return image;
             else
                 return new Bitmap(1, 1);

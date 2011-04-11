@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Drawing;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
 
@@ -36,5 +37,6 @@ namespace OpenSim.Framework
     {
         void BeginDecode(UUID assetID, byte[] j2kData, DecodedCallback callback);
         bool Decode(UUID assetID, byte[] j2kData);
+        Image DecodeToImage(byte[] j2kData);
     }
 }

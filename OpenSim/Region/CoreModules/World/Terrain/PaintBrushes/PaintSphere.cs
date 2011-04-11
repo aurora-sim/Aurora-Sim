@@ -87,14 +87,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
             if (textureToApply == null)
                 return;
 
-            Image paintiTexture;
-            ManagedImage paintManaged;
-            if (!OpenJPEG.DecodeToImage(paintAsset.Data, out paintManaged, out paintiTexture))
+            Image paintiTexture = map.Scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage (paintAsset.Data);
+            if (paintiTexture == null)
                 return;
 
-            Image textureToAddiTexture;
-            ManagedImage textureToAddManaged;
-            if (!OpenJPEG.DecodeToImage(textureToApply.Data, out textureToAddManaged, out textureToAddiTexture))
+            Image textureToAddiTexture = map.Scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage (textureToApply.Data);
+            if (textureToAddiTexture == null)
             {
                 paintiTexture.Dispose();
                 return;
