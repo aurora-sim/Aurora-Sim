@@ -404,7 +404,12 @@ namespace OpenSim.Services.MessagingService
 
                 #region OpenSim teleport compatibility!
 
-                circuitData.CapsPath = CapsUtil.GetRandomCapsObjectPath ();
+                if (!m_useCallbacks)
+                {
+                    circuitData.CapsPath = CapsUtil.GetRandomCapsObjectPath ();
+                    circuitData.startpos.X += (neighbor.RegionLocX - clientCaps.GetRootCapsService ().RegionX);
+                    circuitData.startpos.Y += (neighbor.RegionLocY - clientCaps.GetRootCapsService ().RegionY);
+                }
 
                 #endregion
 
@@ -578,6 +583,8 @@ namespace OpenSim.Services.MessagingService
 
         private void CloseNeighborAgents(GridRegion oldRegion, GridRegion destination, UUID AgentID)
         {
+            if (!m_useCallbacks)
+                return;
             Util.FireAndForget(delegate(object o)
             {
                 //Sleep for 5 seconds to give the agents a chance to cross and get everything right
