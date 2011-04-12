@@ -95,7 +95,7 @@ namespace Aurora.Framework
         List<string> QueryFullData(string whereClause, string table, string wantedValue);
 
         /// <summary>
-        /// select 'wantedValue' from 'table' where 'whereClause'
+        /// select 'wantedValue' from 'table' 'whereClause'
         /// </summary>
         IDataReader QueryData(string whereClause, string table, string wantedValue);
 

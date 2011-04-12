@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Net;
 using System.Reflection;
 using log4net;
@@ -644,6 +645,18 @@ namespace OpenSim.Framework
         DateTime Expires { get; set; }
 
         uint CRC { get; set; }
+
+        byte[] ParticleSystem { get; set; }
+
+        int CreationDate { get; set; }
+
+        bool DIE_AT_EDGE { get; set; }
+
+        byte[] TextureAnimation { get; set; }
+
+        Vector3 GroupPosition { get; }
+
+        Color Color { get; set; }
     }
 
     public interface ISceneGraph

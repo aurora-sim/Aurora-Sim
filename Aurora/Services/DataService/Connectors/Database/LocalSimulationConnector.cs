@@ -1,18 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Reflection;
 using Aurora.Framework;
-using Aurora.DataManager;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using Nini.Config;
-using log4net;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Services.DataService
 {
@@ -24,6 +20,8 @@ namespace Aurora.Services.DataService
 		private IGenericData GD = null;
         private string m_regionSettingsRealm = "regionsettings";
         private string m_terrainRealm = "terrain";
+        private string m_primsRealm = "prims";
+        private string m_primShapesRealm = "primshapes";
 
         public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
@@ -271,6 +269,97 @@ namespace Aurora.Services.DataService
                 }
             }
             return null;
+        }
+
+        public void StoreObject(ISceneEntity obj, UUID regionUUID)
+        {
+            uint flags = obj.RootChild.GetEffectiveObjectFlags ();
+
+            // Eligibility check
+            //
+            if ((flags & (uint)PrimFlags.Temporary) != 0)
+                return;
+            if ((flags & (uint)PrimFlags.TemporaryOnRez) != 0)
+                return;
+
+            foreach (ISceneChildEntity prim in obj.ChildrenEntities ())
+            {
+                GD.Replace (m_primsRealm, new string[] {
+                                "UUID", "CreationDate",
+                                "Name", "Text", "Description",
+                                "SitName", "TouchName", "ObjectFlags",
+                                "OwnerMask", "NextOwnerMask", "GroupMask",
+                                "EveryoneMask", "BaseMask", "PositionX",
+                                "PositionY", "PositionZ", "GroupPositionX",
+                                "GroupPositionY", "GroupPositionZ", "VelocityX",
+                                "VelocityY", "VelocityZ", "AngularVelocityX",
+                                "AngularVelocityY", "AngularVelocityZ",
+                                "AccelerationX", "AccelerationY",
+                                "AccelerationZ", "RotationX",
+                                "RotationY", "RotationZ",
+                                "RotationW", "SitTargetOffsetX",
+                                "SitTargetOffsetY", "SitTargetOffsetZ",
+                                "SitTargetOrientW", "SitTargetOrientX",
+                                "SitTargetOrientY", "SitTargetOrientZ",
+                                "RegionUUID", "CreatorID",
+                                "OwnerID", "GroupID",
+                                "LastOwnerID", "SceneGroupID",
+                                "PayPrice", "PayButton1",
+                                "PayButton2", "PayButton3",
+                                "PayButton4", "LoopedSound",
+                                "LoopedSoundGain", "TextureAnimation",
+                                "OmegaX", "OmegaY", "OmegaZ",
+                                "CameraEyeOffsetX", "CameraEyeOffsetY",
+                                "CameraEyeOffsetZ", "CameraAtOffsetX",
+                                "CameraAtOffsetY", "CameraAtOffsetZ",
+                                "ForceMouselook", "ScriptAccessPin",
+                                "AllowedDrop", "DieAtEdge",
+                                "SalePrice", "SaleType",
+                                "ColorR", "ColorG", "ColorB", "ColorA",
+                                "ParticleSystem", "ClickAction", "Material",
+                                "CollisionSound", "CollisionSoundVolume",
+                                "PassTouches",
+                                "LinkNumber", "MediaURL", "Generic" }, new object[]
+                                {
+                                    prim.UUID.ToString(),
+                                    prim.CreationDate,
+                                    prim.Name,
+                                    prim.Text, prim.Description, 
+                                    prim.SitName, prim.TouchName, (uint)prim.Flags, prim.OwnerMask, prim.NextOwnerMask, prim.GroupMask,
+                                    prim.EveryoneMask, prim.BaseMask, (double)prim.AbsolutePosition.X, (double)prim.AbsolutePosition.Y, (double)prim.AbsolutePosition.Z,
+                                    (double)prim.GroupPosition.X, (double)prim.GroupPosition.Y, (double)prim.GroupPosition.Z, (double)prim.Velocity.X, (double)prim.Velocity.Y,
+                                     (double)prim.Velocity.Z, (double)prim.AngularVelocity.X, (double)prim.AngularVelocity.Y, (double)prim.AngularVelocity.Z, (double)prim.Acceleration.X,
+                                     (double)prim.Acceleration.Y, (double)prim.Acceleration.Z, (double)prim.Rotation.X, (double)prim.Rotation.Y, (double)prim.Rotation.Z, (double)prim.Rotation.W,
+                                     (double)prim.SitTargetPosition.X, (double)prim.SitTargetPosition.Y, (double)prim.SitTargetPosition.Z, (double)prim.SitTargetOrientation.W,
+                                     (double)prim.SitTargetOrientation.X, (double)prim.SitTargetOrientation.Y, (double)prim.SitTargetOrientation.Z, regionUUID, prim.CreatorID, prim.OwnerID,
+                                     prim.GroupID, prim.LastOwnerID, obj.UUID, prim.PayPrice[0], prim.PayPrice[1], prim.PayPrice[2], prim.PayPrice[3], prim.PayPrice[4],
+                                     ((prim.SoundFlags & 1) == 1) ? prim.Sound : UUID.Zero, ((prim.SoundFlags & 1) == 1) ? prim.SoundGain : 0, prim.TextureAnimation, (double)prim.AngularVelocity.X,
+                                     (double)prim.AngularVelocity.Y, (double)prim.AngularVelocity.Z, (double)prim.CameraEyeOffset.X, (double)prim.CameraEyeOffset.Y, (double)prim.CameraEyeOffset.Z,
+                                     (double)prim.CameraEyeOffset.X,  (double)prim.CameraEyeOffset.Y,  (double)prim.CameraEyeOffset.Z, prim.ForceMouselook ? 1 : 0, prim.ScriptAccessPin,
+                                     prim.AllowedDrop ? 1 : 0, prim.DIE_AT_EDGE ? 1 : 0, prim.SalePrice, unchecked((sbyte)(prim.ObjectSaleType)), prim.Color.R, prim.Color.G, prim.Color.B,
+                                     prim.Color.A, prim.ParticleSystem, unchecked((sbyte)(prim.ClickAction)), unchecked((sbyte)(prim.Material)), prim.CollisionSound, prim.CollisionSoundVolume,
+                                     prim.PassTouch, prim.LinkNum, prim.MediaUrl, prim.GenericData
+                                });
+
+                GD.Replace (m_primShapesRealm, new string[] {
+                                "UUID", "Shape", "ScaleX", "ScaleY",
+                                "ScaleZ", "PCode", "PathBegin", "PathEnd",
+                                "PathScaleX", "PathScaleY", "PathShearX",
+                                "PathShearY", "PathSkew", "PathCurve",
+                                "PathRadiusOffset", "PathRevolutions",
+                                "PathTaperX", "PathTaperY", "PathTwist",
+                                "PathTwistBegin", "ProfileBegin", "ProfileEnd",
+                                "ProfileCurve", "ProfileHollow", "Texture",
+                                "ExtraParams", "State", "Media" },
+                        new object[] {
+                                    prim.UUID, 0, (double)prim.Shape.Scale.X, (double)prim.Shape.Scale.Y, (double)prim.Shape.Scale.Z,
+                                    prim.Shape.PCode, prim.Shape.PathBegin, prim.Shape.PathEnd, prim.Shape.PathScaleX, prim.Shape.PathScaleY,
+                                    prim.Shape.PathShearX, prim.Shape.PathShearY, prim.Shape.PathSkew, prim.Shape.PathCurve, prim.Shape.PathRadiusOffset,
+                                    prim.Shape.PathRevolutions, prim.Shape.PathTaperX, prim.Shape.PathTaperY, prim.Shape.PathTwist, prim.Shape.PathTwistBegin,
+                                    prim.Shape.ProfileBegin, prim.Shape.ProfileEnd, prim.Shape.ProfileCurve, prim.Shape.ProfileHollow, prim.Shape.TextureEntry, 
+                                    prim.Shape.ExtraParams, prim.Shape.State, null == prim.Shape.Media ? null : prim.Shape.Media.ToXml()
+                                });
+            }
         }
     }
 }

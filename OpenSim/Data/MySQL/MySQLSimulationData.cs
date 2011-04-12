@@ -694,7 +694,7 @@ namespace OpenSim.Data.MySQL
 
         #endregion
 
-        #region Terrain
+        #region Terrain (legacy)
 
         public void StoreTerrain(short[] ter, UUID regionID, bool Revert)
         {
