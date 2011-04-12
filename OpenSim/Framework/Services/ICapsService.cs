@@ -252,7 +252,7 @@ namespace OpenSim.Services.Interfaces
         /// <summary>
         /// The URL (http:// included) to the SEED CAP handler
         /// </summary>
-        String CapsUrl { get; }
+        String CapsUrl { get; set; }
 
         /// <summary>
         /// Have we been disabled? (Should be deleted soon)

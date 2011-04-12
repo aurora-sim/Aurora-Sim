@@ -404,7 +404,7 @@ namespace OpenSim.Services.MessagingService
 
                 #region OpenSim teleport compatibility!
 
-                circuitData.CapsPath = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath ());
+                circuitData.CapsPath = CapsUtil.GetRandomCapsObjectPath ();
 
                 #endregion
 
@@ -426,8 +426,9 @@ namespace OpenSim.Services.MessagingService
                         //We are assuming an OpenSim region now!
                         #region OpenSim teleport compatibility!
 
-                        otherRegionsCapsURL = otherRegionService.Region.ServerURI.Remove(otherRegionService.Region.ServerURI.Length - 1, 1) + 
-                            circuitData.CapsPath;
+                        otherRegionsCapsURL = "http://" + otherRegionService.Region.ExternalEndPoint.ToString() + 
+                            CapsUtil.GetCapsSeedPath(circuitData.CapsPath);
+                        otherRegionService.CapsUrl = otherRegionsCapsURL;
 
                         #endregion
                     }

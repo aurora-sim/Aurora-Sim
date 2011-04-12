@@ -154,12 +154,19 @@ namespace OpenSim.Services.CapsService
             get { return m_clientCapsService.Server; }
         }
 
+        private string m_overrideCapsURL; // ONLY FOR OPENSIM
         /// <summary>
         /// This is the full URL to the Caps SEED request
         /// </summary>
         public String CapsUrl
         {
-            get { return HostUri + m_capsUrlBase; }
+            get 
+            {
+                if (m_overrideCapsURL != "" && m_overrideCapsURL != null)
+                    return m_overrideCapsURL;
+                return HostUri + m_capsUrlBase;
+            }
+            set { m_overrideCapsURL = value; }
         }
 
         #endregion
