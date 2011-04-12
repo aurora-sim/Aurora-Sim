@@ -167,11 +167,13 @@ namespace Aurora.Modules
                 }
                 //Check for avies! They arn't prims!
                 if (scene.GetScenePresence(primLocalID) != null)
-                {
                     continue;
-                }
+
                 if (entity != null)
-                    EntitiesToUpdate.Add(entity);
+                {
+                    if(!EntitiesToUpdate.Contains(entity))
+                        EntitiesToUpdate.Add(entity);
+                }
                 else
                 {
                     m_log.Error("[SCENEPACKETHANDLER]: Could not find prim in SelectPrim, killing prim.");
