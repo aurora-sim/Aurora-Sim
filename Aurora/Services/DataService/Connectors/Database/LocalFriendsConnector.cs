@@ -48,7 +48,8 @@ namespace Aurora.Services.DataService
 
         public bool Store(UUID PrincipalID, string Friend, int Flags, int Offered)
         {
-            return GD.Replace(m_realm, new string[] { "PrincipalID", "Friend", "Flags", "Offered" },
+            GD.Delete (m_realm, new string[2] { "PrincipalID", "Friend" }, new object[2] { PrincipalID, Friend });
+            return GD.Insert(m_realm, new string[] { "PrincipalID", "Friend", "Flags", "Offered" },
                 new object[] { PrincipalID, Friend, Flags, Offered });
         }
 
