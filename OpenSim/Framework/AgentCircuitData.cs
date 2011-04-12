@@ -109,6 +109,20 @@ namespace OpenSim.Framework
         /// </summary>
         public Vector3 startpos;
 
+        #region OPENSIM ONLY
+
+        /// <summary>
+        /// Agent's account first name
+        /// </summary>
+        public string firstname;
+
+        /// <summary>
+        /// Agent's account last name
+        /// </summary>
+        public string lastname;
+
+        #endregion
+
         public AgentCircuitData()
         {
         }
@@ -122,6 +136,13 @@ namespace OpenSim.Framework
             OSDMap args = new OSDMap();
             args["agent_id"] = OSD.FromUUID(AgentID);
             args["caps_path"] = OSD.FromString(CapsPath);
+
+            #region OPENSIM ONLY
+
+            args["first_name"] = OSD.FromString (firstname);
+            args["last_name"] = OSD.FromString (lastname);
+
+            #endregion
 
             args["child"] = OSD.FromBoolean(child);
             args["circuit_code"] = OSD.FromString(circuitcode.ToString());
@@ -150,6 +171,8 @@ namespace OpenSim.Framework
             AgentCircuitData Copy = new AgentCircuitData();
 
             Copy.AgentID = AgentID;
+            Copy.firstname = firstname;
+            Copy.lastname = lastname;
             Copy.Appearance = Appearance;
             Copy.CapsPath = CapsPath;
             Copy.child = child;

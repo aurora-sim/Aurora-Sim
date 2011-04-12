@@ -455,6 +455,9 @@ namespace OpenSim.Services.MessagingService
                         neighbor.RegionSizeY,
                         requestingRegion);
 
+                    if (!m_useCallbacks)
+                        Thread.Sleep (3000); //Give it a bit of time
+
                     m_log.Info("[AgentProcessing]: Completed inform client about neighbor " + neighbor.RegionName);
                 }
                 else
