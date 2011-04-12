@@ -665,16 +665,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
         }
 
         /// <summary>
-        /// Does the given user have an inventory structure?
-        /// </summary>
-        /// <param name="userID"></param>
-        /// <returns></returns>
-        public bool HasInventoryForUser(UUID userID)
-        {
-            return GetRootFolder(userID) != null;
-        }
-
-        /// <summary>
         /// Get the active gestures of the agent.
         /// </summary>
         /// <param name="userID"></param>
@@ -696,27 +686,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
             // FIXME: Implement this in SimianGrid
             return new List<InventoryItemBase>(0);
-        }
-
-        /// <summary>
-        /// Get the union of permissions of all inventory items
-        /// that hold the given assetID. 
-        /// </summary>
-        /// <param name="userID"></param>
-        /// <param name="assetID"></param>
-        /// <returns>The permissions or 0 if no such asset is found in 
-        /// the user's inventory</returns>
-        public int GetAssetPermissions(UUID userID, UUID assetID)
-        {
-//            NameValueCollection requestArgs = new NameValueCollection
-//            {
-//                { "RequestMethod", "GetInventoryNodes" },
-//                { "OwnerID", userID.ToString() },
-//                { "AssetID", assetID.ToString() }
-//            };
-
-            // FIXME: Implement this in SimianGrid
-            return (int)PermissionMask.All;
         }
 
         private List<InventoryFolderBase> GetFoldersFromResponse(OSDArray items, UUID baseFolder, bool includeBaseFolder)

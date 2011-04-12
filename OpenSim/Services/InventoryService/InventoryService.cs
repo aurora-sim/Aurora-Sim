@@ -650,21 +650,6 @@ namespace OpenSim.Services.InventoryService
             return new List<InventoryItemBase> (m_Database.GetActiveGestures (principalID));
         }
 
-        public virtual int GetAssetPermissions(UUID principalID, UUID assetID)
-        {
-            return m_Database.GetAssetPermissions(principalID, assetID);
-        }
-
-        /// <summary>
-        /// Does the user have an inventory?
-        /// </summary>
-        /// <param name="userID"></param>
-        /// <returns></returns>
-        public bool HasInventoryForUser (UUID principalID)
-        {
-            return GetRootFolder (principalID) != null;
-        }
-
         private bool ParentIsTrash(UUID folderID)
         {
             List<InventoryFolderBase> folder = m_Database.GetFolders(new string[] { "folderID" }, new string[] { folderID.ToString() });

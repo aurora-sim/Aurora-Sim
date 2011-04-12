@@ -50,17 +50,7 @@ namespace OpenSim.Services.Connectors
 
         public virtual bool CreateUserInventory(UUID principalID)
         {
-            Dictionary<string,object> ret = MakeRequest("CREATEUSERINVENTORY",
-                    new Dictionary<string,object> {
-                        { "PRINCIPAL", principalID.ToString() }
-                    });
-
-            if (ret == null)
-                return false;
-            if (ret.Count == 0)
-                return false;
-
-            return bool.Parse(ret["RESULT"].ToString());
+            return false;
         }
 
         public virtual List<InventoryFolderBase> GetInventorySkeleton(UUID principalID)
@@ -474,20 +464,7 @@ namespace OpenSim.Services.Connectors
 
         public virtual List<InventoryItemBase> GetActiveGestures(UUID principalID)
         {
-            Dictionary<string,object> ret = MakeRequest("GETACTIVEGESTURES",
-                    new Dictionary<string,object> {
-                        { "PRINCIPAL", principalID.ToString() }
-                    });
-
-            if (ret == null)
-                return null;
-
-            List<InventoryItemBase> items = new List<InventoryItemBase>();
-
-            foreach (Object o in ret.Values) // getting the values directly, we don't care about the keys item_i
-                items.Add(BuildItem((Dictionary<string, object>)o));
-
-            return items;
+            return new List<InventoryItemBase> ();
         }
 
         public virtual int GetAssetPermissions(UUID principalID, UUID assetID)
@@ -512,16 +489,6 @@ namespace OpenSim.Services.Connectors
         public OSDArray GetLLSDFolderItems(UUID folderID, UUID parentID)
         {
             return null;
-        }
-
-        /// <summary>
-        /// Does the user have an inventory?
-        /// </summary>
-        /// <param name="principalID"></param>
-        /// <returns></returns>
-        public virtual bool HasInventoryForUser(UUID principalID)
-        {
-            return GetRootFolder (principalID) != null;
         }
 
         // Helpers

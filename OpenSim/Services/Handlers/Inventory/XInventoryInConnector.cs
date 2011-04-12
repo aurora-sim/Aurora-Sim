@@ -155,11 +155,6 @@ namespace OpenSim.Services
                             m_registry.RequestModuleInterface<IGridRegistrationService>();
                 switch (method)
                 {
-                    case "CREATEUSERINVENTORY":
-                        if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Full))
-                                return FailureResult();
-                        return HandleCreateUserInventory(request);
                     case "GETINVENTORYSKELETON":
                         if (urlModule != null)
                             if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
@@ -240,16 +235,6 @@ namespace OpenSim.Services
                             if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleGetFolder(request);
-                    case "GETACTIVEGESTURES":
-                        if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
-                                return FailureResult();
-                        return HandleGetActiveGestures(request);
-                    case "GETASSETPERMISSIONS":
-                        if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
-                                return FailureResult();
-                        return HandleGetAssetPermissions(request);
                 }
                 m_log.DebugFormat("[XINVENTORY HANDLER]: unknown method request: {0}", method);
             }
@@ -302,24 +287,6 @@ namespace OpenSim.Services
             xw.Flush();
 
             return ms.ToArray();
-        }
-
-        byte[] HandleCreateUserInventory(Dictionary<string,object> request)
-        {
-            Dictionary<string,object> result = new Dictionary<string,object>();
-
-            if (!request.ContainsKey("PRINCIPAL"))
-                return FailureResult();
-
-            if (m_InventoryService.CreateUserInventory(new UUID(request["PRINCIPAL"].ToString())))
-                result["RESULT"] = "True";
-            else
-                result["RESULT"] = "False";
-
-            string xmlString = WebUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[XXX]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding();
-            return encoding.GetBytes(xmlString);
         }
 
         byte[] HandleGetInventorySkeleton(Dictionary<string,object> request)
@@ -627,49 +594,6 @@ namespace OpenSim.Services
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
-
-        byte[] HandleGetActiveGestures(Dictionary<string,object> request)
-        {
-            Dictionary<string,object> result = new Dictionary<string,object>();
-            UUID principal = UUID.Zero;
-            UUID.TryParse(request["PRINCIPAL"].ToString(), out principal);
-
-            List<InventoryItemBase> gestures = m_InventoryService.GetActiveGestures(principal);
-            Dictionary<string, object> items = new Dictionary<string, object>();
-            if (gestures != null)
-            {
-                int i = 0;
-                foreach (InventoryItemBase item in gestures)
-                {
-                    items["item_" + i.ToString()] = EncodeItem(item);
-                    i++;
-                }
-            }
-            result["ITEMS"] = items;
-
-            string xmlString = WebUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[XXX]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding();
-            return encoding.GetBytes(xmlString);
-        }
-
-        byte[] HandleGetAssetPermissions(Dictionary<string,object> request)
-        {
-            Dictionary<string,object> result = new Dictionary<string,object>();
-            UUID principal = UUID.Zero;
-            UUID.TryParse(request["PRINCIPAL"].ToString(), out principal);
-            UUID assetID = UUID.Zero;
-            UUID.TryParse(request["ASSET"].ToString(), out assetID);
-
-            int perms = m_InventoryService.GetAssetPermissions(principal, assetID);
-
-            result["RESULT"] = perms.ToString();
-            string xmlString = WebUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[XXX]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding();
-            return encoding.GetBytes(xmlString);
-        }
-
 
         private Dictionary<string, object> EncodeFolder(InventoryFolderBase f)
         {

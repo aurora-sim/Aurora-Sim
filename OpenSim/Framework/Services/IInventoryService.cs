@@ -128,7 +128,6 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="item"></param>
         /// <returns>true if the item was successfully deleted</returns>
-        //bool DeleteItem(InventoryItemBase item);
         bool DeleteFolders(UUID userID, List<UUID> folderIDs);
 
         /// <summary>
@@ -162,6 +161,12 @@ namespace OpenSim.Services.Interfaces
         /// <returns>true if the item was successfully updated</returns>
         bool UpdateItem(InventoryItemBase item);
 
+        /// <summary>
+        /// Move the given items to the folder given in the inventory item
+        /// </summary>
+        /// <param name="ownerID"></param>
+        /// <param name="items"></param>
+        /// <returns></returns>
         bool MoveItems(UUID ownerID, List<InventoryItemBase> items);
 
         /// <summary>
@@ -169,7 +174,6 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="item"></param>
         /// <returns>true if the item was successfully deleted</returns>
-        //bool DeleteItem(InventoryItemBase item);
         bool DeleteItems(UUID userID, List<UUID> itemIDs);
 
         /// <summary>
@@ -187,13 +191,6 @@ namespace OpenSim.Services.Interfaces
         InventoryFolderBase GetFolder(InventoryFolderBase folder);
 
         /// <summary>
-        /// Does the given user have an inventory structure?
-        /// </summary>
-        /// <param name="userID"></param>
-        /// <returns></returns>
-        bool HasInventoryForUser(UUID userID);
-
-        /// <summary>
         /// Get the active gestures of the agent.
         /// </summary>
         /// <param name="userId"></param>
@@ -201,17 +198,18 @@ namespace OpenSim.Services.Interfaces
         List<InventoryItemBase> GetActiveGestures(UUID userId);
 
         /// <summary>
-        /// Get the union of permissions of all inventory items
-        /// that hold the given assetID. 
+        /// Get an OSDArray of the items in the given folder
         /// </summary>
-        /// <param name="userID"></param>
-        /// <param name="assetID"></param>
-        /// <returns>The permissions or 0 if no such asset is found in 
-        /// the user's inventory</returns>
-        int GetAssetPermissions(UUID userID, UUID assetID);
-
-
+        /// <param name="principalID"></param>
+        /// <param name="folderID"></param>
+        /// <returns></returns>
         OSDArray GetLLSDFolderItems(UUID principalID, UUID folderID);
+
+        /// <summary>
+        /// Get the item serialized as an OSDArray
+        /// </summary>
+        /// <param name="itemID"></param>
+        /// <returns></returns>
         OSDArray GetItem(UUID itemID);
     }
 
@@ -229,7 +227,6 @@ namespace OpenSim.Services.Interfaces
 
         bool MoveItem (string id, string newParent);
         InventoryItemBase[] GetActiveGestures (UUID principalID);
-        int GetAssetPermissions (UUID principalID, UUID assetID);
 
         byte[] FetchInventoryReply(OSDArray fetchRequest, UUID AgentID);
     }

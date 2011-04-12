@@ -644,16 +644,6 @@ namespace Aurora.Services.DataService
             }
         }
 
-        public int GetAssetPermissions (UUID principalID, UUID assetID)
-        {
-            List<string> query = GD.Query (new string[2] { "avatarID", "assetID" }, new object[2] { principalID, assetID },
-                m_itemsrealm, "inventoryCurrentPermissions");
-            if (query.Count > 0)
-                return int.Parse (query[0]);
-            else
-                return 0;
-        }
-
         #endregion
     }
 }
