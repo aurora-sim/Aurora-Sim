@@ -66,7 +66,8 @@ namespace Aurora.Services.DataService
 
         public bool Store(AuthData data)
         {
-            return GD.Replace(m_realm, new string[] { "UUID", "passwordHash", "passwordSalt",
+            GD.Delete (m_realm, new string[1] {"UUID"}, new object[1] { data.PrincipalID });
+            return GD.Insert (m_realm, new string[] { "UUID", "passwordHash", "passwordSalt",
                 "webLoginKey", "accountType" }, new object[] { data.PrincipalID, 
                     data.PasswordHash, data.PasswordSalt, data.WebLoginKey, data.AccountType });
         }
