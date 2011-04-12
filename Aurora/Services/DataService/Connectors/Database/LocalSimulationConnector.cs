@@ -22,6 +22,7 @@ namespace Aurora.Services.DataService
         private string m_terrainRealm = "terrain";
         private string m_primsRealm = "prims";
         private string m_primShapesRealm = "primshapes";
+        private string m_primItemsRealm = "primitems";
 
         public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
@@ -48,6 +49,8 @@ namespace Aurora.Services.DataService
         public void Dispose()
         {
         }
+
+        #region Region Settings
 
         public RegionSettings LoadRegionSettings (UUID regionUUID)
         {
@@ -129,6 +132,10 @@ namespace Aurora.Services.DataService
                 rs.Covenant, rs.Sandbox, rs.SunVector.X, rs.SunVector.Y, rs.SunVector.Z, rs.LoadedCreationID, rs.LoadedCreationDateTime,
                 rs.TerrainMapImageID, rs.TerrainImageID, rs.MinimumAge, rs.CovenantLastUpdated, OSDParser.SerializeJsonString(rs.Generic)});
         }
+
+        #endregion
+
+        #region Terrain
 
         public void StoreTerrain (short[] ter, UUID regionID, bool Revert)
         {
@@ -271,6 +278,8 @@ namespace Aurora.Services.DataService
             return null;
         }
 
+        #endregion
+
         public void StoreObject(ISceneEntity obj, UUID regionUUID)
         {
             uint flags = obj.RootChild.GetEffectiveObjectFlags ();
@@ -361,5 +370,211 @@ namespace Aurora.Services.DataService
                                 });
             }
         }
+
+        public void RemoveObject(UUID obj, UUID regionUUID)
+        {
+            List<UUID> uuids = new List<UUID> ();
+
+            List<string> retVal = GD.Query ("SceneGroupID", obj, m_primsRealm, "UUID");
+            GD.Delete (m_primsRealm, new string[1] { "SceneGroupID" }, new object[1] { obj });
+            
+            // there is no way this should be < 1 unless there is
+            // a very corrupt database, but in that case be extra
+            // safe anyway.
+            if (uuids.Count > 0)
+            {
+                RemoveShapes (uuids.ConvertAll<string> (new Converter<UUID, string> (delegate (UUID t) { return t.ToString (); })));
+                RemoveItems (uuids.ConvertAll<string>(new Converter<UUID,string>(delegate(UUID t) { return t.ToString(); })));
+            }
+        }
+
+        public void RemoveObjects(List<UUID> uuids)
+        {
+            for (int cntr = 0; cntr < uuids.Count; cntr += 10)
+            {
+                int max = (uuids.Count - cntr) < 10 ? (uuids.Count - cntr) : 10;
+                List<string> keys = new List<string> (max);
+                List<object> values = new List<object> (max);
+                for (int i = 0; i < max; i++)
+                {
+                    keys.Add ("SceneGroupID");
+                    values.Add (uuids[cntr + i]);
+                }
+
+                GD.Delete (m_primsRealm, keys.ToArray (), values.ToArray ());
+            }
+
+            RemoveShapes (uuids.ConvertAll<string> (new Converter<UUID, string> (delegate (UUID t) { return t.ToString (); })));
+            RemoveItems (uuids.ConvertAll<string> (new Converter<UUID, string> (delegate (UUID t) { return t.ToString (); })));
+        }
+
+        public void RemoveRegion(UUID regionUUID)
+        {
+            List<string> retVal = GD.Query ("RegionUUID", regionUUID, m_primsRealm, "UUID");
+            GD.Delete (m_primsRealm, new string[1] { "RegionUUID" }, new object[1] { regionUUID });
+
+            RemoveShapes (retVal);
+            RemoveItems (retVal);
+        }
+
+        private void RemoveItems(UUID uuid)
+        {
+            GD.Delete (m_primItemsRealm, new string[1] { "PrimID" }, new object[1] { uuid });
+        }
+
+        private void RemoveItems(List<string> uuids)
+        {
+            for (int cntr = 0; cntr < uuids.Count; cntr += 10)
+            {
+                int max = (uuids.Count - cntr) < 10 ? (uuids.Count - cntr) : 10;
+                List<string> keys = new List<string> (max);
+                List<object> values = new List<object> (max);
+                for (int i = 0; i < max; i++)
+                {
+                    keys.Add ("PrimID");
+                    values.Add (uuids[cntr + i]);
+                }
+
+                GD.Delete (m_primItemsRealm, keys.ToArray (), values.ToArray ());
+            }
+        }
+
+        private void RemoveShapes(List<string> uuids)
+        {
+            for (int cntr = 0; cntr < uuids.Count; cntr += 10)
+            {
+                int max = (uuids.Count - cntr) < 10 ? (uuids.Count - cntr) : 10;
+                List<string> keys = new List<string> (max);
+                List<object> values = new List<object> (max);
+                for (int i = 0; i < max; i++)
+                {
+                    keys.Add ("UUID");
+                    values.Add (uuids[cntr + i]);
+                }
+
+                GD.Delete (m_primShapesRealm, keys.ToArray (), values.ToArray ());
+            }
+        }
+
+        /*public List<SceneObjectGroup> LoadObjects(UUID regionID, Scene scene)
+        {
+            const int ROWS_PER_QUERY = 5000;
+
+            Dictionary<UUID, SceneObjectPart> prims = new Dictionary<UUID, SceneObjectPart> (ROWS_PER_QUERY);
+            Dictionary<UUID, SceneObjectGroup> objects = new Dictionary<UUID, SceneObjectGroup> ();
+            int count = 0;
+
+            #region Prim Loading
+
+            lock (m_dbLock)
+            {
+                using (MySqlConnection dbcon = new MySqlConnection (m_connectionString))
+                {
+                    dbcon.Open ();
+
+                    using (MySqlCommand cmd = dbcon.CreateCommand ())
+                    {
+                        cmd.CommandText =
+                            "SELECT * FROM prims LEFT JOIN primshapes ON prims.UUID = primshapes.UUID WHERE RegionUUID = ?RegionUUID";
+                        cmd.Parameters.AddWithValue ("RegionUUID", regionID.ToString ());
+
+                        using (IDataReader reader = ExecuteReader (cmd))
+                        {
+                            while (reader.Read ())
+                            {
+                                SceneObjectPart prim = BuildPrim (reader, scene);
+
+                                UUID parentID = DBGuid.FromDB (reader["SceneGroupID"].ToString ());
+                                if (parentID != prim.UUID)
+                                    prim.ParentUUID = parentID;
+
+                                prims[prim.UUID] = prim;
+
+                                ++count;
+                                if (count % ROWS_PER_QUERY == 0)
+                                    m_log.Info ("[REGION DB]: Loaded " + count + " prims...");
+                            }
+                        }
+                    }
+                }
+            }
+
+            #endregion Prim Loading
+
+            #region SceneObjectGroup Creation
+
+            // Create all of the SOGs from the root prims first
+            foreach (SceneObjectPart prim in prims.Values)
+            {
+                if (prim.ParentUUID == UUID.Zero)
+                    objects[prim.UUID] = new SceneObjectGroup (prim, scene);
+            }
+
+            // Add all of the children objects to the SOGs
+            foreach (SceneObjectPart prim in prims.Values)
+            {
+                SceneObjectGroup sog;
+                if (prim.UUID != prim.ParentUUID)
+                {
+                    if (objects.TryGetValue (prim.ParentUUID, out sog))
+                    {
+                        sog.AddChild (prim, prim.LinkNum);
+                    }
+                    else
+                    {
+                        m_log.WarnFormat (
+                            "[REGION DB]: Database contains an orphan child prim {0} {1} in region {2} pointing to missing parent {3}.  This prim will not be loaded.",
+                            prim.Name, prim.UUID, regionID, prim.ParentUUID);
+                    }
+                }
+            }
+
+            #endregion SceneObjectGroup Creation
+
+            m_log.DebugFormat ("[REGION DB]: Loaded {0} objects using {1} prims", objects.Count, prims.Count);
+
+            #region Prim Inventory Loading
+
+            // Instead of attempting to LoadItems on every prim,
+            // most of which probably have no items... get a 
+            // list from DB of all prims which have items and
+            // LoadItems only on those
+            List<SceneObjectPart> primsWithInventory = new List<SceneObjectPart> ();
+            lock (m_dbLock)
+            {
+                using (MySqlConnection dbcon = new MySqlConnection (m_connectionString))
+                {
+                    dbcon.Open ();
+
+                    using (MySqlCommand itemCmd = dbcon.CreateCommand ())
+                    {
+                        itemCmd.CommandText = "SELECT DISTINCT primID FROM primitems";
+                        using (IDataReader itemReader = ExecuteReader (itemCmd))
+                        {
+                            while (itemReader.Read ())
+                            {
+                                if (!(itemReader["primID"] is DBNull))
+                                {
+                                    UUID primID = DBGuid.FromDB (itemReader["primID"].ToString ());
+                                    if (prims.ContainsKey (primID))
+                                        primsWithInventory.Add (prims[primID]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            foreach (SceneObjectPart prim in primsWithInventory)
+            {
+                LoadItems (prim);
+            }
+
+            #endregion Prim Inventory Loading
+
+            m_log.DebugFormat ("[REGION DB]: Loaded inventory from {0} objects", primsWithInventory.Count);
+
+            return new List<SceneObjectGroup> (objects.Values);
+        }*/
     }
 }

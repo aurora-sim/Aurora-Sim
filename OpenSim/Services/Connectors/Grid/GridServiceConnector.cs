@@ -102,8 +102,8 @@ namespace OpenSim.Services.Connectors
                         m_log.Warn("[GridServiceConnector]: Exception on parsing OSDMap from server, legacy (OpenSim) server?");
                     }
                 }
-            } 
-            SessionID = UUID.Zero;
+            }
+            SessionID = SecureSessionID;
             return OldRegisterRegion(regionInfo);
         }
 
