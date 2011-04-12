@@ -2484,9 +2484,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             adb.SessionID = SessionId; // More security
             gdb.GodLevel = (byte)AdminLevel;
             gdb.Token = Token;
-            //respondPacket.AgentData = (GrantGodlikePowersPacket.AgentDataBlock)ablock;
-            respondPacket.GrantData = gdb;
-            respondPacket.AgentData = adb;
             OutPacket(respondPacket, ThrottleOutPacketType.AvatarInfo);
         }
 
@@ -6197,6 +6194,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 DetachAttachmentIntoInvPacket detachtoInv = (DetachAttachmentIntoInvPacket)Pack;
 
                 #region Packet Session and User Check
+//TODO!
                 // UNSUPPORTED ON THIS PACKET
                 #endregion
 
@@ -6411,6 +6409,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             #region Packet Session and User Check
             if (m_checkPackets)
             {
+//TODO!
                 // UNSUPPORTED ON THIS PACKET
             }
             #endregion
