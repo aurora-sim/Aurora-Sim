@@ -402,16 +402,34 @@ namespace OpenSim.Services.MessagingService
                     circuitData.OtherInformation["UserUrls"] = commsService.GetUrlsForUser(neighbor, circuitData.AgentID);
                 }
 
+                #region OpenSim teleport compatibility!
+
+                circuitData.CapsPath = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath ());
+
+                #endregion
+
                 bool regionAccepted = SimulationService.CreateAgent(neighbor, circuitData,
                         TeleportFlags, agentData, out reason);
                 if (regionAccepted)
                 {
+                    string otherRegionsCapsURL;
                     //If the region accepted us, we should get a CAPS url back as the reason, if not, its not updated or not an Aurora region, so don't touch it.
                     if (reason != "")
                     {
-                        OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
+                        OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson (reason);
                         OSDMap SimSeedCaps = (OSDMap)responseMap["CapsUrls"];
-                        otherRegionService.AddCAPS(SimSeedCaps);
+                        otherRegionService.AddCAPS (SimSeedCaps);
+                        otherRegionsCapsURL = otherRegionService.CapsUrl;
+                    }
+                    else
+                    {
+                        //We are assuming an OpenSim region now!
+                        #region OpenSim teleport compatibility!
+
+                        otherRegionsCapsURL = otherRegionService.Region.ServerURI.Remove(otherRegionService.Region.ServerURI.Length - 1, 1) + 
+                            circuitData.CapsPath;
+
+                        #endregion
                     }
 
                     IEventQueueService EQService = m_registry.RequestModuleInterface<IEventQueueService>();
@@ -427,7 +445,7 @@ namespace OpenSim.Services.MessagingService
                     Thread.Sleep(300);
                     EQService.EstablishAgentCommunication(AgentID, neighbor.RegionHandle,
                         neighbor.ExternalEndPoint.Address.GetAddressBytes(),
-                        neighbor.ExternalEndPoint.Port, otherRegionService.CapsUrl, neighbor.RegionSizeX,
+                        neighbor.ExternalEndPoint.Port, otherRegionsCapsURL, neighbor.RegionSizeX,
                         neighbor.RegionSizeY,
                         requestingRegion);
 

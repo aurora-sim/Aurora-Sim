@@ -216,6 +216,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         private const int NumMovementsBetweenRayCast = 5;
 
+        /// <summary>
+        /// ONLY HERE FOR OPENSIM COMPATIBILITY
+        /// </summary>
         private string m_callbackURI = null;
         public string CallbackURI
         {
@@ -2298,8 +2301,8 @@ namespace OpenSim.Region.Framework.Scenes
         public void ChildAgentDataUpdate(AgentData cAgentData)
         {
             //m_log.Debug("   >>> ChildAgentDataUpdate <<< " + Scene.RegionInfo.RegionName);
-            if (!IsChildAgent)
-                return;
+            //if (!IsChildAgent)
+            //    return;
 
             CopyFrom(cAgentData);
         }

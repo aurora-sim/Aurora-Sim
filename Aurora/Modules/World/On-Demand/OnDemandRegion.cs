@@ -99,7 +99,8 @@ namespace Aurora.Modules.World.On_Demand
                 if (!m_isRunning)
                 {
                     m_isRunning = true;
-                    OSDMap responseMap = (OSDMap)parameters;
+                    object[] obj = (object[])parameters;
+                    OSDMap responseMap = (OSDMap)obj[0];
                     //Tell the caller that we will have to wait a bit possibly
                     responseMap["WaitTime"] = m_waitTime;
                     if (m_scene.RegionInfo.Startup == StartupType.Medium)
