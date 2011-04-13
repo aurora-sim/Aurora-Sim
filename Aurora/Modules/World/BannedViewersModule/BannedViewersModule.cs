@@ -109,7 +109,7 @@ namespace Aurora.Modules
                         {
                             OSDMap viewerMap = (OSDMap)m_map[textureEntry.FaceTextures[i].TextureID.ToString()];
                             //Check the names
-                            if (isViewerBanned (viewerMap["name"].ToString (), viewerMap["evil"].AsBoolean ()))
+                            if (IsViewerBanned (viewerMap["name"].ToString (), viewerMap["evil"].AsBoolean ()))
                             {
                                 client.Kick("You cannot use " + viewerMap["name"] + " in this sim.");
                                 IEntityTransferModule transferModule = client.Scene.RequestModuleInterface<IEntityTransferModule> ();
@@ -125,7 +125,7 @@ namespace Aurora.Modules
             catch { }
         }
 
-        private bool isViewerBanned(string name, bool isEvil)
+        public bool IsViewerBanned(string name, bool isEvil)
         {
             if (m_useIncludeList)
             {
