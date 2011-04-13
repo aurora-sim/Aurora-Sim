@@ -61,6 +61,7 @@ namespace OpenSim.Region.CoreModules
 
         public void AddRegion(Scene scene)
         {
+            scene.RegisterModuleInterface<IActivityDetector> (this);
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
         }

@@ -970,7 +970,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 IActivityDetector[] activityDetectors = scene.RequestModuleInterfaces<IActivityDetector> ();
                 foreach (IActivityDetector det in activityDetectors)
                 {
-                    det.AgentIsAZombie (sp.UUID);
+                    if(det != null)
+                        det.AgentIsAZombie (sp.UUID);
                 }
                 scene.RemoveAgent (sp);
                 sp = null;
