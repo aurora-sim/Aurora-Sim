@@ -102,6 +102,7 @@ namespace OpenSim.Services.AvatarService
 
         public bool SetAvatar(UUID principalID, AvatarData avatar)
         {
+            m_registry.RequestModuleInterface<ISimulationBase> ().EventManager.FireGenericEventHandler ("SetAppearance", new object[2] { principalID, avatar });
             return m_Database.Store (principalID, avatar);
         }
 
