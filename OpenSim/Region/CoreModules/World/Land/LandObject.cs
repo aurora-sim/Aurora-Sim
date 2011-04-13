@@ -308,6 +308,18 @@ namespace OpenSim.Region.CoreModules.World.Land
                         newData.PassPrice = args.PassPrice;
                     }
 
+                    if ((args.ParcelFlags & (uint)ParcelFlags.ShowDirectory) == (uint)ParcelFlags.ShowDirectory &&
+                        (newData.Flags & (uint)ParcelFlags.ShowDirectory) != (uint)ParcelFlags.ShowDirectory)
+                    {
+                        //If the flags have changed, we need to charge them.. maybe
+                        // We really need to check per month or whatever
+                        //IMoneyModule moneyModule = m_scene.RequestModuleInterface<IMoneyModule> ();
+                        //if (moneyModule != null)
+                        //{
+                        //    if(!moneyModule.Charge(remote_client.AgentId, 30, "Parcel Show in Search Fee"))
+                        //        args.ParcelFlags &= (uint)ParcelFlags.ShowDirectory;
+                        //}
+                    }
                     newData.Flags = args.ParcelFlags;
 
                     m_parcelManagementModule.UpdateLandObject(LandData.LocalID, newData);
