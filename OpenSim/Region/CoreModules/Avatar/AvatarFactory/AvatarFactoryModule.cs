@@ -624,50 +624,42 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         {
             IInventoryService invService = m_scene.InventoryService;
 
-            if (invService.GetRootFolder(userID) != null)
+            for (int i = 0; i < AvatarWearable.MAX_WEARABLES; i++)
             {
-                for (int i = 0; i < AvatarWearable.MAX_WEARABLES; i++)
+                for (int j = 0; j < appearance.Wearables[j].Count; j++)
                 {
-                    for (int j = 0; j < appearance.Wearables[j].Count; j++)
+                    if (appearance.Wearables[i][j].ItemID == UUID.Zero)
+                        continue;
+
+                    // Ignore ruth's assets
+                    if (appearance.Wearables[i][j].ItemID == AvatarWearable.DefaultWearables[i][j].ItemID)
                     {
-                        if (appearance.Wearables[i][j].ItemID == UUID.Zero)
-                            continue;
+                        //m_log.ErrorFormat(
+                        //    "[AvatarFactory]: Found an asset for the default avatar, itemID {0}, wearable {1}, asset {2}" +
+                        //    ", setting to default asset {3}.",
+                        //    appearance.Wearables[i][j].ItemID, (WearableType)i, appearance.Wearables[i][j].AssetID,
+                        //    AvatarWearable.DefaultWearables[i][j].AssetID);
+                        appearance.Wearables[i].Add (appearance.Wearables[i][j].ItemID, appearance.Wearables[i][j].AssetID);
+                        continue;
+                    }
 
-                        // Ignore ruth's assets
-                        if (appearance.Wearables[i][j].ItemID == AvatarWearable.DefaultWearables[i][j].ItemID)
-                        {
-                            //m_log.ErrorFormat(
-                            //    "[AvatarFactory]: Found an asset for the default avatar, itemID {0}, wearable {1}, asset {2}" +
-                            //    ", setting to default asset {3}.",
-                            //    appearance.Wearables[i][j].ItemID, (WearableType)i, appearance.Wearables[i][j].AssetID,
-                            //    AvatarWearable.DefaultWearables[i][j].AssetID);
-                            appearance.Wearables[i].Add(appearance.Wearables[i][j].ItemID, appearance.Wearables[i][j].AssetID);
-                            continue;
-                        }
+                    InventoryItemBase baseItem = new InventoryItemBase (appearance.Wearables[i][j].ItemID, userID);
+                    baseItem = invService.GetItem (baseItem);
 
-                        InventoryItemBase baseItem = new InventoryItemBase(appearance.Wearables[i][j].ItemID, userID);
-                        baseItem = invService.GetItem(baseItem);
+                    if (baseItem != null)
+                    {
+                        appearance.Wearables[i].Add (appearance.Wearables[i][j].ItemID, baseItem.AssetID);
+                    }
+                    else
+                    {
+                        m_log.ErrorFormat (
+                            "[AvatarFactory]: Can't find inventory item {0} for {1}, setting to default",
+                            appearance.Wearables[i][j].ItemID, (WearableType)i);
 
-                        if (baseItem != null)
-                        {
-                            appearance.Wearables[i].Add(appearance.Wearables[i][j].ItemID, baseItem.AssetID);
-                        }
-                        else
-                        {
-                            m_log.ErrorFormat(
-                                "[AvatarFactory]: Can't find inventory item {0} for {1}, setting to default",
-                                appearance.Wearables[i][j].ItemID, (WearableType)i);
-
-                            appearance.Wearables[i].RemoveItem(appearance.Wearables[i][j].ItemID);
-                            appearance.Wearables[i].Add(AvatarWearable.DefaultWearables[i][j].ItemID, AvatarWearable.DefaultWearables[i][j].AssetID);
-                        }
+                        appearance.Wearables[i].RemoveItem (appearance.Wearables[i][j].ItemID);
+                        appearance.Wearables[i].Add (AvatarWearable.DefaultWearables[i][j].ItemID, AvatarWearable.DefaultWearables[i][j].AssetID);
                     }
                 }
-            }
-            else
-            {
-                appearance.Wearables = AvatarWearable.DefaultWearables;
-                m_log.WarnFormat("[AvatarFactory]: user {0} has no inventory, setting appearance to default", userID);
             }
         }
 
