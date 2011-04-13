@@ -15,9 +15,11 @@ namespace Aurora.Modules
 {
     public class BannedViewersModule: ISharedRegionModule, IBanViewersModule
     {
-        private List<string> m_bannedViewers = new List<string>();
+        private List<string> m_bannedViewers = new List<string> ();
+        private List<string> m_allowedViewers = new List<string> ();
         private bool m_banEvilViewersByDefault = true;
         private bool m_enabled = true;
+        private bool m_useIncludeList = false;
         private OSDMap m_map = null;
         private string m_viewerTagURL = "http://viewertags.com/app/client_list.xml";
 
@@ -29,16 +31,27 @@ namespace Aurora.Modules
             }
         }
 
+        public List<string> AllowedViewers
+        {
+            get
+            {
+                return m_allowedViewers;
+            }
+        }
+
         public void Initialise(IConfigSource source)
         {
             IConfig config = source.Configs["BanViewersModule"];
             if (config != null)
             {
-                string bannedViewers = config.GetString("ViewersToBan", "");
-                m_banEvilViewersByDefault = config.GetBoolean("BanKnownEvilViewers", true);
+                string bannedViewers = config.GetString ("ViewersToBan", "");
+                m_bannedViewers = new List<string> (bannedViewers.Split (new string[1] { "," }, StringSplitOptions.RemoveEmptyEntries));
+                string allowedViewers = config.GetString ("ViewersToAllow", "");
+                m_allowedViewers = new List<string> (allowedViewers.Split (new string[1] { "," }, StringSplitOptions.RemoveEmptyEntries));
+                m_banEvilViewersByDefault = config.GetBoolean ("BanKnownEvilViewers", true);
                 m_viewerTagURL = config.GetString ("ViewerXMLURL", m_viewerTagURL);
-                m_bannedViewers = new List<string>(bannedViewers.Split(new string[1]{","}, StringSplitOptions.RemoveEmptyEntries));
-                m_enabled = config.GetBoolean("Enabled", true);
+                m_enabled = config.GetBoolean ("Enabled", true);
+                m_useIncludeList = config.GetBoolean ("UseAllowListInsteadOfBanList", false);
             }
         }
 
@@ -96,25 +109,37 @@ namespace Aurora.Modules
                         {
                             OSDMap viewerMap = (OSDMap)m_map[textureEntry.FaceTextures[i].TextureID.ToString()];
                             //Check the names
-                            if (BannedViewers.Contains(viewerMap["name"].ToString()))
+                            if (isViewerBanned (viewerMap["name"].ToString (), viewerMap["evil"].AsBoolean ()))
                             {
                                 client.Kick("You cannot use " + viewerMap["name"] + " in this sim.");
                                 IEntityTransferModule transferModule = client.Scene.RequestModuleInterface<IEntityTransferModule> ();
                                 if (transferModule != null)
                                     transferModule.IncomingCloseAgent (((Scene)client.Scene), client.AgentId);
+                                break;
                             }
-                            else if (m_banEvilViewersByDefault && viewerMap.ContainsKey("evil") && (viewerMap["evil"].AsBoolean() == true))
-                            {
-                                client.Kick("You cannot use " + viewerMap["name"] + " in this sim.");
-                                IEntityTransferModule transferModule = client.Scene.RequestModuleInterface<IEntityTransferModule> ();
-                                if (transferModule != null)
-                                    transferModule.IncomingCloseAgent (((Scene)client.Scene), client.AgentId);
-                            }
+                            break;
                         }
                     }
                 }
             }
             catch { }
+        }
+
+        private bool isViewerBanned(string name, bool isEvil)
+        {
+            if (m_useIncludeList)
+            {
+                if (!m_allowedViewers.Contains (name))
+                    return true;
+            }
+            else
+            {
+                if (BannedViewers.Contains (name))
+                    return true;
+                else if (m_banEvilViewersByDefault && isEvil)
+                    return true;
+            }
+            return false;
         }
     }
 }

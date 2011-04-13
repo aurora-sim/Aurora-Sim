@@ -63,6 +63,14 @@
 
 [AssetService]
     AllowRemoteDelete = true
+
+[DisplayNamesModule]
+    ;; This allows for display names to be used
+    Enabled = true
+
+    ;; Blocks all user names in this list from being used as display names. Names are NOT case sensitive. Seperate names by commas.
+    ;; Example "Linden,Admin"
+    BannedUserNames = "Linden"
     
 [VoiceIncludes]
     ;; If you would like to set up voice for the entire grid, select one of these includes depending on which voice module you wish to set up
