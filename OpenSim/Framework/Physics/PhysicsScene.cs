@@ -50,8 +50,8 @@ namespace OpenSim.Framework
 
         public virtual Vector3 PointOfGravity
         {
-            get;
-            set;
+            get { return Vector3.Zero; }
+            set { }
         }
 
         public abstract void Initialise(IMesher meshmerizer, RegionInfo region);
@@ -62,7 +62,7 @@ namespace OpenSim.Framework
         public abstract void RemoveAvatar(PhysicsActor actor);
 
         public abstract void RemovePrim(PhysicsActor prim);
-
+    
         public abstract PhysicsActor AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
                                                   Vector3 size, Quaternion rotation); //To be removed
         public abstract PhysicsActor AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
@@ -78,6 +78,8 @@ namespace OpenSim.Framework
         {
             get { return 0; }
         }
+
+        #region Ninja Physics Code
 
         public virtual bool SupportsNINJAJoints
         {
@@ -139,24 +141,23 @@ namespace OpenSim.Framework
         public virtual Vector3 GetJointAxis(PhysicsJoint joint)
         { return Vector3.Zero; }
 
+        #endregion
 
         public abstract void AddPhysicsActorTaint(PhysicsActor prim);
 
         public abstract float Simulate(float timeStep);
 
-        public abstract void GetResults();
+        public virtual void GetResults() { }
 
         public abstract void SetTerrain(short[] heightMap);
 
         public abstract void SetWaterLevel(short[] map);
 
-        public abstract void DeleteTerrain();
-
         public abstract void Dispose();
 
         public abstract Dictionary<uint, float> GetTopColliders();
 
-        public abstract bool IsThreaded { get; }
+        public virtual bool IsThreaded { get { return false; } }
 
         public abstract bool DisableCollisions { get; set; }
 
@@ -326,29 +327,9 @@ namespace OpenSim.Framework
             return 0f;
         }
 
-        public override void GetResults ()
-        {
-            m_log.Info ("[PHYSICS]: NullPhysicsScene : GetResults()");
-        }
-
         public override void SetTerrain (short[] heightMap)
         {
             m_log.InfoFormat ("[PHYSICS]: NullPhysicsScene : SetTerrain({0} items)", heightMap.Length);
-        }
-
-        public override void DeleteTerrain ()
-        {
-        }
-
-        public override bool IsThreaded
-        {
-            get { return false; }
-        }
-
-        public override Vector3 PointOfGravity
-        {
-            get { return Vector3.Zero; }
-            set { }
         }
 
         public override void Dispose ()

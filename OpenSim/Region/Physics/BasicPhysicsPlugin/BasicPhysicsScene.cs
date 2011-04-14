@@ -165,20 +165,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             return fps;
         }
 
-        public override void GetResults()
-        {
-        }
-
-        public override bool IsThreaded
-        {
-            get { return (false); // for now we won't be multithreaded
-            }
-        }
-
-        public override void DeleteTerrain()
-        {
-        }
-
         public override void SetWaterLevel(short[] map)
         {
         }

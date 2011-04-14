@@ -3397,16 +3397,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return fps;
         }
 
-        public override void GetResults()
-        {
-        }
-
-        public override bool IsThreaded
-        {
-            // for now we won't be multithreaded
-            get { return (false); }
-        }
-
         #region ODE Specific Terrain Fixes
 
 /* needs fixing if really needed
@@ -3777,10 +3767,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 ODETerrainHeightFieldHeights.Add (RegionTerrain, _heightmap);
                 TerrainHeightFieldlimits.Add (RegionTerrain, heighlimits);
             }
-        }
-
-        public override void DeleteTerrain()
-        {
         }
 
         public double GetWaterLevel(float x, float y)

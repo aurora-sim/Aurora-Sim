@@ -128,12 +128,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             get { return false; }
         }
 
-        public override Vector3 PointOfGravity
-        {
-            get { return Vector3.Zero; }
-            set { }
-        }
-
         public BulletDotNETScene(string sceneIdentifier)
         {
             BulletLock = new object();
@@ -527,11 +521,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             }
         }
 
-        public override void GetResults()
-        {
-            
-        }
-
         public override void SetTerrain(short[] shortheightMap)
         {
             if (m_terrainShape != null)
@@ -609,7 +598,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             
         }
 
-        public override void DeleteTerrain()
+        public void DeleteTerrain()
         {
             if (TerrainBody != null)
             {
