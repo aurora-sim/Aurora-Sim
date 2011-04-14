@@ -245,10 +245,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         {
             m_taintRemove = true;
         }
-        public override bool Stopped
-        {
-            get { return m_zeroFlag; }
-        }
 
         public override Vector3 Size
         {
@@ -282,20 +278,10 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             set { return; }
         }
 
-        public override bool VolumeDetect
-        {
-            get { return false; }
-        }
-
         public override uint LocalID
         {
             get { return m_localID; }
             set { m_localID = value; }
-        }
-
-        public override bool Grabbed
-        {
-            set { return; }
         }
 
         public override bool Selected
@@ -349,42 +335,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         {
             get { return m_target_velocity; }
             set { return; }
-        }
-
-        public override int VehicleType
-        {
-            get { return 0; }
-            set { return; }
-        }
-
-        public override void VehicleFloatParam(int param, float value)
-        {
-            
-        }
-
-        public override void VehicleVectorParam(int param, Vector3 value)
-        {
-            
-        }
-
-        public override void VehicleRotationParam(int param, Quaternion rotation)
-        {
-            
-        }
-
-        public override void VehicleFlags(int param, bool remove)
-        {
-
-        }
-
-        public override void SetVolumeDetect(int param)
-        {
-            
-        }
-
-        public override Vector3 GeometricCenter
-        {
-            get { return Vector3.Zero; }
         }
 
         public override Vector3 CenterOfMass

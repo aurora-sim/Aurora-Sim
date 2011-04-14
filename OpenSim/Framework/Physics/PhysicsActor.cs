@@ -95,11 +95,6 @@ namespace OpenSim.Framework
 
     public class NullPhysicsActor : PhysicsActor
     {
-        public override bool Stopped
-        {
-            get{ return false; }
-        }
-
         public override Vector3 Position
         {
             get { return Vector3.Zero; }
@@ -118,19 +113,9 @@ namespace OpenSim.Framework
             set { return; }
         }
 
-        public override bool Grabbed
-        {
-            set { return; }
-        }
-
         public override bool Selected
         {
             set { return; }
-        }
-
-        public override bool VolumeDetect
-        {
-            get { return false; }
         }
 
         public override float Buoyancy
@@ -139,7 +124,7 @@ namespace OpenSim.Framework
             set { return; }
         }
 
-        public override bool  FloatOnWater
+        public override bool FloatOnWater
         {
             set { return; }
         }
@@ -174,52 +159,7 @@ namespace OpenSim.Framework
             set { return; }
         }
 
-        public override int VehicleType
-        {
-            get { return 0; }
-            set { return; }
-        }
-
-        public override void VehicleFloatParam(int param, float value)
-        {
-
-        }
-
-        public override void VehicleVectorParam(int param, Vector3 value)
-        {
-
-        }
-
-        public override void VehicleRotationParam(int param, Quaternion rotation)
-        {
-
-        }
-
-        public override void VehicleFlags(int param, bool remove)
-        {
-            
-        }
-
-        public override void SetCameraPos(Vector3 CameraRotation)
-        {
-        }
-
-        public override void SetVolumeDetect(int param)
-        {
-
-        }
-
-        public override void SetMaterial(int material)
-        {
-            
-        }
-
         public override Vector3 CenterOfMass
-        {
-            get { return Vector3.Zero; }
-        }
-
-        public override Vector3 GeometricCenter
         {
             get { return Vector3.Zero; }
         }
@@ -291,18 +231,6 @@ namespace OpenSim.Framework
         {
             get { return type; }
             set { type = value; }
-        }
-
-        public override void link(PhysicsActor obj)
-        {
-        }
-
-        public override void delink()
-        {
-        }
-
-        public override void LockAngularMotion(Vector3 axis)
-        {
         }
 
         public override void AddForce(Vector3 force, bool pushforce)

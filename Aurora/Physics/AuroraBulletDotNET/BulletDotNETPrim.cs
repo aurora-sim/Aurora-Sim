@@ -270,11 +270,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
         #region PhysicsActor overrides
 
-        public override bool Stopped
-        {
-            get { return _zeroFlag; }
-        }
-
         public override Vector3 Size
         {
             get { return _size; }
@@ -298,11 +293,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 //m_log.Info("[PHYSICS]: Setting TrackerID: " + value);
                 m_localID = value;
             }
-        }
-
-        public override bool Grabbed
-        {
-            set { return; }
         }
 
         public override bool Selected
@@ -408,20 +398,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         public override void VehicleFlags(int param, bool remove)
         {
             m_vehicle.ProcessVehicleFlags(param, remove);
-        }
-
-        public override void SetVolumeDetect(int param)
-        {
-            lock (_parent_scene.BulletLock)
-            {
-                //TODO: GhostObject
-                m_isVolumeDetect = (param != 0);
-            }
-        }
-
-        public override Vector3 GeometricCenter
-        {
-            get { return Vector3.Zero; }
         }
 
         public override Vector3 CenterOfMass
@@ -565,6 +541,18 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             set { m_buoyancy = value; }
         }
 
+        public override bool VolumeDetect
+        {
+	        get 
+	        { 
+	    	    return m_isVolumeDetect;
+	        }
+	        set 
+	        { 
+	    	    m_isVolumeDetect = value;
+	        }
+        }
+
         public override Vector3 PIDTarget { get { return m_PIDTarget; } set { m_PIDTarget = value; } }
         public override bool PIDActive { get { return m_usePID; } set { m_usePID = value; } }
         public override float PIDTau { get { return m_PIDTau; } set { m_PIDTau = value; } }
@@ -579,11 +567,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         public override float APIDStrength { set { return; } }
         public override float APIDDamping { set { return; } }
 
-        public override bool VolumeDetect
-        {
-            get { return false; }
-        }
-        
         public override void AddForce(Vector3 force, bool pushforce)
         {
             m_forcelist.Add(force);

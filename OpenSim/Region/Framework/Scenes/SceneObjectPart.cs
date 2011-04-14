@@ -2275,7 +2275,7 @@ namespace OpenSim.Region.Framework.Scenes
                         PhysActor.SOPDescription = this.Description;
                         PhysActor.LocalID = LocalId;
                         DoPhysicsPropertyUpdate(RigidBody, true);
-                        PhysActor.SetVolumeDetect(VolumeDetectActive ? 1 : 0);
+                        PhysActor.VolumeDetect = VolumeDetectActive;
                         if(OnAddPhysics != null)
                             OnAddPhysics();
                     }
@@ -5184,7 +5184,7 @@ namespace OpenSim.Region.Framework.Scenes
                     IsVD = false;               // Switch it of for the course of this routine
                     VolumeDetectActive = false; // and also permanently
                     if (PhysActor != null)
-                        PhysActor.SetVolumeDetect(0);   // Let physics know about it too
+                        PhysActor.VolumeDetect = false;   // Let physics know about it too
                 }
                 else
                 {
@@ -5313,7 +5313,7 @@ namespace OpenSim.Region.Framework.Scenes
                 // logic should make sure, this Physactor is always here.
                 if (this.PhysActor != null)
                 {
-                    PhysActor.SetVolumeDetect(1);
+                    PhysActor.VolumeDetect = true;
                     AddFlag(PrimFlags.Phantom); // We set this flag also if VD is active
                     this.VolumeDetectActive = true;
                 }
@@ -5327,7 +5327,7 @@ namespace OpenSim.Region.Framework.Scenes
                     PhysicsActor pa = this.PhysActor;
                     if (pa != null)
                     {
-                        PhysActor.SetVolumeDetect(0);
+                        PhysActor.VolumeDetect = false;
                     }
                     this.VolumeDetectActive = false;
                 }

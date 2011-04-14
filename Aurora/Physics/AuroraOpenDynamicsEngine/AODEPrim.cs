@@ -288,14 +288,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public override bool Grabbed
-        {
-            set { return; }
-        }
-
         public override bool VolumeDetect
         {
             get { return m_isVolumeDetect; }
+            set
+            { 
+                AddChange(changes.VolumeDtc, (object)value);
+            }
         }
 
         public override bool Selected
@@ -2099,11 +2098,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set { m_throttleUpdates = value; }
         }
 
-        public override bool Stopped
-        {
-            get { return _zeroFlag; }
-        }
-
         public override Vector3 Position
             {
             get
@@ -2207,14 +2201,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_vehicle.ProcessSetCameraPos(CameraRotation);
         }
 
-        public override void SetVolumeDetect(int param)
-        {
-            lock (_parent_scene.OdeLock)
-            {
-            AddChange(changes.VolumeDtc, (object)param);
-            }
-        }
-
         public override Vector3 CenterOfMass
         {
             get {
@@ -2234,16 +2220,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
         }
 
-        public override Vector3 GeometricCenter
-        {
-            get { return Vector3.Zero; }
-        }
-
         public override PrimitiveBaseShape Shape
         {
             set
             {
-            AddChange(changes.Shape, (object)value);
+                AddChange(changes.Shape, (object)value);
             }
         }
 
@@ -2952,7 +2933,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private void changevoldtc(Object arg)
             {
-            m_isVolumeDetect = ((int)arg != 0);
+            m_isVolumeDetect = (bool)arg;
             }                       
 
         private void donullchange()

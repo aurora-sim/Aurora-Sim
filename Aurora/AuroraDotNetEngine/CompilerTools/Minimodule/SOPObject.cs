@@ -617,8 +617,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         {
             get
             {
-                Vector3 tmp = GetSOP().PhysActor.GeometricCenter;
-                return tmp;
+                return Vector3.Zero;
             }
         }
 

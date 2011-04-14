@@ -72,11 +72,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             set { return; }
         }
 
-        public override bool Grabbed
-        {
-            set { return; }
-        }
-
         public override bool Selected
         {
             set { return; }
@@ -129,11 +124,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             set { return; }
         }
 
-        public override bool Stopped
-        {
-            get { return false; }
-        }
-
         public override Vector3 Position
         {
             get { return _position; }
@@ -166,43 +156,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             set { return; }
         }
 
-        public override int VehicleType
-        {
-            get { return 0; }
-            set { return; }
-        }
-
-        public override void VehicleFloatParam(int param, float value)
-        {
-
-        }
-
-        public override void VehicleVectorParam(int param, Vector3 value)
-        {
-
-        }
-
-        public override void VehicleRotationParam(int param, Quaternion rotation)
-        {
-
-        }
-
-        public override void VehicleFlags(int param, bool remove)
-        {
-
-        }
-
-        public override void SetVolumeDetect(int param)
-        {
-
-        }
-
         public override Vector3 CenterOfMass
-        {
-            get { return Vector3.Zero; }
-        }
-
-        public override Vector3 GeometricCenter
         {
             get { return Vector3.Zero; }
         }
@@ -234,18 +188,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override Vector3 Acceleration
         {
             get { return _acceleration; }
-        }
-
-        public override void link(PhysicsActor obj)
-        {
-        }
-
-        public override void delink()
-        {
-        }
-
-        public override void LockAngularMotion(Vector3 axis)
-        {
         }
 
         public void SetAcceleration(Vector3 accel)
@@ -338,15 +280,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override bool SubscribedEvents()
         {
             return false;
-        }
-
-        public override void SetCameraPos(Vector3 CameraRotation)
-        {
-        }
-
-        public override bool VolumeDetect
-        {
-            get { return false; }
         }
     }
 }

@@ -827,15 +827,11 @@ namespace OpenSim.Framework
         public event OutOfBounds OnOutOfBounds;
 #pragma warning restore 67
 
-        public abstract bool Stopped { get; }
-
         public abstract Vector3 Size { get; set; }
 
         public abstract PrimitiveBaseShape Shape { set; }
 
         public abstract uint LocalID { get; set; }
-
-        public abstract bool Grabbed { set; }
 
         public abstract bool Selected { set; }
 
@@ -844,11 +840,11 @@ namespace OpenSim.Framework
 
         public abstract void CrossingFailure ();
 
-        public abstract void link (PhysicsActor obj);
+        public virtual void link (PhysicsActor obj) { }
 
-        public abstract void delink ();
+        public virtual void delink () { }
 
-        public abstract void LockAngularMotion (Vector3 axis);
+        public virtual void LockAngularMotion (Vector3 axis) { }
 
         public virtual void RequestPhysicsterseUpdate ()
         {
@@ -904,27 +900,22 @@ namespace OpenSim.Framework
                 movementUpdate ();
         }
 
-        public virtual void SetMaterial (int material)
-        {
-
-        }
+        public virtual void SetMaterial (int material) { }
 
         public abstract Vector3 Position { get; set; }
         public abstract float Mass { get; set; }
         public abstract Vector3 Force { get; set; }
 
-        public abstract int VehicleType { get; set; }
-        public abstract void VehicleFloatParam (int param, float value);
-        public abstract void VehicleVectorParam (int param, Vector3 value);
-        public abstract void VehicleRotationParam (int param, Quaternion rotation);
-        public abstract void VehicleFlags (int param, bool remove);
-        public abstract void SetCameraPos (Vector3 CameraRotation);
+        public virtual int VehicleType { get { return 0; } set { return; } }
+        public virtual void VehicleFloatParam (int param, float value) { }
+        public virtual void VehicleVectorParam (int param, Vector3 value) { }
+        public virtual void VehicleRotationParam (int param, Quaternion rotation) { }
+        public virtual void VehicleFlags (int param, bool remove) { }
+
+        public virtual void SetCameraPos (Vector3 CameraRotation) { }
         public virtual void AddMovementForce (Vector3 force) { }
         public virtual void SetMovementForce (Vector3 force) { }
 
-        public abstract void SetVolumeDetect (int param);    // Allows the detection of collisions with inherently non-physical prims. see llVolumeDetect for more
-
-        public abstract Vector3 GeometricCenter { get; }
         public abstract Vector3 CenterOfMass { get; }
         public abstract Vector3 Velocity { get; set; }
         public abstract Vector3 Torque { get; set; }
@@ -955,7 +946,11 @@ namespace OpenSim.Framework
         public abstract PIDHoverType PIDHoverType { set; }
         public abstract float PIDHoverTau { set; }
 
-        public abstract bool VolumeDetect { get; }
+        public virtual bool VolumeDetect 
+        { 
+            get { return false; }
+            set { return; }
+        }
 
         // For RotLookAt
         public abstract Quaternion APIDTarget { set; }

@@ -230,11 +230,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set { return; }
         }
 
-        public override bool VolumeDetect
-        {
-            get { return false; }
-        }
-
         public override float Buoyancy
         {
             get { return m_buoyancy; }
@@ -379,11 +374,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_pidControllerActive = status;
         }
 
-        public override bool Stopped
-        {
-            get { return _zeroFlag; }
-        }
-
         /// <summary>
         /// This 'puts' an avatar somewhere in the physics space.
         /// Not really a good choice unless you 'know' it's a good
@@ -486,18 +476,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set { return; }
         }
 
-        public override int VehicleType
-        {
-            get { return 0; }
-            set { return; }
-        }
-
         public override Vector3 CenterOfMass
-        {
-            get { return Vector3.Zero; }
-        }
-
-        public override Vector3 GeometricCenter
         {
             get { return Vector3.Zero; }
         }
@@ -1425,22 +1404,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         #endregion
 
-        #region Unused code (for prims)
-
-        public override void link(PhysicsActor obj)
-        {
-
-        }
-
-        public override void delink()
-        {
-
-        }
-
-        public override void LockAngularMotion(Vector3 axis)
-        {
-
-        }
+        #region Unused code
 
 //      This code is very useful. Written by DanX0r. We're just not using it right now.
 //      Commented out to prevent a warning.
@@ -1465,35 +1429,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 //             //m_log.Info("[PHYSICSAV]: Rotation: " + bodyrotation.M00 + " : " + bodyrotation.M01 + " : " + bodyrotation.M02 + " : " + bodyrotation.M10 + " : " + bodyrotation.M11 + " : " + bodyrotation.M12 + " : " + bodyrotation.M20 + " : " + bodyrotation.M21 + " : " + bodyrotation.M22);
         //         }
 
-        #region Vehicle (not used)
-
-        public override void VehicleFloatParam(int param, float value)
-        {
-
-        }
-
-        public override void VehicleVectorParam(int param, Vector3 value)
-        {
-
-        }
-
-        public override void VehicleRotationParam(int param, Quaternion rotation)
-        {
-
-        }
-
-        public override void VehicleFlags(int param, bool remove)
-        {
-
-        }
-
-        #endregion
-
-        public override void SetVolumeDetect(int param)
-        {
-
-        }
-
         public void SetAcceleration(Vector3 accel)
         {
             m_pidControllerActive = true;
@@ -1510,10 +1445,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         public override void CrossingFailure()
-        {
-        }
-
-        public override void SetCameraPos(Vector3 CameraRotation)
         {
         }
 
