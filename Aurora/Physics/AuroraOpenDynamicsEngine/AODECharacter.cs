@@ -220,11 +220,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set { m_localID = value; }
         }
 
-        public override bool Grabbed
-        {
-            set { return; }
-        }
-
         public override bool Selected
         {
             set { return; }
