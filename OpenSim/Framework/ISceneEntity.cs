@@ -935,16 +935,30 @@ namespace OpenSim.Framework
         public abstract float Buoyancy { get; set; }
 
         // Used for MoveTo
-        public abstract Vector3 PIDTarget { get; set; }
-        public abstract bool PIDActive { get; set; }
-        public abstract float PIDTau { get; set; }
+        public virtual Vector3 PIDTarget
+        {
+            get { return Vector3.Zero; }
+            set { return; }
+        }
 
+        public virtual bool PIDActive
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        public virtual float PIDTau
+        {
+            get { return 0; }
+            set { return; }
+        }
+        
         // Used for llSetHoverHeight and maybe vehicle height
         // Hover Height will override MoveTo target's Z
-        public abstract bool PIDHoverActive { set; }
-        public abstract float PIDHoverHeight { set; }
-        public abstract PIDHoverType PIDHoverType { set; }
-        public abstract float PIDHoverTau { set; }
+        public virtual float PIDHoverHeight { set { return; } }
+        public virtual bool PIDHoverActive { set { return; } }
+        public virtual PIDHoverType PIDHoverType { set { return; } }
+        public virtual float PIDHoverTau { set { return; } }
 
         public virtual bool VolumeDetect 
         { 
@@ -953,10 +967,13 @@ namespace OpenSim.Framework
         }
 
         // For RotLookAt
-        public abstract Quaternion APIDTarget { set; }
-        public abstract bool APIDActive { set; }
-        public abstract float APIDStrength { set; }
-        public abstract float APIDDamping { set; }
+        public virtual Quaternion APIDTarget { set { return; } }
+        
+        public virtual bool APIDActive { set { return; } }
+        
+        public virtual float APIDStrength { set { return; } }
+        
+        public virtual float APIDDamping { set { return; } }
 
         public abstract void AddForce (Vector3 force, bool pushforce);
         public abstract void AddAngularForce (Vector3 force, bool pushforce);

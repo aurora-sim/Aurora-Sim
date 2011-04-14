@@ -2790,10 +2790,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 m_aMotor = null;
             }
         }
-
-        public override void SetCameraPos(Vector3 CameraRotation)
-        {
-        }
     }
 }
 

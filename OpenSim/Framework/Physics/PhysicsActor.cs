@@ -248,20 +248,6 @@ namespace OpenSim.Framework
             set { return; }
         }
 
-        public override Vector3 PIDTarget { get { return Vector3.Zero; } set { return; } }
-        public override bool PIDActive { get { return false; } set { return; } }
-        public override float PIDTau { get { return 0; } set { return; } }
-
-        public override float PIDHoverHeight { set { return; } }
-        public override bool PIDHoverActive { set { return; } }
-        public override PIDHoverType PIDHoverType { set { return; } }
-        public override float PIDHoverTau { set { return; } }
-        
-        public override Quaternion APIDTarget { set { return; } }
-        public override bool APIDActive { set { return; } }
-        public override float APIDStrength { set { return; } }
-        public override float APIDDamping { set { return; } }
-        
         public override void SetMomentum(Vector3 momentum)
         {
         }

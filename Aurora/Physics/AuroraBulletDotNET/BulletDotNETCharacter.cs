@@ -295,21 +295,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             
         }
 
-        public override void link(PhysicsActor obj)
-        {
-            
-        }
-
-        public override void delink()
-        {
-            
-        }
-
-        public override void LockAngularMotion(Vector3 axis)
-        {
-            
-        }
-
         public override Vector3 Position
         {
             get { return m_position; }
@@ -553,51 +538,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         {
             get { return m_buoyancy; }
             set { m_buoyancy = value; }
-        }
-
-        public override Vector3 PIDTarget { get { return Vector3.Zero; } set { return; } }
-        public override bool PIDActive { get { return false; } set { return; } }
-        public override float PIDTau { get { return 0; } set { return; } }
-
-        public override bool PIDHoverActive
-        {
-            set { return; }
-        }
-
-        public override float PIDHoverHeight
-        {
-            set { return; }
-        }
-
-        public override PIDHoverType PIDHoverType
-        {
-            set { return; }
-        }
-
-        public override float PIDHoverTau
-        {
-            set { return; }
-        }
-
-
-        public override Quaternion APIDTarget 
-        { 
-            set { return; }
-        }
-        
-        public override bool APIDActive
-        { 
-            set { return; }
-        }
-        
-        public override float APIDStrength
-        { 
-            set { return; }
-        }
-        
-        public override float APIDDamping
-        { 
-            set { return; }
         }
 
         /// <summary>
@@ -1197,10 +1137,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 //CollidingGround = false;
                 m_iscolliding = false;
             }
-        }
-
-        public override void SetCameraPos(Vector3 CameraRotation)
-        {
         }
     }
 
