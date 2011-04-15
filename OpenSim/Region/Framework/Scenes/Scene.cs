@@ -175,6 +175,7 @@ namespace OpenSim.Region.Framework.Scenes
         public RegionInfo RegionInfo
         {
             get { return m_regInfo; }
+            set { m_regInfo = value; }
         }
 
         // This gets locked so things stay thread safe.

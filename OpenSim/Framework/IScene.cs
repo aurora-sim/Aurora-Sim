@@ -64,7 +64,7 @@ namespace OpenSim.Framework
     {
         #region Core
 
-        RegionInfo RegionInfo { get; }
+        RegionInfo RegionInfo { get; set; }
         AuroraEventManager AuroraEventManager { get; }
         EntityManager Entities { get; }
         EventManager EventManager { get; }

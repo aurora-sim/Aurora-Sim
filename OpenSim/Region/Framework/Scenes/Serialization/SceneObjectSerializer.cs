@@ -206,11 +206,46 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 XmlDocument doc = new XmlDocument();
                 doc.LoadXml(xmlData);
 
+                return InternalFromXml2Format(doc, scene);
+            }
+            catch (Exception e)
+            {
+                m_log.ErrorFormat("[SERIALIZER]: Deserialization of xml failed with {0}.  xml was {1}", e, xmlData);
+                return null;
+            }
+        }
+
+        public static SceneObjectGroup FromXml2Format(MemoryStream ms, Scene scene)
+        {
+            //m_log.DebugFormat("[SOG]: Starting deserialization of SOG");
+            //int time = Util.EnvironmentTickCount();
+
+            try
+            {
+                XmlDocument doc = new XmlDocument();
+                doc.Load(ms);
+
+                return InternalFromXml2Format(doc, scene);
+            }
+            catch (Exception e)
+            {
+                m_log.ErrorFormat("[SERIALIZER]: Deserialization of xml failed with {0}", e);
+                return null;
+            }
+        }
+
+        private static SceneObjectGroup InternalFromXml2Format(XmlDocument doc, Scene scene)
+        {
+            //m_log.DebugFormat("[SOG]: Starting deserialization of SOG");
+            //int time = Util.EnvironmentTickCount();
+
+            try
+            {
                 XmlNodeList parts = doc.GetElementsByTagName("SceneObjectPart");
 
                 if (parts.Count == 0)
                 {
-                    m_log.ErrorFormat("[SERIALIZER]: Deserialization of xml failed: No SceneObjectPart nodes. xml was " + xmlData);
+                    m_log.ErrorFormat("[SERIALIZER]: Deserialization of xml failed: No SceneObjectPart nodes. xml was " + doc.Value);
                     return null;
                 }
 
@@ -238,7 +273,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat("[SERIALIZER]: Deserialization of xml failed with {0}.  xml was {1}", e, xmlData);
+                m_log.ErrorFormat("[SERIALIZER]: Deserialization of xml failed with {0}.  xml was {1}", e, doc.Value);
                 return null;
             }
         }

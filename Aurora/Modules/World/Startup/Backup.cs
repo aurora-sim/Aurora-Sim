@@ -19,6 +19,7 @@ using OpenSim.Framework;
 using OpenSim.Framework.Serialization;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
@@ -898,6 +899,99 @@ namespace Aurora.Modules
             private void WriteAsset(AssetBase asset, TarArchiveWriter writer)
             {
                 writer.WriteFile("assets", asset.Data);
+            }
+
+            public void LoadModuleFromArchive(byte[] data, string filePath, TarArchiveReader.TarEntryType type, IScene scene)
+            {
+                if (filePath.StartsWith("/parcels"))
+                {
+                    IParcelManagementModule module = scene.RequestModuleInterface<IParcelManagementModule>();
+                    LandData parcel = new LandData();
+                    OSD parcelData = OSDParser.DeserializeLLSDBinary(data);
+                    parcel.FromOSD((OSDMap)parcelData);
+                    module.UpdateLandObject(parcel.LocalID, parcel);
+                }
+                else if (filePath.StartsWith("/terrain"))
+                {
+                    ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule>();
+
+                    MemoryStream ms = new MemoryStream(data);
+                    terrainModule.LoadFromStream(filePath, ms, 0, 0);
+                    ms.Close();
+                }
+                else if (filePath.StartsWith("/entities"))
+                {
+                    MemoryStream ms = new MemoryStream(data);
+                    SceneObjectGroup sceneObject = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromXml2Format(ms, (Scene)scene);
+                    foreach (SceneObjectPart part in sceneObject.ChildrenList)
+                    {
+                        if (!ResolveUserUuid(part.CreatorID))
+                            part.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+
+                        if (!ResolveUserUuid(part.OwnerID))
+                            part.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+
+                        if (!ResolveUserUuid(part.LastOwnerID))
+                            part.LastOwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+
+                        // And zap any troublesome sit target information
+                        part.SitTargetOrientation = new Quaternion(0, 0, 0, 1);
+                        part.SitTargetPosition = new Vector3(0, 0, 0);
+
+                        // Fix ownership/creator of inventory items
+                        // Not doing so results in inventory items
+                        // being no copy/no mod for everyone
+                        lock (part.TaskInventory)
+                        {
+                            TaskInventoryDictionary inv = part.TaskInventory;
+                            foreach (KeyValuePair<UUID, TaskInventoryItem> kvp in inv)
+                            {
+                                if (!ResolveUserUuid(kvp.Value.OwnerID))
+                                {
+                                    kvp.Value.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+                                }
+                                if (!ResolveUserUuid(kvp.Value.CreatorID))
+                                {
+                                    kvp.Value.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+                                }
+                            }
+                        }
+                    }
+
+                    if (m_scene.SceneGraph.AddPrimToScene(sceneObject))
+                    {
+                        sceneObject.HasGroupChanged = true;
+                        sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                        sceneObject.CreateScriptInstances(0, false, 0, UUID.Zero);
+                        sceneObject.ResumeScripts();
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Used to cache lookups for valid uuids.
+            /// </summary>
+            private IDictionary<UUID, bool> m_validUserUuids = new Dictionary<UUID, bool>();
+
+            private bool ResolveUserUuid(UUID uuid)
+            {
+                bool v;
+                if (!m_validUserUuids.TryGetValue(uuid, out v))
+                {
+                    UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, uuid);
+                    if (account != null)
+                    {
+                        m_validUserUuids.Add(uuid, true);
+                        return true;
+                    }
+                    else
+                    {
+                        m_validUserUuids.Add(uuid, false);
+                        return false;
+                    }
+                }
+
+                return v;
             }
 
             #endregion

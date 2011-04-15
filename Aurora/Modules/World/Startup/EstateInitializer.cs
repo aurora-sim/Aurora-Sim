@@ -331,5 +331,24 @@ namespace OpenSim.Region.CoreModules
 
             m_log.Info("[Archive]: Finished writing region info to archive");
         }
+
+        public void LoadModuleFromArchive(byte[] data, string filePath, TarArchiveReader.TarEntryType type, IScene scene)
+        {
+            if (filePath.StartsWith("/estate"))
+            {
+                string estateData = Encoding.UTF8.GetString(data);
+                EstateSettings settings = new EstateSettings(WebUtils.ParseXmlResponse(estateData));
+                scene.RegionInfo.EstateSettings = settings;
+            }
+            else if (filePath.StartsWith("/regioninfo"))
+            {
+                string regionData = Encoding.UTF8.GetString(data);
+                RegionInfo settings = new RegionInfo();
+                settings.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeLLSDBinary(data));
+                settings.RegionSettings = scene.RegionInfo.RegionSettings;
+                settings.EstateSettings = scene.RegionInfo.EstateSettings;
+                scene.RegionInfo = settings;
+            }
+        }
     }
 }

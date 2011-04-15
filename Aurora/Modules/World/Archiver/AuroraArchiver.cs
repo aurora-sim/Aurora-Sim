@@ -69,7 +69,8 @@ namespace Aurora.Modules
 
             GZipStream m_loadStream = new GZipStream(ArchiveHelpers.GetStream(fileName), CompressionMode.Decompress);
             TarArchiveReader reader = new TarArchiveReader(m_loadStream);
-            
+
+            LoadRegionBackup(reader, scene);
         }
 
         private void SaveAuroraArchive(string mod, string[] cmd)
@@ -81,19 +82,12 @@ namespace Aurora.Modules
                 return;
             }
 
-            string regionParcel = MainConsole.Instance.CmdPrompt("Do you want to save the full region or a parcel?", "region", new List<string>(new string[2] { "region", "parcel" }));
             string fileName = MainConsole.Instance.CmdPrompt("What file name will this be saved as?", scene.RegionInfo.RegionName + ".backup");
             
             GZipStream m_saveStream = new GZipStream(new FileStream(fileName, FileMode.Create), CompressionMode.Compress);
             TarArchiveWriter writer = new TarArchiveWriter(m_saveStream);
             
-            if (regionParcel == "region")
-            {
-                SaveRegionBackup(writer, scene);
-            }
-            else
-            {
-            }
+            SaveRegionBackup(writer, scene);
         }
 
         public void SaveRegionBackup(TarArchiveWriter writer, IScene scene)
@@ -111,6 +105,25 @@ namespace Aurora.Modules
             }
 
             writer.Close();
+        }
+
+        public void LoadRegionBackup(TarArchiveReader reader, IScene scene)
+        {
+            IAuroraBackupModule[] modules = scene.RequestModuleInterfaces<IAuroraBackupModule>();
+
+            byte[] data;
+            string filePath;
+            TarArchiveReader.TarEntryType entryType;
+
+            while ((data = reader.ReadEntry(out filePath, out entryType)) != null)
+            {
+                if (TarArchiveReader.TarEntryType.TYPE_DIRECTORY == entryType)
+                    continue;
+                foreach (IAuroraBackupModule module in modules)
+                    module.LoadModuleFromArchive(data, filePath, entryType, scene);
+            }
+
+            reader.Close();
         }
     }
 }
