@@ -168,14 +168,14 @@ namespace Aurora.Simulation.Base
                 //Always run once, then disable this
                 Running = false;
                 //Initialize the sim base now
-                Startup(configSource, m_configSource, simBase.Copy());
+                Startup(configSource, m_configSource, simBase.Copy(), args);
             }
         }
 
-        public static void Startup(ArgvConfigSource originalConfigSource, IConfigSource configSource, ISimulationBase simBase)
+        public static void Startup(ArgvConfigSource originalConfigSource, IConfigSource configSource, ISimulationBase simBase, string[] cmdParameters)
         {
             //Get it ready to run
-            simBase.Initialize(originalConfigSource, configSource);
+            simBase.Initialize(originalConfigSource, configSource, cmdParameters);
             try
             {
                 //Start it. This starts ALL modules and completes the startup of the application

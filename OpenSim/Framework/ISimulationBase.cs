@@ -69,7 +69,7 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="originalConfigSource">The settings parsed from the command line</param>
         /// <param name="configSource">The .ini config</param>
-        void Initialize(IConfigSource originalConfigSource, IConfigSource configSource);
+        void Initialize(IConfigSource originalConfigSource, IConfigSource configSource, string[] cmdParameters);
 
         /// <summary>
         /// Start up any modules and run the HTTP server

@@ -94,6 +94,12 @@ namespace Aurora.Simulation.Base
             get { return m_Port; }
         }
 
+        protected string[] m_commandLineParameters = null;
+        public string[] CommandLineParameters
+        {
+             get { return m_commandLineParameters; }
+        }
+
         protected string m_pidFile = String.Empty;
 
         /// <summary>
@@ -101,8 +107,9 @@ namespace Aurora.Simulation.Base
         /// </summary>
         /// <param name="originalConfig"></param>
         /// <param name="configSource"></param>
-        public virtual void Initialize(IConfigSource originalConfig, IConfigSource configSource)
+        public virtual void Initialize(IConfigSource originalConfig, IConfigSource configSource, string[] cmdParams)
         {
+            m_commandLineParameters = cmdParams;
             m_StartupTime = DateTime.Now;
             m_version = VersionInfo.Version + " (" + Util.GetRuntimeInformation() + ")";
             m_original_config = configSource;

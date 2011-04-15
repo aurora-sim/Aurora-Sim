@@ -62,6 +62,5 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         void AddForce(Vector3 force, bool pushforce);
         void AddAngularForce(Vector3 force, bool pushforce);
-        void SetMomentum(Vector3 momentum);
     }
 }
