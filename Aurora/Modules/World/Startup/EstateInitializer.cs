@@ -351,11 +351,11 @@ namespace OpenSim.Region.CoreModules
             }
         }
 
-        public void BeginLoadModuleFromArchive()
+        public void BeginLoadModuleFromArchive(IScene scene)
         {
         }
 
-        public void EndLoadModuleFromArchive()
+        public void EndLoadModuleFromArchive(IScene scene)
         {
         }
     }

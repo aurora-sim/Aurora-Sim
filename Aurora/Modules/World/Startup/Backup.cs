@@ -793,6 +793,7 @@ namespace Aurora.Modules
 
             private bool m_isArchiving = false;
             private List<UUID> m_missingAssets = new List<UUID>();
+            private List<LandData> m_parcels = new List<LandData>();
 
             public bool IsArchiving
             {
@@ -904,12 +905,57 @@ namespace Aurora.Modules
                 writer.WriteFile("assets", asset.Data);
             }
 
-            public void BeginLoadModuleFromArchive()
+            public void BeginLoadModuleFromArchive(IScene scene)
             {
+                IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
+                IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
+                //Disable the script engine so that it doesn't load in the background and kill OAR loading
+                foreach (IScriptModule module in modules)
+                {
+                    module.Disabled = true;
+                }
+                //Disable backup for now as well
+                if (backup != null)
+                    backup.LoadingPrims = true;
+
+                IParcelManagementModule parcelModule = scene.RequestModuleInterface<IParcelManagementModule>();
+                parcelModule.ResetSimLandObjects();
+                string m_merge = MainConsole.Instance.CmdPrompt("Should we merge prims together (keep the prims from the old region too)?", "false");
+                if (m_merge == "false")
+                {
+                    DateTime before = DateTime.Now;
+                    m_log.Info("[ARCHIVER]: Clearing all existing scene objects");
+                    if (backup != null)
+                        backup.DeleteAllSceneObjects();
+                    m_log.Info("[ARCHIVER]: Cleared all existing scene objects in " + (DateTime.Now - before).Minutes + ":" + (DateTime.Now - before).Seconds);
+                }
             }
 
-            public void EndLoadModuleFromArchive()
+            public void EndLoadModuleFromArchive(IScene scene)
             {
+                IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
+                IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
+                //Reeanble now that we are done
+                foreach (IScriptModule module in modules)
+                {
+                    module.Disabled = false;
+                }
+                //Reset backup too
+                if (backup != null)
+                    backup.LoadingPrims = false;
+
+                m_scene.EventManager.TriggerIncomingLandDataFromStorage(m_parcels);
+                //Update the database as well!
+                IParcelManagementModule parcelManagementModule = m_scene.RequestModuleInterface<IParcelManagementModule>();
+                if (parcelManagementModule != null)
+                {
+                    foreach (LandData parcel in m_parcels)
+                    {
+                        parcelManagementModule.UpdateLandObject(parcel.LocalID, parcel);
+                    }
+                }
+                m_parcels.Clear();
+                m_validUserUuids.Clear();
             }
 
             public void LoadModuleFromArchive(byte[] data, string filePath, TarArchiveReader.TarEntryType type, IScene scene)
@@ -920,7 +966,7 @@ namespace Aurora.Modules
                     LandData parcel = new LandData();
                     OSD parcelData = OSDParser.DeserializeLLSDBinary(data);
                     parcel.FromOSD((OSDMap)parcelData);
-                    module.UpdateLandObject(parcel.LocalID, parcel);
+                    m_parcels.Add(parcel);
                 }
                 else if (filePath.StartsWith("terrain/"))
                 {

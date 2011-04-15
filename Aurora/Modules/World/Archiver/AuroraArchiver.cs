@@ -115,6 +115,9 @@ namespace Aurora.Modules
             string filePath;
             TarArchiveReader.TarEntryType entryType;
 
+            foreach (IAuroraBackupModule module in modules)
+                module.BeginLoadModuleFromArchive(scene);
+
             while ((data = reader.ReadEntry(out filePath, out entryType)) != null)
             {
                 if (TarArchiveReader.TarEntryType.TYPE_DIRECTORY == entryType)
@@ -124,6 +127,9 @@ namespace Aurora.Modules
             }
 
             reader.Close();
+
+            foreach (IAuroraBackupModule module in modules)
+                module.EndLoadModuleFromArchive(scene);
         }
     }
 }

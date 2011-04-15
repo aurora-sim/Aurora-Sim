@@ -389,16 +389,6 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             landData.Clear();
             serialisedParcels.Clear();
 
-            // Reload serialized prims
-            //m_log.InfoFormat("[ARCHIVER]: Loading {0} scene objects.  Please wait.", serialisedSceneObjects.Count);
-
-            //m_log.InfoFormat("[ARCHIVER]: Restored {0} scene objects to the scene", sceneObjectsLoadedCount);
-
-            //int ignoredObjects = serialisedSceneObjects.Count - sceneObjectsLoadedCount;
-
-            //if (ignoredObjects > 0)
-            //    m_log.WarnFormat("[ARCHIVER]: Ignored {0} scene objects that already existed in the scene", ignoredObjects);
-
             m_log.InfoFormat("[ARCHIVER]: Successfully loaded archive in " + (DateTime.Now - start).Minutes + ":" + (DateTime.Now - start).Seconds);
 
             m_validUserUuids.Clear();
