@@ -486,7 +486,7 @@ namespace Aurora.Modules
             /// </summary>
             public void ProcessPrimBackupTaints(bool forced, bool backupAll)
             {
-                if (m_backingup)
+                if (m_backingup || !m_shouldLoadPrims) //No loading, no saving
                     return;
                 m_backingup = true;
                 try

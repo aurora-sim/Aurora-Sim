@@ -36,6 +36,7 @@ using log4net;
 using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Framework.Capabilities;
+using OpenSim.Framework.Serialization;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Framework.Servers;
@@ -46,7 +47,7 @@ using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
-    public class WindLightSettingsModule : INonSharedRegionModule, IWindLightSettingsModule
+    public class WindLightSettingsModule : INonSharedRegionModule, IWindLightSettingsModule, IAuroraBackupModule
     {
         #region Declarations
 
@@ -81,6 +82,7 @@ namespace Aurora.Modules
 
             m_scene = scene;
             m_scene.RegisterModuleInterface<IWindLightSettingsModule>(this);
+            m_scene.StackModuleInterface<IAuroraBackupModule>(this);
             IRegionInfoConnector RegionInfoConnector = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
             if (RegionInfoConnector != null)
                 m_WindlightSettings = RegionInfoConnector.LoadRegionWindlightSettings(m_scene.RegionInfo.RegionID);
@@ -592,6 +594,45 @@ namespace Aurora.Modules
             map.Add("message", OSD.FromString("WindLightSettingsUpdate"));
             return map;
         }
+
+        #region IAuroraBackupModule Members
+
+        public bool IsArchiving
+        {
+            get { return false; }
+        }
+
+        public void SaveModuleToArchive(TarArchiveWriter writer, IScene scene)
+        {
+            writer.WriteDir("windlight");
+
+            foreach (RegionLightShareData lsd in m_WindlightSettings.Values)
+            {
+                OSDMap map = lsd.ToOSD();
+                writer.WriteFile("windlight/" + lsd.UUID.ToString(), OSDParser.SerializeLLSDBinary(map));
+            }
+        }
+
+        public void BeginLoadModuleFromArchive(IScene scene)
+        {
+        }
+
+        public void LoadModuleFromArchive(byte[] data, string filePath, TarArchiveReader.TarEntryType type, IScene scene)
+        {
+            if (filePath.StartsWith("windlight/"))
+            {
+                OSDMap map = (OSDMap)OSDParser.DeserializeLLSDBinary(data);
+                RegionLightShareData lsd = new RegionLightShareData();
+                lsd.FromOSD(map);
+                m_WindlightSettings[lsd.minEffectiveAltitude] = lsd;
+            }
+        }
+
+        public void EndLoadModuleFromArchive(IScene scene)
+        {
+        }
+
+        #endregion
     }
 }
 
