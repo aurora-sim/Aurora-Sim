@@ -11,6 +11,8 @@ using OpenSim.Framework.Serialization.External;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Nini.Config;
+using Microsoft.Win32;
+using System.Windows.Forms;
 using log4net;
 
 namespace Aurora.Modules
@@ -28,6 +30,11 @@ namespace Aurora.Modules
 
         public void PostInitialise()
         {
+            //Register the extention
+            string ext = ".abackup";
+            RegistryKey key = Registry.ClassesRoot.CreateSubKey(ext + "\\DefaultIcon");
+            key.SetValue("", Application.StartupPath + "\\CrateDownload.ico");
+            key.Close();
         }
 
         public void AddRegion(Scene scene)
@@ -65,7 +72,7 @@ namespace Aurora.Modules
                 return;
             }
 
-            string fileName = MainConsole.Instance.CmdPrompt("What file name should we load?", scene.RegionInfo.RegionName + ".backup");
+            string fileName = MainConsole.Instance.CmdPrompt("What file name should we load?", scene.RegionInfo.RegionName + ".abackup");
 
             GZipStream m_loadStream = new GZipStream(ArchiveHelpers.GetStream(fileName), CompressionMode.Decompress);
             TarArchiveReader reader = new TarArchiveReader(m_loadStream);
@@ -82,7 +89,7 @@ namespace Aurora.Modules
                 return;
             }
 
-            string fileName = MainConsole.Instance.CmdPrompt("What file name will this be saved as?", scene.RegionInfo.RegionName + ".backup");
+            string fileName = MainConsole.Instance.CmdPrompt("What file name will this be saved as?", scene.RegionInfo.RegionName + ".abackup");
             
             GZipStream m_saveStream = new GZipStream(new FileStream(fileName, FileMode.Create), CompressionMode.Compress);
             TarArchiveWriter writer = new TarArchiveWriter(m_saveStream);

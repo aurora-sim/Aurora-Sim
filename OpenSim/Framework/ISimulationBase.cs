@@ -51,6 +51,7 @@ namespace OpenSim.Framework
         string Version { get; }
         void RunStartupCommands();
         void RunCommandScript(string p);
+        string[] CommandLineParameters { get; }
 
         /// <summary>
         /// Shut down the simulation and close
