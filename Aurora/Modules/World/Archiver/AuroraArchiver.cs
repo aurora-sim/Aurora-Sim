@@ -23,7 +23,7 @@ namespace Aurora.Modules
         public void Initialise(IConfigSource source)
         {
             MainConsole.Instance.Commands.AddCommand("save archive", "save archive", "Saves an Aurora Archive", SaveAuroraArchive);
-            MainConsole.Instance.Commands.AddCommand("load archive", "load archive", "Loads an Aurora Archive", SaveAuroraArchive);
+            MainConsole.Instance.Commands.AddCommand("load archive", "load archive", "Loads an Aurora Archive", LoadAuroraArchive);
         }
 
         public void PostInitialise()

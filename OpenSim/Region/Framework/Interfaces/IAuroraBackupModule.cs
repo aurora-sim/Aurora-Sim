@@ -12,6 +12,10 @@ namespace OpenSim.Region.Framework.Interfaces
         bool IsArchiving { get; }
         void SaveModuleToArchive(TarArchiveWriter writer, IScene scene);
 
+        void BeginLoadModuleFromArchive();
+
         void LoadModuleFromArchive(byte[] data, string filePath, TarArchiveReader.TarEntryType type, IScene scene);
+
+        void EndLoadModuleFromArchive();
     }
 }

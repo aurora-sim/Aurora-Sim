@@ -334,13 +334,13 @@ namespace OpenSim.Region.CoreModules
 
         public void LoadModuleFromArchive(byte[] data, string filePath, TarArchiveReader.TarEntryType type, IScene scene)
         {
-            if (filePath.StartsWith("/estate"))
+            if (filePath.StartsWith("estate/"))
             {
                 string estateData = Encoding.UTF8.GetString(data);
                 EstateSettings settings = new EstateSettings(WebUtils.ParseXmlResponse(estateData));
                 scene.RegionInfo.EstateSettings = settings;
             }
-            else if (filePath.StartsWith("/regioninfo"))
+            else if (filePath.StartsWith("regioninfo/"))
             {
                 string regionData = Encoding.UTF8.GetString(data);
                 RegionInfo settings = new RegionInfo();
@@ -349,6 +349,14 @@ namespace OpenSim.Region.CoreModules
                 settings.EstateSettings = scene.RegionInfo.EstateSettings;
                 scene.RegionInfo = settings;
             }
+        }
+
+        public void BeginLoadModuleFromArchive()
+        {
+        }
+
+        public void EndLoadModuleFromArchive()
+        {
         }
     }
 }

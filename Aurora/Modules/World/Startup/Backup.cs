@@ -823,10 +823,13 @@ namespace Aurora.Modules
 
                 writer.WriteDir("terrain");
 
-                ITerrainChannel terrain = scene.RequestModuleInterface<ITerrainChannel>();
-                if (terrain != null)
+                ITerrainModule tModule = scene.RequestModuleInterface<ITerrainModule>();
+                if (tModule != null)
                 {
-                    writer.WriteFile("terrain/" + scene.RegionInfo.RegionID.ToString(), ShortToByte(terrain.GetSerialised(scene)));
+                    MemoryStream s = new MemoryStream();
+                    tModule.SaveToStream(scene.RegionInfo.RegionID.ToString() + ".r32", s);
+                    writer.WriteFile("terrain/" + scene.RegionInfo.RegionID.ToString() + ".r32", s.ToArray());
+                    s.Close();
                 }
 
                 m_log.Info("[Archive]: Finished writing terrain to archive");
@@ -901,9 +904,17 @@ namespace Aurora.Modules
                 writer.WriteFile("assets", asset.Data);
             }
 
+            public void BeginLoadModuleFromArchive()
+            {
+            }
+
+            public void EndLoadModuleFromArchive()
+            {
+            }
+
             public void LoadModuleFromArchive(byte[] data, string filePath, TarArchiveReader.TarEntryType type, IScene scene)
             {
-                if (filePath.StartsWith("/parcels"))
+                if (filePath.StartsWith("parcels/"))
                 {
                     IParcelManagementModule module = scene.RequestModuleInterface<IParcelManagementModule>();
                     LandData parcel = new LandData();
@@ -911,7 +922,7 @@ namespace Aurora.Modules
                     parcel.FromOSD((OSDMap)parcelData);
                     module.UpdateLandObject(parcel.LocalID, parcel);
                 }
-                else if (filePath.StartsWith("/terrain"))
+                else if (filePath.StartsWith("terrain/"))
                 {
                     ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule>();
 
@@ -919,7 +930,7 @@ namespace Aurora.Modules
                     terrainModule.LoadFromStream(filePath, ms, 0, 0);
                     ms.Close();
                 }
-                else if (filePath.StartsWith("/entities"))
+                else if (filePath.StartsWith("entities/"))
                 {
                     MemoryStream ms = new MemoryStream(data);
                     SceneObjectGroup sceneObject = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromXml2Format(ms, (Scene)scene);
