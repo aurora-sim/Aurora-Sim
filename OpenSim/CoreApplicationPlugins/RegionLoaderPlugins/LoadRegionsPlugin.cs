@@ -49,6 +49,7 @@ namespace OpenSim.CoreApplicationPlugins
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected ISimulationBase m_openSim;
+        public bool Enabled = true;
 
         #region IApplicationPlugin Members
 
@@ -62,6 +63,7 @@ namespace OpenSim.CoreApplicationPlugins
         public void Initialize(ISimulationBase openSim)
         {
             m_openSim = openSim;
+            openSim.ApplicationRegistry.RegisterModuleInterface<LoadRegionsPlugin>(this);
         }
 
         public void ReloadConfiguration(IConfigSource config)
@@ -79,7 +81,7 @@ namespace OpenSim.CoreApplicationPlugins
         public void PostStart()
         {
             IConfig handlerConfig = m_openSim.ConfigSource.Configs["ApplicationPlugins"];
-            if (handlerConfig.GetString("LoadRegionsPlugin", "") != Name)
+            if (handlerConfig.GetString("LoadRegionsPlugin", "") != Name || !Enabled)
                 return;
 
             List<IRegionLoader> regionLoaders = AuroraModuleLoader.PickupModules<IRegionLoader>();
