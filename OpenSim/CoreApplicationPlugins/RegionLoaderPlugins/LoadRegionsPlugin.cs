@@ -95,7 +95,7 @@ namespace OpenSim.CoreApplicationPlugins
                     continue;
 
                 m_log.Info("[LoadRegionsPlugin]: Checking for region configurations from " + loader.Name + " plugin...");
-
+               {
                 RegionInfo[] regionsToLoad = loader.LoadRegions();
                 if (regionsToLoad == null)
                     continue; //No regions, end for this module
