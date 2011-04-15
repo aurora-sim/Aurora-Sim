@@ -624,7 +624,7 @@ namespace Aurora.Modules
                 OSDMap map = (OSDMap)OSDParser.DeserializeLLSDBinary(data);
                 RegionLightShareData lsd = new RegionLightShareData();
                 lsd.FromOSD(map);
-                m_WindlightSettings[lsd.minEffectiveAltitude] = lsd;
+                SaveWindLightSettings(lsd.minEffectiveAltitude, lsd);
             }
         }
 

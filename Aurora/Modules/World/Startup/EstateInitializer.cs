@@ -342,8 +342,15 @@ namespace OpenSim.Region.CoreModules
             }
             else if (filePath.StartsWith("regioninfo/"))
             {
+                string m_merge = MainConsole.Instance.CmdPrompt("Should we load the region information from the archive (region name, region position, etc)?", "false");
                 RegionInfo settings = new RegionInfo();
                 settings.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeLLSDBinary(data));
+                if (m_merge == "false")
+                {
+                    //Still load the region settings though
+                    scene.RegionInfo.RegionSettings = settings.RegionSettings;
+                    return;
+                }
                 settings.RegionSettings = scene.RegionInfo.RegionSettings;
                 settings.EstateSettings = scene.RegionInfo.EstateSettings;
                 scene.RegionInfo = settings;
