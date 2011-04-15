@@ -249,10 +249,11 @@ namespace HttpServer
         {
             try
             {
-                if (ar == null || ar.AsyncState == null)
+                if (ar == null)
                 {
                     LogWriter.Write (this, LogPrio.Debug, "Failed to end receive : NullRef");
                     Disconnect (SocketError.NoRecovery);
+                    return;
                 }
                 int bytesRead = Stream.EndRead(ar);
                 if (bytesRead == 0)
