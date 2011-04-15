@@ -1229,7 +1229,7 @@
       </Files>
     </Project>
 
-    <Project frameworkVersion="v4_0" name="OpenSim.CoreApplicationPlugins" path="OpenSim/CoreApplicationPlugins" type="Library">
+    <Project frameworkVersion="v4_0" name="Aurora.CoreApplicationPlugins" path="Aurora/CoreApplicationPlugins" type="Library">
       <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../bin/</OutputPath>
