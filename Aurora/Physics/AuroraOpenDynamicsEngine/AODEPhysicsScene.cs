@@ -3157,7 +3157,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 foreach (AuroraODECharacter actor in _characters)
                                 {
                                     if (actor != null)
-                                        actor.Move(ODE_STEPSIZE, defects);
+                                        actor.Move(ODE_STEPSIZE, ref defects);
                                 }
                                 if (0 != defects.Count)
                                 {

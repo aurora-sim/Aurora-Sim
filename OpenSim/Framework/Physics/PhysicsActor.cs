@@ -164,11 +164,6 @@ namespace OpenSim.Framework
             get { return Vector3.Zero; }
         }
 
-        public override PrimitiveBaseShape Shape
-        {
-            set { return; }
-        }
-
         public override Vector3 Velocity
         {
             get { return Vector3.Zero; }
@@ -246,10 +241,6 @@ namespace OpenSim.Framework
         {
             get { return Vector3.Zero; }
             set { return; }
-        }
-
-        public override void SetMomentum(Vector3 momentum)
-        {
         }
 
         public override void SubscribeEvents(int ms)

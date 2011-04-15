@@ -139,11 +139,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
                 }
         }
 
-        public override PrimitiveBaseShape Shape
-        {
-            set { return; }
-        }
-
         public override float Mass
         {
             get { return 0f; }
@@ -200,10 +195,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         }
 
         public override void AddAngularForce(Vector3 force, bool pushforce)
-        {
-        }
-
-        public override void SetMomentum(Vector3 momentum)
         {
         }
 

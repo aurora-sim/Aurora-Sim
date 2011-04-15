@@ -729,14 +729,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             GetSOP().PhysActor.AddAngularForce(force, pushforce);
         }
 
-        public void SetMomentum(Vector3 momentum)
-        {
-            if (!CanEdit())
-                return;
-
-            GetSOP().PhysActor.SetMomentum(momentum);
-        }
-
         #endregion
 
         #region Implementation of IObjectShape

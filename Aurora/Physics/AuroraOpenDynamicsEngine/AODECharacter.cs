@@ -476,11 +476,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             get { return Vector3.Zero; }
         }
 
-        public override PrimitiveBaseShape Shape
-        {
-            set { return; }
-        }
-
         public override Vector3 Velocity
         {
             get
@@ -716,84 +711,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         #endregion
 
         #region Move
-/* suspended
-        private void AlignAvatarTiltWithCurrentDirectionOfMovement(Vector3 movementVector)
-            {
-            if (!_parent_scene.IsAvCapsuleTilted)
-                return;
-
-            movementVector.Z = 0f;           
-
-            if (movementVector == Vector3.Zero)
-                {
-                return;
-                }
-
-            // if we change the capsule heading too often, the capsule can fall down
-            // therefore we snap movement vector to just 1 of 4 predefined directions (ne, nw, se, sw),
-            // meaning only 4 possible capsule tilt orientations
-
-            float sqr2 = 1.41421356f; // square root of 2  lasy to cut extra digits
-
-            if (movementVector.X > 0)
-                {
-                movementVector.X = sqr2;
-
-                // east ?? there is no east above
-                if (movementVector.Y > 0)
-                    {
-                    // northeast
-                    movementVector.Y = sqr2;
-                    }
-                else
-                    {
-                    // southeast
-                    movementVector.Y = -sqr2;
-                    }
-                }
-            else
-                {
-                movementVector.X = -sqr2;
-                // west 
-
-                if (movementVector.Y > 0)
-                    {
-                    // northwest
-                    movementVector.Y = sqr2;
-                    }
-                else
-                    {
-                    // southwest
-                    movementVector.Y = -sqr2;
-                    }
-                }
-
-            // movementVector.Z is zero
-
-            // calculate tilt components based on desired amount of tilt and current (snapped) heading.
-            // the "-" sign is to force the tilt to be OPPOSITE the direction of movement.
-            float xTiltComponent = -movementVector.X * m_tiltMagnitudeWhenProjectedOnXYPlane;
-            float yTiltComponent = -movementVector.Y * m_tiltMagnitudeWhenProjectedOnXYPlane;
-            //m_log.Debug(movementVector.X + " " + movementVector.Y);
-            //m_log.Debug("[PHYSICS] changing avatar tilt");
-            d.JointSetAMotorAngle(Amotor, 0, xTiltComponent);
-            d.JointSetAMotorAngle(Amotor, 1, yTiltComponent);
-            d.JointSetAMotorAngle(Amotor, 2, 0);
-            d.JointSetAMotorParam(Amotor, (int)dParam.LowStop, xTiltComponent - 0.001f);
-            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop, xTiltComponent + 0.001f); // must be same as lowstop, else a different, spurious tilt is introduced
-            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop2, yTiltComponent - 0.001f);
-            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop2, yTiltComponent + 0.001f); // same as lowstop
-            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop3, - 0.001f);
-            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop3, 0.001f); // same as lowstop
-            }
-*/
       
         /// <summary>
         /// Called from Simulate
         /// This is the avatar's movement control + PID Controller
         /// </summary>
         /// <param name="timeStep"></param>
-        public void Move (float timeStep, List<AuroraODECharacter> defects)
+        public void Move (float timeStep, ref List<AuroraODECharacter> defects)
         {
             //  no lock; for now it's only called from within Simulate()
 
@@ -1204,7 +1128,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        
         /// <summary>
         /// Updates the reported position and velocity.  This essentially sends the data up to ScenePresence.
         /// </summary>
@@ -1386,6 +1309,77 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         #endregion
 
         #region Unused code
+/* suspended
+        private void AlignAvatarTiltWithCurrentDirectionOfMovement(Vector3 movementVector)
+            {
+            if (!_parent_scene.IsAvCapsuleTilted)
+                return;
+
+            movementVector.Z = 0f;           
+
+            if (movementVector == Vector3.Zero)
+                {
+                return;
+                }
+
+            // if we change the capsule heading too often, the capsule can fall down
+            // therefore we snap movement vector to just 1 of 4 predefined directions (ne, nw, se, sw),
+            // meaning only 4 possible capsule tilt orientations
+
+            float sqr2 = 1.41421356f; // square root of 2  lasy to cut extra digits
+
+            if (movementVector.X > 0)
+                {
+                movementVector.X = sqr2;
+
+                // east ?? there is no east above
+                if (movementVector.Y > 0)
+                    {
+                    // northeast
+                    movementVector.Y = sqr2;
+                    }
+                else
+                    {
+                    // southeast
+                    movementVector.Y = -sqr2;
+                    }
+                }
+            else
+                {
+                movementVector.X = -sqr2;
+                // west 
+
+                if (movementVector.Y > 0)
+                    {
+                    // northwest
+                    movementVector.Y = sqr2;
+                    }
+                else
+                    {
+                    // southwest
+                    movementVector.Y = -sqr2;
+                    }
+                }
+
+            // movementVector.Z is zero
+
+            // calculate tilt components based on desired amount of tilt and current (snapped) heading.
+            // the "-" sign is to force the tilt to be OPPOSITE the direction of movement.
+            float xTiltComponent = -movementVector.X * m_tiltMagnitudeWhenProjectedOnXYPlane;
+            float yTiltComponent = -movementVector.Y * m_tiltMagnitudeWhenProjectedOnXYPlane;
+            //m_log.Debug(movementVector.X + " " + movementVector.Y);
+            //m_log.Debug("[PHYSICS] changing avatar tilt");
+            d.JointSetAMotorAngle(Amotor, 0, xTiltComponent);
+            d.JointSetAMotorAngle(Amotor, 1, yTiltComponent);
+            d.JointSetAMotorAngle(Amotor, 2, 0);
+            d.JointSetAMotorParam(Amotor, (int)dParam.LowStop, xTiltComponent - 0.001f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop, xTiltComponent + 0.001f); // must be same as lowstop, else a different, spurious tilt is introduced
+            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop2, yTiltComponent - 0.001f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop2, yTiltComponent + 0.001f); // same as lowstop
+            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop3, - 0.001f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop3, 0.001f); // same as lowstop
+            }
+*/
 
 //      This code is very useful. Written by DanX0r. We're just not using it right now.
 //      Commented out to prevent a warning.
@@ -1417,11 +1411,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         public override void AddAngularForce(Vector3 force, bool pushforce)
-        {
-
-        }
-
-        public override void SetMomentum(Vector3 momentum)
         {
         }
 

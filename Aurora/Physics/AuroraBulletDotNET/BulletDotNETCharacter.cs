@@ -273,11 +273,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             m_pidControllerActive = status;
         }
 
-        public override PrimitiveBaseShape Shape
-        {
-            set { return; }
-        }
-
         public override uint LocalID
         {
             get { return m_localID; }
@@ -621,11 +616,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         public override void AddAngularForce(Vector3 force, bool pushforce)
         {
 
-        }
-
-        public override void SetMomentum(Vector3 momentum)
-        {
-            
         }
 
         public override void SubscribeEvents(int ms)

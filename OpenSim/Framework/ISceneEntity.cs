@@ -814,12 +814,12 @@ namespace OpenSim.Framework
 
     public abstract class PhysicsActor
     {
+        // disable warning: public events
+#pragma warning disable 67
         public delegate void RequestTerseUpdate ();
         public delegate void CollisionUpdate (EventArgs e);
         public delegate void OutOfBounds (Vector3 pos);
 
-        // disable warning: public events
-#pragma warning disable 67
         public event RequestTerseUpdate OnRequestTerseUpdate;
         public event RequestTerseUpdate OnSignificantMovement;
         public event RequestTerseUpdate OnPositionAndVelocityUpdate;
@@ -829,7 +829,7 @@ namespace OpenSim.Framework
 
         public abstract Vector3 Size { get; set; }
 
-        public abstract PrimitiveBaseShape Shape { set; }
+        public virtual PrimitiveBaseShape Shape { set { } }
 
         public abstract uint LocalID { get; set; }
 
@@ -911,8 +911,8 @@ namespace OpenSim.Framework
         public virtual void VehicleVectorParam (int param, Vector3 value) { }
         public virtual void VehicleRotationParam (int param, Quaternion rotation) { }
         public virtual void VehicleFlags (int param, bool remove) { }
-
         public virtual void SetCameraPos (Vector3 CameraRotation) { }
+
         public virtual void AddMovementForce (Vector3 force) { }
         public virtual void SetMovementForce (Vector3 force) { }
 
@@ -977,7 +977,6 @@ namespace OpenSim.Framework
 
         public abstract void AddForce (Vector3 force, bool pushforce);
         public abstract void AddAngularForce (Vector3 force, bool pushforce);
-        public abstract void SetMomentum (Vector3 momentum);
         public abstract void SubscribeEvents (int ms);
         public abstract void UnSubscribeEvents ();
         public abstract bool SubscribedEvents ();

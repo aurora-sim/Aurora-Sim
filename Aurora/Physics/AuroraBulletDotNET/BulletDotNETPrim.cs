@@ -580,10 +580,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             m_taintaddangularforce = true;
         }
 
-        public override void SetMomentum(Vector3 momentum)
-        {
-        }
-
         public override void SubscribeEvents(int ms)
         {
             m_eventsubscription = ms;

@@ -2009,7 +2009,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (IsPhysical && Body != IntPtr.Zero)
                 {
-                d.BodySetTorque(Body, newtorque.X, newtorque.Y, newtorque.Z);
+                    d.BodySetTorque(Body, newtorque.X, newtorque.Y, newtorque.Z);
                 }
             }
         }
@@ -2674,10 +2674,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 AddChange(changes.CollidesWater, (object)value);
                 }
             }
-
-        public override void SetMomentum(Vector3 momentum)
-        {
-        }
 
         public override Vector3 PIDTarget 
         {
