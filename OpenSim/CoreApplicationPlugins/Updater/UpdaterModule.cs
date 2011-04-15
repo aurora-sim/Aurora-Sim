@@ -16,6 +16,7 @@ namespace OpenSim.CoreApplicationPlugins
     public class UpdaterPlugin : IApplicationPlugin
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private string m_urlToCheckForUpdates = "http://grid.aurora-sim.org/updates.xml";
 
         public void Initialize(ISimulationBase openSim)
         {
@@ -34,7 +35,7 @@ namespace OpenSim.CoreApplicationPlugins
                 float CurrentVersion = float.Parse(openSim.Version.Split(' ')[1]);
                 float LastestVersionToBlock = updateConfig.GetFloat("LatestRelease", 0);
 
-                string WebSite = updateConfig.GetString("URLToCheckForUpdates", "http://auroraserver.ath.cx:8080/updater.xml");
+                string WebSite = updateConfig.GetString("URLToCheckForUpdates", m_urlToCheckForUpdates);
                 //Pull the xml from the website
                 string XmlData = Utilities.ReadExternalWebsite(WebSite);
 

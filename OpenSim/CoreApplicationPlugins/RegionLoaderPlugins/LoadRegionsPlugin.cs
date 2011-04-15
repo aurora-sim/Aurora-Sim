@@ -49,6 +49,7 @@ namespace OpenSim.CoreApplicationPlugins
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected ISimulationBase m_openSim;
+        public bool Enabled = true;
 
         #region IApplicationPlugin Members
 
@@ -62,6 +63,7 @@ namespace OpenSim.CoreApplicationPlugins
         public void Initialize(ISimulationBase openSim)
         {
             m_openSim = openSim;
+            openSim.ApplicationRegistry.RegisterModuleInterface<LoadRegionsPlugin>(this);
         }
 
         public void ReloadConfiguration(IConfigSource config)
@@ -79,7 +81,7 @@ namespace OpenSim.CoreApplicationPlugins
         public void PostStart()
         {
             IConfig handlerConfig = m_openSim.ConfigSource.Configs["ApplicationPlugins"];
-            if (handlerConfig.GetString("LoadRegionsPlugin", "") != Name)
+            if (handlerConfig.GetString("LoadRegionsPlugin", "") != Name || !Enabled)
                 return;
 
             List<IRegionLoader> regionLoaders = AuroraModuleLoader.PickupModules<IRegionLoader>();
@@ -93,27 +95,23 @@ namespace OpenSim.CoreApplicationPlugins
                     continue;
 
                 m_log.Info("[LoadRegionsPlugin]: Checking for region configurations from " + loader.Name + " plugin...");
+               {
+                RegionInfo[] regionsToLoad = loader.LoadRegions();
+                if (regionsToLoad == null)
+                    continue; //No regions, end for this module
 
-                while (true)
+                string reason;
+                if (!CheckRegionsForSanity(regionsToLoad, out reason))
                 {
-
-                    RegionInfo[] regionsToLoad = loader.LoadRegions();
-                    if (regionsToLoad == null)
-                        break; //No regions, end
-
-                    string reason;
-                    if (!CheckRegionsForSanity(regionsToLoad, out reason))
-                    {
-                        m_log.Error("[LoadRegionsPlugin]: Halting startup due to conflicts in region configurations");
-                        if (!loader.FailedToStartRegions(reason))
-                            throw new Exception(); //If it doesn't fix it, end the program
-                    }
-                    else
-                    {
-                        //They are sanitized, load them
-                        manager.AllRegions += regionsToLoad.Length;
-                        regions.Add(regionsToLoad);
-                        break;
+                    m_log.Error("[LoadRegionsPlugin]: Halting startup due to conflicts in region configurations");
+                    if (!loader.FailedToStartRegions(reason))
+                        throw new Exception(); //If it doesn't fix it, end the program
+                }
+                else
+                {
+                    //They are sanitized, load them
+                    manager.AllRegions += regionsToLoad.Length;
+                    regions.Add(regionsToLoad);
                     }
                 }
             }
