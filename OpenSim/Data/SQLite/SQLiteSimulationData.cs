@@ -391,9 +391,7 @@ namespace OpenSim.Data.SQLite
                     }
                     catch( Exception ex)
                     {
-                        string mes = ex.Message.Replace("\n", "");
-                        mes = mes.Replace("\r", "");
-                        m_log.Warn("[NxGSQLite]: Error saving prim " + mes);
+                        m_log.Warn("[NxGSQLite]: Error saving prim " + ex.ToString());
                     }
                 }
                 cmd.Dispose();

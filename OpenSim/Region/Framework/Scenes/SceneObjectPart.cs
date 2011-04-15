@@ -679,11 +679,15 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public OSD GetComponentState(string Name)
         {
-            IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene).RequestModuleInterface<IComponentManager>();
-            if (manager != null)
-                return manager.GetComponentState(this, Name);
+            IRegistryCore scene = (ParentGroup == null ? m_initialScene : ParentGroup.Scene);
+            if (scene != null)
+            {
+                IComponentManager manager = scene.RequestModuleInterface<IComponentManager>();
+                if (manager != null)
+                    return manager.GetComponentState(this, Name);
+            }
 
-            return null;
+            return new OSD();
         }
 
         /// <summary>

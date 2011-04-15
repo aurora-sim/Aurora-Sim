@@ -342,7 +342,6 @@ namespace OpenSim.Region.CoreModules
             }
             else if (filePath.StartsWith("regioninfo/"))
             {
-                string regionData = Encoding.UTF8.GetString(data);
                 RegionInfo settings = new RegionInfo();
                 settings.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeLLSDBinary(data));
                 settings.RegionSettings = scene.RegionInfo.RegionSettings;

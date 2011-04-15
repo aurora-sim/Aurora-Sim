@@ -345,7 +345,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             AmountOfStartupsLeft++;
             SceneManager m = scene.RequestModuleInterface<SceneManager>();
-            if (AmountOfStartupsLeft == m.AllRegions)
+            if (AmountOfStartupsLeft >= m.AllRegions)
             {
                 //All done!
                 MaintenanceThread.Started = true;

@@ -227,7 +227,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void HandleStartupComplete(IScene scene, List<string> data)
         {
             RegionsFinishedStarting++;
-            if (RegionsFinishedStarting == AllRegions)
+            if (RegionsFinishedStarting >= AllRegions)
             {
                 FinishStartUp();
             }

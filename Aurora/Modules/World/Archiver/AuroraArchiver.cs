@@ -10,6 +10,7 @@ using OpenSim.Framework.Serialization;
 using OpenSim.Framework.Serialization.External;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Aurora.Simulation.Base;
 using Nini.Config;
 using Microsoft.Win32;
 using System.Windows.Forms;
@@ -17,19 +18,17 @@ using log4net;
 
 namespace Aurora.Modules
 {
-    public class AuroraArchiver : ISharedRegionModule
+    public class AuroraArchiver : IService
     {
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public void Initialise(IConfigSource source)
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             MainConsole.Instance.Commands.AddCommand("save archive", "save archive", "Saves an Aurora Archive", SaveAuroraArchive);
             MainConsole.Instance.Commands.AddCommand("load archive", "load archive", "Loads an Aurora Archive", LoadAuroraArchive);
-        }
-
-        public void PostInitialise()
-        {
             //Register the extention
             string ext = ".abackup";
             RegistryKey key = Registry.ClassesRoot.CreateSubKey(ext + "\\DefaultIcon");
@@ -37,31 +36,15 @@ namespace Aurora.Modules
             key.Close();
         }
 
-        public void AddRegion(Scene scene)
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void RegionLoaded(Scene scene)
+        public void FinishedStartup()
         {
         }
 
-        public void RemoveRegion(Scene scene)
-        {
-        }
-
-        public void Close()
-        {
-        }
-
-        public string Name
-        {
-            get { return "AuroraArchiver"; }
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
+        #endregion
 
         private void LoadAuroraArchive(string mod, string[] cmd)
         {

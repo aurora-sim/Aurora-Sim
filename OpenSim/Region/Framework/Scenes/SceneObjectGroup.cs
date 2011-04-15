@@ -758,8 +758,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="scene"></param>
         public void AttachToScene(IScene scene)
         {
-            if(scene is Scene)
-                m_scene = (Scene)scene;
+            m_scene = scene;
 
             if (m_rootPart.Shape == null)
             {

@@ -34,5 +34,11 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="ParcelID"></param>
         void RemoveLandObject(UUID RegionID, UUID ParcelID);
+
+        /// <summary>
+        /// Removes a region
+        /// </summary>
+        /// <param name="ParcelID"></param>
+        void RemoveLandObject(UUID RegionID);
     }
 }

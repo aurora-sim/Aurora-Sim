@@ -151,5 +151,21 @@ namespace Aurora.Services.DataService
             GenericUtils.RemoveGeneric(RegionID, "LandData", ParcelID.ToString(), GD);
             GD.Delete("parcelaccess", new string[] { "ParcelID" }, new object[] { ParcelID });
         }
+
+        /// <summary>
+        /// Delete a parcel from the database
+        /// </summary>
+        /// <param name="RegionID"></param>
+        /// <param name="ParcelID"></param>
+        public void RemoveLandObject(UUID RegionID)
+        {
+            List<LandData> parcels = LoadLandObjects(RegionID);
+            //Remove both the generic and the parcel access list
+            GenericUtils.RemoveGeneric(RegionID, "LandData", GD);
+            foreach (LandData data in parcels)
+            {
+                GD.Delete("parcelaccess", new string[] { "ParcelID" }, new object[] { data.GlobalID });
+            }
+        }
     }
 }

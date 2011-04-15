@@ -916,19 +916,22 @@ namespace Aurora.Modules
                 }
                 //Disable backup for now as well
                 if (backup != null)
+                {
                     backup.LoadingPrims = true;
+                    string m_merge = MainConsole.Instance.CmdPrompt("Should we merge prims together (keep the prims from the old region too)?", "false");
+                    if (m_merge == "false")
+                    {
+                        DateTime before = DateTime.Now;
+                        m_log.Info("[ARCHIVER]: Clearing all existing scene objects");
+                        if (backup != null)
+                            backup.DeleteAllSceneObjects();
+                        m_log.Info("[ARCHIVER]: Cleared all existing scene objects in " + (DateTime.Now - before).Minutes + ":" + (DateTime.Now - before).Seconds);
+                    }
+                }
 
                 IParcelManagementModule parcelModule = scene.RequestModuleInterface<IParcelManagementModule>();
-                parcelModule.ResetSimLandObjects();
-                string m_merge = MainConsole.Instance.CmdPrompt("Should we merge prims together (keep the prims from the old region too)?", "false");
-                if (m_merge == "false")
-                {
-                    DateTime before = DateTime.Now;
-                    m_log.Info("[ARCHIVER]: Clearing all existing scene objects");
-                    if (backup != null)
-                        backup.DeleteAllSceneObjects();
-                    m_log.Info("[ARCHIVER]: Cleared all existing scene objects in " + (DateTime.Now - before).Minutes + ":" + (DateTime.Now - before).Seconds);
-                }
+                if(parcelModule != null)
+                    parcelModule.ResetSimLandObjects();
             }
 
             public void EndLoadModuleFromArchive(IScene scene)
@@ -944,17 +947,17 @@ namespace Aurora.Modules
                 if (backup != null)
                     backup.LoadingPrims = false;
 
-                m_scene.EventManager.TriggerIncomingLandDataFromStorage(m_parcels);
                 //Update the database as well!
                 IParcelManagementModule parcelManagementModule = m_scene.RequestModuleInterface<IParcelManagementModule>();
                 if (parcelManagementModule != null)
                 {
+                    m_scene.EventManager.TriggerIncomingLandDataFromStorage(m_parcels);
                     foreach (LandData parcel in m_parcels)
                     {
                         parcelManagementModule.UpdateLandObject(parcel.LocalID, parcel);
                     }
+                    m_parcels.Clear();
                 }
-                m_parcels.Clear();
                 m_validUserUuids.Clear();
             }
 
@@ -962,7 +965,6 @@ namespace Aurora.Modules
             {
                 if (filePath.StartsWith("parcels/"))
                 {
-                    IParcelManagementModule module = scene.RequestModuleInterface<IParcelManagementModule>();
                     LandData parcel = new LandData();
                     OSD parcelData = OSDParser.DeserializeLLSDBinary(data);
                     parcel.FromOSD((OSDMap)parcelData);
