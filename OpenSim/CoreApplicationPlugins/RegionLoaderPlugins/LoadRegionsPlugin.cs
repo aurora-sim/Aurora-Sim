@@ -96,26 +96,22 @@ namespace OpenSim.CoreApplicationPlugins
 
                 m_log.Info("[LoadRegionsPlugin]: Checking for region configurations from " + loader.Name + " plugin...");
 
-                while (true)
+                RegionInfo[] regionsToLoad = loader.LoadRegions();
+                if (regionsToLoad == null)
+                    continue; //No regions, end for this module
+
+                string reason;
+                if (!CheckRegionsForSanity(regionsToLoad, out reason))
                 {
-
-                    RegionInfo[] regionsToLoad = loader.LoadRegions();
-                    if (regionsToLoad == null)
-                        break; //No regions, end
-
-                    string reason;
-                    if (!CheckRegionsForSanity(regionsToLoad, out reason))
-                    {
-                        m_log.Error("[LoadRegionsPlugin]: Halting startup due to conflicts in region configurations");
-                        if (!loader.FailedToStartRegions(reason))
-                            throw new Exception(); //If it doesn't fix it, end the program
-                    }
-                    else
-                    {
-                        //They are sanitized, load them
-                        manager.AllRegions += regionsToLoad.Length;
-                        regions.Add(regionsToLoad);
-                        break;
+                    m_log.Error("[LoadRegionsPlugin]: Halting startup due to conflicts in region configurations");
+                    if (!loader.FailedToStartRegions(reason))
+                        throw new Exception(); //If it doesn't fix it, end the program
+                }
+                else
+                {
+                    //They are sanitized, load them
+                    manager.AllRegions += regionsToLoad.Length;
+                    regions.Add(regionsToLoad);
                     }
                 }
             }
