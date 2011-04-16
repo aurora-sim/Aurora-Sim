@@ -2486,7 +2486,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             gdb.Token = Token;
             respondPacket.AgentData = adb;
             respondPacket.GrantData = gdb;
-            OutPacket(respondPacket, ThrottleOutPacketType.Immediate);
+            OutPacket(respondPacket, ThrottleOutPacketType.AvatarInfo);
         }
 
         public void SendGroupMembership(GroupMembershipData[] GroupMembership)

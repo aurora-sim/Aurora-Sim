@@ -1390,8 +1390,6 @@ namespace OpenSim.Region.Framework.Scenes
                     //                        "In {0} adding velocity to {1} of {2}", m_scene.RegionInfo.RegionName, Name, agent_control_v3);
 
                     AddNewMovement(agent_control_v3, q);
-
-                    m_scene.EventManager.TriggerOnClientMovement(this);
                 }
             }
 
@@ -1919,8 +1917,6 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            m_perfMonMS = Util.EnvironmentTickCount();
-
             PhysicsActor actor = m_physicsActor;
             if (actor != null)
             {
@@ -1928,8 +1924,6 @@ namespace OpenSim.Region.Framework.Scenes
                 Rotation = rotation;
                 direc.Normalize();
                 direc *= 6 * m_speedModifier;
-
-
 
                 // scale it up acording to situation
 
@@ -2002,9 +1996,6 @@ namespace OpenSim.Region.Framework.Scenes
                     //else
                         PhysicsActor.SetMovementForce(direc);
                 }
-                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
-                if (reporter != null)
-                    reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
             }
         }
 
