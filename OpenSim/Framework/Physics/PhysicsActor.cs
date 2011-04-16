@@ -359,11 +359,6 @@ namespace OpenSim.Framework
             set { }
         }
 
-        public override Vector3 Acceleration
-        {
-            get { return Vector3.Zero; }
-        }
-
         public override bool IsPhysical
         {
             get { return false; }
@@ -397,11 +392,6 @@ namespace OpenSim.Framework
 
         public override void AddForce(Vector3 force, bool pushforce)
         {
-        }
-
-        public override void AddAngularForce(Vector3 force, bool pushforce)
-        {
-
         }
 
         public override Vector3 RotationalVelocity

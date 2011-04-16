@@ -2324,12 +2324,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             get { return _acceleration; }
         }
 
-
-        public void SetAcceleration(Vector3 accel)
-        {
-            AddChange(changes.Acceleration, (object)accel); 
-        }
-
         public override void AddForce(Vector3 force, bool pushforce)
         {
             if (force.IsFinite())

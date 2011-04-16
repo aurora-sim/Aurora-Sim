@@ -339,9 +339,14 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                     else
                     {
                         ITerrainChannel channel = m_scenePresence.Scene.RequestModuleInterface<ITerrainChannel>();
-                        float groundHeight = channel.GetNormalizedGroundHeight((int)m_scenePresence.AbsolutePosition.X, (int)m_scenePresence.AbsolutePosition.Y);
-                        if (actor != null && (m_scenePresence.AbsolutePosition.Z - groundHeight) < 2)
-                            return "LAND";
+                        if (channel != null)
+                        {
+                            float groundHeight = channel.GetNormalizedGroundHeight((int)m_scenePresence.AbsolutePosition.X, (int)m_scenePresence.AbsolutePosition.Y);
+                            if (actor != null && (m_scenePresence.AbsolutePosition.Z - groundHeight) < 2)
+                                return "LAND";
+                            else
+                                return "HOVER_DOWN";
+                        }
                         else
                             return "HOVER_DOWN";
                     }

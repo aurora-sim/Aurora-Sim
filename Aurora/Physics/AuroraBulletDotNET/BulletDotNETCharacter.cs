@@ -352,11 +352,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             set { }
         }
 
-        public override Vector3 Acceleration
-        {
-            get { return Vector3.Zero; } // m_acceleration; }
-        }
-
         public override Quaternion Orientation
         {
             get { return Quaternion.Identity; }
@@ -613,11 +608,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 m_taintedForce += force;
                 m_parent_scene.AddPhysicsActorTaint(this);
             }
-        }
-
-        public override void AddAngularForce(Vector3 force, bool pushforce)
-        {
-
         }
 
         public override void SubscribeEvents(int ms)

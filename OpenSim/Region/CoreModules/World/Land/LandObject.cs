@@ -662,9 +662,10 @@ namespace OpenSim.Region.CoreModules.World.Land
             int ty = min_y * 4;
             if (ty > (m_scene.RegionInfo.RegionSizeY - 1))
                 ty = (m_scene.RegionInfo.RegionSizeY - 1);
+            float min = heightmap != null ? heightmap[tx, ty] : 0;
             LandData.AABBMin =
                 new Vector3((float) (min_x * 4), (float) (min_y * 4),
-                              heightmap[tx, ty]);
+                              min);
 
             tx = max_x * 4;
             if (tx > (m_scene.RegionInfo.RegionSizeX - 1))
@@ -672,9 +673,10 @@ namespace OpenSim.Region.CoreModules.World.Land
             ty = max_y * 4;
             if (ty > (m_scene.RegionInfo.RegionSizeY - 1))
                 ty = (m_scene.RegionInfo.RegionSizeY - 1);
+            min = heightmap != null ? heightmap[tx, ty] : 0;
             LandData.AABBMax =
                 new Vector3((float) (max_x * 4), (float) (max_y * 4),
-                              heightmap[tx, ty]);
+                              min);
             LandData.Area = tempArea;
         }
 

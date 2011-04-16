@@ -49,7 +49,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Vector3 _velocity;
         private Vector3 m_lastVelocity;
         private Vector3 _target_velocity;
-        private Vector3 _acceleration;
 //        private Quaternion _orientation;
 //        private Quaternion _lastorientation;
         private Vector3 m_rotationalVelocity;
@@ -126,7 +125,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public IntPtr Body = IntPtr.Zero;
         private AuroraODEPhysicsScene _parent_scene;
         public IntPtr Shell = IntPtr.Zero;
-//        public IntPtr Amotor = IntPtr.Zero;
         public d.Mass ShellMass;
         public bool collidelock = false;
 
@@ -136,7 +134,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         // unique UUID of this character object
         public UUID m_uuid;
         public bool bad = false;
-//        private int m_WaitGroundCheck = 0;
 
         private float PID_P;
         private float PID_D;
@@ -270,28 +267,25 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public override bool IsColliding
         {
             get { return m_iscolliding; }
-        set
+            set
             {
-            if (value)
+                if (value)
                 {
-                m_colliderfilter += 2;
-                if (m_colliderfilter > 2)
-                    m_colliderfilter = 2;
+                    m_colliderfilter += 2;
+                    if (m_colliderfilter > 2)
+                        m_colliderfilter = 2;
                 }
-            else
+                else
                 {
-                m_colliderfilter--;
-                if (m_colliderfilter < 0)
-                    m_colliderfilter = 0;
+                    m_colliderfilter--;
+                    if (m_colliderfilter < 0)
+                        m_colliderfilter = 0;
                 }
 
-            if (m_colliderfilter == 0)
-                m_iscolliding = false;
-            else
-                m_iscolliding = true;
-
-            //                if (m_iscolliding)
-            //                    m_log.Warn("col");
+                if (m_colliderfilter == 0)
+                    m_iscolliding = false;
+                else
+                    m_iscolliding = true;
             }
         }
 
@@ -299,31 +293,29 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// Returns if an avatar is colliding with the ground
         /// </summary>
         public override bool CollidingGround
-            {
+        {
             get { return m_iscollidingGround; }
             set
-                {
+            {
 
                 if (value)
-                    {
+                {
                     m_colliderGroundfilter += 2;
                     if (m_colliderGroundfilter > 2)
                         m_colliderGroundfilter = 2;
-                    }
+                }
                 else
-                    {
+                {
                     m_colliderGroundfilter--;
                     if (m_colliderGroundfilter < 0)
                         m_colliderGroundfilter = 0;
-                    }
+                }
 
                 if (m_colliderGroundfilter == 0)
                     m_iscollidingGround = false;
                 else
                     m_iscollidingGround = true;
-
-                
-                }
+            }
         }
 
 
@@ -565,11 +557,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //d.Matrix3 ord = new d.Matrix3(or.m00, or.m10, or.m20, or.m01, or.m11, or.m21, or.m02, or.m12, or.m22);
                 //d.BodySetRotation(Body, ref ord);
             }
-        }
-
-        public override Vector3 Acceleration
-        {
-            get { return _acceleration; }
         }
 
         #endregion
@@ -875,6 +862,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             movementmult *= 10;
             if (flying)
                 movementmult *= 4;
+
+            #region Jump code
+
             if (IsJumping && (IsColliding && m_preJumpCounter > 25) || m_preJumpCounter > 50)
             {
                 m_isJumping = false;
@@ -896,7 +886,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 TriggerMovementUpdate();
                 return;
             }
-            
+
+            #endregion
+
             //  if velocity is zero, use position control; otherwise, velocity control
             if (_target_velocity == Vector3.Zero &&
                 Math.Abs (vel.X) < 0.05 && Math.Abs (vel.Y) < 0.05 && Math.Abs (vel.Z) < 0.05 && (this.m_iscollidingGround || this.m_iscollidingObj || this.flying))
@@ -1151,16 +1143,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_log.Warn ("[PHYSICS]: Got a NaN force vector in Move()");
                 m_log.Warn ("[PHYSICS]: Avatar Position is non-finite!");
                 defects.Add (this);
-                // _parent_scene.RemoveCharacter(this);
-                // destroy avatar capsule and related ODE data
-                /*
-                                if (Amotor != IntPtr.Zero)
-                                {
-                                    // Kill the Amotor
-                                    d.JointDestroy(Amotor);
-                                    Amotor = IntPtr.Zero;
-                                }
-                 */
                 //kill the Geometry
                 _parent_scene.waitForSpaceUnlock (_parent_scene.space);
 
@@ -1212,151 +1194,125 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             bool needfixbody = false;
 
             if (_position.X < 0.0f)
-                {
+            {
                 needfixbody = true;
                 _position.X = 0.1f;
-                }
+            }
             else if (_position.X > (int)_parent_scene.Region.RegionSizeX - 0.1f)
-                {
+            {
                 needfixbody = true;
                 _position.X = (int)_parent_scene.Region.RegionSizeX - 0.1f;
-                }
+            }
 
             if (_position.Y < 0.0f)
-                {
+            {
                 needfixbody = true;
                 _position.Y = 0.1f;
-                }
+            }
             else if (_position.Y > (int)_parent_scene.Region.RegionSizeY - 0.1)
-                {
+            {
                 needfixbody = true;
                 _position.Y = (int)_parent_scene.Region.RegionSizeY - 0.1f;
-                }
+            }
 
             if (needfixbody)
                 d.BodySetPosition(Body, _position.X, _position.Y, _position.Z);
 
-/*
-            if (_zeroFlag)
-                {
-                _velocity = Vector3.Zero;
-
-                // Did we send out the 'stopped' message?
-                if (!m_ZeroUpdateSent)
-                    {
-                    m_ZeroUpdateSent = true;
-                    base.RequestPhysicsterseUpdate();
-                    }
-
-                //Tell any listeners that we've stopped
-                base.TriggerMovementUpdate();
-                }
-            else
-                {
-                m_ZeroUpdateSent = false;
- */
-                try
-                    {
-                    vec = d.BodyGetLinearVel(Body);
-                    }
-                catch (NullReferenceException)
-                    {
-                    vec.X = _velocity.X;
-                    vec.Y = _velocity.Y;
-                    vec.Z = _velocity.Z;
-                    }
+            try
+            {
+                vec = d.BodyGetLinearVel(Body);
+            }
+            catch (NullReferenceException)
+            {
+                vec.X = _velocity.X;
+                vec.Y = _velocity.Y;
+                vec.Z = _velocity.Z;
+            }
 
 
-                // vec is a ptr into internal ode data better not mess with it
+            // vec is a ptr into internal ode data better not mess with it
 
-                _velocity.X = vec.X;
-                _velocity.Y = vec.Y;
-                _velocity.Z = vec.Z;
+            _velocity.X = vec.X;
+            _velocity.Y = vec.Y;
+            _velocity.Z = vec.Z;
 
-                bool VelIsZero = false;
-                int vcntr = 0;
-                if (Math.Abs(_velocity.X) < 0.001)
-                    {
-                    vcntr++;
-                    _velocity.X = 0;
-                    }
-                if (Math.Abs(_velocity.Y) < 0.001)
-                    {
-                    vcntr++;
-                    _velocity.Y = 0;
-                    }
-                if (Math.Abs(_velocity.Z) < 0.001)
-                    {
-                    vcntr++;
-                    _velocity.Z = 0;
-                    }
-                if (vcntr == 3)
-                    VelIsZero = true;
-                
-                // slow down updates
-                m_UpdateTimecntr += timestep;
-                if (m_UpdateTimecntr < m_UpdateFPScntr)
-                    return;
+            bool VelIsZero = false;
+            int vcntr = 0;
+            if (Math.Abs(_velocity.X) < 0.001)
+            {
+                vcntr++;
+                _velocity.X = 0;
+            }
+            if (Math.Abs(_velocity.Y) < 0.001)
+            {
+                vcntr++;
+                _velocity.Y = 0;
+            }
+            if (Math.Abs(_velocity.Z) < 0.001)
+            {
+                vcntr++;
+                _velocity.Z = 0;
+            }
+            if (vcntr == 3)
+                VelIsZero = true;
 
-                m_UpdateTimecntr = 0;
+            // slow down updates
+            m_UpdateTimecntr += timestep;
+            if (m_UpdateTimecntr < m_UpdateFPScntr)
+                return;
 
-                const float VELOCITY_TOLERANCE = 0.01f;
-                const float POSITION_TOLERANCE = 0.05f;
-                bool needSendUpdate = false;
+            m_UpdateTimecntr = 0;
 
-               
-                   
-                //Check to see whether we need to trigger the significant movement method in the presence
- // avas don't rotate for now                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
+            const float VELOCITY_TOLERANCE = 0.01f;
+            const float POSITION_TOLERANCE = 0.05f;
+            bool needSendUpdate = false;
+
+            //Check to see whether we need to trigger the significant movement method in the presence
+            // avas don't rotate for now                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
             // but simulator does not process rotation changes
-                if (//!VelIsZero &&
- //                   (!Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
-                    (
-                    (Math.Abs(Velocity.X - m_lastVelocity.X) > VELOCITY_TOLERANCE) ||
-                    (Math.Abs(Velocity.Y - m_lastVelocity.Y) > VELOCITY_TOLERANCE) ||
-                    (Math.Abs(Velocity.Z - m_lastVelocity.Z) > VELOCITY_TOLERANCE) ||
-                    (Math.Abs(_position.X - m_lastPosition.X) > POSITION_TOLERANCE) ||
-                    (Math.Abs(_position.Y - m_lastPosition.Y) > POSITION_TOLERANCE) ||
-                    (Math.Abs(_position.Z - m_lastPosition.Z) > POSITION_TOLERANCE)// ||
-//                    (Math.Abs(_lastorientation.X - _orientation.X) > 0.001) ||
-//                    (Math.Abs(_lastorientation.Y - _orientation.Y) > 0.001) ||
-//                    (Math.Abs(_lastorientation.Z - _orientation.Z) > 0.001) ||
-//                    (Math.Abs(_lastorientation.W - _orientation.W) > 0.001)
-                    ))
-                    {
-                            // Update the "last" values
-                            needSendUpdate = true;
-                            m_ZeroUpdateSent = false;
-                            m_lastPosition = _position;
-                        //                        m_lastRotationalVelocity = RotationalVelocity;
-                            m_lastVelocity = Velocity;
-//                            _lastorientation = Orientation;
-//                        base.RequestPhysicsterseUpdate();
-//                        base.TriggerSignificantMovement();
-                     }
+            if (//!VelIsZero &&
+                //                   (!Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
+                (
+                (Math.Abs(Velocity.X - m_lastVelocity.X) > VELOCITY_TOLERANCE) ||
+                (Math.Abs(Velocity.Y - m_lastVelocity.Y) > VELOCITY_TOLERANCE) ||
+                (Math.Abs(Velocity.Z - m_lastVelocity.Z) > VELOCITY_TOLERANCE) ||
+                (Math.Abs(_position.X - m_lastPosition.X) > POSITION_TOLERANCE) ||
+                (Math.Abs(_position.Y - m_lastPosition.Y) > POSITION_TOLERANCE) ||
+                (Math.Abs(_position.Z - m_lastPosition.Z) > POSITION_TOLERANCE)// ||
+                //                    (Math.Abs(_lastorientation.X - _orientation.X) > 0.001) ||
+                //                    (Math.Abs(_lastorientation.Y - _orientation.Y) > 0.001) ||
+                //                    (Math.Abs(_lastorientation.Z - _orientation.Z) > 0.001) ||
+                //                    (Math.Abs(_lastorientation.W - _orientation.W) > 0.001)
+                ))
+            {
+                // Update the "last" values
+                needSendUpdate = true;
+                m_ZeroUpdateSent = false;
+                m_lastPosition = _position;
+                //                        m_lastRotationalVelocity = RotationalVelocity;
+                m_lastVelocity = Velocity;
+                //                            _lastorientation = Orientation;
+                //                        base.RequestPhysicsterseUpdate();
+                //                        base.TriggerSignificantMovement();
+            }
+            else if (VelIsZero)
+            {
+                if (!m_ZeroUpdateSent)
+                {
+                    needSendUpdate = true;
+                    m_ZeroUpdateSent = true;
+                }
+            }
 
-                else if(VelIsZero)
-                    {
-                    if (!m_ZeroUpdateSent)
-                        {
-                        needSendUpdate = true;
-                        m_ZeroUpdateSent = true;
-                        }
-                    }                  
-                    
-                
-                if (needSendUpdate)
-                    {
-                    base.RequestPhysicsterseUpdate();
-                    base.TriggerSignificantMovement();
-//                    base.TriggerMovementUpdate();
-                    }
+            if (needSendUpdate)
+            {
+                base.RequestPhysicsterseUpdate();
+                base.TriggerSignificantMovement();
+            }
 
-
-                //Tell any listeners about the new info
-                // guess something needs this to be here, don't know why for now
-                base.TriggerMovementUpdate();
-//            }
+            //Tell any listeners about the new info
+            // This is for animations
+            base.TriggerMovementUpdate();
         }
 
         #endregion
@@ -1456,16 +1412,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 //             //d.Matrix3 bodyrotation = d.BodyGetRotation(Body);
 //             //m_log.Info("[PHYSICSAV]: Rotation: " + bodyrotation.M00 + " : " + bodyrotation.M01 + " : " + bodyrotation.M02 + " : " + bodyrotation.M10 + " : " + bodyrotation.M11 + " : " + bodyrotation.M12 + " : " + bodyrotation.M20 + " : " + bodyrotation.M21 + " : " + bodyrotation.M22);
         //         }
-
-        public void SetAcceleration(Vector3 accel)
-        {
-            m_pidControllerActive = true;
-            _acceleration = accel;
-        }
-
-        public override void AddAngularForce(Vector3 force, bool pushforce)
-        {
-        }
 
         public override void CrossingFailure()
         {

@@ -1583,7 +1583,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
          
             // assumes 1m terrain resolution
 
-            if (geom == IntPtr.Zero)
+            if (geom == IntPtr.Zero || TerrainHeightFieldHeights.Count == 0)
                 return false;
 
             d.Vector3 pos;
@@ -1761,7 +1761,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                 }
             }
-            return 0f;
+            return float.MinValue;
         }
         // End recovered. Kitto Flora
 

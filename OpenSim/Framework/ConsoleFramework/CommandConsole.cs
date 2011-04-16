@@ -43,7 +43,7 @@ namespace OpenSim.Framework
 {
     public class Commands
     {
-        public const bool _ConsoleIsCaseSensitive = true;
+        public static bool _ConsoleIsCaseSensitive = true;
 
         /// <summary>
         /// Encapsulates a command that can be invoked from the console

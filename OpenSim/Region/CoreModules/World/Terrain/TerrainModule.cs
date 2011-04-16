@@ -108,6 +108,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private bool m_sendTerrainUpdatesByViewDistance = false;
         protected Dictionary<UUID, bool[,]> m_terrainPatchesSent = new Dictionary<UUID, bool[,]>();
         protected bool m_use3DWater = false;
+        protected bool m_noTerrain = false;
 
         #region INonSharedRegionModule Members
 
@@ -123,6 +124,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 m_sendTerrainUpdatesByViewDistance = config.Configs["TerrainModule"].GetBoolean("SendTerrainByViewDistance", m_sendTerrainUpdatesByViewDistance);
                 m_use3DWater = config.Configs["TerrainModule"].GetBoolean("Use3DWater", m_use3DWater);
                 m_savetime = config.Configs["TerrainModule"].GetInt("QueueSaveTime", m_savetime);
+                m_noTerrain = config.Configs["TerrainModule"].GetBoolean("NoTerrain", m_noTerrain);
             }
         }
 
@@ -133,10 +135,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_scenes.Add(scene);
             m_terrainModules.Add(this);
 
-            LoadWorldHeightmap();
-            LoadWorldWaterMap();
-            scene.PhysicsScene.SetTerrain(m_channel.GetSerialised(scene));
-            UpdateWaterHeight(scene.RegionInfo.RegionSettings.WaterHeight);
+            if (!m_noTerrain)
+            {
+                LoadWorldHeightmap();
+                LoadWorldWaterMap();
+                scene.PhysicsScene.SetTerrain(m_channel.GetSerialised(scene));
+                UpdateWaterHeight(scene.RegionInfo.RegionSettings.WaterHeight);
+            }
 
             m_scene.RegisterModuleInterface<ITerrainModule>(this);
             m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
@@ -286,7 +291,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// <param name="RemoteClient">Client to send to</param>
         public void SendLayerData(IClientAPI RemoteClient)
         {
-            if (!m_sendTerrainUpdatesByViewDistance)
+            if (!m_sendTerrainUpdatesByViewDistance && !m_noTerrain)
             {
                 //Default way, send the full terrain at once
                 RemoteClient.SendLayerData(m_channel.GetSerialised(RemoteClient.Scene));
@@ -321,7 +326,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         protected void SendTerrainUpdatesForClient (IScenePresence presence)
         {
-            if (!m_sendTerrainUpdatesByViewDistance)
+            if (!m_sendTerrainUpdatesByViewDistance || !m_noTerrain)
                 return;
 
             if (presence == null)
@@ -413,7 +418,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         public void SaveTerrain ()
         {
-            m_scene.SimulationDataService.StoreTerrain(m_channel.GetSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
+            if(!m_noTerrain)
+                m_scene.SimulationDataService.StoreTerrain(m_channel.GetSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
         }
 
         /// <summary>
@@ -421,7 +427,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         public void SaveWater()
         {
-            m_scene.SimulationDataService.StoreWater(m_waterChannel.GetSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
+            if (!m_noTerrain)
+                m_scene.SimulationDataService.StoreWater(m_waterChannel.GetSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
         }
 
         /// <summary>
@@ -429,11 +436,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         public void ResetTerrain()
         {
-            TerrainChannel channel = new TerrainChannel(m_scene);
-            m_channel = channel;
-            SaveRevertTerrain(channel);
-            m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
-            CheckForTerrainUpdates(false, true, false);
+            if (!m_noTerrain)
+            {
+                TerrainChannel channel = new TerrainChannel(m_scene);
+                m_channel = channel;
+                SaveRevertTerrain(channel);
+                m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
+                CheckForTerrainUpdates(false, true, false);
+            }
         }
 
         /// <summary>

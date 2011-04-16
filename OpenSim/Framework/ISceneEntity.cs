@@ -882,6 +882,8 @@ namespace OpenSim.Framework
 
         public virtual float APIDDamping { set { return; } }
 
+        public abstract Vector3 Acceleration { get; }
+        public abstract void AddAngularForce(Vector3 force, bool pushforce);
     }
 
     public abstract class PhysicsActor
@@ -961,7 +963,6 @@ namespace OpenSim.Framework
         public abstract Vector3 Velocity { get; set; }
         public abstract Vector3 Torque { get; set; }
         public abstract float CollisionScore { get; set; }
-        public abstract Vector3 Acceleration { get; }
         public abstract Quaternion Orientation { get; set; }
         public abstract int PhysicsActorType { get; set; }
         public abstract bool IsPhysical { get; set; }
@@ -976,7 +977,6 @@ namespace OpenSim.Framework
         public abstract float Buoyancy { get; set; }
 
         public abstract void AddForce (Vector3 force, bool pushforce);
-        public abstract void AddAngularForce (Vector3 force, bool pushforce);
         public abstract void SubscribeEvents (int ms);
         public abstract void UnSubscribeEvents ();
         public abstract bool SubscribedEvents ();

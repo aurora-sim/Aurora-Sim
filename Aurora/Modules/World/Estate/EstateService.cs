@@ -350,11 +350,15 @@ namespace Aurora.Modules
             }
 
             //Check that we are not underground as well
-            float posZLimit = scene.RequestModuleInterface<ITerrainChannel>()[(int)Position.X, (int)Position.Y] + (float)1.25;
-
-            if (posZLimit >= (Position.Z) && !(Single.IsInfinity(posZLimit) || Single.IsNaN(posZLimit)))
+            ITerrainChannel chan = scene.RequestModuleInterface<ITerrainChannel>();
+            if (chan != null)
             {
-                Position.Z = posZLimit;
+                float posZLimit = chan[(int)Position.X, (int)Position.Y] + (float)1.25;
+
+                if (posZLimit >= (Position.Z) && !(Single.IsInfinity(posZLimit) || Single.IsNaN(posZLimit)))
+                {
+                    Position.Z = posZLimit;
+                }
             }
 
             IAgentConnector AgentConnector = DataManager.DataManager.RequestPlugin<IAgentConnector>();
