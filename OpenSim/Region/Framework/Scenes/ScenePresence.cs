@@ -1881,20 +1881,6 @@ namespace OpenSim.Region.Framework.Scenes
             Animator.RemoveAnimation(animID);
         }
 
-        public Vector3 m_preJumpForce = Vector3.Zero;
-
-        public Vector3 PreJumpForce
-        {
-            get
-            {
-                return m_preJumpForce;
-            }
-            set
-            {
-                m_preJumpForce = value;
-            }
-        }
-
         /// <summary>
         /// Rotate the avatar to the given rotation and apply a movement in the given relative vector
         /// </summary>
@@ -1915,78 +1901,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 actor.SetMovementForce((rotation == Quaternion.Identity ? vec : (vec * rotation)));
                 Rotation = rotation;
-                return;
-                Vector3 direc = (rotation == Quaternion.Identity ? vec : (vec * rotation));
-                Rotation = rotation;
-                direc.Normalize();
-                direc *= 6 * m_speedModifier;
-
-                // scale it up acording to situation
-
-                if (actor.Flying)
-                {
-                    direc *= 4.0f;
-                    //bool controlland = (((m_AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG) != 0) || ((m_AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_UP_NEG) != 0));
-                    //bool colliding = (m_physicsActor.IsColliding==true);
-                    //if (controlland)
-                    //    m_log.Info("[AGENT]: landCommand");
-                    //if (colliding)
-                    //    m_log.Info("[AGENT]: colliding");
-                    //if (m_physicsActor.Flying && colliding && controlland)
-                    //{
-                    //    StopFlying();
-                    //    m_log.Info("[AGENT]: Stop FLying");
-                    //}
-                }
-                else if (!actor.Flying && actor.IsColliding)
-                {
-                    if (direc.Z > 2.0f)
-                    {
-                        if (Velocity.Z <= .25 && Velocity.Z >= -0.25)
-                        {
-                            if (direc.Z < 2.5f)
-                                direc.Z = 2.5f;
-                            if (m_animator.UsePreJump && !IsJumping)
-                            {
-                                //AllowMovement = false;
-                                IsJumping = true;
-                                PreJumpForce = direc;
-                                Animator.TrySetMovementAnimation("PREJUMP");
-                                //Leave this here! Otherwise jump will sometimes not occur...
-                                return;
-                            }
-                            else if (PreJumpForce.Equals(Vector3.Zero))
-                            {
-                                direc.X *= 2;
-                                direc.Y *= 2;
-                                if (direc.X == 0 && direc.Y == 0)
-                                    direc.Z *= 2f;
-                                else
-                                    direc.Z *= 3f;
-
-                                if (!IsJumping)
-                                    Animator.TrySetMovementAnimation("JUMP");
-                            }
-                        }
-                        else //Jumping while moving vertically... stop it
-                            return;
-                    }
-                }
-
-
-                //This is where you start to decay the velocity
-                //direc *= 0.95f;
-                //More decay on the Z, otherwise flying up and down is a bit hard
-
-                //                     this does not acumulate and is just a constant
-                direc.Z = direc.Z * 0.5f;
-
-                //It'll stop the physics engine from decaying, which makes it look bad
-                //if (this.m_newStyleMovement && direc != Vector3.Zero)//  let avas be stopped !!
-                if (direc == Vector3.Zero)
-                    PhysicsActor.Velocity = Vector3.Zero;
-                //else
-                PhysicsActor.SetMovementForce(direc);
             }
         }
 
@@ -2014,17 +1928,20 @@ namespace OpenSim.Region.Framework.Scenes
                 m_enqueueSendChildAgentUpdateTime != new DateTime() &&
                 DateTime.Now > m_enqueueSendChildAgentUpdateTime)
             {
-                //Send the child agent data update
-                INeighborService neighborService = m_scene.RequestModuleInterface<INeighborService>();
-                if (neighborService != null)
-                {
-                    AgentData data = new AgentData();
-                    this.CopyTo(data);
-                    neighborService.SendChildAgentUpdate(data, m_scene.RegionInfo.RegionID);
-                }
                 //Reset it now
                 m_enqueueSendChildAgentUpdateTime = new DateTime();
                 m_enqueueSendChildAgentUpdate = false;
+                Util.FireAndForget(delegate(object o)
+                {
+                    //Send the child agent data update
+                    INeighborService neighborService = m_scene.RequestModuleInterface<INeighborService>();
+                    if (neighborService != null)
+                    {
+                        AgentData data = new AgentData();
+                        CopyTo(data);
+                        neighborService.SendChildAgentUpdate(data, m_scene.RegionInfo.RegionID);
+                    }
+                });
             }
         }
 

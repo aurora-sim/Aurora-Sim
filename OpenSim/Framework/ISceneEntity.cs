@@ -135,11 +135,7 @@ namespace OpenSim.Framework
         float DrawDistance { get; set; }
         Vector3 CameraAtAxis { get; }
 
-        Vector3 PreJumpForce { get; set; }
-
         bool IsDeleted { get; set; }
-
-        bool IsJumping { get; set; }
 
         void PushForce (Vector3 impulse);
         bool SitGround { get; set; }

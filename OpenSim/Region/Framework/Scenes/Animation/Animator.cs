@@ -185,8 +185,6 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             const float BRUSH_TIME = 3.5f;
 
             const float SOFTLAND_FORCE = 80;
-            
-            const float PREJUMP_DELAY = 0.35f;
 
             #region Inputs
 
@@ -384,12 +382,6 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             if (actor.IsPreJumping)
             {
                 return "PREJUMP";
-            }
-
-            if (m_scenePresence.IsJumping)
-            {
-                m_scenePresence.IsJumping = false;
-                m_scenePresence.AllowMovement = true;
             }
 
             if (m_movementAnimation == "FALLDOWN")
