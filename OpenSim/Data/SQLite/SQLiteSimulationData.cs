@@ -91,6 +91,7 @@ namespace OpenSim.Data.SQLite
             {
                 ds = new DataSet("Region");
 
+                connectionString = connectionString.Replace("URI=file:", "URI=file:" + Util.BasePathCombine("") + "/");
                 m_conn = new SqliteConnection(connectionString);
                 m_conn.Open();
 

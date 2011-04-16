@@ -207,8 +207,10 @@ namespace OpenSim.Region.Framework.Scenes
                 m_regInfo.RegionLocX / Constants.RegionSize + "," +
                 m_regInfo.RegionLocY / Constants.RegionSize + ", Size: " +
                 m_regInfo.RegionSizeX + "," +
-                m_regInfo.RegionSizeY + 
-                ", Port: " + m_regInfo.InternalEndPoint.Port;
+                m_regInfo.RegionSizeY +
+                ", Port: " + m_regInfo.InternalEndPoint.Port +
+            ", Internal address: " + m_regInfo.InternalEndPoint.Address +
+            ", External address: " + m_regInfo.ExternalHostName;
         }
 
         #region Services

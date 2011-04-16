@@ -76,6 +76,7 @@ namespace OpenSim.Data.SQLite
             {
                 dbconnect = "URI=file:Asset.db,version=3";
             }
+            dbconnect = dbconnect.Replace("URI=file:", "URI=file:" + Util.BasePathCombine("") + "/");
             m_conn = new SqliteConnection(dbconnect);
             m_conn.Open();
 

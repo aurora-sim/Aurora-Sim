@@ -28,9 +28,9 @@ namespace Aurora.DataManager.SQLite
 
         public override void ConnectToDatabase(string connectionString, string migratorName, bool validateTables)
         {
+            connectionString = connectionString.Replace("URI=file:", "URI=file:" + Util.BasePathCombine("") + "/");
             m_Connection = new SqliteConnection(connectionString);
             m_Connection.Open();
-
             var migrationManager = new MigrationManager(this, migratorName, validateTables);
             migrationManager.DetermineOperation();
             migrationManager.ExecuteOperation();

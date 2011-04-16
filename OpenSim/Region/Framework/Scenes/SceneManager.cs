@@ -155,7 +155,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (dllName == String.Empty)
                 dllName = "OpenSim.Data.Null.dll";
 
-            m_simulationDataService = AuroraModuleLoader.LoadPlugin<ISimulationDataStore>(dllName);
+            m_simulationDataService = AuroraModuleLoader.LoadPlugin<ISimulationDataStore>(Util.BasePathCombine(dllName));
             
             if (m_simulationDataService == null)
             {
@@ -567,7 +567,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             string ClientstackDll = m_config.Configs["Startup"].GetString("ClientStackPlugin", "OpenSim.Region.ClientStack.LindenUDP.dll");
 
-            IClientNetworkServer clientServer = AuroraModuleLoader.LoadPlugin<IClientNetworkServer> (ClientstackDll);
+            IClientNetworkServer clientServer = AuroraModuleLoader.LoadPlugin<IClientNetworkServer> (Util.BasePathCombine(ClientstackDll));
             clientServer.Initialise(
                     listenIP, ref port, 0, regionInfo.m_allow_alternate_ports,
                     m_config, circuitManager);

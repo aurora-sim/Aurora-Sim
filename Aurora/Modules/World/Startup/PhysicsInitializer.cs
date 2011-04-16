@@ -39,7 +39,7 @@ namespace OpenSim.Region.CoreModules
                 meshEngine = "Meshmerizer";
             }
             PhysicsPluginManager physicsPluginManager = new PhysicsPluginManager();
-            physicsPluginManager.LoadPluginsFromAssemblies(Path);
+            physicsPluginManager.LoadPluginsFromAssemblies(Util.BasePathCombine(Path));
 
             PhysicsScene pScene = physicsPluginManager.GetPhysicsScene(engine, meshEngine, source, scene.RegionInfo);
             scene.PhysicsScene = pScene;

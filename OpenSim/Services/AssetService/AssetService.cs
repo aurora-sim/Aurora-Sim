@@ -92,7 +92,7 @@ namespace OpenSim.Services.AssetService
             if (dllName.Equals(String.Empty))
                 throw new Exception("No StorageProvider configured");
 
-            m_Database = AuroraModuleLoader.LoadPlugin<IAssetDataPlugin>(dllName);
+            m_Database = AuroraModuleLoader.LoadPlugin<IAssetDataPlugin>(Util.BasePathCombine(dllName));
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");
 
