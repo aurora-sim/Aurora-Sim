@@ -515,7 +515,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name="force"></param>
         public override void SetMovementForce(Vector3 force)
         {
-            _target_velocity = force;       
+            if(force != Vector3.Zero)
+                _target_velocity = force;       
         }
 
         public override Vector3 Torque
@@ -843,6 +844,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             else
                 movementmult /= _parent_scene.avMovementDivisorRun;
 
+            movementmult *= 10;
+            if (flying)
+                movementmult *= 4;
+
 
             //  if velocity is zero, use position control; otherwise, velocity control
             if (_target_velocity == Vector3.Zero &&
@@ -877,7 +882,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (!flying)
                     {
                         if (_target_velocity.Z != 0.0f)
-                            vec.Z = (_target_velocity.Z - vel.Z) * PID_D;// + (_zeroPosition.Z - tempPos.Z) * PID_P)) _zeropos maybe bad here
+                            vec.Z = (_target_velocity.Z * movementmult - vel.Z) * PID_D;// + (_zeroPosition.Z - tempPos.Z) * PID_P)) _zeropos maybe bad here
                         // We're standing or walking on something
                         vec.X = (_target_velocity.X * movementmult - vel.X) * PID_D * 2;
                         vec.Y = (_target_velocity.Y * movementmult - vel.Y) * PID_D * 2;
@@ -902,8 +907,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         // we're not colliding and we're not flying so that means we're falling!
                         // m_iscolliding includes collisions with the ground.
-                        vec.X = (_target_velocity.X - vel.X) * PID_D * 0.85f;
-                        vec.Y = (_target_velocity.Y - vel.Y) * PID_D * 0.85f;
+                        vec.X = (_target_velocity.X * movementmult - vel.X) * PID_D * 0.85f;
+                        vec.Y = (_target_velocity.Y * movementmult - vel.Y) * PID_D * 0.85f;
                     }
                 }
 
@@ -940,7 +945,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     #endregion
 
-                    vec.Z = (_target_velocity.Z - vel.Z) * PID_D * 0.5f;
+                    vec.Z = (_target_velocity.Z * movementmult - vel.Z) * PID_D * 0.5f;
                     if (_parent_scene.AllowAvGravity && tempPos.Z > _parent_scene.AvGravityHeight)
                         //Add extra gravity
                         vec.Z += ((10 * _parent_scene.gravityz) * Mass);

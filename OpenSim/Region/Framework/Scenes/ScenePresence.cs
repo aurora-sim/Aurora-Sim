@@ -121,9 +121,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private bool m_updateflag;
         private uint m_movementflag;
-        public bool m_velocityIsDecaying = false;
-        public bool m_overrideUserInput = false;
-        public double m_endForceTime = 0;
         private UUID m_requestedSitTargetUUID;
         public UUID SittingOnUUID
         {
@@ -877,8 +874,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void Teleport(Vector3 pos)
         {
-            m_overrideUserInput = false;
-            m_endForceTime = 0;
             bool isFlying = false;
             if (m_physicsActor != null)
                 isFlying = m_physicsActor.Flying;
@@ -896,8 +891,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void TeleportWithMomentum(Vector3 pos)
         {
-            m_overrideUserInput = false;
-            m_endForceTime = 0;
             bool isFlying = false;
             if (m_physicsActor != null)
                 isFlying = m_physicsActor.Flying;
@@ -1920,6 +1913,9 @@ namespace OpenSim.Region.Framework.Scenes
             PhysicsCharacter actor = m_physicsActor;
             if (actor != null)
             {
+                actor.SetMovementForce((rotation == Quaternion.Identity ? vec : (vec * rotation)));
+                Rotation = rotation;
+                return;
                 Vector3 direc = (rotation == Quaternion.Identity ? vec : (vec * rotation));
                 Rotation = rotation;
                 direc.Normalize();
@@ -1978,24 +1974,19 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
 
-                // UNTODO: Add the force instead of only setting it to support multiple forces per frame?
-                // It fires multiple time and screws things up...
-                if (!m_overrideUserInput)
-                {
-                    //This is where you start to decay the velocity
-                    //direc *= 0.95f;
-                    //More decay on the Z, otherwise flying up and down is a bit hard
+                //This is where you start to decay the velocity
+                //direc *= 0.95f;
+                //More decay on the Z, otherwise flying up and down is a bit hard
 
-                    //                     this does not acumulate and is just a constant
-                    direc.Z = direc.Z * 0.5f;
-                    
-                    //It'll stop the physics engine from decaying, which makes it look bad
-                    //if (this.m_newStyleMovement && direc != Vector3.Zero)//  let avas be stopped !!
-                    if (direc == Vector3.Zero)
-                        PhysicsActor.Velocity = Vector3.Zero;
-                    //else
-                        PhysicsActor.SetMovementForce(direc);
-                }
+                //                     this does not acumulate and is just a constant
+                direc.Z = direc.Z * 0.5f;
+
+                //It'll stop the physics engine from decaying, which makes it look bad
+                //if (this.m_newStyleMovement && direc != Vector3.Zero)//  let avas be stopped !!
+                if (direc == Vector3.Zero)
+                    PhysicsActor.Velocity = Vector3.Zero;
+                //else
+                PhysicsActor.SetMovementForce(direc);
             }
         }
 
