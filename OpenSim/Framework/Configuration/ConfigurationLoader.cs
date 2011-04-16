@@ -107,8 +107,7 @@ namespace OpenSim.Framework
             }
             else
             {
-                string masterFilePath = Path.GetFullPath(
-                        Path.Combine(Util.configDir(), masterFileName));
+                string masterFilePath = Util.BasePathCombine(masterFileName);
 
                 if (masterFileName != String.Empty &&
                         File.Exists(masterFilePath) &&
@@ -130,8 +129,7 @@ namespace OpenSim.Framework
                 }
                 else
                 {
-                    iniFilePath = Path.GetFullPath(
-                            Path.Combine(Util.configDir(), iniGridName));
+                    iniFilePath = Util.BasePathCombine(iniGridName);
 
                     if (File.Exists(iniFilePath))
                     {
@@ -151,8 +149,7 @@ namespace OpenSim.Framework
                 }
                 else
                 {
-                    iniFilePath = Path.GetFullPath(
-                            Path.Combine(Util.configDir(), iniSimName));
+                    iniFilePath = Util.BasePathCombine(iniSimName);
 
                     if (File.Exists(iniFilePath))
                     {
@@ -165,7 +162,7 @@ namespace OpenSim.Framework
             string iniDirName =
                     startupConfig.GetString("inidirectory", "");
             string iniDirPath =
-                    Path.Combine(Util.configDir(), iniDirName);
+                    Util.BasePathCombine(iniDirName);
 
             if (Directory.Exists(iniDirPath) && iniDirName != "")
             {
@@ -177,8 +174,8 @@ namespace OpenSim.Framework
                 {
                     if (Path.GetExtension(filePath).ToLower() == ".ini")
                     {
-                        if (!sources.Contains(Path.GetFullPath(filePath)))
-                            sources.Add(Path.GetFullPath(filePath));
+                        if (!sources.Contains(Util.BasePathCombine(filePath)))
+                            sources.Add(Util.BasePathCombine(filePath));
                     }
                 }
             }
@@ -244,7 +241,7 @@ namespace OpenSim.Framework
                         }
                         else
                         {
-                            string basepath = Path.GetFullPath(Util.configDir());
+                            string basepath = Util.BasePathCombine("");
                             // Resolve relative paths with wildcards
                             string chunkWithoutWildcards = file;
                             string chunkWithWildcards = string.Empty;
@@ -254,8 +251,7 @@ namespace OpenSim.Framework
                                 chunkWithoutWildcards = file.Substring(0, wildcardIndex);
                                 chunkWithWildcards = file.Substring(wildcardIndex);
                             }
-                            string path = Path.Combine(basepath, chunkWithoutWildcards);
-                            path = Path.GetFullPath(path) + chunkWithWildcards;
+                            string path = Path.Combine(basepath, chunkWithoutWildcards + chunkWithWildcards);
                             string[] paths = Util.Glob(path);
                             foreach (string p in paths)
                             {
@@ -295,7 +291,7 @@ namespace OpenSim.Framework
             if (!IsUri(iniPath))
             {
                 if(showIniLoading)
-                    m_log.InfoFormat("[CONFIG]: Reading configuration file {0}", Path.GetFullPath(iniPath));
+                    m_log.InfoFormat("[CONFIG]: Reading configuration file {0}", Util.BasePathCombine(iniPath));
 
                 m_config.Merge(new IniConfigSource(iniPath, Nini.Ini.IniFileType.AuroraStyle));
                 if (inidbg)

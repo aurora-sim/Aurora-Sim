@@ -664,16 +664,6 @@ namespace OpenSim.Framework
             return temp;
         }
 
-        public static string assetsDir()
-        {
-            return Path.Combine(configDir(), "assets");
-        }
-
-        public static string inventoryDir()
-        {
-            return Path.Combine(configDir(), "inventory");
-        }
-
         public static string configDir()
         {
             return ".";
@@ -1753,6 +1743,13 @@ namespace OpenSim.Framework
             }
 
             return result;
+        }
+
+        public static string BasePathCombine(string p)
+        {
+            if (p == "")
+                return System.Windows.Forms.Application.StartupPath;
+            return Path.Combine(System.Windows.Forms.Application.StartupPath, p);
         }
     }
 }

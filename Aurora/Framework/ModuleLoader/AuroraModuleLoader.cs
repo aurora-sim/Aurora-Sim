@@ -26,7 +26,7 @@ namespace Aurora.Framework
         /// <returns></returns>
         public static List<T> PickupModules<T>()
         {
-            return LoadModules<T>(Environment.CurrentDirectory);
+            return LoadModules<T>(Util.BasePathCombine(""));
         }
         
         /// <summary>

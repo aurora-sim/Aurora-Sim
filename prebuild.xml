@@ -169,8 +169,9 @@
       <Reference name="System.Core"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
+	  <Reference name="System.Windows.Forms"/>
       <Reference name="System.Web"/>
-      <Reference name="System.Xml"/>
+ 	  <Reference name="System.Xml"/>
 
       <Reference name="SmartThreadPool"/>
 

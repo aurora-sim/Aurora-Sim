@@ -625,8 +625,8 @@ namespace OpenSim.CoreApplicationPlugins
                     {
                         // Make sure that the file to be created is in a subdirectory of the region storage directory.
                         string requestedFilePath = Path.Combine(regionConfigPath, (string)requestData["region_file"]);
-                        string requestedDirectory = Path.GetDirectoryName(Path.GetFullPath(requestedFilePath));
-                        if (requestedDirectory.StartsWith(Path.GetFullPath(regionConfigPath)))
+                        string requestedDirectory = Path.GetDirectoryName(Util.BasePathCombine(requestedFilePath));
+                        if (requestedDirectory.StartsWith(Util.BasePathCombine(regionConfigPath)))
                             regionIniPath = requestedFilePath;
                         else
                             throw new Exception("Invalid location for region file.");
