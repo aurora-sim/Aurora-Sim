@@ -655,31 +655,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             MoveAngular(pTimestep, pParentScene);
             LimitRotation(pTimestep);
 
-            /*if (!parent.m_angularlock.ApproxEquals(Vector3.One, 0.003f) &&
-                                parent.Amotor != IntPtr.Zero)
-            {
-                d.JointSetAMotorParam(Amotor, (int)dParam.LowStop, -0f);
-                d.JointSetAMotorParam(Amotor, (int)dParam.LoStop3, -0f);
-                d.JointSetAMotorParam(Amotor, (int)dParam.LoStop2, -0f);
-                d.JointSetAMotorParam(Amotor, (int)dParam.HiStop, 0f);
-                d.JointSetAMotorParam(Amotor, (int)dParam.HiStop3, 0f);
-                d.JointSetAMotorParam(Amotor, (int)dParam.HiStop2, 0f);
-                d.JointSetAMotorParam(Amotor, (int)dParam.Vel, 9000f);
-                d.JointSetAMotorParam(Amotor, (int)dParam.FudgeFactor, 0f);
-                d.JointSetAMotorParam(Amotor, (int)dParam.FMax, int.MaxValue);
-                d.Vector3 avel2 = d.BodyGetAngularVel(Body);
-
-                if (parent.m_angularlock.X == 0)
-                    avel2.X = 0;
-                if (parent.m_angularlock.Y == 0)
-                    avel2.Y = 0;
-                if (parent.m_angularlock.Z == 0)
-                    avel2.Z = 0;
-                d.BodySetAngularVel(Body, avel2.X, avel2.Y, avel2.Z);
-                d.BodySetAngularDamping(Body, 1);
-                d.BodySetTorque(Body, 0, 0, 0);
-            }*/
-
             // WE deal with updates
             parent.RequestPhysicsterseUpdate();
         }   // end Step

@@ -150,8 +150,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public int geomCrossingFailuresBeforeOutofbounds = 1;
 
-        public float bodyMotorJointMaxforceTensor = 2;
-
         public int bodyFramesAutoDisable = 20;
 
         private bool m_filterCollisions = false;
@@ -417,13 +415,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 PID_D = 3200.0f;
                 PID_P = 1400.0f;
-//                avStandupTensor = 2000000f;
             }
             else
             {
                 PID_D = 2200.0f;
                 PID_P = 900.0f;
-//                avStandupTensor = 550000f;
             }
 
             if (m_config != null)
@@ -469,7 +465,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     avMovementDivisorWalk = (physicsconfig.GetFloat("av_movement_divisor_walk", 1.3f) * 2);
                     avMovementDivisorRun = (physicsconfig.GetFloat("av_movement_divisor_run", 0.8f) * 2);
                     avCapRadius = physicsconfig.GetFloat("av_capsule_radius", 0.37f);
-//                    avCapsuleTilted = physicsconfig.GetBoolean("av_capsule_tilted", true);
 
                     contactsPerCollision = physicsconfig.GetInt("contacts_per_collision", 80);
 
@@ -493,15 +488,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         PID_D = physicsconfig.GetFloat("av_pid_derivative_linux", 2200.0f);
                         PID_P = physicsconfig.GetFloat("av_pid_proportional_linux", 900.0f);
-//                        avStandupTensor = physicsconfig.GetFloat("av_capsule_standup_tensor_linux", 550000f);
-                        bodyMotorJointMaxforceTensor = physicsconfig.GetFloat("body_motor_joint_maxforce_tensor_linux", 5f);
                     }
                     else
                     {
                         PID_D = physicsconfig.GetFloat("av_pid_derivative_win", 2200.0f);
                         PID_P = physicsconfig.GetFloat("av_pid_proportional_win", 900.0f);
-//                        avStandupTensor = physicsconfig.GetFloat("av_capsule_standup_tensor_win", 550000f);
-                        bodyMotorJointMaxforceTensor = physicsconfig.GetFloat("body_motor_joint_maxforce_tensor_win", 5f);
                     }
                     physics_logging = physicsconfig.GetBoolean("physics_logging", false);
                     physics_logging_interval = physicsconfig.GetInt("physics_logging_interval", 0);

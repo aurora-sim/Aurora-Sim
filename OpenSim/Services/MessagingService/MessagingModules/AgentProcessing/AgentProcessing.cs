@@ -480,6 +480,15 @@ namespace OpenSim.Services.MessagingService
             AgentCircuitData circuit, AgentData agentData, UUID AgentID, ulong requestingRegion,
             out string reason)
         {
+            IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
+            IRegionClientCapsService regionCaps = clientCaps.GetCapsService(requestingRegion);
+
+            if (regionCaps == null || !regionCaps.RootAgent)
+            {
+                reason = "";
+                return false;
+            }
+
             bool result = false;
             try
             {
@@ -502,6 +511,7 @@ namespace OpenSim.Services.MessagingService
                         destination = GridService.GetRegionByUUID(UUID.Zero, destination.RegionID);
                         //Inform the client of the neighbor if needed
                         circuit.child = false; //Force child status to the correct type
+
                         if (!InformClientOfNeighbor(AgentID, requestingRegion, circuit, destination, TeleportFlags,
                             agentData, out reason))
                         {
@@ -517,9 +527,6 @@ namespace OpenSim.Services.MessagingService
                     }
 
                     IEventQueueService EQService = m_registry.RequestModuleInterface<IEventQueueService>();
-
-                    IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
-                    IRegionClientCapsService regionCaps = clientCaps.GetCapsService(requestingRegion);
 
                     IRegionClientCapsService otherRegion = clientCaps.GetCapsService(destination.RegionHandle);
 

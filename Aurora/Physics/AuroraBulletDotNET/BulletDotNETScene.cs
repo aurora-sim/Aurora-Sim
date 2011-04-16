@@ -72,7 +72,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         private float avPIDD = 65f;
         private float avPIDP = 21f;
         private float avCapRadius = 0.37f;
-        private float avStandupTensor = 2000000f;
         private float avDensity = 80f;
         private float avHeightFudgeFactor = 0.52f;
         private float avMovementDivisorWalk = 1.8f;
@@ -180,14 +179,12 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                     {
                         avPIDD = physicsconfig.GetFloat("av_pid_derivative_linux", 65f);
                         avPIDP = physicsconfig.GetFloat("av_pid_proportional_linux", 25);
-                        avStandupTensor = physicsconfig.GetFloat("av_capsule_standup_tensor_linux", 2000000f);
                         bodyMotorJointMaxforceTensor = physicsconfig.GetFloat("body_motor_joint_maxforce_tensor_linux", 2f);
                     }
                     else
                     {
                         avPIDD = physicsconfig.GetFloat("av_pid_derivative_win", 65f);
                         avPIDP = physicsconfig.GetFloat("av_pid_proportional_win", 25);
-                        avStandupTensor = physicsconfig.GetFloat("av_capsule_standup_tensor_win", 2000000f);
                         bodyMotorJointMaxforceTensor = physicsconfig.GetFloat("body_motor_joint_maxforce_tensor_win", 2f);
                     }
 
@@ -228,7 +225,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             lock (BulletLock)
             {
                 BulletDotNETCharacter chr = new BulletDotNETCharacter(avName, this, position, size, avPIDD, avPIDP,
-                                                                      avCapRadius, avStandupTensor, avDensity,
+                                                                      avCapRadius, avDensity,
                                                                       avHeightFudgeFactor, avMovementDivisorWalk,
                                                                       avMovementDivisorRun);
                 chr.LocalID = LocalID;

@@ -70,14 +70,8 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         protected string m_movementAnimation = "DEFAULT";
 
         protected bool m_useSplatAnimation = true;
-        protected bool m_usePreJump = true;
-        public bool UsePreJump
-        {
-            get { return m_usePreJump; }
-        }
 
         private float m_animTickFall;
-        private float m_animTickJump;
         private float m_timesBeforeSlowFlyIsOff = 0;
         private float m_animTickStandup = 0;
         
@@ -92,7 +86,6 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             IConfig animationConfig = sp.Scene.Config.Configs["Animations"];
             if (animationConfig != null)
             {
-                m_usePreJump = animationConfig.GetBoolean ("enableprejump", m_usePreJump);
                 m_useSplatAnimation = animationConfig.GetBoolean ("enableSplatAnimation", m_useSplatAnimation);
             }
             //This step makes sure that we don't waste almost 2.5! seconds on incoming agents
@@ -196,12 +189,6 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             PhysicsCharacter actor = m_scenePresence.PhysicsActor;
 
             // Create forward and left vectors from the current avatar rotation
-            /*
-                        Matrix4 rotMatrix = Matrix4.CreateFromQuaternion(m_scenePresence.Rotation);
-                        Vector3 fwd = Vector3.Transform(Vector3.UnitX, rotMatrix);
-                        Vector3 left = Vector3.Transform(Vector3.UnitY, rotMatrix);
-            */
-
             Vector3 fwd = Vector3.UnitX * m_scenePresence.Rotation;
             Vector3 left = Vector3.UnitY * m_scenePresence.Rotation;
 
@@ -228,7 +215,6 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             if (heldRight) { move.X -= left.X; move.Y -= left.Y; }
             if (heldUp) { move.Z += 1; }
             if (heldDown) { move.Z -= 1; }
-            bool jumping = m_animTickJump != 0;
             float fallVelocity = (actor != null) ? actor.Velocity.Z : 0.0f;
 
             if (heldTurnLeft && yawPos && !heldForward &&
@@ -284,7 +270,6 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             if (actor != null && (m_scenePresence.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) == (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY)
             {
                 m_animTickFall = 0;
-                m_animTickJump = 0;
                 if (move.X != 0f || move.Y != 0f)
                 {
                     if (move.Z == 0)
@@ -414,35 +399,6 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                     else
                         return "LAND";
                 }
-                /*//Experimentally found variables, but it makes soft landings look good.
-                // -- Revolution
-                //Note: we use m_scenePresence.LastVelocity for a reason! The PhysActor and SP Velocity are both cleared before this is called.
-                
-                float Z = m_scenePresence.LastVelocity.Z * m_scenePresence.LastVelocity.Z;
-                if (Math.Abs(m_scenePresence.LastVelocity.X) < 0.1 && Math.Abs(m_scenePresence.LastVelocity.Y) < 0.1)
-                    Z *= Z; //If you are falling down, the calculation is different..
-                if (Z < SOFTLAND_FORCE)
-                {
-                    m_animTickFall = Util.EnvironmentTickCount();
-
-                    return "SOFT_LAND";
-                }
-                else if (Z < LAND_FORCE)
-                {
-                    m_animTickFall = Util.EnvironmentTickCount();
-
-                    return "LAND";
-                }
-                else
-                {
-                    if (m_scenePresence.Scene.m_useSplatAnimation)
-                    {
-                        m_animTickStandup = Util.EnvironmentTickCount();
-                        return "STANDUP";
-                    }
-                    else
-                        return "LAND";
-                }*/
             }
             else if (m_movementAnimation == "LAND")
             {
@@ -458,9 +414,6 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             if (move.Z <= 0f)
             {
-                // Not jumping
-                m_animTickJump = 0;
-
                 if (move.X != 0f || move.Y != 0f ||
                     actor.Velocity.X != 0 && actor.Velocity.Y != 0)
                 {

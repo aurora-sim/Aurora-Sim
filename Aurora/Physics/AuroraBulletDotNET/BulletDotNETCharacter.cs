@@ -130,7 +130,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         private CollisionEventUpdate CollisionEventsThisFrame = null;
         private int m_requestedUpdateFrequency = 0;
 
-        public BulletDotNETCharacter(string avName, BulletDotNETScene parent_scene, Vector3 pos, Vector3 size, float pid_d, float pid_p, float capsule_radius, float tensor, float density, float height_fudge_factor, float walk_divisor, float rundivisor)
+        public BulletDotNETCharacter(string avName, BulletDotNETScene parent_scene, Vector3 pos, Vector3 size, float pid_d, float pid_p, float capsule_radius, float density, float height_fudge_factor, float walk_divisor, float rundivisor)
         {
             m_position = pos;
             m_zeroPosition = pos;
