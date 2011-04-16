@@ -180,7 +180,7 @@ namespace OpenSim.Region.Framework.Scenes
                     o.Flags = o.Flags & update.Flags;
                     m_presenceUpdatesToSend.Remove(update.Entity.UUID);
                 }
-                m_objectUpdatesToSend.Insert (0, update.Entity.UUID, update);
+                m_objectUpdatesToSend.Insert(m_objectUpdatesToSend.Count, update.Entity.UUID, update);
             }
         }
 
