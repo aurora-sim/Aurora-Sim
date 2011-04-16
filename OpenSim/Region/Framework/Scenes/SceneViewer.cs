@@ -130,25 +130,21 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 EntityUpdate o = (EntityUpdate)m_presenceUpdatesToSend[presence.UUID];
                 if (o == null)
-                {
-                    o = new EntityUpdate (presence, flags);
-                    if (m_presence.UUID == presence.UUID)
-                    {
-                        //Its us, set us first!
-                        m_ourPresenceHasUpdate = true;
-                        m_presenceUpdatesToSend.Insert (0, presence.UUID, o);
-                    }
-                    else if(m_ourPresenceHasUpdate) //If this is set, we start inserting at 1 so that our updates go first
-                        // We can also safely assume that 1 is fine, because there has to be 0 already there set by us
-                        m_presenceUpdatesToSend.Insert (1,presence.UUID, o);
-                    else //Set us at 0, no updates from us
-                        m_presenceUpdatesToSend.Insert (0, presence.UUID, o);
-                }
+                    o = new EntityUpdate(presence, flags);
                 else
+                    m_presenceUpdatesToSend.Remove(presence.UUID);
+
+                if (m_presence.UUID == presence.UUID)
                 {
-                    o.Flags = o.Flags & flags;
-                    m_presenceUpdatesToSend[presence.UUID] = o;
+                    //Its us, set us first!
+                    m_ourPresenceHasUpdate = true;
+                    m_presenceUpdatesToSend.Insert(0, presence.UUID, o);
                 }
+                else if (m_ourPresenceHasUpdate) //If this is set, we start inserting at 1 so that our updates go first
+                    // We can also safely assume that 1 is fine, because there has to be 0 already there set by us
+                    m_presenceUpdatesToSend.Insert(m_presenceUpdatesToSend.Count, presence.UUID, o);
+                else //Set us at 0, no updates from us
+                    m_presenceUpdatesToSend.Insert(m_presenceUpdatesToSend.Count, presence.UUID, o);
             }
         }
 

@@ -420,9 +420,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private bool Update()
         {
-            if (!ShouldRunHeartbeat) //If we arn't supposed to be running, kill ourselves
-                return false;
-
             ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "SimFrameStats");
             ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Total Frame Time");
             ISetMonitor lastFrameMonitor = (ISetMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Last Completed Frame At");
@@ -431,98 +428,102 @@ namespace OpenSim.Region.Framework.Scenes
             IPhysicsFrameMonitor physicsFrameMonitor = (IPhysicsFrameMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Total Physics Frame Time");
             ITimeMonitor physicsSyncFrameMonitor = (ITimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Physics Sync Frame Time");
             ITimeMonitor physicsFrameTimeMonitor = (ITimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Physics Update Frame Time");
-            int maintc = Util.EnvironmentTickCount();
-            int BeginningFrameTime = maintc;
-
-            // Increment the frame counter
-            ++m_frame;
-
-            try
+            while (true)
             {
-                int OtherFrameTime = Util.EnvironmentTickCount();
-                if (PhysicsReturns.Count != 0)
+                if (!ShouldRunHeartbeat) //If we arn't supposed to be running, kill ourselves
+                    return false;
+
+                int maintc = Util.EnvironmentTickCount();
+                int BeginningFrameTime = maintc;
+                // Increment the frame counter
+                ++m_frame;
+
+                try
                 {
-                    lock (PhysicsReturns)
+                    int OtherFrameTime = Util.EnvironmentTickCount();
+                    if (PhysicsReturns.Count != 0)
                     {
-                        ILLClientInventory inventoryModule = RequestModuleInterface<ILLClientInventory>();
-                        if (inventoryModule != null)
-                            inventoryModule.ReturnObjects(PhysicsReturns.ToArray(), UUID.Zero);
-                        PhysicsReturns.Clear();
+                        lock (PhysicsReturns)
+                        {
+                            ILLClientInventory inventoryModule = RequestModuleInterface<ILLClientInventory>();
+                            if (inventoryModule != null)
+                                inventoryModule.ReturnObjects(PhysicsReturns.ToArray(), UUID.Zero);
+                            PhysicsReturns.Clear();
+                        }
                     }
+                    if (m_frame % m_update_coarse_locations == 0)
+                    {
+                        List<Vector3> coarseLocations;
+                        List<UUID> avatarUUIDs;
+                        SceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60);
+                        // Send coarse locations to clients 
+                        foreach (IScenePresence presence in GetScenePresences())
+                        {
+                            presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
+                        }
+                    }
+
+                    if (m_frame % m_update_entities == 0)
+                        m_sceneGraph.UpdateEntities();
+
+                    if (m_frame % m_update_events == 0)
+                        m_eventManager.TriggerOnFrame();
+
+                    int PhysicsSyncTime = Util.EnvironmentTickCount();
+                    TimeSpan SinceLastFrame = DateTime.UtcNow - m_lastphysupdate;
+
+                    if ((m_frame % m_update_physics == 0) && !RegionInfo.RegionSettings.DisablePhysics)
+                        m_sceneGraph.UpdatePreparePhysics();
+
+                    int MonitorPhysicsSyncTime = Util.EnvironmentTickCountSubtract(PhysicsSyncTime);
+
+                    int PhysicsUpdateTime = Util.EnvironmentTickCount();
+
+                    if (m_frame % m_update_physics == 0)
+                    {
+                        if (!RegionInfo.RegionSettings.DisablePhysics && SinceLastFrame.TotalSeconds > m_physicstimespan)
+                        {
+                            m_sceneGraph.UpdatePhysics(SinceLastFrame.TotalSeconds);
+                            m_lastphysupdate = DateTime.UtcNow;
+                        }
+                    }
+
+                    int MonitorPhysicsUpdateTime = Util.EnvironmentTickCountSubtract(PhysicsUpdateTime) + MonitorPhysicsSyncTime;
+
+                    physicsFrameTimeMonitor.AddTime(MonitorPhysicsUpdateTime);
+                    physicsFrameMonitor.AddFPS(1);
+                    physicsSyncFrameMonitor.AddTime(MonitorPhysicsSyncTime);
+
+                    IPhysicsMonitor monitor = RequestModuleInterface<IPhysicsMonitor>();
+                    if (monitor != null)
+                        monitor.AddPhysicsStats(RegionInfo.RegionID, PhysicsScene);
+
+                    //Now fix the sim stats
+                    int MonitorOtherFrameTime = Util.EnvironmentTickCountSubtract(OtherFrameTime);
+                    int MonitorLastCompletedFrame = Util.EnvironmentTickCount();
+
+                    simFrameMonitor.AddFPS(1);
+                    lastFrameMonitor.SetValue(MonitorLastCompletedFrame);
+                    otherFrameMonitor.AddTime(MonitorOtherFrameTime);
+
+                    maintc = Util.EnvironmentTickCountSubtract(maintc);
+                    maintc = (int)(m_updatetimespan * 1000) - maintc;
                 }
-                if (m_frame % m_update_coarse_locations == 0)
+                catch (Exception e)
                 {
-                    List<Vector3> coarseLocations;
-                    List<UUID> avatarUUIDs;
-                    SceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60);
-                    // Send coarse locations to clients 
-                    foreach (IScenePresence presence in GetScenePresences ())
-                    {
-                        presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
-                    }
+                    m_log.Error("[REGION]: Failed with exception " + e.ToString() + " in region: " + RegionInfo.RegionName);
+                    return true;
                 }
 
-                if (m_frame % m_update_entities == 0)
-                    m_sceneGraph.UpdateEntities();
+                int MonitorEndFrameTime = Util.EnvironmentTickCountSubtract(BeginningFrameTime) + maintc;
 
-                if (m_frame % m_update_events == 0)
-                    m_eventManager.TriggerOnFrame();
+                if (maintc > 0 && maintc < 100)
+                    Thread.Sleep(maintc);
 
-                int PhysicsSyncTime = Util.EnvironmentTickCount();
-                TimeSpan SinceLastFrame = DateTime.UtcNow - m_lastphysupdate;
+                sleepFrameMonitor.AddTime(maintc);
 
-                if ((m_frame % m_update_physics == 0) && !RegionInfo.RegionSettings.DisablePhysics)
-                    m_sceneGraph.UpdatePreparePhysics();
-
-                int MonitorPhysicsSyncTime = Util.EnvironmentTickCountSubtract(PhysicsSyncTime);
-
-                int PhysicsUpdateTime = Util.EnvironmentTickCount();
-
-                if (m_frame % m_update_physics == 0)
-                {
-                    if (!RegionInfo.RegionSettings.DisablePhysics && SinceLastFrame.TotalSeconds > m_physicstimespan)
-                    {
-                        m_sceneGraph.UpdatePhysics(SinceLastFrame.TotalSeconds);
-                        m_lastphysupdate = DateTime.UtcNow;
-                    }
-                }
-
-                int MonitorPhysicsUpdateTime = Util.EnvironmentTickCountSubtract(PhysicsUpdateTime) + MonitorPhysicsSyncTime;
-
-                physicsFrameTimeMonitor.AddTime(MonitorPhysicsUpdateTime);
-                physicsFrameMonitor.AddFPS(1);
-                physicsSyncFrameMonitor.AddTime(MonitorPhysicsSyncTime);
-
-                IPhysicsMonitor monitor = RequestModuleInterface<IPhysicsMonitor>();
-                if (monitor != null)
-                    monitor.AddPhysicsStats(RegionInfo.RegionID, PhysicsScene);
-
-                //Now fix the sim stats
-                int MonitorOtherFrameTime = Util.EnvironmentTickCountSubtract(OtherFrameTime);
-                int MonitorLastCompletedFrame = Util.EnvironmentTickCount();
-
-                simFrameMonitor.AddFPS(1);
-                lastFrameMonitor.SetValue(MonitorLastCompletedFrame);
-                otherFrameMonitor.AddTime(MonitorOtherFrameTime);
-
-                maintc = Util.EnvironmentTickCountSubtract(maintc);
-                maintc = (int)(m_updatetimespan * 1000) - maintc;
+                totalFrameMonitor.AddFrameTime(MonitorEndFrameTime);
             }
-            catch (Exception e)
-            {
-                m_log.Error ("[REGION]: Failed with exception " + e.ToString () + " in region: " + RegionInfo.RegionName);
-                return true;
-            }
-
-            int MonitorEndFrameTime = Util.EnvironmentTickCountSubtract(BeginningFrameTime) + maintc;
-
-            if (maintc > 0)
-                Thread.Sleep(maintc);
-
-            sleepFrameMonitor.AddTime(maintc);
-
-            totalFrameMonitor.AddFrameTime (MonitorEndFrameTime);
-            return true;
         }
 
         #endregion
