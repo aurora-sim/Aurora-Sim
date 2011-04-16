@@ -178,7 +178,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (o.Flags == update.Flags)
                         return; //Same, leave it alone!
                     o.Flags = o.Flags & update.Flags;
-                    m_presenceUpdatesToSend.Remove(update.Entity.UUID);
+                    m_objectUpdatesToSend.Remove(update.Entity.UUID);
                 }
                 m_objectUpdatesToSend.Insert(m_objectUpdatesToSend.Count, update.Entity.UUID, update);
             }
