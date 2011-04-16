@@ -902,7 +902,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (m_ispreJumping && m_preJumpCounter == 15)
             {
                 m_ispreJumping = false;
-                _target_velocity += m_preJumpForce * 2;
+                _target_velocity += m_preJumpForce * 4;
                 m_preJumpCounter = 0;
                 m_isJumping = true;
             }
