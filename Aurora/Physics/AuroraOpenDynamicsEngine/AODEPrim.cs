@@ -1671,6 +1671,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     fy += m_force.Y;
                     fz += m_force.Z;
 
+                    m_force = Vector3.Zero;
+
                     # region drag and forces accumulators
 
                     float drag = -m_mass * 0.2f;

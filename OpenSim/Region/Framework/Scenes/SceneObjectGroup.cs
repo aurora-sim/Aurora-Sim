@@ -2236,7 +2236,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if (!m_rootPart.BlockGrab)
                         {
                             Vector3 grabforce = pos - AbsolutePosition;
-                            grabforce = grabforce * m_rootPart.PhysActor.Mass;
+                            grabforce = grabforce * m_rootPart.PhysActor.Mass * 10;
                             m_rootPart.PhysActor.AddForce(grabforce, true);
                             m_scene.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
                             // This is outside the above permissions condition

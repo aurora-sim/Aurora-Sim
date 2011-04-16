@@ -643,7 +643,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if(PhysicsActor != null)
                     return PhysicsActor.SpeedModifier;
-                return 0;
+                return 1;
             }
             set 
             {
