@@ -326,7 +326,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         protected void SendTerrainUpdatesForClient (IScenePresence presence)
         {
-            if (!m_sendTerrainUpdatesByViewDistance || !m_noTerrain)
+            if (!m_sendTerrainUpdatesByViewDistance || m_noTerrain)
                 return;
 
             if (presence == null)

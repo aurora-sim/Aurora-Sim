@@ -283,6 +283,8 @@ namespace OpenSim.Region.CoreModules.World.Land
         private Vector3 GetPositionAtGround(float x, float y)
         {
             ITerrainChannel heightmap = m_scene.RequestModuleInterface<ITerrainChannel>();
+            if (heightmap == null)
+                return new Vector3(x, y, float.MinValue);
             return new Vector3(x, y, heightmap.GetNormalizedGroundHeight((int)x, (int)y));
         }
 
@@ -1582,6 +1584,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                     m_scene.ForEachClient(SendParcelOverlay);
                     land.SendLandUpdateToClient(true, remote_client);
+                    UpdateLandObject(land.LandData.LocalID, land.LandData);
                 }
             }
         }
@@ -1603,6 +1606,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     land.LandData.Flags &= ~(uint)(ParcelFlags.ForSale | ParcelFlags.ForSaleObjects | ParcelFlags.SellParcelObjects | ParcelFlags.ShowDirectory | ParcelFlags.AllowDeedToGroup | ParcelFlags.ContributeWithDeed);
                     m_scene.ForEachClient(SendParcelOverlay);
                     land.SendLandUpdateToClient(true, remote_client);
+                    UpdateLandObject(land.LandData.LocalID, land.LandData);
                 }
             }
         }
@@ -1626,6 +1630,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                     land.SendLandUpdateToClient(true, remote_client);
                     m_scene.ForEachClient(SendParcelOverlay);
+                    UpdateLandObject(land.LandData.LocalID, land.LandData);
                 }
             }
         }
@@ -1695,6 +1700,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                 land.SendLandUpdateToClient(true, remote_client);
                 m_scene.ForEachClient(SendParcelOverlay);
+                UpdateLandObject(land.LandData.LocalID, land.LandData);
             }
         }
 
