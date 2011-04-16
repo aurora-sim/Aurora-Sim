@@ -875,13 +875,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             movementmult *= 10;
             if (flying)
                 movementmult *= 4;
-            /*if (IsJumping && IsColliding && _target_velocity.Z == 0)
+            if (IsJumping && IsColliding && m_preJumpCounter > 25)
             {
                 m_isJumping = false;
                 m_log.Warn("noJump");
-            }*/
+                m_preJumpCounter = 0;
+            }
+            if (IsJumping)
+                m_preJumpCounter++;
 
-            if (m_preJumpCounter == 15)
+            if (m_ispreJumping && m_preJumpCounter == 15)
             {
                 m_ispreJumping = false;
                 _target_velocity += m_preJumpForce * 2;
