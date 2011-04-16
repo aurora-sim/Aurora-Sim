@@ -132,7 +132,10 @@ namespace OpenSim.Region.Framework.Scenes
                 if (o == null)
                     o = new EntityUpdate(presence, flags);
                 else
+                {
+                    o.Flags = o.Flags & flags;
                     m_presenceUpdatesToSend.Remove(presence.UUID);
+                }
 
                 if (m_presence.UUID == presence.UUID)
                 {
@@ -167,14 +170,13 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 EntityUpdate o = (EntityUpdate)m_objectUpdatesToSend[update.Entity.UUID];
                 if (o == null)
-                {
-                    m_objectUpdatesToSend.Insert (0, update.Entity.UUID, update);
-                }
+                    o = update;
                 else
                 {
                     o.Flags = o.Flags & update.Flags;
-                    m_objectUpdatesToSend[update.Entity.UUID] = o;
+                    m_presenceUpdatesToSend.Remove(update.Entity.UUID);
                 }
+                m_objectUpdatesToSend.Insert (0, update.Entity.UUID, update);
             }
         }
 
