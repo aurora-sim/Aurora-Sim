@@ -195,7 +195,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 return "SIT_GROUND_CONSTRAINED";
             }
             AgentManager.ControlFlags controlFlags = (AgentManager.ControlFlags)m_scenePresence.AgentControlFlags;
-            PhysicsActor actor = m_scenePresence.PhysicsActor;
+            PhysicsCharacter actor = m_scenePresence.PhysicsActor;
 
             // Create forward and left vectors from the current avatar rotation
             /*
@@ -377,154 +377,15 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             #region Ground Movement
 
-            //This needs to be in front of landing, otherwise you get odd landing effects sometimes when one jumps
-            // -- Revolution
-            if (move.Z > 0f || m_animTickJump != 0)
+            if (actor.IsJumping)
             {
-                if (m_usePreJump)
-                {
-                    //This is to check to make sure they arn't trying to fly up by holding down jump
-                    if ((m_scenePresence.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) == 0)
-                    {
-                        // Jumping
-                        float jumpChange = (((float)Util.EnvironmentTickCount()) - m_animTickJump) / 1000;
-                        if (!jumping || (jumpChange < PREJUMP_DELAY && m_animTickJump > 0))
-                        {
-                            // Begin prejump
-                            if (m_animTickJump == 0)
-                                m_animTickJump = (float)Util.EnvironmentTickCount();
-                            return "PREJUMP";
-                        }
-                        else if (m_animTickJump != 0)
-                        {
-                            #region PreJump 
-                            /*m_hasPreJumped = true;
-                            if (m_scenePresence.PreJumpForce.Z != 0 && !m_hasJumpAddedForce)
-                            {
-                                m_hasJumpAddedForce = true;
-                                m_scenePresence.PreJumpForce.X /= 2f;
-                                m_scenePresence.PreJumpForce.Y /= 2f;
-                                //m_scenePresence.PreJumpForce.Z *= 1.75f;
-                                if(m_scenePresence.Scene.m_UseNewStyleMovement)
-                                    m_scenePresence.m_velocityIsDecaying = false;
-
-                                m_scenePresence.PhysicsActor.Velocity = m_scenePresence.PreJumpForce;
-                                //m_scenePresence.m_forceToApply = m_scenePresence.PreJumpForce;
-
-                                m_scenePresence.PreJumpForce = new Vector3(
-                                    m_scenePresence.PreJumpForce.X > 0 ? 7 : (m_scenePresence.PreJumpForce.X < 0 ? -3 : 0),
-                                    m_scenePresence.PreJumpForce.Y > 0 ? 7 : (m_scenePresence.PreJumpForce.Y < 0 ? -3 : 0),
-                                    0);
-
-                                m_jumpZ = 0;
-                                return "JUMP";
-                            }
-
-                            if (jumpChange >= 3) //Kill this if it takes too long
-                            {
-                                m_scenePresence.PhysicsActor.Velocity = Vector3.Zero;
-                                m_animTickJump = 0;
-                                m_scenePresence.AllowMovement = true;
-                                if (m_scenePresence.Scene.m_UseNewStyleMovement)
-                                    m_scenePresence.m_velocityIsDecaying = true;
-                                m_animTickNextJump = Util.TickCount();
-                                return "STAND";
-                            }
-
-                            //Check #1: Going up.
-                            if (m_jumpZ == 0 &&
-                                m_scenePresence.Velocity.Z >= -0.3)
-                            {
-                                //This stops from double jump when you jump straight up and doesn't break jumping with X and Y velocity
-                                //This particular check makes sure that we do not break jumping straight up
-                                if (!m_scenePresence.m_forceToApply.HasValue ||
-                                     (m_scenePresence.m_forceToApply.HasValue &&
-                                     m_scenePresence.m_forceToApply.Value.X != 0 &&
-                                     m_scenePresence.m_forceToApply.Value.Y != 0))
-                                {
-                                    m_scenePresence.PreJumpForce.Z = -1f;
-
-                                    m_scenePresence.m_forceToApply = m_scenePresence.PreJumpForce;
-                                }
-
-                                m_scenePresence.AllowMovement = false;
-                                return "JUMP";
-                            }
-                            //Check #2: Coming down
-                            else if (m_jumpZ <= 1 &&
-                                m_scenePresence.Velocity.Z < 0)
-                            {
-                                m_jumpZ = 1;
-                                //This stops from double jump when you jump straight up and doesn't break jumping with X and Y velocity
-                                //This particular check makes sure that we do not break jumping straight up
-                                if (!m_scenePresence.m_forceToApply.HasValue ||
-                                     (m_scenePresence.m_forceToApply.HasValue &&
-                                     m_scenePresence.m_forceToApply.Value.X != 0 &&
-                                     m_scenePresence.m_forceToApply.Value.Y != 0))
-                                {
-                                    m_scenePresence.PreJumpForce.Z = -0.1f;
-
-                                    m_scenePresence.m_forceToApply = m_scenePresence.PreJumpForce;
-                                }
-
-                                m_scenePresence.AllowMovement = false;
-                                return "JUMP";
-                            }
-                            else
-                            {
-                                //m_scenePresence.m_forceToApply = Vector3.Zero;
-                                m_scenePresence.PhysicsActor.Velocity = Vector3.Zero;
-                                m_animTickJump = 0;
-                                m_scenePresence.AllowMovement = true;
-                                if (m_scenePresence.Scene.m_UseNewStyleMovement)
-                                    m_scenePresence.m_velocityIsDecaying = true;
-                                m_animTickNextJump = Util.EnvironmentTickCount();
-                                return "STAND";
-                            }*/
-                            #endregion
-                            if (m_scenePresence.PreJumpForce != Vector3.Zero)
-                            {
-                                Vector3 jumpForce = m_scenePresence.PreJumpForce;
-                                m_scenePresence.PreJumpForce = Vector3.Zero;
-                                m_scenePresence.AddNewMovement(jumpForce, Quaternion.Identity);
-                                m_animTickJump = -42;
-                                return "JUMP";
-                            }
-
-                            m_animTickJump++;
-                            //This never gets hit as velocity is really broken
-                            //if (m_scenePresence.Velocity.Z < -0.50)
-                            //{
-                            //    m_scenePresence.m_forceToApply = Vector3.Zero;
-                            //    m_scenePresence.m_overrideUserInput = false;
-                            //}
-                            return "JUMP";
-                        }
-                    }
-                }
-                else
-                {
-                    // Jumping
-                    //float jumpChange = (((float)Util.EnvironmentTickCount()) - m_animTickJump) / 1000;
-                    if (!jumping)
-                    {
-                        m_animTickJump = Util.EnvironmentTickCount();
-                        return "JUMP";
-                    }
-                    else
-                    {
-                        // Start actual jump
-                        if (m_animTickJump > 0)
-                        {
-                            m_animTickJump = -20;
-                            return "JUMP";
-                        }
-
-                        m_animTickJump++;
-                        return "JUMP";
-                    }
-                }
+                return "JUMP";
             }
+            if (actor.IsPreJumping)
+            {
+                return "PREJUMP";
+            }
+
             if (m_scenePresence.IsJumping)
             {
                 m_scenePresence.IsJumping = false;

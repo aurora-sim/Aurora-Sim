@@ -263,6 +263,10 @@ namespace OpenSim.Framework
         {
             get { return false; }
         }
+        public override bool IsPreJumping
+        {
+            get { return false; }
+        }
         public override Vector3 Position
         {
             get { return Vector3.Zero; }

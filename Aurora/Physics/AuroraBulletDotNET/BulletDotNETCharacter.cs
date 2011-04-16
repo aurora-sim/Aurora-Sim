@@ -41,6 +41,10 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         {
             get { return false; }
         }
+        public override bool IsPreJumping
+        {
+            get { return false; }
+        }
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public btRigidBody Body;

@@ -60,9 +60,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         float m_UpdateTimecntr = 0;
         float m_UpdateFPScntr = 0.05f;
+        private bool m_isJumping = false;
         public override bool IsJumping
         {
-            get { return false; }
+            get { return m_isJumping; }
+        }
+        private int m_preJumpCounter = 0;
+        private bool m_ispreJumping = false;
+        private Vector3 m_preJumpForce = Vector3.Zero;
+        public override bool IsPreJumping
+        {
+            get { return m_ispreJumping; }
         }
 
         private float m_mass = 80f;
@@ -515,6 +523,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name="force"></param>
         public override void SetMovementForce(Vector3 force)
         {
+            if (!Flying)
+            {
+                if (force.Z >= 1.0f)
+                {
+                    m_ispreJumping = true;
+                    m_preJumpForce = force;
+                    m_preJumpCounter = 0;
+                    TriggerMovementUpdate();
+                    return;
+                }
+            }
+            if (m_ispreJumping)
+            {
+                TriggerMovementUpdate();
+                return;
+            }
             if(force != Vector3.Zero)
                 _target_velocity = force;       
         }
@@ -822,7 +846,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 else
                     vec.Z = ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P);
             }
-            if (tempPos.Z - AvatarHalfsize - groundHeight < 0.1)
+            if (tempPos.Z - AvatarHalfsize - groundHeight < 0.12f)
             {
                 m_iscolliding = true;
                 m_iscollidingGround = true;
@@ -838,6 +862,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             else
                 m_iscollidingGround = false;
 
+            #endregion
+
+            #region Movement
+
             float movementmult = 1f;
             if (!m_alwaysRun)
                 movementmult /= _parent_scene.avMovementDivisorWalk;
@@ -847,13 +875,32 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             movementmult *= 10;
             if (flying)
                 movementmult *= 4;
+            /*if (IsJumping && IsColliding && _target_velocity.Z == 0)
+            {
+                m_isJumping = false;
+                m_log.Warn("noJump");
+            }*/
 
-
+            if (m_preJumpCounter == 15)
+            {
+                m_ispreJumping = false;
+                _target_velocity += m_preJumpForce * 2;
+                m_preJumpCounter = 0;
+                m_isJumping = true;
+            }
+            if (m_ispreJumping)
+            {
+                m_preJumpCounter++;
+                TriggerMovementUpdate();
+                return;
+            }
+            
             //  if velocity is zero, use position control; otherwise, velocity control
             if (_target_velocity == Vector3.Zero &&
                 Math.Abs (vel.X) < 0.05 && Math.Abs (vel.Y) < 0.05 && Math.Abs (vel.Z) < 0.05 && (this.m_iscollidingGround || this.m_iscollidingObj || this.flying))
             //This is so that if we get moved by something else, it will update us in the client
             {
+                m_isJumping = false;
                 //  keep track of where we stopped.  No more slippin' & slidin'
                 if (!_zeroFlag)
                 {

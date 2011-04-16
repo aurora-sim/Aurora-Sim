@@ -40,6 +40,10 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
             get { return false; }
         }
+        public override bool IsPreJumping
+        {
+            get { return false; }
+        }
         private Vector3 _position;
         private Vector3 _velocity;
         private Vector3 _acceleration;
