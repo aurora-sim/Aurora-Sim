@@ -287,11 +287,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             set { m_localID = value; }
         }
 
-        public override void CrossingFailure()
-        {
-            
-        }
-
         public override Vector3 Position
         {
             get { return m_position; }

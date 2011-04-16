@@ -815,6 +815,22 @@ namespace OpenSim.Framework
 
         public virtual void AddMovementForce(Vector3 force) { }
         public virtual void SetMovementForce(Vector3 force) { }
+
+
+        public delegate bool checkForRegionCrossing();
+        public event checkForRegionCrossing OnCheckForRegionCrossing;
+
+        public virtual bool CheckForRegionCrossing()
+        {
+            // Make a temporary copy of the event to avoid possibility of
+            // a race condition if the last subscriber unsubscribes
+            // immediately after the null check and before the event is raised.
+            checkForRegionCrossing handler = OnCheckForRegionCrossing;
+
+            if (handler != null)
+                return handler();
+            return false;
+        }
     }
 
     public abstract class PhysicsObject : PhysicsActor
@@ -831,6 +847,8 @@ namespace OpenSim.Framework
         public virtual PrimitiveBaseShape Shape { set { } }
 
         public abstract bool Selected { set; }
+
+        public abstract void CrossingFailure();
 
         public virtual void SetMaterial(int material) { }
 
@@ -904,8 +922,6 @@ namespace OpenSim.Framework
         public abstract Vector3 Size { get; set; }
 
         public abstract uint LocalID { get; set; }
-
-        public abstract void CrossingFailure ();
 
         public virtual void RequestPhysicsterseUpdate ()
         {

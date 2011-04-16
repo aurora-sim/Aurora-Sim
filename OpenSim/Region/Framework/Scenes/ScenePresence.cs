@@ -777,6 +777,7 @@ namespace OpenSim.Region.Framework.Scenes
                 Name, m_scene.RegionInfo.RegionName);
 
             AddToPhysicalScene(isFlying, false);
+            NotInTransit();
 
             if (m_forceFly)
                 m_physicsActor.Flying = true;
@@ -817,6 +818,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void MakeChildAgent()
         {
+            NotInTransit();
             // It looks like m_animator is set to null somewhere, and MakeChild
             // is called after that. Probably in aborted teleports.
             if (m_animator == null)
@@ -860,6 +862,8 @@ namespace OpenSim.Region.Framework.Scenes
                         m_physicsActor.OnSignificantMovement -= CheckForSignificantMovement;
                     if (m_physicsActor != null)
                         m_physicsActor.OnPositionAndVelocityUpdate -= PhysicsUpdatePosAndVelocity;
+                    if (m_physicsActor != null)
+                        m_physicsActor.OnCheckForRegionCrossing -= CheckForBorderCrossing;
                     if (m_physicsActor != null)
                         m_physicsActor.OnOutOfBounds -= OutOfBoundsCall;
                     if (m_physicsActor != null)
@@ -1524,6 +1528,8 @@ namespace OpenSim.Region.Framework.Scenes
             Animator.TrySetMovementAnimation("STAND");
         }
 
+        #region Sit code
+
         private ISceneChildEntity FindNextAvailableSitTarget (UUID targetID)
         {
             ISceneChildEntity targetPart = m_scene.GetSceneObjectPart(targetID);
@@ -1854,6 +1860,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        #endregion
+
         /// <summary>
         /// Event handler for the 'Always run' setting on the client
         /// Tells the physics plugin to increase speed of movement.
@@ -2058,14 +2066,6 @@ namespace OpenSim.Region.Framework.Scenes
                     syncPoster.Post(SyncMessageHelper.SendChildAgentUpdate(agentpos, m_scene.RegionInfo.RegionHandle), m_scene.RegionInfo.RegionHandle);
             }
 
-            //Moving these into the terse update check, as they don't need to be checked/sent unless the client has moved.
-            // followed suggestion from mic bowman. reversed the two lines below.
-            if (((m_parentID == UUID.Zero && m_physicsActor != null) ||
-                m_parentID != UUID.Zero) &&
-                (m_physicsActor != null &&
-                m_physicsActor.Position.IsFinite())) // Check that we have a physics actor or we're sitting on something
-                CheckForBorderCrossing();
-
             //Moving collision sound ID inside this loop so that we don't trigger it too much
             if (CollisionSoundID != UUID.Zero)
             {
@@ -2082,14 +2082,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Checks to see if the avatar is in range of a border and calls CrossToNewRegion
         /// </summary>
-        protected void CheckForBorderCrossing()
+        protected bool CheckForBorderCrossing()
         {
             if (IsChildAgent)
-                return;
+                return false;
             //Don't check if the avatar is sitting on something. Crossing should be called
             // directly by the SOG if the object needs to cross.
             if (m_parentID != UUID.Zero)
-                return;
+                return false;
 
             Vector3 pos2 = AbsolutePosition;
             Vector3 vel = Velocity;
@@ -2140,6 +2140,8 @@ namespace OpenSim.Region.Framework.Scenes
                                 transferModule.Cross(this, isFlying, neighborRegion);
                             else
                                 m_log.DebugFormat("[ScenePresence]: Unable to cross agent to neighbouring region, because there is no AgentTransferModule");
+
+                            return true;
                         }
                         else
                             m_log.Debug("[ScenePresence]: Could not find region for " + Name + " to cross into @ {" + TargetX / 256 + ", " + TargetY / 256 + "}");
@@ -2158,7 +2160,9 @@ namespace OpenSim.Region.Framework.Scenes
                 pos2.Y = pos2.Y + (vel.Y * timeStep);
                 pos2.Z = pos2.Z + (vel.Z * timeStep);
                 m_pos = pos2;*/
+                return true;
             }
+            return false;
         }
 
         public void InTransit()
@@ -2188,6 +2192,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_parentID = UUID.Zero;
             m_parentPosition = Vector3.Zero;
             ControllingClient.Reset();
+            NotInTransit();
         }
 
         #endregion
@@ -2389,6 +2394,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_physicsActor.OnSignificantMovement += CheckForSignificantMovement;
             m_physicsActor.OnCollisionUpdate += PhysicsCollisionUpdate;
             m_physicsActor.OnPositionAndVelocityUpdate += PhysicsUpdatePosAndVelocity;
+            m_physicsActor.OnCheckForRegionCrossing += CheckForBorderCrossing;
 
             m_physicsActor.OnOutOfBounds += OutOfBoundsCall; // Called for PhysicsActors when there's something wrong
             m_physicsActor.SubscribeEvents(500);

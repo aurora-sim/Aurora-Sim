@@ -384,7 +384,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         if (value.Z > 9999999f || value.Z <-90f)
                         {
-                        value.Z = _parent_scene.GetTerrainHeightAtXY(_parent_scene.Region.RegionSizeX * 0.5f, _parent_scene.Region.RegionSizeY * 0.5f) + 5;
+                            value.Z = _parent_scene.GetTerrainHeightAtXY(_parent_scene.Region.RegionSizeX * 0.5f, _parent_scene.Region.RegionSizeY * 0.5f) + 5;
                         }
 
                         _position.X = value.X;
@@ -745,10 +745,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             dtmp.Y = 0;
             dtmp.Z = 0;
             d.BodySetQuaternion (Body, ref dtmp);
-            d.BodySetAngularVel (Body, 0, 0, 0);
+            d.BodySetAngularVel(Body, 0, 0, 0);
 
+            Vector3 vec = Vector3.Zero;
+            d.Vector3 vel = d.BodyGetLinearVel(Body);
 
-            //PidStatus = true;
+            #region Flight Ceiling
 
             // rex, added height check
 
@@ -775,6 +777,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // endrex
 
+            #endregion
+
+            #region NonFinite Pos
 
             Vector3 localPos = new Vector3 ((float)tempPos.X, (float)tempPos.Y, (float)tempPos.Z);
 
@@ -813,8 +818,25 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return;
             }
 
-            Vector3 vec = Vector3.Zero;
-            d.Vector3 vel = d.BodyGetLinearVel (Body);
+            #endregion
+
+            #region Check for out of region
+
+            if (Position.X < 0.25f || Position.Y < 0.25f ||
+                Position.X > _parent_scene.Region.RegionSizeX - .25f ||
+                Position.Y > _parent_scene.Region.RegionSizeY - .25f)
+            {
+                if (!CheckForRegionCrossing())
+                {
+                    Vector3 newPos = Position;
+                    newPos.X = Util.Clip(Position.X, 0.75f, _parent_scene.Region.RegionSizeX - 0.75f);
+                    newPos.Y = Util.Clip(Position.Y, 0.75f, _parent_scene.Region.RegionSizeY - 0.75f);
+                    Position = newPos;
+                    d.BodySetPosition(Body, newPos.X, newPos.Y, newPos.Z);
+                }
+            }
+
+            #endregion
 
             #region Check for underground
 
@@ -1098,8 +1120,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #endregion
 
-
             #endregion
+
+            #region Apply the force
 
             if (vec.IsFinite ())
             {
@@ -1161,6 +1184,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     Shell = IntPtr.Zero;
                 }
             }
+
+            #endregion
         }
 
         /// <summary>
@@ -1412,10 +1437,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 //             //d.Matrix3 bodyrotation = d.BodyGetRotation(Body);
 //             //m_log.Info("[PHYSICSAV]: Rotation: " + bodyrotation.M00 + " : " + bodyrotation.M01 + " : " + bodyrotation.M02 + " : " + bodyrotation.M10 + " : " + bodyrotation.M11 + " : " + bodyrotation.M12 + " : " + bodyrotation.M20 + " : " + bodyrotation.M21 + " : " + bodyrotation.M22);
         //         }
-
-        public override void CrossingFailure()
-        {
-        }
 
         #endregion
 

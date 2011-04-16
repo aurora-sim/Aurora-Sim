@@ -515,92 +515,99 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             IScene m_scene = agent.Scene;
 
-            if (crossingRegion != null)
+            try
             {
-                //Make sure that all attachments are ready for the teleport
-                IAttachmentsModule attModule = agent.Scene.RequestModuleInterface<IAttachmentsModule>();
-                if (attModule != null)
-                    attModule.ValidateAttachments(agent.UUID);
-
-                int xOffset = crossingRegion.RegionLocX - m_scene.RegionInfo.RegionLocX;
-                int yOffset = crossingRegion.RegionLocY - m_scene.RegionInfo.RegionLocY;
-
-                if (xOffset < 0)
-                    pos.X += m_scene.RegionInfo.RegionSizeX;
-                else if (xOffset > 0)
-                    pos.X -= m_scene.RegionInfo.RegionSizeX;
-
-                if (yOffset < 0)
-                    pos.Y += m_scene.RegionInfo.RegionSizeY;
-                else if (yOffset > 0)
-                    pos.Y -= m_scene.RegionInfo.RegionSizeY;
-
-                //Make sure that they are within bounds (velocity can push it out of bounds)
-                if (pos.X < 0)
-                    pos.X = 1;
-                if (pos.Y < 0)
-                    pos.Y = 1;
-
-                if (pos.X > crossingRegion.RegionSizeX)
-                    pos.X = crossingRegion.RegionSizeX - 1;
-                if (pos.Y > crossingRegion.RegionSizeY)
-                    pos.Y = crossingRegion.RegionSizeY - 1;
-
-                AgentData cAgent = new AgentData();
-                agent.CopyTo(cAgent);
-                cAgent.Position = pos;
-                if (isFlying)
-                    cAgent.ControlFlags |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
-
-                AgentCircuitData agentCircuit = agent.ControllingClient.RequestClientInfo();
-                agentCircuit.startpos = pos;
-                agentCircuit.child = false;
-                IAvatarAppearanceModule appearance = agent.RequestModuleInterface<IAvatarAppearanceModule> ();
-                if(appearance != null)
-                    agentCircuit.Appearance = appearance.Appearance;
-
-                IEventQueueService eq = agent.Scene.RequestModuleInterface<IEventQueueService>();
-                if (eq != null)
+                if (crossingRegion != null)
                 {
-                    //This does UpdateAgent and closing of child agents
-                    //  messages if they need to be called
-                    ISyncMessagePosterService syncPoster = agent.Scene.RequestModuleInterface<ISyncMessagePosterService>();
-                    if (syncPoster != null)
-                    {
-                        OSDMap map = syncPoster.Get(SyncMessageHelper.CrossAgent(crossingRegion, pos,
-                            agent.Velocity, agentCircuit, cAgent, agent.Scene.RegionInfo.RegionHandle),
-                            agent.Scene.RegionInfo.RegionHandle);
-                        bool result = false;
-                        if(map != null)
-                            result =  map["Success"].AsBoolean();
-                        if (!result)
-                        {
-                            agent.ControllingClient.SendTeleportFailed(map["Reason"].AsString());
-                            // If the cross was successful, this agent is a child agent
-                            // Otherwise, put them back in the scene
-                            if (!agent.IsChildAgent)
-                            {
-                                bool m_flying = ((agent.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
-                                agent.AddToPhysicalScene(m_flying, false);
-                            }
+                    //Make sure that all attachments are ready for the teleport
+                    IAttachmentsModule attModule = agent.Scene.RequestModuleInterface<IAttachmentsModule>();
+                    if (attModule != null)
+                        attModule.ValidateAttachments(agent.UUID);
 
-                            // In any case
-                            agent.NotInTransit();
-                            return agent;
+                    int xOffset = crossingRegion.RegionLocX - m_scene.RegionInfo.RegionLocX;
+                    int yOffset = crossingRegion.RegionLocY - m_scene.RegionInfo.RegionLocY;
+
+                    if (xOffset < 0)
+                        pos.X += m_scene.RegionInfo.RegionSizeX;
+                    else if (xOffset > 0)
+                        pos.X -= m_scene.RegionInfo.RegionSizeX;
+
+                    if (yOffset < 0)
+                        pos.Y += m_scene.RegionInfo.RegionSizeY;
+                    else if (yOffset > 0)
+                        pos.Y -= m_scene.RegionInfo.RegionSizeY;
+
+                    //Make sure that they are within bounds (velocity can push it out of bounds)
+                    if (pos.X < 0)
+                        pos.X = 1;
+                    if (pos.Y < 0)
+                        pos.Y = 1;
+
+                    if (pos.X > crossingRegion.RegionSizeX)
+                        pos.X = crossingRegion.RegionSizeX - 1;
+                    if (pos.Y > crossingRegion.RegionSizeY)
+                        pos.Y = crossingRegion.RegionSizeY - 1;
+
+                    AgentData cAgent = new AgentData();
+                    agent.CopyTo(cAgent);
+                    cAgent.Position = pos;
+                    if (isFlying)
+                        cAgent.ControlFlags |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
+
+                    AgentCircuitData agentCircuit = agent.ControllingClient.RequestClientInfo();
+                    agentCircuit.startpos = pos;
+                    agentCircuit.child = false;
+                    IAvatarAppearanceModule appearance = agent.RequestModuleInterface<IAvatarAppearanceModule>();
+                    if (appearance != null)
+                        agentCircuit.Appearance = appearance.Appearance;
+
+                    IEventQueueService eq = agent.Scene.RequestModuleInterface<IEventQueueService>();
+                    if (eq != null)
+                    {
+                        //This does UpdateAgent and closing of child agents
+                        //  messages if they need to be called
+                        ISyncMessagePosterService syncPoster = agent.Scene.RequestModuleInterface<ISyncMessagePosterService>();
+                        if (syncPoster != null)
+                        {
+                            OSDMap map = syncPoster.Get(SyncMessageHelper.CrossAgent(crossingRegion, pos,
+                                agent.Velocity, agentCircuit, cAgent, agent.Scene.RegionInfo.RegionHandle),
+                                agent.Scene.RegionInfo.RegionHandle);
+                            bool result = false;
+                            if (map != null)
+                                result = map["Success"].AsBoolean();
+                            if (!result)
+                            {
+                                agent.ControllingClient.SendTeleportFailed(map["Reason"].AsString());
+                                // If the cross was successful, this agent is a child agent
+                                // Otherwise, put them back in the scene
+                                if (!agent.IsChildAgent)
+                                {
+                                    bool m_flying = ((agent.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
+                                    agent.AddToPhysicalScene(m_flying, false);
+                                }
+
+                                // In any case
+                                agent.NotInTransit();
+                                return agent;
+                            }
                         }
                     }
+
+                    agent.MakeChildAgent();
+
+                    //Revolution- We already were in this region... we don't need updates about the avatars we already know about, right?
+                    // OLD: now we have a child agent in this region. Request and send all interesting data about (root) agents in the sim
+                    //agent.SendOtherAgentsAvatarDataToMe();
+                    //agent.SendOtherAgentsAppearanceToMe();
+
+                    //Kill the groups here, otherwise they will become ghost attachments 
+                    //  and stay in the sim, they'll get readded below into the new sim
+                    KillAttachments(agent);
                 }
-
-                agent.MakeChildAgent();
-                
-                //Revolution- We already were in this region... we don't need updates about the avatars we already know about, right?
-                // OLD: now we have a child agent in this region. Request and send all interesting data about (root) agents in the sim
-                //agent.SendOtherAgentsAvatarDataToMe();
-                //agent.SendOtherAgentsAppearanceToMe();
-
-                //Kill the groups here, otherwise they will become ghost attachments 
-                //  and stay in the sim, they'll get readded below into the new sim
-                KillAttachments(agent);
+            }
+            catch(Exception ex)
+            {
+                m_log.Warn("[EntityTransferModule]: Exception in crossing: " + ex.ToString());
             }
             // In any case
             agent.NotInTransit();

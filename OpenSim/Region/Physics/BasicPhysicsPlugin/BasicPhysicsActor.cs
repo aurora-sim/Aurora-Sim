@@ -186,10 +186,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
         }
 
-        public override void CrossingFailure()
-        {
-        }
-
         public override void SubscribeEvents(int ms)
         {
         }

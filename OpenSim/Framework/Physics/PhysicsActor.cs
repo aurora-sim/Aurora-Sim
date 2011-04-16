@@ -349,10 +349,6 @@ namespace OpenSim.Framework
             set { }
         }
 
-        public override void CrossingFailure()
-        {
-        }
-
         public override Quaternion Orientation
         {
             get { return Quaternion.Identity; }
