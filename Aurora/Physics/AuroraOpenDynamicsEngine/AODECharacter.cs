@@ -72,6 +72,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             get { return m_ispreJumping; }
         }
 
+        private float m_speedModifier = 1.0f;
+        public override float SpeedModifier
+        {
+            get { return m_speedModifier; }
+            set { m_speedModifier = value; }
+        }
+
         private float m_mass = 80f;
         private bool m_pidControllerActive = true;
         //private static float POSTURE_SERVO = 10000.0f;
@@ -91,7 +98,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Vector3 m_taintPosition = Vector3.Zero;
         private Quaternion m_taintRotation = Quaternion.Identity;
         public uint m_localID = 0;
-        public bool m_returnCollisions = false;
         // taints and their non-tainted counterparts
         public bool m_isPhysical = false; // the current physical status
         public bool m_tainted_isPhysical = false; // set when the physical status is tainted (false=not existing in physics engine, true=existing)
@@ -107,8 +113,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
 
         private float m_buoyancy = 0f;
-
-        // private CollisionLocker ode;
 
         private string m_name = String.Empty;
 
@@ -126,7 +130,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private AuroraODEPhysicsScene _parent_scene;
         public IntPtr Shell = IntPtr.Zero;
         public d.Mass ShellMass;
-        public bool collidelock = false;
 
         public int m_eventsubscription = 0;
         private CollisionEventUpdate CollisionEventsThisFrame = new CollisionEventUpdate();
@@ -882,6 +885,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 movementmult /= _parent_scene.avMovementDivisorRun;
 
             movementmult *= 10;
+            movementmult *= SpeedModifier;
             if (flying)
                 movementmult *= 4;
 
@@ -1484,7 +1488,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name="force"></param>
         public void doForce(Vector3 force)
         {
-            if (!collidelock && force != Vector3.Zero)
+            if (force != Vector3.Zero)
             {
                 //force /= m_mass;
                 d.BodyAddForce(Body, force.X, force.Y, force.Z);

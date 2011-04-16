@@ -267,6 +267,11 @@ namespace OpenSim.Framework
         {
             get { return false; }
         }
+        public override float SpeedModifier
+        {
+            get { return 1.0f; }
+            set { }
+        }
         public override Vector3 Position
         {
             get { return Vector3.Zero; }

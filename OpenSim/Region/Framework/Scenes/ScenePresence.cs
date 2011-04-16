@@ -163,8 +163,6 @@ namespace OpenSim.Region.Framework.Scenes
         private bool m_flyDisabled;
         private volatile bool m_creatingPhysicalRepresentation = false;
 
-        private float m_speedModifier = 1.0f;
-
         private const float SIGNIFICANT_MOVEMENT = 2.0f;
 
         private Quaternion m_bodyRot= Quaternion.Identity;
@@ -641,8 +639,17 @@ namespace OpenSim.Region.Framework.Scenes
 
         public float SpeedModifier
         {
-            get { return m_speedModifier; }
-            set { m_speedModifier = value; }
+            get 
+            {
+                if(PhysicsActor != null)
+                    return PhysicsActor.SpeedModifier;
+                return 0;
+            }
+            set 
+            {
+                if(PhysicsActor != null)
+                    PhysicsActor.SpeedModifier = value;
+            }
         }
 
         public bool ForceFly
@@ -2321,7 +2328,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 //if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
                 //    m_godLevel = cAgent.GodLevel;
-                m_speedModifier = cAgent.Speed;
+                SpeedModifier = cAgent.Speed;
                 DrawDistance = cAgent.DrawDistance;
                 m_setAlwaysRun = cAgent.AlwaysRun;
                 IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();

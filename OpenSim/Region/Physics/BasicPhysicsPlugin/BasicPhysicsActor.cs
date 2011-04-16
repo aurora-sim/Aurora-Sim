@@ -44,6 +44,11 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
             get { return false; }
         }
+        public override float SpeedModifier
+        {
+            get { return 1.0f; }
+            set { }
+        }
         private Vector3 _position;
         private Vector3 _velocity;
         private Vector3 _size;

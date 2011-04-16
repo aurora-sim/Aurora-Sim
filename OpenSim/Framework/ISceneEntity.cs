@@ -811,6 +811,7 @@ namespace OpenSim.Framework
     public abstract class PhysicsCharacter : PhysicsActor
     {
         public abstract bool IsJumping { get; }
+        public abstract float SpeedModifier { get; set; }
         public abstract bool IsPreJumping { get; }
 
         public virtual void AddMovementForce(Vector3 force) { }
