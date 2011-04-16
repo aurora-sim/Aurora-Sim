@@ -2484,7 +2484,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             adb.SessionID = SessionId; // More security
             gdb.GodLevel = (byte)AdminLevel;
             gdb.Token = Token;
-            OutPacket(respondPacket, ThrottleOutPacketType.AvatarInfo);
+            respondPacket.AgentData = adb;
+            respondPacket.GrantData = gdb;
+            OutPacket(respondPacket, ThrottleOutPacketType.Immediate);
         }
 
         public void SendGroupMembership(GroupMembershipData[] GroupMembership)
