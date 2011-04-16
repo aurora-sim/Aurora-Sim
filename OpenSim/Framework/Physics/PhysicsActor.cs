@@ -93,7 +93,7 @@ namespace OpenSim.Framework
         }
     }
 
-    public class NullPhysicsActor : PhysicsActor
+    public class NullObjectPhysicsActor : PhysicsObject
     {
         public override Vector3 Position
         {
@@ -235,6 +235,169 @@ namespace OpenSim.Framework
         public override void AddAngularForce(Vector3 force, bool pushforce)
         {
             
+        }
+
+        public override Vector3 RotationalVelocity
+        {
+            get { return Vector3.Zero; }
+            set { return; }
+        }
+
+        public override void SubscribeEvents(int ms)
+        {
+
+        }
+        public override void UnSubscribeEvents()
+        {
+
+        }
+        public override bool SubscribedEvents()
+        {
+            return false;
+        }
+    }
+
+    public class NullCharacterPhysicsActor : PhysicsCharacter
+    {
+        public override bool IsJumping
+        {
+            get { return false; }
+        }
+        public override Vector3 Position
+        {
+            get { return Vector3.Zero; }
+            set { return; }
+        }
+
+        public override bool SetAlwaysRun
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        public override uint LocalID
+        {
+            get { return 0; }
+            set { return; }
+        }
+
+        public override float Buoyancy
+        {
+            get { return 0f; }
+            set { return; }
+        }
+
+        public override bool FloatOnWater
+        {
+            set { return; }
+        }
+
+        public override bool CollidingGround
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        public override bool CollidingObj
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        public override Vector3 Size
+        {
+            get { return Vector3.Zero; }
+            set { return; }
+        }
+
+        public override float Mass
+        {
+            get { return 0f; }
+            set { }
+        }
+
+        public override Vector3 Force
+        {
+            get { return Vector3.Zero; }
+            set { return; }
+        }
+
+        public override Vector3 CenterOfMass
+        {
+            get { return Vector3.Zero; }
+        }
+
+        public override Vector3 Velocity
+        {
+            get { return Vector3.Zero; }
+            set { return; }
+        }
+
+        public override Vector3 Torque
+        {
+            get { return Vector3.Zero; }
+            set { return; }
+        }
+
+        public override float CollisionScore
+        {
+            get { return 0f; }
+            set { }
+        }
+
+        public override void CrossingFailure()
+        {
+        }
+
+        public override Quaternion Orientation
+        {
+            get { return Quaternion.Identity; }
+            set { }
+        }
+
+        public override Vector3 Acceleration
+        {
+            get { return Vector3.Zero; }
+        }
+
+        public override bool IsPhysical
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        public override bool Flying
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        public override bool ThrottleUpdates
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        public override bool IsColliding
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        int type = (int)ActorTypes.Unknown;
+        public override int PhysicsActorType
+        {
+            get { return type; }
+            set { type = value; }
+        }
+
+        public override void AddForce(Vector3 force, bool pushforce)
+        {
+        }
+
+        public override void AddAngularForce(Vector3 force, bool pushforce)
+        {
+
         }
 
         public override Vector3 RotationalVelocity

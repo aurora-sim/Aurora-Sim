@@ -55,7 +55,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
     /// Various properties that ODE uses for AMotors but isn't exposed in ODE.NET so we must define them ourselves.
     /// </summary>
 
-    public class AuroraODEPrim : PhysicsActor
+    public class AuroraODEPrim : PhysicsObject
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -140,7 +140,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public IntPtr prev_geom;
         public IntPtr _triMeshData;
 
-        private PhysicsActor _parent;
+        private PhysicsObject _parent;
 
         private List<AuroraODEPrim> childrenPrim = new List<AuroraODEPrim>();
 
@@ -2400,7 +2400,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set { m_buoyancy = value; }
         }
 
-        public override void link(PhysicsActor obj)
+        public override void link(PhysicsObject obj)
             {
             AddChange(changes.Link, obj);
             }

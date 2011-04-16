@@ -1498,7 +1498,6 @@
       <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Simulation.Base"/>
 	  <Reference name="Aurora.Services.DataService"/>
-      <Reference name="OpenSim.CoreApplicationPlugins"/>
       <Reference name="OpenSim.Data"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Region.CoreModules"/>

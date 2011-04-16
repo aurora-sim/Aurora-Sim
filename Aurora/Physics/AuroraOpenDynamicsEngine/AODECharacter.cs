@@ -36,7 +36,7 @@ using log4net;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
-    public class AuroraODECharacter : PhysicsActor
+    public class AuroraODECharacter : PhysicsCharacter
     {
         #region Declare
 
@@ -60,6 +60,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         float m_UpdateTimecntr = 0;
         float m_UpdateFPScntr = 0.05f;
+        public override bool IsJumping
+        {
+            get { return false; }
+        }
 
         private float m_mass = 80f;
         private bool m_pidControllerActive = true;
@@ -218,11 +222,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             get { return m_localID; }
             set { m_localID = value; }
-        }
-
-        public override bool Selected
-        {
-            set { return; }
         }
 
         public override float Buoyancy

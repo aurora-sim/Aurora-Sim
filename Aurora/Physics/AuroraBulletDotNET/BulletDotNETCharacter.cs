@@ -35,8 +35,12 @@ using log4net;
 
 namespace OpenSim.Region.Physics.BulletDotNETPlugin
 {
-    public class BulletDotNETCharacter : PhysicsActor
+    public class BulletDotNETCharacter : PhysicsCharacter
     {
+        public override bool IsJumping
+        {
+            get { return false; }
+        }
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public btRigidBody Body;
@@ -278,12 +282,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             get { return m_localID; }
             set { m_localID = value; }
         }
-
-        public override bool Selected
-        {
-            set { return; }
-        }
-
 
         public override void CrossingFailure()
         {

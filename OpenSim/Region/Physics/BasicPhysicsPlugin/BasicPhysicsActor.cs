@@ -34,8 +34,12 @@ using OpenSim.Region.Physics.Manager;
 
 namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 {
-    public class BasicActor : PhysicsActor
+    public class BasicCharacterActor : PhysicsCharacter
     {
+        public override bool IsJumping
+        {
+            get { return false; }
+        }
         private Vector3 _position;
         private Vector3 _velocity;
         private Vector3 _acceleration;
@@ -44,7 +48,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         private bool flying;
         private bool iscolliding;
 
-        public BasicActor()
+        public BasicCharacterActor()
         {
         }
 
@@ -69,11 +73,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override uint LocalID
         {
             get { return 0; }
-            set { return; }
-        }
-
-        public override bool Selected
-        {
             set { return; }
         }
 
@@ -202,6 +201,189 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
         }
 
+        public override void SubscribeEvents(int ms)
+        {
+        }
+
+        public override void UnSubscribeEvents()
+        {
+        }
+
+        public override bool SubscribedEvents()
+        {
+            return false;
+        }
+    }
+
+    public class BasicObjectActor : PhysicsObject
+    {
+        private Vector3 _position;
+        private Vector3 _velocity;
+        private Vector3 _acceleration;
+        private Vector3 _size;
+        private Vector3 m_rotationalVelocity;
+        private bool flying;
+        private bool iscolliding;
+
+        public BasicObjectActor()
+        {
+        }
+
+        public override bool Selected
+        {
+            set { }
+        }
+
+        public override int PhysicsActorType
+        {
+            get { return (int)ActorTypes.Agent; }
+            set { return; }
+        }
+
+        public override Vector3 RotationalVelocity
+        {
+            get { return m_rotationalVelocity; }
+            set { m_rotationalVelocity = value; }
+        }
+
+        public override bool SetAlwaysRun
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        public override uint LocalID
+        {
+            get { return 0; }
+            set { return; }
+        }
+
+        public override float Buoyancy
+        {
+            get { return 0f; }
+            set { return; }
+        }
+
+        public override bool FloatOnWater
+        {
+            set { return; }
+        }
+
+        public override bool IsPhysical
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        public override bool ThrottleUpdates
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        public override bool Flying
+        {
+            get { return flying; }
+            set { flying = value; }
+        }
+
+        public override bool IsColliding
+        {
+            get { return iscolliding; }
+            set { iscolliding = value; }
+        }
+
+        public override bool CollidingGround
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        public override bool CollidingObj
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        public override Vector3 Position
+        {
+            get { return _position; }
+            set { _position = value; }
+        }
+
+        public override Vector3 Size
+        {
+            get { return _size; }
+            set
+            {
+                _size = value;
+                _size.Z = _size.Z / 2.0f;
+            }
+        }
+
+        public override float Mass
+        {
+            get { return 0f; }
+            set { }
+        }
+
+        public override Vector3 Force
+        {
+            get { return Vector3.Zero; }
+            set { return; }
+        }
+
+        public override Vector3 CenterOfMass
+        {
+            get { return Vector3.Zero; }
+        }
+
+        public override Vector3 Velocity
+        {
+            get { return _velocity; }
+            set { _velocity = value; }
+        }
+
+        public override Vector3 Torque
+        {
+            get { return Vector3.Zero; }
+            set { return; }
+        }
+
+        public override float CollisionScore
+        {
+            get { return 0f; }
+            set { }
+        }
+
+        public override Quaternion Orientation
+        {
+            get { return Quaternion.Identity; }
+            set { }
+        }
+
+        public override Vector3 Acceleration
+        {
+            get { return _acceleration; }
+        }
+
+        public void SetAcceleration(Vector3 accel)
+        {
+            _acceleration = accel;
+        }
+
+        public override void AddForce(Vector3 force, bool pushforce)
+        {
+        }
+
+        public override void AddAngularForce(Vector3 force, bool pushforce)
+        {
+        }
+
+        public override void CrossingFailure()
+        {
+        }
+
         public override Vector3 PIDTarget
         {
             get { return Vector3.Zero; }
@@ -240,23 +422,23 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             set { return; }
         }
 
-        public override Quaternion APIDTarget 
-        { 
+        public override Quaternion APIDTarget
+        {
             set { return; }
         }
-        
+
         public override bool APIDActive
-        { 
+        {
             set { return; }
         }
-        
+
         public override float APIDStrength
-        { 
+        {
             set { return; }
         }
-        
+
         public override float APIDDamping
-        { 
+        {
             set { return; }
         }
 

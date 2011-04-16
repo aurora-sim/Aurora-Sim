@@ -268,7 +268,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Physical scene representation of this Avatar.
         /// </summary>
-        public PhysicsActor PhysicsActor
+        public PhysicsCharacter PhysicsActor
         {
             get { return m_physicsActor; }
             set { m_physicsActor = value; }
@@ -458,7 +458,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         private IClientAPI m_controllingClient;
 
-        protected PhysicsActor m_physicsActor;
+        protected PhysicsCharacter m_physicsActor;
 
         /// <value>
         /// The client controlling this presence
@@ -521,7 +521,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                PhysicsActor actor = m_physicsActor;
+                PhysicsCharacter actor = m_physicsActor;
                 if (actor != null)
                 {
                     try
@@ -558,7 +558,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                PhysicsActor actor = m_physicsActor;
+                PhysicsCharacter actor = m_physicsActor;
                 if (actor != null)
                     return actor.Velocity;
 
@@ -566,7 +566,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                PhysicsActor actor = m_physicsActor;
+                PhysicsCharacter actor = m_physicsActor;
                 if (actor != null)
                 {
                     try
@@ -1139,7 +1139,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_headrotation = agentData.HeadRotation;
             m_state = agentData.State;
 
-            PhysicsActor actor = PhysicsActor;
+            PhysicsCharacter actor = PhysicsActor;
             if (actor == null)
             {
                 //This happens while sitting, don't spam it
@@ -1917,7 +1917,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            PhysicsActor actor = m_physicsActor;
+            PhysicsCharacter actor = m_physicsActor;
             if (actor != null)
             {
                 Vector3 direc = (rotation == Quaternion.Identity ? vec : (vec * rotation));

@@ -57,15 +57,15 @@ namespace OpenSim.Framework
         public abstract void Initialise(IMesher meshmerizer, RegionInfo region);
         public abstract void PostInitialise(IConfigSource config);
 
-        public abstract PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying, uint LocalID);
+        public abstract PhysicsCharacter AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying, uint LocalID);
 
-        public abstract void RemoveAvatar(PhysicsActor actor);
+        public abstract void RemoveAvatar(PhysicsCharacter actor);
 
-        public abstract void RemovePrim(PhysicsActor prim);
+        public abstract void RemovePrim(PhysicsObject prim);
     
-        public abstract PhysicsActor AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
+        public abstract PhysicsObject AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
                                                   Vector3 size, Quaternion rotation); //To be removed
-        public abstract PhysicsActor AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
+        public abstract PhysicsObject AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
                                                   Vector3 size, Quaternion rotation, bool isPhysical);
 
         public virtual float TimeDilation
@@ -93,7 +93,7 @@ namespace OpenSim.Framework
         public virtual void RequestJointDeletion(string objectNameInScene)
         { return; }
 
-        public virtual void RemoveAllJointsConnectedToActorThreadLocked(PhysicsActor actor)
+        public virtual void RemoveAllJointsConnectedToActorThreadLocked(PhysicsObject actor)
         { return; }
 
         public virtual void DumpJointInfo()
@@ -277,17 +277,17 @@ namespace OpenSim.Framework
         {
         }
 
-        public override PhysicsActor AddAvatar (string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying, uint localID)
+        public override PhysicsCharacter AddAvatar (string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying, uint localID)
         {
             m_log.InfoFormat ("[PHYSICS]: NullPhysicsScene : AddAvatar({0})", position);
-            return new NullPhysicsActor ();
+            return new NullCharacterPhysicsActor ();
         }
 
-        public override void RemoveAvatar (PhysicsActor actor)
+        public override void RemoveAvatar (PhysicsCharacter actor)
         {
         }
 
-        public override void RemovePrim (PhysicsActor prim)
+        public override void RemovePrim(PhysicsObject prim)
         {
         }
 
@@ -303,17 +303,17 @@ namespace OpenSim.Framework
                     }
         */
 
-        public override PhysicsActor AddPrimShape (string primName, PrimitiveBaseShape pbs, Vector3 position,
+        public override PhysicsObject AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
                                                   Vector3 size, Quaternion rotation) //To be removed
         {
             return AddPrimShape (primName, pbs, position, size, rotation, false);
         }
 
-        public override PhysicsActor AddPrimShape (string primName, PrimitiveBaseShape pbs, Vector3 position,
+        public override PhysicsObject AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
                                                   Vector3 size, Quaternion rotation, bool isPhysical)
         {
             m_log.InfoFormat ("[PHYSICS]: NullPhysicsScene : AddPrim({0},{1})", position, size);
-            return new NullPhysicsActor ();
+            return new NullObjectPhysicsActor ();
         }
 
         public override void AddPhysicsActorTaint (PhysicsActor prim)

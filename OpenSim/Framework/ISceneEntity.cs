@@ -71,7 +71,7 @@ namespace OpenSim.Framework
 
         IAnimator Animator { get; }
 
-        PhysicsActor PhysicsActor { get; set; }
+        PhysicsCharacter PhysicsActor { get; set; }
 
         /// <summary>
         /// Is this client really in this region?
@@ -379,7 +379,7 @@ namespace OpenSim.Framework
 
         Quaternion GetWorldRotation ();
 
-        PhysicsActor PhysActor { get; set; }
+        PhysicsObject PhysActor { get; set; }
 
         TaskInventoryDictionary TaskInventory { get; set; }
 
@@ -812,6 +812,81 @@ namespace OpenSim.Framework
         Water = 4
     }
 
+    public abstract class PhysicsCharacter : PhysicsActor
+    {
+        public abstract bool IsJumping { get; }
+
+        public virtual void AddMovementForce(Vector3 force) { }
+        public virtual void SetMovementForce(Vector3 force) { }
+    }
+
+    public abstract class PhysicsObject : PhysicsActor
+    {
+        public string SOPName;
+        public string SOPDescription;
+
+        public virtual void link(PhysicsObject obj) { }
+
+        public virtual void delink() { }
+
+        public virtual void LockAngularMotion(Vector3 axis) { }
+
+        public virtual PrimitiveBaseShape Shape { set { } }
+
+        public abstract bool Selected { set; }
+
+        public virtual void SetMaterial(int material) { }
+
+        public virtual int VehicleType { get { return 0; } set { return; } }
+        public virtual void VehicleFloatParam(int param, float value) { }
+        public virtual void VehicleVectorParam(int param, Vector3 value) { }
+        public virtual void VehicleRotationParam(int param, Quaternion rotation) { }
+        public virtual void VehicleFlags(int param, bool remove) { }
+        public virtual void SetCameraPos(Vector3 CameraRotation) { }
+
+        // Used for MoveTo
+        public virtual Vector3 PIDTarget
+        {
+            get { return Vector3.Zero; }
+            set { return; }
+        }
+
+        public virtual bool PIDActive
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        public virtual float PIDTau
+        {
+            get { return 0; }
+            set { return; }
+        }
+
+        // Used for llSetHoverHeight and maybe vehicle height
+        // Hover Height will override MoveTo target's Z
+        public virtual float PIDHoverHeight { set { return; } }
+        public virtual bool PIDHoverActive { set { return; } }
+        public virtual PIDHoverType PIDHoverType { set { return; } }
+        public virtual float PIDHoverTau { set { return; } }
+
+        public virtual bool VolumeDetect
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        // For RotLookAt
+        public virtual Quaternion APIDTarget { set { return; } }
+
+        public virtual bool APIDActive { set { return; } }
+
+        public virtual float APIDStrength { set { return; } }
+
+        public virtual float APIDDamping { set { return; } }
+
+    }
+
     public abstract class PhysicsActor
     {
         // disable warning: public events
@@ -829,22 +904,9 @@ namespace OpenSim.Framework
 
         public abstract Vector3 Size { get; set; }
 
-        public virtual PrimitiveBaseShape Shape { set { } }
-
         public abstract uint LocalID { get; set; }
 
-        public abstract bool Selected { set; }
-
-        public string SOPName;
-        public string SOPDescription;
-
         public abstract void CrossingFailure ();
-
-        public virtual void link (PhysicsActor obj) { }
-
-        public virtual void delink () { }
-
-        public virtual void LockAngularMotion (Vector3 axis) { }
 
         public virtual void RequestPhysicsterseUpdate ()
         {
@@ -854,9 +916,7 @@ namespace OpenSim.Framework
             RequestTerseUpdate handler = OnRequestTerseUpdate;
 
             if (handler != null)
-            {
                 handler ();
-            }
         }
 
         public virtual void RaiseOutOfBounds (Vector3 pos)
@@ -867,9 +927,7 @@ namespace OpenSim.Framework
             OutOfBounds handler = OnOutOfBounds;
 
             if (handler != null)
-            {
                 handler (pos);
-            }
         }
 
         public virtual void SendCollisionUpdate (EventArgs e)
@@ -877,9 +935,7 @@ namespace OpenSim.Framework
             CollisionUpdate handler = OnCollisionUpdate;
 
             if (handler != null)
-            {
                 handler (e);
-            }
         }
 
         public virtual void TriggerSignificantMovement ()
@@ -900,21 +956,9 @@ namespace OpenSim.Framework
                 movementUpdate ();
         }
 
-        public virtual void SetMaterial (int material) { }
-
         public abstract Vector3 Position { get; set; }
         public abstract float Mass { get; set; }
         public abstract Vector3 Force { get; set; }
-
-        public virtual int VehicleType { get { return 0; } set { return; } }
-        public virtual void VehicleFloatParam (int param, float value) { }
-        public virtual void VehicleVectorParam (int param, Vector3 value) { }
-        public virtual void VehicleRotationParam (int param, Quaternion rotation) { }
-        public virtual void VehicleFlags (int param, bool remove) { }
-        public virtual void SetCameraPos (Vector3 CameraRotation) { }
-
-        public virtual void AddMovementForce (Vector3 force) { }
-        public virtual void SetMovementForce (Vector3 force) { }
 
         public abstract Vector3 CenterOfMass { get; }
         public abstract Vector3 Velocity { get; set; }
@@ -933,47 +977,6 @@ namespace OpenSim.Framework
         public abstract bool FloatOnWater { set; }
         public abstract Vector3 RotationalVelocity { get; set; }
         public abstract float Buoyancy { get; set; }
-
-        // Used for MoveTo
-        public virtual Vector3 PIDTarget
-        {
-            get { return Vector3.Zero; }
-            set { return; }
-        }
-
-        public virtual bool PIDActive
-        {
-            get { return false; }
-            set { return; }
-        }
-
-        public virtual float PIDTau
-        {
-            get { return 0; }
-            set { return; }
-        }
-        
-        // Used for llSetHoverHeight and maybe vehicle height
-        // Hover Height will override MoveTo target's Z
-        public virtual float PIDHoverHeight { set { return; } }
-        public virtual bool PIDHoverActive { set { return; } }
-        public virtual PIDHoverType PIDHoverType { set { return; } }
-        public virtual float PIDHoverTau { set { return; } }
-
-        public virtual bool VolumeDetect 
-        { 
-            get { return false; }
-            set { return; }
-        }
-
-        // For RotLookAt
-        public virtual Quaternion APIDTarget { set { return; } }
-        
-        public virtual bool APIDActive { set { return; } }
-        
-        public virtual float APIDStrength { set { return; } }
-        
-        public virtual float APIDDamping { set { return; } }
 
         public abstract void AddForce (Vector3 force, bool pushforce);
         public abstract void AddAngularForce (Vector3 force, bool pushforce);
@@ -1015,10 +1018,6 @@ namespace OpenSim.Framework
         public delegate void OnFrameDelegate ();
 
         public event OnFrameDelegate OnFrame;
-
-        public delegate void ClientMovement (IScenePresence client);
-
-        public event ClientMovement OnClientMovement;
 
         public delegate void OnClientConnectCoreDelegate (IClientCore client);
 
@@ -1368,27 +1367,6 @@ namespace OpenSim.Framework
                     {
                         m_log.ErrorFormat (
                             "[EVENT MANAGER]: Delegate for TriggerOnScriptMovingEndEvent failed - continuing.  {0} {1}",
-                            e.ToString (), e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerOnClientMovement (IScenePresence avatar)
-        {
-            ClientMovement handlerClientMovement = OnClientMovement;
-            if (handlerClientMovement != null)
-            {
-                foreach (ClientMovement d in handlerClientMovement.GetInvocationList ())
-                {
-                    try
-                    {
-                        d (avatar);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat (
-                            "[EVENT MANAGER]: Delegate for TriggerOnClientMovement failed - continuing.  {0} {1}",
                             e.ToString (), e.StackTrace);
                     }
                 }

@@ -36,7 +36,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 {
     public class BasicScene : PhysicsScene
     {
-        private List<BasicActor> _actors = new List<BasicActor>();
+        private List<PhysicsActor> _actors = new List<PhysicsActor>();
         private short[] _heightMap;
         private RegionInfo m_region;
 
@@ -60,22 +60,22 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
         }
 
-        public override PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying, uint localID)
+        public override PhysicsCharacter AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying, uint localID)
         {
-            BasicActor act = new BasicActor();
+            BasicCharacterActor act = new BasicCharacterActor();
             act.Position = position;
             act.Flying = isFlying;
             _actors.Add(act);
             return act;
         }
 
-        public override void RemovePrim(PhysicsActor prim)
+        public override void RemovePrim(PhysicsObject prim)
         {
         }
 
-        public override void RemoveAvatar(PhysicsActor actor)
+        public override void RemoveAvatar(PhysicsCharacter actor)
         {
-            BasicActor act = (BasicActor) actor;
+            BasicCharacterActor act = (BasicCharacterActor)actor;
             if (_actors.Contains(act))
             {
                 _actors.Remove(act);
@@ -89,13 +89,13 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         }
 */
 
-        public override PhysicsActor AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
+        public override PhysicsObject AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
                                                   Vector3 size, Quaternion rotation)
         {
             return AddPrimShape(primName, pbs, position, size, rotation, false);
         }
 
-        public override PhysicsActor AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
+        public override PhysicsObject AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
                                                   Vector3 size, Quaternion rotation, bool isPhysical)
         {
             return null;
@@ -110,7 +110,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             float fps = 0;
             for (int i = 0; i < _actors.Count; ++i)
             {
-                BasicActor actor = _actors[i];
+                PhysicsActor actor = _actors[i];
                 Vector3 actorPosition = actor.Position;
                 Vector3 actorVelocity = actor.Velocity;
 

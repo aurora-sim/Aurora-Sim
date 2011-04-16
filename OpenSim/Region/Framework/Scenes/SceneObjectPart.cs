@@ -193,7 +193,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         [XmlIgnore]
-        public PhysicsActor PhysActor
+        public PhysicsObject PhysActor
         {
             get { return m_physActor; }
             set
@@ -570,7 +570,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private int m_passTouches;
 
-        private PhysicsActor m_physActor;
+        private PhysicsObject m_physActor;
         protected Vector3 m_acceleration;
         protected Vector3 m_angularVelocity;
 
@@ -1212,7 +1212,7 @@ namespace OpenSim.Region.Framework.Scenes
             get
             {
                 // If this is a linkset, we don't want the physics engine mucking up our group position here.
-                PhysicsActor actor = PhysActor;
+                PhysicsObject actor = PhysActor;
                 if (actor != null && _parentID == 0)
                 {
                     m_groupPosition = actor.Position;
@@ -1257,7 +1257,7 @@ namespace OpenSim.Region.Framework.Scenes
             get
                 {
                 // We don't want the physics engine mucking up the rotations in a linkset
-                PhysicsActor actor = PhysActor;
+                    PhysicsObject actor = PhysActor;
                 if (_parentID == 0 && (Shape.PCode != 9 || Shape.State == 0) && actor != null)
                     {
                     if (actor.Orientation.X != 0f || actor.Orientation.Y != 0f
@@ -1280,7 +1280,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                PhysicsActor actor = PhysActor;
+                PhysicsObject actor = PhysActor;
                 if (actor != null)
                 {
                     if (actor.IsPhysical)
@@ -1294,7 +1294,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             set
             {
-                PhysicsActor actor = PhysActor;
+                PhysicsObject actor = PhysActor;
                 if (actor != null)
                 {
                     if (actor.IsPhysical)
@@ -1311,7 +1311,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                PhysicsActor actor = PhysActor;
+                PhysicsObject actor = PhysActor;
                 if ((actor != null) && actor.IsPhysical)
                 {
                     m_angularVelocity = actor.RotationalVelocity;
@@ -1342,7 +1342,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
                 m_description = value;
-                PhysicsActor actor = PhysActor;
+                PhysicsObject actor = PhysActor;
                 if (actor != null)
                 {
                     actor.SOPDescription = value;
@@ -1925,7 +1925,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (value.W == 0) //We have an issue here... try to normalize it
                 value.Normalize();
 
-            PhysicsActor actor = PhysActor;
+            PhysicsObject actor = PhysActor;
             if (actor != null)
                 {
                 if (actor.PhysicsActorType != (int)ActorTypes.Prim)  // for now let other times get updates
@@ -1981,7 +1981,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (ParentGroup != null && !ParentGroup.IsDeleted)
                 {
                 ParentGroup.HasGroupChanged = true;
-                PhysicsActor actor = PhysActor;
+                PhysicsObject actor = PhysActor;
                 if (_parentID != 0 && actor != null &&(single || !actor.IsPhysical))
                     {
                     actor.Position = GetWorldPosition();
@@ -2020,7 +2020,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_groupPosition = value;
 
-            PhysicsActor actor = PhysActor;
+            PhysicsObject actor = PhysActor;
 
             if (actor != null)
             {
@@ -5257,7 +5257,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 RemFlag(PrimFlags.Phantom);
 
-                PhysicsActor pa = PhysActor;
+                PhysicsObject pa = PhysActor;
                 if (pa == null)
                 {
                     // It's not phantom anymore. So make sure the physics engine get's knowledge of it
@@ -5328,7 +5328,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     // Remove VolumeDetect in any case. Note, it's safe to call SetVolumeDetect as often as you like
                     // (mumbles, well, at least if you have infinte CPU powers :-))
-                    PhysicsActor pa = this.PhysActor;
+                    PhysicsObject pa = this.PhysActor;
                     if (pa != null)
                     {
                         PhysActor.VolumeDetect = false;

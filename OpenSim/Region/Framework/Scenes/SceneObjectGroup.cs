@@ -2951,7 +2951,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             m_rootPart.UpdateRotation(rot);
 
-            PhysicsActor actor = m_rootPart.PhysActor;
+            PhysicsObject actor = m_rootPart.PhysActor;
             if (actor != null)
             {
                 actor.Orientation = m_rootPart.RotationOffset;
@@ -2975,7 +2975,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             m_rootPart.UpdateRotation(rot);
 
-            PhysicsActor actor = m_rootPart.PhysActor;
+            PhysicsObject actor = m_rootPart.PhysActor;
             if (actor != null)
             {
                 actor.Orientation = m_rootPart.RotationOffset;

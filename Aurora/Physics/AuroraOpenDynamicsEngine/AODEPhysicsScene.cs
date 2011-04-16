@@ -202,7 +202,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private int m_physicsiterations = 10;
         private const float m_SkipFramesAtms = 0.40f; // Drop frames gracefully at a 400 ms lag
-        private readonly PhysicsActor PANull = new NullPhysicsActor();
+        private readonly PhysicsActor PANull = new NullObjectPhysicsActor();
         private float step_time = 0.0f;
         private RegionInfo m_region;
 
@@ -1087,10 +1087,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // appears to be phantom for the world
                 Boolean skipThisContact = false;
 
-                if (p1.VolumeDetect)
+                if (p1.PhysicsActorType == (int)ActorTypes.Prim && ((AuroraODEPrim)p1).VolumeDetect)
                     skipThisContact = true;   // No collision on volume detect prims
 
-                if (p2.VolumeDetect)
+                if (p2.PhysicsActorType == (int)ActorTypes.Prim && ((AuroraODEPrim)p2).VolumeDetect)
                     skipThisContact = true;   // No collision on volume detect prims
 
                 if (curContact.depth < 0f)
@@ -1798,7 +1798,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         #region Add/Remove Entities
 
-        public override PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying, uint localID)
+        public override PhysicsCharacter AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying, uint localID)
         {
             Vector3 pos;
             pos.X = position.X;
@@ -1843,14 +1843,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public override void RemoveAvatar(PhysicsActor actor)
+        public override void RemoveAvatar(PhysicsCharacter actor)
         {
             //m_log.Debug("[PHYSICS]:ODELOCK");
             ((AuroraODECharacter)actor).Destroy();
 
         }
 
-        private PhysicsActor AddPrim(String name, Vector3 position, Vector3 size, Quaternion rotation,
+        private PhysicsObject AddPrim(String name, Vector3 position, Vector3 size, Quaternion rotation,
                                      IMesh mesh, PrimitiveBaseShape pbs, bool isphysical)
         {
 
@@ -1882,16 +1882,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public override PhysicsActor AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
+        public override PhysicsObject AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
                                                   Vector3 size, Quaternion rotation) //To be removed
         {
             return AddPrimShape(primName, pbs, position, size, rotation, false);
         }
 
-        public override PhysicsActor AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
+        public override PhysicsObject AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
                                                   Vector3 size, Quaternion rotation, bool isPhysical)
         {
-            PhysicsActor result;
+            PhysicsObject result;
             IMesh mesh = null;
 
             if (needsMeshing(pbs))
@@ -2166,7 +2166,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return joint;
         }
 
-        private void RemoveAllJointsConnectedToActor(PhysicsActor actor)
+        private void RemoveAllJointsConnectedToActor(PhysicsObject actor)
         {
             //m_log.Debug("RemoveAllJointsConnectedToActor: start");
             if (actor.SOPName != null && joints_connecting_actor.ContainsKey(actor.SOPName) && joints_connecting_actor[actor.SOPName] != null)
@@ -2181,7 +2181,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public override void RemoveAllJointsConnectedToActorThreadLocked(PhysicsActor actor)
+        public override void RemoveAllJointsConnectedToActorThreadLocked(PhysicsObject actor)
         {
             //m_log.Debug("RemoveAllJointsConnectedToActorThreadLocked: start");
             lock (OdeLock)
@@ -2255,7 +2255,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public override void RemovePrim(PhysicsActor prim)
+        public override void RemovePrim(PhysicsObject prim)
         {
             if (prim is AuroraODEPrim)
             {
@@ -3736,7 +3736,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 geom_name_map[RegionTerrain] = "Terrain";
 
-                NullPhysicsActor terrainActor = new NullPhysicsActor ()
+                NullObjectPhysicsActor terrainActor = new NullObjectPhysicsActor()
                 {
                     PhysicsActorType = (int)ActorTypes.Ground
                 };

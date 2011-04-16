@@ -39,7 +39,7 @@ using OpenSim.Region.Physics.Manager;
 
 namespace OpenSim.Region.Physics.BulletDotNETPlugin
 {
-    public class BulletDotNETPrim : PhysicsActor
+    public class BulletDotNETPrim : PhysicsObject
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -330,7 +330,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 m_log.Warn("[PHYSICS]: Too many crossing failures for: " + m_primName);
             }
         }
-        public override void link(PhysicsActor obj)
+        public override void link(PhysicsObject obj)
         {
             m_taintparent = obj;
         }
