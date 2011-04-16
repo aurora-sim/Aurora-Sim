@@ -481,7 +481,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             }
             IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
                 
-            m_log.InfoFormat("[AvatarFactory]: Handle initial appearance send for {0}", agentid);
+            //m_log.InfoFormat("[AvatarFactory]: Handle initial appearance send for {0}", agentid);
 
             //Only set this if we actually have sent the wearables
             appearance.InitialHasWearablesBeenSent = true;
