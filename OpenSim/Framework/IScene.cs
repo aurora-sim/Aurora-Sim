@@ -90,6 +90,7 @@ namespace OpenSim.Framework
         void AddNewClient (IClientAPI client);
         IScenePresence GetScenePresence (UUID uUID);
         List<IScenePresence> GetScenePresences ();
+        int GetScenePresenceCount();
         IScenePresence GetScenePresence (uint localID);
         bool TryGetScenePresence (UUID agentID, out IScenePresence scenePresence);
         bool TryGetAvatarByName (string p, out IScenePresence NewSP);

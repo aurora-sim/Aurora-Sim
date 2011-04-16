@@ -2061,12 +2061,6 @@ namespace OpenSim.Region.Framework.Scenes
                 this,
                 PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity
                 | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity);
-
-            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_scene.RegionInfo.RegionID.ToString (), "Agent Update Count");
-            if (reporter != null)
-            {
-                reporter.AddAgentUpdates (1);
-            }
         }
 
         /// <summary>
@@ -2080,7 +2074,10 @@ namespace OpenSim.Region.Framework.Scenes
 
             IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
             if (reporter != null)
+            {
                 reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
+                reporter.AddAgentUpdates(m_scene.GetScenePresenceCount());
+            }
         }
 
         public void SendCoarseLocations(List<Vector3> coarseLocations, List<UUID> avatarUUIDs)

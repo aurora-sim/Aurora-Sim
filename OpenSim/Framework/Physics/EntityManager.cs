@@ -144,6 +144,11 @@ namespace OpenSim.Framework
             }
         }
 
+        public int GetPresenceCount ()
+        {
+            return m_presenceEntities.Count;
+        }
+
         public IScenePresence[] GetPresences(Vector3 pos, float radius)
         {
             lock (m_presenceEntities)

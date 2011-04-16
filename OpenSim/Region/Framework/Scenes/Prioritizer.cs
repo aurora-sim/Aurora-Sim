@@ -107,41 +107,42 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool DistanceCulling (IScenePresence client, IEntity entity)
         {
+            IScene scene = client.Scene;
             float DD = client.DrawDistance;
             if (DD < 32) //Limit to a small distance
                 DD = 32;
-            if (DD > client.Scene.RegionInfo.RegionSizeX)
+            if (DD > scene.RegionInfo.RegionSizeX)
                 return true; //Its larger than the region, no culling check even necessary
             Vector3 posToCheckFrom = client.AbsolutePosition;
             if (client.IsChildAgent)
             {
                 if (m_cachedXOffset == 0 && m_cachedYOffset == 0) //Not found yet
                 {
-                    IAgentInfoService agentInfoService = client.Scene.RequestModuleInterface<IAgentInfoService> ();
+                    IAgentInfoService agentInfoService = scene.RequestModuleInterface<IAgentInfoService>();
                     if (agentInfoService != null)
                     {
                         UserInfo info = agentInfoService.GetUserInfo (client.UUID.ToString ());
                         if (info != null)
                         {
-                            GridRegion r = client.Scene.GridService.GetRegionByUUID (client.Scene.RegionInfo.ScopeID, 
+                            GridRegion r = scene.GridService.GetRegionByUUID(scene.RegionInfo.ScopeID, 
                                 info.CurrentRegionID);
                             if (r != null)
                             {
-                                m_cachedXOffset = client.Scene.RegionInfo.RegionLocX - r.RegionLocX;
-                                m_cachedYOffset = client.Scene.RegionInfo.RegionLocY - r.RegionLocY; 
+                                m_cachedXOffset = scene.RegionInfo.RegionLocX - r.RegionLocX;
+                                m_cachedYOffset = scene.RegionInfo.RegionLocY - r.RegionLocY; 
                             }
                         }
                     }
                 }
                 //We need to add the offset so that we can check from the right place in child regions
                 if (m_cachedXOffset < 0)
-                    posToCheckFrom.X = client.Scene.RegionInfo.RegionSizeX - (client.Scene.RegionInfo.RegionSizeX + client.AbsolutePosition.X + m_cachedXOffset);
+                    posToCheckFrom.X = scene.RegionInfo.RegionSizeX - (scene.RegionInfo.RegionSizeX + client.AbsolutePosition.X + m_cachedXOffset);
                 if (m_cachedYOffset < 0)
-                    posToCheckFrom.Y = client.Scene.RegionInfo.RegionSizeY - (client.Scene.RegionInfo.RegionSizeY + client.AbsolutePosition.Y + m_cachedYOffset);
-                if (m_cachedXOffset > client.Scene.RegionInfo.RegionSizeX)
-                    posToCheckFrom.X = client.Scene.RegionInfo.RegionSizeX - (client.Scene.RegionInfo.RegionSizeX - (client.AbsolutePosition.X + m_cachedXOffset));
-                if (m_cachedYOffset > client.Scene.RegionInfo.RegionSizeY)
-                    posToCheckFrom.Y = client.Scene.RegionInfo.RegionSizeY - (client.Scene.RegionInfo.RegionSizeY - (client.AbsolutePosition.Y + m_cachedYOffset));
+                    posToCheckFrom.Y = scene.RegionInfo.RegionSizeY - (scene.RegionInfo.RegionSizeY + client.AbsolutePosition.Y + m_cachedYOffset);
+                if (m_cachedXOffset > scene.RegionInfo.RegionSizeX)
+                    posToCheckFrom.X = scene.RegionInfo.RegionSizeX - (scene.RegionInfo.RegionSizeX - (client.AbsolutePosition.X + m_cachedXOffset));
+                if (m_cachedYOffset > scene.RegionInfo.RegionSizeY)
+                    posToCheckFrom.Y = scene.RegionInfo.RegionSizeY - (scene.RegionInfo.RegionSizeY - (client.AbsolutePosition.Y + m_cachedYOffset));
             }
             //If the distance is greater than the clients draw distance, its out of range
             if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition) > 

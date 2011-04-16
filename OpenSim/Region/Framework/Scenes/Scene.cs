@@ -668,6 +668,11 @@ namespace OpenSim.Region.Framework.Scenes
             return new List<IScenePresence> (m_sceneGraph.GetScenePresences ());
         }
 
+        public int GetScenePresenceCount()
+        {
+            return Entities.GetPresenceCount();
+        }
+
         /// <summary>
         /// Get a prim via its local id
         /// </summary>
