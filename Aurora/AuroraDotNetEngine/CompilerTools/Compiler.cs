@@ -96,7 +96,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             SetupApis();
         }
 
-        private void ReadConfig()
+        public void ReadConfig()
         {
             // Get some config
             WriteScriptSourceToDebugFile = m_scriptEngine.Config.GetBoolean("WriteScriptSourceToDebugFile", false);

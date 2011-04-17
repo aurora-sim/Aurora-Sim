@@ -222,6 +222,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ShowWarnings = ScriptConfigSource.GetBoolean("ShowWarnings", ShowWarnings);
             DisplayErrorsOnConsole = ScriptConfigSource.GetBoolean("DisplayErrorsOnConsole", DisplayErrorsOnConsole);
             ChatCompileErrorsToDebugChannel = ScriptConfigSource.GetBoolean("ChatCompileErrorsToDebugChannel", ChatCompileErrorsToDebugChannel);
+
+            if (Compiler != null)
+                Compiler.ReadConfig();
         }
 
         public void PostInitialise()

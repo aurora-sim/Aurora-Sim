@@ -96,48 +96,4 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     }
 
     #endregion
-
-    #region EventPerformanceQueue
-
-    public class EventPerformanceQueue
-    {
-        Queue FirstStartQueue = new Queue(10000);
-        Queue ContinuedQueue = new Queue(10000);
-        public bool GetNext(out object Item)
-        {
-            Item = null;
-            lock (FirstStartQueue)
-            {
-                if (FirstStartQueue.Count != 0)
-                {
-                    Item = FirstStartQueue.Dequeue();
-                    return true;
-                }
-            }
-            lock (ContinuedQueue)
-            {
-                if (ContinuedQueue.Count != 0)
-                {
-                    Item = ContinuedQueue.Dequeue();
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public void Add(object item, EventPriority priority)
-        {
-            if (priority == EventPriority.FirstStart)
-                lock (FirstStartQueue)
-                    FirstStartQueue.Enqueue(item);
-            else if (priority == EventPriority.Suspended)
-                lock (ContinuedQueue)
-                    ContinuedQueue.Enqueue(item);
-            else if (priority == EventPriority.Continued)
-                lock (ContinuedQueue)
-                    ContinuedQueue.Enqueue(item);
-        }
-    }
-
-    #endregion
 }
