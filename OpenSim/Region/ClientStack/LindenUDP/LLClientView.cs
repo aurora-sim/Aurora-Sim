@@ -1109,7 +1109,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLandPacket(map, x, y, type, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
 
-                OutPacket(layerpack, ThrottleOutPacketType.Task);
+                OutPacket(layerpack, ThrottleOutPacketType.Land);
             }
             catch (Exception e)
             {
