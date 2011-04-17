@@ -107,7 +107,6 @@ namespace OpenSim.Region.Framework.Scenes
     {
         public DateTime timeFirstChanged;
         public DateTime timeLastChanged;
-        public bool m_forceBackupNow = false;
         public bool m_isLoaded = false;
         private Vector3 m_lastSignificantPosition = Vector3.Zero;
         public Vector3 LastSignificantPosition
@@ -541,7 +540,6 @@ namespace OpenSim.Region.Framework.Scenes
         public SceneObjectGroup(IScene scene)
         {
             m_scene = scene;
-            m_forceBackupNow = true;
             m_isLoaded = true;
         }
 

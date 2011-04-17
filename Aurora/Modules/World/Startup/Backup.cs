@@ -645,13 +645,6 @@ namespace Aurora.Modules
                     return false;
                 }
 
-                //Forced to backup NOW
-                if (grp.m_forceBackupNow)
-                {
-                    //Revert it
-                    grp.m_forceBackupNow = false;
-                    return true;
-                }
                 //If we are shutting down, no more additions should occur
                 // NOTE: When we call backup on shutdown, we do a force backup, which ignores this switch, which is why we can safely block this
                 if (m_scene.ShuttingDown)
@@ -669,7 +662,8 @@ namespace Aurora.Modules
                     if ((currentTime - grp.timeFirstChanged).TotalMinutes > m_persistAfter)
                         return true;
                     //Selected prims are probably being changed, add them back for tte next backup
-                    shouldReaddToLoopNow = true;
+                    shouldReaddToLoop = true;
+                    shouldReaddToLoopNow = false;
                     return false;
                 }
                 //Check whether it is between the Min Time and Max Time to backup
