@@ -2128,7 +2128,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             replytask.InventoryData.TaskID = taskID;
             replytask.InventoryData.Serial = serial;
             replytask.InventoryData.Filename = fileName;
-            OutPacket(replytask, ThrottleOutPacketType.Asset);
+            OutPacket(replytask, ThrottleOutPacketType.Transfer);
         }
 
         public void SendXferPacket(ulong xferID, uint packet, byte[] data)
@@ -2137,7 +2137,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             sendXfer.XferID.ID = xferID;
             sendXfer.XferID.Packet = packet;
             sendXfer.DataPacket.Data = data;
-            OutPacket(sendXfer, ThrottleOutPacketType.Asset);
+            OutPacket(sendXfer, ThrottleOutPacketType.Transfer);
         }
 
         public void SendEconomyData(float EnergyEfficiency, int ObjectCapacity, int ObjectCount, int PriceEnergyUnit,
@@ -2589,7 +2589,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             Transfer.TransferInfo.Size = 0;
             Transfer.TransferInfo.TransferID = req.TransferRequestID;
             Transfer.Header.Zerocoded = true;
-            OutPacket(Transfer, ThrottleOutPacketType.Asset);
+            OutPacket(Transfer, ThrottleOutPacketType.Transfer);
         }
 
         public void SendAsset(AssetRequestToClient req)
@@ -2623,7 +2623,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             Transfer.TransferInfo.Size = req.AssetInf.Data.Length;
             Transfer.TransferInfo.TransferID = req.TransferRequestID;
             Transfer.Header.Zerocoded = true;
-            OutPacket(Transfer, ThrottleOutPacketType.Asset);
+            OutPacket(Transfer, ThrottleOutPacketType.Transfer);
 
             if (req.NumPackets == 1)
             {
@@ -2634,7 +2634,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 TransferPacket.TransferData.Data = req.AssetInf.Data;
                 TransferPacket.TransferData.Status = (int)TransferPacketStatus.Done;
                 TransferPacket.Header.Zerocoded = true;
-                OutPacket(TransferPacket, ThrottleOutPacketType.Asset);
+                OutPacket(TransferPacket, ThrottleOutPacketType.Transfer);
             }
             else
             {
@@ -2667,7 +2667,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         TransferPacket.TransferData.Status = (int)TransferPacketStatus.MorePacketsToCome;
                     }
                     TransferPacket.Header.Zerocoded = true;
-                    OutPacket(TransferPacket, ThrottleOutPacketType.Asset);
+                    OutPacket(TransferPacket, ThrottleOutPacketType.Transfer);
 
                     packetNumber++;
                 }
@@ -3830,17 +3830,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         #endregion Primitive Packet/Data Sending Methods
 
-        void HandleQueueEmpty(ThrottleOutPacketTypeFlags categories)
+        void HandleQueueEmpty()
         {
-            if ((categories & ThrottleOutPacketTypeFlags.Task) != 0)
-            {
-                DequeueUpdates(m_udpServer.PrimUpdatesPerCallback);
-            }
-
-            if ((categories & ThrottleOutPacketTypeFlags.Texture) != 0)
-            {
-                ProcessTextureRequests();
-            }
+            DequeueUpdates(m_udpServer.PrimUpdatesPerCallback);
+            ProcessTextureRequests();
         }
 
         void ProcessTextureRequests()
@@ -3868,7 +3861,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             newPack.XferID.FilePath = FilePath;
             newPack.XferID.Filename = FileName;
             newPack.Header.Zerocoded = true;
-            OutPacket(newPack, ThrottleOutPacketType.Asset);
+            OutPacket(newPack, ThrottleOutPacketType.Transfer);
         }
 
         public void SendConfirmXfer(ulong xferID, uint PacketID)
@@ -3877,7 +3870,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             newPack.XferID.ID = xferID;
             newPack.XferID.Packet = PacketID;
             newPack.Header.Zerocoded = true;
-            OutPacket(newPack, ThrottleOutPacketType.Asset);
+            OutPacket(newPack, ThrottleOutPacketType.Transfer);
         }
 
         public void SendInitiateDownload(string simFileName, string clientFileName)
@@ -3886,7 +3879,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             newPack.AgentData.AgentID = AgentId;
             newPack.FileData.SimFilename = Utils.StringToBytes(simFileName);
             newPack.FileData.ViewerFilename = Utils.StringToBytes(clientFileName);
-            OutPacket(newPack, ThrottleOutPacketType.Asset);
+            OutPacket(newPack, ThrottleOutPacketType.Transfer);
         }
 
         public void SendImageFirstPart(
@@ -7806,7 +7799,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             AbortXferPacket xferItem = (AbortXferPacket)PacketPool.Instance.GetPacket(PacketType.AbortXfer);
             xferItem.XferID.ID = xferID;
-            OutPacket(xferItem, ThrottleOutPacketType.Asset);
+            OutPacket(xferItem, ThrottleOutPacketType.Transfer);
         }
 
         private bool HandleCreateInventoryFolder(IClientAPI sender, Packet Pack)

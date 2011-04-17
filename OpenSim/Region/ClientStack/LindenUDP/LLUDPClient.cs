@@ -54,8 +54,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
     /// Fired when the queue for one or more packet categories is empty. This 
     /// event can be hooked to put more data on the empty queues
     /// </summary>
-    /// <param name="category">Categories of the packet queues that are empty</param>
-    public delegate void QueueEmpty(ThrottleOutPacketTypeFlags categories);
+    public delegate void QueueEmpty();
 
     #endregion Delegates
 
@@ -141,6 +140,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>Percentage of the task throttle category that is allocated to avatar and prim
         /// state updates</summary>
         const float STATE_TASK_PERCENTAGE = 0.3f;
+        const float TRANSFER_ASSET_PERCENTAGE = 0.5f;
         const float AVATAR_INFO_STATE_PERCENTAGE = 0.2f;
         const int MAXPERCLIENTRATE = 625000;
         const int MINPERCLIENTRATE = 6250;
@@ -283,6 +283,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             MapCatsToPriority[(int)ThrottleOutPacketType.Task] = 4;
             MapCatsToPriority[(int)ThrottleOutPacketType.Texture] = 2;
             MapCatsToPriority[(int)ThrottleOutPacketType.Asset] = 3;
+            MapCatsToPriority[(int)ThrottleOutPacketType.Transfer] = 5;
             MapCatsToPriority[(int)ThrottleOutPacketType.State] = 5;
             MapCatsToPriority[(int)ThrottleOutPacketType.AvatarInfo] = 6;
             MapCatsToPriority[(int)ThrottleOutPacketType.OutBand] = 7;
@@ -387,6 +388,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             int state = (int)(task * STATE_TASK_PERCENTAGE);
             task -= state;
 
+            int transfer = (int)(asset * TRANSFER_ASSET_PERCENTAGE);
+            asset -= transfer;
+
             // avatar info cames out from state
             int avatarinfo = (int)((float)state * AVATAR_INFO_STATE_PERCENTAGE);
             state -= avatarinfo;
@@ -447,6 +451,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             bucket.DripRate = asset;
             bucket.MaxBurst = asset;
 
+            bucket = m_throttleCategories[(int)ThrottleOutPacketType.Transfer];
+            bucket.DripRate = transfer;
+            bucket.MaxBurst = transfer;
+
             bucket = m_throttleCategories[(int)ThrottleOutPacketType.Task];
             /* Only use task, not task and other parts
                         bucket.DripRate = task + state + avatarinfo;
@@ -492,7 +500,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                                             m_throttleCategories[(int)ThrottleOutPacketType.State].DripRate +
                                                             m_throttleCategories[(int)ThrottleOutPacketType.AvatarInfo].DripRate), 0, data, i, 4); i += 4;
                 Buffer.BlockCopy(Utils.FloatToBytes((float)m_throttleCategories[(int)ThrottleOutPacketType.Texture].DripRate), 0, data, i, 4); i += 4;
-                Buffer.BlockCopy(Utils.FloatToBytes((float)m_throttleCategories[(int)ThrottleOutPacketType.Asset].DripRate), 0, data, i, 4); i += 4;
+                Buffer.BlockCopy(Utils.FloatToBytes((float)m_throttleCategories[(int)ThrottleOutPacketType.Asset].DripRate +
+                                                            m_throttleCategories[(int)ThrottleOutPacketType.Transfer].DripRate), 0, data, i, 4); i += 4;
 
                 m_packedThrottles = data;
             }
@@ -537,8 +546,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             OutgoingPacket packet;
             bool packetSent = false;
-            ThrottleOutPacketTypeFlags emptyCategories = 0;
-
+            
             for (int i = 0; i < MaxNPacks; i++)
             {
                 if (m_nextOutPackets != null)
@@ -595,10 +603,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if (m_outbox.count < 100 || m_lastEmptyUpdates > 10)
             {
-                MainConsole.Instance.Output(m_outbox.count.ToString(), log4net.Core.Level.Alert);
+                if(m_outbox.count > 100)
+                    MainConsole.Instance.Output(m_outbox.count.ToString(), log4net.Core.Level.Alert);
                 m_lastEmptyUpdates = 0;
-                emptyCategories = (ThrottleOutPacketTypeFlags)0xffff;
-                BeginFireQueueEmpty (emptyCategories);
+                BeginFireQueueEmpty ();
             }
             else
                 m_lastEmptyUpdates++;
@@ -798,14 +806,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// </summary>
         /// <param name="throttleIndex">Throttle category to fire the callback
         /// for</param>
-        private void BeginFireQueueEmpty(ThrottleOutPacketTypeFlags categories)
+        private void BeginFireQueueEmpty()
         {
             if (m_nextOnQueueEmpty != 0 && (Environment.TickCount & Int32.MaxValue) >= m_nextOnQueueEmpty)
             {
                 // Use a value of 0 to signal that FireQueueEmpty is running
                 m_nextOnQueueEmpty = 0;
                 // Asynchronously run the callback
-                Util.FireAndForget(FireQueueEmpty, categories);
+                Util.FireAndForget(FireQueueEmpty);
             }
         }
 
@@ -820,70 +828,19 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             const int MIN_CALLBACK_MS = 30;
 
-            ThrottleOutPacketTypeFlags categories = (ThrottleOutPacketTypeFlags)o;
             QueueEmpty callback = OnQueueEmpty;
             
             int start = Environment.TickCount & Int32.MaxValue;
 
             if (callback != null)
             {
-                try { callback(categories); }
-                catch (Exception e) { m_log.Error("[LLUDPCLIENT]: OnQueueEmpty(" + categories + ") threw an exception: " + e.Message, e); }
+                try { callback(); }
+                catch (Exception e) { m_log.Error("[LLUDPCLIENT]: OnQueueEmpty() threw an exception: " + e.Message, e); }
             }
 
             m_nextOnQueueEmpty = start + MIN_CALLBACK_MS;
             if (m_nextOnQueueEmpty == 0)
                 m_nextOnQueueEmpty = 1;
-        }
-
-        /// <summary>
-        /// Converts a <seealso cref="ThrottleOutPacketType"/> integer to a
-        /// flag value
-        /// </summary>
-        /// <param name="i">Throttle category to convert</param>
-        /// <returns>Flag representation of the throttle category</returns>
-        private static ThrottleOutPacketTypeFlags CategoryToFlag(int i)
-        {
-            ThrottleOutPacketType category = (ThrottleOutPacketType)i;
-
-            /*
-             * Land = 1,
-        /// <summary>Wind data</summary>
-        Wind = 2,
-        /// <summary>Cloud data</summary>
-        Cloud = 3,
-        /// <summary>Any packets that do not fit into the other throttles</summary>
-        Task = 4,
-        /// <summary>Texture assets</summary>
-        Texture = 5,
-        /// <summary>Non-texture assets</summary>
-        Asset = 6,
-        /// <summary>Avatar and primitive data</summary>
-        /// <remarks>This is a sub-category of Task</remarks>
-        State = 7,
-             */
-
-            switch (category)
-            {
-                case ThrottleOutPacketType.Land:
-                    return ThrottleOutPacketTypeFlags.Land;
-                case ThrottleOutPacketType.Wind:
-                    return ThrottleOutPacketTypeFlags.Wind;
-                case ThrottleOutPacketType.Cloud:
-                    return ThrottleOutPacketTypeFlags.Cloud;
-                case ThrottleOutPacketType.Task:
-                    return ThrottleOutPacketTypeFlags.Task;
-                case ThrottleOutPacketType.Texture:
-                    return ThrottleOutPacketTypeFlags.Texture;
-                case ThrottleOutPacketType.Asset:
-                    return ThrottleOutPacketTypeFlags.Asset;
-                case ThrottleOutPacketType.State:
-                    return ThrottleOutPacketTypeFlags.State;
-                case ThrottleOutPacketType.AvatarInfo:
-                    return ThrottleOutPacketTypeFlags.AvatarInfo;
-                default:
-                    return 0;
-            }
         }
     }
 }

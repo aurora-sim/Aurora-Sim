@@ -62,23 +62,10 @@ namespace OpenSim.Framework
         ///This is a sub-category of Task</remarks>
         AvatarInfo = 8,
         OutBand = 9,
+        Transfer = 10, //This is for when the client asks for a transfer, such as an asset or a inventory list
         /// <summary>The number of packet categories to throttle on.
         /// If a throttle category is added or removed, this number must also change</summary>
-        Count = 10, // this must be the LAST one 
-        Immediate = 11, // This one is outside of Count and does NOT have a queue, and all packets will be sent immediately
-    }
-
-    [Flags]
-    public enum ThrottleOutPacketTypeFlags
-    {
-        Land = 1 << 0,
-        Wind = 1 << 1,
-        Cloud = 1 << 2,
-        Task = 1 << 3,
-        Texture = 1 << 4,
-        Asset = 1 << 5,
-        State = 1 << 6,
-        AvatarInfo = 1 << 7,
-        OutBand = 1 << 8
+        Count = 11, // this must be the LAST one 
+        Immediate = 12, // This one is outside of Count and does NOT have a queue, and all packets will be sent immediately
     }
 }
