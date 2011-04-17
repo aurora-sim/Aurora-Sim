@@ -304,24 +304,36 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 // Go through all
                 foreach (AppDomainStructure ads in appDomains)
                 {
-                    // Don't process current AppDomain
-                    if (ads.CurrentAppDomain != currentAD.CurrentAppDomain)
-                    {
-                        // Not current AppDomain
+                    // Not current AppDomain
                         // Is number of unloaded bigger or equal to number of loaded?
-                        if (ads.ScriptsLoaded <= ads.ScriptsWaitingUnload)
-                        {
-                            // Remove from internal list
-                            appDomains.Remove(ads);
+                    if (ads.ScriptsLoaded <= ads.ScriptsWaitingUnload)
+                    {
+                        // Remove from internal list
+                        appDomains.Remove(ads);
 
-                            try
-                            {
-                                // Unload
-                                AppDomain.Unload(ads.CurrentAppDomain);
-                            }
-                            catch { }
-                            ads.CurrentAppDomain = null;
+                        try
+                        {
+                            // Unload
+                            AppDomain.Unload(ads.CurrentAppDomain);
                         }
+                        catch { }
+                        if (ads.CurrentAppDomain == currentAD.CurrentAppDomain)
+                            currentAD = null;
+                        ads.CurrentAppDomain = null;
+                    }
+                }
+                if (currentAD != null)
+                {
+                    if (currentAD.ScriptsLoaded <= currentAD.ScriptsWaitingUnload)
+                    {
+                        try
+                        {
+                            // Unload
+                            AppDomain.Unload(currentAD.CurrentAppDomain);
+                        }
+                        catch { }
+                        currentAD.CurrentAppDomain = null;
+                        currentAD = null;
                     }
                 }
             }
@@ -351,17 +363,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     // Yes - increase
                     currentAD.ScriptsWaitingUnload++;
-                    return;
                 }
-
-                // Lopp through all AppDomains
-                foreach (AppDomainStructure ads in appDomains)
+                else
                 {
-                    if (ads.CurrentAppDomain == ad)
+                    // Lopp through all AppDomains
+                    foreach (AppDomainStructure ads in appDomains)
                     {
-                        // Found it
-                        ads.ScriptsWaitingUnload++;
-                        break;
+                        if (ads.CurrentAppDomain == ad)
+                        {
+                            // Found it
+                            ads.ScriptsWaitingUnload++;
+                            break;
+                        }
                     }
                 }
             }

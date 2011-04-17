@@ -414,6 +414,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     //Reset this every time so that we don't reuse any compiled scripts
                     ScriptProtection.Reset (false);
                 }
+
                 ScriptProtection.Reset (true);
                 //Delete all assemblies
                 Compiler.RecreateDirectory ();
