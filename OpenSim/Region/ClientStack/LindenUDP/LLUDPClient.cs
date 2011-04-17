@@ -227,6 +227,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private int m_defaultRTO = 1000;
         private int m_maxRTO = 60000;
+        private int m_lastEmptyUpdates = 0;
 
 //        private int m_lastthrottleCategoryChecked = 0;
 
@@ -576,23 +577,21 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             this.PacketsSent++;
                         }
                         else
-                        {
                             m_nextOutPackets = packet;
-                        }
                     }
                     else
-                    {
-                        emptyCategories = (ThrottleOutPacketTypeFlags)0xffff;
                         break;
-                    }
                 }
             }
 
-            if (m_outbox.count < 100)
+            if (m_outbox.count < 100 || m_lastEmptyUpdates > 40)
             {
+                m_lastEmptyUpdates = 0;
                 emptyCategories = (ThrottleOutPacketTypeFlags)0xffff;
                 BeginFireQueueEmpty (emptyCategories);
             }
+            else
+                m_lastEmptyUpdates++;
 
             //m_log.Info("[LLUDPCLIENT]: Queues: " + queueDebugOutput); // Serious debug business
             return packetSent;
