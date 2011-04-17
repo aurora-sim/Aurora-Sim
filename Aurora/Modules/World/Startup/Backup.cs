@@ -120,7 +120,7 @@ namespace Aurora.Modules
             protected Dictionary<UUID, SceneObjectGroup> m_secondaryBackupTaintedPrims = new Dictionary<UUID, SceneObjectGroup>();
             protected DateTime runSecondaryBackup = DateTime.Now;
             protected volatile bool m_backingup = false;
-            protected int m_update_backup = 50; //Trigger backup
+            protected int m_update_backup = 5000; //Trigger backup
             protected DateTime m_lastRanBackupInHeartbeat = DateTime.MinValue;
             protected bool m_LoadingPrims = false;
             protected bool m_haveLoadedPrims = false;

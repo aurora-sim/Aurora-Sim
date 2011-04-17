@@ -603,8 +603,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if (m_outbox.count < 100 || m_lastEmptyUpdates > 10)
             {
-                if(m_outbox.count > 100)
-                    MainConsole.Instance.Output(m_outbox.count.ToString(), log4net.Core.Level.Alert);
+                //if(m_outbox.count > 100)
+                //    MainConsole.Instance.Output(m_outbox.count.ToString(), log4net.Core.Level.Alert);
                 m_lastEmptyUpdates = 0;
                 BeginFireQueueEmpty ();
             }

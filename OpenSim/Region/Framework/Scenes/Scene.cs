@@ -428,6 +428,7 @@ namespace OpenSim.Region.Framework.Scenes
             IPhysicsFrameMonitor physicsFrameMonitor = (IPhysicsFrameMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Total Physics Frame Time");
             ITimeMonitor physicsSyncFrameMonitor = (ITimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Physics Sync Frame Time");
             ITimeMonitor physicsFrameTimeMonitor = (ITimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Physics Update Frame Time");
+            IPhysicsMonitor monitor = RequestModuleInterface<IPhysicsMonitor>();
             while (true)
             {
                 if (!ShouldRunHeartbeat) //If we arn't supposed to be running, kill ourselves
@@ -494,7 +495,6 @@ namespace OpenSim.Region.Framework.Scenes
                     physicsFrameMonitor.AddFPS(1);
                     physicsSyncFrameMonitor.AddTime(MonitorPhysicsSyncTime);
 
-                    IPhysicsMonitor monitor = RequestModuleInterface<IPhysicsMonitor>();
                     if (monitor != null)
                         monitor.AddPhysicsStats(RegionInfo.RegionID, PhysicsScene);
 
