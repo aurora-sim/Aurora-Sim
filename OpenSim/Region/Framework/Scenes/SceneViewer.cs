@@ -114,6 +114,11 @@ namespace OpenSim.Region.Framework.Scenes
                 //Don't do this immediately
                 //SignificantClientMovement (m_presence.ControllingClient);
             }
+            else if (FunctionName == "SignficantCameraMovement")
+            {
+                //Camera chagned, do a cull check
+                SignificantClientMovement(m_presence.ControllingClient);
+            }
             return null;
         }
 
@@ -195,6 +200,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="remote_client"></param>
         private void SignificantClientMovement (IClientAPI remote_client)
         {
+            if (Culler == null)
+                return;
+
             if (!Culler.UseCulling)
                 return;
 
@@ -208,7 +216,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_presence.DrawDistance = 32; //Force give them a draw distance
             }
 
-            if (!m_presence.IsChildAgent || (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor))
+            if (!m_presence.IsChildAgent || m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor)
             {
                 Vector3 pos = m_presence.CameraPosition;
                 float distsq = Vector3.DistanceSquared (pos, m_lastUpdatePos);
