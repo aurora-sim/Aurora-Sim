@@ -360,11 +360,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             int endY = (((int)(presence.AbsolutePosition.Y + presence.DrawDistance)) / Constants.TerrainPatchSize) + 1;
             endY = Math.Max (endY, 0);
             endY = Math.Min (endY, m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize);
-            for (int x = startX; x <
-                    endX; x++) 
+            for (int x = startX; x < endX; x++) 
             {
-                for (int y = startY; y <
-                    endY; y++) 
+                for (int y = startY; y < endY; y++) 
                 {
                     if(x < 0 || y < 0 || x >= m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize ||
                         y >= m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize)

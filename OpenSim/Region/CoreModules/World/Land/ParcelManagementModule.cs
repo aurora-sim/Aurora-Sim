@@ -96,6 +96,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// </value>
         private int[,] m_landIDList;
         private bool UseDwell = true;
+        private List<UUID> m_hasSentParcelOverLay = new List<UUID>();
 
         /// <value>
         /// Land objects keyed by local id
@@ -460,14 +461,10 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (UseDwell)
                 UseDwell = !ES.BlockDwell;
 
+            m_hasSentParcelOverLay.Remove(client.AgentId);
             IEntity presenceEntity;
             if (m_scene.Entities.TryGetValue (client.AgentId, out presenceEntity) && presenceEntity is IScenePresence)
-            {
-                Util.FireAndForget(delegate(object o)
-                {
-                    SendParcelOverlay(client);
-                });
-            }
+                SendParcelOverlay(client);
         }
 
         private void OnClosingClient(IClientAPI client)
@@ -493,6 +490,8 @@ namespace OpenSim.Region.CoreModules.World.Land
             client.OnParcelDisableObjectsRequest -= DisableObjectsInParcel;
             client.OnParcelSetOtherCleanTime -= SetParcelOtherCleanTime;
             client.OnParcelBuy -= ProcessParcelBuy;
+
+            m_hasSentParcelOverLay.Remove(client.AgentId);
         }
 
         public void PostInitialise()
@@ -1299,6 +1298,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             UpdateLandObject(startLandObject.LandData.LocalID, startLandObject.LandData);
             result.SendLandUpdateToAvatarsOverMe();
             //Update the parcel overlay for ALL clients
+            m_hasSentParcelOverLay.Clear(); //Clear everyone out
             m_scene.ForEachClient(SendParcelOverlay);
         }
 
@@ -1402,91 +1402,98 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// <param name="remote_client">The object representing the client</param>
         public void SendParcelOverlay(IClientAPI remote_client)
         {
-            const int LAND_BLOCKS_PER_PACKET = 1024;
+            if (m_hasSentParcelOverLay.Contains(remote_client.AgentId))
+                return; //Already sent
+            m_hasSentParcelOverLay.Add(remote_client.AgentId);
 
-            byte[] byteArray = new byte[LAND_BLOCKS_PER_PACKET];
-            int byteArrayCount = 0;
-            int sequenceID = 0;
-            for (int y = 0; y < (ParcelManagementModule.LAND_OVERLAY_CHUNKS * m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize); y++)
+            Util.FireAndForget(delegate(object o)
             {
-                for (int x = 0; x < (ParcelManagementModule.LAND_OVERLAY_CHUNKS * m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize); x++)
+                const int LAND_BLOCKS_PER_PACKET = 1024;
+
+                byte[] byteArray = new byte[LAND_BLOCKS_PER_PACKET];
+                int byteArrayCount = 0;
+                int sequenceID = 0;
+                for (int y = 0; y < (ParcelManagementModule.LAND_OVERLAY_CHUNKS * m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize); y++)
                 {
-                    byte tempByte = 0; //This represents the byte for the current 4x4
-
-                    ILandObject currentParcelBlock = GetLandObject(x * 4, y * 4);
-
-                    if (currentParcelBlock != null)
+                    for (int x = 0; x < (ParcelManagementModule.LAND_OVERLAY_CHUNKS * m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize); x++)
                     {
-                        if (currentParcelBlock.LandData.OwnerID == remote_client.AgentId)
-                        {
-                            //Owner Flag
-                            tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_TYPE_OWNED_BY_REQUESTER);
-                        }
-                        else if (currentParcelBlock.LandData.SalePrice > 0 &&
-                                 (currentParcelBlock.LandData.AuthBuyerID == UUID.Zero ||
-                                  currentParcelBlock.LandData.AuthBuyerID == remote_client.AgentId))
-                        {
-                            //Sale Flag
-                            tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_TYPE_IS_FOR_SALE);
-                        }
-                        else if (currentParcelBlock.LandData.OwnerID == UUID.Zero)
-                        {
-                            //Public Flag
-                            tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_TYPE_PUBLIC);
-                        }
-                        else if (currentParcelBlock.LandData.GroupID != UUID.Zero)
-                        {
-                            tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_TYPE_OWNED_BY_GROUP);
-                        }
-                        else
-                        {
-                            //Other Flag
-                            tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_TYPE_OWNED_BY_OTHER);
-                        }
+                        byte tempByte = 0; //This represents the byte for the current 4x4
 
-                        //Now for border control
+                        ILandObject currentParcelBlock = GetLandObject(x * 4, y * 4);
 
-                        ILandObject westParcel = null;
-                        ILandObject southParcel = null;
-                        if (x > 0)
+                        if (currentParcelBlock != null)
                         {
-                            westParcel = GetLandObject((x - 1) * 4, y * 4);
-                        }
-                        if (y > 0)
-                        {
-                            southParcel = GetLandObject(x * 4, (y - 1) * 4);
-                        }
+                            if (currentParcelBlock.LandData.OwnerID == remote_client.AgentId)
+                            {
+                                //Owner Flag
+                                tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_TYPE_OWNED_BY_REQUESTER);
+                            }
+                            else if (currentParcelBlock.LandData.SalePrice > 0 &&
+                                     (currentParcelBlock.LandData.AuthBuyerID == UUID.Zero ||
+                                      currentParcelBlock.LandData.AuthBuyerID == remote_client.AgentId))
+                            {
+                                //Sale Flag
+                                tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_TYPE_IS_FOR_SALE);
+                            }
+                            else if (currentParcelBlock.LandData.OwnerID == UUID.Zero)
+                            {
+                                //Public Flag
+                                tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_TYPE_PUBLIC);
+                            }
+                            else if (currentParcelBlock.LandData.GroupID != UUID.Zero)
+                            {
+                                tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_TYPE_OWNED_BY_GROUP);
+                            }
+                            else
+                            {
+                                //Other Flag
+                                tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_TYPE_OWNED_BY_OTHER);
+                            }
 
-                        if (x == 0)
-                        {
-                            tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_FLAG_PROPERTY_BORDER_WEST);
-                        }
-                        else if (westParcel != null && westParcel != currentParcelBlock)
-                        {
-                            tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_FLAG_PROPERTY_BORDER_WEST);
-                        }
+                            //Now for border control
 
-                        if (y == 0)
-                        {
-                            tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_FLAG_PROPERTY_BORDER_SOUTH);
-                        }
-                        else if (southParcel != null && southParcel != currentParcelBlock)
-                        {
-                            tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_FLAG_PROPERTY_BORDER_SOUTH);
-                        }
+                            ILandObject westParcel = null;
+                            ILandObject southParcel = null;
+                            if (x > 0)
+                            {
+                                westParcel = GetLandObject((x - 1) * 4, y * 4);
+                            }
+                            if (y > 0)
+                            {
+                                southParcel = GetLandObject(x * 4, (y - 1) * 4);
+                            }
 
-                        byteArray[byteArrayCount] = tempByte;
-                        byteArrayCount++;
-                        if (byteArrayCount >= LAND_BLOCKS_PER_PACKET)
-                        {
-                            remote_client.SendLandParcelOverlay(byteArray, sequenceID);
-                            byteArrayCount = 0;
-                            sequenceID++;
-                            byteArray = new byte[LAND_BLOCKS_PER_PACKET];
+                            if (x == 0)
+                            {
+                                tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_FLAG_PROPERTY_BORDER_WEST);
+                            }
+                            else if (westParcel != null && westParcel != currentParcelBlock)
+                            {
+                                tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_FLAG_PROPERTY_BORDER_WEST);
+                            }
+
+                            if (y == 0)
+                            {
+                                tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_FLAG_PROPERTY_BORDER_SOUTH);
+                            }
+                            else if (southParcel != null && southParcel != currentParcelBlock)
+                            {
+                                tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_FLAG_PROPERTY_BORDER_SOUTH);
+                            }
+
+                            byteArray[byteArrayCount] = tempByte;
+                            byteArrayCount++;
+                            if (byteArrayCount >= LAND_BLOCKS_PER_PACKET)
+                            {
+                                remote_client.SendLandParcelOverlay(byteArray, sequenceID);
+                                byteArrayCount = 0;
+                                sequenceID++;
+                                byteArray = new byte[LAND_BLOCKS_PER_PACKET];
+                            }
                         }
                     }
                 }
-            }
+            });
         }
 
         public void ClientOnParcelPropertiesRequest(int start_x, int start_y, int end_x, int end_y, int sequence_id,
@@ -1582,6 +1589,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     land.LandData.AuthBuyerID = UUID.Zero;
                     land.LandData.Flags &= ~(uint)(ParcelFlags.ForSale | ParcelFlags.ForSaleObjects | ParcelFlags.SellParcelObjects | ParcelFlags.ShowDirectory | ParcelFlags.AllowDeedToGroup | ParcelFlags.ContributeWithDeed);
 
+                    m_hasSentParcelOverLay.Clear(); //Clear everyone out
                     m_scene.ForEachClient(SendParcelOverlay);
                     land.SendLandUpdateToClient(true, remote_client);
                     UpdateLandObject(land.LandData.LocalID, land.LandData);
@@ -1604,6 +1612,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     land.LandData.SalePrice = 0;
                     land.LandData.AuthBuyerID = UUID.Zero;
                     land.LandData.Flags &= ~(uint)(ParcelFlags.ForSale | ParcelFlags.ForSaleObjects | ParcelFlags.SellParcelObjects | ParcelFlags.ShowDirectory | ParcelFlags.AllowDeedToGroup | ParcelFlags.ContributeWithDeed);
+                    m_hasSentParcelOverLay.Clear(); //Clear everyone out
                     m_scene.ForEachClient(SendParcelOverlay);
                     land.SendLandUpdateToClient(true, remote_client);
                     UpdateLandObject(land.LandData.LocalID, land.LandData);
@@ -1629,6 +1638,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     land.LandData.Flags &= ~(uint)(ParcelFlags.ForSale | ParcelFlags.ForSaleObjects | ParcelFlags.SellParcelObjects | ParcelFlags.ShowDirectory | ParcelFlags.AllowDeedToGroup | ParcelFlags.ContributeWithDeed);
 
                     land.SendLandUpdateToClient(true, remote_client);
+                    m_hasSentParcelOverLay.Clear(); //Clear everyone out
                     m_scene.ForEachClient(SendParcelOverlay);
                     UpdateLandObject(land.LandData.LocalID, land.LandData);
                 }
@@ -1699,6 +1709,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 land.DeedToGroup(groupID);
 
                 land.SendLandUpdateToClient(true, remote_client);
+                m_hasSentParcelOverLay.Clear(); //Clear everyone out
                 m_scene.ForEachClient(SendParcelOverlay);
                 UpdateLandObject(land.LandData.LocalID, land.LandData);
             }

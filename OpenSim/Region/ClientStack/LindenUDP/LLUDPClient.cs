@@ -552,6 +552,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         packetSent = true;
                         this.PacketsSent++;
                     }
+                    else
+                    {
+                        int prio = MapCatsToPriority[(int)nextPacket.Category];
+                        prio++;
+                        if (prio > MapCatsToPriority.Length)
+                            prio--;
+                        m_outbox.Enqueue(prio, nextPacket);
+                        m_nextOutPackets = null;
+                    }
                 }
                 else
                 {
@@ -584,8 +593,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
             }
 
-            if (m_outbox.count < 100 || m_lastEmptyUpdates > 40)
+            if (m_outbox.count < 100 || m_lastEmptyUpdates > 10)
             {
+                MainConsole.Instance.Output(m_outbox.count.ToString(), log4net.Core.Level.Alert);
                 m_lastEmptyUpdates = 0;
                 emptyCategories = (ThrottleOutPacketTypeFlags)0xffff;
                 BeginFireQueueEmpty (emptyCategories);
