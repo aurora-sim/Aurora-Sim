@@ -209,7 +209,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
     {
         private Vector3 _position;
         private Vector3 _velocity;
-        private Vector3 _acceleration;
         private Vector3 _size;
         private Vector3 m_rotationalVelocity;
         private bool flying;
@@ -354,7 +353,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override Vector3 Acceleration
         {
-            get { return _acceleration; }
+            get { return Vector3.Zero; }
         }
 
         public override void AddForce(Vector3 force, bool pushforce)

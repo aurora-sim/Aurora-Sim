@@ -811,16 +811,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 lock (contacts)
                 {
-                    /*if (m_EnableAutoConfig)
-                    {
-                        if (Math.Abs((m_timeDilation * contactsPerCollision) - contacts.Length) > 5)
-                        {
-                            contactsPerCollision = (int)(m_timeDilation * contactsPerCollision);
-                            contacts = new d.ContactGeom[(int)Math.Abs((m_timeDilation * contactsPerCollision))];
-                        }
-                    }*/
-
-                    count = d.Collide(g1, g2, (contacts.Length & 0xffff) , contacts, d.ContactGeom.SizeOf);
+                    count = d.Collide(g1, g2, (contacts.Length & 0xffff), contacts, d.ContactGeom.SizeOf);
                 }
             }
             catch (SEHException)
@@ -1476,6 +1467,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (m_filterCollisions)
                 _perloopContact.Clear();
+
+            if (m_EnableAutoConfig)
+            {
+                if (Math.Abs((m_timeDilation * contactsPerCollision - contacts.Length)) > 10)
+                {
+                    contacts = new d.ContactGeom[Math.Max(5, (int)(m_timeDilation * contactsPerCollision))];
+                    m_log.WarnFormat("[ODE]: AutoConfig: changing contact amount to {0}, {1}%", contacts.Length, (m_timeDilation * contactsPerCollision) / contactsPerCollision * 100);
+                }
+            }
 
             lock (_characters)
             {

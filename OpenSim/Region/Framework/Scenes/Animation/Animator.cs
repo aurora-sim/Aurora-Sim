@@ -218,7 +218,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             float fallVelocity = (actor != null) ? actor.Velocity.Z : 0.0f;
 
             if (heldTurnLeft && yawPos && !heldForward &&
-                !heldBack && !jumping && actor != null &&
+                !heldBack && !actor.IsJumping && actor != null &&
                 !actor.Flying && move.Z == 0 &&
                 fallVelocity == 0.0f && !heldUp &&
                 !heldDown && move.CompareTo(Vector3.Zero) == 0)
@@ -226,7 +226,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 return "TURNLEFT";
             }
             if (heldTurnRight && yawNeg && !heldForward &&
-                !heldBack && !jumping && actor != null &&
+                !heldBack && !actor.IsJumping && actor != null &&
                 !actor.Flying && move.Z == 0 &&
                 fallVelocity == 0.0f && !heldUp &&
                 !heldDown && move.CompareTo(Vector3.Zero) == 0)
@@ -353,7 +353,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             #region Falling/Floating/Landing
 
-            if (actor == null && !jumping && move.Z == 0 || (actor != null && (!actor.CollidingObj && !actor.CollidingGround) && m_scenePresence.Velocity.Z < -2))
+            if (actor == null && !actor.IsJumping && move.Z == 0 || (actor != null && (!actor.CollidingObj && !actor.CollidingGround) && m_scenePresence.Velocity.Z < -2))
             {
                 //Always return falldown immediately as there shouldn't be a waiting period
                 if(m_animTickFall == 0)
