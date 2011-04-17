@@ -294,7 +294,7 @@ namespace OpenSim.Region.Framework.Scenes
             #region New client entering the Scene, requires all objects in the Scene
 
             ///If we havn't started processing this client yet, we need to send them ALL the prims that we have in this Scene (and deal with culling as well...)
-            if (!m_SentInitialObjects)
+            if (!m_SentInitialObjects && m_presence.DrawDistance != 0.0f)
             {
                 m_SentInitialObjects = true;
                 //If they are not in this region, we check to make sure that we allow seeing into neighbors

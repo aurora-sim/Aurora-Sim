@@ -890,8 +890,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 EnumeratorInfo Running = QIS.ID.Script.ExecuteEvent(QIS.State,
                             QIS.functionName,
                             QIS.param, QIS.CurrentlyAt, out ex);
-//                if (QIS.ID.VersionID != QIS.VersionID)
-//                    return false;
 
                 if (ex != null)
                 {
