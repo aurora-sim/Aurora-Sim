@@ -30,11 +30,6 @@ using OpenMetaverse;
 
 namespace OpenSim.Framework
 {
-    public enum EventDataFlags
-    {
-        Mature = 1 << 0,
-    }
-
     public class EventData
     {
         public uint eventID;

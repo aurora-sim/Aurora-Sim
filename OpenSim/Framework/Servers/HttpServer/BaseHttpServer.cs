@@ -728,8 +728,6 @@ namespace OpenSim.Framework.Servers.HttpServer
             agentHandler = null;
             try
             {
-                if(m_agentHandlers.TryGetValue(request, out agentHandler))
-                    return true;
                 foreach (IHttpAgentHandler handler in m_agentHandlers.Values)
                 {
                     if (handler.Match(request, response))
