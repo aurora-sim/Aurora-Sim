@@ -746,11 +746,7 @@ namespace Aurora.Modules
 
                 foreach (SceneObjectPart part in group.ChildrenList)
                 {
-                    if (part.IsJoint() && ((part.Flags & PrimFlags.Physics) != 0))
-                    {
-                        m_scene.PhysicsScene.RequestJointDeletion(part.Name); // FIXME: what if the name changed?
-                    }
-                    else if (part.PhysActor != null)
+                    if (part.PhysActor != null)
                     {
                         m_scene.PhysicsScene.RemovePrim(part.PhysActor);
                         part.PhysActor = null;

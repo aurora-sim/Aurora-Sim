@@ -141,14 +141,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             RayCast(reqs[i]);               // if there isn't anyone to send results
                     }
 
-                    /*
-                    foreach (ODERayCastRequest req in m_PendingRequests)
-                    {
-                        if (req.callbackMethod != null) // quick optimization here, don't raycast 
-                            RayCast(req);               // if there isn't anyone to send results to
-                            
-                    }
-                    */
                     m_PendingRequests.Clear();
                 }
             }

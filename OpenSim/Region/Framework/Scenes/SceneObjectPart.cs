@@ -2242,51 +2242,44 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="m_physicalPrim"></param>
         public void ApplyPhysics(uint rootObjectFlags, bool VolumeDetectActive, bool m_physicalPrim)
         {
-            bool isPhysical = (((rootObjectFlags & (uint) PrimFlags.Physics) != 0) && m_physicalPrim);
-            bool isPhantom = ((rootObjectFlags & (uint) PrimFlags.Phantom) != 0);
+            bool isPhysical = (((rootObjectFlags & (uint)PrimFlags.Physics) != 0) && m_physicalPrim);
+            bool isPhantom = ((rootObjectFlags & (uint)PrimFlags.Phantom) != 0);
 
-            if (IsJoint())
+            // Special case for VolumeDetection: If VolumeDetection is set, the phantom flag is locally ignored
+            if (VolumeDetectActive)
+                isPhantom = false;
+
+            // Added clarification..   since A rigid body is an object that you can kick around, etc.
+            bool RigidBody = isPhysical && !isPhantom;
+
+            // The only time the physics scene shouldn't know about the prim is if it's phantom or an attachment, which is phantom by definition
+            // or flexible
+            if (!isPhantom && !IsAttachment && !(Shape.PathCurve == (byte)Extrusion.Flexible))
             {
-                DoPhysicsPropertyUpdate(isPhysical, true);
-            }
-            else
-            {
-                // Special case for VolumeDetection: If VolumeDetection is set, the phantom flag is locally ignored
-                if (VolumeDetectActive)
-                    isPhantom = false;
+                Vector3 tmp = GetWorldPosition();
+                Quaternion qtmp = GetWorldRotation();
+                PhysActor = m_parentGroup.Scene.PhysicsScene.AddPrimShape(
+                    string.Format("{0}/{1}", Name, UUID),
+                    Shape,
+                    tmp,
+                    Scale,
+                    qtmp,
+                    RigidBody);
 
-                // Added clarification..   since A rigid body is an object that you can kick around, etc.
-                bool RigidBody = isPhysical && !isPhantom;
-
-                // The only time the physics scene shouldn't know about the prim is if it's phantom or an attachment, which is phantom by definition
-                // or flexible
-                if (!isPhantom && !IsAttachment && !(Shape.PathCurve == (byte) Extrusion.Flexible))
+                // Basic Physics returns null..  joy joy joy.
+                if (PhysActor != null)
                 {
-                    Vector3 tmp = GetWorldPosition();
-                    Quaternion qtmp = GetWorldRotation();
-                    PhysActor = m_parentGroup.Scene.PhysicsScene.AddPrimShape(
-                        string.Format("{0}/{1}", Name, UUID),
-                        Shape,
-                        tmp,
-                        Scale,
-                        qtmp,
-                        RigidBody);
-
-                    // Basic Physics returns null..  joy joy joy.
-                    if (PhysActor != null)
-                    {
-                        PhysActor.SOPName = this.Name; // save object name and desc into the PhysActor so ODE internals know the joint/body info
-                        PhysActor.SOPDescription = this.Description;
-                        PhysActor.LocalID = LocalId;
-                        DoPhysicsPropertyUpdate(RigidBody, true);
-                        PhysActor.VolumeDetect = VolumeDetectActive;
-                        if(OnAddPhysics != null)
-                            OnAddPhysics();
-                    }
-                    else
-                    {
-                        //m_log.DebugFormat("[SOP]: physics actor is null for {0} with parent {1}", UUID, this.ParentGroup.UUID);
-                    }
+                    PhysActor.SOPName = this.Name; // save object name and desc into the PhysActor so ODE internals know the joint/body info
+                    PhysActor.SOPDescription = this.Description;
+                    PhysActor.LocalID = LocalId;
+                    DoPhysicsPropertyUpdate(RigidBody, true);
+                    PhysActor.VolumeDetect = VolumeDetectActive;
+                    if (OnAddPhysics != null)
+                        OnAddPhysics();
+                }
+                else
+                {
+                    //m_log.DebugFormat("[SOP]: physics actor is null for {0} with parent {1}", UUID, this.ParentGroup.UUID);
                 }
             }
         }
@@ -2507,100 +2500,62 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void DoPhysicsPropertyUpdate(bool UsePhysics, bool isNew)
         {
-            if (IsJoint())
+            if (PhysActor != null)
             {
-                if (UsePhysics)
+                if (UsePhysics != PhysActor.IsPhysical || isNew)
                 {
-                    INinjaPhysicsModule ninjaMod = ParentGroup.Scene.RequestModuleInterface<INinjaPhysicsModule>();
-                    if(ninjaMod != null)
-                        ninjaMod.jointCreate(this);
-                }
-                else
-                {
-                    if (isNew)
+                    if (PhysActor.IsPhysical) // implies UsePhysics==false for this block
                     {
-                        // if the joint proxy is new, and it is not physical, do nothing. There is no joint in ODE to
-                        // delete, and if we try to delete it, due to asynchronous processing, the deletion request
-                        // will get processed later at an indeterminate time, which could cancel a later-arriving
-                        // joint creation request.
+                        PhysActor.OnRequestTerseUpdate -= PhysicsRequestingTerseUpdate;
+                        PhysActor.OnSignificantMovement -= ParentGroup.CheckForSignificantMovement;
+                        PhysActor.OnOutOfBounds -= PhysicsOutOfBounds;
+                        PhysActor.delink();
+
+                        if (OnRemovePhysics != null)
+                            OnRemovePhysics();
+
+                        // stop client-side interpolation of all joint proxy objects that have just been deleted
+                        // this is done because RemoveAllJointsConnectedToActor invokes the OnJointDeactivated callback,
+                        // which stops client-side interpolation of deactivated joint proxy objects.
                     }
-                    else
-                    {
-                        // here we turn off the joint object, so remove the joint from the physics scene
-                        m_parentGroup.Scene.PhysicsScene.RequestJointDeletion(Name); // FIXME: what if the name changed?
 
-                        // make sure client isn't interpolating the joint proxy object
-                        Velocity = Vector3.Zero;
-                        AngularVelocity = Vector3.Zero;
-                        Acceleration = Vector3.Zero;
+                    if (!UsePhysics && !isNew)
+                    {
+                        // reset velocity to 0 on physics switch-off. Without that, the client thinks the
+                        // prim still has velocity and continues to interpolate its position along the old
+                        // velocity-vector.
+                        Velocity = new Vector3(0, 0, 0);
+                        Acceleration = new Vector3(0, 0, 0);
+                        AngularVelocity = new Vector3(0, 0, 0);
+                        //RotationalVelocity = new Vector3(0, 0, 0);
                     }
-                }
-            }
-            else
-            {
-                if (PhysActor != null)
-                {
-                    if (UsePhysics != PhysActor.IsPhysical || isNew)
+
+                    PhysActor.IsPhysical = UsePhysics;
+
+
+                    // If we're not what we're supposed to be in the physics scene, recreate ourselves.
+                    //m_parentGroup.Scene.PhysicsScene.RemovePrim(PhysActor);
+                    /// that's not wholesome.  Had to make Scene public
+                    //PhysActor = null;
+
+                    if ((Flags & PrimFlags.Phantom) == 0)
                     {
-                        if (PhysActor.IsPhysical) // implies UsePhysics==false for this block
+                        if (UsePhysics)
                         {
-                            PhysActor.OnRequestTerseUpdate -= PhysicsRequestingTerseUpdate;
-                            PhysActor.OnSignificantMovement -= ParentGroup.CheckForSignificantMovement;
-                            PhysActor.OnOutOfBounds -= PhysicsOutOfBounds;
-                            PhysActor.delink();
-
-                            if (ParentGroup.Scene.PhysicsScene.SupportsNINJAJoints && (!isNew))
+                            PhysActor.OnRequestTerseUpdate += PhysicsRequestingTerseUpdate;
+                            PhysActor.OnSignificantMovement += ParentGroup.CheckForSignificantMovement;
+                            PhysActor.OnOutOfBounds += PhysicsOutOfBounds;
+                            if (_parentID != 0 && _parentID != LocalId)
                             {
-                                // destroy all joints connected to this now deactivated body
-                                m_parentGroup.Scene.PhysicsScene.RemoveAllJointsConnectedToActorThreadLocked(PhysActor);
-                            }
-
-                            if(OnRemovePhysics != null)
-                                OnRemovePhysics();
-
-                            // stop client-side interpolation of all joint proxy objects that have just been deleted
-                            // this is done because RemoveAllJointsConnectedToActor invokes the OnJointDeactivated callback,
-                            // which stops client-side interpolation of deactivated joint proxy objects.
-                        }
-
-                        if (!UsePhysics && !isNew)
-                        {
-                            // reset velocity to 0 on physics switch-off. Without that, the client thinks the
-                            // prim still has velocity and continues to interpolate its position along the old
-                            // velocity-vector.
-                            Velocity = new Vector3(0, 0, 0);
-                            Acceleration = new Vector3(0, 0, 0);
-                            AngularVelocity = new Vector3(0, 0, 0);
-                            //RotationalVelocity = new Vector3(0, 0, 0);
-                        }
-
-                        PhysActor.IsPhysical = UsePhysics;
-
-
-                        // If we're not what we're supposed to be in the physics scene, recreate ourselves.
-                        //m_parentGroup.Scene.PhysicsScene.RemovePrim(PhysActor);
-                        /// that's not wholesome.  Had to make Scene public
-                        //PhysActor = null;
-
-                        if ((Flags & PrimFlags.Phantom) == 0)
-                        {
-                            if (UsePhysics)
-                            {
-                                PhysActor.OnRequestTerseUpdate += PhysicsRequestingTerseUpdate;
-                                PhysActor.OnSignificantMovement += ParentGroup.CheckForSignificantMovement;
-                                PhysActor.OnOutOfBounds += PhysicsOutOfBounds;
-                                if (_parentID != 0 && _parentID != LocalId)
+                                if (ParentGroup.RootPart.PhysActor != null)
                                 {
-                                    if (ParentGroup.RootPart.PhysActor != null)
-                                    {
-                                        PhysActor.link(ParentGroup.RootPart.PhysActor);
-                                    }
+                                    PhysActor.link(ParentGroup.RootPart.PhysActor);
                                 }
                             }
                         }
                     }
-                    m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(PhysActor);
                 }
+                m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(PhysActor);
             }
             ParentGroup.Scene.AuroraEventManager.FireGenericEventHandler("ObjectChangedPhysicalStatus", this.ParentGroup);
         }
@@ -5113,53 +5068,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public bool IsHingeJoint()
-        {
-            // For now, we use the NINJA naming scheme for identifying joints.
-            // In the future, we can support other joint specification schemes such as a 
-            // custom checkbox in the viewer GUI.
-            if (m_parentGroup.Scene.PhysicsScene.SupportsNINJAJoints)
-            {
-                string hingeString = "hingejoint";
-                return (Name.Length >= hingeString.Length && Name.Substring(0, hingeString.Length) == hingeString);
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        public bool IsBallJoint()
-        {
-            // For now, we use the NINJA naming scheme for identifying joints.
-            // In the future, we can support other joint specification schemes such as a 
-            // custom checkbox in the viewer GUI.
-            if (m_parentGroup.Scene.PhysicsScene.SupportsNINJAJoints)
-            {
-                string ballString = "balljoint";
-                return (Name.Length >= ballString.Length && Name.Substring(0, ballString.Length) == ballString);
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        public bool IsJoint()
-        {
-            // For now, we use the NINJA naming scheme for identifying joints.
-            // In the future, we can support other joint specification schemes such as a 
-            // custom checkbox in the viewer GUI.
-            if (m_parentGroup.Scene.PhysicsScene.SupportsNINJAJoints)
-            {
-                return IsHingeJoint() || IsBallJoint();
-            }
-            else
-            {
-                return false;
-            }
-        }
-
         public void UpdatePrimFlags(bool UsePhysics, bool IsTemporary, bool IsPhantom, bool IsVD)
         {
             bool wasUsingPhysics = ((Flags & PrimFlags.Physics) != 0);
@@ -5198,11 +5106,6 @@ namespace OpenSim.Region.Framework.Scenes
                     // this will also cause the prim to be visible to physics
                 }
 
-            }
-
-            if (UsePhysics && IsJoint())
-            {
-                IsPhantom = true;
             }
 
             if (UsePhysics)

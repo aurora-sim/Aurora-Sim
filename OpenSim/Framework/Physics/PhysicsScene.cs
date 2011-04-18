@@ -79,70 +79,6 @@ namespace OpenSim.Framework
             get { return 0; }
         }
 
-        #region Ninja Physics Code
-
-        public virtual bool SupportsNINJAJoints
-        {
-            get { return false; }
-        }
-
-        public virtual PhysicsJoint RequestJointCreation(string objectNameInScene, PhysicsJointType jointType, Vector3 position,
-                                            Quaternion rotation, string parms, List<string> bodyNames, string trackedBodyName, Quaternion localRotation)
-        { return null; }
-
-        public virtual void RequestJointDeletion(string objectNameInScene)
-        { return; }
-
-        public virtual void RemoveAllJointsConnectedToActorThreadLocked(PhysicsObject actor)
-        { return; }
-
-        public virtual void DumpJointInfo()
-        { return; }
-
-        public event JointMoved OnJointMoved;
-
-        protected virtual void DoJointMoved(PhysicsJoint joint)
-        {
-            // We need this to allow subclasses (but not other classes) to invoke the event; C# does
-            // not allow subclasses to invoke the parent class event.
-            if (OnJointMoved != null)
-            {
-                OnJointMoved(joint);
-            }
-        }
-
-        public event JointDeactivated OnJointDeactivated;
-
-        protected virtual void DoJointDeactivated(PhysicsJoint joint)
-        {
-            // We need this to allow subclasses (but not other classes) to invoke the event; C# does
-            // not allow subclasses to invoke the parent class event.
-            if (OnJointDeactivated != null)
-            {
-                OnJointDeactivated(joint);
-            }
-        }
-
-        public event JointErrorMessage OnJointErrorMessage;
-
-        protected virtual void DoJointErrorMessage(PhysicsJoint joint, string message)
-        {
-            // We need this to allow subclasses (but not other classes) to invoke the event; C# does
-            // not allow subclasses to invoke the parent class event.
-            if (OnJointErrorMessage != null)
-            {
-                OnJointErrorMessage(joint, message);
-            }
-        }
-
-        public virtual Vector3 GetJointAnchor(PhysicsJoint joint)
-        { return Vector3.Zero; }
-
-        public virtual Vector3 GetJointAxis(PhysicsJoint joint)
-        { return Vector3.Zero; }
-
-        #endregion
-
         public abstract void AddPhysicsActorTaint(PhysicsActor prim);
 
         public abstract float Simulate(float timeStep);
@@ -353,7 +289,4 @@ namespace OpenSim.Framework
             get { return false; }
         }
     }
-    public delegate void JointMoved(PhysicsJoint joint);
-    public delegate void JointDeactivated(PhysicsJoint joint);
-    public delegate void JointErrorMessage(PhysicsJoint joint, string message); // this refers to an "error message due to a problem", not "amount of joint constraint violation"
 }
