@@ -116,7 +116,9 @@ namespace Aurora.Framework
         String512,
         String1024,
         String8196,
-        Text
+        Text,
+        MediumText,
+        LongText
     }
     public class ColumnDefinition
     {

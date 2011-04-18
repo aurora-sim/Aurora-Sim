@@ -778,6 +778,10 @@ namespace Aurora.DataManager.MSSQL
                     return "DATETIME";
                 case ColumnTypes.Text:
                     return "TEXT";
+                case ColumnTypes.MediumText:
+                    return "MEDIUMTEXT";
+                case ColumnTypes.LongText:
+                    return "LONGTEXT";
                 default:
                     throw new DataManagerException("Unknown column type.");
             }
@@ -903,6 +907,10 @@ namespace Aurora.DataManager.MSSQL
                     return ColumnTypes.DateTime;
                 case "text":
                     return ColumnTypes.Text;
+                case "mediumtext":
+                    return ColumnTypes.MediumText;
+                case "longtext":
+                    return ColumnTypes.LongText;
                 case "image":
                     return ColumnTypes.Blob;
                 default:

@@ -756,6 +756,10 @@ namespace Aurora.DataManager.MySQL
                     return "VARCHAR(8196)";
                 case ColumnTypes.Text:
                     return "TEXT";
+                case ColumnTypes.MediumText:
+                    return "MEDIUMTEXT";
+                case ColumnTypes.LongText:
+                    return "LONGTEXT";
                 case ColumnTypes.Blob:
                     return "blob";
                 case ColumnTypes.LongBlob:
@@ -934,6 +938,10 @@ namespace Aurora.DataManager.MySQL
                     return ColumnTypes.String8196;
                 case "text":
                     return ColumnTypes.Text;
+                case "mediumtext":
+                    return ColumnTypes.MediumText;
+                case "longtext":
+                    return ColumnTypes.LongText;
                 case "blob":
                     return ColumnTypes.Blob;
                 case "longblob":
