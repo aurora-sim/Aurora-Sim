@@ -191,7 +191,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private d.Contact[,] m_materialContacts;
 
         private int m_physicsiterations = 10;
-        private const float m_SkipFramesAtms = 0.40f; // Drop frames gracefully at a 400 ms lag
+        private const float m_SkipFramesAtms = 0.150f; // Drop frames gracefully at a 150 ms lag
         private readonly PhysicsActor PANull = new NullObjectPhysicsActor();
         private float step_time = 0.0f;
         private RegionInfo m_region;
@@ -2467,22 +2467,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // skip a few frames to catch up gracefully.
             // without shooting the physicsactors all over the place
 
-            if (step_time >= m_SkipFramesAtms)
+            // Process 10 frames if the sim is running normal..
+            // process 5 frames if the sim is running slow
+            if (m_EnableAutoConfig && step_time >= m_SkipFramesAtms && m_physicsiterations != 5)
             {
+                m_log.Warn("[ODE]: Sim is lagging, changing to half resolution");
                 // Instead of trying to catch up, it'll do 5 physics frames only
                 step_time = ODE_STEPSIZE;
                 m_physicsiterations = 5;
-            }
-            else
-            {
-                m_physicsiterations = 10;
-            }
-
-            IsLocked = true;
-            lock (OdeLock)
-            {
-                // Process 10 frames if the sim is running normal..
-                // process 5 frames if the sim is running slow
                 try
                 {
                     d.WorldSetQuickStepNumIterations(world, m_physicsiterations);
@@ -2492,7 +2484,25 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_log.Error("[PHYSICS]: The operating system wasn't able to allocate enough memory for the simulation.  Restarting the sim.");
                     ode.drelease(world);
                 }
+            }
+            else if (m_EnableAutoConfig && m_physicsiterations != 10)
+            {
+                step_time = ODE_STEPSIZE;
+                m_physicsiterations = 10;
+                try
+                {
+                    d.WorldSetQuickStepNumIterations(world, m_physicsiterations);
+                }
+                catch (StackOverflowException)
+                {
+                    m_log.Error("[PHYSICS]: The operating system wasn't able to allocate enough memory for the simulation.  Restarting the sim.");
+                    ode.drelease(world);
+                }
+            }
 
+            IsLocked = true;
+            lock (OdeLock)
+            {
                 int nodesteps = 0;
 
                 // Figure out the Frames Per Second we're going at.
