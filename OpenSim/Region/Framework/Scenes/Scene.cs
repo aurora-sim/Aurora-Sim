@@ -376,7 +376,8 @@ namespace OpenSim.Region.Framework.Scenes
                     transferModule.IncomingCloseAgent (this, avatar.UUID);
                 }
             }
-            //Stop the heartbeat
+            ShouldRunHeartbeat = false; //Stop the heartbeat
+            //Now close the tracker
             monitor.Stop();
 
             if (m_sceneGraph.PhysicsScene != null)
