@@ -99,7 +99,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float gravityy = 0f;
         public float gravityz = -9.8f;
 
-        private float contactsurfacelayer = 0.001f;
+        private float contactsurfacelayer = 0.1f;
 
         private int HashspaceLow = -3;  // current ODE limits
         private int HashspaceHigh = 10;
@@ -111,10 +111,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private readonly IntPtr contactgroup;
 
-        private float nmTerrainContactFriction = 255.0f;
-        private float nmTerrainContactBounce = 0.1f;
-        private float nmTerrainContactERP = 0.1025f;
-
         private float nmAvatarObjectContactFriction = 250f;
         private float nmAvatarObjectContactBounce = 0.1f;
 
@@ -124,9 +120,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float PID_D = 3200f;
         public float PID_P = 1400f;
         public float avCapRadius = 0.37f;
-//        public float avStandupTensor = 2000000f;
-//        private bool avCapsuleTilted = true; // true = old compatibility mode with leaning capsule; false = new corrected mode
-//        public bool IsAvCapsuleTilted { get { return avCapsuleTilted; } set { avCapsuleTilted = value; } }
         public float avDensity = 80f;
         public float avHeightFudgeFactor = 0.52f;
         public float avMovementDivisorWalk = 1.3f;
@@ -185,6 +178,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public bool m_usepreJump = true;
         public int m_preJumpTime = 15;
         public float m_preJumpForceMultiplier = 4;
+        public float m_AvFlySpeed = 4.0f;
 
         private d.Contact contact;
         private d.Contact AvatarMovementprimContact;
@@ -433,16 +427,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_PointOfGravity.Y = physicsconfig.GetFloat("point_gravityy", 0);
                     m_PointOfGravity.Z = physicsconfig.GetFloat("point_gravityz", 0);
 
+                    m_AvFlySpeed = physicsconfig.GetFloat("AvFlySpeed", m_AvFlySpeed);
                     m_allowJump = physicsconfig.GetBoolean("AllowJump", m_allowJump);
                     m_usepreJump = physicsconfig.GetBoolean("UsePreJump", m_usepreJump);
                     m_preJumpTime = physicsconfig.GetInt("PreJumpTime", m_preJumpTime);
                     m_preJumpForceMultiplier = physicsconfig.GetFloat("PreJumpMultiplier", m_preJumpForceMultiplier);
 
                     contactsurfacelayer = physicsconfig.GetFloat("world_contact_surface_layer", 0.001f);
-
-                    nmTerrainContactFriction = physicsconfig.GetFloat("nm_terraincontact_friction", 255.0f);
-                    nmTerrainContactBounce = physicsconfig.GetFloat("nm_terraincontact_bounce", 0.1f);
-                    nmTerrainContactERP = physicsconfig.GetFloat("nm_terraincontact_erp", 0.1025f);
 
                     nmAvatarObjectContactFriction = physicsconfig.GetFloat("objectcontact_friction", 250f);
                     nmAvatarObjectContactBounce = physicsconfig.GetFloat("objectcontact_bounce", 0.2f);
@@ -516,7 +507,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // Use this when an avatar comes in contact with a prim
             // and is moving
 
-            AvatarMovementprimContact.surface.mode |= d.ContactFlags.SoftERP;
+            AvatarMovementprimContact.surface.mode = d.ContactFlags.Slip1;
             AvatarMovementprimContact.surface.mu = nmAvatarObjectContactFriction;
             AvatarMovementprimContact.surface.bounce = nmAvatarObjectContactBounce;
             AvatarMovementprimContact.surface.soft_cfm = 0.010f;

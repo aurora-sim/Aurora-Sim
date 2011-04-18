@@ -899,7 +899,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             movementmult *= 10;
             movementmult *= SpeedModifier;
             if (flying)
-                movementmult *= 4;
+                movementmult *= _parent_scene.m_AvFlySpeed;
 
             #region Jump code
 
