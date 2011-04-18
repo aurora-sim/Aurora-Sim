@@ -191,6 +191,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private d.Contact[,] m_materialContacts;
 
         private int m_physicsiterations = 10;
+        private int m_timeBetweenRevertingAutoConfigIterations = 50;
         private const float m_SkipFramesAtms = 0.150f; // Drop frames gracefully at a 150 ms lag
         private readonly PhysicsActor PANull = new NullObjectPhysicsActor();
         private float step_time = 0.0f;
@@ -2469,12 +2470,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // Process 10 frames if the sim is running normal..
             // process 5 frames if the sim is running slow
-            if (m_EnableAutoConfig && step_time >= m_SkipFramesAtms && m_physicsiterations != 5)
+            if (m_EnableAutoConfig && TimeDilation < 0.75f && m_physicsiterations > 5)
             {
                 m_log.Warn("[ODE]: Sim is lagging, changing to half resolution");
                 // Instead of trying to catch up, it'll do 5 physics frames only
                 step_time = ODE_STEPSIZE;
                 m_physicsiterations = 5;
+                m_timeBetweenRevertingAutoConfigIterations = 50;
                 try
                 {
                     d.WorldSetQuickStepNumIterations(world, m_physicsiterations);
@@ -2485,10 +2487,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     ode.drelease(world);
                 }
             }
-            else if (m_EnableAutoConfig && m_physicsiterations != 10)
+            else if (m_EnableAutoConfig && TimeDilation > 0.75f && m_physicsiterations < 10 &&
+                m_timeBetweenRevertingAutoConfigIterations == 0) //Wait for 50 frames before doing the next step down
             {
+                m_log.Warn("[ODE]: Sim is not lagging, changing to full resolution");
                 step_time = ODE_STEPSIZE;
-                m_physicsiterations = 10;
+                m_physicsiterations++;
+                m_timeBetweenRevertingAutoConfigIterations = 50;
                 try
                 {
                     d.WorldSetQuickStepNumIterations(world, m_physicsiterations);
@@ -2499,6 +2504,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     ode.drelease(world);
                 }
             }
+            if (m_physicsiterations != 10 && TimeDilation > 0.75f)
+                m_timeBetweenRevertingAutoConfigIterations--; //Subtract for the next time
 
             IsLocked = true;
             lock (OdeLock)

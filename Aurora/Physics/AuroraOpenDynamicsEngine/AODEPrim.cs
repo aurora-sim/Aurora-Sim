@@ -2424,14 +2424,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         public void UpdatePositionAndVelocity(float timestep)
-            {
+        {
             if (m_frozen)
                 return;
             //  no lock; called from Simulate() -- if you call this from elsewhere, gotta lock or do Monitor.Enter/Exit!
             if (_parent == null)
-                {
+            {
                 if (Body != IntPtr.Zero && prim_geom != IntPtr.Zero) // FIXME -> or if it is a joint
-                    {
+                {
                     d.Vector3 cpos = d.BodyGetPosition(Body); // object position ( center of mass)
                     d.Vector3 lpos = d.GeomGetPosition(prim_geom); // root position that is seem by rest of simulator
                     d.Quaternion ori;
@@ -2440,14 +2440,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.Vector3 rotvel = d.BodyGetAngularVel(Body);
 
 
-                    if (cpos.X > ((int)_parent_scene.WorldExtents.X - 0.05f) || 
+                    if (cpos.X > ((int)_parent_scene.WorldExtents.X - 0.05f) ||
                         cpos.X < 0f ||
-                        cpos.Y > ((int)_parent_scene.WorldExtents.Y - 0.05f) || 
+                        cpos.Y > ((int)_parent_scene.WorldExtents.Y - 0.05f) ||
                         cpos.Y < 0f)
-                        {
+                    {
 
                         if (m_crossingfailures < _parent_scene.geomCrossingFailuresBeforeOutofbounds)
-                            {
+                        {
                             _position.X = (float)lpos.X;
                             _position.Y = (float)lpos.Y;
                             _position.Z = (float)lpos.Z;
@@ -2458,9 +2458,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                             base.RequestPhysicsterseUpdate();
                             return;
-                            }
+                        }
                         else
-                            {
+                        {
                             m_frozen = true;
 
                             Vector3 l_position;
@@ -2470,12 +2470,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                             base.RaiseOutOfBounds(l_position);
                             return;
-                            }
                         }
-                    #region
+                    }
+
+                    #region Out of bounds
+
                     if (cpos.Z < 0 ||
                         (cpos.Z > _parent_scene.m_flightCeilingHeight && _parent_scene.m_useFlightCeilingHeight))
-                        {
+                    {
                         // This is so prim that get lost underground don't fall forever and suck up
                         //
                         // Sim resources and memory.
@@ -2514,17 +2516,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         _zeroFlag = true;
                         m_frozen = true;
                         return;
-                        }
+                    }
                     #endregion
 
                     if (m_vehicle.Type == Vehicle.TYPE_NONE)
-                        {
+                    {
 
                         m_lastVelocity = _velocity; // for acelaration
                         _position.X = (float)lpos.X;
                         _position.Y = (float)lpos.Y;
                         _position.Z = (float)lpos.Z;
-                        }
+                    }
                     _orientation.X = (float)ori.X;
                     _orientation.Y = (float)ori.Y;
                     _orientation.Z = (float)ori.Z;
@@ -2545,22 +2547,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         && (Math.Abs(rotvel.Y) < 0.0001)
                         && (Math.Abs(rotvel.Z) < 0.0001)
 
-                        && m_vehicle.Type == Vehicle.TYPE_NONE )
-                        {
+                        && m_vehicle.Type == Vehicle.TYPE_NONE)
+                    {
                         _zeroFlag = true;
                         m_throttleUpdates = false;
-                        }
+                    }
                     else
-                        {
+                    {
                         _zeroFlag = false;
                         m_lastUpdateSent = 1;
-                        }
+                    }
 
                     bool needupdate = false;
                     bool forceupdate = false;
 
                     if (_zeroFlag)
-                        {
+                    {
                         _velocity.X = 0.0f;
                         _velocity.Y = 0.0f;
                         _velocity.Z = 0.0f;
@@ -2573,27 +2575,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_rotationalVelocity.Y = 0;
                         m_rotationalVelocity.Z = 0;
 
-// better let ode keep dealing with small values
-//                        d.BodySetLinearVel(Body, 0, 0, 0);
-//                        d.BodySetAngularVel(Body, 0, 0, 0);
+                        // better let ode keep dealing with small values
+                        //                        d.BodySetLinearVel(Body, 0, 0, 0);
+                        //                        d.BodySetAngularVel(Body, 0, 0, 0);
 
                         if (m_lastUpdateSent > 0)
-                            {
+                        {
                             if (throttleCounter > 100 || m_lastUpdateSent >= 2)
-                                {
+                            {
                                 needupdate = true;
                                 forceupdate = true;
                                 m_lastUpdateSent--;
                                 throttleCounter = 0;
-                                }
+                            }
                             else
                                 throttleCounter += 4;
-                             }
                         }
+                    }
                     else
-                        {
+                    {
                         if (m_vehicle.Type == Vehicle.TYPE_NONE)
-                            {
+                        {
                             _velocity.X = (float)vel.X;
                             _velocity.Y = (float)vel.Y;
                             _velocity.Z = (float)vel.Z;
@@ -2604,8 +2606,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             m_rotationalVelocity.X = (float)rotvel.X;
                             m_rotationalVelocity.Y = (float)rotvel.Y;
                             m_rotationalVelocity.Z = (float)rotvel.Z;
-                            }
                         }
+                    }
 
                     // slow down updates
                     m_UpdateTimecntr += timestep;
@@ -2624,26 +2626,26 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         || (Math.Abs(_acceleration.Y) > 0.005)
                         || (Math.Abs(_acceleration.Z) > 0.005)
                         )//)
-                        {
+                    {
                         if (!m_throttleUpdates || throttleCounter > _parent_scene.geomUpdatesPerThrottledUpdate)
-                            {
-                            needupdate = true;
-                            }
-                        else
-                            throttleCounter +=4;
-                        }
-
-                    
-                    if (needupdate)
                         {
+                            needupdate = true;
+                        }
+                        else
+                            throttleCounter += 4;
+                    }
+
+
+                    if (needupdate)
+                    {
                         m_lastposition = _position;
                         m_lastorientation = _orientation;
                         base.RequestPhysicsterseUpdate();
-                        }
-
                     }
+
+                }
                 else
-                    {
+                {
                     // Not a body..   so Make sure the client isn't interpolating
                     _velocity.X = 0;
                     _velocity.Y = 0;
@@ -2658,10 +2660,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_rotationalVelocity.Z = 0;
                     _zeroFlag = true;
                     m_frozen = true;
-                    }
                 }
             }
-
+        }
 
         public override bool FloatOnWater
             {
