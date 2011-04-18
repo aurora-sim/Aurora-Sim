@@ -64,8 +64,7 @@ namespace OpenSim.Framework.Servers.HttpServer
         protected Dictionary<string, LLSDMethod> m_llsdHandlers = new Dictionary<string, LLSDMethod>();
         protected Dictionary<string, IRequestHandler> m_streamHandlers = new Dictionary<string, IRequestHandler>();
         protected Dictionary<string, GenericHTTPMethod> m_HTTPHandlers = new Dictionary<string, GenericHTTPMethod>();
-        protected Dictionary<string, IHttpAgentHandler> m_agentHandlers = new Dictionary<string, IHttpAgentHandler>();
-
+        
         protected Dictionary<string, PollServiceEventArgs> m_pollHandlers =
             new Dictionary<string, PollServiceEventArgs>();
 
@@ -223,24 +222,6 @@ namespace OpenSim.Framework.Servers.HttpServer
             return false;
         }
 
-        // Note that the agent string is provided simply to differentiate
-        // the handlers - it is NOT required to be an actual agent header
-        // value.
-        public bool AddAgentHandler(string agent, IHttpAgentHandler handler)
-        {
-            lock (m_agentHandlers)
-            {
-                if (!m_agentHandlers.ContainsKey(agent))
-                {
-                    m_agentHandlers.Add(agent, handler);
-                    return true;
-                }
-            }
-
-            //must already have a handler for that path so return false
-            return false;
-        }
-
         public bool AddLLSDHandler(string path, LLSDMethod handler)
         {
             lock (m_llsdHandlers)
@@ -381,20 +362,6 @@ namespace OpenSim.Framework.Servers.HttpServer
 
                 //Fix the current Culture
                 Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US", true);
-
-                //  This is the REST agent interface. We require an agent to properly identify
-                //  itself. If the REST handler recognizes the prefix it will attempt to
-                //  satisfy the request. If it is not recognizable, and no damage has occurred
-                //  the request can be passed through to the other handlers. This is a low
-                //  probability event; if a request is matched it is normally expected to be
-                //  handled
-                IHttpAgentHandler agentHandler;
-
-                if (TryGetAgentHandler(request, response, out agentHandler))
-                {
-                    if (HandleAgentRequest(agentHandler, request, response))
-                        return;
-                }
 
                 //response.KeepAlive = true;
                 response.SendChunked = false;
@@ -721,27 +688,6 @@ namespace OpenSim.Framework.Servers.HttpServer
                     return true;
                 }
             }
-        }
-
-        private bool TryGetAgentHandler(OSHttpRequest request, OSHttpResponse response, out IHttpAgentHandler agentHandler)
-        {
-            agentHandler = null;
-            try
-            {
-                foreach (IHttpAgentHandler handler in m_agentHandlers.Values)
-                {
-                    if (handler.Match(request, response))
-                    {
-                        agentHandler = handler;
-                        return true;
-                    }
-                }
-            }
-            catch (KeyNotFoundException)
-            {
-            }
-
-            return false;
         }
 
         /// <summary>
@@ -1233,59 +1179,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             map["login"] = OSD.FromString("false");
             return map;
         }
-        /// <summary>
-        /// A specific agent handler was provided. Such a handler is expecetd to have an
-        /// intimate, and highly specific relationship with the client. Consequently,
-        /// nothing is done here.
-        /// </summary>
-        /// <param name="handler"></param>
-        /// <param name="request"></param>
-        /// <param name="response"></param>
-
-        private bool HandleAgentRequest(IHttpAgentHandler handler, OSHttpRequest request, OSHttpResponse response)
-        {
-            // In the case of REST, then handler is responsible for ALL aspects of
-            // the request/response handling. Nothing is done here, not even encoding.
-
-            try
-            {
-                return handler.Handle(request, response);
-            }
-            catch (Exception e)
-            {
-                // If the handler did in fact close the stream, then this will blow
-                // chunks. So that that doesn't disturb anybody we throw away any
-                // and all exceptions raised. We've done our best to release the
-                // client.
-                try
-                {
-                    m_log.Warn("[HTTP-AGENT]: Error - " + e.ToString());
-                    response.SendChunked = false;
-                    response.KeepAlive = true;
-                    response.StatusCode = (int)OSHttpStatusCode.ServerErrorInternalError;
-                    //response.OutputStream.Close();
-                    try
-                    {
-                        response.Send();
-                        //response.FreeContext();
-                    }
-                    catch (SocketException f)
-                    {
-                        // This has to be here to prevent a Linux/Mono crash
-                        m_log.WarnFormat(
-                            "[BASE HTTP SERVER]: XmlRpcRequest issue {0}.\nNOTE: this may be spurious on Linux.", f);
-                    }
-                }
-                catch (Exception)
-                {
-                }
-            }
-
-            // Indicate that the request has been "handled"
-
-            return true;
-        }
-
+        
         public void HandleHTTPRequest(OSHttpRequest request, OSHttpResponse response)
         {
             //            m_log.DebugFormat(
@@ -1790,23 +1684,6 @@ namespace OpenSim.Framework.Servers.HttpServer
             }
 
             RemoveHTTPHandler(httpMethod, path);
-        }
-
-        public bool RemoveAgentHandler(string agent, IHttpAgentHandler handler)
-        {
-            try
-            {
-                if (handler == m_agentHandlers[agent])
-                {
-                    m_agentHandlers.Remove(agent);
-                    return true;
-                }
-            }
-            catch (KeyNotFoundException)
-            {
-            }
-
-            return false;
         }
 
         public void RemoveXmlRPCHandler(string method)
