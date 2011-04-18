@@ -634,6 +634,8 @@ namespace OpenSim.Framework.Servers.HttpServer
 
             lock (m_streamHandlers)
             {
+                if(m_streamHandlers.TryGetValue(handlerKey, out streamHandler))
+                    return true;
                 foreach (string pattern in m_streamHandlers.Keys)
                 {
                     if (handlerKey.StartsWith(pattern))
@@ -664,6 +666,8 @@ namespace OpenSim.Framework.Servers.HttpServer
 
             lock (m_pollHandlers)
             {
+                if(m_pollHandlers.TryGetValue(handlerKey, out oServiceEventArgs))
+                    return true;
                 foreach (string pattern in m_pollHandlers.Keys)
                 {
                     if (handlerKey.StartsWith(pattern))
@@ -696,6 +700,8 @@ namespace OpenSim.Framework.Servers.HttpServer
 
             lock (m_HTTPHandlers)
             {
+                if(m_HTTPHandlers.TryGetValue(handlerKey, out HTTPHandler))
+                    return true;
                 foreach (string pattern in m_HTTPHandlers.Keys)
                 {
                     if (handlerKey.StartsWith(pattern))
@@ -725,6 +731,8 @@ namespace OpenSim.Framework.Servers.HttpServer
             agentHandler = null;
             try
             {
+                if(m_agentHandlers.TryGetValue(request, out agentHandler))
+                    return true;
                 foreach (IHttpAgentHandler handler in m_agentHandlers.Values)
                 {
                     if (handler.Match(request, response))
