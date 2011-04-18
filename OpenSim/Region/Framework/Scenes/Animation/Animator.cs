@@ -46,6 +46,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             get { return m_animations;  }
         }
         protected AnimationSet m_animations = null;
+        protected int SLOWFLY_DELAY = 10;
 
         /// <value>
         /// The current movement animation
@@ -72,7 +73,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         protected bool m_useSplatAnimation = true;
 
         private float m_animTickFall;
-        private float m_timesBeforeSlowFlyIsOff = 0;
+        private int m_timesBeforeSlowFlyIsOff = 0;
         private float m_animTickStandup = 0;
         
         /// <value>
@@ -86,6 +87,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             IConfig animationConfig = sp.Scene.Config.Configs["Animations"];
             if (animationConfig != null)
             {
+                SLOWFLY_DELAY = animationConfig.GetInt("SlowFlyDelay", SLOWFLY_DELAY);
                 m_useSplatAnimation = animationConfig.GetBoolean ("enableSplatAnimation", m_useSplatAnimation);
             }
             //This step makes sure that we don't waste almost 2.5! seconds on incoming agents
@@ -173,7 +175,6 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         /// </summary>
         private string GetMovementAnimation()
         {
-            const float SLOWFLY_DELAY = 15f;
             const float STANDUP_TIME = 2f;
             const float BRUSH_TIME = 3.5f;
 

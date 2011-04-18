@@ -189,6 +189,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private readonly Dictionary<IntPtr, float[]> TerrainHeightFieldlimits = new Dictionary<IntPtr, float[]>();
         private short[] WaterHeightFieldHeight;
         public bool m_EnableAutoConfig = true;
+        public bool m_allowJump = true;
         public bool m_usepreJump = true;
         public int m_preJumpTime = 15;
         public float m_preJumpForceMultiplier = 4;
@@ -442,6 +443,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_PointOfGravity.Y = physicsconfig.GetFloat("point_gravityy", 0);
                     m_PointOfGravity.Z = physicsconfig.GetFloat("point_gravityz", 0);
 
+                    m_allowJump = physicsconfig.GetBoolean("AllowJump", m_allowJump);
                     m_usepreJump = physicsconfig.GetBoolean("UsePreJump", m_usepreJump);
                     m_preJumpTime = physicsconfig.GetInt("PreJumpTime", m_preJumpTime);
                     m_preJumpForceMultiplier = physicsconfig.GetFloat("PreJumpMultiplier", m_preJumpForceMultiplier);
