@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,7 +28,10 @@ namespace Aurora.Framework
         /// <param name="hb">The delegate to run.</param>
         public void StartTrackingThread(int millisecondTimeOut, Heartbeat hb)
         {
-            m_heartbeats.Add(new InternalHeartbeat() { heartBeat = hb, millisecondTimeOut = millisecondTimeOut });
+            lock (m_lock)
+            {
+                m_heartbeats.Add(new InternalHeartbeat() { heartBeat = hb, millisecondTimeOut = millisecondTimeOut });
+            }
         }
 
         /// <summary>
@@ -61,31 +64,34 @@ namespace Aurora.Framework
                 List<InternalHeartbeat> hbToRemove = null;
                 while (m_timesToIterate >= 0)
                 {
-                    foreach (InternalHeartbeat intHB in m_heartbeats)
+                    lock (m_lock)
                     {
-                        bool isRunning = false;
-                        if (!CallAndWait(intHB.millisecondTimeOut, intHB.heartBeat, out isRunning))
+                        foreach (InternalHeartbeat intHB in m_heartbeats)
                         {
-                            Console.WriteLine("WARNING: Could not run Heartbeat in specified limits!");
+                            bool isRunning = false;
+                            if (!CallAndWait (intHB.millisecondTimeOut, intHB.heartBeat, out isRunning))
+                            {
+                                Console.WriteLine ("WARNING: Could not run Heartbeat in specified limits!");
+                            }
+                            else if(!isRunning)
+                            {
+                                if(hbToRemove == null)
+                                    hbToRemove = new List<InternalHeartbeat> ();
+                                hbToRemove.Add (intHB);
+                            }
                         }
-                        else if (!isRunning)
-                        {
-                            if (hbToRemove == null)
-                                hbToRemove = new List<InternalHeartbeat>();
-                            hbToRemove.Add(intHB);
-                        }
-                    }
 
-                    if (hbToRemove != null)
-                    {
-                        foreach (InternalHeartbeat intHB in hbToRemove)
+                        if (hbToRemove != null)
                         {
-                            m_heartbeats.Remove(intHB);
+                            foreach (InternalHeartbeat intHB in hbToRemove)
+                            {
+                                m_heartbeats.Remove (intHB);
+                            }
+                            //Renull it for later
+                            hbToRemove = null;
+                            if (m_heartbeats.Count == 0) //None left, break
+                                break;
                         }
-                        //Renull it for later
-                        hbToRemove = null;
-                        if (m_heartbeats.Count == 0) //None left, break
-                            break;
                     }
                     //0 is infinite
                     if (m_timesToIterate != 0)
@@ -98,7 +104,7 @@ namespace Aurora.Framework
                     if (m_timesToIterate == -1) //Kill signal
                         break;
                     if (m_sleepTime != 0)
-                        Thread.Sleep(m_sleepTime);
+                        Thread.Sleep (m_sleepTime);
                 }
             }
             catch
@@ -154,10 +160,13 @@ namespace Aurora.Framework
 
         public void Stop()
         {
-            //Remove all
-            m_heartbeats.Clear();
-            //Kill it
-            m_timesToIterate = -1;
+            lock (m_lock)
+            {
+                //Remove all
+                m_heartbeats.Clear();
+                //Kill it
+                m_timesToIterate = -1;
+            }
         }
     }
 }
