@@ -596,6 +596,7 @@ namespace HttpServer
 		    IHttpRequest request = args.Request;
 			if (_requestQueue.ShouldQueue)
 			{
+			        WriteLog(LogPrio.Fatal, "Enqueuing http request");
 				_requestQueue.Enqueue(context, request);
 				return;
 			}
