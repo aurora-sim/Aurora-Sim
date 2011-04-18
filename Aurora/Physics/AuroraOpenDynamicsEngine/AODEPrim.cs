@@ -1342,15 +1342,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_targetSpace = targetspace;
 
             if (_mesh == null)
-                {
+            {
                 if (_parent_scene.needsMeshing(_pbs))
-                    {
+                {
                     // Don't need to re-enable body..   it's done in SetMesh
                     _mesh = _parent_scene.mesher.CreateMesh(m_primName, _pbs, _size, _parent_scene.meshSculptLOD, IsPhysical);
                     // createmesh returns null when it's a shape that isn't a cube.
                     // m_log.Debug(m_localID);
-                    }
                 }
+            }
 
 
             lock (_parent_scene.OdeLock)

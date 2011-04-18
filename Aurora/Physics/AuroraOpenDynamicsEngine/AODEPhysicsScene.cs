@@ -143,7 +143,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public int geomCrossingFailuresBeforeOutofbounds = 1;
 
-        public int bodyFramesAutoDisable = 20;
+        public int bodyFramesAutoDisable = 10;
 
         private bool m_filterCollisions = false;
 
@@ -457,7 +457,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     geomCrossingFailuresBeforeOutofbounds = physicsconfig.GetInt("geom_crossing_failures_before_outofbounds", 5);
 
                     geomDefaultDensity = physicsconfig.GetFloat("geometry_default_density", 10.000006836f);
-                    bodyFramesAutoDisable = physicsconfig.GetInt("body_frames_auto_disable", 20);
+                    bodyFramesAutoDisable = physicsconfig.GetInt("body_frames_auto_disable", 10);
 
                     bodyPIDD = physicsconfig.GetFloat("body_pid_derivative", 35f);
                     bodyPIDG = physicsconfig.GetFloat("body_pid_gain", 25f);
@@ -686,17 +686,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             IntPtr aSpace;
 
             for (int i = 0; i < nspacesPerSideX; i++)
-                {
+            {
                 for (int j = 0; j < nspacesPerSideY; j++)
-                    {
+                {
                     aSpace = d.HashSpaceCreate(IntPtr.Zero);
                     staticPrimspace[i, j] = aSpace;
                     d.GeomSetCategoryBits(aSpace, (int)CollisionCategories.Space);
                     waitForSpaceUnlock(aSpace);
                     d.SpaceSetSublevel(aSpace, 1);
                     d.SpaceAdd(space, aSpace);
-                    }
                 }
+            }
         }
 
         internal void waitForSpaceUnlock(IntPtr space)
