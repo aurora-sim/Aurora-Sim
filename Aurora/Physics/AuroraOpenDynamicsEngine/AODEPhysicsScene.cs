@@ -187,10 +187,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float m_preJumpForceMultiplier = 4;
 
         private d.Contact contact;
-        private d.Contact TerrainContact;
         private d.Contact AvatarMovementprimContact;
-//        private d.Contact AvatarMovementTerrainContact;
-        private d.Contact WaterContact;
         private d.Contact[,] m_materialContacts;
 
         private int m_physicsiterations = 10;
@@ -513,28 +510,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             contact.surface.soft_cfm = 0.010f;
             contact.surface.soft_erp = 0.010f;
 
-            // Terrain contact friction and Bounce
-            // This is the *non* moving version.   Use this when an avatar
-            // isn't moving to keep it in place better
-            TerrainContact.surface.mode |= d.ContactFlags.SoftERP;
-            TerrainContact.surface.mu = nmTerrainContactFriction;
-            TerrainContact.surface.bounce = nmTerrainContactBounce;
-            TerrainContact.surface.soft_erp = nmTerrainContactERP;
-
-            WaterContact.surface.mode |= (d.ContactFlags.SoftERP | d.ContactFlags.SoftCFM);
-            WaterContact.surface.mu = 0f; // No friction
-            WaterContact.surface.bounce = 0.0f; // No bounce
-            WaterContact.surface.soft_cfm = 0.010f;
-            WaterContact.surface.soft_erp = 0.010f;
-
             // Prim contact friction and bounce
             // This is the *non* moving version of friction and bounce
             // Use this when an avatar comes in contact with a prim
             // and is moving
 
-            AvatarMovementprimContact.surface.mode |= d.ContactFlags.Bounce;
-            AvatarMovementprimContact.surface.mu = mAvatarObjectContactFriction;
-            AvatarMovementprimContact.surface.bounce = mAvatarObjectContactBounce;
+            AvatarMovementprimContact.surface.mode |= d.ContactFlags.SoftERP;
+            AvatarMovementprimContact.surface.mu = nmAvatarObjectContactFriction;
+            AvatarMovementprimContact.surface.bounce = nmAvatarObjectContactBounce;
+            AvatarMovementprimContact.surface.soft_cfm = 0.010f;
+            AvatarMovementprimContact.surface.soft_erp = 0.010f;
+            //AvatarMovementprimContact.surface.mode |= d.ContactFlags.Bounce;
+            //AvatarMovementprimContact.surface.mu = mAvatarObjectContactFriction;
+            //AvatarMovementprimContact.surface.bounce = mAvatarObjectContactBounce;
 
             /*
                 <summary></summary>
