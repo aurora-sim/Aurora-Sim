@@ -4950,6 +4950,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 ce.account = account;
                 pinfo = World.RequestModuleInterface<IAgentInfoService>().GetUserInfo(uuid.ToString());
                 ce.pinfo = pinfo;
+                m_userInfoCache[uuid] = ce;
             }
             else
             {
@@ -5148,11 +5149,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
             }
-            if (soundId != UUID.Zero)
-            {
-                m_host.CollisionSound = soundId;
-                m_host.CollisionSoundVolume = (float)impact_volume;
-            }
+            //We do allow UUID.Zero here for scripts that want to disable the collision sound (such as "")
+            m_host.CollisionSound = soundId;
+            m_host.CollisionSoundVolume = (float)impact_volume;
         }
 
         public void llCollisionSprite(string impact_sprite)
