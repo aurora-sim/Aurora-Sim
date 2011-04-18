@@ -375,11 +375,11 @@ namespace OpenSim.Framework.Servers.HttpServer
 
             try
             {
-                // OpenSim.Framework.WebUtil.OSHeaderRequestID
                 if (request.Headers["opensim-request-id"] != null)
                     reqnum = String.Format("{0}:{1}", request.RemoteIPEndPoint, request.Headers["opensim-request-id"]);
                 // m_log.DebugFormat("[BASE HTTP SERVER]: <{0}> handle request for {1}",reqnum,request.RawUrl);
 
+                //Fix the current Culture
                 Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US", true);
 
                 //  This is the REST agent interface. We require an agent to properly identify
@@ -393,9 +393,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                 if (TryGetAgentHandler(request, response, out agentHandler))
                 {
                     if (HandleAgentRequest(agentHandler, request, response))
-                    {
                         return;
-                    }
                 }
 
                 //response.KeepAlive = true;
@@ -499,7 +497,6 @@ namespace OpenSim.Framework.Servers.HttpServer
                     try
                     {
                         response.OutputStream.Write(buffer, 0, buffer.Length);
-                        //response.OutputStream.Close();
                     }
                     catch (HttpListenerException)
                     {
@@ -1079,7 +1076,6 @@ namespace OpenSim.Framework.Servers.HttpServer
         /// <returns>true if we have one, false if not</returns>
         private bool DoWeHaveALLSDHandler(string path)
         {
-
             string[] pathbase = path.Split('/');
             string searchquery = "/";
 
@@ -1290,7 +1286,6 @@ namespace OpenSim.Framework.Servers.HttpServer
             // Indicate that the request has been "handled"
 
             return true;
-
         }
 
         public void HandleHTTPRequest(OSHttpRequest request, OSHttpResponse response)
