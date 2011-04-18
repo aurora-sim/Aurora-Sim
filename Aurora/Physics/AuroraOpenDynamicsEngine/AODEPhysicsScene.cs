@@ -1834,13 +1834,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             Quaternion rot = rotation;
 
             AuroraODEPrim newPrim;
-            lock (OdeLock)
-            {
-                newPrim = new AuroraODEPrim(name, this, pos, siz, rot, mesh, pbs, isphysical, ode);
+            newPrim = new AuroraODEPrim(name, this, pos, siz, rot, mesh, pbs, isphysical, ode);
 
-                lock (_prims)
-                    _prims.Add(newPrim);
-            }
+            lock (_prims)
+                _prims.Add(newPrim);
 
             return newPrim;
         }
