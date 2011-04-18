@@ -522,11 +522,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (force.Z >= 1.0f)
                 {
-                    m_ispreJumping = true;
-                    m_preJumpForce = force;
-                    m_preJumpCounter = 0;
-                    TriggerMovementUpdate();
-                    return;
+                    if (_parent_scene.m_usepreJump)
+                    {
+                        m_ispreJumping = true;
+                        m_preJumpForce = force;
+                        m_preJumpCounter = 0;
+                        TriggerMovementUpdate();
+                        return;
+                    }
+                    else
+                    {
+                        m_isJumping = true;
+                        m_preJumpCounter = _parent_scene.m_preJumpTime;
+                        TriggerMovementUpdate();
+                        force *= _parent_scene.m_preJumpForceMultiplier;
+                    }
                 }
             }
             if (m_ispreJumping)
@@ -891,7 +901,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Jump code
 
-            if (IsJumping && (IsColliding && m_preJumpCounter > 25) || m_preJumpCounter > 50)
+            if (IsJumping && (IsColliding && m_preJumpCounter > _parent_scene.m_preJumpTime + 10) || m_preJumpCounter > 50)
             {
                 m_isJumping = false;
                 m_preJumpCounter = 0;
@@ -899,10 +909,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (IsJumping)
                 m_preJumpCounter++;
 
-            if (m_ispreJumping && m_preJumpCounter == 15)
+            if (m_ispreJumping && m_preJumpCounter == _parent_scene.m_preJumpTime)
             {
                 m_ispreJumping = false;
-                _target_velocity += m_preJumpForce * 4;
+                _target_velocity += m_preJumpForce * _parent_scene.m_preJumpForceMultiplier;
                 m_preJumpCounter = 0;
                 m_isJumping = true;
             }

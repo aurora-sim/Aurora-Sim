@@ -189,7 +189,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private readonly Dictionary<IntPtr, float[]> TerrainHeightFieldlimits = new Dictionary<IntPtr, float[]>();
         private short[] WaterHeightFieldHeight;
         public bool m_EnableAutoConfig = true;
-        public bool m_DisableSlowPrims = true;
+        public bool m_usepreJump = true;
+        public int m_preJumpTime = 15;
+        public float m_preJumpForceMultiplier = 4;
 
         private d.Contact contact;
         private d.Contact TerrainContact;
@@ -352,10 +354,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// Sets many properties that ODE requires to be stable
         /// These settings need to be tweaked 'exactly' right or weird stuff happens.
         /// </summary>
-        
-        
-
-
         public AuroraODEPhysicsScene(CollisionLocker dode, string sceneIdentifier)
         {
             OdeLock = new Object();
@@ -444,6 +442,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_PointOfGravity.Y = physicsconfig.GetFloat("point_gravityy", 0);
                     m_PointOfGravity.Z = physicsconfig.GetFloat("point_gravityz", 0);
 
+                    m_usepreJump = physicsconfig.GetBoolean("UsePreJump", m_usepreJump);
+                    m_preJumpTime = physicsconfig.GetInt("PreJumpTime", m_preJumpTime);
+                    m_preJumpForceMultiplier = physicsconfig.GetFloat("PreJumpMultiplier", m_preJumpForceMultiplier);
 
                     contactsurfacelayer = physicsconfig.GetFloat("world_contact_surface_layer", 0.001f);
 
