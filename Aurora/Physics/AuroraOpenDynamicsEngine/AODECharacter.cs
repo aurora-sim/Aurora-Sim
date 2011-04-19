@@ -1279,17 +1279,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             bool VelIsZero = false;
             int vcntr = 0;
-            if (Math.Abs(_velocity.X) < 0.001)
+            if (Math.Abs(_velocity.X) < 0.01)
             {
                 vcntr++;
                 _velocity.X = 0;
             }
-            if (Math.Abs(_velocity.Y) < 0.001)
+            if (Math.Abs(_velocity.Y) < 0.01)
             {
                 vcntr++;
                 _velocity.Y = 0;
             }
-            if (Math.Abs(_velocity.Z) < 0.001)
+            if (Math.Abs(_velocity.Z) < 0.01)
             {
                 vcntr++;
                 _velocity.Z = 0;
