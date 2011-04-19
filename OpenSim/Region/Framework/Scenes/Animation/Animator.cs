@@ -366,11 +366,11 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             #region Ground Movement
 
-            if (actor.IsJumping)
+            if (actor != null && actor.IsJumping)
             {
                 return "JUMP";
             }
-            if (actor.IsPreJumping)
+            if (actor != null && actor.IsPreJumping)
             {
                 return "PREJUMP";
             }
