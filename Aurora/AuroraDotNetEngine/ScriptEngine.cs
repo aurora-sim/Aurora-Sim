@@ -924,7 +924,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             id.World = part.ParentEntity.Scene;
             id.RezzedFrom = RezzedFrom;
             ls.ID = id;
-            ScriptProtection.AddNewScript(id);
             return ls;
         }
 
@@ -953,7 +952,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             id.World = id.Part.ParentEntity.Scene;
             ls.ID = id;
-            ScriptProtection.AddNewScript(id);
             MaintenanceThread.AddScriptChange(new LUStruct[] { ls }, LoadPriority.Restart);
         }
 
