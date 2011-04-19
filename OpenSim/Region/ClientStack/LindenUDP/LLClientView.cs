@@ -3763,7 +3763,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 ObjectUpdatePacket oo = new ObjectUpdatePacket(packet.ToBytes(), ref ii);
                 OutPacket(packet, ThrottleOutPacketType.Immediate, true, delegate(OutgoingPacket p)
                 {
-                    ResendFullPrimUpdates(packet.ObjectData);
+                    ResendPrimUpdates(updates);
                 });
             }
 
@@ -3781,7 +3781,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 OutPacket(packet, ThrottleOutPacketType.Immediate, true, delegate(OutgoingPacket p)
                 {
-                    ResendFullPrimUpdates(packet.ObjectData);
+                    ResendPrimUpdates(updates);
                 });
             }
 
@@ -3799,7 +3799,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 OutPacket(packet, ThrottleOutPacketType.Immediate, true, delegate(OutgoingPacket p)
                 {
-                    ResendFullPrimUpdates(packet.ObjectData);
+                    ResendPrimUpdates(updates);
                 });
             }
 
@@ -3819,39 +3819,23 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                     int i = 0;
                     ImprovedTerseObjectUpdatePacket o = new ImprovedTerseObjectUpdatePacket(p.Buffer.Data, ref i);
-                    ResendTersePrimUpdates(o.ObjectData);
+                    ResendPrimUpdates(updates);
                 });
             }
         }
 
-        private void ResendFullPrimUpdates(object[] updates)
+        private void ResendPrimUpdates(IEnumerable<EntityUpdate> updates)
         {
             IScenePresence sp = m_scene.GetScenePresence(AgentId);
             if (sp != null)
             {
                 ISceneViewer viewer = sp.SceneViewer;
-                for (int i = 0; i < updates.Length; i++)
+                foreach (EntityUpdate update in updates)
                 {
-                    if (updates is ObjectUpdatePacket.ObjectDataBlock[])
-                        viewer.QueuePartForUpdate(m_scene.GetSceneObjectPart(((ObjectUpdatePacket.ObjectDataBlock[])updates)[i].FullID), PrimUpdateFlags.FullUpdate);
-                    else if (updates is ObjectUpdateCachedPacket.ObjectDataBlock[])
-                        viewer.QueuePartForUpdate(m_scene.GetSceneObjectPart(((ObjectUpdateCachedPacket.ObjectDataBlock[])updates)[i].ID), PrimUpdateFlags.FullUpdate);
-                    else if (updates is ObjectUpdateCompressedPacket.ObjectDataBlock[])
-                        viewer.QueuePartForUpdate(m_scene.GetSceneObjectPart(new UUID(((ObjectUpdateCompressedPacket.ObjectDataBlock[])updates)[i].Data, 0)), PrimUpdateFlags.FullUpdate);
-                }
-            }
-        }
-
-        private void ResendTersePrimUpdates(ImprovedTerseObjectUpdatePacket.ObjectDataBlock[] updates)
-        {
-            IScenePresence sp = m_scene.GetScenePresence(AgentId);
-            if (sp != null)
-            {
-                ISceneViewer viewer = sp.SceneViewer;
-                for (int i = 0; i < updates.Length; i++)
-                {
-                    viewer.QueuePartForUpdate(m_scene.GetSceneObjectPart(Utils.BytesToUInt(updates[i].Data, 0)),
-                        PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity);
+                    if (update.Entity is ISceneChildEntity)
+                        viewer.QueuePartForUpdate((ISceneChildEntity)update.Entity, update.Flags);
+                    else
+                        viewer.QueuePresenceForUpdate((IScenePresence)update.Entity, update.Flags);
                 }
             }
         }
