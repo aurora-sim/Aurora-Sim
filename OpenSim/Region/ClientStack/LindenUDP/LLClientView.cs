@@ -1670,14 +1670,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     currentPacket.ItemData[itemsSent % MAX_ITEMS_PER_PACKET] = CreateItemDataBlock(items[itemsSent++]);
                 else
                 {
-                    OutPacket(currentPacket, ThrottleOutPacketType.Asset, false);
+                    OutPacket(currentPacket, ThrottleOutPacketType.Asset, false, null);
                     currentPacket = null;
                 }
 
             }
 
             if (currentPacket != null)
-                OutPacket(currentPacket, ThrottleOutPacketType.Asset, false);
+                OutPacket(currentPacket, ThrottleOutPacketType.Asset, false, null);
         }
 
         private InventoryDescendentsPacket.FolderDataBlock CreateFolderDataBlock(InventoryFolderBase folder)
@@ -3759,8 +3759,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
-
-                OutPacket (packet, ThrottleOutPacketType.Immediate, true);
+                int ii = 0;
+                ObjectUpdatePacket oo = new ObjectUpdatePacket(packet.ToBytes(), ref ii);
+                OutPacket(packet, ThrottleOutPacketType.Immediate, true, delegate(OutgoingPacket p)
+                {
+                    ResendFullPrimUpdates(packet.ObjectData);
+                });
             }
 
             if (compressedUpdateBlocks.IsValueCreated)
@@ -3775,7 +3779,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket(packet, ThrottleOutPacketType.Immediate, true);
+                OutPacket(packet, ThrottleOutPacketType.Immediate, true, delegate(OutgoingPacket p)
+                {
+                    ResendFullPrimUpdates(packet.ObjectData);
+                });
             }
 
             if (cachedUpdateBlocks.IsValueCreated)
@@ -3790,7 +3797,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket(packet, ThrottleOutPacketType.Immediate, true);
+                OutPacket(packet, ThrottleOutPacketType.Immediate, true, delegate(OutgoingPacket p)
+                {
+                    ResendFullPrimUpdates(packet.ObjectData);
+                });
             }
 
             if (terseUpdateBlocks.IsValueCreated)
@@ -3805,11 +3815,48 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket(packet, ThrottleOutPacketType.Immediate, true);
+                OutPacket(packet, ThrottleOutPacketType.Immediate, true, delegate(OutgoingPacket p)
+                {
+                    int i = 0;
+                    ImprovedTerseObjectUpdatePacket o = new ImprovedTerseObjectUpdatePacket(p.Buffer.Data, ref i);
+                    ResendTersePrimUpdates(o.ObjectData);
+                });
             }
         }
 
-        public void DequeueUpdates (int nupdates)
+        private void ResendFullPrimUpdates(object[] updates)
+        {
+            IScenePresence sp = m_scene.GetScenePresence(AgentId);
+            if (sp != null)
+            {
+                ISceneViewer viewer = sp.SceneViewer;
+                for (int i = 0; i < updates.Length; i++)
+                {
+                    if (updates is ObjectUpdatePacket.ObjectDataBlock[])
+                        viewer.QueuePartForUpdate(m_scene.GetSceneObjectPart(((ObjectUpdatePacket.ObjectDataBlock[])updates)[i].FullID), PrimUpdateFlags.FullUpdate);
+                    else if (updates is ObjectUpdateCachedPacket.ObjectDataBlock[])
+                        viewer.QueuePartForUpdate(m_scene.GetSceneObjectPart(((ObjectUpdateCachedPacket.ObjectDataBlock[])updates)[i].ID), PrimUpdateFlags.FullUpdate);
+                    else if (updates is ObjectUpdateCompressedPacket.ObjectDataBlock[])
+                        viewer.QueuePartForUpdate(m_scene.GetSceneObjectPart(new UUID(((ObjectUpdateCompressedPacket.ObjectDataBlock[])updates)[i].Data, 0)), PrimUpdateFlags.FullUpdate);
+                }
+            }
+        }
+
+        private void ResendTersePrimUpdates(ImprovedTerseObjectUpdatePacket.ObjectDataBlock[] updates)
+        {
+            IScenePresence sp = m_scene.GetScenePresence(AgentId);
+            if (sp != null)
+            {
+                ISceneViewer viewer = sp.SceneViewer;
+                for (int i = 0; i < updates.Length; i++)
+                {
+                    viewer.QueuePartForUpdate(m_scene.GetSceneObjectPart(Utils.BytesToUInt(updates[i].Data, 0)),
+                        PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity);
+                }
+            }
+        }
+
+        public void DequeueUpdates(int nupdates)
         {
             IScenePresence sp = m_scene.GetScenePresence (AgentId);
             if (sp != null)
@@ -11864,6 +11911,19 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// handles splitting manually</param>
         protected void OutPacket(Packet packet, ThrottleOutPacketType throttlePacketType, bool doAutomaticSplitting)
         {
+            OutPacket(packet, throttlePacketType, doAutomaticSplitting, null);
+        }
+
+        /// <summary>
+        /// This is the starting point for sending a simulator packet out to the client
+        /// </summary>
+        /// <param name="packet">Packet to send</param>
+        /// <param name="throttlePacketType">Throttling category for the packet</param>
+        /// <param name="doAutomaticSplitting">True to automatically split oversized
+        /// packets (the default), or false to disable splitting if the calling code
+        /// handles splitting manually</param>
+        protected void OutPacket(Packet packet, ThrottleOutPacketType throttlePacketType, bool doAutomaticSplitting, UnackedPacketMethod method)
+        {
             if (m_debugPacketLevel > 0)
             {
                 bool outputPacket = true;
@@ -11886,7 +11946,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     m_log.DebugFormat("[CLIENT]: Packet OUT {0}", packet.Type);
             }
 
-            m_udpServer.SendPacket(m_udpClient, packet, throttlePacketType, doAutomaticSplitting);
+            m_udpServer.SendPacket(m_udpClient, packet, throttlePacketType, doAutomaticSplitting, method);
         }
 
         /// <summary>

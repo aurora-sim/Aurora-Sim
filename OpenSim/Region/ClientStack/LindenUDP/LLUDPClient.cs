@@ -552,7 +552,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 if (m_nextOutPackets != null)
                 {
                     OutgoingPacket nextPacket = m_nextOutPackets;
-                    if (m_throttle.RemoveTokens(nextPacket.Buffer.DataLength))
+                    TokenBucket bucket = m_throttleCategories[(int)nextPacket.Category];
+                    if (bucket == null || bucket.RemoveTokens(nextPacket.Buffer.DataLength))
                     {
                         // Send the packet
                         m_udpServer.SendPacketFinal(nextPacket);
@@ -578,7 +579,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     {
                         // A packet was pulled off the queue. See if we have
                         // enough tokens in the bucket to send it out
-                        if (packet.Category == ThrottleOutPacketType.OutBand || m_throttle.RemoveTokens(packet.Buffer.DataLength))
+                        TokenBucket bucket = m_throttleCategories[(int)packet.Category];
+                        if (packet.Category == ThrottleOutPacketType.OutBand || bucket == null || bucket.RemoveTokens(packet.Buffer.DataLength))
                         {
                             // Send the packet
                             m_udpServer.SendPacketFinal(packet);

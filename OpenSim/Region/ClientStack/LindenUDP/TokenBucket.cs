@@ -168,9 +168,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if (content - amount >= 0)
             {
-                if (parent != null && !parent.RemoveTokens(amount))
-                    return false;
-
+                // we don't have to remove from the parent, the drip rate is already
+                // reflective of the drip rate limits in the parent
                 content -= amount;
                 return true;
             }
