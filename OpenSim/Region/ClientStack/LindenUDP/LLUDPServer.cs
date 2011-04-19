@@ -455,8 +455,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 // Exponential backoff of the retransmission timeout
                 udpClient.BackoffRTO();
                 for (int i = 0; i < expiredPackets.Count; ++i)
-                    if(expiredPackets[i].UnackedMethod != null)
+                {
+                    if (expiredPackets[i].UnackedMethod != null)
                         expiredPackets[i].UnackedMethod(expiredPackets[i]);
+                }
 
                 lock (udpClient)
                 {
@@ -466,6 +468,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 // Resend packets
                 for (int i = 0; i < expiredPackets.Count; i++)
                 {
+                    if (expiredPackets[i].UnackedMethod != null)
+                        continue; //If its not null, it has taken care of the packet sending on its own
                     OutgoingPacket outgoingPacket = expiredPackets[i];
 
                     //m_log.DebugFormat("[LLUDPSERVER]: Resending packet #{0} (attempt {1}), {2}ms have passed",
