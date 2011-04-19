@@ -115,7 +115,10 @@ namespace Aurora.Simulation.Base
             string supported = String.Empty;
             if (Util.IsEnvironmentSupported(ref supported))
             {
-                m_log.Info("[Setup]: Environment is compatible.\n");
+                int minWorker, minIOC;
+                // Get the current settings.
+                System.Threading.ThreadPool.GetMinThreads(out minWorker, out minIOC);
+                m_log.InfoFormat("[Setup]: Environment is compatible. Thread Workers: {0}, IO Workers {1}\n", minWorker, minIOC);
             }
             else
             {
