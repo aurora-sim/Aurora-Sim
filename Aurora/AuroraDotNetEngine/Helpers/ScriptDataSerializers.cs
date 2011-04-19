@@ -65,12 +65,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return null;
         }
 
-        public void SaveStateTo (ScriptData script)
+        public void SaveStateTo(ScriptData script)
         {
-            if (script.Script == null)
-                return; //If it didn't compile correctly, this happens
-            if (!script.Script.NeedsStateSaved)
-                return; //If it doesn't need a state save, don't save one
+            SaveStateTo(script, false);
+        }
+        public void SaveStateTo (ScriptData script, bool forced)
+        {
+            if (!forced)
+            {
+                if (script.Script == null)
+                    return; //If it didn't compile correctly, this happens
+                if (!script.Script.NeedsStateSaved)
+                    return; //If it doesn't need a state save, don't save one
+            }
             script.Script.NeedsStateSaved = false;
             StateSave stateSave = new StateSave ();
             stateSave.State = script.State;
@@ -149,14 +156,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void DeleteFrom (ScriptData script)
         {
-            OSDMap component = (OSDMap)m_manager.GetComponentState (script.Part, m_componentName);
+            OSDMap component = m_manager.GetComponentState (script.Part, m_componentName) as OSDMap;
             //Attempt to find the state saves we have
             if (component != null)
             {
                 //if we did remove something, resave it
                 if(component.Remove(script.ItemID.ToString()))
                 {
-                    m_manager.SetComponentState (script.Part, m_componentName, component);
+                    if (component.Count == 0)
+                        m_manager.RemoveComponentState(script.Part.UUID, m_componentName);
+                    else
+                        m_manager.SetComponentState (script.Part, m_componentName, component);
                 }
             }
         }

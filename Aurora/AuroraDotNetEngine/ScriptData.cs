@@ -370,7 +370,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 m_ScriptEngine.MaintenanceThread.AddEventSchQueue (this, "state_entry",
                     new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0] { });
                 //Save a state save after a state change, its a large change in the script's function
-                m_ScriptEngine.StateSave.SaveStateTo (this);
+                m_ScriptEngine.StateSave.SaveStateTo (this, true);
             }
         }
 
@@ -708,7 +708,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             else
             {
                 //Make a new state save now
-                m_ScriptEngine.StateSave.SaveStateTo (this);
+                m_ScriptEngine.StateSave.SaveStateTo (this, true);
             }
 
             // Add it to our script memstruct so it can be found by other scripts
