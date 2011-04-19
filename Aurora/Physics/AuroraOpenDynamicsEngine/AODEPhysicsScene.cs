@@ -98,6 +98,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float gravityx = 0f;
         public float gravityy = 0f;
         public float gravityz = -9.8f;
+        private const int maxContactsbeforedeath = 4000;
+        private int m_currentmaxContactsbeforedeath = maxContactsbeforedeath;
 
         private float contactsurfacelayer = 0.1f;
 
@@ -1056,7 +1058,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (!skipThisContact && checkDupe(curContact, p2.PhysicsActorType))
                     skipThisContact = true;
 
-                const int maxContactsbeforedeath = 4000;
                 joint = IntPtr.Zero;
 
                 if (!skipThisContact)
@@ -1114,7 +1115,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
 
-                            if (m_global_contactcount < maxContactsbeforedeath)
+                            if (m_global_contactcount < m_currentmaxContactsbeforedeath)
                             {
                                 joint = d.JointCreateContact(world, contactgroup, ref m_materialContacts[material, movintYN]);
                                 m_global_contactcount++;
@@ -1136,7 +1137,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
 
-                            if (m_global_contactcount < maxContactsbeforedeath)
+                            if (m_global_contactcount < m_currentmaxContactsbeforedeath)
                             {
                                 joint = d.JointCreateContact(world, contactgroup, ref m_materialContacts[material, movintYN]);
                                 m_global_contactcount++;
@@ -1156,7 +1157,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 AvatarMovementprimContact.geom = curContact;
                                 if (m_filterCollisions)
                                     _perloopContact.Add(curContact);
-                                if (m_global_contactcount < maxContactsbeforedeath)
+                                if (m_global_contactcount < m_currentmaxContactsbeforedeath)
                                 {
                                     joint = d.JointCreateContact(world, contactgroup, ref AvatarMovementprimContact);
                                     m_global_contactcount++;
@@ -1169,7 +1170,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 if (m_filterCollisions)
                                     _perloopContact.Add(curContact);
 
-                                if (m_global_contactcount < maxContactsbeforedeath)
+                                if (m_global_contactcount < m_currentmaxContactsbeforedeath)
                                 {
                                     joint = d.JointCreateContact(world, contactgroup, ref contact);
                                     m_global_contactcount++;
@@ -1189,7 +1190,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
 
-                            if (m_global_contactcount < maxContactsbeforedeath)
+                            if (m_global_contactcount < m_currentmaxContactsbeforedeath)
                             {
                                 joint = d.JointCreateContact(world, contactgroup, ref m_materialContacts[material, 0]);
                                 m_global_contactcount++;
@@ -1197,7 +1198,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                     }
 
-                    if (m_global_contactcount < maxContactsbeforedeath && joint != IntPtr.Zero) // stack collide!
+                    if (m_global_contactcount < m_currentmaxContactsbeforedeath && joint != IntPtr.Zero) // stack collide!
                     {
                         d.JointAttach(joint, b1, b2);
                         m_global_contactcount++;
@@ -1447,6 +1448,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (Math.Abs((m_timeDilation * contactsPerCollision - contacts.Length)) > 10)
                 {
+                    m_currentmaxContactsbeforedeath = Math.Max(100, (int)(maxContactsbeforedeath * TimeDilation));
                     contacts = new d.ContactGeom[Math.Max(5, (int)(m_timeDilation * contactsPerCollision))];
                     m_log.WarnFormat("[ODE]: AutoConfig: changing contact amount to {0}, {1}%", contacts.Length, (m_timeDilation * contactsPerCollision) / contactsPerCollision * 100);
                 }
