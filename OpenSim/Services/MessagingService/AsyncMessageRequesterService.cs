@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,6 +25,7 @@ namespace OpenSim.Services.MessagingService
 
         protected List<IScene> m_scenes = new List<IScene>();
         protected volatile bool m_locked = false;
+        protected Timer m_timer = null;
 
         #endregion
 
@@ -50,11 +51,14 @@ namespace OpenSim.Services.MessagingService
 
             m_scenes.Add(scene);
 
-            //Start the request timer
-            Timer timer = new Timer();
-            timer.Elapsed += requestAsyncMessages;
-            timer.Interval = 60 * 1000; //60 secs
-            timer.Start();
+            if (m_timer == null)
+            {
+                m_timer = new Timer();
+                //Start the request timer
+                m_timer.Elapsed += requestAsyncMessages;
+                m_timer.Interval = 60 * 1000; //60 secs
+                m_timer.Start();
+            }
         }
 
         public void RemoveRegion(Scene scene)
