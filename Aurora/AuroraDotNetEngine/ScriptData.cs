@@ -676,9 +676,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return false;
             }
 
-            ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as MarshalByRefObject);
-            if (lease != null) //Its null if it is all running in the same app domain
-                lease.Register(Script.Sponsor);
+            //ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as MarshalByRefObject);
+            //if (lease != null) //Its null if it is all running in the same app domain
+            //    lease.Register(Script.Sponsor);
 
             //If its a reupload, an avatar is waiting for the script errors
             if (reupload)
