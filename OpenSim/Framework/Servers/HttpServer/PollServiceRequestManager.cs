@@ -41,8 +41,8 @@ namespace OpenSim.Framework.Servers.HttpServer
         private PollServiceWorkerThread[] m_PollServiceWorkerThreads;
         private Thread m_watcherThread;
         private bool m_running = true;
-
-        
+        private int m_timeOut = 0;
+        private bool m_threadRunning = false;
 
         public PollServiceRequestManager(BaseHttpServer pSrv, uint pWorkerThreadCount, int pTimeout)
         {
@@ -50,24 +50,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             m_WorkerThreadCount = pWorkerThreadCount;
             m_workerThreads = new Thread[m_WorkerThreadCount];
             m_PollServiceWorkerThreads = new PollServiceWorkerThread[m_WorkerThreadCount];
-
-            //startup worker threads
-            for (uint i=0;i<m_WorkerThreadCount;i++)
-            {
-                m_PollServiceWorkerThreads[i] = new PollServiceWorkerThread(m_server, pTimeout);
-                m_PollServiceWorkerThreads[i].ReQueue += ReQueueEvent;
-               
-                m_workerThreads[i] = new Thread(m_PollServiceWorkerThreads[i].ThreadStart);
-                m_workerThreads[i].Name = String.Format("PollServiceWorkerThread{0}",i);
-                //Can't add to thread Tracker here Referencing OpenSim.Framework creates circular reference
-                m_workerThreads[i].Start();
-                
-            }
-
-            //start watcher threads
-            m_watcherThread = new Thread(ThreadStart);
-            m_watcherThread.Name = "PollServiceWatcherThread";
-            m_watcherThread.Start();
+            m_timeOut = pTimeout;
         }
 
         internal void ReQueueEvent(PollServiceHttpRequest req)
@@ -85,7 +68,37 @@ namespace OpenSim.Framework.Servers.HttpServer
         public void Enqueue(PollServiceHttpRequest req)
         {
             lock (m_requests)
+            {
+                PokeThreads();
                 m_requests.Enqueue(req);
+            }
+        }
+
+        private void PokeThreads()
+        {
+            if (m_threadRunning)
+                return;
+
+            m_threadRunning = true;
+            //startup worker threads
+            for (uint i = 0; i < m_WorkerThreadCount; i++)
+            {
+                if (m_PollServiceWorkerThreads[i] == null)
+                {
+                    m_PollServiceWorkerThreads[i] = new PollServiceWorkerThread(m_server, m_timeOut);
+                    m_PollServiceWorkerThreads[i].ReQueue += ReQueueEvent;
+
+                    m_workerThreads[i] = new Thread(m_PollServiceWorkerThreads[i].ThreadStart);
+                    m_workerThreads[i].Name = String.Format("PollServiceWorkerThread{0}", i);
+                    //Can't add to thread Tracker here Referencing OpenSim.Framework creates circular reference
+                    m_workerThreads[i].Start();
+                }
+            }
+
+            //start watcher threads
+            m_watcherThread = new Thread(ThreadStart);
+            m_watcherThread.Name = "PollServiceWatcherThread";
+            m_watcherThread.Start();
         }
 
         public void ThreadStart(object o)
@@ -94,7 +107,11 @@ namespace OpenSim.Framework.Servers.HttpServer
             {
                 try
                 {
-                    ProcessQueuedRequests();
+                    if (!ProcessQueuedRequests())
+                    {
+                        m_threadRunning = false;
+                        return;
+                    }
                 }
                 catch
                 {
@@ -103,12 +120,12 @@ namespace OpenSim.Framework.Servers.HttpServer
             }
         }
 
-        private void ProcessQueuedRequests()
+        private bool ProcessQueuedRequests()
         {
             lock (m_requests)
             {
                 if (m_requests.Count == 0)
-                    return;
+                    return false;
 
                 int reqperthread = (int) (m_requests.Count/m_WorkerThreadCount) + 1;
                 // For Each WorkerThread
@@ -124,13 +141,12 @@ namespace OpenSim.Framework.Servers.HttpServer
                         catch (InvalidOperationException)
                         {
                             // The queue is empty, we did our calculations wrong!
-                            return;
+                            return false;
                         }
-                        
                     }
                 }
             }
-            
+            return true;
         }
 
 

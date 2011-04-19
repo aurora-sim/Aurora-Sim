@@ -41,8 +41,7 @@ using HttpServer;
 using log4net;
 using Nwc.XmlRpc;
 using OpenMetaverse.StructuredData;
-using CoolHTTPListener = HttpServer.HttpListener;
-using HttpListener = System.Net.HttpListener;
+using HttpListener = HttpServer.HttpListener;
 using LogPrio = HttpServer.LogPrio;
 
 namespace OpenSim.Framework.Servers.HttpServer
@@ -55,9 +54,7 @@ namespace OpenSim.Framework.Servers.HttpServer
         private volatile int NotSocketErrors = 0;
         public volatile bool HTTPDRunning = false;
 
-        protected Thread m_workerThread;
-        // protected HttpListener m_httpListener;
-        protected CoolHTTPListener m_httpListener2;
+        protected HttpListener m_httpListener;
         protected Dictionary<string, XmlRpcMethod> m_rpcHandlers = new Dictionary<string, XmlRpcMethod>();
         protected Dictionary<string, bool> m_rpcHandlersKeepAlive = new Dictionary<string, bool>();
         protected DefaultLLSDMethod m_defaultLlsdHandler = null; // <--   Moving away from the monolithic..  and going to /registered/
@@ -1560,9 +1557,9 @@ namespace OpenSim.Framework.Servers.HttpServer
                 {
                     //m_httpListener.Prefixes.Add("http://+:" + m_port + "/");
                     //m_httpListener.Prefixes.Add("http://10.1.1.5:" + m_port + "/");
-                    m_httpListener2 = CoolHTTPListener.Create(m_listenIPAddress, (int)m_port);
-                    m_httpListener2.ExceptionThrown += httpServerException;
-                    m_httpListener2.LogWriter = httpserverlog;
+                    m_httpListener = HttpListener.Create(m_listenIPAddress, (int)m_port);
+                    m_httpListener.ExceptionThrown += httpServerException;
+                    m_httpListener.LogWriter = httpserverlog;
 
                     // Uncomment this line in addition to those in HttpServerLogWriter
                     // if you want more detailed trace information from the HttpServer
@@ -1576,25 +1573,17 @@ namespace OpenSim.Framework.Servers.HttpServer
                     //m_httpListener.Prefixes.Add("http://+:" + m_port + "/");
                     System.Security.Cryptography.X509Certificates.X509Certificate2 cert =
                         new System.Security.Cryptography.X509Certificates.X509Certificate2("SineWaveCert.pfx", "123");
-                    m_httpListener2 = CoolHTTPListener.Create(IPAddress.Any, (int)m_port, cert);
-                    m_httpListener2.ExceptionThrown += httpServerException;
-                    m_httpListener2.LogWriter = httpserverlog;
+                    m_httpListener = HttpListener.Create(IPAddress.Any, (int)m_port, cert);
+                    m_httpListener.ExceptionThrown += httpServerException;
+                    m_httpListener.LogWriter = httpserverlog;
                 }
 
-                m_httpListener2.RequestReceived += OnRequest;
-                //m_httpListener.Start();
-                m_httpListener2.Start(64);
+                m_httpListener.RequestReceived += OnRequest;
+                m_httpListener.Start(64);
 
                 // Long Poll Service Manager with 3 worker threads a 25 second timeout for no events
                 m_PollServiceManager = new PollServiceRequestManager(this, 3, 25000);
                 HTTPDRunning = true;
-
-                //HttpListenerContext context;
-                //while (true)
-                //{
-                //    context = m_httpListener.GetContext();
-                //    ThreadPool.UnsafeQueueUserWorkItem(new WaitCallback(HandleRequest), context);
-                // }
             }
             catch (Exception e)
             {
@@ -1637,12 +1626,12 @@ namespace OpenSim.Framework.Servers.HttpServer
             HTTPDRunning = false;
             try
             {
-                m_httpListener2.ExceptionThrown -= httpServerException;
+                m_httpListener.ExceptionThrown -= httpServerException;
                 //m_httpListener2.DisconnectHandler = null;
 
-                m_httpListener2.LogWriter = null;
-                m_httpListener2.RequestReceived -= OnRequest;
-                m_httpListener2.Stop();
+                m_httpListener.LogWriter = null;
+                m_httpListener.RequestReceived -= OnRequest;
+                m_httpListener.Stop();
             }
             catch (NullReferenceException)
             {
