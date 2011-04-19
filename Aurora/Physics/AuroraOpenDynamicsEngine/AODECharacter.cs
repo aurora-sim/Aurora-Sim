@@ -981,16 +981,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         vec.X = (_target_velocity.X * movementmult - vel.X) * PID_D * 0.75f;
                         vec.Y = (_target_velocity.Y * movementmult - vel.Y) * PID_D * 0.75f;
                     }
-
                     else
                     {
                         // we're not colliding and we're not flying so that means we're falling!
                         // m_iscolliding includes collisions with the ground.
-                        vec.X = (_target_velocity.X * movementmult - vel.X) * PID_D * 0.85f;
-                        vec.Y = (_target_velocity.Y * movementmult - vel.Y) * PID_D * 0.85f;
+                        vec.X = (_target_velocity.X - vel.X) * PID_D * 0.85f;
+                        vec.Y = (_target_velocity.Y - vel.Y) * PID_D * 0.85f;
                     }
                 }
-
                 if (flying)
                 {
                     #region Av gravity
