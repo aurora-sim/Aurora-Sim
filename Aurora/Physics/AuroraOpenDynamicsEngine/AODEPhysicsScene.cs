@@ -156,11 +156,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private readonly HashSet<AuroraODEPrim> _activeprims = new HashSet<AuroraODEPrim>();
         private readonly HashSet<AuroraODECharacter> _taintedActors = new HashSet<AuroraODECharacter>();
         public struct AODEchangeitem
-            {
+        {
             public AuroraODEPrim prim;
             public changes what;
             public Object arg;
-            }
+        }
 //        public Queue<AODEchangeitem> ChangesQueue = new Queue<AODEchangeitem>(500);
         public OpenSim.Framework.LocklessQueue<AODEchangeitem> ChangesQueue = new OpenSim.Framework.LocklessQueue<AODEchangeitem>();
         private readonly List<d.ContactGeom> _perloopContact = new List<d.ContactGeom>();

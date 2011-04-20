@@ -63,7 +63,7 @@ namespace OpenSim.Services
 
         private void loadGridInfo(IConfigSource configSource)
         {
-            _info["platform"] = "OpenSim";
+            _info["platform"] = "Aurora";
             try
             {
                 IConfig startupCfg = configSource.Configs["Startup"];

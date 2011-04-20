@@ -62,6 +62,8 @@ namespace PrimMesher
 
             bool needsScaling = false;
 
+            bool smallMap = bmW * bmH <= lod * lod;
+
             width = bmW;
             height = bmH;
             while (width * height > numLodPixels)
@@ -107,9 +109,13 @@ namespace PrimMesher
                 {
                     for (int x = 0; x <= width; x++)
                     {
-                        int bmY = y < height ? y * 2 : y * 2 - 1;
-                        int bmX = x < width ? x * 2 : x * 2 - 1;
-                        Color pixel = unsafeBMP.GetPixel(bmX, bmY);
+                        Color pixel;
+                        if (smallMap)
+                            pixel = unsafeBMP.GetPixel(x < width ? x : x - 1,
+                                            y < height ? y : y - 1);
+                        else
+                            pixel = unsafeBMP.GetPixel(x < width ? x * 2 : x * 2 - 1,
+                                            y < height ? y * 2 : y * 2 - 1);
 
                         redBytes[byteNdx] = pixel.R;
                         greenBytes[byteNdx] = pixel.G;
