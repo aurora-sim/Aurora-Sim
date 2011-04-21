@@ -61,6 +61,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected bool m_forceCullCheck = false;
         private OrderedDictionary/*<UUID, EntityUpdate>*/ m_presenceUpdatesToSend = new OrderedDictionary/*<UUID, EntityUpdate>*/ ();
         private OrderedDictionary/*<UUID, EntityUpdate>*/ m_objectUpdatesToSend = new OrderedDictionary/*<UUID, EntityUpdate>*/ ();
+        private List<UUID> m_InPacketQueue = new List<UUID>();
 
         private HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity> ();
         private Vector3 m_lastUpdatePos;
@@ -371,7 +372,8 @@ namespace OpenSim.Region.Framework.Scenes
                     List<EntityUpdate> updates = new List<EntityUpdate> ();
                     for (int i = 0; i < count; i++)
                     {
-                        updates.Add ((EntityUpdate)m_presenceUpdatesToSend[0]);
+                        updates.Add((EntityUpdate)m_presenceUpdatesToSend[0]);
+                        m_InPacketQueue.Add(((EntityUpdate)m_objectUpdatesToSend[0]).Entity.UUID);
                         m_presenceUpdatesToSend.RemoveAt (0);
                     }
                     //If we're first, we definitely got set, so we don't need to check this at all
@@ -391,6 +393,7 @@ namespace OpenSim.Region.Framework.Scenes
                     for (int i = 0; i < count; i++)
                     {
                         updates.Add ((EntityUpdate)m_objectUpdatesToSend[0]);
+                        m_InPacketQueue.Add(((EntityUpdate)m_objectUpdatesToSend[0]).Entity.UUID);
                         m_objectUpdatesToSend.RemoveAt (0);
                     }
                     m_presence.ControllingClient.SendPrimUpdate (updates);
@@ -403,6 +406,15 @@ namespace OpenSim.Region.Framework.Scenes
                 reporter.AddAgentTime (Util.EnvironmentTickCountSubtract (AgentMS));
 
             m_inUse = false;
+        }
+
+        /// <summary>
+        /// Once the packet has been sent, allow newer updates to be sent for the given entity
+        /// </summary>
+        /// <param name="ID"></param>
+        public void FinishedPacketSend(UUID ID)
+        {
+            m_InPacketQueue.Remove(ID);
         }
 
         private void SendQueued (PriorityQueue<EntityUpdate, double> m_entsqueue)

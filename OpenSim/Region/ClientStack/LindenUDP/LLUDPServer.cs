@@ -53,6 +53,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
     {
         /// <summary>Maximum transmission unit, or UDP packet size, for the LLUDP protocol</summary>
         public const int MTU = 1400;
+        /// <summary> Number of packets to send per loop per LLUDPClient </summary>
+        public const int MAX_PACKET_SEND = 4;
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -1031,7 +1033,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             SendPing(udpClient);
 
                         // Dequeue any outgoing packets that are within the throttle limits
-                        if (udpClient.DequeueOutgoing(4)) // limit number of packets for each client per call
+                        if (udpClient.DequeueOutgoing(MAX_PACKET_SEND)) // limit number of packets for each client per call
                             m_packetSent = true;
                     }
                 }

@@ -63,6 +63,12 @@ namespace OpenSim.Framework
         void SendPrimUpdates(Int64 numUpdates);
 
         /// <summary>
+        /// Once the packet has been sent, allow newer updates to be sent for the given entity
+        /// </summary>
+        /// <param name="ID"></param>
+        void FinishedPacketSend(UUID ID);
+
+        /// <summary>
         /// The client has left this region and went into a child region, clean up anything required
         /// </summary>
         void Reset ();

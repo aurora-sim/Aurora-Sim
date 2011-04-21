@@ -222,7 +222,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>A container that can hold one packet for each outbox, used to store
         /// dequeued packets that are being held for throttling</summary>
         private readonly OutgoingPacket[] m_nextPackets = new OutgoingPacket[(int)ThrottleOutPacketType.Count];
-        private OutgoingPacket m_nextOutPackets;
         /// <summary>A reference to the LLUDPServer that is managing this client</summary>
         private readonly LLUDPServer m_udpServer;
 
@@ -555,69 +554,34 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             OutgoingPacket packet;
             bool packetSent = false;
-            
+
+            List<OutgoingPacket> waitingPackets = new List<OutgoingPacket>();
             for (int i = 0; i < MaxNPacks; i++)
             {
-                if (m_nextOutPackets != null)
+                // No dequeued packet waiting to be sent, try to pull one off
+                // this queue
+                if (m_outbox.Dequeue(out packet))
                 {
-                    OutgoingPacket nextPacket = m_nextOutPackets;
-                    TokenBucket bucket = m_throttleCategories[(int)nextPacket.Category];
-                    if (bucket == null || bucket.RemoveTokens(nextPacket.Buffer.DataLength))
+                    // A packet was pulled off the queue. See if we have
+                    // enough tokens in the bucket to send it out
+                    TokenBucket bucket = m_throttleCategories[(int)packet.Category];
+                    if (packet.Category == ThrottleOutPacketType.OutBand || bucket == null || bucket.RemoveTokens(packet.Buffer.DataLength))
                     {
-                        // Send the packet
-                        m_udpServer.SendPacketFinal(nextPacket);
-                        m_nextOutPackets = null;
                         packetSent = true;
-
-                        //Slowly move the burst rate up toward what it should be
-                        if (m_throttle.BurstRate < STARTPERCLIENTRATE)
-                        {
-                            float tmp = (float)m_throttle.RequestedDripRate * 1.005f;
-                            m_throttle.RequestedDripRate = (int)tmp;
-                        }
-
-                        this.PacketsSent++;
+                        //Send the packet
+                        SendQueuedPacket(packet);
                     }
                     else
-                    {
-                        int prio = MapCatsToPriority[(int)nextPacket.Category];
-                        prio++;
-                        if (prio > MapCatsToPriority.Length)
-                            prio--;
-                        m_outbox.Enqueue(prio, nextPacket);
-                        m_nextOutPackets = null;
-                    }
+                        waitingPackets.Add(packet);
                 }
                 else
-                {
-                    // No dequeued packet waiting to be sent, try to pull one off
-                    // this queue
-                    if (m_outbox.Dequeue(out packet))
-                    {
-                        // A packet was pulled off the queue. See if we have
-                        // enough tokens in the bucket to send it out
-                        TokenBucket bucket = m_throttleCategories[(int)packet.Category];
-                        if (packet.Category == ThrottleOutPacketType.OutBand || bucket == null || bucket.RemoveTokens(packet.Buffer.DataLength))
-                        {
-                            // Send the packet
-                            m_udpServer.SendPacketFinal(packet);
-                            packetSent = true;
-
-                            //Slowly move the burst rate up toward what it should be
-                            if (m_throttle.BurstRate < STARTPERCLIENTRATE)
-                            {
-                                float tmp = (float)m_throttle.RequestedDripRate * 1.005f;
-                                m_throttle.RequestedDripRate = (int)tmp;
-                            }
-
-                            this.PacketsSent++;
-                        }
-                        else
-                            m_nextOutPackets = packet;
-                    }
-                    else
-                        break;
-                }
+                    break;
+            }
+            //Requeue any updates that we couldn't send immediately
+            foreach (OutgoingPacket nextPacket in waitingPackets)
+            {
+                int prio = MapCatsToPriority[(int)nextPacket.Category];
+                m_outbox.Enqueue(prio++, nextPacket);//Up the prio with it as well since it should have already been sent
             }
 
             if (m_outbox.Count <= 100 || m_lastEmptyUpdates > 10) //Fire it every 10 queues whether we should be or not
@@ -637,138 +601,21 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             //m_log.Info("[LLUDPCLIENT]: Queues: " + queueDebugOutput); // Serious debug business
             return packetSent;
-            /*
-  
-                         OutgoingPacket packet;
-                        OpenSim.Framework.LocklessQueue<OutgoingPacket> queue;
-                        TokenBucket bucket;
-                        bool packetSent = false;
-                        ThrottleOutPacketTypeFlags emptyCategories = 0;
+        }
 
-                        //string queueDebugOutput = String.Empty; // Serious debug business
-                        int npacksTosent = MaxNPacks;
+        private void SendQueuedPacket(OutgoingPacket packet)
+        {
+            // Send the packet
+            m_udpServer.SendPacketFinal(packet);
 
-                        int i = m_lastthrottleCategoryChecked;
-                        for (int j = 0; j < (int)ThrottleOutPacketType.OutBand; j++) // don't check OutBand
-                        {
+            //Slowly move the burst rate up toward what it should be
+            if (m_throttle.BurstRate < STARTPERCLIENTRATE)
+            {
+                float tmp = (float)m_throttle.RequestedDripRate * 1.005f;
+                m_throttle.RequestedDripRate = (int)tmp;
+            }
 
-                            bucket = m_throttleCategories[i];
-                            //queueDebugOutput += m_packetOutboxes[i].Count + " ";  // Serious debug business
-
-                            if (m_nextPackets[i] != null)
-                            {
-                                // This bucket was empty the last time we tried to send a packet,
-                                // leaving a dequeued packet still waiting to be sent out. Try to
-                                // send it again
-                                OutgoingPacket nextPacket = m_nextPackets[i];
-                                if (bucket.RemoveTokens(nextPacket.Buffer.DataLength))
-                                {
-                                    // Send the packet
-                                    m_udpServer.SendPacketFinal(nextPacket);
-                                    m_nextPackets[i] = null;
-                                    packetSent = true;
-                                    this.PacketsSent++;
-                                }
-                            }
-                            else
-                            {
-                                // No dequeued packet waiting to be sent, try to pull one off
-                                // this queue
-                                queue = m_packetOutboxes[i];
-                                if (queue.Dequeue(out packet))
-                                {
-                                    // A packet was pulled off the queue. See if we have
-                                    // enough tokens in the bucket to send it out
-                                    if (bucket.RemoveTokens(packet.Buffer.DataLength))
-                                    {
-                                        // Send the packet
-                                        m_udpServer.SendPacketFinal(packet);
-                                        packetSent = true;
-                                        this.PacketsSent++;
-                                    }
-                                    else
-                                    {
-                                        // Save the dequeued packet for the next iteration
-                                        m_nextPackets[i] = packet;
-                                    }
-
-                                    // If the queue is empty after this dequeue, fire the queue
-                                    // empty callback now so it has a chance to fill before we 
-                                    // get back here
-                                    if (queue.Count == 0)
-                                        emptyCategories |= CategoryToFlag(i);
-                                }
-                                else
-                                {
-                                    // No packets in this queue. Fire the queue empty callback
-                                    // if it has not been called recently
-                                    emptyCategories |= CategoryToFlag(i);
-                                }
-                            }
-
-                            if (++i >= (int)ThrottleOutPacketType.OutBand)
-                                i = 0;
-
-                            if (--npacksTosent <= 0)
-                                break;
-                        }
-
-                        m_lastthrottleCategoryChecked = i;
-
-                        // send at least one outband packet 
-
-                        if (npacksTosent <= 0)
-                            npacksTosent = 1;
-
-                        i = (int)ThrottleOutPacketType.OutBand;
-
-                        while (npacksTosent > 0)
-                        {
-                            //outband has no tokens checking and no throttle
-                            // No dequeued packet waiting to be sent, try to pull one off
-                            // this queue
-                            queue = m_packetOutboxes[i];
-                            if (queue.Dequeue(out packet))
-                            {
-                                // A packet was pulled off the queue. See if we have
-                                // enough tokens in the bucket to send it out
-
-                                //                        if (bucket.RemoveTokens(packet.Buffer.DataLength))
-                                //                            {
-                                // Send the packet
-                                m_udpServer.SendPacketFinal(packet);
-                                packetSent = true;
-                                this.PacketsSent++;
-                                //                            }
-            //                                            else
-            //                                                {
-                                                            // Save the dequeued packet for the next iteration
-            //                                                m_nextPackets[i] = packet;
-            //                                                }
-
-                                // If the queue is empty after this dequeue, fire the queue
-                                // empty callback now so it has a chance to fill before we 
-                                // get back here
-                                if (queue.Count == 0)
-                                    emptyCategories |= CategoryToFlag(i);
-                            }
-                            else
-                            {
-                                // No packets in this queue. Fire the queue empty callback
-                                // if it has not been called recently
-                                emptyCategories |= CategoryToFlag(i);
-                                break;
-                            }
-                            npacksTosent--;
-                        }
-
-                        if (emptyCategories != 0)
-                            BeginFireQueueEmpty(emptyCategories);
-
-                        //m_log.Info("[LLUDPCLIENT]: Queues: " + queueDebugOutput); // Serious debug business
-                        return packetSent;
-             */
-
+            this.PacketsSent++;
         }
 
         /// <summary>
