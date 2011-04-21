@@ -300,7 +300,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// It loops through the available updates and sends them out (no waiting)
         /// </summary>
         /// <param name="numUpdates">The number of updates to send</param>
-        public void SendPrimUpdates (int numUpdates)
+        public void SendPrimUpdates(Int64 numUpdates)
         {
             if (m_inUse)
                 return;

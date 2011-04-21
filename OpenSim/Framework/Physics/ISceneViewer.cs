@@ -60,7 +60,7 @@ namespace OpenSim.Framework
         /// It loops through the available updates and sends them out (no waiting)
         /// </summary>
         /// <param name="numUpdates">The number of updates to send</param>
-        void SendPrimUpdates(int numUpdates);
+        void SendPrimUpdates(Int64 numUpdates);
 
         /// <summary>
         /// The client has left this region and went into a child region, clean up anything required

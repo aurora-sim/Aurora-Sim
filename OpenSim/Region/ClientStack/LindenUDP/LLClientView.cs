@@ -3738,8 +3738,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
             }
 
-            float TIME_DILATION = m_scene.TimeDilation;
-            ushort timeDilation = Utils.FloatToUInt16 (TIME_DILATION, 0.0f, 1.0f);
+            ushort timeDilation = Utils.FloatToUInt16(m_scene.TimeDilation, 0.0f, 1.0f);
 
             //
             // NOTE: These packets ARE being sent as Unknown for a reason
@@ -3747,6 +3746,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //        the LLUDPClient, which is attempting to send these packets out, they just have to 
             //        be created. So instead of sending them as task (which puts them back in the queue),
             //        we send them out immediately, as this is on a seperate thread anyway.
+            //
+            // SECOND NOTE: These packets are back as Task for now... we shouldn't send them out as unknown
+            //        as we cannot be sure that the UDP server is ready for us to send them, so we will
+            //        requeue them... even though we probably could send them out fine.
             //
             if (objectUpdateBlocks.IsValueCreated)
             {
@@ -3761,7 +3764,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     packet.ObjectData[i] = blocks[i];
                 int ii = 0;
                 ObjectUpdatePacket oo = new ObjectUpdatePacket(packet.ToBytes(), ref ii);
-                OutPacket(packet, ThrottleOutPacketType.Immediate, true, delegate(OutgoingPacket p)
+                OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
                 {
                     ResendPrimUpdates(updates);
                 });
@@ -3779,7 +3782,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket(packet, ThrottleOutPacketType.Immediate, true, delegate(OutgoingPacket p)
+                OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
                 {
                     ResendPrimUpdates(updates);
                 });
@@ -3797,7 +3800,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket(packet, ThrottleOutPacketType.Immediate, true, delegate(OutgoingPacket p)
+                OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
                 {
                     ResendPrimUpdates(updates);
                 });
@@ -3815,7 +3818,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-                OutPacket(packet, ThrottleOutPacketType.Immediate, true, delegate(OutgoingPacket p)
+                OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
                 {
                     int i = 0;
                     ImprovedTerseObjectUpdatePacket o = new ImprovedTerseObjectUpdatePacket(p.Buffer.Data, ref i);
@@ -3840,7 +3843,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
         }
 
-        public void DequeueUpdates(int nupdates)
+        public void DequeueUpdates(Int64 nupdates)
         {
             IScenePresence sp = m_scene.GetScenePresence (AgentId);
             if (sp != null)
@@ -3856,14 +3859,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             ISceneViewer viewer = m_scene.GetScenePresence (AgentId).SceneViewer;
             while (m_UpdatesQueue.Count > 0)
-                viewer.SendPrimUpdates (100);
+                viewer.SendPrimUpdates (m_udpServer.PrimUpdatesPerCallback);
         }
 
         #endregion Primitive Packet/Data Sending Methods
 
-        void HandleQueueEmpty()
+        void HandleQueueEmpty(Int64 numPackets)
         {
-            DequeueUpdates(m_udpServer.PrimUpdatesPerCallback);
+            DequeueUpdates(numPackets);
             ProcessTextureRequests();
         }
 

@@ -54,7 +54,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
     /// Fired when the queue for one or more packet categories is empty. This 
     /// event can be hooked to put more data on the empty queues
     /// </summary>
-    public delegate void QueueEmpty();
+    public delegate void QueueEmpty(Int64 numPackets);
 
     #endregion Delegates
 
@@ -62,7 +62,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
     {
         public OpenSim.Framework.LocklessQueue<object>[] queues;
         public int[] promotioncntr;
-        public int count;
+        public int Count;
         public int promotionratemask;
         public int nlevels;
 
@@ -86,7 +86,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 return false;
 
             queues[prio].Enqueue(o); // store it in its level
-            Interlocked.Increment(ref count);
+            Interlocked.Increment(ref Count);
 
             Interlocked.Increment(ref promotioncntr[prio]);
 
@@ -119,7 +119,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     if (o is OutgoingPacket)
                     {
                         pack = (OutgoingPacket)o;
-                        Interlocked.Decrement(ref count);
+                        Interlocked.Decrement(ref Count);
                         return true;
                     }
                     // else  do call to a funtion that will return the packet or whatever
@@ -140,8 +140,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>Percentage of the task throttle category that is allocated to avatar and prim
         /// state updates</summary>
         const float STATE_TASK_PERCENTAGE = 0.3f;
-        const float TRANSFER_ASSET_PERCENTAGE = 0.5f;
-        const float AVATAR_INFO_STATE_PERCENTAGE = 0.2f;
+        const float TRANSFER_ASSET_PERCENTAGE = 0.75f;
+        const float AVATAR_INFO_STATE_PERCENTAGE = 0.3f;
         const int MAXPERCLIENTRATE = 625000;
         const int MINPERCLIENTRATE = 6250;
         const int STARTPERCLIENTRATE = 25000;
@@ -280,7 +280,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // Default the retransmission timeout to three seconds
             RTO = m_defaultRTO;
 
-            MapCatsToPriority[(int)ThrottleOutPacketType.Resend] = 2;
+            //Set the priorities for the different packet types
+            //Higher is more important
+            MapCatsToPriority[(int)ThrottleOutPacketType.Resend] = 7;
             MapCatsToPriority[(int)ThrottleOutPacketType.Land] = 1;
             MapCatsToPriority[(int)ThrottleOutPacketType.Wind] = 0;
             MapCatsToPriority[(int)ThrottleOutPacketType.Cloud] = 0;
@@ -508,6 +510,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return data;
         }
 
+        public void SlowDownSend()
+        {
+            float tmp = (float)m_throttle.BurstRate * 0.95f;
+            if (tmp < MINPERCLIENTRATE)
+                tmp = (float)MINPERCLIENTRATE;
+            m_throttle.RequestedDripRate = (int)tmp;
+        }
+
         public bool EnqueueOutgoing(OutgoingPacket packet)
         {
             int category = (int)packet.Category;
@@ -558,6 +568,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         m_udpServer.SendPacketFinal(nextPacket);
                         m_nextOutPackets = null;
                         packetSent = true;
+
+                        //Slowly move the burst rate up toward what it should be
+                        if (m_throttle.BurstRate < STARTPERCLIENTRATE)
+                        {
+                            float tmp = (float)m_throttle.BurstRate * 1.005f;
+                            m_throttle.RequestedDripRate = (int)tmp;
+                        }
+
                         this.PacketsSent++;
                     }
                     else
@@ -585,6 +603,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             m_udpServer.SendPacketFinal(packet);
                             packetSent = true;
 
+                            //Slowly move the burst rate up toward what it should be
+                            if (m_throttle.BurstRate < STARTPERCLIENTRATE)
+                            {
+                                float tmp = (float)m_throttle.BurstRate * 1.005f;
+                                m_throttle.RequestedDripRate = (int)tmp;
+                            }
+
                             this.PacketsSent++;
                         }
                         else
@@ -595,12 +620,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
             }
 
-            if (m_outbox.count < 100 || m_lastEmptyUpdates > 10)
+            if (m_outbox.Count <= 100 || m_lastEmptyUpdates > 10) //Fire it every 10 queues whether we should be or not
             {
                 //if(m_outbox.count > 100)
                 //    MainConsole.Instance.Output(m_outbox.count.ToString(), log4net.Core.Level.Alert);
                 m_lastEmptyUpdates = 0;
-                BeginFireQueueEmpty ();
+                Int64 numPackets = m_udpServer.PrimUpdatesPerCallback;
+                if (m_outbox.Count > 100)
+                    numPackets *= (numPackets / m_outbox.Count);
+                BeginFireQueueEmpty (numPackets);
             }
             else
                 m_lastEmptyUpdates++;
@@ -800,14 +828,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// </summary>
         /// <param name="throttleIndex">Throttle category to fire the callback
         /// for</param>
-        private void BeginFireQueueEmpty()
+        private void BeginFireQueueEmpty(Int64 numPackets)
         {
             if (m_nextOnQueueEmpty != 0 && (Environment.TickCount & Int32.MaxValue) >= m_nextOnQueueEmpty)
             {
                 // Use a value of 0 to signal that FireQueueEmpty is running
                 m_nextOnQueueEmpty = 0;
                 // Asynchronously run the callback
-                Util.FireAndForget(FireQueueEmpty);
+                Util.FireAndForget(FireQueueEmpty, numPackets);
             }
         }
 
@@ -820,7 +848,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// signature</param>
         private void FireQueueEmpty(object o)
         {
-            const int MIN_CALLBACK_MS = 30;
+            const int MIN_CALLBACK_MS = 50;
 
             QueueEmpty callback = OnQueueEmpty;
             
@@ -828,7 +856,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if (callback != null)
             {
-                try { callback(); }
+                try { callback((Int64)o); }
                 catch (Exception e) { m_log.Error("[LLUDPCLIENT]: OnQueueEmpty() threw an exception: " + e.Message, e); }
             }
 
