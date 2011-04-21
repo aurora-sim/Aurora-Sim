@@ -146,6 +146,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         const int MAXPERCLIENTRATE = 625000;
         const int MINPERCLIENTRATE = 6250;
         const int STARTPERCLIENTRATE = 25000;
+        const int MAX_PACKET_SKIP_RATE = 6;
 
         private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -557,6 +558,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             bool packetSent = false;
 
             List<OutgoingPacket> waitingPackets = new List<OutgoingPacket>();
+            int packetsSkipped = 0;
             for (int i = 0; i < MaxNPacks; i++)
             {
                 // No dequeued packet waiting to be sent, try to pull one off
@@ -572,21 +574,39 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         //Send the packet
                         SendQueuedPacket(packet);
                     }
-                    else
+                    else if (packetsSkipped < MAX_PACKET_SKIP_RATE)
+                    {
+                        //This does increase the time that we spend in this loop... but its relatively safe
+                        // We won't have an infinite loop since we can only skip so many packets, 
+                        // and if we arn't sending anything, it doesn't take too long.
+                        MaxNPacks--;
+                        packetsSkipped++;
                         waitingPackets.Add(packet);
+                    }
                 }
                 else
                     break;
             }
 #if Debug
-                if (waitingPackets.Count > 100)
+                if (waitingPackets.Count > 0)
                     MainConsole.Instance.Output(waitingPackets.Count + " were not sent immediately", log4net.Core.Level.Alert);
 #endif
             //Requeue any updates that we couldn't send immediately
             foreach (OutgoingPacket nextPacket in waitingPackets)
             {
                 int prio = MapCatsToPriority[(int)nextPacket.Category];
-                m_outbox.Enqueue(prio++, nextPacket);//Up the prio with it as well since it should have already been sent
+                if (nextPacket.ReSendAttempt == 0)
+                    nextPacket.ReSendAttempt++; //We tried, update it
+                else if (nextPacket.ReSendAttempt < 2)
+                {
+                    //This "isn't" the first time this packets been kicked out of the queue, send its prio down
+                    nextPacket.ReSendAttempt = 0;
+                    prio--;
+                    if (prio < 0)
+                        prio = 0;
+                }
+                //Re-enqueue the packet now
+                m_outbox.Enqueue(prio, nextPacket);
             }
 
             if (m_outbox.Count <= 100 || m_lastEmptyUpdates > 10) //Fire it every 10 queues whether we should be or not

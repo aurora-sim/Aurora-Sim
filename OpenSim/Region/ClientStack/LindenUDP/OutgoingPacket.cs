@@ -57,6 +57,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public UnackedPacketMethod UnackedMethod;
         /// <summary>The delegate to be called when this packet is sent</summary>
         public UnackedPacketMethod FinishedMethod;
+        /// <summary>The # of times the server has attempted to send this packet</summary>
+        public int ReSendAttempt = 0;
 
         /// <summary>
         /// Default constructor
