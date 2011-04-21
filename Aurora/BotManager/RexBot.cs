@@ -1222,7 +1222,7 @@ namespace Aurora.BotManager
             
         }
 
-        public void SendAnimations (UUID[] animID, int[] seqs, UUID sourceAgentId, UUID[] objectIDs)
+        public void SendAnimations (AnimationGroup animations)
         {
             
         }

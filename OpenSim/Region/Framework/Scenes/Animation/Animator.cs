@@ -465,16 +465,22 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         /// <param name="animations"></param>
         /// <param name="seqs"></param>
         /// <param name="objectIDs"></param>
-        public void SendAnimPack(UUID[] animations, int[] seqs, UUID[] objectIDs)
+        public void SendAnimPack(UUID[] animations, int[] sequenceNums, UUID[] objectIDs)
         {
             if (m_scenePresence.IsChildAgent)
                 return;
 
+            AnimationGroup anis = new AnimationGroup()
+            {
+                Animations = animations,
+                SequenceNums = sequenceNums,
+                ObjectIDs = objectIDs,
+                AvatarID = m_scenePresence.UUID
+            };
             m_scenePresence.Scene.ForEachScenePresence(
                 delegate(IScenePresence presence) 
-                { 
-                    if(m_scenePresence.SceneViewer.Culler.ShowEntityToClient(presence, m_scenePresence))
-                        presence.ControllingClient.SendAnimations(animations, seqs, m_scenePresence.UUID, objectIDs); 
+                {
+                    m_scenePresence.SceneViewer.QueuePresenceForAnimationUpdate(presence, anis);
                 });
         }
 
@@ -483,12 +489,19 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             if (m_scenePresence.IsChildAgent)
                 return;
 
-            UUID[] animIDs;
+            UUID[] animations;
             int[] sequenceNums;
             UUID[] objectIDs;
 
-            m_animations.GetArrays(out animIDs, out sequenceNums, out objectIDs);
-            client.SendAnimations(animIDs, sequenceNums, m_scenePresence.ControllingClient.AgentId, objectIDs);
+            m_animations.GetArrays(out animations, out sequenceNums, out objectIDs);
+            AnimationGroup anis = new AnimationGroup()
+            {
+                Animations = animations,
+                SequenceNums = sequenceNums,
+                ObjectIDs = objectIDs,
+                AvatarID = m_scenePresence.ControllingClient.AgentId
+            };
+            m_scenePresence.Scene.GetScenePresence(client.AgentId).SceneViewer.QueuePresenceForAnimationUpdate(m_scenePresence, anis);
         }
 
         /// <summary>

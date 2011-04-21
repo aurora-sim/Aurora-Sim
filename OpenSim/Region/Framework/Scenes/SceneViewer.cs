@@ -62,10 +62,12 @@ namespace OpenSim.Region.Framework.Scenes
         protected Culler m_culler;
         protected bool m_forceCullCheck = false;
         private OrderedDictionary/*<UUID, EntityUpdate>*/ m_presenceUpdatesToSend = new OrderedDictionary/*<UUID, EntityUpdate>*/ ();
+        private OrderedDictionary/*<UUID, AnimationGroup>*/ m_presenceAnimationsToSend = new OrderedDictionary/*<UUID, AnimationGroup>*/ ();
         private OrderedDictionary/*<UUID, EntityUpdate>*/ m_objectUpdatesToSend = new OrderedDictionary/*<UUID, EntityUpdate>*/ ();
-        private List<UUID> m_InPacketQueue = new List<UUID>();
-
+        private List<UUID> m_EntitiesInPacketQueue = new List<UUID>();
+        private List<UUID> m_AnimationsInPacketQueue = new List<UUID>();
         private HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity> ();
+        private HashSet<IScenePresence> lastPresencesInView = new HashSet<IScenePresence> ();
         private Vector3 m_lastUpdatePos;
 
         private const float PresenceSendPercentage = 0.60f;
@@ -110,6 +112,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeY)
                 {
                     lastGrpsInView.Clear();
+                    lastPresencesInView.Clear();
                 }
                 else
                 {
@@ -160,6 +163,40 @@ namespace OpenSim.Region.Framework.Scenes
                     m_presenceUpdatesToSend.Insert(m_presenceUpdatesToSend.Count, presence.UUID, o);
                 else //Set us at 0, no updates from us
                     m_presenceUpdatesToSend.Insert(m_presenceUpdatesToSend.Count, presence.UUID, o);
+            }
+        }
+
+        public void QueuePresenceForAnimationUpdate(IScenePresence presence, AnimationGroup animation)
+        {
+            if (Culler == null || !Culler.ShowEntityToClient(m_presence, presence))
+                return; // if 2 far ignore
+
+            lock (m_presenceAnimationsToSend)
+            {
+                AnimationGroup o = (AnimationGroup)m_presenceAnimationsToSend[presence.UUID];
+                if (o == null)
+                    o = animation;
+                else
+                {
+                    List<UUID> animations = new List<UUID>();
+                    animations.AddRange(animation.Animations);
+                    animations.AddRange(o.Animations);
+                    o.Animations = animations.ToArray();
+
+                    List<int> SequenceNums = new List<int>();
+                    SequenceNums.AddRange(animation.SequenceNums);
+                    SequenceNums.AddRange(o.SequenceNums);
+                    o.SequenceNums = SequenceNums.ToArray();
+
+                    List<UUID> ObjectIDs = new List<UUID>();
+                    ObjectIDs.AddRange(animation.ObjectIDs);
+                    ObjectIDs.AddRange(o.ObjectIDs);
+                    o.ObjectIDs = ObjectIDs.ToArray();
+
+                    m_presenceAnimationsToSend.Remove(presence.UUID);
+                }
+                //Insert at the end
+                m_presenceAnimationsToSend.Insert(m_presenceAnimationsToSend.Count, presence.UUID, o);
             }
         }
 
@@ -292,6 +329,33 @@ namespace OpenSim.Region.Framework.Scenes
 
             // send them 
             SendQueued (m_entsqueue);
+
+            HashSet<IScenePresence> NewPresencesInView = new HashSet<IScenePresence>();
+
+            //Check for scenepresences as well
+            IScenePresence[] presences = m_presence.Scene.Entities.GetPresences(m_presence.AbsolutePosition, m_presence.DrawDistance);
+            foreach (IScenePresence presence in presences)
+            {
+                if (presence != null)
+                {
+                    //Check for culling here!
+                    if (!Culler.ShowEntityToClient(m_presence, presence))
+                        continue; // if 2 far ignore
+
+                    NewPresencesInView.Add(presence);
+
+                    if (lastPresencesInView.Contains(presence))
+                        continue; //Don't resend the update
+
+                    QueuePresenceForUpdate(presence, PrimUpdateFlags.FullUpdate);
+                    //Send the animations too
+                    presence.Animator.SendAnimPackToClient(m_presence.ControllingClient);
+                }
+            }
+            presences = null;
+            lastPresencesInView.Clear();
+            lastPresencesInView.UnionWith(NewPresencesInView);
+            NewPresencesInView.Clear();
         }
 
         #endregion
@@ -377,14 +441,14 @@ namespace OpenSim.Region.Framework.Scenes
                         for (int i = 0; i < count; i++)
                         {
                             EntityUpdate update = ((EntityUpdate)m_presenceUpdatesToSend[0]);
-                            if (m_InPacketQueue.Contains(update.Entity.UUID))
+                            if (m_EntitiesInPacketQueue.Contains(update.Entity.UUID))
                             {
                                 m_presenceUpdatesToSend.RemoveAt(0);
                                 m_presenceUpdatesToSend.Insert(m_presenceUpdatesToSend.Count, update.Entity.UUID, update);
                                 continue;
                             }
                             updates.Add(update);
-                            m_InPacketQueue.Add(update.Entity.UUID);
+                            m_EntitiesInPacketQueue.Add(update.Entity.UUID);
                             m_presenceUpdatesToSend.RemoveAt(0);
                         }
                         //If we're first, we definitely got set, so we don't need to check this at all
@@ -392,6 +456,39 @@ namespace OpenSim.Region.Framework.Scenes
                         m_presence.ControllingClient.SendPrimUpdate(updates);
                     }
                     catch(Exception ex)
+                    {
+                        m_log.WarnFormat("[SceneViewer]: Exception while running presence loop: {0}", ex.ToString());
+                    }
+                }
+            }
+
+            lock (m_presenceAnimationsToSend)
+            {
+                //Send the numUpdates of them if that many
+                // if we don't have that many, we send as many as possible, then switch to objects
+                if (m_presenceAnimationsToSend.Count != 0)
+                {
+                    try
+                    {
+                        int count = m_presenceAnimationsToSend.Count > presenceNumToSend ? presenceNumToSend : m_presenceAnimationsToSend.Count;
+                        for (int i = 0; i < count; i++)
+                        {
+                            AnimationGroup update = ((AnimationGroup)m_presenceAnimationsToSend[0]);
+                            if (m_AnimationsInPacketQueue.Contains(update.AvatarID))
+                            {
+                                m_presenceAnimationsToSend.RemoveAt(0);
+                                m_presenceAnimationsToSend.Insert(m_presenceAnimationsToSend.Count, update.AvatarID, update);
+                                continue;
+                            }
+                            m_AnimationsInPacketQueue.Add(update.AvatarID);
+
+                            m_presence.ControllingClient.SendAnimations(update);
+                            m_presenceAnimationsToSend.RemoveAt(0);
+                        }
+                        //If we're first, we definitely got set, so we don't need to check this at all
+                        m_ourPresenceHasUpdate = false;
+                    }
+                    catch (Exception ex)
                     {
                         m_log.WarnFormat("[SceneViewer]: Exception while running presence loop: {0}", ex.ToString());
                     }
@@ -411,14 +508,14 @@ namespace OpenSim.Region.Framework.Scenes
                         for (int i = 0; i < count; i++)
                         {
                             EntityUpdate update = ((EntityUpdate)m_objectUpdatesToSend[0]);
-                            if (m_InPacketQueue.Contains(update.Entity.UUID))
+                            if (m_EntitiesInPacketQueue.Contains(update.Entity.UUID))
                             {
                                 m_objectUpdatesToSend.RemoveAt(0);
                                 m_objectUpdatesToSend.Insert(m_objectUpdatesToSend.Count, update.Entity.UUID, update);
                                 continue;
                             }
                             updates.Add((EntityUpdate)m_objectUpdatesToSend[0]);
-                            m_InPacketQueue.Add(((EntityUpdate)m_objectUpdatesToSend[0]).Entity.UUID);
+                            m_EntitiesInPacketQueue.Add(((EntityUpdate)m_objectUpdatesToSend[0]).Entity.UUID);
                             m_objectUpdatesToSend.RemoveAt(0);
                         }
                         m_presence.ControllingClient.SendPrimUpdate(updates);
@@ -442,12 +539,21 @@ namespace OpenSim.Region.Framework.Scenes
         /// Once the packet has been sent, allow newer updates to be sent for the given entity
         /// </summary>
         /// <param name="ID"></param>
-        public void FinishedPacketSend(IEnumerable<EntityUpdate> updates)
+        public void FinishedEntityPacketSend(IEnumerable<EntityUpdate> updates)
         {
             foreach (EntityUpdate update in updates)
             {
-                m_InPacketQueue.Remove(update.Entity.UUID);
+                m_EntitiesInPacketQueue.Remove(update.Entity.UUID);
             }
+        }
+
+        /// <summary>
+        /// Once the packet has been sent, allow newer animations to be sent for the given entity
+        /// </summary>
+        /// <param name="ID"></param>
+        public void FinishedAnimationPacketSend(AnimationGroup update)
+        {
+            m_AnimationsInPacketQueue.Remove(update.AvatarID);
         }
 
         private void SendQueued (PriorityQueue<EntityUpdate, double> m_entsqueue)

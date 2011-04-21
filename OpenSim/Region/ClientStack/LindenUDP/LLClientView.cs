@@ -3446,41 +3446,45 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(avp, ThrottleOutPacketType.AvatarInfo);
         }
 
-        public void SendAnimations(UUID[] animations, int[] seqs, UUID sourceAgentId, UUID[] objectIDs)
+        public void SendAnimations(AnimationGroup animations)
         {
             //m_log.DebugFormat("[CLIENT]: Sending animations to {0}", Name);
 
             AvatarAnimationPacket ani = (AvatarAnimationPacket)PacketPool.Instance.GetPacket(PacketType.AvatarAnimation);
             // TODO: don't create new blocks if recycling an old packet
-            ani.AnimationSourceList = new AvatarAnimationPacket.AnimationSourceListBlock[animations.Length];
+            ani.AnimationSourceList = new AvatarAnimationPacket.AnimationSourceListBlock[animations.Animations.Length];
             
             ani.Sender = new AvatarAnimationPacket.SenderBlock();
-            ani.Sender.ID = sourceAgentId;
+            ani.Sender.ID = animations.AvatarID;
 
-            ani.AnimationList = new AvatarAnimationPacket.AnimationListBlock[animations.Length];
+            ani.AnimationList = new AvatarAnimationPacket.AnimationListBlock[animations.Animations.Length];
             
             ani.PhysicalAvatarEventList = new AvatarAnimationPacket.PhysicalAvatarEventListBlock[1];
             ani.PhysicalAvatarEventList[0] = new AvatarAnimationPacket.PhysicalAvatarEventListBlock();
             ani.PhysicalAvatarEventList[0].TypeData = new byte[0];
 
-            for (int i = 0; i < animations.Length; ++i)
+            for (int i = 0; i < animations.Animations.Length; ++i)
             {
                 ani.AnimationList[i] = new AvatarAnimationPacket.AnimationListBlock();
-                ani.AnimationList[i].AnimID = animations[i];
-                ani.AnimationList[i].AnimSequenceID = seqs[i] + ((i + 1) * 2);
+                ani.AnimationList[i].AnimID = animations.Animations[i];
+                ani.AnimationList[i].AnimSequenceID = animations.SequenceNums[i] + ((i + 1) * 2);
 
                 ani.AnimationSourceList[i] = new AvatarAnimationPacket.AnimationSourceListBlock();
-                ani.AnimationSourceList[i].ObjectID = objectIDs[i];
+                ani.AnimationSourceList[i].ObjectID = animations.ObjectIDs[i];
                 //if (objectIDs[i] == UUID.Zero)
                 //    ani.AnimationSourceList[i].ObjectID = sourceAgentId;
             }
             //We do this here to keep the numbers under control
-            m_animationSequenceNumber += (animations.Length * 2);
+            m_animationSequenceNumber += (animations.Animations.Length * 2);
 
             ani.Header.Reliable = true;
             ani.HasVariableBlocks = false;
         //            OutPacket(ani, ThrottleOutPacketType.Asset);
-            OutPacket(ani, ThrottleOutPacketType.AvatarInfo);
+            OutPacket(ani, ThrottleOutPacketType.AvatarInfo, true, null,
+                delegate(OutgoingPacket packet)
+                {
+                    m_scene.GetScenePresence(AgentId).SceneViewer.FinishedAnimationPacketSend(animations);
+                });
         }
 
         #endregion
@@ -3783,7 +3787,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     alreadyFinishedSendingPackets = true;
                     IScenePresence presence = m_scene.GetScenePresence(AgentId);
                     if (presence != null)
-                        presence.SceneViewer.FinishedPacketSend(updates);
+                        presence.SceneViewer.FinishedEntityPacketSend(updates);
                 });
             }
 
@@ -3813,7 +3817,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     alreadyFinishedSendingPackets = true;
                     IScenePresence presence = m_scene.GetScenePresence(AgentId);
                     if (presence != null)
-                        presence.SceneViewer.FinishedPacketSend(updates);
+                        presence.SceneViewer.FinishedEntityPacketSend(updates);
                 });
             }
 
@@ -3843,7 +3847,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     alreadyFinishedSendingPackets = true;
                     IScenePresence presence = m_scene.GetScenePresence(AgentId);
                     if (presence != null)
-                        presence.SceneViewer.FinishedPacketSend(updates);
+                        presence.SceneViewer.FinishedEntityPacketSend(updates);
                 });
             }
 
@@ -3873,7 +3877,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     alreadyFinishedSendingPackets = true;
                     IScenePresence presence = m_scene.GetScenePresence(AgentId);
                     if (presence != null)
-                        presence.SceneViewer.FinishedPacketSend(updates);
+                        presence.SceneViewer.FinishedEntityPacketSend(updates);
                 });
             }
         }

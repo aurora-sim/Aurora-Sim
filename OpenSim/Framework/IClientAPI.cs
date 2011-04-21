@@ -1121,7 +1121,7 @@ namespace OpenSim.Framework
         void SendKillObject (ulong regionHandle, IEntity[] entities);
         void SendKillObject(ulong regionHandle, uint[] entities);
 
-        void SendAnimations(UUID[] animID, int[] seqs, UUID sourceAgentId, UUID[] objectIDs);
+        void SendAnimations(AnimationGroup animations);
         void SendRegionHandshake(RegionInfo regionInfo, RegionHandshakeArgs args);
 
         void SendChatMessage(string message, byte type, Vector3 fromPos, string fromName, UUID fromAgentID, byte source,

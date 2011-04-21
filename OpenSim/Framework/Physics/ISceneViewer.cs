@@ -49,7 +49,14 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="presence"></param>
         /// <param name="flags"></param>
-        void QueuePresenceForUpdate (IScenePresence presence, PrimUpdateFlags flags);
+        void QueuePresenceForUpdate(IScenePresence presence, PrimUpdateFlags flags);
+
+        /// <summary>
+        /// Send a presence terse update to all clients
+        /// </summary>
+        /// <param name="presence"></param>
+        /// <param name="flags"></param>
+        void QueuePresenceForAnimationUpdate(IScenePresence presence, AnimationGroup animation);
 
         /// <summary>
         /// Add the objects to the queue for which we need to send an update to the client
@@ -68,7 +75,13 @@ namespace OpenSim.Framework
         /// Once the packet has been sent, allow newer updates to be sent for the given entity
         /// </summary>
         /// <param name="ID"></param>
-        void FinishedPacketSend(IEnumerable<EntityUpdate> ID);
+        void FinishedEntityPacketSend(IEnumerable<EntityUpdate> ID);
+
+        /// <summary>
+        /// Once the packet has been sent, allow newer animations to be sent for the given entity
+        /// </summary>
+        /// <param name="ID"></param>
+        void FinishedAnimationPacketSend(AnimationGroup update);
 
         /// <summary>
         /// The client has left this region and went into a child region, clean up anything required
@@ -79,6 +92,14 @@ namespace OpenSim.Framework
         /// Closes the SceneViewer
         /// </summary>
         void Close ();
+    }
+
+    public class AnimationGroup
+    {
+        public UUID AvatarID;
+        public UUID[] Animations;
+        public int[] SequenceNums;
+        public UUID[] ObjectIDs;
     }
 
     public interface IPrioritizer
