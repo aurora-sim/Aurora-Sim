@@ -55,6 +55,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public ThrottleOutPacketType Category;
         /// <summary>The delegate to be called if this packet is determined to be unacknowledged</summary>
         public UnackedPacketMethod UnackedMethod;
+        /// <summary>The delegate to be called when this packet is sent</summary>
+        public UnackedPacketMethod FinishedMethod;
 
         /// <summary>
         /// Default constructor
@@ -63,14 +65,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <param name="buffer">Serialized packet data. If the flags or sequence number
         /// need to be updated, they will be injected directly into this binary buffer</param>
         /// <param name="category">Throttling category for this packet</param>
-        /// <param name="method">The delegate to be called if this packet is determined to be unacknowledged</param>
+        /// <param name="resendMethod">The delegate to be called if this packet is determined to be unacknowledged</param>
+        /// <param name="finishedMethod">The delegate to be called when this packet is sent</param>
         public OutgoingPacket(LLUDPClient client, UDPPacketBuffer buffer,
-            ThrottleOutPacketType category, UnackedPacketMethod method)
+            ThrottleOutPacketType category, UnackedPacketMethod resendMethod,
+            UnackedPacketMethod finishedMethod)
         {
             Client = client;
             Buffer = buffer;
             Category = category;
-            UnackedMethod = method;
+            UnackedMethod = resendMethod;
+            FinishedMethod = finishedMethod;
         }
     }
 }

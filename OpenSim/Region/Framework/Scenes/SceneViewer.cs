@@ -442,9 +442,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// Once the packet has been sent, allow newer updates to be sent for the given entity
         /// </summary>
         /// <param name="ID"></param>
-        public void FinishedPacketSend(UUID ID)
+        public void FinishedPacketSend(IEnumerable<EntityUpdate> updates)
         {
-            m_InPacketQueue.Remove(ID);
+            foreach (EntityUpdate update in updates)
+            {
+                m_InPacketQueue.Remove(update.Entity.UUID);
+            }
         }
 
         private void SendQueued (PriorityQueue<EntityUpdate, double> m_entsqueue)

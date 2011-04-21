@@ -254,7 +254,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return x == m_x && y == m_y;
         }
 
-        public void BroadcastPacket(Packet packet, ThrottleOutPacketType category, bool sendToPausedAgents, bool allowSplitting, UnackedPacketMethod method)
+        public void BroadcastPacket(Packet packet, ThrottleOutPacketType category, bool sendToPausedAgents, bool allowSplitting, UnackedPacketMethod resendMethod, UnackedPacketMethod finishedMethod)
         {
             // CoarseLocationUpdate and AvatarGroupsReply packets cannot be split in an automated way
             if ((packet.Type == PacketType.CoarseLocationUpdate || packet.Type == PacketType.AvatarGroupsReply) && allowSplitting)
@@ -275,7 +275,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         delegate(IClientAPI client)
                         {
                             if (client is LLClientView)
-                                SendPacketData(((LLClientView)client).UDPClient, data, packet.Type, category, method);
+                                SendPacketData(((LLClientView)client).UDPClient, data, packet.Type, category, resendMethod, finishedMethod);
                         }
                     );
                 }
@@ -287,13 +287,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     delegate(IClientAPI client)
                     {
                         if (client is LLClientView)
-                            SendPacketData(((LLClientView)client).UDPClient, data, packet.Type, category, method);
+                            SendPacketData(((LLClientView)client).UDPClient, data, packet.Type, category, resendMethod, finishedMethod);
                     }
                 );
             }
         }
 
-        public void SendPacket(LLUDPClient udpClient, Packet packet, ThrottleOutPacketType category, bool allowSplitting, UnackedPacketMethod method)
+        public void SendPacket(LLUDPClient udpClient, Packet packet, ThrottleOutPacketType category, bool allowSplitting, UnackedPacketMethod resendMethod, UnackedPacketMethod finishedMethod)
         {
             // CoarseLocationUpdate packets cannot be split in an automated way
             if (packet.Type == PacketType.CoarseLocationUpdate && allowSplitting)
@@ -310,17 +310,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < packetCount; i++)
                 {
                     byte[] data = datas[i];
-                    SendPacketData(udpClient, data, packet.Type, category, method);
+                    SendPacketData(udpClient, data, packet.Type, category, resendMethod, finishedMethod);
                 }
             }
             else
             {
                 byte[] data = packet.ToBytes();
-                SendPacketData(udpClient, data, packet.Type, category, method);
+                SendPacketData(udpClient, data, packet.Type, category, resendMethod, finishedMethod);
             }
         }
 
-        public void SendPacketData(LLUDPClient udpClient, byte[] data, PacketType type, ThrottleOutPacketType category, UnackedPacketMethod method)
+        public void SendPacketData(LLUDPClient udpClient, byte[] data, PacketType type, ThrottleOutPacketType category, UnackedPacketMethod resendMethod, UnackedPacketMethod finishedMethod)
         {
             int dataLength = data.Length;
             bool doZerocode = (data[0] & Helpers.MSG_ZEROCODED) != 0;
@@ -375,7 +375,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             #region Queue or Send
 
-            OutgoingPacket outgoingPacket = new OutgoingPacket(udpClient, buffer, category, method);
+            OutgoingPacket outgoingPacket = new OutgoingPacket(udpClient, buffer, category, resendMethod, finishedMethod);
 
             if (!outgoingPacket.Client.EnqueueOutgoing(outgoingPacket))
                 SendPacketFinal(outgoingPacket);
@@ -405,7 +405,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 packet.Header.Reliable = false;
                 packet.Packets = blocks.ToArray();
 
-                SendPacket(udpClient, packet, ThrottleOutPacketType.OutBand, true, null);
+                SendPacket(udpClient, packet, ThrottleOutPacketType.OutBand, true, null, null);
             }
         }
 
@@ -418,14 +418,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // We *could* get OldestUnacked, but it would hurt performance and not provide any benefit
             pc.PingID.OldestUnacked = 0;
 
-            SendPacket(udpClient, pc, ThrottleOutPacketType.OutBand, false, null);
+            SendPacket(udpClient, pc, ThrottleOutPacketType.OutBand, false, null, null);
         }
 
         public void CompletePing(LLUDPClient udpClient, byte pingID)
         {
             CompletePingCheckPacket completePing = new CompletePingCheckPacket();
             completePing.PingID.PingID = pingID;
-            SendPacket(udpClient, completePing, ThrottleOutPacketType.OutBand, false, null);
+            SendPacket(udpClient, completePing, ThrottleOutPacketType.OutBand, false, null, null);
         }
 
         public void ResendUnacked(LLUDPClient udpClient)
@@ -574,6 +574,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             // Keep track of when this packet was sent out (right now)
             outgoingPacket.TickCount = Environment.TickCount & Int32.MaxValue;
+
+            outgoingPacket.FinishedMethod(outgoingPacket);
         }
 
         protected override void PacketReceived(UDPPacketBuffer buffer)

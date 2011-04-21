@@ -3751,6 +3751,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //        as we cannot be sure that the UDP server is ready for us to send them, so we will
             //        requeue them... even though we probably could send them out fine.
             //
+            
+            //When we resend the packets, we don't want to resend them more than once if more than one packet type went out, so only send once
+            bool alreadyResentPackets = false;
+            bool alreadyFinishedSendingPackets = false;
+
             if (objectUpdateBlocks.IsValueCreated)
             {
                 List<ObjectUpdatePacket.ObjectDataBlock> blocks = objectUpdateBlocks.Value;
@@ -3766,7 +3771,19 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 ObjectUpdatePacket oo = new ObjectUpdatePacket(packet.ToBytes(), ref ii);
                 OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
                 {
+                    if (alreadyResentPackets)
+                        return;
+                    alreadyResentPackets = true;
                     ResendPrimUpdates(updates);
+                },
+                delegate(OutgoingPacket p)
+                {
+                    if(alreadyFinishedSendingPackets)
+                        return;
+                    alreadyFinishedSendingPackets = true;
+                    IScenePresence presence = m_scene.GetScenePresence(AgentId);
+                    if (presence != null)
+                        presence.SceneViewer.FinishedPacketSend(updates);
                 });
             }
 
@@ -3784,7 +3801,19 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
                 {
+                    if (alreadyResentPackets)
+                        return;
+                    alreadyResentPackets = true;
                     ResendPrimUpdates(updates);
+                },
+                delegate(OutgoingPacket p)
+                {
+                    if (alreadyFinishedSendingPackets)
+                        return;
+                    alreadyFinishedSendingPackets = true;
+                    IScenePresence presence = m_scene.GetScenePresence(AgentId);
+                    if (presence != null)
+                        presence.SceneViewer.FinishedPacketSend(updates);
                 });
             }
 
@@ -3802,7 +3831,19 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
                 {
+                    if (alreadyResentPackets)
+                        return;
+                    alreadyResentPackets = true;
                     ResendPrimUpdates(updates);
+                },
+                delegate(OutgoingPacket p)
+                {
+                    if (alreadyFinishedSendingPackets)
+                        return;
+                    alreadyFinishedSendingPackets = true;
+                    IScenePresence presence = m_scene.GetScenePresence(AgentId);
+                    if (presence != null)
+                        presence.SceneViewer.FinishedPacketSend(updates);
                 });
             }
 
@@ -3820,9 +3861,19 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
                 {
-                    int i = 0;
-                    ImprovedTerseObjectUpdatePacket o = new ImprovedTerseObjectUpdatePacket(p.Buffer.Data, ref i);
+                    if (alreadyResentPackets)
+                        return;
+                    alreadyResentPackets = true;
                     ResendPrimUpdates(updates);
+                },
+                delegate(OutgoingPacket p)
+                {
+                    if (alreadyFinishedSendingPackets)
+                        return;
+                    alreadyFinishedSendingPackets = true;
+                    IScenePresence presence = m_scene.GetScenePresence(AgentId);
+                    if (presence != null)
+                        presence.SceneViewer.FinishedPacketSend(updates);
                 });
             }
         }
@@ -11909,7 +11960,23 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <param name="doAutomaticSplitting">True to automatically split oversized
         /// packets (the default), or false to disable splitting if the calling code
         /// handles splitting manually</param>
-        protected void OutPacket(Packet packet, ThrottleOutPacketType throttlePacketType, bool doAutomaticSplitting, UnackedPacketMethod method)
+        /// <param name="resendMethod">Method that will be called if the packet needs resent</param>
+        protected void OutPacket(Packet packet, ThrottleOutPacketType throttlePacketType, bool doAutomaticSplitting, UnackedPacketMethod resendMethod)
+        {
+            OutPacket(packet, throttlePacketType, doAutomaticSplitting, resendMethod, null);
+        }
+
+        /// <summary>
+        /// This is the starting point for sending a simulator packet out to the client
+        /// </summary>
+        /// <param name="packet">Packet to send</param>
+        /// <param name="throttlePacketType">Throttling category for the packet</param>
+        /// <param name="doAutomaticSplitting">True to automatically split oversized
+        /// packets (the default), or false to disable splitting if the calling code
+        /// handles splitting manually</param>
+        /// <param name="resendMethod">Method that will be called if the packet needs resent</param>
+        /// <param name="finishedMethod">Method that will be called when the packet is sent</param>
+        protected void OutPacket(Packet packet, ThrottleOutPacketType throttlePacketType, bool doAutomaticSplitting, UnackedPacketMethod resendMethod, UnackedPacketMethod finishedMethod)
         {
             if (m_debugPacketLevel > 0)
             {
@@ -11933,7 +12000,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     m_log.DebugFormat("[CLIENT]: Packet OUT {0}", packet.Type);
             }
 
-            m_udpServer.SendPacket(m_udpClient, packet, throttlePacketType, doAutomaticSplitting, method);
+            m_udpServer.SendPacket(m_udpClient, packet, throttlePacketType, doAutomaticSplitting, resendMethod, finishedMethod);
         }
 
         /// <summary>

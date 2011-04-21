@@ -26,6 +26,8 @@
  */
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using OpenMetaverse;
 
 namespace OpenSim.Framework
@@ -66,7 +68,7 @@ namespace OpenSim.Framework
         /// Once the packet has been sent, allow newer updates to be sent for the given entity
         /// </summary>
         /// <param name="ID"></param>
-        void FinishedPacketSend(UUID ID);
+        void FinishedPacketSend(IEnumerable<EntityUpdate> ID);
 
         /// <summary>
         /// The client has left this region and went into a child region, clean up anything required
