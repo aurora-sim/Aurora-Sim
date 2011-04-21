@@ -141,8 +141,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>Percentage of the task throttle category that is allocated to avatar and prim
         /// state updates</summary>
         const float STATE_TASK_PERCENTAGE = 0.3f;
-        const float TRANSFER_ASSET_PERCENTAGE = 0.75f;
-        const float AVATAR_INFO_STATE_PERCENTAGE = 0.3f;
+        const float TRANSFER_ASSET_PERCENTAGE = 0.9f;
+        const float AVATAR_INFO_STATE_PERCENTAGE = 0.5f;
         const int MAXPERCLIENTRATE = 625000;
         const int MINPERCLIENTRATE = 6250;
         const int STARTPERCLIENTRATE = 25000;

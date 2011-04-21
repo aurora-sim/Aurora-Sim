@@ -85,10 +85,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
         #endregion
 
-
-        #region IRegionModule Members
-
-
+        #region INonSharedRegionModule Members
 
         public void Close() { }
 
@@ -104,16 +101,6 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                                                        {
                                                            return ProcessAdd(m_dhttpMethod, agentID);
                                                        }));
-            /*
-                   caps.RegisterHandler("NewFileAgentInventoryVariablePrice",
-
-                           new LLSDStreamhandler<LLSDAssetUploadRequest, LLSDNewFileAngentInventoryVariablePriceReplyResponse>("POST",
-                                                                                                  "/CAPS/" + capID.ToString(),
-                                                                                                  delegate(LLSDAssetUploadRequest req)
-                                                              {
-                                                                  return NewAgentInventoryRequest(req,agentID);
-                                                              }));
-             */
             return retVal;
         }
 
@@ -267,7 +254,8 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 pbs.ProfileEnd = (ushort)obj.ProfileEnd;
                 pbs.Scale = obj.Scale;
                 pbs.State = (byte)0;
-                SceneObjectPart prim = new SceneObjectPart();
+                SceneObjectPart prim = new SceneObjectPart(AgentId, pbs, obj.Position, obj.Rotation,
+                    Vector3.Zero, obj.Name, m_scene);
                 prim.UUID = UUID.Random();
                 prim.CreatorID = AgentId;
                 prim.OwnerID = AgentId;
@@ -335,7 +323,6 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                     return responsedata;
                 }
                 allparts[i] = grp;
-
             }
 
             for (int j = 1; j < allparts.Length; j++)

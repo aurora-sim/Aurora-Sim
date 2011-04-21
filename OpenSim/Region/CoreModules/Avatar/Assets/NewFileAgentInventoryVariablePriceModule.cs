@@ -80,10 +80,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
 
         #endregion
 
-
-        #region IRegionModule Members
-
-       
+        #region INonSharedRegionModule Members
 
         public void Close() { }
 
@@ -110,7 +107,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
             OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 
             //TODO:  The Mesh uploader uploads many types of content. If you're going to implement a Money based limit
-            // You need to be aware of this and 
+            // You need to be aware of this and make sure to deal with it appropriately 
 
 
             //if (llsdRequest.asset_type == "texture" ||
@@ -121,11 +118,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
 
 
             IMoneyModule mm = m_scene.RequestModuleInterface<IMoneyModule>();
-
+            int uploadPrice = 0;
             if (mm != null)
             {
                 if (m_scene.TryGetClient(agentID, out client))
                 {
+                    uploadPrice = mm.UploadCharge;
                     if (!mm.Charge(agentID, mm.UploadCharge, "Asset upload"))
                     {
                         if (client != null)
@@ -164,7 +162,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
             map["rsvp"] = uploaderURL;
             map["state"] = "upload";
             map["resource_cost"] = 0;
-            map["upload_price"] = 0;
+            map["upload_price"] = uploadPrice;
             return OSDParser.SerializeLLSDXmlString(map);
         }
 
