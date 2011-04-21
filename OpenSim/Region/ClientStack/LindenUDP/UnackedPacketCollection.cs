@@ -127,6 +127,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         // The TickCount will be set to the current time when the packet
                         // is actually sent out again
                         packet.TickCount = 0;
+                        // As with other network applications, assume that an expired packet is
+                        // an indication of some network problem, slow transmission
+                        packet.Client.FlowThrottle.ExpirePackets(1);
 
                         expiredPackets.Add(packet);
                         if (i++ > 50)  // limit number of packets loop
@@ -166,6 +169,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         if (m_packets.TryGetValue(pendingRemove.SequenceNumber, out ackedPacket))
                         {
                             m_packets.Remove(pendingRemove.SequenceNumber);
+
+                            // As with other network applications, assume that an acknowledged packet is an
+                            // indication that the network can handle a little more load, speed up the transmission
+                            ackedPacket.Client.FlowThrottle.AcknowledgePackets(ackedPacket.Buffer.DataLength);
 
                             // Update stats
                             System.Threading.Interlocked.Add(ref ackedPacket.Client.UnackedBytes, -ackedPacket.Buffer.DataLength);

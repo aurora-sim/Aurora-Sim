@@ -194,7 +194,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
            #endregion BinaryStats
 
             if(sceneThrottleBps != 0)
-                m_throttle = new TokenBucket(null, sceneThrottleBps, sceneThrottleBps);
+                m_throttle = new TokenBucket(null, sceneThrottleBps);
             m_throttleRates = new ThrottleRates(configSource);
         }
 
@@ -458,11 +458,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                     if (expiredPackets[i].UnackedMethod != null)
                         expiredPackets[i].UnackedMethod(expiredPackets[i]);
-                }
-
-                lock (udpClient)
-                {
-                    udpClient.SlowDownSend();
                 }
 
                 // Resend packets
