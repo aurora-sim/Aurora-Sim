@@ -147,6 +147,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         const int MINPERCLIENTRATE = 6250;
         const int STARTPERCLIENTRATE = 25000;
         const int MAX_PACKET_SKIP_RATE = 6;
+        const float CLIENT_THROTTLE_MULTIPLIER = 1.5f;
 
         private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -270,14 +271,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_packetOutboxes[i] = new OpenSim.Framework.LocklessQueue<OutgoingPacket>();
 
                 // Initialize the token buckets that control the throttling for each category
-                m_throttleCategories[i] = new TokenBucket(m_throttle, rates.GetLimit(type));
                 //Fix parent types so that tokens are passed through appropriately
                 if (type == ThrottleOutPacketType.State)
-                    m_throttleCategories[i].Parent = m_throttleCategories[(int)ThrottleOutPacketType.Task];
+                    m_throttleCategories[i] = new TokenBucket(m_throttleCategories[(int)ThrottleOutPacketType.Task], rates.GetLimit(type));
                 else if (type == ThrottleOutPacketType.AvatarInfo)
-                    m_throttleCategories[i].Parent = m_throttleCategories[(int)ThrottleOutPacketType.State];
+                    m_throttleCategories[i] = new TokenBucket(m_throttleCategories[(int)ThrottleOutPacketType.State], rates.GetLimit(type));
                 else if (type == ThrottleOutPacketType.Transfer)
-                    m_throttleCategories[i].Parent = m_throttleCategories[(int)ThrottleOutPacketType.Asset];
+                    m_throttleCategories[i] = new TokenBucket(m_throttleCategories[(int)ThrottleOutPacketType.Asset], rates.GetLimit(type));
+                else
+                    m_throttleCategories[i] = new TokenBucket(m_throttle, rates.GetLimit(type));
             }
 
             // Default the retransmission timeout to three seconds
@@ -378,13 +380,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
 
             // 0.125f converts from bits to bytes
-            int resend = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f); pos += 4;
-            int land = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f); pos += 4;
-            int wind = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f); pos += 4;
-            int cloud = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f); pos += 4;
-            int task = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f); pos += 4;
-            int texture = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f); pos += 4;
-            int asset = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f);
+            int resend = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f * CLIENT_THROTTLE_MULTIPLIER); pos += 4;
+            int land = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f * CLIENT_THROTTLE_MULTIPLIER); pos += 4;
+            int wind = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f * CLIENT_THROTTLE_MULTIPLIER); pos += 4;
+            int cloud = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f * CLIENT_THROTTLE_MULTIPLIER); pos += 4;
+            int task = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f * CLIENT_THROTTLE_MULTIPLIER); pos += 4;
+            int texture = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f * CLIENT_THROTTLE_MULTIPLIER); pos += 4;
+            int asset = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f * CLIENT_THROTTLE_MULTIPLIER);
             // These are subcategories of task that we allocate a percentage to
             int state = (int)(task * STATE_TASK_PERCENTAGE);
             task -= state;
@@ -417,7 +419,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 total = MAXPERCLIENTRATE;
             if (total < MINPERCLIENTRATE)
             {
-                int percent = (int)((MINPERCLIENTRATE / total) * 100);
+                int percent = (int)(((float)MINPERCLIENTRATE / (float)total) * 100);
                 resend *= percent;
                 resend /= 100;
                 land *= percent;
@@ -475,11 +477,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             bucket = m_throttleCategories[(int)ThrottleOutPacketType.State];
             bucket.RequestedDripRate = state;
 
-            bucket = m_throttleCategories[(int)ThrottleOutPacketType.Texture];
-            bucket.RequestedDripRate = texture;
-
             bucket = m_throttleCategories[(int)ThrottleOutPacketType.AvatarInfo];
             bucket.RequestedDripRate = avatarinfo;
+
+            bucket = m_throttleCategories[(int)ThrottleOutPacketType.Texture];
+            bucket.RequestedDripRate = texture;
 
             bucket = m_throttleCategories[(int)ThrottleOutPacketType.OutBand];
             bucket.RequestedDripRate = 0;
@@ -641,7 +643,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             m_udpServer.SendPacketFinal(packet);
 
             //Slowly move the burst rate up toward what it should be
-            if (m_throttle.BurstRate < STARTPERCLIENTRATE)
+            if (m_throttle.RequestedDripRate < STARTPERCLIENTRATE)
             {
                 float tmp = (float)m_throttle.RequestedDripRate * 1.005f;
                 m_throttle.RequestedDripRate = (int)tmp;
