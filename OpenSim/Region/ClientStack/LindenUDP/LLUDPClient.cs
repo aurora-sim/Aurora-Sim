@@ -572,7 +572,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         //Slowly move the burst rate up toward what it should be
                         if (m_throttle.BurstRate < STARTPERCLIENTRATE)
                         {
-                            float tmp = (float)m_throttle.BurstRate * 1.005f;
+                            float tmp = (float)m_throttle.RequestedDripRate * 1.005f;
                             m_throttle.RequestedDripRate = (int)tmp;
                         }
 
@@ -606,7 +606,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             //Slowly move the burst rate up toward what it should be
                             if (m_throttle.BurstRate < STARTPERCLIENTRATE)
                             {
-                                float tmp = (float)m_throttle.BurstRate * 1.005f;
+                                float tmp = (float)m_throttle.RequestedDripRate * 1.005f;
                                 m_throttle.RequestedDripRate = (int)tmp;
                             }
 
@@ -622,13 +622,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if (m_outbox.Count <= 100 || m_lastEmptyUpdates > 10) //Fire it every 10 queues whether we should be or not
             {
-                //if(m_outbox.count > 100)
-                //    MainConsole.Instance.Output(m_outbox.count.ToString(), log4net.Core.Level.Alert);
-                m_lastEmptyUpdates = 0;
-                Int64 numPackets = m_udpServer.PrimUpdatesPerCallback;
+                float numPackets = m_udpServer.PrimUpdatesPerCallback;
                 if (m_outbox.Count > 100)
-                    numPackets *= (numPackets / m_outbox.Count);
-                BeginFireQueueEmpty (numPackets);
+                    numPackets *= (numPackets / (float)m_outbox.Count) * ((float)m_lastEmptyUpdates / 10);
+                if (numPackets < 20)
+                    return packetSent; //Forget about it, wait until we have more
+                if (m_outbox.Count > 100)
+                    MainConsole.Instance.Output(m_outbox.Count.ToString() + "," + numPackets, log4net.Core.Level.Alert);
+                m_lastEmptyUpdates = 0;
+                BeginFireQueueEmpty ((Int64)numPackets);
             }
             else
                 m_lastEmptyUpdates++;
