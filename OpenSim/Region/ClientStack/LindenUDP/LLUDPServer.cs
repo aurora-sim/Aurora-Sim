@@ -575,7 +575,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // Keep track of when this packet was sent out (right now)
             outgoingPacket.TickCount = Environment.TickCount & Int32.MaxValue;
 
-            outgoingPacket.FinishedMethod(outgoingPacket);
+            if(outgoingPacket.FinishedMethod != null)
+                outgoingPacket.FinishedMethod(outgoingPacket);
         }
 
         protected override void PacketReceived(UDPPacketBuffer buffer)
