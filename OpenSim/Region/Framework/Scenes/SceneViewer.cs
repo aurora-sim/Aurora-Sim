@@ -108,19 +108,10 @@ namespace OpenSim.Region.Framework.Scenes
                 if (sp.UUID != m_presence.UUID)
                     return null; //Only want our av
 
-                if (m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeX &&
-                    m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeY)
-                {
-                    lastGrpsInView.Clear();
-                    lastPresencesInView.Clear();
-                }
-                else
-                {
-                    //Draw Distance chagned, force a cull check
-                    m_forceCullCheck = true;
-                    //Don't do this immediately
-                    //SignificantClientMovement (m_presence.ControllingClient);
-                }
+                //Draw Distance chagned, force a cull check
+                m_forceCullCheck = true;
+                //Don't do this immediately
+                //SignificantClientMovement (m_presence.ControllingClient);
             }
             else if (FunctionName == "SignficantCameraMovement")
             {
@@ -231,7 +222,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (remote_client.AgentId != m_presence.UUID)
                 return;
 
-            if (m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeX &&
+            if (!m_forceCullCheck && m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeX &&
                     m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeY)
             {
                 m_forceCullCheck = false; //Make sure to reset it
