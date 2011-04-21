@@ -173,30 +173,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             lock (m_presenceAnimationsToSend)
             {
-                AnimationGroup o = (AnimationGroup)m_presenceAnimationsToSend[presence.UUID];
-                if (o == null)
-                    o = animation;
-                else
-                {
-                    List<UUID> animations = new List<UUID>();
-                    animations.AddRange(animation.Animations);
-                    animations.AddRange(o.Animations);
-                    o.Animations = animations.ToArray();
-
-                    List<int> SequenceNums = new List<int>();
-                    SequenceNums.AddRange(animation.SequenceNums);
-                    SequenceNums.AddRange(o.SequenceNums);
-                    o.SequenceNums = SequenceNums.ToArray();
-
-                    List<UUID> ObjectIDs = new List<UUID>();
-                    ObjectIDs.AddRange(animation.ObjectIDs);
-                    ObjectIDs.AddRange(o.ObjectIDs);
-                    o.ObjectIDs = ObjectIDs.ToArray();
-
-                    m_presenceAnimationsToSend.Remove(presence.UUID);
-                }
+                m_presenceAnimationsToSend.Remove(animation.AvatarID);
                 //Insert at the end
-                m_presenceAnimationsToSend.Insert(m_presenceAnimationsToSend.Count, presence.UUID, o);
+                m_presenceAnimationsToSend.Insert(m_presenceAnimationsToSend.Count, animation.AvatarID, animation);
             }
         }
 
@@ -481,9 +460,8 @@ namespace OpenSim.Region.Framework.Scenes
                                 continue;
                             }
                             m_AnimationsInPacketQueue.Add(update.AvatarID);
-
-                            m_presence.ControllingClient.SendAnimations(update);
                             m_presenceAnimationsToSend.RemoveAt(0);
+                            m_presence.ControllingClient.SendAnimations(update);
                         }
                         //If we're first, we definitely got set, so we don't need to check this at all
                         m_ourPresenceHasUpdate = false;

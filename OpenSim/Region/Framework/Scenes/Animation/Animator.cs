@@ -480,7 +480,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             m_scenePresence.Scene.ForEachScenePresence(
                 delegate(IScenePresence presence) 
                 {
-                    m_scenePresence.SceneViewer.QueuePresenceForAnimationUpdate(presence, anis);
+                    presence.SceneViewer.QueuePresenceForAnimationUpdate(presence, anis);
                 });
         }
 

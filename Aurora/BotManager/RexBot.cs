@@ -483,7 +483,6 @@ namespace Aurora.BotManager
             }
             catch (System.ArgumentException)
             {
-                
             }
             
             m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
@@ -694,8 +693,10 @@ namespace Aurora.BotManager
             if (State != RexBotState.Idle)
             {
                 bool CheckFly = State == RexBotState.Flying;
+                if (!ShouldFly && CheckFly)
+                    ShouldFly = CheckFly;
                 Vector3 diffPos = m_destination - m_scenePresence.AbsolutePosition;
-                if (Math.Abs (diffPos.X) < 1 && Math.Abs (diffPos.Y) < m_closeToPoint &&
+                if (Math.Abs(diffPos.X) < m_closeToPoint && Math.Abs(diffPos.Y) < m_closeToPoint &&
                     (!CheckFly || (ShouldFly && Math.Abs (diffPos.Z) < m_closeToPoint))) //If we are flying, Z checking matters
                 {
                     State = RexBotState.Idle;
