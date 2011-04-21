@@ -96,6 +96,8 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
                 uinfo = m_MockScene.UserAccountService.GetUserAccount(UUID.Zero, m_service.LibraryOwnerName);
                 m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID);
             }
+            if (m_MockScene.InventoryService.GetRootFolder(m_service.LibraryOwner) == null)
+                m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID); 
 
             InventoryCollection col = m_MockScene.InventoryService.GetFolderContent(uinfo.PrincipalID, UUID.Zero);
             bool alreadyExists = false;
