@@ -265,8 +265,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 // Initialize the packet outboxes, where packets sit while they are waiting for tokens
                 m_packetOutboxes[i] = new OpenSim.Framework.LocklessQueue<OutgoingPacket>();
+
                 // Initialize the token buckets that control the throttling for each category
                 m_throttleCategories[i] = new TokenBucket(m_throttle, rates.GetLimit(type));
+                //Fix parent types so that tokens are passed through appropriately
+                if (type == ThrottleOutPacketType.State)
+                    m_throttleCategories[i].Parent = m_throttleCategories[(int)ThrottleOutPacketType.Task];
+                else if (type == ThrottleOutPacketType.AvatarInfo)
+                    m_throttleCategories[i].Parent = m_throttleCategories[(int)ThrottleOutPacketType.State];
+                else if (type == ThrottleOutPacketType.Transfer)
+                    m_throttleCategories[i].Parent = m_throttleCategories[(int)ThrottleOutPacketType.Asset];
             }
 
             // Default the retransmission timeout to three seconds
