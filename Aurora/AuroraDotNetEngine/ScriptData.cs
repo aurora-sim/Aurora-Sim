@@ -697,9 +697,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 m_ScriptEngine.StateSave.Deserialize(this, LastStateSave);
 
-                m_ScriptEngine.CreateFromData(Part.UUID, ItemID, Part.UUID,
-                    PluginData);
-
                 // we get new rez events on sim restart, too
                 // but if there is state, then we fire the change
                 // event

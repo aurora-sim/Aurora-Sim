@@ -107,7 +107,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             threadpool = new AuroraThreadPool(info);
 
 
-            MaxScriptThreads = Engine.Config.GetInt("Threads", 1); // leave control threads out of user option
+            MaxScriptThreads = Engine.Config.GetInt("Threads", 100); // leave control threads out of user option
             AuroraThreadPoolStartInfo sinfo = new AuroraThreadPoolStartInfo();
             sinfo.priority = ThreadPriority.Normal;
             sinfo.Threads = MaxScriptThreads;
