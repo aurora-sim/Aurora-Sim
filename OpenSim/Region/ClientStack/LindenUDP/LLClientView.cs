@@ -3778,7 +3778,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     if (alreadyResentPackets)
                         return;
                     alreadyResentPackets = true;
-                    ResendPrimUpdates(updates);
+                    ResendPrimUpdates(updates, p);
                 },
                 delegate(OutgoingPacket p)
                 {
@@ -3808,7 +3808,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     if (alreadyResentPackets)
                         return;
                     alreadyResentPackets = true;
-                    ResendPrimUpdates(updates);
+                    ResendPrimUpdates(updates, p);
                 },
                 delegate(OutgoingPacket p)
                 {
@@ -3838,7 +3838,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     if (alreadyResentPackets)
                         return;
                     alreadyResentPackets = true;
-                    ResendPrimUpdates(updates);
+                    ResendPrimUpdates(updates, p);
                 },
                 delegate(OutgoingPacket p)
                 {
@@ -3868,7 +3868,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     if (alreadyResentPackets)
                         return;
                     alreadyResentPackets = true;
-                    ResendPrimUpdates(updates);
+                    ResendPrimUpdates(updates, p);
                 },
                 delegate(OutgoingPacket p)
                 {
@@ -3882,8 +3882,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
         }
 
-        private void ResendPrimUpdates(IEnumerable<EntityUpdate> updates)
+        private void ResendPrimUpdates(IEnumerable<EntityUpdate> updates, OutgoingPacket oPacket)
         {
+            // Remove the update packet from the list of packets waiting for acknowledgement
+            // because we are requeuing the list of updates. They will be resent in new packets
+            // with the most recent state and priority.
+            m_udpClient.NeedAcks.Remove(oPacket.SequenceNumber);
+            
+            // Count this as a resent packet since we are going to requeue all of the updates contained in it
+            Interlocked.Increment(ref m_udpClient.PacketsResent);
+            
             IScenePresence sp = m_scene.GetScenePresence(AgentId);
             if (sp != null)
             {
