@@ -2073,13 +2073,16 @@ namespace OpenSim.Region.Framework.Scenes
                     syncPoster.Post(SyncMessageHelper.SendChildAgentUpdate(agentpos, m_scene.RegionInfo.RegionHandle), m_scene.RegionInfo.RegionHandle);
             }
 
-            //Moving collision sound ID inside this loop so that we don't trigger it too much
-            if (CollisionSoundID != UUID.Zero)
-            {
-                ISoundModule module = Scene.RequestModuleInterface<ISoundModule>();
-                module.TriggerSound(CollisionSoundID, UUID, UUID, UUID.Zero, 1, AbsolutePosition, Scene.RegionInfo.RegionHandle, 100);
-                CollisionSoundID = UUID.Zero;
-            }
+            // Disabled for now until we can make sure that we only send one of these per simulation loop,
+            //   as with lots of clients, this will lag the client badly.
+            //
+            // Moving collision sound ID inside this loop so that we don't trigger it too much
+            //if (CollisionSoundID != UUID.Zero)
+            //{
+            //    ISoundModule module = Scene.RequestModuleInterface<ISoundModule>();
+            //    module.TriggerSound(CollisionSoundID, UUID, UUID, UUID.Zero, 1, AbsolutePosition, Scene.RegionInfo.RegionHandle, 100);
+            //    CollisionSoundID = UUID.Zero;
+            //}
         }
 
         #endregion
