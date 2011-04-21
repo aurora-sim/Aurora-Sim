@@ -24,6 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#define Debug
 
 using System;
 using System.Collections.Generic;
@@ -577,6 +578,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 else
                     break;
             }
+#if Debug
+                if (waitingPackets.Count > 100)
+                    MainConsole.Instance.Output(waitingPackets.Count + " were not sent immediately", log4net.Core.Level.Alert);
+#endif
             //Requeue any updates that we couldn't send immediately
             foreach (OutgoingPacket nextPacket in waitingPackets)
             {
@@ -590,9 +595,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 if (m_outbox.Count > 100)
                     numPackets *= (numPackets / (float)m_outbox.Count) * ((float)m_lastEmptyUpdates / 10);
                 if (numPackets < 20)
-                    return packetSent; //Forget about it, wait until we have more
+                    return packetSent; //Forget about it, wait until we have more, since we send lots of updates in one packet
+                
+#if Debug
                 if (m_outbox.Count > 100)
-                    MainConsole.Instance.Output(m_outbox.Count.ToString() + "," + numPackets, log4net.Core.Level.Alert);
+                    MainConsole.Instance.Output(string.Format("Count of packet queue {0}, entity updates sending {1}", m_outbox.Count.ToString(), numPackets.ToString()), log4net.Core.Level.Alert);
+#endif
+
                 m_lastEmptyUpdates = 0;
                 BeginFireQueueEmpty ((Int64)numPackets);
             }

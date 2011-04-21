@@ -46,6 +46,8 @@ namespace OpenSim.Region.Framework.Scenes
     {
         #region Declares
 
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        
         private const double MINVIEWDSTEP = 16;
         private const double MINVIEWDSTEPSQ = MINVIEWDSTEP * MINVIEWDSTEP;
 
@@ -368,17 +370,31 @@ namespace OpenSim.Region.Framework.Scenes
                 // if we don't have that many, we send as many as possible, then switch to objects
                 if (m_presenceUpdatesToSend.Count != 0)
                 {
-                    int count = m_presenceUpdatesToSend.Count > presenceNumToSend ? presenceNumToSend : m_presenceUpdatesToSend.Count;
-                    List<EntityUpdate> updates = new List<EntityUpdate> ();
-                    for (int i = 0; i < count; i++)
+                    try
                     {
-                        updates.Add((EntityUpdate)m_presenceUpdatesToSend[0]);
-                        m_InPacketQueue.Add(((EntityUpdate)m_objectUpdatesToSend[0]).Entity.UUID);
-                        m_presenceUpdatesToSend.RemoveAt (0);
+                        int count = m_presenceUpdatesToSend.Count > presenceNumToSend ? presenceNumToSend : m_presenceUpdatesToSend.Count;
+                        List<EntityUpdate> updates = new List<EntityUpdate>();
+                        for (int i = 0; i < count; i++)
+                        {
+                            EntityUpdate update = ((EntityUpdate)m_presenceUpdatesToSend[0]);
+                            if (m_InPacketQueue.Contains(update.Entity.UUID))
+                            {
+                                m_presenceUpdatesToSend.RemoveAt(0);
+                                m_presenceUpdatesToSend.Insert(m_presenceUpdatesToSend.Count, update.Entity.UUID, update);
+                                continue;
+                            }
+                            updates.Add(update);
+                            m_InPacketQueue.Add(update.Entity.UUID);
+                            m_presenceUpdatesToSend.RemoveAt(0);
+                        }
+                        //If we're first, we definitely got set, so we don't need to check this at all
+                        m_ourPresenceHasUpdate = false;
+                        m_presence.ControllingClient.SendPrimUpdate(updates);
                     }
-                    //If we're first, we definitely got set, so we don't need to check this at all
-                    m_ourPresenceHasUpdate = false;
-                    m_presence.ControllingClient.SendPrimUpdate (updates);
+                    catch(Exception ex)
+                    {
+                        m_log.WarnFormat("[SceneViewer]: Exception while running presence loop: {0}", ex.ToString());
+                    }
                 }
             }
 
@@ -388,15 +404,29 @@ namespace OpenSim.Region.Framework.Scenes
                 int numToSend = (int)(numUpdates * PrimSendPercentage) + numberSent; //If we didn't send that many presence updates, send a few more
                 if (m_objectUpdatesToSend.Count != 0)
                 {
-                    int count = m_objectUpdatesToSend.Count > numToSend ? numToSend : m_objectUpdatesToSend.Count;
-                    List<EntityUpdate> updates = new List<EntityUpdate> ();
-                    for (int i = 0; i < count; i++)
+                    try
                     {
-                        updates.Add ((EntityUpdate)m_objectUpdatesToSend[0]);
-                        m_InPacketQueue.Add(((EntityUpdate)m_objectUpdatesToSend[0]).Entity.UUID);
-                        m_objectUpdatesToSend.RemoveAt (0);
+                        int count = m_objectUpdatesToSend.Count > numToSend ? numToSend : m_objectUpdatesToSend.Count;
+                        List<EntityUpdate> updates = new List<EntityUpdate>();
+                        for (int i = 0; i < count; i++)
+                        {
+                            EntityUpdate update = ((EntityUpdate)m_objectUpdatesToSend[0]);
+                            if (m_InPacketQueue.Contains(update.Entity.UUID))
+                            {
+                                m_objectUpdatesToSend.RemoveAt(0);
+                                m_objectUpdatesToSend.Insert(m_objectUpdatesToSend.Count, update.Entity.UUID, update);
+                                continue;
+                            }
+                            updates.Add((EntityUpdate)m_objectUpdatesToSend[0]);
+                            m_InPacketQueue.Add(((EntityUpdate)m_objectUpdatesToSend[0]).Entity.UUID);
+                            m_objectUpdatesToSend.RemoveAt(0);
+                        }
+                        m_presence.ControllingClient.SendPrimUpdate(updates);
                     }
-                    m_presence.ControllingClient.SendPrimUpdate (updates);
+                    catch (Exception ex)
+                    {
+                        m_log.WarnFormat("[SceneViewer]: Exception while running object loop: {0}", ex.ToString());
+                    }
                 }
             }
 
