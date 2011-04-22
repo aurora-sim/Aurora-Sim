@@ -115,6 +115,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             instance.Disabled = save.Disabled;
             instance.UserInventoryItemID = save.UserInventoryID;
             instance.PluginData = save.Plugins;
+            m_module.CreateFromData(instance.Part.UUID, instance.ItemID, instance.Part.UUID,
+ 	              instance.PluginData);
             instance.Source = save.Source;
             instance.InventoryItem.PermsGranter = save.PermsGranter;
             instance.InventoryItem.PermsMask = save.PermsMask;
