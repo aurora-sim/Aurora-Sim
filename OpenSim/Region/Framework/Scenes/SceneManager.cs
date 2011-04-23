@@ -894,6 +894,15 @@ namespace OpenSim.Region.Framework.Scenes
                         ((SceneObjectGroup)ent).ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
                     }
                 }
+                IScenePresence[] presences = scene.Entities.GetPresences();
+                foreach(IScenePresence presence in presences)
+                {
+                    if(!presence.IsChildAgent)
+                        scene.ForEachClient(delegate(IClientAPI client)
+                        {
+                            client.SendAvatarDataImmediate(presence);
+                        });
+                }
             });
         }
 

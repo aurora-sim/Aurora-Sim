@@ -3497,7 +3497,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void SendAvatarDataImmediate (IEntity avatar)
         {
             IScenePresence presence = avatar as IScenePresence;
-            if (presence == null)
+            if (presence == null || presence.IsChildAgent)
                 return;
 
             ObjectUpdatePacket objupdate = (ObjectUpdatePacket)PacketPool.Instance.GetPacket(PacketType.ObjectUpdate);
@@ -3512,7 +3512,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             objupdate.ObjectData = new ObjectUpdatePacket.ObjectDataBlock[1];
             objupdate.ObjectData[0] = CreateAvatarUpdateBlock(presence);
 
-            OutPacket(objupdate, ThrottleOutPacketType.AvatarInfo);
+            OutPacket(objupdate, ThrottleOutPacketType.Immediate);
         }
 
         public void SendCoarseLocationUpdate(List<UUID> users, List<Vector3> CoarseLocations)
@@ -3569,6 +3569,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OpenSim.Framework.Lazy<List<ObjectUpdateCompressedPacket.ObjectDataBlock>> compressedUpdateBlocks = new OpenSim.Framework.Lazy<List<ObjectUpdateCompressedPacket.ObjectDataBlock>> ();
             OpenSim.Framework.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>> terseUpdateBlocks = new OpenSim.Framework.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>> ();
             OpenSim.Framework.Lazy<List<ObjectUpdateCachedPacket.ObjectDataBlock>> cachedUpdateBlocks = new OpenSim.Framework.Lazy<List<ObjectUpdateCachedPacket.ObjectDataBlock>> ();
+            List<EntityUpdate> fullUpdates = new List<EntityUpdate>();
+            List<EntityUpdate> compressedUpdates = new List<EntityUpdate>();
+            List<EntityUpdate> cachedUpdates = new List<EntityUpdate>();
+            List<EntityUpdate> terseUpdates = new List<EntityUpdate>();
 
             foreach (EntityUpdate update in updates)
             {
@@ -3695,10 +3699,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     if (canUseCached && !isTerse)
                     {
+                        cachedUpdates.Add(update);
                         cachedUpdateBlocks.Value.Add (CreatePrimCachedUpdateBlock ((SceneObjectPart)entity, this.m_agentId));
                     }
                     else if (!canUseImproved && !canUseCompressed)
                     {
+                        fullUpdates.Add(update);
                         if (entity is IScenePresence)
                         {
                             objectUpdateBlocks.Value.Add (CreateAvatarUpdateBlock ((IScenePresence)entity));
@@ -3710,6 +3716,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     else if (!canUseImproved)
                     {
+                        compressedUpdates.Add(update);
                         CompressedFlags Flags = CompressedFlags.None;
                         if (updateFlags.HasFlag (PrimUpdateFlags.AngularVelocity))
                             Flags |= CompressedFlags.HasAngularVelocity;
@@ -3732,6 +3739,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     else
                     {
+                        terseUpdates.Add(update);
                         terseUpdateBlocks.Value.Add (CreateImprovedTerseBlock (entity, updateFlags.HasFlag (PrimUpdateFlags.Textures)));
                     }
                 }
@@ -3778,7 +3786,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     if (alreadyResentPackets)
                         return;
                     alreadyResentPackets = true;
-                    ResendPrimUpdates(updates, p);
+                    ResendPrimUpdates(fullUpdates, p);
                 },
                 delegate(OutgoingPacket p)
                 {
@@ -3787,7 +3795,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     alreadyFinishedSendingPackets = true;
                     IScenePresence presence = m_scene.GetScenePresence(AgentId);
                     if (presence != null)
-                        presence.SceneViewer.FinishedEntityPacketSend(updates);
+                        presence.SceneViewer.FinishedEntityPacketSend(fullUpdates);
                 });
             }
 
@@ -3808,7 +3816,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     if (alreadyResentPackets)
                         return;
                     alreadyResentPackets = true;
-                    ResendPrimUpdates(updates, p);
+                    ResendPrimUpdates(compressedUpdates, p);
                 },
                 delegate(OutgoingPacket p)
                 {
@@ -3817,7 +3825,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     alreadyFinishedSendingPackets = true;
                     IScenePresence presence = m_scene.GetScenePresence(AgentId);
                     if (presence != null)
-                        presence.SceneViewer.FinishedEntityPacketSend(updates);
+                        presence.SceneViewer.FinishedEntityPacketSend(compressedUpdates);
                 });
             }
 
@@ -3838,7 +3846,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     if (alreadyResentPackets)
                         return;
                     alreadyResentPackets = true;
-                    ResendPrimUpdates(updates, p);
+                    ResendPrimUpdates(cachedUpdates, p);
                 },
                 delegate(OutgoingPacket p)
                 {
@@ -3847,7 +3855,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     alreadyFinishedSendingPackets = true;
                     IScenePresence presence = m_scene.GetScenePresence(AgentId);
                     if (presence != null)
-                        presence.SceneViewer.FinishedEntityPacketSend(updates);
+                        presence.SceneViewer.FinishedEntityPacketSend(cachedUpdates);
                 });
             }
 
@@ -3868,7 +3876,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     if (alreadyResentPackets)
                         return;
                     alreadyResentPackets = true;
-                    ResendPrimUpdates(updates, p);
+                    ResendPrimUpdates(terseUpdates, p);
                 },
                 delegate(OutgoingPacket p)
                 {
@@ -3877,7 +3885,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     alreadyFinishedSendingPackets = true;
                     IScenePresence presence = m_scene.GetScenePresence(AgentId);
                     if (presence != null)
-                        presence.SceneViewer.FinishedEntityPacketSend(updates);
+                        presence.SceneViewer.FinishedEntityPacketSend(terseUpdates);
                 });
             }
         }

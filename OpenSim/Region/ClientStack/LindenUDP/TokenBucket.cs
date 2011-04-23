@@ -128,6 +128,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_dripRate = (value < 0 ? 0 : value);
                 m_burstRate = (Int64)((double)m_dripRate * m_quantumsPerBurst);
                 m_totalDripRequest = m_dripRate;
+                //m_log.Warn("New drip rate: " + m_totalDripRequest);
                 if (m_parent != null)
                     m_parent.RegisterRequest(this, m_dripRate);
             }
@@ -138,13 +139,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             get
             {
                 if (m_parent == null)
-                    return Math.Min(RequestedDripRate, TotalDripRequest);
+                    return Math.Min(RequestedDripRate, RequestedDripRate);
 
                 double rate = (double)RequestedDripRate * m_parent.DripRateModifier();
                 if (rate < m_minimumDripRate)
                     rate = m_minimumDripRate;
 
-                return Math.Min((Int64)rate, TotalDripRequest);
+                return Math.Min((Int64)rate, RequestedDripRate);
             }
         }
 
@@ -222,7 +223,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             // Pass the new values up to the parent
             if (m_parent != null)
-                m_parent.RegisterRequest(this, Math.Min(RequestedDripRate, TotalDripRequest));
+                m_parent.RegisterRequest(this, Math.Min(RequestedDripRate, RequestedDripRate));
         }
 
         /// <summary>
@@ -243,7 +244,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             // Pass the new values up to the parent
             if (m_parent != null)
-                m_parent.RegisterRequest(this, Math.Min(RequestedDripRate, TotalDripRequest));
+                m_parent.RegisterRequest(this, Math.Min(RequestedDripRate, RequestedDripRate));
         }
 
         /// <summary>

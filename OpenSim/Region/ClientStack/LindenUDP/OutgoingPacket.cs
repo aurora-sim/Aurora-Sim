@@ -28,6 +28,7 @@
 using System;
 using OpenSim.Framework;
 using OpenMetaverse;
+using OpenMetaverse.Packets;
 
 namespace OpenSim.Region.ClientStack.LindenUDP
 {
@@ -59,6 +60,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public UnackedPacketMethod FinishedMethod;
         /// <summary>The # of times the server has attempted to send this packet</summary>
         public int ReSendAttempt = 0;
+        /// <summary>The packet we are sending</summary>
+        public Packet Packet;
 
         /// <summary>
         /// Default constructor
@@ -71,13 +74,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <param name="finishedMethod">The delegate to be called when this packet is sent</param>
         public OutgoingPacket(LLUDPClient client, UDPPacketBuffer buffer,
             ThrottleOutPacketType category, UnackedPacketMethod resendMethod,
-            UnackedPacketMethod finishedMethod)
+            UnackedPacketMethod finishedMethod, Packet packet)
         {
             Client = client;
             Buffer = buffer;
             Category = category;
             UnackedMethod = resendMethod;
             FinishedMethod = finishedMethod;
+            Packet = packet;
         }
     }
 }

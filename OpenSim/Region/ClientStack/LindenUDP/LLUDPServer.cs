@@ -83,7 +83,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>Manages authentication for agent circuits</summary>
         public AgentCircuitManager m_circuitManager;
         /// <summary>Reference to the scene this UDP server is attached to</summary>
-        protected Scene m_scene;
+        public Scene m_scene;
         /// <summary>The X/Y coordinates of the scene this UDP server is attached to</summary>
         private uint m_x;
         private uint m_y;
@@ -275,7 +275,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         delegate(IClientAPI client)
                         {
                             if (client is LLClientView)
-                                SendPacketData(((LLClientView)client).UDPClient, data, packet.Type, category, resendMethod, finishedMethod);
+                                SendPacketData(((LLClientView)client).UDPClient, data, packet, category, resendMethod, finishedMethod);
                         }
                     );
                 }
@@ -287,7 +287,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     delegate(IClientAPI client)
                     {
                         if (client is LLClientView)
-                            SendPacketData(((LLClientView)client).UDPClient, data, packet.Type, category, resendMethod, finishedMethod);
+                            SendPacketData(((LLClientView)client).UDPClient, data, packet, category, resendMethod, finishedMethod);
                     }
                 );
             }
@@ -310,17 +310,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < packetCount; i++)
                 {
                     byte[] data = datas[i];
-                    SendPacketData(udpClient, data, packet.Type, category, resendMethod, finishedMethod);
+                    SendPacketData(udpClient, data, packet, category, resendMethod, finishedMethod);
                 }
             }
             else
             {
                 byte[] data = packet.ToBytes();
-                SendPacketData(udpClient, data, packet.Type, category, resendMethod, finishedMethod);
+                SendPacketData(udpClient, data, packet, category, resendMethod, finishedMethod);
             }
         }
 
-        public void SendPacketData(LLUDPClient udpClient, byte[] data, PacketType type, ThrottleOutPacketType category, UnackedPacketMethod resendMethod, UnackedPacketMethod finishedMethod)
+        public void SendPacketData(LLUDPClient udpClient, byte[] data, Packet packet, ThrottleOutPacketType category, UnackedPacketMethod resendMethod, UnackedPacketMethod finishedMethod)
         {
             int dataLength = data.Length;
             bool doZerocode = (data[0] & Helpers.MSG_ZEROCODED) != 0;
@@ -347,7 +347,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     // The packet grew larger than the bufferSize while zerocoding.
                     // Remove the MSG_ZEROCODED flag and send the unencoded data
                     // instead
-                    m_log.Info("[LLUDPSERVER]: Packet exceeded buffer size during zerocoding for " + type + ". DataLength=" + dataLength +
+                    m_log.Info("[LLUDPSERVER]: Packet exceeded buffer size during zerocoding for " + packet.Type + ". DataLength=" + dataLength +
                         " and BufferLength=" + buffer.Data.Length + ". Removing MSG_ZEROCODED flag");
                     data[0] = (byte)(data[0] & ~Helpers.MSG_ZEROCODED);
                 }
@@ -375,7 +375,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             #region Queue or Send
 
-            OutgoingPacket outgoingPacket = new OutgoingPacket(udpClient, buffer, category, resendMethod, finishedMethod);
+            OutgoingPacket outgoingPacket = new OutgoingPacket(udpClient, buffer, category, resendMethod, finishedMethod, packet);
 
             if (!outgoingPacket.Client.EnqueueOutgoing(outgoingPacket))
                 SendPacketFinal(outgoingPacket);

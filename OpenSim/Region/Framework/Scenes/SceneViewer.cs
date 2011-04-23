@@ -428,9 +428,13 @@ namespace OpenSim.Region.Framework.Scenes
                             m_EntitiesInPacketQueue.Add(update.Entity.UUID);
                             m_presenceUpdatesToSend.RemoveAt(0);
                         }
-                        //If we're first, we definitely got set, so we don't need to check this at all
-                        m_ourPresenceHasUpdate = false;
-                        m_presence.ControllingClient.SendPrimUpdate(updates);
+                        if (updates.Count != 0)
+                        {
+                            //Make sure we don't have an update for us
+                            if(updates[0].Entity.UUID == m_presence.UUID)
+                                m_ourPresenceHasUpdate = false;
+                            m_presence.ControllingClient.SendPrimUpdate(updates);
+                        }
                     }
                     catch(Exception ex)
                     {
@@ -461,8 +465,6 @@ namespace OpenSim.Region.Framework.Scenes
                             m_presenceAnimationsToSend.RemoveAt(0);
                             m_presence.ControllingClient.SendAnimations(update);
                         }
-                        //If we're first, we definitely got set, so we don't need to check this at all
-                        m_ourPresenceHasUpdate = false;
                     }
                     catch (Exception ex)
                     {
