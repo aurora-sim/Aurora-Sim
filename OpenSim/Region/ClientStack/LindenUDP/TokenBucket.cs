@@ -276,6 +276,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         protected void Deposit(Int64 count)
         {
             m_tokenCount += count;
+#if Debug
+            m_log.Warn("depositing " + count + ", " + m_tokenCount);
+#endif
 
             // Deposit the overflow in the parent bucket, this is how we share
             // unused bandwidth
@@ -323,13 +326,42 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 //We also can take from children if we need to, if they arn't using their drip
                 foreach (TokenBucket child in m_children.Keys)
                 {
-                    if (child.m_tokenCount > m_tokenCount * 3)
+                    deltaMS = Math.Min(Util.EnvironmentTickCountSubtract(child.m_lastDrip), m_ticksPerQuantum);
+                    if (child.m_tokenCount > (m_tokenCount + 1000) && deltaMS > 5) //Make sure that we have less tokens and we havn't stolen from them in the last 5ms
                     {
-                        tokensToAdd += child.Drip();
-                    }
+                        Int64 oldTokens = tokensToAdd;
+                        Int64 childDrip = child.Drip();
+                        //See if we can steal actual tokens, not just the drip
+                        childDrip += child.StealTokens(childDrip);
+                        //Add in the extra tokens
+                        tokensToAdd += childDrip;
+#if Debug
+                        m_log.WarnFormat("Taking {0} from children, {1}, ctokens: {2}, otokens: {3}", tokensToAdd - oldTokens, deltaMS, child.m_tokenCount, m_tokenCount);
+#endif
+                        }
+                    else
+                        child.Deposit(child.Drip()); //Drip for them then, since we might need it later
                 }
             }
             return tokensToAdd;
+        }
+
+        /// <summary>
+        /// Take tokens from children and give them to the parent
+        /// </summary>
+        /// <param name="prevDrip"></param>
+        /// <returns></returns>
+        protected Int64 StealTokens(Int64 prevDrip)
+        {
+            Int64 diff = m_tokenCount / 3;
+            //Make sure that the parent needs the tokens first, then make sure that we don't give away all of ours
+            if (m_tokenCount > (m_parent.m_tokenCount + 1000))
+            {
+                //Steal actual tokens from the children
+                m_tokenCount -= diff;
+                return diff;
+            }
+            return 0;
         }
     }
 
@@ -384,7 +416,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void ExpirePackets(Int32 count)
         {
             Int64 old = AdjustedDripRate;
-            AdjustedDripRate = (Int64)(AdjustedDripRate / Math.Pow(2, count));
+            //AdjustedDripRate = (Int64)(AdjustedDripRate / Math.Pow(2, count));
+            AdjustedDripRate = AdjustedDripRate - count;
             m_log.WarnFormat("[ADAPTIVEBUCKET] drop {0} by {1} to {2} expired packets", old, count, AdjustedDripRate);
         }
 

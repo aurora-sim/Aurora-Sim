@@ -128,6 +128,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             ProcessQueues();
 
             List<OutgoingPacket> expiredPackets = null;
+            int expiredPacketsBytes = 0;
 
             if (m_packets.Count > 0)
             {
@@ -150,6 +151,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         packet.TickCount = 0;
 
                         expiredPackets.Add(packet);
+                        expiredPacketsBytes += packet.Buffer.DataLength;
                         if (i++ > 50)  // limit number of packets loop
                             break;
                     }
@@ -160,7 +162,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 // As with other network applications, assume that an expired packet is
                 // an indication of some network problem, slow transmission
-                expiredPackets[0].Client.FlowThrottle.ExpirePackets(expiredPackets.Count);
+                expiredPackets[0].Client.FlowThrottle.ExpirePackets(expiredPacketsBytes);
             }
 
             return expiredPackets;
