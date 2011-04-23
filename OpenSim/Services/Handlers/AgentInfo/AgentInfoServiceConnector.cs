@@ -60,16 +60,6 @@ namespace OpenSim.Services
             m_registry = registry;
             m_port = handlerConfig.GetUInt("AgentInfoInHandlerPort");
 
-            if (handlerConfig.GetBoolean("UnsecureUrls", false))
-            {
-                string url = "/agentinfo";
-
-                IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-                m_port = server.Port;
-
-                AgentInfoServerPostHandler handler = new AgentInfoServerPostHandler(url, registry, registry.RequestModuleInterface<IAgentInfoService>().InnerService, 0);
-                server.AddStreamHandler(handler);
-            }
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
 
@@ -104,6 +94,12 @@ namespace OpenSim.Services
             server.AddStreamHandler(handler);
 
             return url;
+        }
+
+        public void RemoveUrlForClient(ulong regionHandle, string sessionID, string url)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            server.RemoveHTTPHandler("POST", url);
         }
 
         public uint Port

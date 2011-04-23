@@ -39,15 +39,6 @@ namespace OpenSim.Services.MessagingService
             m_registry = registry;
             m_port = handlerConfig.GetUInt("MessagingServiceInHandlerPort");
 
-            if (handlerConfig.GetBoolean("UnsecureUrls", false))
-            {
-                string url = "/messagingservice";
-
-                IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-                m_port = server.Port;
-
-                server.AddStreamHandler(new MessagingServiceInPostHandler(url, registry, this, 0));
-            }
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
 
@@ -106,6 +97,12 @@ namespace OpenSim.Services.MessagingService
             server.AddStreamHandler(new MessagingServiceInPostHandler(url, m_registry, this, RegionHandle));
 
             return url;
+        }
+
+        public void RemoveUrlForClient(ulong regionHandle, string sessionID, string url)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            server.RemoveHTTPHandler("POST", url);
         }
 
         #endregion

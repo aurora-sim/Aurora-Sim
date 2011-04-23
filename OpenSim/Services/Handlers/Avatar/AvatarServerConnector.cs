@@ -61,16 +61,13 @@ namespace OpenSim.Services
             m_registry = registry;
             m_port = handlerConfig.GetUInt("AvatarInHandlerPort");
 
-            if (handlerConfig.GetBoolean("UnsecureUrls", false))
-            {
-                string url = "/avatar";
-
-                IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-                m_port = server.Port;
-
-                server.AddStreamHandler (new AvatarServerPostHandler (url, registry.RequestModuleInterface<IAvatarService> ().InnerService, 0, registry));
-            }
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
+        }
+
+        public void RemoveUrlForClient(ulong regionHandle, string sessionID, string url)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            server.RemoveHTTPHandler("POST", url);
         }
 
         public void FinishedStartup()

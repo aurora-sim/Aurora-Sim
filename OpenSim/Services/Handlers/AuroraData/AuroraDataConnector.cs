@@ -44,16 +44,6 @@ namespace OpenSim.Services
             m_registry = registry;
             m_port = handlerConfig.GetUInt("AuroraDataHandlerPort");
 
-            if (handlerConfig.GetBoolean("UnsecureUrls", false))
-            {
-                string url = "/auroradata";
-
-                IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-                m_port = server.Port;
-
-                server.AddStreamHandler (new AuroraDataServerPostHandler (url, 0, m_registry));
-                server.AddStreamHandler (new AuroraDataServerPostOSDHandler (url + "osd", 0, m_registry));
-            }
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
 
@@ -94,6 +84,13 @@ namespace OpenSim.Services
             server.AddStreamHandler (new AuroraDataServerPostOSDHandler (url + "osd", RegionHandle, m_registry));
 
             return url;
+        }
+
+        public void RemoveUrlForClient(ulong regionHandle, string sessionID, string url)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            server.RemoveHTTPHandler("POST", url);
+            server.RemoveHTTPHandler("POST", url + "osd");
         }
 
         #endregion

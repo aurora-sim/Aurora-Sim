@@ -678,5 +678,13 @@ namespace OpenSim.Services.Interfaces
         /// <param name="p"></param>
         /// <param name="oSD"></param>
         void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url);
+
+        /// <summary>
+        /// Removes the given region from the http server so that the URLs cannot be used anymore
+        /// </summary>
+        /// <param name="regionHandle"></param>
+        /// <param name="sessionID"></param>
+        /// <param name="url"></param>
+        void RemoveUrlForClient(ulong regionHandle, string sessionID, string url);
     }
 }

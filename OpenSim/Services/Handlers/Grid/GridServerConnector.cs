@@ -66,10 +66,16 @@ namespace OpenSim.Services
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
             m_port = server.Port;
 
-            GridServerPostHandler handler = new GridServerPostHandler(url, registry, registry.RequestModuleInterface<IGridService>().InnerService, handlerConfig.GetBoolean("UnsecureUrls", false), 0);
+            GridServerPostHandler handler = new GridServerPostHandler(url, registry, registry.RequestModuleInterface<IGridService>().InnerService, false, 0);
             server.AddStreamHandler(handler);
 
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
+        }
+
+        public void RemoveUrlForClient(ulong regionHandle, string sessionID, string url)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            server.RemoveHTTPHandler("POST", url);
         }
 
         public void FinishedStartup()

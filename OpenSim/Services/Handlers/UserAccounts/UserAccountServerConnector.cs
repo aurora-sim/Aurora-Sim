@@ -57,15 +57,6 @@ namespace OpenSim.Services
             m_registry = registry;
             m_port = handlerConfig.GetUInt("UserAccountInHandlerPort");
 
-            if (handlerConfig.GetBoolean("UnsecureUrls", false))
-            {
-                string url = "/accounts";
-
-                IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-                m_port = server.Port;
-
-                server.AddStreamHandler(new UserAccountServerPostHandler(url, registry.RequestModuleInterface<IUserAccountService>(), 0, registry));
-            }
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
 
@@ -102,6 +93,12 @@ namespace OpenSim.Services
 
             server.AddStreamHandler(new UserAccountServerPostHandler(url, m_registry.RequestModuleInterface<IUserAccountService>(), RegionHandle, m_registry));
             return url;
+        }
+
+        public void RemoveUrlForClient(ulong regionHandle, string sessionID, string url)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            server.RemoveHTTPHandler("POST", url);
         }
 
         #endregion

@@ -60,18 +60,6 @@ namespace OpenSim.Services
             m_registry = registry;
             m_port = handlerConfig.GetUInt("AssetInHandlerPort");
 
-            if (handlerConfig.GetBoolean("UnsecureUrls", false))
-            {
-                IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-                m_port = server.Port;
-                string url = "/assets";
-
-                IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService>();
-                server.AddStreamHandler(new AssetServerGetHandler(m_AssetService, url, 0, registry));
-                server.AddStreamHandler(new AssetServerPostHandler(m_AssetService, url, 0, registry));
-                server.AddStreamHandler(new AssetServerDeleteHandler(m_AssetService, m_allowDelete, url, 0, registry));
-            }
-
             IConfig serverConfig = config.Configs[m_ConfigName];
             m_allowDelete = serverConfig != null ? serverConfig.GetBoolean("AllowRemoteDelete", false) : false;
 
@@ -117,6 +105,14 @@ namespace OpenSim.Services
             server.AddStreamHandler(new AssetServerDeleteHandler(m_AssetService, m_allowDelete, url, RegionHandle, m_registry));
 
             return url;
+        }
+
+        public void RemoveUrlForClient(ulong regionHandle, string sessionID, string url)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            server.RemoveHTTPHandler("POST", url);
+            server.RemoveHTTPHandler("GET", url);
+            server.RemoveHTTPHandler("DELETE", url);
         }
 
         #endregion

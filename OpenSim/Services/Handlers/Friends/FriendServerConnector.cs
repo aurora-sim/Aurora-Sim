@@ -57,15 +57,6 @@ namespace OpenSim.Services
             m_registry = registry;
             m_port = handlerConfig.GetUInt("FriendsInHandlerPort");
 
-            if (handlerConfig.GetBoolean("UnsecureUrls", false))
-            {
-                string url = "/friends";
-
-                IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-                m_port = server.Port;
-
-                server.AddStreamHandler (new FriendsServerPostHandler (url, m_registry.RequestModuleInterface<IFriendsService> ().InnerService, 0, m_registry));
-            }
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
 
@@ -102,6 +93,12 @@ namespace OpenSim.Services
             server.AddStreamHandler (new FriendsServerPostHandler (url, m_registry.RequestModuleInterface<IFriendsService> ().InnerService, RegionHandle, m_registry));
 
             return url;
+        }
+
+        public void RemoveUrlForClient(ulong regionHandle, string sessionID, string url)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            server.RemoveHTTPHandler("POST", url);
         }
 
         #endregion

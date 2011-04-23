@@ -28,6 +28,7 @@ namespace OpenSim.Services.GridService
         protected ISimulationBase m_simulationBase;
         protected IConfig m_permissionConfig;
         protected IRegistryCore m_registry;
+        protected bool m_useSessionTime = true;
         /// <summary>
         /// Timeout before the handlers expire (in hours)
         /// </summary>
@@ -92,7 +93,7 @@ namespace OpenSim.Services.GridService
 
             if(ConfigurationConfig != null)
                 m_loadBalancer.SetUrls(ConfigurationConfig.GetString("HostNames", "http://localhost").Split(','));
-
+            m_useSessionTime = ConfigurationConfig.GetBoolean("UseSessionTime", m_useSessionTime);
             m_permissionConfig = config.Configs["RegionPermissions"];
             if (m_permissionConfig != null)
                 ReadConfiguration(m_permissionConfig);
@@ -162,12 +163,15 @@ namespace OpenSim.Services.GridService
 
             foreach (GridRegistrationURLs url in urls)
             {
-                //Fix the expiration time
-                url.Expiration = DateTime.Now.AddHours (m_timeBeforeTimeout);
-                
                 foreach (IGridRegistrationUrlModule module in m_modules.Values)
                 {
                     module.AddExistingUrlForClient(url.SessionID.ToString(), url.RegionHandle, url.URLS[module.UrlName]);
+                }
+                if (m_useSessionTime && url.Expiration.AddHours(m_timeBeforeTimeout / 8) < DateTime.Now) //Check to see whether the expiration is soon before updating
+                {
+                    //Fix the expiration time
+                    url.Expiration = DateTime.Now.AddHours(m_timeBeforeTimeout);
+                    InnerUpdateUrlsForClient(url);
                 }
             }
         }
@@ -223,14 +227,13 @@ namespace OpenSim.Services.GridService
                 "GridRegistrationUrls", RegionHandle.ToString(), new GridRegistrationURLs());
             if (urls != null)
             {
+                m_log.WarnFormat("[GridRegService]: Removing URLs for {0}", RegionHandle);
                 //Remove all the handlers from the HTTP Server
-                foreach (KeyValuePair<string, OSD> kvp in urls.URLS)
+                foreach (IGridRegistrationUrlModule module in m_modules.Values)
                 {
-                    if (!m_modules.ContainsKey(kvp.Key))
+                    if (!urls.URLS.ContainsKey(module.UrlName))
                         continue;
-                    IGridRegistrationUrlModule module = m_modules[kvp.Key];
-                    IHttpServer server = m_simulationBase.GetHttpServer(module.Port);
-                    server.RemoveHTTPHandler("POST", kvp.Value);
+                    module.RemoveUrlForClient(urls.RegionHandle, urls.SessionID, urls.URLS[module.UrlName].AsString());
                 }
                 //Remove from the database so that they don't pop up later
                 m_genericsConnector.RemoveGeneric(UUID.Zero, "GridRegistrationUrls", RegionHandle.ToString());
@@ -241,14 +244,19 @@ namespace OpenSim.Services.GridService
         {
             GridRegistrationURLs urls = m_genericsConnector.GetGeneric<GridRegistrationURLs>(UUID.Zero,
                 "GridRegistrationUrls", RegionHandle.ToString(), new GridRegistrationURLs());
+            InnerUpdateUrlsForClient(urls);
+        }
+
+        private void InnerUpdateUrlsForClient(GridRegistrationURLs urls)
+        {
             if (urls != null)
             {
                 urls.Expiration = DateTime.Now.AddHours(m_timeBeforeTimeout);
-                m_genericsConnector.AddGeneric(UUID.Zero, "GridRegistrationUrls", RegionHandle.ToString(), urls.ToOSD());
-                m_log.WarnFormat("[GridRegistrationService]: Updated URLs for {0}", RegionHandle);
+                m_genericsConnector.AddGeneric(UUID.Zero, "GridRegistrationUrls", urls.RegionHandle.ToString(), urls.ToOSD());
+                m_log.WarnFormat("[GridRegistrationService]: Updated URLs for {0}", urls.RegionHandle);
             }
             else
-                m_log.ErrorFormat("[GridRegistrationService]: Failed to find URLs to update for {0}", RegionHandle);
+                m_log.ErrorFormat("[GridRegistrationService]: Failed to find URLs to update for {0}", urls.RegionHandle);
         }
 
         public void RegisterModule(IGridRegistrationUrlModule module)
@@ -264,7 +272,7 @@ namespace OpenSim.Services.GridService
             if (urls != null)
             {
                 //Past time for it to expire
-                if (urls.Expiration < DateTime.Now)
+                if (m_useSessionTime && urls.Expiration < DateTime.Now)
                 {
                     RemoveUrlsForClient(SessionID, RegionHandle);
                     return false;

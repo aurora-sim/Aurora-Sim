@@ -64,15 +64,6 @@ namespace OpenSim.Services
             m_registry = registry;
             m_port = handlerConfig.GetUInt("InventoryInHandlerPort");
 
-            if (handlerConfig.GetBoolean("UnsecureUrls", false))
-            {
-                string url = "/xinventory";
-
-                IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-                m_port = server.Port;
-
-                server.AddStreamHandler(new XInventoryConnectorPostHandler(url, registry.RequestModuleInterface<IInventoryService>(), 0, m_registry));
-            }
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
 
@@ -110,6 +101,12 @@ namespace OpenSim.Services
             server.AddStreamHandler(new XInventoryConnectorPostHandler(url, m_registry.RequestModuleInterface<IInventoryService>(), RegionHandle, m_registry));
 
             return url;
+        }
+
+        public void RemoveUrlForClient(ulong regionHandle, string sessionID, string url)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            server.RemoveHTTPHandler("POST", url);
         }
 
         #endregion

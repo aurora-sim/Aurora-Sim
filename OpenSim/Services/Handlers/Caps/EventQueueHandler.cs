@@ -43,16 +43,6 @@ namespace OpenSim.Services
             m_registry = registry;
             m_port = handlerConfig.GetUInt("EventQueueInHandlerPort");
 
-            if (handlerConfig.GetBoolean("UnsecureUrls", false))
-            {
-                string url = "/CAPS/EQMPOSTER";
-
-                IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-                m_port = server.Port;
-
-                server.AddStreamHandler (new EQMEventPoster (url, registry.RequestModuleInterface<IEventQueueService> ().InnerService,
-                registry.RequestModuleInterface<ICapsService>(), 0, m_registry));
-            }
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
 
@@ -93,6 +83,12 @@ namespace OpenSim.Services
             server.AddStreamHandler (new EQMEventPoster (url, m_registry.RequestModuleInterface<IEventQueueService> ().InnerService,
                     m_registry.RequestModuleInterface<ICapsService>(), RegionHandle, m_registry));
             return url;
+        }
+
+        public void RemoveUrlForClient(ulong regionHandle, string sessionID, string url)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            server.RemoveHTTPHandler("POST", url);
         }
 
         #endregion
