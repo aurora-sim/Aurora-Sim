@@ -158,8 +158,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 PrimUpdatesPerCallback = config.GetInt("PrimUpdatesPerCallback", 100);
                 TextureSendLimit = config.GetInt("TextureSendLimit", 20);
 
-                m_defaultRTO = config.GetInt("DefaultRTO", 0);
-                m_maxRTO = config.GetInt("MaxRTO", 0);
+                m_defaultRTO = config.GetInt("DefaultRTO", 1000);
+                m_maxRTO = config.GetInt("MaxRTO", 20000);
                 ClientTimeOut = config.GetInt("ClientTimeOut", 60);
                 m_disableFacelights = config.GetBoolean("DisableFacelights", false);
             }
@@ -469,6 +469,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                     if (expiredPackets[i].UnackedMethod != null)
                         continue; //If its not null, it has taken care of the packet sending on its own
+
                     OutgoingPacket outgoingPacket = expiredPackets[i];
 
                     //m_log.DebugFormat("[LLUDPSERVER]: Resending packet #{0} (attempt {1}), {2}ms have passed",
@@ -477,8 +478,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     // Set the resent flag
                     outgoingPacket.Buffer.Data[0] = (byte)(outgoingPacket.Buffer.Data[0] | Helpers.MSG_RESENT);
 
-// resend in its original category
-//                    outgoingPacket.Category = ThrottleOutPacketType.Resend;
+                    // resend in its original category
+                    outgoingPacket.Category = ThrottleOutPacketType.Resend;
 
                     // Bump up the resend count on this packet
                     Interlocked.Increment(ref outgoingPacket.ResendCount);

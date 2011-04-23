@@ -148,15 +148,19 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         // The TickCount will be set to the current time when the packet
                         // is actually sent out again
                         packet.TickCount = 0;
-                        // As with other network applications, assume that an expired packet is
-                        // an indication of some network problem, slow transmission
-                        packet.Client.FlowThrottle.ExpirePackets(1);
 
                         expiredPackets.Add(packet);
                         if (i++ > 50)  // limit number of packets loop
                             break;
                     }
                 }
+            }
+
+            if (expiredPackets != null && expiredPackets.Count > 0)
+            {
+                // As with other network applications, assume that an expired packet is
+                // an indication of some network problem, slow transmission
+                expiredPackets[0].Client.FlowThrottle.ExpirePackets(expiredPackets.Count);
             }
 
             return expiredPackets;

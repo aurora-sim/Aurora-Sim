@@ -4017,15 +4017,25 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(notFoundPacket, ThrottleOutPacketType.Texture);
         }
 
+        private volatile bool m_sendingSimStatsPacket = false;
         public void SendSimStats(SimStats stats)
         {
+            if (m_sendingSimStatsPacket)
+                return;
+
+            m_sendingSimStatsPacket = true;
+
             SimStatsPacket pack = new SimStatsPacket();
             pack.Region = stats.RegionBlock;
             pack.Stat = stats.StatsBlock;
 
             pack.Header.Reliable = false;
 
-            OutPacket(pack, ThrottleOutPacketType.Task);
+            OutPacket(pack, ThrottleOutPacketType.Task, true, null,
+                delegate(OutgoingPacket packet)
+                {
+                    m_sendingSimStatsPacket = false;
+                });
         }
 
         public void SendObjectPropertiesFamilyData(uint RequestFlags, UUID ObjectUUID, UUID OwnerID, UUID GroupID,

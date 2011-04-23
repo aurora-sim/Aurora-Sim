@@ -660,7 +660,7 @@ namespace OpenSim.Framework
         ISceneEntity AddNewPrim (
             UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape);
         Vector3 GetNewRezLocation (Vector3 RayStart, Vector3 RayEnd, UUID RayTargetID, Quaternion rot, byte bypassRayCast, byte RayEndIsIntersection, bool frontFacesOnly, Vector3 scale, bool FaceCenter);
-        void GetCoarseLocations (out List<Vector3> coarseLocations, out List<UUID> avatarUUIDs, uint maxLocations);
+        bool GetCoarseLocations (out List<Vector3> coarseLocations, out List<UUID> avatarUUIDs, uint maxLocations);
         IScenePresence GetScenePresence (string firstName, string lastName);
         IScenePresence GetScenePresence (uint localID);
         void ForEachScenePresence (Action<IScenePresence> action);

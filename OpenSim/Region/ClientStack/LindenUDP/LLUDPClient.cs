@@ -234,7 +234,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private byte[] m_packedThrottles;
 
         private int m_defaultRTO = 1000;
-        private int m_maxRTO = 60000;
+        private int m_maxRTO = 20000;
         private int m_lastEmptyUpdates = 0;
 
         /// <summary>

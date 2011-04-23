@@ -69,6 +69,8 @@ namespace OpenSim.Region.Framework.Scenes
         private HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity> ();
         private HashSet<IScenePresence> lastPresencesInView = new HashSet<IScenePresence> ();
         private Vector3 m_lastUpdatePos;
+        private int m_numberOfLoops = 0;
+        private const int NUMBER_OF_LOOPS_TO_WAIT = 30;
 
         private const float PresenceSendPercentage = 0.60f;
         private const float PrimSendPercentage = 0.40f;
@@ -341,6 +343,11 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (m_inUse)
                 return;
+
+            m_numberOfLoops++;
+            if (m_numberOfLoops < NUMBER_OF_LOOPS_TO_WAIT) //Wait for the client to finish connecting fully before sending out bunches of updates
+                return;
+
             m_inUse = true;
             //This is for stats
             int AgentMS = Util.EnvironmentTickCount ();

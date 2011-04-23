@@ -457,11 +457,13 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         List<Vector3> coarseLocations;
                         List<UUID> avatarUUIDs;
-                        SceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60);
-                        // Send coarse locations to clients 
-                        foreach (IScenePresence presence in GetScenePresences())
+                        if (SceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60))
                         {
-                            presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
+                            // Send coarse locations to clients 
+                            foreach (IScenePresence presence in GetScenePresences())
+                            {
+                                presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
+                            }
                         }
                     }
 

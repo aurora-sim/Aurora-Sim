@@ -168,7 +168,10 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void GetCoarseLocations(out List<Vector3> coarseLocations, out List<UUID> avatarUUIDs, uint maxLocations)
+        private List<Vector3> m_oldCoarseLocations = new List<Vector3>();
+        private List<UUID> m_oldAvatarUUIDs = new List<UUID>();
+
+        public bool GetCoarseLocations(out List<Vector3> coarseLocations, out List<UUID> avatarUUIDs, uint maxLocations)
         {
             coarseLocations = new List<Vector3>();
             avatarUUIDs = new List<UUID>();
@@ -204,6 +207,33 @@ namespace OpenSim.Region.Framework.Scenes
                     avatarUUIDs.Add(sp.UUID);
                 }
             }
+
+            if(m_oldCoarseLocations.Count == coarseLocations.Count)
+            {
+                List<UUID> foundAvies = new List<UUID>(m_oldAvatarUUIDs);
+                for (int i = 0; i < avatarUUIDs.Count; i++)
+                {
+                    foundAvies.Remove(avatarUUIDs[i]);
+                }
+                if (foundAvies.Count == 0)
+                {
+                    //All avies are still the same, check their locations now
+                    for (int i = 0; i < avatarUUIDs.Count; i++)
+                    {
+                        if (m_oldCoarseLocations[i].ApproxEquals(coarseLocations[i], 5))
+                            continue;
+                        m_oldCoarseLocations = coarseLocations;
+                        m_oldAvatarUUIDs = avatarUUIDs;
+                        return true;
+                    }
+                    //Things are still close enough to the same
+                    return false;
+                }
+            }
+            m_oldCoarseLocations = coarseLocations;
+            m_oldAvatarUUIDs = avatarUUIDs;
+            //Its changed, tell it to send new
+            return true;
         }
 
         #endregion
