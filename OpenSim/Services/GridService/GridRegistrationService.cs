@@ -93,7 +93,8 @@ namespace OpenSim.Services.GridService
 
             if(ConfigurationConfig != null)
                 m_loadBalancer.SetUrls(ConfigurationConfig.GetString("HostNames", "http://localhost").Split(','));
-            m_useSessionTime = ConfigurationConfig.GetBoolean("UseSessionTime", m_useSessionTime);
+            if (ConfigurationConfig != null)
+                m_useSessionTime = ConfigurationConfig.GetBoolean("UseSessionTime", m_useSessionTime);
             m_permissionConfig = config.Configs["RegionPermissions"];
             if (m_permissionConfig != null)
                 ReadConfiguration(m_permissionConfig);
