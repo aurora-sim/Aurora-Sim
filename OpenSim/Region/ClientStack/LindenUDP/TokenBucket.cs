@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using log4net;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.ClientStack.LindenUDP
 {
@@ -143,7 +144,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 if (rate < m_minimumDripRate)
                     rate = m_minimumDripRate;
 
-                return (Int64)rate;
+                return Math.Min((Int64)rate, TotalDripRequest);
             }
         }
 
@@ -177,7 +178,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             RequestedDripRate = dripRate;
             // TotalDripRequest = dripRate; // this will be overwritten when a child node registers
             // MaxBurst = (Int64)((double)dripRate * m_quantumsPerBurst);
-            m_lastDrip = Environment.TickCount & Int32.MaxValue;
+            m_lastDrip = Util.EnvironmentTickCount();
         }
 
         /// <summary>
@@ -209,12 +210,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// </summary>
         public void RegisterRequest(TokenBucket child, Int64 request)
         {
-            m_children[child] = request;
-            // m_totalDripRequest = m_children.Values.Sum();
+            lock (m_children)
+            {
+                m_children[child] = request;
+                // m_totalDripRequest = m_children.Values.Sum();
 
-            m_totalDripRequest = 0;
-            foreach (KeyValuePair<TokenBucket, Int64> cref in m_children)
-                m_totalDripRequest += cref.Value;
+                m_totalDripRequest = 0;
+                foreach (KeyValuePair<TokenBucket, Int64> cref in m_children)
+                    m_totalDripRequest += cref.Value;
+            }
 
             // Pass the new values up to the parent
             if (m_parent != null)
@@ -227,12 +231,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// </summary>
         public void UnregisterRequest(TokenBucket child)
         {
-            m_children.Remove(child);
-            // m_totalDripRequest = m_children.Values.Sum();
+            lock (m_children)
+            {
+                m_children.Remove(child);
+                // m_totalDripRequest = m_children.Values.Sum();
 
-            m_totalDripRequest = 0;
-            foreach (KeyValuePair<TokenBucket, Int64> cref in m_children)
-                m_totalDripRequest += cref.Value;
+                m_totalDripRequest = 0;
+                foreach (KeyValuePair<TokenBucket, Int64> cref in m_children)
+                    m_totalDripRequest += cref.Value;
+            }
 
             // Pass the new values up to the parent
             if (m_parent != null)
@@ -299,10 +306,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             // Determine the interval over which we are adding tokens, never add
             // more than a single quantum of tokens
-            Int32 now = Environment.TickCount & Int32.MaxValue;
-            Int32 deltaMS = Math.Min(now - m_lastDrip, m_ticksPerQuantum);
-
-            m_lastDrip = now;
+            Int32 deltaMS = Math.Min(Util.EnvironmentTickCountSubtract(m_lastDrip), m_ticksPerQuantum);
+            m_lastDrip = Util.EnvironmentTickCount();
 
             // This can be 0 in the very unusual case that the timer wrapped
             // It can be 0 if we try add tokens at a sub-tick rate
@@ -317,15 +322,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        // <summary>
-        // The minimum rate for flow control.
-        // </summary>
-        protected const Int64 m_minimumFlow = m_minimumDripRate * 10;
+        /// <summary>
+        /// The minimum rate for flow control.
+        /// </summary>
+        protected const Int64 m_minimumFlow = m_minimumDripRate * 15;
 
-        // <summary>
-        // The maximum rate for flow control. Drip rate can never be
-        // greater than this.
-        // </summary>
+        /// <summary>
+        /// The maximum rate for flow control. Drip rate can never be
+        /// greater than this.
+        /// </summary>
         protected Int64 m_maxDripRate = 0;
         protected Int64 MaxDripRate
         {
@@ -357,18 +362,20 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             MaxDripRate = maxDripRate;
         }
 
-        // <summary>
-        //
-        // </summary>
+        /// <summary>
+        /// Expires the given packets and reduces the amount of drip that will be used to send packets later
+        /// </summary>
+        /// <param name="count"># of packets that have expired</param>
         public void ExpirePackets(Int32 count)
         {
-            // m_log.WarnFormat("[ADAPTIVEBUCKET] drop {0} by {1} expired packets",AdjustedDripRate,count);
+            m_log.WarnFormat("[ADAPTIVEBUCKET] drop {0} by {1} expired packets",AdjustedDripRate,count);
             AdjustedDripRate = (Int64)(AdjustedDripRate / Math.Pow(2, count));
         }
 
-        // <summary>
-        //
-        // </summary>
+        /// <summary>
+        /// Add successfully sent packets into the drip rate
+        /// </summary>
+        /// <param name="count"># of bytes in the successfully sent packet</param>
         public void AcknowledgePackets(Int32 count)
         {
             AdjustedDripRate = AdjustedDripRate + count;
