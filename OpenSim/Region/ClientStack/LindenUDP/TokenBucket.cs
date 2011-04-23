@@ -255,7 +255,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public bool RemoveTokens(Int64 amount)
         {
             // Deposit tokens for this interval
-            Drip();
+            Deposit(Drip());
 
             // If we have enough tokens then remove them and return
             if (m_tokenCount - amount >= 0)
@@ -282,7 +282,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             Int64 burstrate = BurstRate;
             if (m_tokenCount > burstrate)
             {
-                if(m_parent != null)
+                if(m_parent != null) //Give the parent the extra
                     m_parent.m_tokenCount += m_tokenCount - burstrate;
                 m_tokenCount = burstrate;
             }
@@ -293,15 +293,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// call depends on the length of time that has passed since the last
         /// call to Drip
         /// </summary>
-        /// <returns>True if tokens were added to the bucket, otherwise false</returns>
-        protected void Drip()
+        /// <returns>The amount of tokens to add to the bucket</returns>
+        protected Int64 Drip()
         {
+            Int64 tokensToAdd = 0;
+
             // This should never happen... means we are a leaf node and were created
             // with no drip rate...
             if (DripRate == 0)
             {
                 m_log.WarnFormat("[TOKENBUCKET] something odd is happening and drip rate is 0");
-                return;
+                return tokensToAdd;
             }
 
             // Determine the interval over which we are adding tokens, never add
@@ -312,9 +314,22 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // This can be 0 in the very unusual case that the timer wrapped
             // It can be 0 if we try add tokens at a sub-tick rate
             if (deltaMS <= 0)
-                return;
+                return tokensToAdd;
 
-            Deposit(deltaMS * DripRate / m_ticksPerQuantum);
+            tokensToAdd += (deltaMS * DripRate / m_ticksPerQuantum);
+
+            lock (m_children)
+            {
+                //We also can take from children if we need to, if they arn't using their drip
+                foreach (TokenBucket child in m_children.Keys)
+                {
+                    if (child.m_tokenCount > m_tokenCount * 3)
+                    {
+                        tokensToAdd += child.Drip();
+                    }
+                }
+            }
+            return tokensToAdd;
         }
     }
 
