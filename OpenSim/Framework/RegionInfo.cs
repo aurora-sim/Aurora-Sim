@@ -438,8 +438,7 @@ namespace OpenSim.Framework
                 NumberStartup = args["number_startup"].AsInteger();
             if (args.ContainsKey ("startupType"))
                 Startup = (StartupType)args["startupType"].AsInteger();
-            if (args.ContainsKey("FindExternalIP"))
-                FindExternalAutomatically = args["FindExternalIP"].AsBoolean();
+            FindExternalAutomatically = args["FindExternalIP"].AsBoolean();
             if (args.ContainsKey("RegionSettings"))
             {
                 RegionSettings = new RegionSettings();

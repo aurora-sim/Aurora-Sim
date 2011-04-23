@@ -577,7 +577,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                                 result = map["Success"].AsBoolean();
                             if (!result)
                             {
-                                agent.ControllingClient.SendTeleportFailed(map["Reason"].AsString());
+                                if(map != null)
+                                    agent.ControllingClient.SendTeleportFailed(map["Reason"].AsString());
+                                else
+                                    agent.ControllingClient.SendTeleportFailed("TP Failed");
                                 // If the cross was successful, this agent is a child agent
                                 // Otherwise, put them back in the scene
                                 if (!agent.IsChildAgent)

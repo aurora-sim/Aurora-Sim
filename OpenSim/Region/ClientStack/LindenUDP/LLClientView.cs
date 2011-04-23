@@ -3512,7 +3512,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             objupdate.ObjectData = new ObjectUpdatePacket.ObjectDataBlock[1];
             objupdate.ObjectData[0] = CreateAvatarUpdateBlock(presence);
 
-            OutPacket(objupdate, ThrottleOutPacketType.Immediate);
+            OutPacket(objupdate, ThrottleOutPacketType.OutBand);
         }
 
         public void SendCoarseLocationUpdate(List<UUID> users, List<Vector3> CoarseLocations)
@@ -3764,10 +3764,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //        requeue them... even though we probably could send them out fine.
             //
             
-            //When we resend the packets, we don't want to resend them more than once if more than one packet type went out, so only send once
-            bool alreadyResentPackets = false;
-            bool alreadyFinishedSendingPackets = false;
-
             if (objectUpdateBlocks.IsValueCreated)
             {
                 List<ObjectUpdatePacket.ObjectDataBlock> blocks = objectUpdateBlocks.Value;
@@ -3783,16 +3779,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 ObjectUpdatePacket oo = new ObjectUpdatePacket(packet.ToBytes(), ref ii);
                 OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
                 {
-                    if (alreadyResentPackets)
-                        return;
-                    alreadyResentPackets = true;
                     ResendPrimUpdates(fullUpdates, p);
                 },
                 delegate(OutgoingPacket p)
                 {
-                    if(alreadyFinishedSendingPackets)
-                        return;
-                    alreadyFinishedSendingPackets = true;
                     IScenePresence presence = m_scene.GetScenePresence(AgentId);
                     if (presence != null)
                         presence.SceneViewer.FinishedEntityPacketSend(fullUpdates);
@@ -3813,16 +3803,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
                 {
-                    if (alreadyResentPackets)
-                        return;
-                    alreadyResentPackets = true;
                     ResendPrimUpdates(compressedUpdates, p);
                 },
                 delegate(OutgoingPacket p)
                 {
-                    if (alreadyFinishedSendingPackets)
-                        return;
-                    alreadyFinishedSendingPackets = true;
                     IScenePresence presence = m_scene.GetScenePresence(AgentId);
                     if (presence != null)
                         presence.SceneViewer.FinishedEntityPacketSend(compressedUpdates);
@@ -3843,16 +3827,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
                 {
-                    if (alreadyResentPackets)
-                        return;
-                    alreadyResentPackets = true;
                     ResendPrimUpdates(cachedUpdates, p);
                 },
                 delegate(OutgoingPacket p)
                 {
-                    if (alreadyFinishedSendingPackets)
-                        return;
-                    alreadyFinishedSendingPackets = true;
                     IScenePresence presence = m_scene.GetScenePresence(AgentId);
                     if (presence != null)
                         presence.SceneViewer.FinishedEntityPacketSend(cachedUpdates);
@@ -3873,16 +3851,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
                 {
-                    if (alreadyResentPackets)
-                        return;
-                    alreadyResentPackets = true;
                     ResendPrimUpdates(terseUpdates, p);
                 },
                 delegate(OutgoingPacket p)
                 {
-                    if (alreadyFinishedSendingPackets)
-                        return;
-                    alreadyFinishedSendingPackets = true;
                     IScenePresence presence = m_scene.GetScenePresence(AgentId);
                     if (presence != null)
                         presence.SceneViewer.FinishedEntityPacketSend(terseUpdates);
