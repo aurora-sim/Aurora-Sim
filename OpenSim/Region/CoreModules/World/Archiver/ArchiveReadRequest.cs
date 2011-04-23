@@ -286,7 +286,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                                 m_log.Debug("[ARCHIVER]: Loaded " + successfulAssetRestores + " assets and failed to load " + failedAssetRestores + " assets...");
                         }
                     }
-                    else if (!m_merge && filePath.StartsWith(ArchiveConstants.TERRAINS_PATH))
+                    else if (filePath.StartsWith(ArchiveConstants.TERRAINS_PATH))
                     {
                         LoadTerrain(filePath, data);
                     }
