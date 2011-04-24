@@ -3688,7 +3688,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 try
                 {
                     //Do NOT send cached updates for terse updates
-                    bool isTerse = updateFlags.HasFlag ((PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity));
+                    bool isTerse = updateFlags.HasFlag ((PrimUpdateFlags.TerseUpdate));
                     //ONLY send full updates for attachments unless you want to figure out all the little screwy things with sending compressed updates and attachments
                     if (entity is SceneObjectPart &&
                         ((SceneObjectPart)entity).IsAttachment)

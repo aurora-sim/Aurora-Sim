@@ -3691,8 +3691,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void ScheduleTerseUpdate()
         {
-            PrimUpdateFlags UpdateFlags = PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity;
-            ScheduleUpdate(UpdateFlags);
+            ScheduleUpdate(PrimUpdateFlags.TerseUpdate);
         }
 
         /// <summary>
@@ -3702,8 +3701,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         private bool IsTerse(PrimUpdateFlags flags)
         {
-            return flags.HasFlag((PrimUpdateFlags.Position | PrimUpdateFlags.Rotation
-                | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity))
+            return flags.HasFlag((PrimUpdateFlags.TerseUpdate))
                 && !flags.HasFlag((PrimUpdateFlags.AttachmentPoint | PrimUpdateFlags.ClickAction |
                 PrimUpdateFlags.CollisionPlane | PrimUpdateFlags.ExtraData | PrimUpdateFlags.FindBest | PrimUpdateFlags.FullUpdate |
                 PrimUpdateFlags.Joint | PrimUpdateFlags.Material | PrimUpdateFlags.MediaURL | PrimUpdateFlags.NameValue |

@@ -1973,8 +1973,7 @@ namespace OpenSim.Region.Framework.Scenes
             //m_log.DebugFormat("[SCENEPRESENCE]: TerseUpdate: Pos={0} Rot={1} Vel={2}", m_pos, m_bodyRot, m_velocity);
             remoteClient.SceneViewer.QueuePresenceForUpdate (
                 this,
-                PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity
-                | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity);
+                PrimUpdateFlags.TerseUpdate);
         }
 
         /// <summary>
