@@ -2276,7 +2276,7 @@ namespace OpenSim.Region.Framework.Scenes
                 multiplier = 0.25f;
             }
             //m_log.Info("[NeighborThrottle]: " + m_scene.GetInaccurateNeighborCount().ToString() + " - m: " + multiplier.ToString());
-            cAgent.Throttles = ControllingClient.GetThrottlesPacked(1);
+            cAgent.Throttles = ControllingClient.GetThrottlesPacked(multiplier);
 
             cAgent.HeadRotation = m_headrotation;
             cAgent.BodyRotation = m_bodyRot;

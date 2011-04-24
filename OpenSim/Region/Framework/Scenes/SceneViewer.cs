@@ -104,7 +104,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         object AuroraEventManager_OnGenericEvent (string FunctionName, object parameters)
         {
-            if (Culler == null || Culler.UseCulling && FunctionName == "DrawDistanceChanged")
+            if (Culler != null && Culler.UseCulling && FunctionName == "DrawDistanceChanged")
             {
                 IScenePresence sp = (IScenePresence)parameters;
                 if (sp.UUID != m_presence.UUID)
@@ -129,7 +129,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void QueuePresenceForUpdate (IScenePresence presence, PrimUpdateFlags flags)
         {
-            if (Culler == null || !Culler.ShowEntityToClient (m_presence, presence))
+            if (Culler != null && !Culler.ShowEntityToClient(m_presence, presence))
                 return; // if 2 far ignore
 
             lock (m_presenceUpdatesToSend)
@@ -161,7 +161,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void QueuePresenceForAnimationUpdate(IScenePresence presence, AnimationGroup animation)
         {
-            if (Culler == null || !Culler.ShowEntityToClient(m_presence, presence))
+            if (Culler != null && !Culler.ShowEntityToClient(m_presence, presence))
                 return; // if 2 far ignore
 
             lock (m_presenceAnimationsToSend)
@@ -178,7 +178,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="part"></param>
         public void QueuePartForUpdate (ISceneChildEntity part, PrimUpdateFlags flags)
         {
-            if (Culler == null || !Culler.ShowEntityToClient(m_presence, part.ParentEntity))
+            if (Culler != null && !Culler.ShowEntityToClient(m_presence, part.ParentEntity))
                 return; // if 2 far ignore
 
             EntityUpdate o = new EntityUpdate (part, flags);
@@ -308,7 +308,7 @@ namespace OpenSim.Region.Framework.Scenes
             IScenePresence[] presences = m_presence.Scene.Entities.GetPresences(m_presence.AbsolutePosition, m_presence.DrawDistance);
             foreach (IScenePresence presence in presences)
             {
-                if (presence != null)
+                if (presence != null && presence.UUID != m_presence.UUID)
                 {
                     //Check for culling here!
                     if (!Culler.ShowEntityToClient(m_presence, presence))
@@ -319,7 +319,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (lastPresencesInView.Contains(presence))
                         continue; //Don't resend the update
 
-                    QueuePresenceForUpdate(presence, PrimUpdateFlags.FullUpdate);
+                    m_presence.ControllingClient.SendAvatarDataImmediate(presence);
                     //Send the animations too
                     presence.Animator.SendAnimPackToClient(m_presence.ControllingClient);
                 }
@@ -357,11 +357,11 @@ namespace OpenSim.Region.Framework.Scenes
             ///If we havn't started processing this client yet, we need to send them ALL the prims that we have in this Scene (and deal with culling as well...)
             if (!m_SentInitialObjects && m_presence.DrawDistance != 0.0f)
             {
-                m_SentInitialObjects = true;
                 //If they are not in this region, we check to make sure that we allow seeing into neighbors
-                if (!m_presence.IsChildAgent || (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor) && Culler != null && m_prioritizer != null)
+                if (!m_presence.IsChildAgent || (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor) && m_prioritizer != null)
                 {
-                    ISceneEntity[] entities = m_presence.Scene.Entities.GetEntities ();
+                    m_SentInitialObjects = true;
+                    ISceneEntity[] entities = m_presence.Scene.Entities.GetEntities();
                     PriorityQueue<EntityUpdate, double> m_entsqueue = new PriorityQueue<EntityUpdate, double> (entities.Length);
 
                     // build a prioritized list of things we need to send
@@ -374,7 +374,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 continue;
 
                             //Check for culling here!
-                            if (!Culler.ShowEntityToClient (m_presence, e))
+                            if (Culler != null && !Culler.ShowEntityToClient(m_presence, e))
                                 continue;
 
                             double priority = m_prioritizer.GetUpdatePriority (m_presence, e);

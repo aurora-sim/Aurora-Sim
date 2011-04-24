@@ -111,7 +111,8 @@ namespace OpenSim.Region.Framework.Scenes
             float DD = client.DrawDistance;
             if (DD < 32) //Limit to a small distance
                 DD = 32;
-            if (DD > scene.RegionInfo.RegionSizeX)
+            if (DD > scene.RegionInfo.RegionSizeX && 
+                DD > scene.RegionInfo.RegionSizeY)
                 return true; //Its larger than the region, no culling check even necessary
             Vector3 posToCheckFrom = client.AbsolutePosition;
             if (client.IsChildAgent)
