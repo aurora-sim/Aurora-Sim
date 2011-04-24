@@ -48,7 +48,38 @@ namespace OpenSim.Framework.Serialization.External
         /// <exception cref="System.Xml.XmlException"></exception>
         public static InventoryItemBase Deserialize(byte[] serialization)
         {
-            return Deserialize(Encoding.ASCII.GetString(serialization, 0, serialization.Length));
+            InventoryItemBase item = new InventoryItemBase();
+
+            MemoryStream sr = new MemoryStream(serialization);
+            XmlTextReader xtr = new XmlTextReader(sr);
+
+            xtr.ReadStartElement("InventoryItem");
+
+            item.Name = xtr.ReadElementString("Name");
+            item.ID = UUID.Parse(xtr.ReadElementString("ID"));
+            item.InvType = Convert.ToInt32(xtr.ReadElementString("InvType"));
+            item.CreatorId = xtr.ReadElementString("CreatorUUID");
+            item.CreationDate = Convert.ToInt32(xtr.ReadElementString("CreationDate"));
+            item.Owner = UUID.Parse(xtr.ReadElementString("Owner"));
+            item.Description = xtr.ReadElementString("Description");
+            item.AssetType = Convert.ToInt32(xtr.ReadElementString("AssetType"));
+            item.AssetID = UUID.Parse(xtr.ReadElementString("AssetID"));
+            item.SaleType = Convert.ToByte(xtr.ReadElementString("SaleType"));
+            item.SalePrice = Convert.ToInt32(xtr.ReadElementString("SalePrice"));
+            item.BasePermissions = Convert.ToUInt32(xtr.ReadElementString("BasePermissions"));
+            item.CurrentPermissions = Convert.ToUInt32(xtr.ReadElementString("CurrentPermissions"));
+            item.EveryOnePermissions = Convert.ToUInt32(xtr.ReadElementString("EveryOnePermissions"));
+            item.NextPermissions = Convert.ToUInt32(xtr.ReadElementString("NextPermissions"));
+            item.Flags = Convert.ToUInt32(xtr.ReadElementString("Flags"));
+            item.GroupID = UUID.Parse(xtr.ReadElementString("GroupID"));
+            item.GroupOwned = Convert.ToBoolean(xtr.ReadElementString("GroupOwned"));
+
+            xtr.ReadEndElement();
+
+            xtr.Close();
+            sr.Close();
+
+            return item;
         }
         
         /// <summary>

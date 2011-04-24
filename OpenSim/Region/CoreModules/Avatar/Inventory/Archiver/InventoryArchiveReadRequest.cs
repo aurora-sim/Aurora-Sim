@@ -105,7 +105,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 int failedAssetRestores = 0;
                 int successfulItemRestores = 0;
 
-                HashSet<InventoryNodeBase> loadedNodes = new HashSet<InventoryNodeBase>();
+                HashSet<InventoryNodeBase> loadedNodes = loadAll ? new HashSet<InventoryNodeBase>() : null;
                
                 List<InventoryFolderBase> folderCandidates
                     = InventoryArchiveUtils.FindFolderByPath(
@@ -153,7 +153,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                         
                         InventoryFolderBase foundFolder 
                             = ReplicateArchivePathToUserInventory(
-                                filePath, rootDestinationFolder, resolvedFolders, loadedNodes);
+                                filePath, rootDestinationFolder, ref resolvedFolders, ref loadedNodes);
     
                         if (TarArchiveReader.TarEntryType.TYPE_DIRECTORY != entryType)
                         {
@@ -162,14 +162,16 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                             if (item != null)
                             {
                                 successfulItemRestores++;
+
+                                if ((successfulItemRestores) % 50 == 0)
+                                    m_log.DebugFormat(
+                                        "[INVENTORY ARCHIVER]: Loaded {0} items...",
+                                        successfulAssetRestores);
                                 
                                 // If we aren't loading the folder containing the item then well need to update the 
                                 // viewer separately for that item.
-                                if (!loadedNodes.Contains(foundFolder))
-                                {
-                                    if (loadAll)
-                                        loadedNodes.Add(item);
-                                }
+                                if (loadAll && !loadedNodes.Contains(foundFolder))
+                                    loadedNodes.Add(item);
                             }
                         }
                     }
@@ -212,8 +214,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         public InventoryFolderBase ReplicateArchivePathToUserInventory(
             string iarPath, 
             InventoryFolderBase rootDestFolder, 
-            Dictionary <string, InventoryFolderBase> resolvedFolders,
-            HashSet<InventoryNodeBase> loadedNodes)
+            ref Dictionary <string, InventoryFolderBase> resolvedFolders,
+            ref HashSet<InventoryNodeBase> loadedNodes)
         {
             string iarPathExisting = iarPath;
 
@@ -221,14 +223,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 //                "[INVENTORY ARCHIVER]: Loading folder {0} {1}", rootDestFolder.Name, rootDestFolder.ID);
                         
             InventoryFolderBase destFolder 
-                = ResolveDestinationFolder(rootDestFolder, ref iarPathExisting, resolvedFolders);
+                = ResolveDestinationFolder(rootDestFolder, ref iarPathExisting, ref resolvedFolders);
             
 //            m_log.DebugFormat(
 //                "[INVENTORY ARCHIVER]: originalArchivePath [{0}], section already loaded [{1}]", 
 //                iarPath, iarPathExisting);
             
             string iarPathToCreate = iarPath.Substring(iarPathExisting.Length);
-            CreateFoldersForPath(destFolder, iarPathExisting, iarPathToCreate, resolvedFolders, loadedNodes);
+            CreateFoldersForPath(destFolder, iarPathExisting, iarPathToCreate, ref resolvedFolders, ref loadedNodes);
             
             return destFolder;
         }
@@ -256,7 +258,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         protected InventoryFolderBase ResolveDestinationFolder(
             InventoryFolderBase rootDestFolder,
             ref string archivePath,
-            Dictionary <string, InventoryFolderBase> resolvedFolders)
+            ref Dictionary <string, InventoryFolderBase> resolvedFolders)
         {
 //            string originalArchivePath = archivePath;
 
@@ -333,8 +335,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             InventoryFolderBase destFolder, 
             string iarPathExisting,
             string iarPathToReplicate, 
-            Dictionary <string, InventoryFolderBase> resolvedFolders, 
-            HashSet<InventoryNodeBase> loadedNodes)
+            ref Dictionary <string, InventoryFolderBase> resolvedFolders, 
+            ref HashSet<InventoryNodeBase> loadedNodes)
         {
             string[] rawDirsToCreate = iarPathToReplicate.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -369,7 +371,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 m_log.DebugFormat("[INVENTORY ARCHIVER]: Created folder {0} from IAR", iarPathExisting);
                 resolvedFolders[iarPathExisting] = destFolder;
 
-                if (0 == i)
+                if (0 == i && loadedNodes != null)
                     loadedNodes.Add(destFolder);
             }
         }
@@ -443,20 +445,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             }
 
             if (m_registry.RequestModuleInterface<IInventoryService>().AddItem(item))
-            {
-                int userlevel = 0;
-                if (m_registry is Scene)
-                {
-                    Scene scene = (Scene)m_registry;
-                    if (scene.Permissions != null && scene.Permissions.IsGod(item.Owner))
-                    {
-                        userlevel = 1;
-                    }
-                    if(scene.EventManager != null)
-                        scene.EventManager.TriggerOnNewInventoryItemUploadComplete(item.Owner, item.AssetID, item.Name, userlevel);
-                }
                 return true;
-            }
             else
             {
                 m_log.WarnFormat(
@@ -506,6 +495,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 asset.Flags = AssetFlags.Normal;
 
                 m_registry.RequestModuleInterface<IAssetService>().Store(asset);
+
+                asset.Data = null;
+                asset = null;
 
                 return true;
             }

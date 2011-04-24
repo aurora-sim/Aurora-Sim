@@ -1162,10 +1162,6 @@ namespace OpenSim.Framework
         public delegate void OnMakeRootAgentDelegate (IScenePresence presence);
         public event OnMakeRootAgentDelegate OnMakeRootAgent;
 
-        public delegate void NewInventoryItemUploadComplete (UUID avatarID, UUID assetID, string name, int userlevel);
-
-        public event NewInventoryItemUploadComplete OnNewInventoryItemUploadComplete;
-
         public delegate void RequestChangeWaterHeight (float height);
 
         public event RequestChangeWaterHeight OnRequestChangeWaterHeight;
@@ -2036,27 +2032,6 @@ namespace OpenSim.Framework
                     {
                         m_log.ErrorFormat (
                             "[EVENT MANAGER]: Delegate for TriggerOnDeregisterCaps failed - continuing.  {0} {1}",
-                            e.ToString (), e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerOnNewInventoryItemUploadComplete (UUID agentID, UUID AssetID, String AssetName, int userlevel)
-        {
-            NewInventoryItemUploadComplete handlerNewInventoryItemUpdateComplete = OnNewInventoryItemUploadComplete;
-            if (handlerNewInventoryItemUpdateComplete != null)
-            {
-                foreach (NewInventoryItemUploadComplete d in handlerNewInventoryItemUpdateComplete.GetInvocationList ())
-                {
-                    try
-                    {
-                        d (agentID, AssetID, AssetName, userlevel);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat (
-                            "[EVENT MANAGER]: Delegate for TriggerOnNewInventoryItemUploadComplete failed - continuing.  {0} {1}",
                             e.ToString (), e.StackTrace);
                     }
                 }
