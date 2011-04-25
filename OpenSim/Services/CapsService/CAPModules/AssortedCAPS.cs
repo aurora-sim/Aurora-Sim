@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Web;
 using log4net;
 using Nini.Config;
 using Aurora.Simulation.Base;
@@ -22,6 +24,28 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.CapsService
 {
+    #region Stream Handler
+
+    public delegate byte[] StreamHandlerCallback(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse);
+
+    public class StreamHandler : BaseStreamHandler
+    {
+        StreamHandlerCallback m_callback;
+
+        public StreamHandler(string httpMethod, string path, StreamHandlerCallback callback)
+            : base(httpMethod, path)
+        {
+            m_callback = callback;
+        }
+
+        public override byte[] Handle(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        {
+            return m_callback(path, request, httpRequest, httpResponse);
+        }
+    }
+
+    #endregion
+
     public class AssortedCAPS : ICapsServiceConnector
     {
         private IRegionClientCapsService m_service;
@@ -45,7 +69,10 @@ namespace OpenSim.Services.CapsService
                 return ProcessUpdateAgentInfo(httpMethod, m_service.AgentID);
             };
             service.AddStreamHandler("UpdateAgentInformation", new RestHTTPHandler("POST", service.CreateCAPS("UpdateAgentInformation", ""),
-                                                      method));
+                                method));
+
+            service.AddStreamHandler ("AvatarPickerSearch", new StreamHandler ("GET", service.CreateCAPS("AvatarPickerSearch", ""),
+                                                      ProcessAvatarPickerSearch));
 
             method = delegate(Hashtable httpMethod)
             {
@@ -115,6 +142,35 @@ namespace OpenSim.Services.CapsService
                 AgentFrontend.UpdateAgent(IAI);
             }
             return responsedata;
+        }
+
+        private byte[] ProcessAvatarPickerSearch(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        {
+            NameValueCollection query = HttpUtility.ParseQueryString(httpRequest.Url.Query);
+            string amt = query.GetOne("page-size");
+            string name = query.GetOne("names");
+            List<UserAccount> accounts = m_service.Registry.RequestModuleInterface<IUserAccountService>().GetUserAccounts(UUID.Zero, name);
+
+            if (accounts == null)
+                accounts = new List<UserAccount>(0);
+            OSDMap body = new OSDMap();
+            OSDArray array = new OSDArray();
+            foreach (UserAccount account in accounts)
+            {
+                OSDMap map = new OSDMap();
+                map["agent_id"] = account.PrincipalID;
+                IUserProfileInfo profileInfo = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(account.PrincipalID);
+                map["display_name"] = (profileInfo == null || profileInfo.DisplayName == "") ? account.Name : profileInfo.DisplayName;
+                map["username"] = account.Name;
+                array.Add(map);
+            }
+
+            body["agents"] = array;
+            byte[] m = OSDParser.SerializeLLSDXmlBytes(body);
+            httpResponse.Body.Write(m, 0, m.Length);
+            httpResponse.StatusCode = (int)System.Net.HttpStatusCode.OK;
+            httpResponse.Send();
+            return null;
         }
 
         private Hashtable ProcessUpdateAgentInfo(Hashtable mDhttpMethod, UUID agentID)

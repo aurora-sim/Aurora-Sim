@@ -1328,16 +1328,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             if (m_scene.InventoryService.AddItem(item))
-            {
-                int userlevel = 0;
-                if (m_scene.Permissions.IsGod(item.Owner))
-                {
-                    userlevel = 1;
-                }
-                m_scene.EventManager.TriggerOnNewInventoryItemUploadComplete(item.Owner, item.AssetID, item.Name, userlevel);
-
                 return true;
-            }
             else
             {
                 m_log.WarnFormat(

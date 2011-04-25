@@ -127,7 +127,6 @@ namespace OpenSim.Services
                     XmlRpcResponse response = new XmlRpcResponse();
                     response.Value = reply.ToHashtable();
                     return response;
-
                 }
             }
 
