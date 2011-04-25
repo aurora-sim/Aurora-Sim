@@ -4062,7 +4062,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             foreach (IEntity entity in parts)
             {
                 if (!(entity is SceneObjectPart))
-                    return;
+                    continue;
                 SceneObjectPart part = entity as SceneObjectPart;
 
                 ObjectPropertiesPacket.ObjectDataBlock block =
@@ -4107,7 +4107,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             proper.ObjectData = blocks.ToArray();
 
             proper.Header.Zerocoded = true;
-            OutPacket(proper, ThrottleOutPacketType.State);
+            bool hasFinishedSending = false; //Since this packet will be split up, we only want to finish sending once
+            OutPacket(proper, ThrottleOutPacketType.State, true, null, delegate(OutgoingPacket packet)
+            {
+                if (hasFinishedSending)
+                    return;
+                hasFinishedSending = true;
+                m_scene.GetScenePresence(AgentId).SceneViewer.FinishedPropertyPacketSend(parts);
+            });
         }
 
         #region Estate Data Sending Methods

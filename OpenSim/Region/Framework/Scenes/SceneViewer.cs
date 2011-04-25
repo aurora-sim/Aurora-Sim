@@ -64,8 +64,10 @@ namespace OpenSim.Region.Framework.Scenes
         private OrderedDictionary/*<UUID, EntityUpdate>*/ m_presenceUpdatesToSend = new OrderedDictionary/*<UUID, EntityUpdate>*/ ();
         private OrderedDictionary/*<UUID, AnimationGroup>*/ m_presenceAnimationsToSend = new OrderedDictionary/*<UUID, AnimationGroup>*/ ();
         private OrderedDictionary/*<UUID, EntityUpdate>*/ m_objectUpdatesToSend = new OrderedDictionary/*<UUID, EntityUpdate>*/ ();
+        private OrderedDictionary/*<UUID, ISceneChildEntity>*/ m_objectPropertiesToSend = new OrderedDictionary/*<UUID, ISceneChildEntity>*/ ();
         private List<UUID> m_EntitiesInPacketQueue = new List<UUID>();
         private List<UUID> m_AnimationsInPacketQueue = new List<UUID>();
+        private List<UUID> m_PropertiesInPacketQueue = new List<UUID>();
         private HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity> ();
         private HashSet<IScenePresence> lastPresencesInView = new HashSet<IScenePresence> ();
         private Vector3 m_lastUpdatePos;
@@ -200,6 +202,22 @@ namespace OpenSim.Region.Framework.Scenes
                     m_objectUpdatesToSend.Remove(update.Entity.UUID);
                 }
                 m_objectUpdatesToSend.Insert(m_objectUpdatesToSend.Count, update.Entity.UUID, update);
+            }
+        }
+
+        public void QueuePartsForPropertiesUpdate(ISceneChildEntity[] entities)
+        {
+            lock (m_objectPropertiesToSend)
+            {
+                foreach (ISceneChildEntity entity in entities)
+                {
+                    if (Culler != null && !Culler.ShowEntityToClient(m_presence, entity))
+                        continue; // if 2 far ignore
+
+                    m_objectPropertiesToSend.Remove(entity.UUID);
+                    //Insert at the end
+                    m_objectPropertiesToSend.Insert(m_objectPropertiesToSend.Count, entity.UUID, entity);
+                }
             }
         }
 
@@ -473,6 +491,37 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
+            lock (m_objectPropertiesToSend)
+            {
+                //Send the numUpdates of them if that many
+                // if we don't have that many, we send as many as possible, then switch to objects
+                if (m_objectPropertiesToSend.Count != 0)
+                {
+                    try
+                    {
+                        List<IEntity> entities = new List<IEntity>();
+                        for (int i = 0; i < numUpdates; i++)
+                        {
+                            ISceneChildEntity entity = ((ISceneChildEntity)m_objectPropertiesToSend[0]);
+                            if (m_PropertiesInPacketQueue.Contains(entity.UUID))
+                            {
+                                m_objectPropertiesToSend.RemoveAt(0);
+                                m_objectPropertiesToSend.Insert(m_objectPropertiesToSend.Count, entity.UUID, entity);
+                                continue;
+                            }
+                            m_PropertiesInPacketQueue.Add(entity.UUID);
+                            m_objectPropertiesToSend.RemoveAt(0);
+                            entities.Add(entity);
+                        }
+                        m_presence.ControllingClient.SendObjectPropertiesReply(entities);
+                    }
+                    catch (Exception ex)
+                    {
+                        m_log.WarnFormat("[SceneViewer]: Exception while running presence loop: {0}", ex.ToString());
+                    }
+                }
+            }
+
             lock (m_objectUpdatesToSend)
             {
                 numberSent = presenceNumToSend - numberSent;
@@ -522,6 +571,18 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (EntityUpdate update in updates)
             {
                 m_EntitiesInPacketQueue.Remove(update.Entity.UUID);
+            }
+        }
+
+        /// <summary>
+        /// Once the packet has been sent, allow newer updates to be sent for the given entity
+        /// </summary>
+        /// <param name="ID"></param>
+        public void FinishedPropertyPacketSend(IEnumerable<IEntity> updates)
+        {
+            foreach (IEntity update in updates)
+            {
+                m_PropertiesInPacketQueue.Remove(update.UUID);
             }
         }
 

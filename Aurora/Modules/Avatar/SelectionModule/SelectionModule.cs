@@ -141,7 +141,7 @@ namespace Aurora.Modules
         protected void SelectPrim(List<uint> primLocalIDs, IClientAPI remoteClient)
         {
             Scene scene = ((Scene)remoteClient.Scene);
-            List<IEntity> EntitiesToUpdate = new List<IEntity> ();
+            List<ISceneChildEntity> EntitiesToUpdate = new List<ISceneChildEntity>();
             SceneObjectPart prim = null;
             foreach (uint primLocalID in primLocalIDs)
             {
@@ -157,9 +157,9 @@ namespace Aurora.Modules
                         // similar changes on deselect
                         // part.IsSelect is on SceneObjectPart.cs
                         // Ubit
-                        //                        if (prim.IsRoot)
+                        //if (prim.IsRoot)
                         {
-                            //                            prim.ParentGroup.IsSelected = true;
+                            //prim.ParentGroup.IsSelected = true;
                             prim.IsSelected = true;
                             scene.AuroraEventManager.FireGenericEventHandler("ObjectSelected", prim);
                         }
@@ -181,10 +181,10 @@ namespace Aurora.Modules
                     remoteClient.SendKillObject(scene.RegionInfo.RegionHandle, new uint[1] { primLocalID });
                 }
             }
-            if (EntitiesToUpdate.Count != 0)
-                remoteClient.SendObjectPropertiesReply(EntitiesToUpdate);
             IScenePresence SP;
             scene.TryGetScenePresence(remoteClient.AgentId, out SP);
+            if (EntitiesToUpdate.Count != 0)
+                SP.SceneViewer.QueuePartsForPropertiesUpdate(EntitiesToUpdate.ToArray());
             PerClientSelectionParticles selection = SP.RequestModuleInterface<PerClientSelectionParticles>();
             if (selection != null)
             {

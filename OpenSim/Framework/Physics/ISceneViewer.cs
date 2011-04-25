@@ -65,6 +65,12 @@ namespace OpenSim.Framework
         void QueuePartForUpdate(ISceneChildEntity part, PrimUpdateFlags UpdateFlags);
 
         /// <summary>
+        /// Add the objects to the queue for which we need to send a properties update for
+        /// </summary>
+        /// <param name="entity"></param>
+        void QueuePartsForPropertiesUpdate(ISceneChildEntity[] entities);
+
+        /// <summary>
         /// This method is called by the LLUDPServer and should never be called by anyone else
         /// It loops through the available updates and sends them out (no waiting)
         /// </summary>
@@ -82,6 +88,12 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="ID"></param>
         void FinishedAnimationPacketSend(AnimationGroup update);
+
+        /// <summary>
+        /// Once the packet has been sent, allow newer property updates to be sent for the given entity
+        /// </summary>
+        /// <param name="ID"></param>
+        void FinishedPropertyPacketSend(IEnumerable<IEntity> updates);
 
         /// <summary>
         /// The client has left this region and went into a child region, clean up anything required

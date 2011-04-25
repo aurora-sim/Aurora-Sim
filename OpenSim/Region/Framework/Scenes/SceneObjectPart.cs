@@ -2708,7 +2708,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void GetProperties(IClientAPI client)
         {
-            client.SendObjectPropertiesReply (new List<IEntity> (new IEntity[] { this }));
+            if (ParentGroup != null && ParentGroup.Scene != null)
+                ParentGroup.Scene.GetScenePresence(client.AgentId).SceneViewer.QueuePartsForPropertiesUpdate(new ISceneChildEntity[1] { this });
         }
 
         public UUID GetRootPartUUID()
