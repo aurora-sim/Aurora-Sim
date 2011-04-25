@@ -216,7 +216,7 @@ namespace Aurora.Services.DataService
                 contents.WriteKey("items"); //Start array items
                 contents.WriteStartArray("items"); 
                 int count = 0;
-                string query = String.Format("where {0} = '{1}'", "parentFolderID", folder_id);
+                string query = String.Format("where {0} = '{1}' and {2} = '{3}'", "parentFolderID", folder_id, "avatarID", AgentID);
                 using (IDataReader retVal = GD.QueryData (query, m_itemsrealm, "*"))
                 {
                     try

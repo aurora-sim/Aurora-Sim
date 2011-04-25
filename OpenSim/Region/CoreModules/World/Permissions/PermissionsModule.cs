@@ -183,7 +183,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
             m_scene.Permissions.OnCreateObjectInventory += CanCreateObjectInventory;
             m_scene.Permissions.OnEditObjectInventory += CanEditObjectInventory;
-            m_scene.Permissions.OnCopyObjectInventory += CanCopyObjectInventory; //NOT YET IMPLEMENTED
+            m_scene.Permissions.OnCopyObjectInventory += CanCopyObjectInventory;
             m_scene.Permissions.OnDeleteObjectInventory += CanDeleteObjectInventory;
             m_scene.Permissions.OnResetScript += CanResetScript;
 

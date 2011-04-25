@@ -737,9 +737,7 @@ namespace OpenSim.Services.LLLoginService
             foreach (InventoryFolderBase InvFolder in folders)
             {
                 if (InvFolder.ParentID == UUID.Zero && InvFolder.Name == "My Inventory")
-                {
                     rootID = InvFolder.ID;
-                }
                 TempHash = new Hashtable();
                 TempHash["name"] = InvFolder.Name;
                 TempHash["parent_id"] = InvFolder.ParentID.ToString();
@@ -747,32 +745,6 @@ namespace OpenSim.Services.LLLoginService
                 TempHash["type_default"] = (Int32)InvFolder.Type;
                 TempHash["folder_id"] = InvFolder.ID.ToString();
                 AgentInventoryArray.Add(TempHash);
-            }
-
-            List<InventoryFolderBase> rootFolders = inventoryService.GetRootFolders(library.LibraryOwner);
-            Hashtable RootHash = new Hashtable();
-            RootHash["name"] = library.LibraryName;
-            RootHash["parent_id"] = UUID.Zero.ToString();
-            RootHash["version"] = (Int32)1;
-            RootHash["type_default"] = (Int32)9;
-            RootHash["folder_id"] = "00000112-000f-0000-0000-000100bba000";
-            AgentInventoryArray.Add(RootHash);
-
-            List<UUID> rootFolderUUIDs = new List<UUID>();
-            foreach (InventoryFolderBase rootFolder in rootFolders)
-            {
-                if (rootFolder.Name != "My Inventory")
-                {
-                    rootFolderUUIDs.Add(rootFolder.ID);
-                }
-            }
-
-            if (rootFolderUUIDs.Count != 0)
-            {
-                foreach (UUID rootfolderID in rootFolderUUIDs)
-                {
-                    TraverseFolder(library.LibraryOwner, rootfolderID, inventoryService, true, ref AgentInventoryArray);
-                }
             }
             return new InventoryData(AgentInventoryArray, rootID);
 
@@ -782,39 +754,33 @@ namespace OpenSim.Services.LLLoginService
         /// Converts the inventory library skeleton into the form required by the rpc request.
         /// </summary>
         /// <returns></returns>
-        protected virtual ArrayList GetInventoryLibrary(ILibraryService library, IInventoryService invService)
+        protected virtual ArrayList GetInventoryLibrary(ILibraryService library, IInventoryService inventoryService)
         {
-            //Dictionary<UUID, InventoryFolderImpl> rootFolders = library.GetAllFolders();
-            //m_log.DebugFormat("[LLOGIN]: Library has {0} folders", rootFolders.Count);
-            //Dictionary<UUID, InventoryFolderImpl> rootFolders = new Dictionary<UUID,InventoryFolderImpl>();
-            ArrayList folderHashes = new ArrayList();
-
-            /*List<InventoryFolderBase> rootFolders = invService.GetRootFolders(library.LibraryOwner);
-            Hashtable TempHash = new Hashtable();
-            TempHash["name"] = library.LibraryName;
-            TempHash["parent_id"] = UUID.Zero.ToString();
-            TempHash["version"] = (Int32)1;
-            TempHash["type_default"] = (Int32)9;
-            TempHash["folder_id"] = "00000112-000f-0000-0000-000100bba000";
-            folderHashes.Add(TempHash);
+            ArrayList AgentInventoryArray = new ArrayList();
+            List<InventoryFolderBase> rootFolders = inventoryService.GetRootFolders(library.LibraryOwner);
+            Hashtable RootHash = new Hashtable();
+            RootHash["name"] = library.LibraryName;
+            RootHash["parent_id"] = UUID.Zero.ToString();
+            RootHash["version"] = (Int32)1;
+            RootHash["type_default"] = (Int32)8;
+            RootHash["folder_id"] = "00000112-000f-0000-0000-000100bba000";
+            AgentInventoryArray.Add(RootHash);
 
             List<UUID> rootFolderUUIDs = new List<UUID>();
             foreach (InventoryFolderBase rootFolder in rootFolders)
             {
                 if (rootFolder.Name != "My Inventory")
-                {
                     rootFolderUUIDs.Add(rootFolder.ID);
-                }
             }
 
-            if (rootFolderUUIDs.Count == 0)
-                return folderHashes; //No default inventory
-
-            foreach (UUID rootID in rootFolderUUIDs)
+            if (rootFolderUUIDs.Count != 0)
             {
-                TraverseFolder(library.LibraryOwner, rootID, invService, true, ref folderHashes);
-            }*/
-            return folderHashes;
+                foreach (UUID rootfolderID in rootFolderUUIDs)
+                {
+                    TraverseFolder(library.LibraryOwner, rootfolderID, inventoryService, true, ref AgentInventoryArray);
+                }
+            }
+            return AgentInventoryArray;
         }
 
         private void TraverseFolder(UUID agentID, UUID folderID, IInventoryService invService, bool rootFolder, ref ArrayList table)
@@ -844,7 +810,7 @@ namespace OpenSim.Services.LLLoginService
         {
             //for now create random inventory library owner
             Hashtable TempHash = new Hashtable();
-            TempHash["agent_id"] = libService.LibraryOwner; // libFolder.Owner
+            TempHash["agent_id"] = libService.LibraryOwner.ToString(); // libFolder.Owner
             ArrayList inventoryLibOwner = new ArrayList();
             inventoryLibOwner.Add(TempHash);
             return inventoryLibOwner;

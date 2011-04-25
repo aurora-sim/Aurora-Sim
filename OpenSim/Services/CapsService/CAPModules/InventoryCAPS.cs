@@ -146,7 +146,7 @@ namespace OpenSim.Services.CapsService
 
                 OSDArray foldersrequested = (OSDArray)map["folders"];
 
-                return Aurora.DataManager.DataManager.RequestPlugin<IInventoryData>().FetchInventoryReply(foldersrequested, AgentID);
+                return Aurora.DataManager.DataManager.RequestPlugin<IInventoryData>().FetchInventoryReply(foldersrequested, m_libraryService.LibraryOwner);
             }
             catch (Exception ex)
             {
