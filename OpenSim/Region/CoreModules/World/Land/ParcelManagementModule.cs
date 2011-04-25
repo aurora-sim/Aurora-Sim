@@ -1800,7 +1800,36 @@ namespace OpenSim.Region.CoreModules.World.Land
                                                        {
                                                            return ProcessPropertiesUpdate(request, path, param, agentID);
                                                        }));
+            retVal["ParcelMediaURLFilterList"] = CapsUtil.CreateCAPS("ParcelMediaURLFilterList", "");
+            server.AddStreamHandler(new RestStreamHandler("POST", retVal["ParcelMediaURLFilterList"],
+                                                       delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                                       {
+                                                           return ProcessParcelMediaURLFilterList(request, path, param, agentID);
+                                                       }));
+
+            
             return retVal;
+        }
+
+        private string ProcessParcelMediaURLFilterList(string request, string path, string param, UUID agentID)
+        {
+            IClientAPI client;
+            if (!m_scene.TryGetClient(agentID, out client))
+            {
+                m_log.WarnFormat("[LAND] unable to retrieve IClientAPI for {0}", agentID.ToString());
+                return OSDParser.SerializeLLSDXmlString(new OSDMap());
+            }
+            OSDMap args = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+
+            ILandObject o = GetLandObject(args["local-id"].AsInteger());
+
+            OSDArray respList = new OSDArray();
+            OSDMap resp = new OSDMap();
+            resp["local-id"] = o.LandData.LocalID;
+            resp["list"] = respList;
+
+            return OSDParser.SerializeLLSDXmlString(resp);
         }
 
         private string ProcessPropertiesUpdate(string request, string path, string param, UUID agentID)

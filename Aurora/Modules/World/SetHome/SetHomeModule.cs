@@ -115,19 +115,57 @@ namespace Aurora.Modules.World.Auction
             OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
             UUID FolderID = rm["folder-id"].AsUUID();
             UUID ItemID = rm["item-id"].AsUUID();
-            //UUID NotecardID = rm["notecard-id"].AsUUID();
-            //There is an object-id as well, but objects arn't handled through this currently as of Sept. 2010
-            
-            //TODO: Check notecard for this
-            //SLUtil.ParseNotecardToList
-            InventoryItemBase item = null;
-            ILLClientInventory inventoryModule = m_scene.RequestModuleInterface<ILLClientInventory>();
-            if (inventoryModule != null)
-                 item = inventoryModule.GiveInventoryItem(agentID, agentID, ItemID, FolderID);
+            UUID NotecardID = rm["notecard-id"].AsUUID();
+            UUID ObjectID = rm["object-id"].AsUUID();
+            InventoryItemBase notecardItem = null;
+            if (ObjectID != UUID.Zero)
+            {
+                ISceneChildEntity part = m_scene.GetSceneObjectPart(ObjectID);
+                if (part != null)
+                {
+                    TaskInventoryItem item = part.Inventory.GetInventoryItem(NotecardID);
+                    if (m_scene.Permissions.CanCopyObjectInventory(NotecardID, ObjectID, agentID))
+                    {
+                        notecardItem = new InventoryItemBase(NotecardID, agentID);
+                        notecardItem.AssetID = item.AssetID;
+                    }
+                }
+            }
+            else
+                notecardItem = m_scene.InventoryService.GetItem(new InventoryItemBase(NotecardID));
+            if(notecardItem != null && notecardItem.Owner == agentID)
+            {
+                AssetBase asset = m_scene.AssetService.Get(notecardItem.AssetID.ToString());
+                if (asset != null)
+                {
+                    System.Text.UTF8Encoding enc =
+                                new System.Text.UTF8Encoding();
+                    List<string> notecardData = SLUtil.ParseNotecardToList(enc.GetString(asset.Data));
+                    OpenMetaverse.Assets.AssetNotecard noteCardAsset = new OpenMetaverse.Assets.AssetNotecard(UUID.Zero, asset.Data);
+                    noteCardAsset.Decode();
+                    bool found = false;
+                    foreach (InventoryItem notecardObjectItem in noteCardAsset.EmbeddedItems)
+                    {
+                        if (notecardObjectItem.UUID == ItemID)
+                        {
+                            //Make sure that it exists
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found)
+                    {
+                        InventoryItemBase item = null;
+                        ILLClientInventory inventoryModule = m_scene.RequestModuleInterface<ILLClientInventory>();
+                        if (inventoryModule != null)
+                            item = inventoryModule.GiveInventoryItem(agentID, agentID, ItemID, FolderID);
 
-            IClientAPI client;
-            m_scene.TryGetClient(agentID, out client);
-            client.SendBulkUpdateInventory(item);
+                        IClientAPI client;
+                        m_scene.TryGetClient(agentID, out client);
+                        client.SendBulkUpdateInventory(item);
+                    }
+                }
+            }
 
             //Send back data
             Hashtable responsedata = new Hashtable();
