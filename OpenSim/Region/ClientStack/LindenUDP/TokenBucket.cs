@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+//#define Debug
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -64,17 +64,22 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         protected Int32 m_lastDrip;
 
         /// <summary>
-        /// The number of bytes that can be sent at this moment. This is the
-        /// current number of tokens in the bucket
-        /// </summary>
-        protected Int64 m_tokenCount;
-
-        /// <summary>
         /// Map of children buckets and their requested maximum burst rate
         /// </summary>
         protected Dictionary<TokenBucket, Int64> m_children = new Dictionary<TokenBucket, Int64>();
 
         #region Properties
+
+        /// <summary>
+        /// The number of bytes that can be sent at this moment. This is the
+        /// current number of tokens in the bucket
+        /// </summary>
+        protected Int64 m_tokenCount;
+        public Int64 TokenCount
+        {
+            get { return m_tokenCount; }
+            set { m_tokenCount = value; }
+        }
 
         /// <summary>
         /// The parent bucket of this bucket, or null if this bucket has no
@@ -274,11 +279,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// Deposit tokens into the bucket from a child bucket that did
         /// not use all of its available tokens
         /// </summary>
-        protected void Deposit(Int64 count)
+        public void Deposit(Int64 count)
         {
             m_tokenCount += count;
 #if Debug
-            m_log.Warn("depositing " + count + ", " + m_tokenCount);
+            //m_log.Warn("depositing: " + count + ", total: " + m_tokenCount);
 #endif
 
             // Deposit the overflow in the parent bucket, this is how we share
@@ -292,13 +297,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
         }
 
-        /// <summary>
-        /// Add tokens to the bucket over time. The number of tokens added each
-        /// call depends on the length of time that has passed since the last
-        /// call to Drip
-        /// </summary>
-        /// <returns>The amount of tokens to add to the bucket</returns>
-        protected Int64 Drip()
+        public Int64 DripUs()
         {
             Int64 tokensToAdd = 0;
 
@@ -306,7 +305,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // with no drip rate...
             if (DripRate == 0)
             {
-                m_log.WarnFormat("[TOKENBUCKET] something odd is happening and drip rate is 0");
+                //m_log.WarnFormat("[TOKENBUCKET] something odd is happening and drip rate is 0");
                 return tokensToAdd;
             }
 
@@ -321,14 +320,25 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 return tokensToAdd;
 
             tokensToAdd += (deltaMS * DripRate / m_ticksPerQuantum);
+            return tokensToAdd;
+        }
+        /// <summary>
+        /// Add tokens to the bucket over time. The number of tokens added each
+        /// call depends on the length of time that has passed since the last
+        /// call to Drip
+        /// </summary>
+        /// <returns>The amount of tokens to add to the bucket</returns>
+        public Int64 Drip()
+        {
+            Int64 tokensToAdd = DripUs();
 
             lock (m_children)
             {
                 //We also can take from children if we need to, if they arn't using their drip
                 foreach (TokenBucket child in m_children.Keys)
                 {
-                    deltaMS = Math.Min(Util.EnvironmentTickCountSubtract(child.m_lastDrip), m_ticksPerQuantum);
-                    if (child.m_tokenCount > (m_tokenCount + 1000) && deltaMS > 5) //Make sure that we have less tokens and we havn't stolen from them in the last 5ms
+                    Int32 deltaMS = Math.Min(Util.EnvironmentTickCountSubtract(child.m_lastDrip), m_ticksPerQuantum);
+                    if (child.TokenCount > 500 && (float)child.TokenCount / (float)m_tokenCount > 1.5f) //Make sure that we have less tokens and we havn't stolen from them in the last 5ms
                     {
                         Int64 oldTokens = tokensToAdd;
                         Int64 childDrip = child.Drip();
@@ -339,11 +349,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 #if Debug
                         m_log.WarnFormat("Taking {0} from children, {1}, ctokens: {2}, otokens: {3}", tokensToAdd - oldTokens, deltaMS, child.m_tokenCount, m_tokenCount);
 #endif
-                        }
+                    }
                     else
                         child.Deposit(child.Drip()); //Drip for them then, since we might need it later
                 }
             }
+            if (m_parent != null && m_tokenCount < 1000)
+                tokensToAdd += m_parent.AskParentForTokens(m_tokenCount);
             return tokensToAdd;
         }
 
@@ -356,9 +368,27 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             Int64 diff = m_tokenCount / 3;
             //Make sure that the parent needs the tokens first, then make sure that we don't give away all of ours
-            if (m_tokenCount > (m_parent.m_tokenCount + 1000))
+            if (m_tokenCount > 500 && (float)m_tokenCount / (float)m_parent.m_tokenCount > 1.5f)
             {
                 //Steal actual tokens from the children
+                m_tokenCount -= diff;
+                return diff;
+            }
+            return 0;
+        }
+
+        protected virtual Int64 AskParentForTokens(Int64 tokenAmount)
+        {
+            Int32 deltaMS = Math.Min(Util.EnvironmentTickCountSubtract(m_lastDrip), m_ticksPerQuantum);
+            //if (deltaMS > 100)
+            //    Deposit(Drip()); //Drip ourselves if we havn't recently
+
+            if (m_tokenCount > 500 && (float)m_tokenCount / (float)tokenAmount > 1.5f) //Make sure that we have less tokens and we havn't stolen from them in the last 5ms
+            {
+                Int64 diff = Math.Min(500, tokenAmount * 10);
+#if Debug
+                m_log.WarnFormat("Giving {0} from parent, {1}, ctokens: {2}, otokens: {3}", diff, deltaMS, tokenAmount, m_tokenCount);
+#endif
                 m_tokenCount -= diff;
                 return diff;
             }
@@ -429,6 +459,33 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void AcknowledgePackets(Int32 count)
         {
             AdjustedDripRate = AdjustedDripRate + count;
+        }
+
+        protected override Int64 AskParentForTokens(Int64 tokenAmount)
+        {
+            Int32 deltaMS = Math.Min(Util.EnvironmentTickCountSubtract(m_lastDrip), m_ticksPerQuantum);
+            //if (deltaMS > 100)
+            //    Deposit(Drip()); //Drip ourselves if we havn't recently
+            Int64 amt = 0;
+            lock (m_children)
+            {
+                foreach (TokenBucket child in m_children.Keys)
+                {
+                    if (child.TokenCount == tokenAmount) //The requestor
+                        continue;
+                    child.Deposit(child.DripUs());
+                    if (child.TokenCount > 500 && (float)child.TokenCount / (float)tokenAmount > 1.5f) //Make sure that we have less tokens and we havn't stolen from them in the last 5ms
+                    {
+                        Int64 diff = Math.Min(500 / m_children.Count, tokenAmount * 10);
+#if Debug
+                        m_log.WarnFormat("Giving {0} from child, {1}, child tokens: {2}, giver tokens: {3}", diff, deltaMS, tokenAmount, child.TokenCount);
+#endif
+                        child.TokenCount -= diff;
+                        amt += diff;
+                    }
+                }
+            }
+            return amt;
         }
     }
 }
