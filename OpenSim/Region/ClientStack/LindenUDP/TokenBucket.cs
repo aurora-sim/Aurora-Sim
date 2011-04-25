@@ -41,6 +41,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static Int32 m_counter = 0;
+        protected const float m_amountRequiredMultiplier = 1.5f;
 
         private Int32 m_identifier;
 
@@ -79,6 +80,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             get { return m_tokenCount; }
             set { m_tokenCount = value; }
+        }
+
+        /// <summary>
+        /// The number of bytes that must be in this token bucket
+        /// before the tokens are able to be taken from it by a parent
+        /// </summary>
+        protected Int64 m_minTokenAmount;
+        public Int64 MinTokenAmount
+        {
+            get { return m_minTokenAmount; }
         }
 
         /// <summary>
@@ -176,12 +187,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// zero if this bucket has no maximum capacity</param>
         /// <param name="dripRate">Rate that the bucket fills, in bytes per
         /// second. If zero, the bucket always remains full</param>
-        public TokenBucket(TokenBucket parent, Int64 dripRate)
+        public TokenBucket(TokenBucket parent, Int64 dripRate, Int64 minTokenAmount)
         {
             m_identifier = m_counter++;
 
             Parent = parent;
             RequestedDripRate = dripRate;
+            m_minTokenAmount = minTokenAmount;
             // TotalDripRequest = dripRate; // this will be overwritten when a child node registers
             // MaxBurst = (Int64)((double)dripRate * m_quantumsPerBurst);
             m_lastDrip = Util.EnvironmentTickCount();
@@ -338,7 +350,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 foreach (TokenBucket child in m_children.Keys)
                 {
                     Int32 deltaMS = Math.Min(Util.EnvironmentTickCountSubtract(child.m_lastDrip), m_ticksPerQuantum);
-                    if (child.TokenCount > 500 && (float)child.TokenCount / (float)m_tokenCount > 1.5f) //Make sure that we have less tokens and we havn't stolen from them in the last 5ms
+                    if (child.TokenCount > child.MinTokenAmount && (float)child.TokenCount / (float)m_tokenCount > m_amountRequiredMultiplier) //Make sure that we have less tokens and we havn't stolen from them in the last 5ms
                     {
                         Int64 oldTokens = tokensToAdd;
                         Int64 childDrip = child.Drip();
@@ -368,7 +380,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             Int64 diff = m_tokenCount / 3;
             //Make sure that the parent needs the tokens first, then make sure that we don't give away all of ours
-            if (m_tokenCount > 500 && (float)m_tokenCount / (float)m_parent.m_tokenCount > 1.5f)
+            if (m_tokenCount > MinTokenAmount && (float)m_tokenCount / (float)m_parent.m_tokenCount > m_amountRequiredMultiplier)
             {
                 //Steal actual tokens from the children
                 m_tokenCount -= diff;
@@ -383,9 +395,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //if (deltaMS > 100)
             //    Deposit(Drip()); //Drip ourselves if we havn't recently
 
-            if (m_tokenCount > 500 && (float)m_tokenCount / (float)tokenAmount > 1.5f) //Make sure that we have less tokens and we havn't stolen from them in the last 5ms
+            if (m_tokenCount > MinTokenAmount && (float)m_tokenCount / (float)tokenAmount > m_amountRequiredMultiplier) //Make sure that we have less tokens and we havn't stolen from them in the last 5ms
             {
-                Int64 diff = Math.Min(500, tokenAmount * 10);
+                Int64 diff = Math.Min(MinTokenAmount, tokenAmount * 10);
 #if Debug
                 m_log.WarnFormat("Giving {0} from parent, {1}, ctokens: {2}, otokens: {3}", diff, deltaMS, tokenAmount, m_tokenCount);
 #endif
@@ -434,8 +446,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         // <summary>
         //
         // </summary>
-        public AdaptiveTokenBucket(TokenBucket parent, Int64 maxDripRate)
-            : base(parent, m_minimumFlow)
+        public AdaptiveTokenBucket(TokenBucket parent, Int64 maxDripRate, Int64 minTokenAmount)
+            : base(parent, m_minimumFlow, minTokenAmount)
         {
             MaxDripRate = maxDripRate;
         }
@@ -474,9 +486,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     if (child.TokenCount == tokenAmount) //The requestor
                         continue;
                     child.Deposit(child.DripUs());
-                    if (child.TokenCount > 500 && (float)child.TokenCount / (float)tokenAmount > 1.5f) //Make sure that we have less tokens and we havn't stolen from them in the last 5ms
+                    if (child.TokenCount > child.MinTokenAmount && (float)child.TokenCount / (float)tokenAmount > m_amountRequiredMultiplier) //Make sure that we have less tokens and we havn't stolen from them in the last 5ms
                     {
-                        Int64 diff = Math.Min(500 / m_children.Count, tokenAmount * 10);
+                        Int64 diff = Math.Min(child.MinTokenAmount / m_children.Count, tokenAmount * 10);
 #if Debug
                         m_log.WarnFormat("Giving {0} from child, {1}, child tokens: {2}, giver tokens: {3}", diff, deltaMS, tokenAmount, child.TokenCount);
 #endif

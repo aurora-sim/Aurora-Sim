@@ -259,7 +259,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_maxRTO = maxRTO;
 
             // Create a token bucket throttle for this client that has the scene token bucket as a parent
-            m_throttle = new AdaptiveTokenBucket(parentThrottle, rates.TotalLimit);
+            m_throttle = new AdaptiveTokenBucket(parentThrottle, rates.TotalLimit, 0);
             // Create an array of token buckets for this clients different throttle categories
             m_throttleCategories = new TokenBucket[(int)ThrottleOutPacketType.Count];
 
@@ -273,13 +273,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 // Initialize the token buckets that control the throttling for each category
                 //Fix parent types so that tokens are passed through appropriately
                 if (type == ThrottleOutPacketType.State)
-                    m_throttleCategories[i] = new TokenBucket(m_throttleCategories[(int)ThrottleOutPacketType.Task], rates.GetLimit(type));
+                    m_throttleCategories[i] = new TokenBucket(m_throttleCategories[(int)ThrottleOutPacketType.Task], rates.GetLimit(type), rates.GetMinimum(type));
                 else if (type == ThrottleOutPacketType.AvatarInfo)
-                    m_throttleCategories[i] = new TokenBucket(m_throttleCategories[(int)ThrottleOutPacketType.State], rates.GetLimit(type));
+                    m_throttleCategories[i] = new TokenBucket(m_throttleCategories[(int)ThrottleOutPacketType.State], rates.GetLimit(type), rates.GetMinimum(type));
                 else if (type == ThrottleOutPacketType.Transfer)
-                    m_throttleCategories[i] = new TokenBucket(m_throttleCategories[(int)ThrottleOutPacketType.Asset], rates.GetLimit(type));
+                    m_throttleCategories[i] = new TokenBucket(m_throttleCategories[(int)ThrottleOutPacketType.Asset], rates.GetLimit(type), rates.GetMinimum(type));
                 else
-                    m_throttleCategories[i] = new TokenBucket(m_throttle, rates.GetLimit(type));
+                    m_throttleCategories[i] = new TokenBucket(m_throttle, rates.GetLimit(type), rates.GetMinimum(type));
             }
 
             // Default the retransmission timeout to three seconds
