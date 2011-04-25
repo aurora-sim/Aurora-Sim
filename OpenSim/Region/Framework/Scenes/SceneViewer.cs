@@ -500,7 +500,8 @@ namespace OpenSim.Region.Framework.Scenes
                     try
                     {
                         List<IEntity> entities = new List<IEntity>();
-                        for (int i = 0; i < numUpdates; i++)
+                        int count = m_objectPropertiesToSend.Count > (int)numUpdates ? (int)numUpdates : m_objectPropertiesToSend.Count;
+                        for (int i = 0; i < count; i++)
                         {
                             ISceneChildEntity entity = ((ISceneChildEntity)m_objectPropertiesToSend[0]);
                             if (m_PropertiesInPacketQueue.Contains(entity.UUID))
