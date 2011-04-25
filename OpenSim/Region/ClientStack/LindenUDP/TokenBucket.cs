@@ -459,8 +459,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void ExpirePackets(Int32 count)
         {
             Int64 old = AdjustedDripRate;
-            //AdjustedDripRate = (Int64)(AdjustedDripRate / Math.Pow(2, count));
-            AdjustedDripRate = AdjustedDripRate - count;
+            AdjustedDripRate = (Int64)(AdjustedDripRate / Math.Pow(2, count));
+            //AdjustedDripRate = AdjustedDripRate - count;
             m_log.WarnFormat("[ADAPTIVEBUCKET] drop {0} by {1} to {2} expired packets", old, count, AdjustedDripRate);
         }
 

@@ -282,9 +282,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     m_throttleCategories[i] = new TokenBucket(m_throttle, rates.GetLimit(type), rates.GetMinimum(type));
             }
 
-            // Default the retransmission timeout to three seconds
-            RTO = m_defaultRTO;
-
             //Set the priorities for the different packet types
             //Higher is more important
             MapCatsToPriority[(int)ThrottleOutPacketType.Resend] = 7;
@@ -299,9 +296,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             MapCatsToPriority[(int)ThrottleOutPacketType.AvatarInfo] = 6;
             MapCatsToPriority[(int)ThrottleOutPacketType.OutBand] = 7;
 
-//            m_lastthrottleCategoryChecked = 0;
-
-            // Default the retransmission timeout to three seconds
+            // Default the retransmission timeout to one second
             RTO = m_defaultRTO;
 
             // Initialize this to a sane value to prevent early disconnects
@@ -325,23 +320,22 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public string GetStats()
         {
-        return string.Format(
-            "{0,7} {1,7} {2,7} {3,9} {4,7} {5,7} {6,7} {7,7} {8,7} {9,8} {10,7} {11,7}",
-            PacketsReceived,
-            PacketsSent,
-            PacketsResent,
-            UnackedBytes,
-            m_packetOutboxes[(int)ThrottleOutPacketType.Resend].Count,
-            m_packetOutboxes[(int)ThrottleOutPacketType.Land].Count,
-            m_packetOutboxes[(int)ThrottleOutPacketType.Wind].Count,
-            m_packetOutboxes[(int)ThrottleOutPacketType.Cloud].Count,
-            m_packetOutboxes[(int)ThrottleOutPacketType.Task].Count,
-            m_packetOutboxes[(int)ThrottleOutPacketType.Texture].Count,
-            m_packetOutboxes[(int)ThrottleOutPacketType.Asset].Count,
-            m_packetOutboxes[(int)ThrottleOutPacketType.State].Count,
-            m_packetOutboxes[(int)ThrottleOutPacketType.OutBand].Count
+            return string.Format(
+                "{0,7} {1,7} {2,7} {3,9} {4,7} {5,7} {6,7} {7,7} {8,7} {9,8} {10,7} {11,7}",
+                PacketsReceived,
+                PacketsSent,
+                PacketsResent,
+                UnackedBytes,
+                m_packetOutboxes[(int)ThrottleOutPacketType.Resend].Count,
+                m_packetOutboxes[(int)ThrottleOutPacketType.Land].Count,
+                m_packetOutboxes[(int)ThrottleOutPacketType.Wind].Count,
+                m_packetOutboxes[(int)ThrottleOutPacketType.Cloud].Count,
+                m_packetOutboxes[(int)ThrottleOutPacketType.Task].Count,
+                m_packetOutboxes[(int)ThrottleOutPacketType.Texture].Count,
+                m_packetOutboxes[(int)ThrottleOutPacketType.Asset].Count,
+                m_packetOutboxes[(int)ThrottleOutPacketType.State].Count,
+                m_packetOutboxes[(int)ThrottleOutPacketType.OutBand].Count
             );
-              
         }
 
         public void SendPacketStats()
@@ -416,10 +410,32 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 */
             int total = resend + land + wind + cloud + task + texture + asset + transfer + state + avatarinfo;
             if (total > MAXPERCLIENTRATE)
+            {
+                int percent = (int)(((float)MAXPERCLIENTRATE / (float)total) * 100);
                 total = MAXPERCLIENTRATE;
+                resend *= percent;
+                resend /= 100;
+                land *= percent;
+                land /= 100;
+                wind *= percent;
+                wind /= 100;
+                cloud *= percent;
+                cloud /= 100;
+                task *= percent;
+                task /= 100;
+                texture *= percent;
+                texture /= 100;
+                state *= percent;
+                state /= 100;
+                avatarinfo *= percent;
+                avatarinfo /= 100;
+                transfer *= percent;
+                transfer /= 100;
+            }
             if (total < MINPERCLIENTRATE)
             {
                 int percent = (int)(((float)MINPERCLIENTRATE / (float)total) * 100);
+                total = MINPERCLIENTRATE;
                 resend *= percent;
                 resend /= 100;
                 land *= percent;
@@ -518,7 +534,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void SlowDownSend()
         {
-            float tmp = (float)m_throttle.BurstRate * 0.95f;
+            float tmp = (float)m_throttle.BurstRate * 0.98f;
             if (tmp < MINPERCLIENTRATE)
                 tmp = (float)MINPERCLIENTRATE;
             m_throttle.RequestedDripRate = (int)tmp;
@@ -538,8 +554,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             else
             {
-                // all known packs should have a known
-                // We don't have a token bucket for this category, so it will not be queued
+                // We don't have a token bucket for this category,
+                //  so it will not be queued and sent immediately
                 return false;
             }
         }
