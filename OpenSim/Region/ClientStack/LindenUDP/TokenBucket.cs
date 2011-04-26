@@ -417,6 +417,66 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// The minimum rate for flow control.
         /// </summary>
         protected const Int64 m_minimumFlow = m_minimumDripRate * 15;
+        protected const Int64 m_resendPacketsDrip = 5000;
+        protected const Int64 m_rateToAllowByteLoss = 500;
+        protected const Int64 m_rateToAllowPacketLoss = 5;
+        protected Int64 m_bytesResentTokenCount = 0;
+        protected Int64 m_packetsResentTokenCount = 0;
+
+        /// <summary>Time of the last resend drip, in system ticks</summary>
+        protected Int32 m_lastBytesResentDrip;
+
+        /// <summary>Time of the last resend drip, in system ticks</summary>
+        protected Int32 m_lastPacketsResentDrip;
+
+        protected Int64 BytesResentTokenCount
+        {
+            get { return m_bytesResentTokenCount; }
+            set
+            {
+                m_bytesResentTokenCount += value;
+                ResentBytesDrip();
+            }
+        }
+
+        protected Int64 PacketsResentTokenCount
+        {
+            get { return m_packetsResentTokenCount; }
+            set
+            {
+                m_packetsResentTokenCount += value;
+                ResentPacketsDrip();
+            }
+        }
+
+        protected Int64 ResendDripCount
+        {
+            get { return AdjustedDripRate / 100; }
+        }
+
+        private void ResentBytesDrip()
+        {
+            Int32 deltaMS = Math.Min(Util.EnvironmentTickCountSubtract(m_lastBytesResentDrip), m_ticksPerQuantum);
+            m_lastBytesResentDrip = Util.EnvironmentTickCount();
+            if (deltaMS <= 0)
+                return;
+
+            m_bytesResentTokenCount -= (deltaMS * ResendDripCount / m_ticksPerQuantum);
+            if (m_bytesResentTokenCount < 0)
+                m_bytesResentTokenCount = 0;
+        }
+
+        private void ResentPacketsDrip()
+        {
+            Int32 deltaMS = Math.Min(Util.EnvironmentTickCountSubtract(m_lastPacketsResentDrip), m_ticksPerQuantum);
+            m_lastPacketsResentDrip = Util.EnvironmentTickCount();
+            if (deltaMS <= 0)
+                return;
+
+            m_packetsResentTokenCount -= (deltaMS / m_resendPacketsDrip);
+            if (m_packetsResentTokenCount < 0)
+                m_packetsResentTokenCount = 0;
+        }
 
         /// <summary>
         /// The maximum rate for flow control. Drip rate can never be
@@ -460,10 +520,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <param name="bytes"># of bytes in the packets that have expired</param>
         public void ExpirePackets(Int32 count, Int32 bytes)
         {
-            Int64 old = AdjustedDripRate;
-            AdjustedDripRate = (Int64)(AdjustedDripRate / Math.Pow(2, count));
-            //AdjustedDripRate = AdjustedDripRate - count;
-            m_log.WarnFormat("[ADAPTIVEBUCKET] drop {0} by {1} to {2} expired packets", old, count, AdjustedDripRate);
+            BytesResentTokenCount += bytes;
+            PacketsResentTokenCount += count;
+            if (BytesResentTokenCount > m_rateToAllowByteLoss ||
+                PacketsResentTokenCount > m_rateToAllowPacketLoss) //Check to see whether its greater than the min packet loss we allow for
+            {
+                Int64 old = AdjustedDripRate;
+                AdjustedDripRate = (Int64)(AdjustedDripRate / Math.Pow(2, count));
+                //AdjustedDripRate = AdjustedDripRate - count;
+                m_log.WarnFormat("[ADAPTIVEBUCKET] dropping {0} by {1} to {2} expired packets", old, count, AdjustedDripRate);
+            }
         }
 
         /// <summary>
