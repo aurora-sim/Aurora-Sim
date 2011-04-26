@@ -334,6 +334,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             tokensToAdd += (deltaMS * DripRate / m_ticksPerQuantum);
             return tokensToAdd;
         }
+
         /// <summary>
         /// Add tokens to the bucket over time. The number of tokens added each
         /// call depends on the length of time that has passed since the last
@@ -456,7 +457,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// Expires the given packets and reduces the amount of drip that will be used to send packets later
         /// </summary>
         /// <param name="count"># of packets that have expired</param>
-        public void ExpirePackets(Int32 count)
+        /// <param name="bytes"># of bytes in the packets that have expired</param>
+        public void ExpirePackets(Int32 count, Int32 bytes)
         {
             Int64 old = AdjustedDripRate;
             AdjustedDripRate = (Int64)(AdjustedDripRate / Math.Pow(2, count));

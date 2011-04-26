@@ -532,14 +532,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return data;
         }
 
-        public void SlowDownSend()
-        {
-            float tmp = (float)m_throttle.BurstRate * 0.98f;
-            if (tmp < MINPERCLIENTRATE)
-                tmp = (float)MINPERCLIENTRATE;
-            m_throttle.RequestedDripRate = (int)tmp;
-        }
-
         public bool EnqueueOutgoing(OutgoingPacket packet)
         {
             int category = (int)packet.Category;

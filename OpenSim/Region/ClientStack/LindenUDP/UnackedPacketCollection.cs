@@ -162,7 +162,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 // As with other network applications, assume that an expired packet is
                 // an indication of some network problem, slow transmission
-                expiredPackets[0].Client.FlowThrottle.ExpirePackets(expiredPackets.Count);
+                expiredPackets[0].Client.FlowThrottle.ExpirePackets(expiredPackets.Count, expiredPacketsBytes);
             }
 
             return expiredPackets;
