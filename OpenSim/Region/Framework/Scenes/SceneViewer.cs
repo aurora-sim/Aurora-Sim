@@ -287,12 +287,12 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!Culler.ShowEntityToClient(m_presence, e))
                         continue; // if 2 far ignore
 
-                    double priority = m_prioritizer.GetUpdatePriority (m_presence, e);
                     NewGrpsInView.Add (e);
 
                     if (lastGrpsInView.Contains (e))
                         continue;
 
+                    double priority = m_prioritizer.GetUpdatePriority(m_presence, e);
                     //Send the root object first!
                     EntityUpdate rootupdate = new EntityUpdate (e.RootChild, PrimUpdateFlags.FullUpdate);
                     PriorityQueueItem<EntityUpdate, double> rootitem = new PriorityQueueItem<EntityUpdate, double> ();
