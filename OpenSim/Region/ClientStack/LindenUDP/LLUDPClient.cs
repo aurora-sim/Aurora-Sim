@@ -506,7 +506,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             m_packedThrottles = null;
         }
 
-        public byte[] GetThrottlesPacked()
+        public byte[] GetThrottlesPacked(float multiplier)
         {
             byte[] data = m_packedThrottles;
 
@@ -515,16 +515,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 data = new byte[7 * 4];
                 int i = 0;
 
-                Buffer.BlockCopy(Utils.FloatToBytes((float)m_throttleCategories[(int)ThrottleOutPacketType.Resend].DripRate), 0, data, i, 4); i += 4;
-                Buffer.BlockCopy(Utils.FloatToBytes((float)m_throttleCategories[(int)ThrottleOutPacketType.Land].DripRate), 0, data, i, 4); i += 4;
-                Buffer.BlockCopy(Utils.FloatToBytes((float)m_throttleCategories[(int)ThrottleOutPacketType.Wind].DripRate), 0, data, i, 4); i += 4;
-                Buffer.BlockCopy(Utils.FloatToBytes((float)m_throttleCategories[(int)ThrottleOutPacketType.Cloud].DripRate), 0, data, i, 4); i += 4;
-                Buffer.BlockCopy(Utils.FloatToBytes((float)(m_throttleCategories[(int)ThrottleOutPacketType.Task].DripRate) +
-                                                            m_throttleCategories[(int)ThrottleOutPacketType.State].DripRate +
-                                                            m_throttleCategories[(int)ThrottleOutPacketType.AvatarInfo].DripRate), 0, data, i, 4); i += 4;
-                Buffer.BlockCopy(Utils.FloatToBytes((float)m_throttleCategories[(int)ThrottleOutPacketType.Texture].DripRate), 0, data, i, 4); i += 4;
-                Buffer.BlockCopy(Utils.FloatToBytes((float)m_throttleCategories[(int)ThrottleOutPacketType.Asset].DripRate +
-                                                            m_throttleCategories[(int)ThrottleOutPacketType.Transfer].DripRate), 0, data, i, 4); i += 4;
+                Buffer.BlockCopy(Utils.FloatToBytes((float)m_throttleCategories[(int)ThrottleOutPacketType.Resend].RequestedDripRate * 8 * multiplier), 0, data, i, 4); i += 4;
+                Buffer.BlockCopy(Utils.FloatToBytes((float)m_throttleCategories[(int)ThrottleOutPacketType.Land].RequestedDripRate * 8 * multiplier), 0, data, i, 4); i += 4;
+                Buffer.BlockCopy(Utils.FloatToBytes((float)m_throttleCategories[(int)ThrottleOutPacketType.Wind].RequestedDripRate * 8 * multiplier), 0, data, i, 4); i += 4;
+                Buffer.BlockCopy(Utils.FloatToBytes((float)m_throttleCategories[(int)ThrottleOutPacketType.Cloud].RequestedDripRate * 8 * multiplier), 0, data, i, 4); i += 4;
+                Buffer.BlockCopy(Utils.FloatToBytes((float)((m_throttleCategories[(int)ThrottleOutPacketType.Task].RequestedDripRate * 8 * multiplier) +
+                                                            (m_throttleCategories[(int)ThrottleOutPacketType.State].RequestedDripRate * 8 * multiplier) +
+                                                            (m_throttleCategories[(int)ThrottleOutPacketType.AvatarInfo].RequestedDripRate * 8 * multiplier))), 0, data, i, 4); i += 4;
+                Buffer.BlockCopy(Utils.FloatToBytes((float)m_throttleCategories[(int)ThrottleOutPacketType.Texture].RequestedDripRate * 8 * multiplier), 0, data, i, 4); i += 4;
+                Buffer.BlockCopy(Utils.FloatToBytes((float)((m_throttleCategories[(int)ThrottleOutPacketType.Asset].RequestedDripRate * 8 * multiplier) +
+                                                            (m_throttleCategories[(int)ThrottleOutPacketType.Transfer].RequestedDripRate * 8 * multiplier))), 0, data, i, 4); i += 4;
 
                 m_packedThrottles = data;
             }

@@ -4731,7 +4731,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             data.RelativePosition.ToBytes(objectData, 0);
             data.Velocity.ToBytes(objectData, 12);
             data.Acceleration.ToBytes(objectData, 24);
-            data.RotationOffset.ToBytes(objectData, 36);
+            try
+            {
+                data.RotationOffset.ToBytes(objectData, 36);
+            }
+            catch (Exception e)
+            {
+                m_log.Warn("[LLClientView]: exception converting quaternion to bytes, using Quaternion.Identity. Exception: " + e.ToString());
+                OpenMetaverse.Quaternion.Identity.ToBytes(objectData, 36);
+            }
             data.AngularVelocity.ToBytes(objectData, 48);
 
             ObjectUpdatePacket.ObjectDataBlock update = new ObjectUpdatePacket.ObjectDataBlock();
@@ -4863,7 +4871,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             i += 12;
             part.RelativePosition.ToBytes(objectData, i);
             i += 12;
-            part.RotationOffset.ToBytes(objectData, i);
+            try
+            {
+                part.RotationOffset.ToBytes(objectData, i);
+            }
+            catch (Exception e)
+            {
+                m_log.Warn("[LLClientView]: exception converting quaternion to bytes, using Quaternion.Identity. Exception: " + e.ToString());
+                OpenMetaverse.Quaternion.Identity.ToBytes(objectData, 36);
+            }
             i += 12;
             Utils.UIntToBytes((uint)updateFlags, objectData, i);
             i += 4;
@@ -11931,7 +11947,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <returns></returns>
         public byte[] GetThrottlesPacked(float multiplier)
         {
-            return m_udpClient.GetThrottlesPacked();
+            return m_udpClient.GetThrottlesPacked(multiplier);
         }
 
         /// <summary>
