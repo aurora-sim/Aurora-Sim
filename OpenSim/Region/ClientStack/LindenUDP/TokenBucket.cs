@@ -456,7 +456,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private void ResentBytesDrip()
         {
-            Int32 deltaMS = Math.Min(Util.EnvironmentTickCountSubtract(m_lastBytesResentDrip), m_ticksPerQuantum);
+            Int32 deltaMS = Util.EnvironmentTickCountSubtract(m_lastBytesResentDrip);
             m_lastBytesResentDrip = Util.EnvironmentTickCount();
             if (deltaMS <= 0)
                 return;
@@ -468,7 +468,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private void ResentPacketsDrip()
         {
-            Int32 deltaMS = Math.Min(Util.EnvironmentTickCountSubtract(m_lastPacketsResentDrip), m_ticksPerQuantum);
+            Int32 deltaMS = Util.EnvironmentTickCountSubtract(m_lastPacketsResentDrip);
             m_lastPacketsResentDrip = Util.EnvironmentTickCount();
             if (deltaMS <= 0)
                 return;
@@ -526,7 +526,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 PacketsResentTokenCount > m_rateToAllowPacketLoss) //Check to see whether its greater than the min packet loss we allow for
             {
                 Int64 old = AdjustedDripRate;
-                AdjustedDripRate = (Int64)(AdjustedDripRate / Math.Pow(2, count));
+                AdjustedDripRate = (Int64)(AdjustedDripRate - (BytesResentTokenCount * 3));
+                BytesResentTokenCount /= 3;
                 //AdjustedDripRate = AdjustedDripRate - count;
                 m_log.WarnFormat("[ADAPTIVEBUCKET] dropping {0} by {1} to {2} expired packets", old, count, AdjustedDripRate);
             }
