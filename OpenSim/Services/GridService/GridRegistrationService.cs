@@ -29,6 +29,7 @@ namespace OpenSim.Services.GridService
         protected IConfig m_permissionConfig;
         protected IRegistryCore m_registry;
         protected bool m_useSessionTime = true;
+        protected bool m_useRegistrationService = true;
         /// <summary>
         /// Timeout before the handlers expire (in hours)
         /// </summary>
@@ -92,9 +93,11 @@ namespace OpenSim.Services.GridService
             IConfig ConfigurationConfig = config.Configs["Configuration"];
 
             if(ConfigurationConfig != null)
-                m_loadBalancer.SetUrls(ConfigurationConfig.GetString("HostNames", "http://localhost").Split(','));
+                m_loadBalancer.SetUrls (ConfigurationConfig.GetString ("HostNames", "http://localhost").Split (','));
             if (ConfigurationConfig != null)
-                m_useSessionTime = ConfigurationConfig.GetBoolean("UseSessionTime", m_useSessionTime);
+                m_useSessionTime = ConfigurationConfig.GetBoolean ("UseSessionTime", m_useSessionTime);
+            if (ConfigurationConfig != null)
+                m_useRegistrationService = ConfigurationConfig.GetBoolean ("UseRegistrationService", m_useRegistrationService);
             m_permissionConfig = config.Configs["RegionPermissions"];
             if (m_permissionConfig != null)
                 ReadConfiguration(m_permissionConfig);
@@ -116,8 +119,11 @@ namespace OpenSim.Services.GridService
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        OSDMap OnMessageReceived(OSDMap message)
+        private OSDMap OnMessageReceived(OSDMap message)
         {
+            if (!m_useRegistrationService)
+                return null;
+
             if (message.ContainsKey("Method") && message["Method"].AsString() == "RegisterHandlers")
             {
                 ulong regionHandle = message["RegionHandle"].AsULong();
@@ -159,6 +165,9 @@ namespace OpenSim.Services.GridService
 
         protected void LoadFromDatabase()
         {
+            if (!m_useRegistrationService)
+                return;
+
             List<GridRegistrationURLs> urls = m_genericsConnector.GetGenerics<GridRegistrationURLs>(
                 UUID.Zero, "GridRegistrationUrls", new GridRegistrationURLs());
 
@@ -224,6 +233,9 @@ namespace OpenSim.Services.GridService
 
         public void RemoveUrlsForClient(string SessionID, ulong RegionHandle)
         {
+            if (!m_useRegistrationService)
+                return;
+
             GridRegistrationURLs urls = m_genericsConnector.GetGeneric<GridRegistrationURLs>(UUID.Zero,
                 "GridRegistrationUrls", RegionHandle.ToString(), new GridRegistrationURLs());
             if (urls != null)
@@ -243,6 +255,9 @@ namespace OpenSim.Services.GridService
 
         public void UpdateUrlsForClient(ulong RegionHandle)
         {
+            if (!m_useRegistrationService)
+                return;
+
             GridRegistrationURLs urls = m_genericsConnector.GetGeneric<GridRegistrationURLs>(UUID.Zero,
                 "GridRegistrationUrls", RegionHandle.ToString(), new GridRegistrationURLs());
             InnerUpdateUrlsForClient(urls);
@@ -268,6 +283,9 @@ namespace OpenSim.Services.GridService
 
         public bool CheckThreatLevel(string SessionID, ulong RegionHandle, string function, ThreatLevel defaultThreatLevel)
         {
+            if (!m_useRegistrationService)
+                return true;
+
             GridRegistrationURLs urls = m_genericsConnector.GetGeneric<GridRegistrationURLs>(UUID.Zero,
                 "GridRegistrationUrls", RegionHandle.ToString(), new GridRegistrationURLs());
             if (urls != null)
