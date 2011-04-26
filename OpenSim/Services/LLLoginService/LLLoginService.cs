@@ -1144,6 +1144,12 @@ namespace OpenSim.Services.LLLoginService
             bool success = simConnector.CreateAgent(region, aCircuit, (int)TeleportFlags.ViaLogin, null, out reason);
             if (!success) // If it failed, do not set up any CapsService for the client
             {
+                if (reason != "")
+                {
+                    OSDMap reasonMap = OSDParser.DeserializeJson(reason) as OSDMap;
+                    if (reasonMap != null && reasonMap.ContainsKey("Reason"))
+                        reason = reasonMap["Reason"].AsString();
+                }
                 //Delete the Caps!
                 IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing>();
                 if (agentProcessor != null && m_CapsService != null)
