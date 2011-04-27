@@ -38,7 +38,6 @@ namespace OpenSim.Services
     public class AvatarServiceConnector : IService, IGridRegistrationUrlModule
     {
         private IRegistryCore m_registry;
-        private uint m_port = 0;
         public string Name
         {
             get { return GetType().Name; }
@@ -59,14 +58,13 @@ namespace OpenSim.Services
                 return;
             
             m_registry = registry;
-            m_port = handlerConfig.GetUInt("AvatarInHandlerPort");
 
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
 
-        public void RemoveUrlForClient(ulong regionHandle, string sessionID, string url)
+        public void RemoveUrlForClient (ulong regionHandle, string sessionID, string url, uint port)
         {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             server.RemoveHTTPHandler("POST", url);
         }
 
@@ -81,23 +79,16 @@ namespace OpenSim.Services
             get { return "AvatarServerURI"; }
         }
 
-        public uint Port
+        public void AddExistingUrlForClient (string SessionID, ulong RegionHandle, string url, uint port)
         {
-            get { return m_port; }
-        }
-
-        public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-            m_port = server.Port;
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
             server.AddStreamHandler (new AvatarServerPostHandler (url, m_registry.RequestModuleInterface<IAvatarService> ().InnerService, RegionHandle, m_registry));
         }
 
-        public string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
+        public string GetUrlForRegisteringClient (string SessionID, ulong RegionHandle, uint port)
         {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-            m_port = server.Port;
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             string url = "/avatar" + UUID.Random();
 
             server.AddStreamHandler (new AvatarServerPostHandler (url, m_registry.RequestModuleInterface<IAvatarService> ().InnerService, RegionHandle, m_registry));

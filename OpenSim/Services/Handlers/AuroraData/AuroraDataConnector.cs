@@ -60,24 +60,17 @@ namespace OpenSim.Services
             get { return "RemoteServerURI"; }
         }
 
-        public uint Port
+        public void AddExistingUrlForClient (string SessionID, ulong RegionHandle, string url, uint port)
         {
-            get { return m_port; }
-        }
-
-        public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-            m_port = server.Port;
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
             server.AddStreamHandler (new AuroraDataServerPostHandler (url, RegionHandle, m_registry));
             server.AddStreamHandler (new AuroraDataServerPostOSDHandler (url + "osd", RegionHandle, m_registry));
         }
 
-        public string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
+        public string GetUrlForRegisteringClient (string SessionID, ulong RegionHandle, uint port)
         {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-            m_port = server.Port;
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             string url = "/auroradata" + UUID.Random ();
 
             server.AddStreamHandler (new AuroraDataServerPostHandler (url, RegionHandle, m_registry));
@@ -86,9 +79,9 @@ namespace OpenSim.Services
             return url;
         }
 
-        public void RemoveUrlForClient(ulong regionHandle, string sessionID, string url)
+        public void RemoveUrlForClient (ulong regionHandle, string sessionID, string url, uint port)
         {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             server.RemoveHTTPHandler("POST", url);
             server.RemoveHTTPHandler("POST", url + "osd");
         }

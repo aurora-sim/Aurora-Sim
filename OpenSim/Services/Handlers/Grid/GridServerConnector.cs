@@ -41,7 +41,6 @@ namespace OpenSim.Services
     public class GridServiceConnector : IService, IGridRegistrationUrlModule
     {
         private IRegistryCore m_registry;
-        private uint m_port = 0;
         public string Name
         {
             get { return GetType().Name; }
@@ -58,7 +57,6 @@ namespace OpenSim.Services
                 return;
 
             m_registry = registry;
-            m_port = handlerConfig.GetUInt("GridInHandlerPort");
 
             //This registers regions... got to have it
             string url = "/grid";
@@ -72,9 +70,9 @@ namespace OpenSim.Services
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
 
-        public void RemoveUrlForClient(ulong regionHandle, string sessionID, string url)
+        public void RemoveUrlForClient (ulong regionHandle, string sessionID, string url, uint port)
         {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             server.RemoveHTTPHandler("POST", url);
         }
 
@@ -89,31 +87,24 @@ namespace OpenSim.Services
             get { return "GridServerURI"; }
         }
 
-        public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url)
+        public void AddExistingUrlForClient (string SessionID, ulong RegionHandle, string url, uint port)
         {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-            m_port = server.Port;
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
             GridServerPostHandler handler = new GridServerPostHandler(url, m_registry, m_registry.RequestModuleInterface<IGridService>().InnerService, true, RegionHandle);
             server.AddStreamHandler(handler);
         }
 
-        public string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
+        public string GetUrlForRegisteringClient (string SessionID, ulong RegionHandle, uint port)
         {
             string url = "/grid" + UUID.Random();
 
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-            m_port = server.Port;
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
             GridServerPostHandler handler = new GridServerPostHandler(url, m_registry, m_registry.RequestModuleInterface<IGridService>().InnerService, true, RegionHandle);
             server.AddStreamHandler(handler);
 
             return url;
-        }
-
-        public uint Port
-        {
-            get { return m_port; }
         }
 
         #endregion

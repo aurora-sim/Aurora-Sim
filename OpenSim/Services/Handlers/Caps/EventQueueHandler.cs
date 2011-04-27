@@ -23,7 +23,6 @@ namespace OpenSim.Services
         #region IService Members
 
         private IRegistryCore m_registry;
-        private uint m_port = 0;
 
         public string Name
         {
@@ -41,7 +40,6 @@ namespace OpenSim.Services
                 return;
 
             m_registry = registry;
-            m_port = handlerConfig.GetUInt("EventQueueInHandlerPort");
 
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
@@ -59,35 +57,28 @@ namespace OpenSim.Services
             get { return "EventQueueServiceURI"; }
         }
 
-        public uint Port
+        public void AddExistingUrlForClient (string SessionID, ulong RegionHandle, string url, uint port)
         {
-            get { return m_port; }
-        }
-
-        public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-            m_port = server.Port;
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
             server.AddStreamHandler (new EQMEventPoster (url, m_registry.RequestModuleInterface<IEventQueueService> ().InnerService,
                     m_registry.RequestModuleInterface<ICapsService>(), RegionHandle, m_registry));
         }
 
-        public string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
+        public string GetUrlForRegisteringClient (string SessionID, ulong RegionHandle, uint port)
         {
             string url = "/CAPS/EQMPOSTER" + UUID.Random();
 
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-            m_port = server.Port;
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
             server.AddStreamHandler (new EQMEventPoster (url, m_registry.RequestModuleInterface<IEventQueueService> ().InnerService,
                     m_registry.RequestModuleInterface<ICapsService>(), RegionHandle, m_registry));
             return url;
         }
 
-        public void RemoveUrlForClient(ulong regionHandle, string sessionID, string url)
+        public void RemoveUrlForClient (ulong regionHandle, string sessionID, string url, uint port)
         {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             server.RemoveHTTPHandler("POST", url);
         }
 

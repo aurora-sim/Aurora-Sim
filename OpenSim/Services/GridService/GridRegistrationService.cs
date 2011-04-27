@@ -27,6 +27,7 @@ namespace OpenSim.Services.GridService
         protected IGenericsConnector m_genericsConnector;
         protected ISimulationBase m_simulationBase;
         protected IConfig m_permissionConfig;
+        protected IConfig m_configurationConfig;
         protected IRegistryCore m_registry;
         protected bool m_useSessionTime = true;
         protected bool m_useRegistrationService = true;
@@ -90,14 +91,13 @@ namespace OpenSim.Services.GridService
             m_registry = registry;
             m_simulationBase = registry.RequestModuleInterface<ISimulationBase>();
 
-            IConfig ConfigurationConfig = config.Configs["Configuration"];
+            m_configurationConfig = config.Configs["Configuration"];
+            m_loadBalancer.SetConfig (m_configurationConfig);
 
-            if(ConfigurationConfig != null)
-                m_loadBalancer.SetUrls (ConfigurationConfig.GetString ("HostNames", "http://localhost").Split (','));
-            if (ConfigurationConfig != null)
-                m_useSessionTime = ConfigurationConfig.GetBoolean ("UseSessionTime", m_useSessionTime);
-            if (ConfigurationConfig != null)
-                m_useRegistrationService = ConfigurationConfig.GetBoolean ("UseRegistrationService", m_useRegistrationService);
+            if (m_configurationConfig != null)
+                m_useSessionTime = m_configurationConfig.GetBoolean ("UseSessionTime", m_useSessionTime);
+            if (m_configurationConfig != null)
+                m_useRegistrationService = m_configurationConfig.GetBoolean ("UseRegistrationService", m_useRegistrationService);
             m_permissionConfig = config.Configs["RegionPermissions"];
             if (m_permissionConfig != null)
                 ReadConfiguration(m_permissionConfig);
@@ -175,7 +175,7 @@ namespace OpenSim.Services.GridService
             {
                 foreach (IGridRegistrationUrlModule module in m_modules.Values)
                 {
-                    module.AddExistingUrlForClient(url.SessionID.ToString(), url.RegionHandle, url.URLS[module.UrlName]);
+                    module.AddExistingUrlForClient (url.SessionID.ToString (), url.RegionHandle, url.URLS[module.UrlName], url.Ports[module.UrlName]);
                 }
                 if (m_useSessionTime && url.Expiration.AddHours(m_timeBeforeTimeout / 8) < DateTime.Now) //Check to see whether the expiration is soon before updating
                 {
@@ -203,21 +203,25 @@ namespace OpenSim.Services.GridService
                 foreach (KeyValuePair<string, OSD> module in urls.URLS)
                 {
                     //Build the URL
-                    retVal[module.Key] = m_loadBalancer.GetHost() + ":" + m_modules[module.Key].Port + module.Value.AsString();
+                    retVal[module.Key] = m_loadBalancer.GetHost (module.Key) + ":" + m_loadBalancer.GetPort (module.Key) + module.Value.AsString ();
                 }
                 return retVal;
             }
             OSDMap databaseSave = new OSDMap();
+            OSDMap ports = new OSDMap();
+            OSDMap hostnames = new OSDMap();
             //Get the URLs from all the modules that have registered with us
             foreach (IGridRegistrationUrlModule module in m_modules.Values)
             {
+                ports[module.UrlName] = m_loadBalancer.GetPort (module.UrlName);
+                hostnames[module.UrlName] = m_loadBalancer.GetHost (module.UrlName);
                 //Build the URL
-                databaseSave[module.UrlName] = module.GetUrlForRegisteringClient(SessionID, RegionHandle);
+                databaseSave[module.UrlName] = module.GetUrlForRegisteringClient (SessionID, RegionHandle, ports[module.UrlName]);
             }
             foreach (KeyValuePair<string, OSD> module in databaseSave)
             {
                 //Build the URL
-                retVal[module.Key] = m_loadBalancer.GetHost() + ":" + m_modules[module.Key].Port + module.Value.AsString();
+                retVal[module.Key] = hostnames[module.Key] + ":" + ports[module.Key] + module.Value.AsString ();
             }
 
             //Save into the database so that we can rebuild later if the server goes offline
@@ -225,6 +229,8 @@ namespace OpenSim.Services.GridService
             urls.URLS = databaseSave;
             urls.RegionHandle = RegionHandle;
             urls.SessionID = SessionID;
+            urls.Ports = ports;
+            urls.HostNames = hostnames;
             urls.Expiration = DateTime.Now.AddHours(m_timeBeforeTimeout);
             m_genericsConnector.AddGeneric(UUID.Zero, "GridRegistrationUrls", RegionHandle.ToString(), urls.ToOSD());
 
@@ -246,7 +252,7 @@ namespace OpenSim.Services.GridService
                 {
                     if (!urls.URLS.ContainsKey(module.UrlName))
                         continue;
-                    module.RemoveUrlForClient(urls.RegionHandle, urls.SessionID, urls.URLS[module.UrlName].AsString());
+                    module.RemoveUrlForClient (urls.RegionHandle, urls.SessionID, urls.URLS[module.UrlName], urls.Ports[module.UrlName]);
                 }
                 //Remove from the database so that they don't pop up later
                 m_genericsConnector.RemoveGeneric(UUID.Zero, "GridRegistrationUrls", RegionHandle.ToString());
@@ -317,6 +323,8 @@ namespace OpenSim.Services.GridService
             public string SessionID;
             public ulong RegionHandle;
             public DateTime Expiration;
+            public OSDMap HostNames;
+            public OSDMap Ports;
 
             public override OSDMap ToOSD()
             {
@@ -325,6 +333,8 @@ namespace OpenSim.Services.GridService
                 retVal["SessionID"] = SessionID;
                 retVal["RegionHandle"] = RegionHandle;
                 retVal["Expiration"] = Expiration;
+                retVal["HostName"] = HostNames;
+                retVal["Port"] = Ports;
                 return retVal;
             }
 
@@ -332,8 +342,10 @@ namespace OpenSim.Services.GridService
             {
                 URLS = (OSDMap)retVal["URLS"];
                 SessionID = retVal["SessionID"].AsString();
-                RegionHandle = retVal["RegionHandle"].AsULong();
-                Expiration = retVal["Expiration"].AsDate();
+                RegionHandle = retVal["RegionHandle"].AsULong ();
+                Expiration = retVal["Expiration"].AsDate ();
+                HostNames = (OSDMap)retVal["HostName"].AsString ();
+                Ports = (OSDMap)retVal["Port"].AsUInteger ();
             }
 
             public override IDataTransferable Duplicate()
@@ -346,15 +358,33 @@ namespace OpenSim.Services.GridService
 
         public class LoadBalancerUrls
         {
-            protected List<string> m_urls = new List<string>();
+            protected List<string> m_urls = new List<string> ();
             protected int lastSetHost = 0;
+            protected const uint m_defaultPort = 8002;
+            protected const string m_defaultHostname = "127.0.0.1";
+            protected IConfig m_configurationConfig;
 
-            public void AddUrls(string[] urls)
+            public void SetConfig (IConfig config)
             {
-                m_urls.AddRange(urls);
+                m_configurationConfig = config;
+
+                if (m_configurationConfig != null)
+                    SetDefaultUrls (m_configurationConfig.GetString ("HostNames", m_defaultHostname).Split (','));
             }
 
-            public void SetUrls(string[] urls)
+            public uint GetPort (string name)
+            {
+                string[] ports = m_configurationConfig.GetString (name, m_defaultPort.ToString()).Split (',');
+
+                return m_defaultPort;
+            }
+
+            public void SetDefaultUrls (string[] urls)
+            {
+                SetUrls ("default", urls);
+            }
+
+            public void SetUrls (string name, string[] urls)
             {
                 for (int i = 0; i < urls.Length; i++)
                 {
@@ -364,10 +394,10 @@ namespace OpenSim.Services.GridService
                     //Readd the http://
                     urls[i] = "http://" + urls[i];
                 }
-                m_urls = new List<string>(urls);
+                m_urls = new List<string> (urls);
             }
 
-            public string GetHost()
+            public string GetHost(string name)
             {
                 if (lastSetHost < m_urls.Count)
                 {

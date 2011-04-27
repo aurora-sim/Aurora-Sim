@@ -660,24 +660,22 @@ namespace OpenSim.Services.Interfaces
         string UrlName { get; }
 
         /// <summary>
-        /// Port this module runs on
-        /// </summary>
-        uint Port { get; }
-
-        /// <summary>
         /// Get the Url for the given sessionID
         /// </summary>
         /// <param name="SessionID"></param>
+        /// <param name="RegionHandle"></param>
+        /// <param name="port"></param>
         /// <returns></returns>
-        string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle);
+        string GetUrlForRegisteringClient (string SessionID, ulong RegionHandle, uint port);
 
         /// <summary>
         /// Adds an existing URL to the module for the given SessionID and RegionHandle
         /// </summary>
-        /// <param name="uUID"></param>
-        /// <param name="p"></param>
-        /// <param name="oSD"></param>
-        void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url);
+        /// <param name="SessionID"></param>
+        /// <param name="RegionHandle"></param>
+        /// <param name="url"></param>
+        /// <param name="port"></param>
+        void AddExistingUrlForClient (string SessionID, ulong RegionHandle, string url, uint port);
 
         /// <summary>
         /// Removes the given region from the http server so that the URLs cannot be used anymore
@@ -685,6 +683,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="regionHandle"></param>
         /// <param name="sessionID"></param>
         /// <param name="url"></param>
-        void RemoveUrlForClient(ulong regionHandle, string sessionID, string url);
+        /// <param name="port"></param>
+        void RemoveUrlForClient (ulong regionHandle, string sessionID, string url, uint port);
     }
 }
