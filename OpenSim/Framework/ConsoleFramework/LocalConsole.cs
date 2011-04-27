@@ -453,6 +453,7 @@ namespace OpenSim.Framework
 
                 ConsoleKeyInfo key = System.Console.ReadKey(true);
                 char c = key.KeyChar;
+                bool changed = false;
 
                 if (!Char.IsControl(c))
                 {
@@ -572,13 +573,59 @@ namespace OpenSim.Framework
                         UnlockOutput();
                         break;
                     case ConsoleKey.LeftArrow:
-                        if (cp > 0)
-                            cp--;
+                            if (cp > 0)
+                            {
+                                changed = true;
+                                cp--;
+                            }
+                            if (m_isPrompting && m_promptOptions.Count > 0)
+                            {
+                                int last = m_lastSetPromptOption;
+                                if (changed)
+                                    cp++;
+                                if(m_lastSetPromptOption > 0)
+                                    m_lastSetPromptOption--;
+                                cmdline = new StringBuilder (m_promptOptions[m_lastSetPromptOption]);
+                                string pr = m_promptOptions[m_lastSetPromptOption];
+                                if ((last - m_lastSetPromptOption) != 0)
+                                {
+                                    int charDiff = m_promptOptions[last].Length - m_promptOptions[m_lastSetPromptOption].Length;
+                                    for (int i = 0; i < charDiff; i++)
+                                        pr += " ";
+                                }
+                                LockOutput ();
+                                System.Console.CursorLeft = 0;
+                                System.Console.Write ("{0}{1}", prompt, pr);
+                                UnlockOutput ();
+                            }
                         allSelected = false;
                         break;
                     case ConsoleKey.RightArrow:
                         if (cp < cmdline.Length)
+                        {
+                            changed = true;
                             cp++;
+                        }
+                        if (m_isPrompting && m_promptOptions.Count > 0)
+                        {
+                            int last = m_lastSetPromptOption;
+                            if (m_lastSetPromptOption < m_promptOptions.Count - 1)
+                                m_lastSetPromptOption++;
+                            if (changed)
+                                cp--;
+                            cmdline = new StringBuilder (m_promptOptions[m_lastSetPromptOption]);
+                            string pr = m_promptOptions[m_lastSetPromptOption];
+                            if ((last - m_lastSetPromptOption) != 0)
+                            {
+                                int charDiff = m_promptOptions[last].Length - m_promptOptions[m_lastSetPromptOption].Length;
+                                for (int i = 0; i < charDiff; i++)
+                                    pr += " ";
+                            }
+                            LockOutput ();
+                            System.Console.CursorLeft = 0;
+                            System.Console.Write ("{0}{1}", prompt, pr);
+                            UnlockOutput ();
+                        }
                         allSelected = false;
                         break;
                     case ConsoleKey.Tab:

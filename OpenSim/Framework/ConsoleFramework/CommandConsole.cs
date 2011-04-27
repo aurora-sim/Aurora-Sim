@@ -415,357 +415,6 @@ namespace OpenSim.Framework
     }
     public delegate void CommandDelegate(string module, string[] cmd);
 
-    /*public class Commands
-    {
-        private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
-        /// <summary>
-        /// Encapsulates a command that can be invoked from the console
-        /// </summary>
-        private class CommandInfo
-        {
-            /// <value>
-            /// The module from which this command comes
-            /// </value>
-            public string module;
-            
-            /// <value>
-            /// Whether the module is shared
-            /// </value>
-            public bool shared;
-            
-            /// <value>
-            /// Very short BNF description
-            /// </value>
-            public string help_text;
-            
-            /// <value>
-            /// Longer one line help text
-            /// </value>
-            public string long_help;
-            
-            /// <value>
-            /// Full descriptive help for this command
-            /// </value>
-            public string descriptive_help;
-            
-            /// <value>
-            /// The method to invoke for this command
-            /// </value>
-            public List<CommandDelegate> fn;
-        }
-
-        /// <value>
-        /// Commands organized by keyword in a tree
-        /// </value>
-        private Dictionary<string, object> tree =
-                new Dictionary<string, object>();
-
-        /// <summary>
-        /// Get help for the given help string
-        /// </summary>
-        /// <param name="helpParts">Parsed parts of the help string.  If empty then general help is returned.</param>
-        /// <returns></returns>
-        public List<string> GetHelp(string[] cmd)
-        {
-            List<string> help = new List<string>();
-            List<string> helpParts = new List<string>(cmd);
-            
-            // Remove initial help keyword
-            helpParts.RemoveAt(0);
-
-            // General help
-            if (helpParts.Count == 0)
-            {
-                help.AddRange(CollectHelp(tree));
-                help.Sort();
-            }
-            else
-            {
-                help.AddRange(CollectHelp(helpParts));
-            }
-
-            return help;
-        }
-        
-        /// <summary>
-        /// See if we can find the requested command in order to display longer help
-        /// </summary>
-        /// <param name="helpParts"></param>
-        /// <returns></returns>
-        private List<string> CollectHelp(List<string> helpParts)
-        {
-            string originalHelpRequest = string.Join(" ", helpParts.ToArray());
-            List<string> help = new List<string>();
-            
-            Dictionary<string, object> dict = tree;
-            while (helpParts.Count > 0)
-            {
-                string helpPart = helpParts[0];
-                
-                if (!dict.ContainsKey(helpPart))
-                    break;
-                
-                //m_log.Debug("Found {0}", helpParts[0]);
-                
-                if (dict[helpPart] is Dictionary<string, Object>)
-                    dict = (Dictionary<string, object>)dict[helpPart]; 
-                
-                helpParts.RemoveAt(0);
-            }
-        
-            // There was a command for the given help string
-            if (dict.ContainsKey(String.Empty))
-            {
-                CommandInfo commandInfo = (CommandInfo)dict[String.Empty];
-                help.Add(commandInfo.help_text);
-                help.Add(commandInfo.long_help);
-
-                string descriptiveHelp = commandInfo.descriptive_help;
-
-                // If we do have some descriptive help then insert a spacing line before and after for readability.
-                if (descriptiveHelp != string.Empty)
-                    help.Add(string.Empty);
-                
-                help.Add(commandInfo.descriptive_help);
-
-                if (descriptiveHelp != string.Empty)
-                    help.Add(string.Empty);
-            }
-            else
-            {
-                help.Add(string.Format("No help is available for {0}", originalHelpRequest));
-            }
-            
-            return help;
-        }
-
-        private List<string> CollectHelp(Dictionary<string, object> dict)
-        {
-            List<string> result = new List<string>();
-
-            foreach (KeyValuePair<string, object> kvp in dict)
-            {
-                if (kvp.Value is Dictionary<string, Object>)
-                {
-                    result.AddRange(CollectHelp((Dictionary<string, Object>)kvp.Value));
-                }
-                else
-                {
-                    if (((CommandInfo)kvp.Value).long_help != String.Empty)
-                        result.Add(((CommandInfo)kvp.Value).help_text+" - "+
-                                ((CommandInfo)kvp.Value).long_help);
-                }
-            }
-            return result;
-        }
-        
-        /// <summary>
-        /// Add a command to those which can be invoked from the console.
-        /// </summary>
-        /// <param name="module"></param>
-        /// <param name="command"></param>
-        /// <param name="help"></param>
-        /// <param name="longhelp"></param>
-        /// <param name="fn"></param>
-        public void AddCommand(string module, bool shared, string command,
-                string help, string longhelp, CommandDelegate fn)
-        {
-            AddCommand(module, shared, command, help, longhelp, String.Empty, fn);
-        }
-
-        /// <summary>
-        /// Add a command to those which can be invoked from the console.
-        /// </summary>
-        /// <param name="module"></param>
-        /// <param name="command"></param>
-        /// <param name="help"></param>
-        /// <param name="longhelp"></param>
-        /// <param name="descriptivehelp"></param>
-        /// <param name="fn"></param>
-        public void AddCommand(string module, bool shared, string command,
-                string help, string longhelp, string descriptivehelp,
-                CommandDelegate fn)
-        {
-            string[] parts = Parser.Parse(command);
-
-            Dictionary<string, Object> current = tree;
-            
-            foreach (string s in parts)
-            {
-                if (current.ContainsKey(s))
-                {
-                    if (current[s] is Dictionary<string, Object>)
-                    {
-                        current = (Dictionary<string, Object>)current[s];
-                    }
-                    else
-                        return;
-                }
-                else
-                {
-                    current[s] = new Dictionary<string, Object>();
-                    current = (Dictionary<string, Object>)current[s];
-                }
-            }
-
-            CommandInfo info;
-
-            if (current.ContainsKey(String.Empty))
-            {
-                info = (CommandInfo)current[String.Empty];
-                if (!info.shared && !info.fn.Contains(fn))
-                    info.fn.Add(fn);
-
-                return;
-            }
-            
-            info = new CommandInfo();
-            info.module = module;
-            info.shared = shared;
-            info.help_text = help;
-            info.long_help = longhelp;
-            info.descriptive_help = descriptivehelp;
-            info.fn = new List<CommandDelegate>();
-            info.fn.Add(fn);
-            current[String.Empty] = info;
-        }
-
-        public string[] FindNextOption(string[] cmd, bool term)
-        {
-            Dictionary<string, object> current = tree;
-
-            int remaining = cmd.Length;
-
-            foreach (string s in cmd)
-            {
-                remaining--;
-
-                List<string> found = new List<string>();
-
-                foreach (string opt in current.Keys)
-                {
-                    if (remaining > 0 && opt == s)
-                    {
-                        found.Clear();
-                        found.Add(opt);
-                        break;
-                    }
-                    if (opt.StartsWith(s))
-                    {
-                        found.Add(opt);
-                    }
-                }
-
-                if (found.Count == 1 && (remaining != 0 || term))
-                {
-                    current = (Dictionary<string, object>)current[found[0]];
-                }
-                else if (found.Count > 0)
-                {
-                    return found.ToArray();
-                }
-                else
-                {
-                    break;
-//                    return new string[] {"<cr>"};
-                }
-            }
-
-            if (current.Count > 1)
-            {
-                List<string> choices = new List<string>();
-
-                bool addcr = false;
-                foreach (string s in current.Keys)
-                {
-                    if (s == String.Empty)
-                    {
-                        CommandInfo ci = (CommandInfo)current[String.Empty];
-                        if (ci.fn.Count != 0)
-                            addcr = true;
-                    }
-                    else
-                        choices.Add(s);
-                }
-                if (addcr)
-                    choices.Add("<cr>");
-                return choices.ToArray();
-            }
-
-            if (current.ContainsKey(String.Empty))
-                return new string[] { "Command help: "+((CommandInfo)current[String.Empty]).help_text};
-
-            return new string[] { new List<string>(current.Keys)[0] };
-        }
-
-        public string[] Resolve(string[] cmd)
-        {
-            string[] result = cmd;
-            int index = -1;
-
-            Dictionary<string, object> current = tree;
-
-            foreach (string s in cmd)
-            {
-                index++;
-
-                List<string> found = new List<string>();
-
-                foreach (string opt in current.Keys)
-                {
-                    if (opt == s)
-                    {
-                        found.Clear();
-                        found.Add(opt);
-                        break;
-                    }
-                    if (opt.StartsWith(s))
-                    {
-                        found.Add(opt);
-                    }
-                }
-
-                if (found.Count == 1)
-                {
-                    result[index] = found[0];
-                    current = (Dictionary<string, object>)current[found[0]];
-                }
-                else if (found.Count > 0)
-                {
-                    return new string[0];
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            if (current.ContainsKey(String.Empty))
-            {
-                try
-                {
-                    CommandInfo ci = (CommandInfo)current[String.Empty];
-                    if (ci.fn.Count == 0)
-                        return new string[0];
-                    foreach (CommandDelegate fn in ci.fn)
-                    {
-                        if (fn != null)
-                            fn(ci.module, result);
-                        else
-                            return new string[0];
-                    }
-                }
-                catch(Exception ex)
-                {
-                    m_log.Warn("Issue executing command: " + ex.ToString());
-                }
-                return result;
-            }
-            
-            return new string[0];
-        }
-    }*/
-
     public class Parser
     {
         public static string[] Parse(string text)
@@ -803,6 +452,10 @@ namespace OpenSim.Framework
     public class CommandConsole : ICommandConsole
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        public bool m_isPrompting = false;
+        public int m_lastSetPromptOption = 0;
+        public List<string> m_promptOptions = new List<string> ();
 
         public virtual void Initialize(string defaultPrompt, IConfigSource source, ISimulationBase baseOpenSim)
         {
@@ -853,6 +506,8 @@ namespace OpenSim.Framework
 
         public virtual string ReadLine(string p, bool isCommand, bool e)
         {
+            string oldDefaultPrompt = m_defaultPrompt;
+            m_defaultPrompt = p;
             System.Console.Write("{0}", p);
             string cmdinput = System.Console.ReadLine();
 
@@ -872,25 +527,33 @@ namespace OpenSim.Framework
                     return String.Empty;
                 }
             }
+            m_defaultPrompt = oldDefaultPrompt;
             return cmdinput;
         }
 
         public string CmdPrompt(string p)
         {
-            return ReadLine(String.Format("{0}: ", p), false, true);
+            m_isPrompting = true;
+            string line = ReadLine(String.Format("{0}: ", p), false, true);
+            m_isPrompting = false;
+            return line;
         }
 
         public string CmdPrompt(string p, string def)
         {
+            m_isPrompting = true;
             string ret = ReadLine(String.Format("{0} [{1}]: ", p, def), false, true);
             if (ret == String.Empty)
                 ret = def;
 
+            m_isPrompting = false;
             return ret;
         }
 
         public string CmdPrompt(string p, List<char> excludedCharacters)
         {
+            m_isPrompting = true;
+
             bool itisdone = false;
             string ret = String.Empty;
             while (!itisdone)
@@ -908,11 +571,13 @@ namespace OpenSim.Framework
                 }
             }
 
+            m_isPrompting = false;
             return ret;
         }
 
         public string CmdPrompt(string p, string def, List<char> excludedCharacters)
         {
+            m_isPrompting = true;
             bool itisdone = false;
             string ret = String.Empty;
             while (!itisdone)
@@ -936,6 +601,7 @@ namespace OpenSim.Framework
                     }
                 }
             }
+            m_isPrompting = false;
 
             return ret;
         }
@@ -943,6 +609,9 @@ namespace OpenSim.Framework
         // Displays a command prompt and returns a default value, user may only enter 1 of 2 options
         public string CmdPrompt(string prompt, string defaultresponse, List<string> options)
         {
+            m_isPrompting = true;
+            m_promptOptions = new List<string>(options);
+
             bool itisdone = false;
             string optstr = String.Empty;
             foreach (string s in options)
@@ -961,6 +630,8 @@ namespace OpenSim.Framework
                     temp = CmdPrompt(prompt, defaultresponse);
                 }
             }
+            m_isPrompting = false;
+            m_promptOptions.Clear ();
             return temp;
         }
 
@@ -968,7 +639,10 @@ namespace OpenSim.Framework
         // (Done with no echo and suitable for passwords)
         public string PasswdPrompt(string p)
         {
-            return ReadLine(p + ": ", false, false);
+            m_isPrompting = true;
+            string line = ReadLine(p + ": ", false, false);
+            m_isPrompting = false;
+            return line;
         }
 
         public virtual void Output(string text, Level level)
