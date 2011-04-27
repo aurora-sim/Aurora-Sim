@@ -2462,8 +2462,6 @@ namespace OpenSim.Region.Framework.Scenes
                 m_parentGroup.Scene.AssetService.Get(dupe.m_shape.SculptTexture.ToString(), dupe, AssetReceived);
             }
 
-            dupe.RemoveComponentState ("ScriptState");
-
             /*PrimitiveBaseShape pbs = dupe.Shape;
             if (dupe.PhysActor != null)
             {

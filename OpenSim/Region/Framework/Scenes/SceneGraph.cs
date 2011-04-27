@@ -36,6 +36,7 @@ using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Region.Physics.Manager;
 using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes.Components;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -1936,7 +1937,20 @@ namespace OpenSim.Region.Framework.Scenes
             //Make an exact copy of the entity
             ISceneEntity copiedEntity = entity.Copy (false);
             //Add the entity to the scene and back it up
-            AddPrimToScene(copiedEntity);
+            //Reset the entity IDs
+            ResetEntityIDs (copiedEntity);
+
+            //Remove the script state for the new item
+            IComponentManager manager = m_parentScene.RequestModuleInterface<IComponentManager> ();
+            if (manager != null)
+                manager.RemoveComponentState (copiedEntity.UUID, "ScriptState");
+
+            //Force the prim to backup now that it has been added
+            copiedEntity.ForcePersistence ();
+            //Tell the entity that they are being added to a scene
+            copiedEntity.AttachToScene (m_parentScene);
+            //Now save the entity that we have 
+            AddEntity (copiedEntity, false);
             //Fix physics representation now
 //            entity.RebuildPhysicalRepresentation();
             return copiedEntity;
