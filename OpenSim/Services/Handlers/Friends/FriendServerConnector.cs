@@ -47,7 +47,7 @@ namespace OpenSim.Services
         {
         }
 
-        public void Start (IConfigSource config, IRegistryCore registry, uint port)
+        public void Start (IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("FriendsInHandler", "") != Name)

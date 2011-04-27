@@ -24,7 +24,6 @@ namespace OpenSim.Services.MessagingService
         }
 
         private IRegistryCore m_registry;
-        private uint m_port = 0;
         public string Name
         {
             get { return GetType().Name; }
@@ -37,7 +36,6 @@ namespace OpenSim.Services.MessagingService
             IConfig handlerConfig = config.Configs["Handlers"];
 
             m_registry = registry;
-            m_port = handlerConfig.GetUInt("MessagingServiceInHandlerPort");
 
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
@@ -74,34 +72,27 @@ namespace OpenSim.Services.MessagingService
             get { return "MessagingServerURI"; }
         }
 
-        public uint Port
+        public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url, uint port)
         {
-            get { return m_port; }
-        }
-
-        public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-            m_port = server.Port;
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
             server.AddStreamHandler(new MessagingServiceInPostHandler(url, m_registry, this, RegionHandle));
         }
 
-        public string GetUrlForRegisteringClient(string SessionID, ulong RegionHandle)
+        public string GetUrlForRegisteringClient (string SessionID, ulong RegionHandle, uint port)
         {
             string url = "/messagingservice" + UUID.Random();
 
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-            m_port = server.Port;
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
             server.AddStreamHandler(new MessagingServiceInPostHandler(url, m_registry, this, RegionHandle));
 
             return url;
         }
 
-        public void RemoveUrlForClient(ulong regionHandle, string sessionID, string url)
+        public void RemoveUrlForClient (ulong regionHandle, string sessionID, string url, uint port)
         {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             server.RemoveHTTPHandler("POST", url);
         }
 

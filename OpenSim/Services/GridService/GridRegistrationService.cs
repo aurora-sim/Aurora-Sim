@@ -203,7 +203,7 @@ namespace OpenSim.Services.GridService
                 foreach (KeyValuePair<string, OSD> module in urls.URLS)
                 {
                     //Build the URL
-                    retVal[module.Key] = m_loadBalancer.GetHost (module.Key) + ":" + m_loadBalancer.GetPort (module.Key) + module.Value.AsString ();
+                    retVal[module.Key] = urls.URLS[module.Key] + ":" + urls.Ports[module.Key] + module.Value.AsString ();
                 }
                 return retVal;
             }
@@ -358,7 +358,8 @@ namespace OpenSim.Services.GridService
 
         public class LoadBalancerUrls
         {
-            protected List<string> m_urls = new List<string> ();
+            protected Dictionary<string, List<string>> m_urls = new Dictionary<string, List<string>> ();
+            protected Dictionary<string, List<uint>> m_ports = new Dictionary<string, List<uint>> ();
             protected int lastSetHost = 0;
             protected const uint m_defaultPort = 8002;
             protected const string m_defaultHostname = "127.0.0.1";
@@ -369,22 +370,20 @@ namespace OpenSim.Services.GridService
                 m_configurationConfig = config;
 
                 if (m_configurationConfig != null)
+                {
                     SetDefaultUrls (m_configurationConfig.GetString ("HostNames", m_defaultHostname).Split (','));
+                    SetDefaultPorts (m_configurationConfig.GetString ("Ports", m_defaultPort.ToString()).Split (','));
+                }
             }
 
-            public uint GetPort (string name)
-            {
-                string[] ports = m_configurationConfig.GetString (name, m_defaultPort.ToString()).Split (',');
+            #region Set accessors
 
-                return m_defaultPort;
-            }
-
-            public void SetDefaultUrls (string[] urls)
+            protected void SetDefaultUrls (string[] urls)
             {
                 SetUrls ("default", urls);
             }
 
-            public void SetUrls (string name, string[] urls)
+            protected void SetUrls (string name, string[] urls)
             {
                 for (int i = 0; i < urls.Length; i++)
                 {
@@ -394,23 +393,67 @@ namespace OpenSim.Services.GridService
                     //Readd the http://
                     urls[i] = "http://" + urls[i];
                 }
-                m_urls = new List<string> (urls);
+                m_urls[name] = new List<string> (urls);
             }
+
+            protected void SetDefaultPorts (string[] ports)
+            {
+                SetPorts ("default", ports);
+            }
+
+            protected void SetPorts (string name, string[] ports)
+            {
+                List<uint> uPorts = new List<uint> ();
+                for (int i = 0; i < ports.Length; i++)
+                {
+                    uPorts.Add (uint.Parse (ports[i]));
+                }
+                m_ports[name] = uPorts;
+            }
+
+            #endregion
+
+            #region Get accessors
 
             public string GetHost(string name)
             {
-                if (lastSetHost < m_urls.Count)
+                if (!m_urls.ContainsKey (name))
+                    SetUrls (name, m_configurationConfig.GetString (name + "Hostnames", m_defaultHostname).Split (','));
+
+                List<string> urls = m_urls[name];
+                if (lastSetHost < urls.Count)
                 {
-                    string url = m_urls[lastSetHost];
+                    string url = urls[lastSetHost];
                     lastSetHost++;
                     if (lastSetHost == m_urls.Count)
                         lastSetHost = 0;
                     return url;
                 }
-                else if (m_urls.Count > 0)
-                    return m_urls[0];
-                return "";
+                else if (urls.Count > 0)
+                    return urls[0];
+                return GetHost("default");
             }
+
+            public uint GetPort (string name)
+            {
+                if (!m_urls.ContainsKey (name))
+                    SetPorts (name, m_configurationConfig.GetString (name + "Ports", m_defaultPort.ToString()).Split (','));
+
+                List<uint> ports = m_ports[name];
+                if (lastSetHost < ports.Count)
+                {
+                    uint url = ports[lastSetHost];
+                    lastSetHost++;
+                    if (lastSetHost == m_urls.Count)
+                        lastSetHost = 0;
+                    return url;
+                }
+                else if (ports.Count > 0)
+                    return ports[0];
+                return GetPort ("default");
+            }
+
+            #endregion
         }
 
         #endregion

@@ -61,13 +61,15 @@ namespace OpenSim.Services
             //This registers regions... got to have it
             string url = "/grid";
 
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-            m_port = server.Port;
+            IGridRegistrationService gridRegService = m_registry.RequestModuleInterface<IGridRegistrationService> ();
+            uint port = handlerConfig.GetUInt ("GridInHandlerPort", 8003);
+
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (port);
 
             GridServerPostHandler handler = new GridServerPostHandler(url, registry, registry.RequestModuleInterface<IGridService>().InnerService, false, 0);
             server.AddStreamHandler(handler);
 
-            m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
+            gridRegService.RegisterModule (this);
         }
 
         public void RemoveUrlForClient (ulong regionHandle, string sessionID, string url, uint port)
