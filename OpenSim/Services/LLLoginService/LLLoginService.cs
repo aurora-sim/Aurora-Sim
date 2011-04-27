@@ -1146,9 +1146,16 @@ namespace OpenSim.Services.LLLoginService
             {
                 if (reason != "")
                 {
-                    OSDMap reasonMap = OSDParser.DeserializeJson(reason) as OSDMap;
-                    if (reasonMap != null && reasonMap.ContainsKey("Reason"))
-                        reason = reasonMap["Reason"].AsString();
+                    try
+                    {
+                        OSDMap reasonMap = OSDParser.DeserializeJson (reason) as OSDMap;
+                        if (reasonMap != null && reasonMap.ContainsKey ("Reason"))
+                            reason = reasonMap["Reason"].AsString ();
+                    }
+                    catch
+                    {
+                        //If its already not JSON, it'll throw an exception, catch it
+                    }
                 }
                 //Delete the Caps!
                 IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing>();
