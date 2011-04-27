@@ -203,7 +203,7 @@ namespace OpenSim.Services.GridService
                 foreach (KeyValuePair<string, OSD> module in urls.URLS)
                 {
                     //Build the URL
-                    retVal[module.Key] = urls.URLS[module.Key] + ":" + urls.Ports[module.Key] + module.Value.AsString ();
+                    retVal[module.Key] = urls.HostNames[module.Key] + ":" + urls.Ports[module.Key] + module.Value.AsString ();
                 }
                 return retVal;
             }

@@ -279,8 +279,6 @@ namespace OpenSim.Services
             resultMap["Result"] = result;
             if (result == "")
             {
-                //Remove any previous URLs
-                m_registry.RequestModuleInterface<IGridRegistrationService>().RemoveUrlsForClient(SecureSessionID.ToString(), rinfo.RegionHandle);
                 OSDMap urls = m_registry.RequestModuleInterface<IGridRegistrationService>().GetUrlForRegisteringClient(SecureSessionID.ToString(), rinfo.RegionHandle);
                 resultMap["URLs"] = urls;
                 resultMap["TimeBeforeReRegister"] = m_registry.RequestModuleInterface<IGridRegistrationService>().ExpiresTime;
