@@ -143,7 +143,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if ((o.Flags & flags) == o.Flags)
                         return; //Same, leave it alone!
-                    o.Flags = o.Flags & flags;
+                    o.Flags = o.Flags | flags;
                     m_presenceUpdatesToSend.Remove(presence.UUID);
                 }
 
@@ -198,10 +198,10 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (o.Flags == update.Flags)
                         return; //Same, leave it alone!
-                    o.Flags = o.Flags & update.Flags;
+                    o.Flags = o.Flags | update.Flags;
                     m_objectUpdatesToSend.Remove(update.Entity.UUID);
                 }
-                m_objectUpdatesToSend.Insert(m_objectUpdatesToSend.Count, update.Entity.UUID, update);
+                m_objectUpdatesToSend.Insert(m_objectUpdatesToSend.Count, o.Entity.UUID, o);
             }
         }
 
@@ -542,8 +542,8 @@ namespace OpenSim.Region.Framework.Scenes
                                 m_objectUpdatesToSend.Insert(m_objectUpdatesToSend.Count, update.Entity.UUID, update);
                                 continue;
                             }
-                            updates.Add((EntityUpdate)m_objectUpdatesToSend[0]);
-                            m_EntitiesInPacketQueue.Add(((EntityUpdate)m_objectUpdatesToSend[0]).Entity.UUID);
+                            updates.Add (update);
+                            m_EntitiesInPacketQueue.Add (update.Entity.UUID);
                             m_objectUpdatesToSend.RemoveAt(0);
                         }
                         m_presence.ControllingClient.SendPrimUpdate(updates);
