@@ -163,7 +163,8 @@ namespace OpenSim.Framework.Servers.HttpServer
 
             foreach (Thread t in m_workerThreads)
             {
-                t.Abort();
+                if(t != null)
+                    t.Abort();
             }
             m_running = false;
         }
