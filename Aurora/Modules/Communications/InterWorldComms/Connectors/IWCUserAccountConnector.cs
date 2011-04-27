@@ -94,9 +94,14 @@ namespace Aurora.Modules
             return m_localService.StoreUserAccount(data);
         }
 
-        public void CreateUser(string name, string md5password, string email)
+        public void CreateUser (string name, string md5password, string email)
         {
-            m_localService.CreateUser(name, md5password, email);
+            m_localService.CreateUser (name, md5password, email);
+        }
+
+        public void CreateUser (UUID userID, string name, string md5password, string email)
+        {
+            m_localService.CreateUser (userID, name, md5password, email);
         }
 
         #endregion

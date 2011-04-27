@@ -303,6 +303,11 @@ namespace OpenSim.Services.UserAccountService
 
         #endregion
 
+        public void CreateUser (string name, string password, string email)
+        {
+            CreateUser (UUID.Random (), name, password, email);
+        }
+
         /// <summary>
         /// Create a user
         /// </summary>
@@ -310,12 +315,13 @@ namespace OpenSim.Services.UserAccountService
         /// <param name="lastName"></param>
         /// <param name="password"></param>
         /// <param name="email"></param>
-        public void CreateUser(string name, string password, string email)
+        public void CreateUser(UUID userID, string name, string password, string email)
         {
-            UserAccount account = GetUserAccount(UUID.Zero, name);
-            if (null == account)
+            UserAccount account = GetUserAccount (UUID.Zero, userID);
+            UserAccount nameaccount = GetUserAccount (UUID.Zero, name);
+            if (null == account && nameaccount == null)
             {
-                account = new UserAccount(UUID.Zero, name, email);
+                account = new UserAccount(UUID.Zero, userID, name, email);
                 if (account.ServiceURLs == null || (account.ServiceURLs != null && account.ServiceURLs.Count == 0))
                 {
                     account.ServiceURLs = new Dictionary<string, object>();
@@ -344,8 +350,12 @@ namespace OpenSim.Services.UserAccountService
                                 name);
                     }
 
-                    m_log.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} created successfully", name);
-                } else {
+                    m_log.InfoFormat ("[USER ACCOUNT SERVICE]: Account {0} created successfully", name);
+                    //Cache it as well
+                    m_cache.Cache (account.PrincipalID, account);
+                } 
+                else
+                {
                     m_log.ErrorFormat("[USER ACCOUNT SERVICE]: Account creation failed for account {0}", name);
                 }
             }

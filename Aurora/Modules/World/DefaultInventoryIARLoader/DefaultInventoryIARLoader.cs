@@ -92,8 +92,8 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
             if (uinfo == null)
             {
                 m_log.Warn("Creating user " + m_service.LibraryOwnerName);
-                m_MockScene.UserAccountService.CreateUser(m_service.LibraryOwnerName, "", "");
-                uinfo = m_MockScene.UserAccountService.GetUserAccount(UUID.Zero, m_service.LibraryOwnerName);
+                m_MockScene.UserAccountService.CreateUser (m_service.LibraryOwner, m_service.LibraryOwnerName, "", "");
+                uinfo = m_MockScene.UserAccountService.GetUserAccount (UUID.Zero, m_service.LibraryOwner);
                 m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID);
             }
             if (m_MockScene.InventoryService.GetRootFolder(m_service.LibraryOwner) == null)

@@ -44,14 +44,24 @@ namespace OpenSim.Services.Interfaces
             PrincipalID = principalID;
         }
 
-        public UserAccount(UUID scopeID, string name, string email)
+        public UserAccount (UUID scopeID, string name, string email)
         {
-            PrincipalID = UUID.Random();
+            PrincipalID = UUID.Random ();
             ScopeID = scopeID;
             Name = name;
             Email = email;
-            ServiceURLs = new Dictionary<string, object>();
-            Created = Util.UnixTimeSinceEpoch();
+            ServiceURLs = new Dictionary<string, object> ();
+            Created = Util.UnixTimeSinceEpoch ();
+        }
+
+        public UserAccount (UUID scopeID, UUID principalID, string name, string email)
+        {
+            PrincipalID = principalID;
+            ScopeID = scopeID;
+            Name = name;
+            Email = email;
+            ServiceURLs = new Dictionary<string, object> ();
+            Created = Util.UnixTimeSinceEpoch ();
         }
 
         public string Name;
@@ -186,7 +196,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        bool StoreUserAccount(UserAccount data);
+        bool StoreUserAccount (UserAccount data);
 
         /// <summary>
         /// Create the user with the given info
@@ -194,7 +204,15 @@ namespace OpenSim.Services.Interfaces
         /// <param name="name"></param>
         /// <param name="md5password">MD5 hashed password</param>
         /// <param name="email"></param>
-        void CreateUser(string name, string md5password, string email);
+        void CreateUser (string name, string md5password, string email);
+
+        /// <summary>
+        /// Create the user with the given info
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="md5password">MD5 hashed password</param>
+        /// <param name="email"></param>
+        void CreateUser (UUID userID, string name, string md5password, string email);
     }
 
     /// <summary>

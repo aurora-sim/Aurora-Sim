@@ -238,7 +238,11 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return false;
         }
 
-        public void CreateUser(string name, string password, string email)
+        public void CreateUser (string name, string password, string email)
+        {
+        }
+
+        public void CreateUser (UUID userID, string name, string password, string email)
         {
         }
 

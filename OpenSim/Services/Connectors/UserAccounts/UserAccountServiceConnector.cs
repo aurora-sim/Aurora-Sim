@@ -186,7 +186,11 @@ namespace OpenSim.Services.Connectors
             return accounts;
         }
 
-        public virtual void CreateUser(string name, string password, string email)
+        public virtual void CreateUser (string name, string password, string email)
+        {
+        }
+
+        public virtual void CreateUser (UUID userID, string name, string password, string email)
         {
         }
 
