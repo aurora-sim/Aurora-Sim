@@ -249,7 +249,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private AuroraODERayCastRequestManager m_rayCastManager;
         private bool IsLocked = false;
         private List<PhysicsActor> RemoveQueue;
-        private Dictionary<PhysicsActor, bool> ActiveCollisionQueue = new Dictionary<PhysicsActor, bool>();
+        private List<PhysicsActor> ActiveAddCollisionQueue = new List<PhysicsActor>();
+        private List<PhysicsActor> ActiveRemoveCollisionQueue = new List<PhysicsActor>();
         private bool m_disableCollisions = false;
 
         public float m_avDecayTime = 0.985f;
@@ -1737,7 +1738,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (IsLocked)
             {
-                ActiveCollisionQueue[obj] = true;
+                ActiveAddCollisionQueue.Add(obj);
             }
             else
             {
@@ -1753,7 +1754,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (IsLocked)
             {
-                ActiveCollisionQueue[obj] = false;
+                ActiveRemoveCollisionQueue.Add(obj);
             }
             else
             {
@@ -2787,24 +2788,24 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     RemoveQueue.RemoveAt(0);
                 }
             }
-            if (ActiveCollisionQueue.Count > 0)
+            if (ActiveAddCollisionQueue.Count > 0)
             {
-                foreach (KeyValuePair<PhysicsActor, bool> actor in ActiveCollisionQueue)
+                foreach (PhysicsActor actor in ActiveAddCollisionQueue)
                 {
-                    if (actor.Value)
-                    {
-                        //add
-                        if (!_collisionEventPrim.Contains(actor.Key))
-                            _collisionEventPrim.Add(actor.Key);
-                    }
-                    else
-                    {
-                        //remove
-                        if (_collisionEventPrim.Contains(actor.Key))
-                            _collisionEventPrim.Remove(actor.Key);
-                    }
+                    //add
+                    if (!_collisionEventPrim.Contains(actor))
+                        _collisionEventPrim.Add(actor);
                 }
-                ActiveCollisionQueue.Clear();
+                ActiveAddCollisionQueue.Clear();
+            }
+            if (ActiveRemoveCollisionQueue.Count > 0)
+            {
+                foreach (PhysicsActor actor in ActiveRemoveCollisionQueue)
+                {
+                    //remove
+                    _collisionEventPrim.Remove(actor);
+                }
+                ActiveRemoveCollisionQueue.Clear();
             }
 
             m_StatUnlockedArea = Util.EnvironmentTickCountSubtract(UnlockedArea);
