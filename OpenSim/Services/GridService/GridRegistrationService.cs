@@ -344,8 +344,14 @@ namespace OpenSim.Services.GridService
                 SessionID = retVal["SessionID"].AsString();
                 RegionHandle = retVal["RegionHandle"].AsULong ();
                 Expiration = retVal["Expiration"].AsDate ();
-                HostNames = (OSDMap)retVal["HostName"].AsString ();
-                Ports = (OSDMap)retVal["Port"].AsUInteger ();
+                HostNames = retVal["HostName"] as OSDMap;
+                Ports = retVal["Port"] as OSDMap;
+                if (URLS == null)
+                    URLS = new OSDMap ();
+                if (HostNames == null)
+                    HostNames = new OSDMap ();
+                if (Ports == null)
+                    Ports = new OSDMap ();
             }
 
             public override IDataTransferable Duplicate()
@@ -360,7 +366,8 @@ namespace OpenSim.Services.GridService
         {
             protected Dictionary<string, List<string>> m_urls = new Dictionary<string, List<string>> ();
             protected Dictionary<string, List<uint>> m_ports = new Dictionary<string, List<uint>> ();
-            protected int lastSetHost = 0;
+            protected Dictionary<string, int> lastSetHost = new Dictionary<string, int>();
+            protected Dictionary<string, int> lastSetPort = new Dictionary<string, int>();
             protected const uint m_defaultPort = 8002;
             protected const string m_defaultHostname = "127.0.0.1";
             protected IConfig m_configurationConfig;
@@ -387,6 +394,8 @@ namespace OpenSim.Services.GridService
             {
                 for (int i = 0; i < urls.Length; i++)
                 {
+                    if (urls[i].StartsWith (" "))
+                        urls[i] = urls[i].Remove (0, 1);
                     //Remove any ports people may have added
                     urls[i] = urls[i].Replace ("http://", "");
                     urls[i] = urls[i].Split (':')[0];
@@ -406,6 +415,8 @@ namespace OpenSim.Services.GridService
                 List<uint> uPorts = new List<uint> ();
                 for (int i = 0; i < ports.Length; i++)
                 {
+                    if (ports[i].StartsWith (" "))
+                        ports[i] = ports[i].Remove (0, 1);
                     uPorts.Add (uint.Parse (ports[i]));
                 }
                 m_ports[name] = uPorts;
@@ -419,14 +430,16 @@ namespace OpenSim.Services.GridService
             {
                 if (!m_urls.ContainsKey (name))
                     SetUrls (name, m_configurationConfig.GetString (name + "Hostnames", m_defaultHostname).Split (','));
+                if (!lastSetHost.ContainsKey (name))
+                    lastSetHost.Add (name, 0);
 
                 List<string> urls = m_urls[name];
-                if (lastSetHost < urls.Count)
+                if (lastSetHost[name] < urls.Count)
                 {
-                    string url = urls[lastSetHost];
-                    lastSetHost++;
-                    if (lastSetHost == m_urls.Count)
-                        lastSetHost = 0;
+                    string url = urls[lastSetHost[name]];
+                    lastSetHost[name]++;
+                    if (lastSetHost[name] == urls.Count)
+                        lastSetHost[name] = 0;
                     return url;
                 }
                 else if (urls.Count > 0)
@@ -436,16 +449,18 @@ namespace OpenSim.Services.GridService
 
             public uint GetPort (string name)
             {
-                if (!m_urls.ContainsKey (name))
+                if (!m_ports.ContainsKey (name))
                     SetPorts (name, m_configurationConfig.GetString (name + "Ports", m_defaultPort.ToString()).Split (','));
+                if (!lastSetPort.ContainsKey (name))
+                    lastSetPort.Add (name, 0);
 
                 List<uint> ports = m_ports[name];
-                if (lastSetHost < ports.Count)
+                if (lastSetPort[name] < ports.Count)
                 {
-                    uint url = ports[lastSetHost];
-                    lastSetHost++;
-                    if (lastSetHost == m_urls.Count)
-                        lastSetHost = 0;
+                    uint url = ports[lastSetPort[name]];
+                    lastSetPort[name]++;
+                    if (lastSetPort[name] == ports.Count)
+                        lastSetPort[name] = 0;
                     return url;
                 }
                 else if (ports.Count > 0)

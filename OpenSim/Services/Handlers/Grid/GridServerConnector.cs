@@ -62,7 +62,7 @@ namespace OpenSim.Services
             string url = "/grid";
 
             IGridRegistrationService gridRegService = m_registry.RequestModuleInterface<IGridRegistrationService> ();
-            uint port = handlerConfig.GetUInt ("GridInHandlerPort", 8003);
+            uint port = handlerConfig.GetUInt ("RegistrationHandlerPort", 8003);
 
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (port);
 
