@@ -5435,7 +5435,13 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             // subscribe to physics updates.
-            if (PhysActor != null)
+            if ((((AggregateScriptEvents & scriptEvents.collision) != 0) ||
+                ((AggregateScriptEvents & scriptEvents.collision_end) != 0) ||
+                ((AggregateScriptEvents & scriptEvents.collision_start) != 0) ||
+                ((AggregateScriptEvents & scriptEvents.land_collision) != 0) ||
+                ((AggregateScriptEvents & scriptEvents.land_collision_end) != 0) ||
+                ((AggregateScriptEvents & scriptEvents.land_collision_start) != 0)
+                ) && PhysActor != null)
             {
                 PhysActor.OnCollisionUpdate += PhysicsCollision;
                 PhysActor.SubscribeEvents(1000);
