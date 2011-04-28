@@ -298,7 +298,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public EnumeratorInfo CurrentlyAt;
         //This is used to check whether the script has been updated since the last attempt to start
         public int VersionID;
+        //The currently running state that this event will be fired under
         public string State;
+        //Event data
+        public ScriptEventsProcData EventsProcData;
     }
 
     public struct StateQueueItem
@@ -343,14 +346,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
     public class ScriptEventsProcData
     {
-        public int State;
-        public bool IgnoreNew = false;
-        public QueueItemStruct CurExecQIS;
+        public ScriptEventsState State;
         public DateTime TimeCheck;
-        /// <summary>
-        /// This helps make sure that we clear out previous versions so that we don't have overlapping script versions running
-        /// </summary>
-        public int VersionID = 0;
     }
 
     public enum LoadPriority : int

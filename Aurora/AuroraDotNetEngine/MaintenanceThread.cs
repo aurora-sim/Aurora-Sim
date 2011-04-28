@@ -359,70 +359,46 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             if (ID == null)
                 return;
-            
-            lock (ID.EventsProcData)
-            {
-                //Ignore any events to be added after this
-                ID.EventsProcData.IgnoreNew = true;
-                //Clear out the old events
-                ID.EventsProcData.VersionID++;
-            }
-        }
 
-        public void FlushEventSchQueue(ScriptData ID, bool ignorenew)
-        {
-            if (ID == null)
-                return;
-
-            lock (ID.EventsProcData)
-            {
-                ID.EventsProcData.IgnoreNew = ignorenew;
-                //Clear out the old events
-                ID.EventsProcData.VersionID++;
-                if (ID.EventsProcData.State == (int)ScriptEventsState.Sleep)
-                {
-                    ID.EventsProcData.State = (int)ScriptEventsState.Idle;
-                }
-            }
+            //Ignore any events to be added after this
+            ID.IgnoreNew = true;
+            //Clear out the old events
+            Interlocked.Increment (ref ID.VersionID);
         }
 
         public void SetEventSchSetIgnoreNew(ScriptData ID, bool yes)
         {
             if (ID == null)
                 return;
-            lock (ID.EventsProcData)
-            {
-                ID.EventsProcData.IgnoreNew = yes;
-            }
+            ID.IgnoreNew = yes;
         }
 
         public void AddEventSchQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, EventPriority priority, params object[] param)
         {
             QueueItemStruct QIS;
 
-            if (ID == null || ID.EventsProcData.IgnoreNew)
+            if (ID == null || ID.IgnoreNew)
                 return;
 
             if (!ID.SetEventParams(FunctionName, qParams)) // check events delay rules
                 return;
 
             QIS = new QueueItemStruct();
+            QIS.EventsProcData = new ScriptEventsProcData ();
             QIS.ID = ID;
             QIS.functionName = FunctionName;
             QIS.llDetectParams = qParams;
             QIS.param = param;
-            QIS.VersionID = ID.EventsProcData.VersionID;
+            QIS.VersionID = ID.VersionID;
             QIS.State = ID.State;
             QIS.CurrentlyAt = null;
 
-            lock (ID.EventsProcData)
+            lock (ScriptEvents)
             {
-                if (ID.EventsProcData.EventsQueue.Count > 100)
-                {
+                if (ScriptEvents.Count > 100)
                     return;
-                }
 
-                ID.EventsProcData.EventsQueue.Enqueue(QIS);
+                ScriptEvents.AddLast (QIS);
             }
 
             Scriptthreadpool.QueueEvent(loop, 2);
@@ -430,10 +406,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void AddEventSchQIS(QueueItemStruct QIS)
         {
-            ScriptData ID;
-
-            ID = QIS.ID;
-            if (ID == null || ID.EventsProcData.IgnoreNew)
+            if (QIS.ID == null || QIS.ID.IgnoreNew)
                 return;
 
             if (!QIS.ID.SetEventParams(QIS.functionName, QIS.llDetectParams)) // check events delay rules
@@ -441,14 +414,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             QIS.CurrentlyAt = null;
 
-            lock (ID.EventsProcData)
+            lock (ScriptEvents)
             {
-                if (ID.EventsProcData.EventsQueue.Count > 100)
-                {
+                if (ScriptEvents.Count > 100)
                     return;
-                }
 
-                ID.EventsProcData.EventsQueue.Enqueue(QIS);
+                ScriptEvents.AddLast (QIS);
             }
 
             Scriptthreadpool.QueueEvent(loop, 2);
@@ -456,51 +427,37 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public bool loop()
         {
-            
+            return false;
         }
 
-        public void EventSchExec(ScriptData ID)
+        public void EventSchExec (QueueItemStruct QIS)
         {
-            QueueItemStruct QIS;
-
-            lock (ID.EventsProcData)
+            if (!QIS.ID.Running)
             {
-                QIS = ID.EventsProcData.CurExecQIS;
-                if (!ID.Running)
+                //do only state_entry and on_rez
+                if (QIS.functionName != "state_entry"
+                    || QIS.functionName != "on_rez")
                 {
-                    //do only state_entry and on_rez
-                    if (QIS.functionName != "state_entry"
-                        || QIS.functionName != "on_rez")
-                    {
-                        return;
-                    }
+                    return;
                 }
             }
 
-            bool res = EventSchProcessQIS(ref QIS);
-
-            lock (ID.EventsProcData)
+            if (!EventSchProcessQIS(ref QIS))
             {
-                if (ID.EventsProcData.State == (int)ScriptEventsState.InExecAbort)
-                    ID.EventsProcData.State = (int)ScriptEventsState.Delete;
-
-//                else if (!res || ID.VersionID != QIS.VersionID)
-                else if (!res)
+                //All done
+                QIS.EventsProcData.State = (int)ScriptEventsState.Idle;
+            }
+            else
+            {
+                if (QIS.CurrentlyAt.SleepTo.Ticks != 0)
                 {
-                    ID.EventsProcData.State = (int)ScriptEventsState.Idle;
+                    double milSecDiff = (QIS.CurrentlyAt.SleepTo - DateTime.Now).TotalMilliseconds;
+                    //this.m_sleeperWaitTime
+                    QIS.EventsProcData.TimeCheck = QIS.CurrentlyAt.SleepTo;
+                    QIS.EventsProcData.State = ScriptEventsState.Sleep;
                 }
                 else
-                {
-                    ID.EventsProcData.CurExecQIS = QIS;
-
-                    if (QIS.CurrentlyAt.SleepTo.Ticks != 0)
-                    {
-                        ID.EventsProcData.TimeCheck = QIS.CurrentlyAt.SleepTo;
-                        ID.EventsProcData.State = (int)ScriptEventsState.Sleep;
-                    }
-                    else
-                        ID.EventsProcData.State = (int)ScriptEventsState.Running;
-                }
+                    QIS.EventsProcData.State = ScriptEventsState.Running;
             }
             return;
         }

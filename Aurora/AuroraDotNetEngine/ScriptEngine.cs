@@ -582,7 +582,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="FunctionName">Name of the function, will be state + "_event_" + FunctionName</param>
         /// <param name="VersionID">Version ID of the script. Note: If it is -1, the version ID will be detected automatically</param>
         /// <param name="param">Array of parameters to match event mask</param>
-        public bool AddToObjectQueue(UUID partID, string FunctionName, DetectParams[] qParams, int VersionID, params object[] param)
+        public bool AddToObjectQueue(UUID partID, string FunctionName, DetectParams[] qParams, params object[] param)
         {
             // Determine all scripts in Object and add to their queue
             ScriptData[] datas = ScriptProtection.GetScripts(partID);
@@ -593,10 +593,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             foreach (ScriptData ID in datas)
             {
-                if (VersionID == -1)
-                    VersionID = ID.VersionID;
                 // Add to each script in that object
-                AddToScriptQueue(ID, FunctionName, qParams, VersionID, EventPriority.FirstStart, param);
+                AddToScriptQueue(ID, FunctionName, qParams, EventPriority.FirstStart, param);
             }
             return true;
         }
@@ -617,7 +615,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             QIS.functionName = FunctionName;
             QIS.llDetectParams = qParams;
             QIS.param = param;
-            QIS.VersionID = ID.EventsProcData.VersionID;
+            QIS.VersionID = ID.VersionID;
             QIS.State = ID.State;
 
             MaintenanceThread.AddEvent(QIS, priority);
@@ -901,7 +899,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if ((statesource & StateSource.PrimCrossing) != 0)
                 {
                     //Post the changed event though
-                    AddToScriptQueue(id, "changed", new DetectParams[0], id.VersionID, EventPriority.FirstStart, new Object[] { new LSL_Types.LSLInteger(512) });
+                    AddToScriptQueue(id, "changed", new DetectParams[0], EventPriority.FirstStart, new Object[] { new LSL_Types.LSLInteger(512) });
                     return new LUStruct() { Action = LUType.Unknown };
                 }
                 else
