@@ -3966,8 +3966,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (email == null)
                 return;
 
-            m_ScriptEngine.AddToObjectQueue(m_host.UUID, "email",
-                    new DetectParams[0], -1, new Object[] {
+            m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, "email",
+                    new Object[5] {
                         new LSL_String(email.time),
                         new LSL_String(email.sender),
                         new LSL_String(email.subject),

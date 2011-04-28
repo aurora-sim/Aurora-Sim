@@ -1631,7 +1631,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             ISceneChildEntity sceneOP = World.GetSceneObjectPart (new UUID (objectUUID));
 
-            m_ScriptEngine.AddToObjectQueue(sceneOP.UUID, "dataserver", new DetectParams[0], -1, resobj);
+            m_ScriptEngine.PostObjectEvent(sceneOP.UUID, "dataserver", resobj);
         }
 
 

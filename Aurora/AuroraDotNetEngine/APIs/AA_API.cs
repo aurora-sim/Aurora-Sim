@@ -366,7 +366,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void aaRaiseError(string message)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AARaiseError", m_host, "AA");
-            m_ScriptEngine.AddToObjectQueue(m_host.UUID, "on_error", new DetectParams[0], -1, new object[] { message });
+            m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, "on_error", new object[] { message });
             throw new EventAbortException();
         }
 

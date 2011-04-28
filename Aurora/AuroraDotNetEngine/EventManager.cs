@@ -187,7 +187,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (ScriptData ID in datas)
             {
                 if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
             }
         }
 
@@ -233,7 +233,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (ScriptData ID in datas)
             {
                 if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(), ID.VersionID, EventPriority.FirstStart, param);
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(), EventPriority.FirstStart, param);
             }
         }
 
@@ -272,7 +272,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (ScriptData ID in datas)
             {
                 if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(), ID.VersionID, EventPriority.FirstStart, param);
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(), EventPriority.FirstStart, param);
             }
         }
 
@@ -308,7 +308,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (ScriptData ID in datas)
             {
                 if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(), ID.VersionID, EventPriority.FirstStart, param);
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(), EventPriority.FirstStart, param);
             }
             //Remove us from the det param list
             det.Remove(remoteClient.AgentId);
@@ -337,7 +337,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (ScriptData ID in datas)
             {
                 if (CheckIfEventShouldFire(ID, functionName, param)) {
-                     m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+                     m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
                     ret = true;
                 }
             }
@@ -374,7 +374,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 foreach (ScriptData ID in datas)
                 {
                     if (CheckIfEventShouldFire(ID, functionName, param))
-                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), ID.VersionID, EventPriority.FirstStart, param);
+                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
                 }
             }
         }
@@ -409,7 +409,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 foreach (ScriptData ID in datas)
                 {
                     if (CheckIfEventShouldFire(ID, functionName, param))
-                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), ID.VersionID, EventPriority.FirstStart, param);
+                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
                 }
             }
         }
@@ -444,7 +444,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 foreach (ScriptData ID in datas)
                 {
                     if (CheckIfEventShouldFire(ID, functionName, param))
-                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), ID.VersionID, EventPriority.FirstStart, param);
+                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
                 }
             }
         }
@@ -480,7 +480,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 foreach (ScriptData ID in datas)
                 {
                     if (CheckIfEventShouldFire(ID, functionName, param))
-                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), ID.VersionID, EventPriority.FirstStart, param);
+                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
                 }
             }
         }
@@ -516,7 +516,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 foreach (ScriptData ID in datas)
                 {
                     if (CheckIfEventShouldFire(ID, functionName, param))
-                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), ID.VersionID, EventPriority.FirstStart, param);
+                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
                 }
             }
         }
@@ -552,7 +552,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 foreach (ScriptData ID in datas)
                 {
                     if (CheckIfEventShouldFire(ID, functionName, param))
-                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), ID.VersionID, EventPriority.FirstStart, param);
+                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
                 }
             }
         }
@@ -571,7 +571,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     new LSL_Types.LSLInteger(change)};
 
             if (CheckIfEventShouldFire(ID, functionName, param))
-                m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+                m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
         }
 
         public void email(uint localID, UUID itemID, string timeSent,
@@ -599,7 +599,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (ScriptData ID in datas)
             {
                 if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
             }
         }
 
@@ -626,7 +626,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (ScriptData ID in datas)
             {
                 if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
             }
         }
 
@@ -649,7 +649,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (ScriptData ID in datas)
             {
                 if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
             }
         }
 
@@ -676,7 +676,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (ScriptData ID in datas)
             {
                 if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
             }
         }
 
@@ -699,7 +699,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (ScriptData ID in datas)
             {
                 if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
             }
         }
 
@@ -723,7 +723,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (ScriptData ID in datas)
             {
                 if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
             }
         }
 
@@ -743,7 +743,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (ScriptData ID in datas)
             {
                 if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
             }
         }
 
@@ -763,7 +763,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (ScriptData ID in datas)
             {
                 if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
             }
         }
 

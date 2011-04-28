@@ -29,8 +29,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         DetectParams GetDetectParams(UUID uUID, UUID m_itemID, int number);
 
-        bool AddToObjectQueue(UUID uUID, string p, DetectParams[] detectParams, int p_4, object[] p_5);
-
         void ResetScript(UUID uUID, UUID m_itemID, bool p);
 
         bool GetScriptRunningState(UUID item);

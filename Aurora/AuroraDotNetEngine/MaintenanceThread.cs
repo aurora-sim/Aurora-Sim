@@ -352,7 +352,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private LinkedList<QueueItemStruct> ScriptEvents = new LinkedList<QueueItemStruct> ();
         private LinkedList<QueueItemStruct> SleepingScriptEvents = new LinkedList<QueueItemStruct> ();
 
-        private int m_sleeperWaitTime = 100;
+        private double m_sleeperWaitTime = 100;
         private DateTime NextSleepersTest = DateTime.Now;
 
         public void RemoveFromEventSchQueue(ScriptData ID, bool abortcur)
@@ -452,7 +452,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (QIS.CurrentlyAt.SleepTo.Ticks != 0)
                 {
                     double milSecDiff = (QIS.CurrentlyAt.SleepTo - DateTime.Now).TotalMilliseconds;
-                    //this.m_sleeperWaitTime
+                    if (m_sleeperWaitTime > milSecDiff)
+                        m_sleeperWaitTime = milSecDiff;
                     QIS.EventsProcData.TimeCheck = QIS.CurrentlyAt.SleepTo;
                     QIS.EventsProcData.State = ScriptEventsState.Sleep;
                 }
