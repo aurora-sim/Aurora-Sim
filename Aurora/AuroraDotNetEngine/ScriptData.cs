@@ -132,10 +132,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public int ControlEventsInQueue = 0;
         public bool StartedFromSavedState = false;
         public UUID RezzedFrom = UUID.Zero; // If rezzed from llRezObject, this is not Zero
-        /// <summary>
-        /// This helps make sure that we clear out previous versions so that we don't have overlapping script versions running
-        /// </summary>
-        public int VersionID = 0;
 
 
         public long EventDelayTicks = 0;
@@ -154,8 +150,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool MovingInQueue = false;
         public bool TargetOmegaWasSet = false;
 
-        public int EventsProcDataLocked = 0;
-        public bool InEventsProcData = false;
         public ScriptEventsProcData EventsProcData = new ScriptEventsProcData();
 
         #endregion
@@ -196,7 +190,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     m_ScriptEngine.StateSave.SaveStateTo (this);
                 }
             }
-            VersionID += 5;
             m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew(this, false);
 
             //Give the user back any controls we took
@@ -487,7 +480,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             DateTime StartTime = DateTime.Now.ToUniversalTime();
 
             //Clear out the removing of events for this script.
-            VersionID++;
+            m_ScriptEngine.MaintenanceThread.FlushEventSchQueue (this, false);
 
             //Reset this
             StartedFromSavedState = false;
@@ -588,9 +581,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     //Close the previous script
                     CloseAndDispose(false); //We don't want to back it up
-
-                    //Increment this so that we clear out the previous upload
-                    VersionID++;
                 }
 
                 //Try to find a previously compiled script in this instance
@@ -601,7 +591,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     try
                     {
-                        m_ScriptEngine.Compiler.PerformScriptCompile(Source, ItemID, Part.OwnerID, VersionID, out AssemblyName);
+                        m_ScriptEngine.Compiler.PerformScriptCompile(Source, ItemID, Part.OwnerID, out AssemblyName);
                         #region Errors and Warnings
 
                         #region Errors

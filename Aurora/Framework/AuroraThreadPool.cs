@@ -119,121 +119,124 @@ namespace Aurora.Framework
             }
 
             if (nthreads - nSleepingthreads < queue.Count && nthreads < Threads.Length)
-                {
-                lock (Threads)
-                    {
-                    for (int i = 0; i < Threads.Length; i++)
-                        {
-                        if (Threads[i] == null)
-                            {
-                            Thread thread = new Thread(ThreadStart);
-                            thread.Priority = m_info.priority;
-                            thread.Name = "AuroraThrPool#"+ i.ToString();
-                            thread.IsBackground = true;
-                            try
-                                {
-                                thread.Start(new int[] { i });
-                                Threads[i] = thread;
-                                Sleeping[i] = 0;
-                                nthreads++;
-                                }
-                            catch { }
-                            return;
-                            }
-                        }
-                    }
-                }
-
-            else if(nSleepingthreads >0)
-                {
-                lock (Threads)
-                    {
-                    for (int i = 0; i < Threads.Length; i++)
-                        {
-                        if (Sleeping[i] == 1 && Threads[i].ThreadState == ThreadState.WaitSleepJoin)
-                            {
-                            Threads[i].Interrupt(); // if we have a sleeping one awake it
-                            return;
-                            }
-                        }
-                    }
-                }
-        }
-
-        public void QueueEvent2(QueueItem2 delegat, int Priority, object obj)
             {
-            if (delegat == null)
-                return;
-            object[] o = new object[]{delegat, obj };
-            lock (queue)
-                {
-                queue.Enqueue(o);
-                }
-
-            if (nthreads < queue.Count && nthreads < Threads.Length)
-                {
                 lock (Threads)
-                    {
+                {
                     for (int i = 0; i < Threads.Length; i++)
-                        {
+                    {
                         if (Threads[i] == null)
-                            {
-                            Thread thread = new Thread(ThreadStart);
+                        {
+                            Thread thread = new Thread (ThreadStart);
                             thread.Priority = m_info.priority;
-                            thread.Name = "AuroraThrPool#" + i.ToString();
+                            thread.Name = "AuroraThrPool#" + i.ToString ();
                             thread.IsBackground = true;
                             try
-                                {
-                                thread.Start(new int[] { i });
+                            {
+                                thread.Start (new int[] { i });
                                 Threads[i] = thread;
                                 Sleeping[i] = 0;
                                 nthreads++;
-                                }
-                            catch { }
-                            return;
                             }
-                        }
-                    }
-                }
-            else if (nSleepingthreads > 0)
-                {
-                lock (Threads)
-                    {
-                    for (int i = 0; i < Threads.Length; i++)
-                        {
-                        if (Sleeping[i] == 1 && Threads[i].ThreadState == ThreadState.WaitSleepJoin)
+                            catch
                             {
-                            Threads[i].Interrupt(); // if we have a sleeping one awake it
-                            return;
                             }
+                            return;
                         }
                     }
                 }
             }
-
-        public void AbortThread(Thread thread)
+            else if (nSleepingthreads > 0)
             {
+                lock (Threads)
+                {
+                    for (int i = 0; i < Threads.Length; i++)
+                    {
+                        if (Sleeping[i] == 1 && Threads[i].ThreadState == ThreadState.WaitSleepJoin)
+                        {
+                            Threads[i].Interrupt (); // if we have a sleeping one awake it
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        public void QueueEvent2 (QueueItem2 delegat, int Priority, object obj)
+        {
+            if (delegat == null)
+                return;
+            object[] o = new object[] { delegat, obj };
+            lock (queue)
+            {
+                queue.Enqueue (o);
+            }
+
+            if (nthreads < queue.Count && nthreads < Threads.Length)
+            {
+                lock (Threads)
+                {
+                    for (int i = 0; i < Threads.Length; i++)
+                    {
+                        if (Threads[i] == null)
+                        {
+                            Thread thread = new Thread (ThreadStart);
+                            thread.Priority = m_info.priority;
+                            thread.Name = "AuroraThrPool#" + i.ToString ();
+                            thread.IsBackground = true;
+                            try
+                            {
+                                thread.Start (new int[] { i });
+                                Threads[i] = thread;
+                                Sleeping[i] = 0;
+                                nthreads++;
+                            }
+                            catch
+                            {
+                            }
+                            return;
+                        }
+                    }
+                }
+            }
+            else if (nSleepingthreads > 0)
+            {
+                lock (Threads)
+                {
+                    for (int i = 0; i < Threads.Length; i++)
+                    {
+                        if (Sleeping[i] == 1 && Threads[i].ThreadState == ThreadState.WaitSleepJoin)
+                        {
+                            Threads[i].Interrupt (); // if we have a sleeping one awake it
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        public void AbortThread (Thread thread)
+        {
             int i;
             lock (Threads)
-                {
+            {
                 for (i = 0; i < Threads.Length; i++)
-                    {
+                {
                     if (Threads[i] == thread)
                         break;
-                    }
+                }
                 if (i == Threads.Length)
                     return;
 
                 Threads[i] = null;
                 nthreads--;
-                }
-            try
-                {
-                thread.Abort("Shutdown");
-                }
-            catch
-                {
-                }
             }
+            try
+            {
+                thread.Abort ("Shutdown");
+            }
+            catch
+            {
+            }
+        }
     }
 }

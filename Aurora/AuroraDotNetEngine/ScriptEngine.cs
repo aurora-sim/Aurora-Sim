@@ -519,7 +519,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (ID == null)
                 return false;
             return AddToScriptQueue(ID,
-                    p.EventName, p.DetectParams, ID.VersionID, priority, p.Params);
+                    p.EventName, p.DetectParams, priority, p.Params);
         }
 
         public bool PostScriptEvent(UUID itemID, UUID primID, string name, Object[] p)
@@ -609,7 +609,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="qParams"></param>
         /// <param name="param"></param>
         /// <returns></returns>
-        public bool AddToScriptQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, int VersionID, EventPriority priority, params object[] param)
+        public bool AddToScriptQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, EventPriority priority, params object[] param)
         {
             // Create a structure and add data
             QueueItemStruct QIS = new QueueItemStruct();
@@ -617,7 +617,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             QIS.functionName = FunctionName;
             QIS.llDetectParams = qParams;
             QIS.param = param;
-            QIS.VersionID = VersionID;
+            QIS.VersionID = ID.EventsProcData.VersionID;
             QIS.State = ID.State;
 
             MaintenanceThread.AddEvent(QIS, priority);

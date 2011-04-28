@@ -190,7 +190,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// </summary>
         /// <param name="Script">LSL script</param>
         /// <returns>Filename to .dll assembly</returns>
-        public void PerformScriptCompile(string Script, UUID itemID, UUID ownerUUID, int VersionID, out string assembly)
+        public void PerformScriptCompile(string Script, UUID itemID, UUID ownerUUID, out string assembly)
         {
             assembly = "";
             

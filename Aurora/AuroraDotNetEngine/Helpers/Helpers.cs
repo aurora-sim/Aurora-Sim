@@ -322,13 +322,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         Reupload = 3
     }
 
-    public enum Trust : int
-    {
-        Full = 5,
-        Medium = 3,
-        Low = 1
-    }
-
     public enum EventPriority : int
     {
         FirstStart = 0,
@@ -337,7 +330,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     }
 
     public enum ScriptEventsState : int
-        {
+    {
         Idle = 0,
         Sleep = 1,
         Suspended = 2,
@@ -346,17 +339,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         InExecAbort = 5,
         Delete = 6,
         Deleted = -1 //?
-        }
+    }
 
     public class ScriptEventsProcData
-        {
+    {
         public int State;
-        public bool IgnoreNew=false;
+        public bool IgnoreNew = false;
         public QueueItemStruct CurExecQIS;
-        public Thread thread;
         public DateTime TimeCheck;
-        public Queue EventsQueue = new Queue(10);
-        }
+        /// <summary>
+        /// This helps make sure that we clear out previous versions so that we don't have overlapping script versions running
+        /// </summary>
+        public int VersionID = 0;
+    }
 
     public enum LoadPriority : int
     {
@@ -396,7 +391,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     // Moderate - Intentional abuse can cause denial of service and crashes
     //            with potential of data or state loss, or trusting users
     //            can be tricked into embarrassing or uncomfortable
-    //            situationsa.
+    //            situations.
     //
     // High     - Casual abuse can cause impaired functionality or temporary
     //            denial of service conditions. Intentional abuse can easily
