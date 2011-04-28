@@ -46,14 +46,21 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="scene"></param>
         /// <param name="fileName"></param>
-        void SavePrimsToXml2(IScene scene, string fileName);
-        
+        void SavePrimsToXml2 (IScene scene, string fileName);
+
         /// <summary>
         /// Deserializes a scene object from its xml2 representation.  This does not load the object into the scene.
         /// </summary>
         /// <param name="xmlString"></param>
         /// <returns>The scene object created</returns>
-        ISceneObject DeserializeGroupFromXml2(string xmlString, IScene scene);
+        ISceneObject DeserializeGroupFromXml2 (string xmlString, IScene scene);
+
+        /// <summary>
+        /// Deserializes a scene object from its xml2 representation.  This does not load the object into the scene.
+        /// </summary>
+        /// <param name="xml"></param>
+        /// <returns>The scene object created</returns>
+        ISceneObject DeserializeGroupFromXml2 (byte[] xml, IScene scene);
 
         /// <summary>
         /// Serialize an individual scene object into the xml2 format

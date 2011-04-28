@@ -190,29 +190,26 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
                     if (filePath.StartsWith(ArchiveConstants.OBJECTS_PATH))
                     {
-                        string sogdata = m_utf8Encoding.GetString(data);
-                        //serialisedSceneObjects.Add(m_utf8Encoding.GetString(data));
                         /*
-                m_log.DebugFormat("[ARCHIVER]: Loading xml with raw size {0}", serialisedSceneObject.Length);
+                        m_log.DebugFormat("[ARCHIVER]: Loading xml with raw size {0}", serialisedSceneObject.Length);
 
-                // Really large xml files (multi megabyte) appear to cause
-                // memory problems
-                // when loading the xml.  But don't enable this check yet
+                        // Really large xml files (multi megabyte) appear to cause
+                        // memory problems
+                        // when loading the xml.  But don't enable this check yet
                 
-                if (serialisedSceneObject.Length > 5000000)
-                {
-                    m_log.Error("[ARCHIVER]: Ignoring xml since size > 5000000);");
-                    continue;
-                }
-                */
+                        if (serialisedSceneObject.Length > 5000000)
+                        {
+                            m_log.Error("[ARCHIVER]: Ignoring xml since size > 5000000);");
+                            continue;
+                        }
+                        */
 
-                        string serialisedSceneObject = sogdata;
-                        SceneObjectGroup sceneObject = (SceneObjectGroup)serialiser.DeserializeGroupFromXml2(serialisedSceneObject, m_scene);
+                        SceneObjectGroup sceneObject = (SceneObjectGroup)serialiser.DeserializeGroupFromXml2 (data, m_scene);
 
                         if (sceneObject == null)
                         {
                             //! big error!
-                            m_log.Error("Error reading SOP XML (Please mantis this!): " + serialisedSceneObject);
+                            m_log.Error("Error reading SOP XML (Please mantis this!): " + m_asciiEncoding.GetString(data));
                             continue;
                         }
                         
@@ -273,38 +270,35 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         if (sceneObjectsLoadedCount % 250 == 0)
                             m_log.Debug("[ARCHIVER]: Loaded " + sceneObjectsLoadedCount + " objects...");
                     }
-                    else if (filePath.StartsWith(ArchiveConstants.ASSETS_PATH))
+                    else if (!m_skipAssets && filePath.StartsWith (ArchiveConstants.ASSETS_PATH))
                     {
-                        if (!m_skipAssets)
-                        {
-                            if (LoadAsset(filePath, data))
-                                successfulAssetRestores++;
-                            else
-                                failedAssetRestores++;
+                        if (LoadAsset (filePath, data))
+                            successfulAssetRestores++;
+                        else
+                            failedAssetRestores++;
 
-                            if ((successfulAssetRestores + failedAssetRestores) % 250 == 0)
-                                m_log.Debug("[ARCHIVER]: Loaded " + successfulAssetRestores + " assets and failed to load " + failedAssetRestores + " assets...");
-                        }
+                        if ((successfulAssetRestores + failedAssetRestores) % 250 == 0)
+                            m_log.Debug ("[ARCHIVER]: Loaded " + successfulAssetRestores + " assets and failed to load " + failedAssetRestores + " assets...");
                     }
-                    else if (filePath.StartsWith(ArchiveConstants.TERRAINS_PATH))
+                    else if (filePath.StartsWith (ArchiveConstants.TERRAINS_PATH))
                     {
-                        LoadTerrain(filePath, data);
+                        LoadTerrain (filePath, data);
                     }
-                    else if (!m_merge && filePath.StartsWith(ArchiveConstants.SETTINGS_PATH))
+                    else if (!m_merge && filePath.StartsWith (ArchiveConstants.SETTINGS_PATH))
                     {
-                        LoadRegionSettings(filePath, data);
+                        LoadRegionSettings (filePath, data);
                     }
-                    else if (!m_merge && filePath.StartsWith(ArchiveConstants.LANDDATA_PATH))
+                    else if (!m_merge && filePath.StartsWith (ArchiveConstants.LANDDATA_PATH))
                     {
-                        serialisedParcels.Add(m_utf8Encoding.GetString(data));
+                        serialisedParcels.Add (m_utf8Encoding.GetString (data));
                     }
                     else if (filePath == ArchiveConstants.CONTROL_FILE_PATH)
                     {
-                        LoadControlFile(filePath, data);
+                        LoadControlFile (filePath, data);
                     }
                     else
                     {
-                        m_log.Debug("[ARCHIVER]:UNKNOWN PATH: " + filePath);
+                        m_log.Debug ("[ARCHIVER]:UNKNOWN PATH: " + filePath);
                     }
                 }
 

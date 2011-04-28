@@ -102,18 +102,34 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             return SceneObjectSerializer.ToXml2Format(grp);
         }
 
-        public static SceneObjectGroup DeserializeGroupFromXml2(string xmlString, Scene scene)
+        public static SceneObjectGroup DeserializeGroupFromXml2 (string xmlString, Scene scene)
         {
-            XmlDocument doc = new XmlDocument();
+            XmlDocument doc = new XmlDocument ();
             XmlNode rootNode;
 
-            XmlTextReader reader = new XmlTextReader(new StringReader(xmlString));
+            XmlTextReader reader = new XmlTextReader (new StringReader (xmlString));
             reader.WhitespaceHandling = WhitespaceHandling.None;
-            doc.Load(reader);
-            reader.Close();
+            doc.Load (reader);
+            reader.Close ();
             rootNode = doc.FirstChild;
 
-            return SceneObjectSerializer.FromXml2Format(rootNode.OuterXml, scene);
+            return SceneObjectSerializer.FromXml2Format (rootNode.OuterXml, scene);
+        }
+
+        public static SceneObjectGroup DeserializeGroupFromXml2 (byte[] xml, Scene scene)
+        {
+            XmlDocument doc = new XmlDocument ();
+            XmlNode rootNode;
+
+            MemoryStream stream = new MemoryStream (xml);
+            XmlTextReader reader = new XmlTextReader (stream);
+            reader.WhitespaceHandling = WhitespaceHandling.None;
+            doc.Load (reader);
+            reader.Close ();
+            stream.Close ();
+            rootNode = doc.FirstChild;
+
+            return SceneObjectSerializer.FromXml2Format (rootNode.OuterXml, scene);
         }
 
         /// <summary>

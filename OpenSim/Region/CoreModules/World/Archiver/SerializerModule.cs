@@ -99,10 +99,17 @@ namespace OpenSim.Region.CoreModules.World.Serialiser
                 SceneXmlLoader.SavePrimsToXml2((Scene)scene, fileName);
         }
 
-        public ISceneObject DeserializeGroupFromXml2(string xmlString, IScene scene)
+        public ISceneObject DeserializeGroupFromXml2 (string xmlString, IScene scene)
         {
             if (scene is Scene)
-                return SceneXmlLoader.DeserializeGroupFromXml2(xmlString, (Scene)scene);
+                return SceneXmlLoader.DeserializeGroupFromXml2 (xmlString, (Scene)scene);
+            return null;
+        }
+
+        public ISceneObject DeserializeGroupFromXml2 (byte[] xml, IScene scene)
+        {
+            if (scene is Scene)
+                return SceneXmlLoader.DeserializeGroupFromXml2 (xml, (Scene)scene);
             return null;
         }
 
