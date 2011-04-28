@@ -22,7 +22,6 @@ namespace OpenSim.Services
     public class AuroraDataServiceConnector : IService, IGridRegistrationUrlModule
     {
         private IRegistryCore m_registry;
-        private uint m_port = 0;
         
         public string Name
         {
@@ -42,7 +41,6 @@ namespace OpenSim.Services
                 return;
 
             m_registry = registry;
-            m_port = handlerConfig.GetUInt("AuroraDataHandlerPort");
 
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
