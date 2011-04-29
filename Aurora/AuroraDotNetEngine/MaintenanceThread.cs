@@ -449,26 +449,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         }
                         if (QIS.EventsProcData.TimeCheck.Ticks < DateTime.Now.Ticks)
                         {
-                            EventSchExec (QIS);
+                            DateTime NextTime = DateTime.MaxValue;
                             if (SleepingScriptEvents.Count > 0)
-                            {
-                                QIS = SleepingScriptEvents.Peek ().Value;
-                                //Now add in the next sleep time
-                                NextSleepersTest = QIS.CurrentlyAt.SleepTo;
-                            }
-                            else //No more left, don't check again
-                                NextSleepersTest = DateTime.MaxValue;
+                                NextTime = SleepingScriptEvents.Peek ().Value.EventsProcData.TimeCheck;
+
+                            //Now add in the next sleep time
+                            NextSleepersTest = NextTime;
+
+                            //All done
+                            Interlocked.Exchange (ref m_CheckingSleepers, 0);
+                            //Execute the event
+                            EventSchExec (QIS);
                         }
                         else
                         {
                             NextSleepersTest = QIS.EventsProcData.TimeCheck;
                             SleepingScriptEvents.Enqueue (QIS, QIS.EventsProcData.TimeCheck);
+                            //All done
+                            Interlocked.Exchange (ref m_CheckingSleepers, 0);
                         }
                     }
                     else //No more left, don't check again
+                    {
                         NextSleepersTest = DateTime.MaxValue;
-                    //All done
-                    Interlocked.Exchange (ref m_CheckingSleepers, 0);
+                        //All done
+                        Interlocked.Exchange (ref m_CheckingSleepers, 0);
+                    }
                 }
                 int timeToSleep = 5;
                 //If we can, get the next event
@@ -488,9 +494,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     //    timeToSleep = (int)(NextSleepersTest - DateTime.Now).TotalMilliseconds;
                     if (timeToSleep < 5)
                         timeToSleep = 5;
-                    else
-                    {
-                    }
                 }
                 Thread.Sleep (timeToSleep);
             }
