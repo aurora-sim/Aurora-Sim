@@ -415,8 +415,8 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             if (move.Z <= 0f)
             {
-                if (move.X != 0f || move.Y != 0f ||
-                    actor.Velocity.X != 0 && actor.Velocity.Y != 0)
+                if (actor != null && (move.X != 0f || move.Y != 0f ||
+                    actor.Velocity.X != 0 && actor.Velocity.Y != 0))
                 {
                     // Walking / crouchwalking / running
                     if (move.Z < 0f)
