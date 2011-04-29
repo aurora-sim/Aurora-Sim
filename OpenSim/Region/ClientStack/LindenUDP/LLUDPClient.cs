@@ -530,11 +530,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     m_throttle.DripRate = (int)tmp;
                     m_throttle.MaxBurst = (int)tmp;
                     }
-                if (m_outbox.Count <= 100) // || m_lastEmptyUpdates > 10) //Fire it every 10 queues whether we should be or not
-                    {
-                    BeginFireQueueEmpty((Int64)100);
-                    }
                 }
+
+            if (m_outbox.Count <= 100) // || m_lastEmptyUpdates > 10) //Fire it every 10 queues whether we should be or not
+                {
+                BeginFireQueueEmpty((Int64)100);
+                }
+
             return packetSent;
             }
 
