@@ -4217,17 +4217,22 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         #endregion Primitive Packet/Data Sending Methods
 
-        void HandleQueueEmpty(Int64 numPackets)
+        void HandleQueueEmpty(object o )
         {
-            DequeueUpdates(numPackets);
-            ProcessTextureRequests();
+            int [] atmp = (int[] ) o;
+
+            if(m_udpServer.PrimUpdatesPerCallback > atmp[0])
+                DequeueUpdates(m_udpServer.PrimUpdatesPerCallback);
+
+            if(m_udpServer.TextureSendLimit > atmp[1])
+                ProcessTextureRequests(m_udpServer.TextureSendLimit);
         }
 
-        void ProcessTextureRequests()
+        void ProcessTextureRequests(int numPackets)
             {
             int tmp = m_udpClient.GetCurTexPacksInQueue();
-            if (m_imageManager != null && m_udpServer.TextureSendLimit>tmp)
-                    m_imageManager.ProcessImageQueue(m_udpServer.TextureSendLimit);
+            if (m_imageManager != null)
+                m_imageManager.ProcessImageQueue(numPackets);
             }
 
         public void SendAssetUploadCompleteMessage(sbyte AssetType, bool Success, UUID AssetFullID)

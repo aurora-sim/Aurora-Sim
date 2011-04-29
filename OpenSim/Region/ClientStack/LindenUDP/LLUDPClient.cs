@@ -55,7 +55,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
     /// Fired when the queue for one or more packet categories is empty. This 
     /// event can be hooked to put more data on the empty queues
     /// </summary>
-    public delegate void QueueEmpty(Int64 numPackets);
+    public delegate void QueueEmpty(object o);
 
     #endregion Delegates
 
@@ -532,9 +532,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                 }
 
-            if (m_outbox.Count <= 100) // || m_lastEmptyUpdates > 10) //Fire it every 10 queues whether we should be or not
+
+            if (m_nextOnQueueEmpty != 0 && (Environment.TickCount & Int32.MaxValue) >= m_nextOnQueueEmpty)
                 {
-                BeginFireQueueEmpty((Int64)100);
+                // Use a value of 0 to signal that FireQueueEmpty is running
+                m_nextOnQueueEmpty = 0;
+                // Asynchronously run the callback
+                int ptmp = m_outbox.queues[MapCatsToPriority[(int)ThrottleOutPacketType.Task]].Count;
+                int ttmp = m_outbox.queues[MapCatsToPriority[(int)ThrottleOutPacketType.Texture]].Count;
+                int [] arg = {ptmp,ttmp};
+                Util.FireAndForget(FireQueueEmpty, arg);
                 }
 
             return packetSent;
@@ -544,6 +551,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
             return m_outbox.queues[MapCatsToPriority[(int)ThrottleOutPacketType.Texture]].Count;
             }
+
+        public int GetCurTaskPacksInQueue()
+            {
+            return m_outbox.queues[MapCatsToPriority[(int)ThrottleOutPacketType.Task]].Count;
+            }
+
 
         /// <summary>
         /// Called when an ACK packet is received and a round-trip time for a
@@ -604,15 +617,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// </summary>
         /// <param name="throttleIndex">Throttle category to fire the callback
         /// for</param>
-        private void BeginFireQueueEmpty(Int64 numPackets)
+        private void BeginFireQueueEmpty()
         {
-            if (m_nextOnQueueEmpty != 0 && (Environment.TickCount & Int32.MaxValue) >= m_nextOnQueueEmpty)
-            {
-                // Use a value of 0 to signal that FireQueueEmpty is running
-                m_nextOnQueueEmpty = 0;
-                // Asynchronously run the callback
-                Util.FireAndForget(FireQueueEmpty, numPackets);
-            }
         }
 
         /// <summary>
@@ -632,7 +638,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if (callback != null)
             {
-                try { callback((Int64)o); }
+                try { callback(o); }
                 catch (Exception e) { m_log.Error("[LLUDPCLIENT]: OnQueueEmpty() threw an exception: " + e.Message, e); }
             }
 
