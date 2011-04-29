@@ -353,7 +353,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private Queue<QueueItemStruct> ScriptEvents = new Queue<QueueItemStruct> ();
         private int m_CheckingEvents = 0;
 
-        private Mischel.Collections.PriorityQueue<QueueItemStruct, DateTime> SleepingScriptEvents = new Mischel.Collections.PriorityQueue<QueueItemStruct, DateTime> (10);
+        private static int DateTimeComparer (DateTime a, DateTime b)
+        {
+            return b.Ticks.CompareTo (a.Ticks);
+        }
+
+        private Mischel.Collections.PriorityQueue<QueueItemStruct, DateTime> SleepingScriptEvents = new Mischel.Collections.PriorityQueue<QueueItemStruct, DateTime> (10, DateTimeComparer);
         private DateTime NextSleepersTest = DateTime.Now;
         private int m_CheckingSleepers = 0;
 
@@ -464,11 +469,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (ScriptEvents.Count > 0)
                     {
                         QIS = ScriptEvents.Dequeue ();
+                        Interlocked.Exchange (ref m_CheckingEvents, 0);
                         EventSchExec (QIS);
                     }
-                    if (NextSleepersTest.Ticks < DateTime.Now.Ticks && ScriptEvents.Count == 0)
+                    else
+                        Interlocked.Exchange (ref m_CheckingEvents, 0);
+                    if (SleepingScriptEvents.Count == 0 && ScriptEvents.Count == 0)
                         break; //No more events, end
-                    Interlocked.Exchange (ref m_CheckingEvents, 0);
                 }
                 Thread.Sleep (5);
             }
