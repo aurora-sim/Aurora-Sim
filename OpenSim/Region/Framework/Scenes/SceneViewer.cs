@@ -600,7 +600,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private static int DoubleComparer (double x, double y)
         {
-            return -x.CompareTo (y);
+            return y.CompareTo (x);
         }
 
         private void SendQueued (PriorityQueue<EntityUpdate, double> m_entsqueue)
