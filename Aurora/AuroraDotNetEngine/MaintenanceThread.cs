@@ -511,6 +511,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 }
             }
+            //Check the versionID so that we can kill events
+            if (QIS.VersionID != QIS.ID.VersionID)
+                return;
 
             if (!EventSchProcessQIS(ref QIS)) //Execute the event
             {
