@@ -60,9 +60,9 @@ namespace OpenSim.Framework
         /// This includes packets like Chat and directory, group, and profile packets</summary>
         /// <remarks>This category shouldn't ever be extremely saturated with packets.
         ///This is a sub-category of Task</remarks>
-        AvatarInfo = 8,
-        OutBand = 9,
-        Transfer = 10, //This is for when the client asks for a transfer, such as an asset or a inventory list
+        Transfer = 8, //This is for when the client asks for a transfer, such as an asset or a inventory list
+        AvatarInfo = 9,
+        OutBand = 10,
         /// <summary>The number of packet categories to throttle on.
         /// If a throttle category is added or removed, this number must also change</summary>
         Count = 11, // this must be the LAST one 
