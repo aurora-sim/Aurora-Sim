@@ -612,7 +612,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 QueueEntityUpdate (up.Value);
             }
-            m_entsqueue.Clear ();
 
             m_lastUpdatePos = (m_presence.IsChildAgent) ?
                 m_presence.AbsolutePosition :

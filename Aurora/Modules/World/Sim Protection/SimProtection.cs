@@ -26,7 +26,9 @@ namespace Aurora.Modules
         protected Scene m_scene;
         protected bool m_Enabled = false;
         protected float TimeAfterToReenablePhysics = 20;
+        protected float TimeAfterToReenableScripts;
         protected DateTime DisabledPhysicsStartTime = DateTime.MinValue;
+        protected DateTime DisabledScriptStartTime = DateTime.MinValue;
         protected bool AllowDisableScripts = true;
         protected bool AllowDisablePhysics = true;
         //Time before a sim sitting at 0FPS is restarted automatically
@@ -45,6 +47,7 @@ namespace Aurora.Modules
         {
             if (!source.Configs.Contains("Protection"))
                 return;
+            TimeAfterToReenableScripts = TimeAfterToReenablePhysics * 2;
             IConfig config = source.Configs["Protection"];
             m_Enabled = config.GetBoolean("Enabled", false);
             BaseRateFramesPerSecond = config.GetFloat("BaseRateFramesPerSecond", 45);
@@ -110,14 +113,22 @@ namespace Aurora.Modules
 
         private void OnCheck(object sender, ElapsedEventArgs e)
         {
-            if (m_statsReporter.LastReportedSimFPS < BaseRateFramesPerSecond * (PercentToBeginShutDownOfServices / 100) && m_statsReporter.LastReportedSimFPS != 0 && AllowDisableScripts)
+            IEstateModule mod = m_scene.RequestModuleInterface<IEstateModule> ();
+            if (AllowDisableScripts && m_statsReporter.LastReportedSimFPS < BaseRateFramesPerSecond * (PercentToBeginShutDownOfServices / 100) && m_statsReporter.LastReportedSimFPS != 0)
             {
                 //Less than the percent to start shutting things down... Lets kill some stuff
-                IScriptModule scriptEngine = m_scene.RequestModuleInterface<IScriptModule>();
-                if (scriptEngine != null)
-                {
-                    scriptEngine.StopAllScripts();
-                }
+                if (mod != null)
+                    mod.SetSceneCoreDebug (false, m_scene.RegionInfo.RegionSettings.DisableCollisions, m_scene.RegionInfo.RegionSettings.DisablePhysics); //These are opposite of what you want the value to be... go figure
+                DisabledScriptStartTime = DateTime.Now;
+            }
+            if (m_scene.RegionInfo.RegionSettings.DisableScripts &&
+               AllowDisableScripts &&
+               SimZeroFPSStartTime != DateTime.MinValue && //This makes sure we don't screw up the setting if the user disabled physics manually
+               SimZeroFPSStartTime.AddSeconds (TimeAfterToReenableScripts) > DateTime.Now)
+            {
+                DisabledScriptStartTime = DateTime.MinValue;
+                if (mod != null)
+                    mod.SetSceneCoreDebug (true, m_scene.RegionInfo.RegionSettings.DisableCollisions, m_scene.RegionInfo.RegionSettings.DisablePhysics); //These are opposite of what you want the value to be... go figure
             }
 
             if (m_statsReporter.LastReportedSimFPS == 0 && KillSimOnZeroFPS)
@@ -129,8 +140,6 @@ namespace Aurora.Modules
             }
             else if (SimZeroFPSStartTime != DateTime.MinValue)
                 SimZeroFPSStartTime = DateTime.MinValue;
-            
-            IEstateModule mod = m_scene.RequestModuleInterface<IEstateModule>();
             
             float[] stats = m_scene.RequestModuleInterface<IMonitorModule>().GetRegionStats(m_scene.RegionInfo.RegionID.ToString());
             if (stats[2]/*PhysicsFPS*/ < BaseRateFramesPerSecond * (PercentToBeginShutDownOfServices / 100) &&
