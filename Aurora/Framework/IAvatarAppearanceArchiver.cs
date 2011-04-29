@@ -7,13 +7,13 @@ using System.Text;
 
 namespace Aurora.Framework
 {
-	public interface IAvatarAppearanceArchiver
-	{
+    public interface IAvatarAppearanceArchiver
+    {
         /// <summary>
         /// Updates an avatars appearance from the saved AvatarArchive in the database.
         /// </summary>
         /// <param name="FileName"></param>
         /// <param name="Name"></param>
         void LoadAvatarArchive(string FileName, string Name);
-	}
+    }
 }
