@@ -148,6 +148,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         const int MAXPERCLIENTRATE = 625000;
         const int MINPERCLIENTRATE = 6250;
         const int STARTPERCLIENTRATE = 25000;
+        const int MAX_PACKET_SKIP_RATE = 4;
 
         private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -480,83 +481,98 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <remarks>This function is only called from a synchronous loop in the
         /// UDPServer so we don't need to bother making this thread safe</remarks>
         /// <returns>True if any packets were sent, otherwise false</returns>
-        public bool DequeueOutgoing(int MaxNPacks)
-            {
-
+        public bool DequeueOutgoing (int MaxNPacks)
+        {
             OutgoingPacket packet;
             bool packetSent = false;
 
-            if (m_nextOutPacket != null)
-                {
-                packet = m_nextOutPacket;
-                if (m_throttle.RemoveTokens(packet.Buffer.DataLength))
-                    {
-                    // Send the packet
-                    m_udpServer.SendPacketFinal(packet);
-                    m_nextOutPacket = null;
-                    packetSent = true;
-                    }
-                }
-            else
-                {
+            List<OutgoingPacket> waitingPackets = new List<OutgoingPacket> ();
+            int packetsSkipped = 0;
+            for (int i = 0; i < MaxNPacks; i++)
+            {
                 // No dequeued packet waiting to be sent, try to pull one off
                 // this queue
-                if (m_outbox.Dequeue(out packet))
-                    {
+                if (m_outbox.Dequeue (out packet))
+                {
                     // A packet was pulled off the queue. See if we have
                     // enough tokens in the bucket to send it out
-                    if (m_throttle.RemoveTokens(packet.Buffer.DataLength) || packet.Category == ThrottleOutPacketType.OutBand)
-                        {
-                        // Send the packet
-                        m_udpServer.SendPacketFinal(packet);
+                    if (packet.Category == ThrottleOutPacketType.OutBand || m_throttle.RemoveTokens (packet.Buffer.DataLength))
+                    {
                         packetSent = true;
-                        }
-                    else
-                        {
-                        m_nextOutPacket = packet;
-                        }
-
+                        //Send the packet
+                        m_udpServer.SendPacketFinal (packet);
+                        this.PacketsSent++;
+                        PacketsCounts[(int)packet.Category] += packet.Packet.Length;
+                    }
+                    else if (packetsSkipped < MAX_PACKET_SKIP_RATE)
+                    {
+                        //This does increase the time that we spend in this loop... but its relatively safe
+                        // We won't have an infinite loop since we can only skip so many packets,
+                        // and if we arn't sending anything, it doesn't take too long.
+                        MaxNPacks--;
+                        packetsSkipped++;
+                        waitingPackets.Add (packet);
                     }
                 }
+                else
+                    break;
+            }
+#if Debug
+                if (waitingPackets.Count > 0)
+                    MainConsole.Instance.Output(waitingPackets.Count + " were not sent immediately", log4net.Core.Level.Alert);
+#endif
+            //Requeue any updates that we couldn't send immediately
+            foreach (OutgoingPacket nextPacket in waitingPackets)
+            {
+                int prio = MapCatsToPriority[(int)nextPacket.Category];
+                if (nextPacket.ReSendAttempt == 0)
+                    nextPacket.ReSendAttempt++; //We tried, update it
+                else if (nextPacket.ReSendAttempt < 2)
+                {
+                    //This "isn't" the first time this packets been kicked out of the queue, send its prio down
+                    nextPacket.ReSendAttempt = 0;
+                    prio--;
+                    if (prio < 0)
+                        prio = 0;
+                }
+                //Re-enqueue the packet now
+                m_outbox.Enqueue (prio, nextPacket);
+            }
 
             if (packetSent)
-                {
-                this.PacketsSent++;
-                PacketsCounts[(int)packet.Category] += packet.Packet.Length;
-
+            {
                 if (m_throttle.MaxBurst < TotalRateRequested)
-                    {
+                {
                     float tmp = (float)m_throttle.MaxBurst * 1.005f;
                     m_throttle.DripRate = (int)tmp;
                     m_throttle.MaxBurst = (int)tmp;
-                    }
                 }
+            }
 
 
             if (m_nextOnQueueEmpty != 0 && (Environment.TickCount & Int32.MaxValue) >= m_nextOnQueueEmpty)
-                {
+            {
                 // Use a value of 0 to signal that FireQueueEmpty is running
                 m_nextOnQueueEmpty = 0;
                 // Asynchronously run the callback
                 int ptmp = m_outbox.queues[MapCatsToPriority[(int)ThrottleOutPacketType.Task]].Count;
                 int ttmp = m_outbox.queues[MapCatsToPriority[(int)ThrottleOutPacketType.Texture]].Count;
-                int [] arg = {ptmp,ttmp};
-                Util.FireAndForget(FireQueueEmpty, arg);
-                }
+                int[] arg = { ptmp, ttmp };
+                Util.FireAndForget (FireQueueEmpty, arg);
+            }
 
             return packetSent;
-            }
+        }
 
-        public int GetCurTexPacksInQueue()
-            {
+        public int GetCurTexPacksInQueue ()
+        {
             return m_outbox.queues[MapCatsToPriority[(int)ThrottleOutPacketType.Texture]].Count;
-            }
+        }
 
-        public int GetCurTaskPacksInQueue()
-            {
+        public int GetCurTaskPacksInQueue ()
+        {
             return m_outbox.queues[MapCatsToPriority[(int)ThrottleOutPacketType.Task]].Count;
-            }
-
+        }
 
         /// <summary>
         /// Called when an ACK packet is received and a round-trip time for a
