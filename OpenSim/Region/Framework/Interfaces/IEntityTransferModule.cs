@@ -37,35 +37,146 @@ namespace OpenSim.Region.Framework.Interfaces
 {
     public interface IEntityTransferModule
     {
+        /// <summary>
+        /// Teleports the given agent to the given region at the given position/rotation
+        /// </summary>
+        /// <param name="agent">The agent to teleport</param>
+        /// <param name="regionHandle">The region handle of the region you are teleporting to</param>
+        /// <param name="position">The position in the new region you are teleporting into</param>
+        /// <param name="lookAt">The rotation you will have once you enter the region</param>
+        /// <param name="teleportFlags">The flags (TeleportFlags class) that are being sent along with this teleport</param>
         void Teleport(IScenePresence agent, ulong regionHandle, Vector3 position,
                                                       Vector3 lookAt, uint teleportFlags);
 
+        /// <summary>
+        /// Teleports the given agent to their home, and if it is not available, a welcome region
+        /// </summary>
+        /// <param name="id">The UUID of the client to teleport home</param>
+        /// <param name="client">The client to teleport hom</param>
         void TeleportHome(UUID id, IClientAPI client);
 
+        // <summary>
+        /// Crosses the given agent to the given neighboring region.
+        /// </summary>
+        /// <param name="agent">The agent to cross</param>
+        /// <param name="isFlying">Whether the agent is currently flying</param>
+        /// <param name="neighborRegion">The neighboring region to cross the agent into</param>
         void Cross(IScenePresence agent, bool isFlying, GridRegion neighborRegion);
 
-        bool CrossGroupToNewRegion(SceneObjectGroup sog, Vector3 position, GridRegion destination);
+        /// <summary>
+        /// Crosses the given object to the given neighboring region.
+        /// </summary>
+        /// <param name="sog">The agent to cross</param>
+        /// <param name="position">The position to put the object in the neighboring region</param>
+        /// <param name="neighborRegion">The neighboring region to cross the agent into</param>
+        /// True if the object was added to the neighbor region, false if not
+        /// </returns>
+        bool CrossGroupToNewRegion(SceneObjectGroup sog, Vector3 position, GridRegion neighborRegion);
 
+        /// <summary>
+        /// Cancel the given teleport for the given agent in the current region (the region the agent started in)
+        /// </summary>
+        /// <param name="AgentID">The agent whose teleport will be canceled</param>
+        /// <param name="RegionHandle">The region that the agent first asked to be teleported from</param>
         void CancelTeleport(UUID AgentID, ulong RegionHandle);
 
-        void RequestTeleportLocation(IClientAPI iClientAPI, ulong regionHandle, Vector3 position, Vector3 lookAt, uint p);
+        /// <summary>
+        /// Teleports the given client to the given region at position/rotation
+        /// </summary>
+        /// <param name="client">The agent to cross</param>
+        /// <param name="regionHandle">The region handle of the region the client is teleporting to</param>
+        /// <param name="position">The position in the new region you are teleporting into</param>
+        /// <param name="lookAt">The rotation you will have once you enter the region</param>
+        /// <param name="teleportFlags">The flags (TeleportFlags class) that are being sent along with this teleport</param>
+        void RequestTeleportLocation(IClientAPI client, ulong regionHandle, Vector3 position, Vector3 lookAt, uint teleportFlags);
 
-        void RequestTeleportLocation(IClientAPI iClientAPI, GridRegion reg, Vector3 position, Vector3 lookAt, uint p);
+        /// <summary>
+        /// Teleports the given client to the given region at position/rotation
+        /// </summary>
+        /// <param name="client">The agent to cross</param>
+        /// <param name="reg">The region the agent is teleporting to</param>
+        /// <param name="position">The position in the new region you are teleporting into</param>
+        /// <param name="lookAt">The rotation you will have once you enter the region</param>
+        /// <param name="teleportFlags">The flags (TeleportFlags class) that are being sent along with this teleport</param>
+        void RequestTeleportLocation(IClientAPI client, GridRegion reg, Vector3 position, Vector3 lookAt, uint teleportFlags);
 
-        void RequestTeleportLocation(IClientAPI iClientAPI, string RegionName, Vector3 pos, Vector3 lookat, uint p);
+        /// <summary>
+        /// Teleports the given client to the given region at position/rotation
+        /// </summary>
+        /// <param name="client">The agent to cross</param>
+        /// <param name="RegionName">The name of the region the client is teleporting to</param>
+        /// <param name="position">The position in the new region you are teleporting into</param>
+        /// <param name="lookAt">The rotation you will have once you enter the region</param>
+        /// <param name="teleportFlags">The flags (TeleportFlags class) that are being sent along with this teleport</param>
+        void RequestTeleportLocation(IClientAPI iClientAPI, string RegionName, Vector3 pos, Vector3 lookat, uint teleportFlags);
 
+        /// <summary>
+        /// A new object (attachment) has come in from the SimulationHandlers, add it to the scene if we are able to
+        /// </summary>
+        /// <param name="regionID">The UUID of the region this object will be added to</param>
+        /// <param name="userID">The user who will have this object attached to them</param>
+        /// <param name="itemID">The itemID to attach to the user</param>
+        /// True if the object was added, false if not
+        /// </returns>
         bool IncomingCreateObject(UUID regionID, UUID userID, UUID itemID);
 
+        /// <summary>
+        /// A new object has come in from the SimulationHandlers, add it to the scene if we are able to
+        /// </summary>
+        /// <param name="regionID">The UUID of the region this object will be added to</param>
+        /// <param name="sog">The object to add</param>
+        /// True if the object was added, false if not
+        /// </returns>
         bool IncomingCreateObject(UUID regionID, ISceneObject sog);
 
+        /// <summary>
+        /// A new user wants to enter the given region, return whether they are allowed to enter the region or not
+        /// </summary>
+        /// <param name="scene">The region to update the agent</param>
+        /// <param name="agent">The agent information</param>
+        /// <param name="teleportFlags">The flags on the agent's teleport</param>
+        /// <param name="reason">The reason the agent cannot enter the region</param>
+        /// <returns>
+        /// True if the user can enter, false if not
+        /// </returns>
         bool NewUserConnection (IScene scene, AgentCircuitData agent, uint teleportFlags, out string reason);
 
+        /// <summary>
+        /// New data has come in about one of our child agents, update them with the new information
+        /// </summary>
+        /// <param name="scene">The region to update the agent</param>
+        /// <param name="cAgentData">The agent information to update</param>
+        /// True if the user was updated, false if not
+        /// </returns>
         bool IncomingChildAgentDataUpdate (IScene scene, AgentData cAgentData);
 
+        /// <summary>
+        /// New data has come in about one of our child agents, update them with the new information
+        /// </summary>
+        /// <param name="scene">The region to update the agent</param>
+        /// <param name="cAgentData">The agent information to update</param>
+        /// <returns>
+        /// True if the user was updated, false if not
+        /// </returns>
         bool IncomingChildAgentDataUpdate (IScene scene, AgentPosition cAgentData);
 
+        /// <summary>
+        /// Get information about the given client from the given region
+        /// </summary>
+        /// <param name="scene">The region to get the agent information from</param>
+        /// <param name="id">The id of the agent</param>
+        /// <param name="agent">The information about the agent</param>
+        /// True if the user was found, false if not
+        /// </returns>
         bool IncomingRetrieveRootAgent (IScene scene, UUID id, out IAgentData agent);
 
+        /// <summary>
+        /// Close the given agent in the given scene
+        /// </summary>
+        /// <param name="scene">The region to close the agent in</param>
+        /// <param name="agentID">The agent to close</param>
+        /// True if the user was closed, false if not
+        /// </returns>
         bool IncomingCloseAgent (IScene scene, UUID agentID);
     }
 }
