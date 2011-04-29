@@ -439,7 +439,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 QueueItemStruct QIS;
                 
                 //Check whether it is time, and then do the thread safety piece
-                if (NextSleepersTest.Ticks < DateTime.Now.Ticks && Interlocked.CompareExchange (ref m_CheckingSleepers, 1, 0) == 0)
+                if (Interlocked.CompareExchange (ref m_CheckingSleepers, 1, 0) == 0)
                 {
                     if (SleepingScriptEvents.Count > 0)
                     {
@@ -447,22 +447,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         {
                             QIS = SleepingScriptEvents.Dequeue ().Value;
                         }
-
-                        EventSchExec (QIS);
-                        if (SleepingScriptEvents.Count > 0)
+                        if (QIS.EventsProcData.TimeCheck.Ticks < DateTime.Now.Ticks)
                         {
-                            QIS = SleepingScriptEvents.Peek ().Value;
-                            //Now add in the next sleep time
-                            NextSleepersTest = QIS.CurrentlyAt.SleepTo;
+                            EventSchExec (QIS);
+                            if (SleepingScriptEvents.Count > 0)
+                            {
+                                QIS = SleepingScriptEvents.Peek ().Value;
+                                //Now add in the next sleep time
+                                NextSleepersTest = QIS.CurrentlyAt.SleepTo;
+                            }
+                            else //No more left, don't check again
+                                NextSleepersTest = DateTime.MaxValue;
                         }
-                        else //No more left, don't check again
-                            NextSleepersTest = DateTime.MaxValue;
+                        else
+                        {
+                            NextSleepersTest = QIS.EventsProcData.TimeCheck;
+                            SleepingScriptEvents.Enqueue (QIS, QIS.EventsProcData.TimeCheck);
+                        }
                     }
                     else //No more left, don't check again
                         NextSleepersTest = DateTime.MaxValue;
                     //All done
                     Interlocked.Exchange (ref m_CheckingSleepers, 0);
                 }
+                int timeToSleep = 5;
                 //If we can, get the next event
                 if (Interlocked.CompareExchange (ref m_CheckingEvents, 1, 0) == 0)
                 {
@@ -476,8 +484,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         Interlocked.Exchange (ref m_CheckingEvents, 0);
                     if (SleepingScriptEvents.Count == 0 && ScriptEvents.Count == 0)
                         break; //No more events, end
+                    //if (NextSleepersTest.Ticks != DateTime.MaxValue.Ticks)
+                    //    timeToSleep = (int)(NextSleepersTest - DateTime.Now).TotalMilliseconds;
+                    if (timeToSleep < 5)
+                        timeToSleep = 5;
+                    else
+                    {
+                    }
                 }
-                Thread.Sleep (5);
+                Thread.Sleep (timeToSleep);
             }
             return false;
         }

@@ -483,7 +483,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             DateTime StartTime = DateTime.Now.ToUniversalTime();
 
             //Clear out the removing of events for this script.
-            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue (this, false);
+            IgnoreNew = false;
+            Interlocked.Increment (ref VersionID);
 
             //Reset this
             StartedFromSavedState = false;
@@ -583,7 +584,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (reupload)
                 {
                     //Close the previous script
-                    CloseAndDispose(false); //We don't want to back it up
+                    CloseAndDispose (false); //We don't want to back it up
+                    Interlocked.Increment (ref VersionID);
+                    IgnoreNew = false;
                 }
 
                 //Try to find a previously compiled script in this instance
