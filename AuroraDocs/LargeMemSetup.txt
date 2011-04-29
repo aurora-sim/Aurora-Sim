@@ -1,7 +1,7 @@
-﻿Patching OpenSim.exe & OpenSim.32BitLaunch.exe to allow them to access more RAM in Windows Systems.
+﻿Patching Aurora.exe & Aurora.32BitLaunch.exe to allow them to access more RAM in Windows Systems.
 
 WHY ?
-An application running in 32Bit Mode on Windows can only access access 2GB Ram Total by default. As seen with OpenSim, this
+An application running in 32Bit Mode on Windows can only access access 2GB Ram Total by default. As seen with Aurora, this
 can can easily be reached when you throw in enough prims, scripts & users.  The Solution is to patch the EXE to make it aware
 and to adjust 32-Bit windows to accomodate that (x64 is already capable).
 
@@ -15,10 +15,10 @@ How-To Patch EXE
 Method 1)  
 
     If you have Visual Studio 2008/2010 and/or C++ Express
-    COPY your OpenSim.exe / OpenSim.32BitLaunch.exe to a safe place (backup)
+    COPY your Aurora.exe / Aurora.32BitLaunch.exe to a safe place (backup)
     Copy again to a separate Working Directory (the ones you will patch)
     Open a Command Prompt (CMD) and change directory to that working dir
-    run Following Command:  OpenSim.32BitLaunch.exe
+    run Following Command:  Aurora.32BitLaunch.exe
 
     REFERENCE for EDITBIN
     http://msdn.microsoft.com/en-us/library/xd3shwhf.aspx

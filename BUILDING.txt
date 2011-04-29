@@ -1,18 +1,27 @@
-=== Building OpenSim ===
+=== Building Aurora ===
 
 === Building on Windows ===
 
 Steps:
  * runprebuild.bat
- * Load OpenSim.sln into Visual Studio .NET and build the solution.
+
+=== If you have Visual Studio .NET ===
+
+ * Load Aurora.sln into Visual Studio .NET and build the solution.
+
+=== If you do not have Visual Studio .NET ===
+
+ * run compile.bat
+
+=== Both ===
+
  * chdir bin 
- * copy OpenSim.ini.example to OpenSim.ini and other appropriate files in bin/config-include
- * run OpenSim.exe
+ * run Aurora.exe
 
 === Building on Linux ===
 
 Prereqs:
- * Mono >= 2.4.2
+ * Mono >= 2.4.3
  * XBuild
  * On some Linux distributions you may need to install additional packages.  
     See http://opensimulator.org/wiki/Dependencies for more information.
@@ -21,8 +30,10 @@ From the distribution type:
  * ./runprebuild.sh
  * xbuild
  * cd bin 
- * copy OpenSim.ini.example to OpenSim.ini and other appropriate files in bin/config-include
- * run mono OpenSim.exe
+=== If your Mono version >= 2.8 ===
+ * run mono Aurora.exe --gc=sgen
+=== If your Mono version < 2.8 ===
+ * run mono Aurora.exe
 
 === References ===
  

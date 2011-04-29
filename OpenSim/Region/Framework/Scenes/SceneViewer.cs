@@ -453,7 +453,7 @@ namespace OpenSim.Region.Framework.Scenes
                             //Make sure we don't have an update for us
                             if(updates[0].Entity.UUID == m_presence.UUID)
                                 m_ourPresenceHasUpdate = false;
-                            m_presence.ControllingClient.SendPrimUpdate(updates);
+                            m_presence.ControllingClient.SendAvatarUpdate(updates);
                         }
                     }
                     catch(Exception ex)

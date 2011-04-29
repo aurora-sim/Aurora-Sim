@@ -1338,10 +1338,15 @@ namespace Aurora.BotManager
             
         }
 
-        public void SendPrimUpdate (IEnumerable<EntityUpdate> updates)
-        {
-            
-        }
+        public void SendAvatarUpdate(IEnumerable<EntityUpdate> updates)
+            {
+
+            }
+
+        public void SendPrimUpdate(IEnumerable<EntityUpdate> updates)
+            {
+
+            }
 
         public void FlushPrimUpdates ()
         {

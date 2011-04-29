@@ -55,7 +55,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
     /// Fired when the queue for one or more packet categories is empty. This 
     /// event can be hooked to put more data on the empty queues
     /// </summary>
-    public delegate void QueueEmpty(Int64 numPackets);
+    public delegate void QueueEmpty(object o);
 
     #endregion Delegates
 
@@ -91,7 +91,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             Interlocked.Increment(ref promotioncntr[prio]);
 
+
             if ((promotioncntr[prio] & promotionratemask) == 0)
+                // keep top free of lower priority things
             // time to move objects up in priority
             // so they don't get stalled if high trafic on higher levels               
             {
@@ -146,8 +148,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         const int MAXPERCLIENTRATE = 625000;
         const int MINPERCLIENTRATE = 6250;
         const int STARTPERCLIENTRATE = 25000;
-        const int MAX_PACKET_SKIP_RATE = 6;
-        const float CLIENT_THROTTLE_MULTIPLIER = 1.5f;
 
         private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -210,23 +210,23 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>Holds the Environment.TickCount value of when the next OnQueueEmpty can be fired</summary>
         private int m_nextOnQueueEmpty = 1;
 
+
         /// <summary>Throttle bucket for this agent's connection</summary>
-        private readonly AdaptiveTokenBucket m_throttle;
-        public AdaptiveTokenBucket FlowThrottle
-        {
-            get { return m_throttle; }
-        }
+        private readonly TokenBucket m_throttle;
         /// <summary>Throttle buckets for each packet category</summary>
-        private readonly TokenBucket[] m_throttleCategories;
+//        private readonly TokenBucket[] m_throttleCategories;
         /// <summary>Outgoing queues for throttled packets</summary>
-        private readonly OpenSim.Framework.LocklessQueue<OutgoingPacket>[] m_packetOutboxes = new OpenSim.Framework.LocklessQueue<OutgoingPacket>[(int)ThrottleOutPacketType.Count];
+//        private readonly OpenSim.Framework.LocklessQueue<OutgoingPacket>[] m_packetOutboxes = new OpenSim.Framework.LocklessQueue<OutgoingPacket>[(int)ThrottleOutPacketType.Count];
+
+        private int[] PacketsCounts = new int[(int)ThrottleOutPacketType.Count];
 
         private UDPprioQueue m_outbox = new UDPprioQueue(8, 0x01); // 8  priority levels (7 max , 0 lowest), autopromotion on every 2 enqueues
                                                                     // valid values 0x01, 0x03,0x07 0x0f...
         public int[] MapCatsToPriority = new int[(int)ThrottleOutPacketType.Count];
         /// <summary>A container that can hold one packet for each outbox, used to store
         /// dequeued packets that are being held for throttling</summary>
-        private readonly OutgoingPacket[] m_nextPackets = new OutgoingPacket[(int)ThrottleOutPacketType.Count];
+//        private readonly OutgoingPacket[] m_nextPackets = new OutgoingPacket[(int)ThrottleOutPacketType.Count];
+        private OutgoingPacket m_nextOutPacket = null;
         /// <summary>A reference to the LLUDPServer that is managing this client</summary>
         private readonly LLUDPServer m_udpServer;
 
@@ -235,8 +235,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private int m_defaultRTO = 1000;
         private int m_maxRTO = 20000;
-        private int m_lastEmptyUpdates = 0;
+//        private int m_lastEmptyUpdates = 0;
 
+        private int TotalRateRequested;
+        private int TotalRateMin;
+
+        private int[] Rates;
         /// <summary>
         /// Default constructor
         /// </summary>
@@ -259,28 +263,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_maxRTO = maxRTO;
 
             // Create a token bucket throttle for this client that has the scene token bucket as a parent
-            m_throttle = new AdaptiveTokenBucket(parentThrottle, rates.TotalLimit, 0);
-            // Create an array of token buckets for this clients different throttle categories
-            m_throttleCategories = new TokenBucket[(int)ThrottleOutPacketType.Count];
+            m_throttle = new TokenBucket(parentThrottle, rates.TotalLimit, 0);
+
+            // remember the rates the client requested
+            Rates = new int[(int)ThrottleOutPacketType.Count];
 
             for (int i = 0; i < (int)ThrottleOutPacketType.Count; i++)
-            {
-                ThrottleOutPacketType type = (ThrottleOutPacketType)i;
-
-                // Initialize the packet outboxes, where packets sit while they are waiting for tokens
-                m_packetOutboxes[i] = new OpenSim.Framework.LocklessQueue<OutgoingPacket>();
-
-                // Initialize the token buckets that control the throttling for each category
-                //Fix parent types so that tokens are passed through appropriately
-                if (type == ThrottleOutPacketType.State)
-                    m_throttleCategories[i] = new TokenBucket(m_throttleCategories[(int)ThrottleOutPacketType.Task], rates.GetLimit(type), rates.GetMinimum(type));
-                else if (type == ThrottleOutPacketType.AvatarInfo)
-                    m_throttleCategories[i] = new TokenBucket(m_throttleCategories[(int)ThrottleOutPacketType.State], rates.GetLimit(type), rates.GetMinimum(type));
-                else if (type == ThrottleOutPacketType.Transfer)
-                    m_throttleCategories[i] = new TokenBucket(m_throttleCategories[(int)ThrottleOutPacketType.Asset], rates.GetLimit(type), rates.GetMinimum(type));
-                else
-                    m_throttleCategories[i] = new TokenBucket(m_throttle, rates.GetLimit(type), rates.GetMinimum(type));
-            }
+                {
+                PacketsCounts[i] = 0;
+                }
 
             //Set the priorities for the different packet types
             //Higher is more important
@@ -309,11 +300,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void Shutdown()
         {
             IsConnected = false;
+            m_nextOutPacket = null;
+
             for (int i = 0; i < (int)ThrottleOutPacketType.Count; i++)
-            {
-                m_packetOutboxes[i].Clear();
-                m_nextPackets[i] = null;
-            }
+                {
+                PacketsCounts[i] = 0;
+                }
             OnPacketStats = null;
             OnQueueEmpty = null;
         }
@@ -326,15 +318,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 PacketsSent,
                 PacketsResent,
                 UnackedBytes,
-                m_packetOutboxes[(int)ThrottleOutPacketType.Resend].Count,
-                m_packetOutboxes[(int)ThrottleOutPacketType.Land].Count,
-                m_packetOutboxes[(int)ThrottleOutPacketType.Wind].Count,
-                m_packetOutboxes[(int)ThrottleOutPacketType.Cloud].Count,
-                m_packetOutboxes[(int)ThrottleOutPacketType.Task].Count,
-                m_packetOutboxes[(int)ThrottleOutPacketType.Texture].Count,
-                m_packetOutboxes[(int)ThrottleOutPacketType.Asset].Count,
-                m_packetOutboxes[(int)ThrottleOutPacketType.State].Count,
-                m_packetOutboxes[(int)ThrottleOutPacketType.OutBand].Count
+                PacketsCounts[(int)ThrottleOutPacketType.Resend],
+                PacketsCounts[(int)ThrottleOutPacketType.Land],
+                PacketsCounts[(int)ThrottleOutPacketType.Wind],
+                PacketsCounts[(int)ThrottleOutPacketType.Cloud],
+                PacketsCounts[(int)ThrottleOutPacketType.Task],
+                PacketsCounts[(int)ThrottleOutPacketType.Texture],
+                PacketsCounts[(int)ThrottleOutPacketType.Asset],
+                PacketsCounts[(int)ThrottleOutPacketType.State],
+                PacketsCounts[(int)ThrottleOutPacketType.OutBand]
             );
         }
 
@@ -352,6 +344,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_packetsSentReported += newPacketsSent;
             }
         }
+
+
+        public void SlowDownSend()
+            {
+            float tmp = (float)m_throttle.MaxBurst * 0.95f;
+            if (tmp < TotalRateMin)
+                tmp = (float)TotalRateMin;
+            m_throttle.MaxBurst = (int)tmp;
+            m_throttle.DripRate = (int)tmp;
+            }
 
         public void SetThrottles(byte[] throttleData)
         {
@@ -374,13 +376,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
 
             // 0.125f converts from bits to bytes
-            int resend = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f * CLIENT_THROTTLE_MULTIPLIER); pos += 4;
-            int land = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f * CLIENT_THROTTLE_MULTIPLIER); pos += 4;
-            int wind = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f * CLIENT_THROTTLE_MULTIPLIER); pos += 4;
-            int cloud = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f * CLIENT_THROTTLE_MULTIPLIER); pos += 4;
-            int task = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f * CLIENT_THROTTLE_MULTIPLIER); pos += 4;
-            int texture = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f * CLIENT_THROTTLE_MULTIPLIER); pos += 4;
-            int asset = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f * CLIENT_THROTTLE_MULTIPLIER);
+            int resend = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f ); pos += 4;
+            int land = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f ); pos += 4;
+            int wind = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f ); pos += 4;
+            int cloud = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f); pos += 4;
+            int task = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f ); pos += 4;
+            int texture = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f ); pos += 4;
+            int asset = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f );
             // These are subcategories of task that we allocate a percentage to
             int state = (int)(task * STATE_TASK_PERCENTAGE);
             task -= state;
@@ -397,64 +399,23 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // Make sure none of the throttles are set below our packet MTU,
             // otherwise a throttle could become permanently clogged
 
-/* this is not respect some viewers requests of less 11200kbits/s per cat
-            resend = Math.Max(resend, LLUDPServer.MTU);
-            land = Math.Max(land, LLUDPServer.MTU);
-            wind = Math.Max(wind, LLUDPServer.MTU);
-            cloud = Math.Max(cloud, LLUDPServer.MTU);
-            task = Math.Max(task, LLUDPServer.MTU);
-            texture = Math.Max(texture, LLUDPServer.MTU);
-            asset = Math.Max(asset, LLUDPServer.MTU);
-            state = Math.Max(state, LLUDPServer.MTU);
-            avatarinfo = Math.Max(avatarinfo, LLUDPServer.MTU);
-*/
             int total = resend + land + wind + cloud + task + texture + asset + transfer + state + avatarinfo;
-            if (total > MAXPERCLIENTRATE)
-            {
-                int percent = (int)(((float)MAXPERCLIENTRATE / (float)total) * 100);
-                total = MAXPERCLIENTRATE;
-                resend *= percent;
-                resend /= 100;
-                land *= percent;
-                land /= 100;
-                wind *= percent;
-                wind /= 100;
-                cloud *= percent;
-                cloud /= 100;
-                task *= percent;
-                task /= 100;
-                texture *= percent;
-                texture /= 100;
-                state *= percent;
-                state /= 100;
-                avatarinfo *= percent;
-                avatarinfo /= 100;
-                transfer *= percent;
-                transfer /= 100;
-            }
-            if (total < MINPERCLIENTRATE)
-            {
-                int percent = (int)(((float)MINPERCLIENTRATE / (float)total) * 100);
-                total = MINPERCLIENTRATE;
-                resend *= percent;
-                resend /= 100;
-                land *= percent;
-                land /= 100;
-                wind *= percent;
-                wind /= 100;
-                cloud *= percent;
-                cloud /= 100;
-                task *= percent;
-                task /= 100;
-                texture *= percent;
-                texture /= 100;
-                state *= percent;
-                state /= 100;
-                avatarinfo *= percent;
-                avatarinfo /= 100;
-                transfer *= percent;
-                transfer /= 100;
-            }
+
+            Rates[(int)ThrottleOutPacketType.Resend] = resend;
+            Rates[(int)ThrottleOutPacketType.Land] = land;
+            Rates[(int)ThrottleOutPacketType.Wind] = wind;
+            Rates[(int)ThrottleOutPacketType.Cloud] = cloud;
+            Rates[(int)ThrottleOutPacketType.Task] = task + state + avatarinfo;
+            Rates[(int)ThrottleOutPacketType.Texture] = texture;
+            Rates[(int)ThrottleOutPacketType.Asset] = asset + transfer;
+            Rates[(int)ThrottleOutPacketType.State] = state;
+
+            TotalRateRequested = total;
+            TotalRateMin = (int)((float)total * 0.1);
+            if (TotalRateMin < MINPERCLIENTRATE)
+                TotalRateMin = MINPERCLIENTRATE;
+            total = TotalRateMin; // let it grow slowlly
+
 
             //m_log.WarnFormat("[LLUDPCLIENT]: {0} is setting throttles. Resend={1}, Land={2}, Wind={3}, Cloud={4}, Task={5}, Texture={6}, Asset={7}, State={8}, AvatarInfo={9}, Transfer={10}, TaskFull={11}, Total={12}",
             //    AgentID, resend, land, wind, cloud, task, texture, asset, state, avatarinfo, transfer, task + state + avatarinfo, total);
@@ -463,45 +424,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             TokenBucket bucket;
 
             bucket = m_throttle;
-            bucket.RequestedDripRate = total;
-
-            bucket = m_throttleCategories[(int)ThrottleOutPacketType.Resend];
-            bucket.RequestedDripRate = resend;
-
-            bucket = m_throttleCategories[(int)ThrottleOutPacketType.Land];
-            bucket.RequestedDripRate = land;
-
-            bucket = m_throttleCategories[(int)ThrottleOutPacketType.Wind];
-            bucket.RequestedDripRate = wind;
-
-            bucket = m_throttleCategories[(int)ThrottleOutPacketType.Cloud];
-            bucket.RequestedDripRate = cloud;
-
-            bucket = m_throttleCategories[(int)ThrottleOutPacketType.Asset];
-            bucket.RequestedDripRate = asset;
-
-            bucket = m_throttleCategories[(int)ThrottleOutPacketType.Transfer];
-            bucket.RequestedDripRate = transfer;
-
-            bucket = m_throttleCategories[(int)ThrottleOutPacketType.Task];
-            /* Only use task, not task and other parts
-                        bucket.DripRate = task + state + avatarinfo;
-                        bucket.MaxBurst = task + state + avatarinfo;
-            */
-            bucket.RequestedDripRate = task;
-
-            bucket = m_throttleCategories[(int)ThrottleOutPacketType.State];
-            bucket.RequestedDripRate = state;
-
-            bucket = m_throttleCategories[(int)ThrottleOutPacketType.AvatarInfo];
-            bucket.RequestedDripRate = avatarinfo;
-
-            bucket = m_throttleCategories[(int)ThrottleOutPacketType.Texture];
-            bucket.RequestedDripRate = texture;
-
-            bucket = m_throttleCategories[(int)ThrottleOutPacketType.OutBand];
-            bucket.RequestedDripRate = 0;
-
+            bucket.DripRate = total;
+            bucket.MaxBurst = total;
             // Reset the packed throttles cached data
             m_packedThrottles = null;
         }
@@ -515,16 +439,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 data = new byte[7 * 4];
                 int i = 0;
 
-                Buffer.BlockCopy(Utils.FloatToBytes((float)m_throttleCategories[(int)ThrottleOutPacketType.Resend].RequestedDripRate * 8 * multiplier), 0, data, i, 4); i += 4;
-                Buffer.BlockCopy(Utils.FloatToBytes((float)m_throttleCategories[(int)ThrottleOutPacketType.Land].RequestedDripRate * 8 * multiplier), 0, data, i, 4); i += 4;
-                Buffer.BlockCopy(Utils.FloatToBytes((float)m_throttleCategories[(int)ThrottleOutPacketType.Wind].RequestedDripRate * 8 * multiplier), 0, data, i, 4); i += 4;
-                Buffer.BlockCopy(Utils.FloatToBytes((float)m_throttleCategories[(int)ThrottleOutPacketType.Cloud].RequestedDripRate * 8 * multiplier), 0, data, i, 4); i += 4;
-                Buffer.BlockCopy(Utils.FloatToBytes((float)((m_throttleCategories[(int)ThrottleOutPacketType.Task].RequestedDripRate * 8 * multiplier) +
-                                                            (m_throttleCategories[(int)ThrottleOutPacketType.State].RequestedDripRate * 8 * multiplier) +
-                                                            (m_throttleCategories[(int)ThrottleOutPacketType.AvatarInfo].RequestedDripRate * 8 * multiplier))), 0, data, i, 4); i += 4;
-                Buffer.BlockCopy(Utils.FloatToBytes((float)m_throttleCategories[(int)ThrottleOutPacketType.Texture].RequestedDripRate * 8 * multiplier), 0, data, i, 4); i += 4;
-                Buffer.BlockCopy(Utils.FloatToBytes((float)((m_throttleCategories[(int)ThrottleOutPacketType.Asset].RequestedDripRate * 8 * multiplier) +
-                                                            (m_throttleCategories[(int)ThrottleOutPacketType.Transfer].RequestedDripRate * 8 * multiplier))), 0, data, i, 4); i += 4;
+                Buffer.BlockCopy(Utils.FloatToBytes((float)Rates[(int)ThrottleOutPacketType.Resend] * 8 * multiplier), 0, data, i, 4); i += 4;
+                Buffer.BlockCopy(Utils.FloatToBytes((float)Rates[(int)ThrottleOutPacketType.Land] * 8 * multiplier), 0, data, i, 4); i += 4;
+                Buffer.BlockCopy(Utils.FloatToBytes((float)Rates[(int)ThrottleOutPacketType.Wind] * 8 * multiplier), 0, data, i, 4); i += 4;
+                Buffer.BlockCopy(Utils.FloatToBytes((float)Rates[(int)ThrottleOutPacketType.Cloud] * 8 * multiplier), 0, data, i, 4); i += 4;
+                Buffer.BlockCopy(Utils.FloatToBytes((float)Rates[(int)ThrottleOutPacketType.Task] * 8 * multiplier), 0, data, i, 4); i += 4;
+                Buffer.BlockCopy(Utils.FloatToBytes((float)Rates[(int)ThrottleOutPacketType.Texture] * 8 * multiplier), 0, data, i, 4); i += 4;
+                Buffer.BlockCopy(Utils.FloatToBytes((float)Rates[(int)ThrottleOutPacketType.Asset] * 8 * multiplier), 0, data, i, 4);
 
                 m_packedThrottles = data;
             }
@@ -537,13 +458,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             int category = (int)packet.Category;
             int prio;
 
-            if (category >= 0 && category < m_packetOutboxes.Length )  
-            {
+
+            if (category >= 0 && category < (int) ThrottleOutPacketType.Count)
+                {
                 //All packets are enqueued, except those that don't have a queue
                 prio = MapCatsToPriority[category];
                 m_outbox.Enqueue(prio, (object)packet);
                 return true;
-            }
+                }
             else
             {
                 // We don't have a token bucket for this category,
@@ -553,112 +475,88 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         }
 
         /// <summary>
-        /// Loops through all of the packet queues for this client and tries to send
-        /// an outgoing packet from each, obeying the throttling bucket limits
-        /// </summary>
-        /// 
-        /// Packet queues are inspected in ascending numerical order starting from 0.  Therefore, queues with a lower 
-        /// ThrottleOutPacketType number will see their packet get sent first (e.g. if both Land and Wind queues have
-        /// packets, then the packet at the front of the Land queue will be sent before the packet at the front of the
-        /// wind queue).
+        // tries to send queued packets
         /// 
         /// <remarks>This function is only called from a synchronous loop in the
         /// UDPServer so we don't need to bother making this thread safe</remarks>
         /// <returns>True if any packets were sent, otherwise false</returns>
-        public bool DequeueOutgoing (int MaxNPacks)
-        {
+        public bool DequeueOutgoing(int MaxNPacks)
+            {
+
             OutgoingPacket packet;
             bool packetSent = false;
 
-            List<OutgoingPacket> waitingPackets = new List<OutgoingPacket>();
-            int packetsSkipped = 0;
-            for (int i = 0; i < MaxNPacks; i++)
-            {
+            if (m_nextOutPacket != null)
+                {
+                packet = m_nextOutPacket;
+                if (m_throttle.RemoveTokens(packet.Buffer.DataLength))
+                    {
+                    // Send the packet
+                    m_udpServer.SendPacketFinal(packet);
+                    m_nextOutPacket = null;
+                    packetSent = true;
+                    }
+                }
+            else
+                {
                 // No dequeued packet waiting to be sent, try to pull one off
                 // this queue
                 if (m_outbox.Dequeue(out packet))
-                {
+                    {
                     // A packet was pulled off the queue. See if we have
                     // enough tokens in the bucket to send it out
-                    TokenBucket bucket = m_throttleCategories[(int)packet.Category];
-                    if (packet.Category == ThrottleOutPacketType.OutBand || bucket == null || bucket.RemoveTokens(packet.Buffer.DataLength))
-                    {
+                    if (m_throttle.RemoveTokens(packet.Buffer.DataLength) || packet.Category == ThrottleOutPacketType.OutBand)
+                        {
+                        // Send the packet
+                        m_udpServer.SendPacketFinal(packet);
                         packetSent = true;
-                        //Send the packet
-                        SendQueuedPacket(packet);
-                    }
-                    else if (packetsSkipped < MAX_PACKET_SKIP_RATE)
-                    {
-                        //This does increase the time that we spend in this loop... but its relatively safe
-                        // We won't have an infinite loop since we can only skip so many packets, 
-                        // and if we arn't sending anything, it doesn't take too long.
-                        MaxNPacks--;
-                        packetsSkipped++;
-                        waitingPackets.Add(packet);
+                        }
+                    else
+                        {
+                        m_nextOutPacket = packet;
+                        }
+
                     }
                 }
-                else
-                    break;
-            }
-#if Debug
-                if (waitingPackets.Count > 0)
-                    MainConsole.Instance.Output(waitingPackets.Count + " were not sent immediately", log4net.Core.Level.Alert);
-#endif
-            //Requeue any updates that we couldn't send immediately
-            foreach (OutgoingPacket nextPacket in waitingPackets)
-            {
-                int prio = MapCatsToPriority[(int)nextPacket.Category];
-                if (nextPacket.ReSendAttempt == 0)
-                    nextPacket.ReSendAttempt++; //We tried, update it
-                else if (nextPacket.ReSendAttempt < 2)
+
+            if (packetSent)
                 {
-                    //This "isn't" the first time this packets been kicked out of the queue, send its prio down
-                    nextPacket.ReSendAttempt = 0;
-                    prio--;
-                    if (prio < 0)
-                        prio = 0;
+                this.PacketsSent++;
+                PacketsCounts[(int)packet.Category] += packet.Packet.Length;
+
+                if (m_throttle.MaxBurst < TotalRateRequested)
+                    {
+                    float tmp = (float)m_throttle.MaxBurst * 1.005f;
+                    m_throttle.DripRate = (int)tmp;
+                    m_throttle.MaxBurst = (int)tmp;
+                    }
                 }
-                //Re-enqueue the packet now
-                m_outbox.Enqueue(prio, nextPacket);
-            }
 
-            if (m_outbox.Count <= 100 || m_lastEmptyUpdates > 10) //Fire it every 10 queues whether we should be or not
-            {
-                float numPackets = m_udpServer.PrimUpdatesPerCallback;
-                if (m_outbox.Count > 100)
-                    numPackets *= (numPackets / (float)m_outbox.Count) * ((float)m_lastEmptyUpdates / 10);
-                if (numPackets < 20)
-                    return packetSent; //Forget about it, wait until we have more, since we send lots of updates in one packet
-                
-#if Debug
-                if (m_outbox.Count > 100)
-                    MainConsole.Instance.Output(string.Format("Count of packet queue {0}, entity updates sending {1}", m_outbox.Count.ToString(), numPackets.ToString()), log4net.Core.Level.Alert);
-#endif
 
-                m_lastEmptyUpdates = 0;
-                BeginFireQueueEmpty ((Int64)numPackets);
-            }
-            else
-                m_lastEmptyUpdates++;
+            if (m_nextOnQueueEmpty != 0 && (Environment.TickCount & Int32.MaxValue) >= m_nextOnQueueEmpty)
+                {
+                // Use a value of 0 to signal that FireQueueEmpty is running
+                m_nextOnQueueEmpty = 0;
+                // Asynchronously run the callback
+                int ptmp = m_outbox.queues[MapCatsToPriority[(int)ThrottleOutPacketType.Task]].Count;
+                int ttmp = m_outbox.queues[MapCatsToPriority[(int)ThrottleOutPacketType.Texture]].Count;
+                int [] arg = {ptmp,ttmp};
+                Util.FireAndForget(FireQueueEmpty, arg);
+                }
 
-            //m_log.Info("[LLUDPCLIENT]: Queues: " + queueDebugOutput); // Serious debug business
             return packetSent;
-        }
-
-        private void SendQueuedPacket(OutgoingPacket packet)
-        {
-            // Send the packet
-            m_udpServer.SendPacketFinal(packet);
-
-            //Slowly move the burst rate up toward what it should be
-            if (m_throttle.RequestedDripRate < STARTPERCLIENTRATE)
-            {
-                float tmp = (float)m_throttle.RequestedDripRate * 1.005f;
-                m_throttle.RequestedDripRate = (int)tmp;
             }
 
-            this.PacketsSent++;
-        }
+        public int GetCurTexPacksInQueue()
+            {
+            return m_outbox.queues[MapCatsToPriority[(int)ThrottleOutPacketType.Texture]].Count;
+            }
+
+        public int GetCurTaskPacksInQueue()
+            {
+            return m_outbox.queues[MapCatsToPriority[(int)ThrottleOutPacketType.Task]].Count;
+            }
+
 
         /// <summary>
         /// Called when an ACK packet is received and a round-trip time for a
@@ -719,15 +617,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// </summary>
         /// <param name="throttleIndex">Throttle category to fire the callback
         /// for</param>
-        private void BeginFireQueueEmpty(Int64 numPackets)
+        private void BeginFireQueueEmpty()
         {
-            if (m_nextOnQueueEmpty != 0 && (Environment.TickCount & Int32.MaxValue) >= m_nextOnQueueEmpty)
-            {
-                // Use a value of 0 to signal that FireQueueEmpty is running
-                m_nextOnQueueEmpty = 0;
-                // Asynchronously run the callback
-                Util.FireAndForget(FireQueueEmpty, numPackets);
-            }
         }
 
         /// <summary>
@@ -747,7 +638,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if (callback != null)
             {
-                try { callback((Int64)o); }
+                try { callback(o); }
                 catch (Exception e) { m_log.Error("[LLUDPCLIENT]: OnQueueEmpty() threw an exception: " + e.Message, e); }
             }
 

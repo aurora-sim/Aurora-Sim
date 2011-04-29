@@ -55,7 +55,7 @@ have been moved to the AuroraConfiguration and Configuration folders (respective
 -- Grid folder --
 -----------------
 
-- GridCommon.ini -  Contains files that are used in grid mode.
+- AuroraGridCommon.ini -  Contains files that are used in grid mode.
 
 -- End Grid folder --
 
@@ -98,7 +98,7 @@ have been moved to the AuroraConfiguration and Configuration folders (respective
 
 - Scripting.ini -  Contains settings to enable/disable scripting plugins.
 - MRM.ini -  Contains MRM settings.
-- AuroraDotNetEngine.ini -  Contains ADNE settings.
+- AuroraDotNetEngine.ini -  Contains ADNE (the script engine) settings.
 
 -- End Scripting folder --
 
@@ -107,7 +107,6 @@ have been moved to the AuroraConfiguration and Configuration folders (respective
 -------------------
 
 - Simian.ini -  Contains files that are used in Simian grid mode.
-- HyperSimian.ini -  Contains files that are used in Hypergrid enabled Simian grid mode.
 
 -- End Simian folder --
 
@@ -123,29 +122,21 @@ have been moved to the AuroraConfiguration and Configuration folders (respective
 ---- Standalone Configuration ----
 -------------------------
 
-- To run standalone, you will need to edit a couple of configuration files for it to run. These files would be:
+- To run Aurora, you will need to edit a config file for it to run. This file is:
 
-    Configuration/Standalone/StandaloneCommon.ini
+bin/Aurora.ini
 
-- In this file, you will need to modify the [CAPSService] section.
-In this section, you will need to put in your hostname (external IP or dns name) and port.
-Now you can skip down to the section on "Starting Aurora".
+- You will need to modify the [Network] section, specifically the HostName parameter.
+- By default, the line is "HostName = http://127.0.0.1" and if you want to allow other users
+     besides yourself to connect to your instance, you will need to change this to your external IP, which can be found 
+     at http://www.whatsmyip.org/.
 
-- To run in grid enabled mode, you will need to edit:
-    Configuration/Grid/AuroraGridCommon.ini
-
--In this file, you will need to edit the [Configuration] and set the URL of the grid you are connecting to as well as the [CAPSService] as outlined above for standalone.
-
-- If you are trying to connect to Robust, you will need to edit:
-    Configuration / RobustGrid / RobustGridCommon.ini
-
-- You'll set this file up in the same way that you would set GridCommon.ini in OpenSim.
 
 -------------------------
 ---- Starting Aurora ----
 -------------------------
 
-- To Start the simulator part of Aurora, just double click on OpenSim.exe (if you are running a 64 bit machine and operating system, click on OpenSim.32bitLauncher.exe). It will run for a bit until you come to a screen that will help you interactively configure your new region.
+- To Start the simulator part of Aurora, just double click on Aurora.exe (if you are running a 64 bit machine and operating system, click on Aurora.32bitLauncher.exe). It will run for a bit until you come to a screen that will help you interactively configure your new region.
 
 ------------------------------
 ---- Connecting to Aurora ----
