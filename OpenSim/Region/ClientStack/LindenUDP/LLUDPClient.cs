@@ -224,10 +224,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private UDPprioQueue m_outbox = new UDPprioQueue(8, 0x01); // 8  priority levels (7 max , 0 lowest), autopromotion on every 2 enqueues
                                                                     // valid values 0x01, 0x03,0x07 0x0f...
         public int[] MapCatsToPriority = new int[(int)ThrottleOutPacketType.Count];
-        /// <summary>A container that can hold one packet for each outbox, used to store
-        /// dequeued packets that are being held for throttling</summary>
-//        private readonly OutgoingPacket[] m_nextPackets = new OutgoingPacket[(int)ThrottleOutPacketType.Count];
-        private OutgoingPacket m_nextOutPacket = null;
         /// <summary>A reference to the LLUDPServer that is managing this client</summary>
         private readonly LLUDPServer m_udpServer;
 
@@ -301,7 +297,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void Shutdown()
         {
             IsConnected = false;
-            m_nextOutPacket = null;
 
             for (int i = 0; i < (int)ThrottleOutPacketType.Count; i++)
                 {
