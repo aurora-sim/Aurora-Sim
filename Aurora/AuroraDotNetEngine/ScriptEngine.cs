@@ -612,6 +612,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             // Create a structure and add data
             QueueItemStruct QIS = new QueueItemStruct();
             QIS.ID = ID;
+            QIS.EventsProcData = new ScriptEventsProcData ();
             QIS.functionName = FunctionName;
             QIS.llDetectParams = qParams;
             QIS.param = param;

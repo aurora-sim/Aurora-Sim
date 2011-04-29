@@ -466,9 +466,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         QIS = ScriptEvents.Dequeue ();
                         EventSchExec (QIS);
                     }
+                    if (NextSleepersTest.Ticks < DateTime.Now.Ticks && ScriptEvents.Count == 0)
+                        break; //No more events, end
                     Interlocked.Exchange (ref m_CheckingEvents, 0);
                 }
+                Thread.Sleep (5);
             }
+            return false;
         }
 
         public void EventSchExec (QueueItemStruct QIS)
