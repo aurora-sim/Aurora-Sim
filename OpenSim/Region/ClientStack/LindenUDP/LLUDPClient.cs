@@ -92,7 +92,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             Interlocked.Increment(ref promotioncntr[prio]);
 
 
-            if (prio < 6 && (promotioncntr[prio] & promotionratemask) == 0)
+            if ((promotioncntr[prio] & promotionratemask) == 0)
                 // keep top free of lower priority things
             // time to move objects up in priority
             // so they don't get stalled if high trafic on higher levels               
@@ -530,13 +530,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     m_throttle.DripRate = (int)tmp;
                     m_throttle.MaxBurst = (int)tmp;
                     }
-                }
-
-            if (m_outbox.Count <= 100) // || m_lastEmptyUpdates > 10) //Fire it every 10 queues whether we should be or not
-                {
-                BeginFireQueueEmpty((Int64)20);
+                if (m_outbox.Count <= 100) // || m_lastEmptyUpdates > 10) //Fire it every 10 queues whether we should be or not
+                    {
+                    BeginFireQueueEmpty((Int64)100);
+                    }
                 }
             return packetSent;
+            }
+
+        public int GetCurTexPacksInQueue()
+            {
+            return m_outbox.queues[MapCatsToPriority[(int)ThrottleOutPacketType.Texture]].Count;
             }
 
         /// <summary>

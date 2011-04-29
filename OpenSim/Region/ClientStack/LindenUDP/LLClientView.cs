@@ -3914,10 +3914,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         }
 
         void ProcessTextureRequests()
-        {
-            if (m_imageManager != null)
-                m_imageManager.ProcessImageQueue(m_udpServer.TextureSendLimit);
-        }
+            {
+            int tmp = m_udpClient.GetCurTexPacksInQueue();
+            if (m_imageManager != null && m_udpServer.TextureSendLimit>tmp)
+                    m_imageManager.ProcessImageQueue(m_udpServer.TextureSendLimit);
+            }
 
         public void SendAssetUploadCompleteMessage(sbyte AssetType, bool Success, UUID AssetFullID)
         {
