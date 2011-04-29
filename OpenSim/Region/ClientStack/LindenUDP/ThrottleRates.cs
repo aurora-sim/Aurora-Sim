@@ -38,26 +38,24 @@ namespace OpenSim.Region.ClientStack.LindenUDP
     /// </summary>
     public sealed class ThrottleRates
     {
-        /// <summary>Minimum bytes in the token bucket before it can be taken from for resent packets</summary>
-        public int ResendMin;
-        /// <summary>Minimum bytes in the token bucket before it can be taken from for terrain packets</summary>
-        public int LandMin;
-        /// <summary>Minimum bytes in the token bucket before it can be taken from for wind packets</summary>
-        public int WindMin;
-        /// <summary>Minimum bytes in the token bucket before it can be taken from for cloud packets</summary>
-        public int CloudMin;
-        /// <summary>Minimum bytes in the token bucket before it can be taken from for task packets</summary>
-        public int TaskMin;
-        /// <summary>Minimum bytes in the token bucket before it can be taken from for texture packets</summary>
-        public int TextureMin;
-        /// <summary>Minimum bytes in the token bucket before it can be taken from for asset packets</summary>
-        public int AssetMin;
-        /// <summary>Minimum bytes in the token bucket before it can be taken from for transfer packets</summary>
-        public int TransferMin;
-        /// <summary>Minimum bytes in the token bucket before it can be taken from for state packets</summary>
-        public int StateMin;
-        /// <summary>Minimum bytes in the token bucket before it can be taken from for AvatarInfo packets</summary>
-        public int AvatarInfoMin;
+        /// <summary>Drip rate for resent packets</summary>
+        public int Resend;
+        /// <summary>Drip rate for terrain packets</summary>
+        public int Land;
+        /// <summary>Drip rate for wind packets</summary>
+        public int Wind;
+        /// <summary>Drip rate for cloud packets</summary>
+        public int Cloud;
+        /// <summary>Drip rate for task packets</summary>
+        public int Task;
+        /// <summary>Drip rate for texture packets</summary>
+        public int Texture;
+        /// <summary>Drip rate for asset packets</summary>
+        public int Asset;
+        /// <summary>Drip rate for state packets</summary>
+        public int State;
+        /// <summary>Drip rate for AvatarInfo packets</summary>
+        public int AvatarInfo;
         /// <summary>Drip rate for the parent token bucket</summary>
         public int Total;
 
@@ -75,8 +73,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public int TextureLimit;
         /// <summary>Maximum burst rate for asset packets</summary>
         public int AssetLimit;
-        /// <summary>Maximum burst rate for asset packets</summary>
-        public int TransferLimit;
         /// <summary>Maximum burst rate for state packets</summary>
         public int StateLimit;
         /// <summary>Burst rate for the parent token bucket</summary>
@@ -94,16 +90,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 IConfig throttleConfig = config.Configs["ClientStack.LindenUDP"];
 
-                ResendMin = throttleConfig.GetInt("resend_min", 1500);
-                LandMin = throttleConfig.GetInt("land_min", 400);
-                WindMin = throttleConfig.GetInt("wind_min", 500);
-                CloudMin = throttleConfig.GetInt("cloud_min", 300);
-                TaskMin = throttleConfig.GetInt("task_min", 1500);
-                TextureMin = throttleConfig.GetInt("texture_min", 1000);
-                AssetMin = throttleConfig.GetInt("asset_min", 250);
-                TransferMin = throttleConfig.GetInt("transfer_min", 1000);
-                StateMin = throttleConfig.GetInt("state_min", 500);
-                AvatarInfoMin = throttleConfig.GetInt("avatar_info_min", 250);
+                Resend = throttleConfig.GetInt("resend_default", 12500);
+                Land = throttleConfig.GetInt("land_default", 1000);
+                Wind = throttleConfig.GetInt("wind_default", 1000);
+                Cloud = throttleConfig.GetInt("cloud_default", 1000);
+                Task = throttleConfig.GetInt("task_default", 1000);
+                Texture = throttleConfig.GetInt("texture_default", 1000);
+                Asset = throttleConfig.GetInt("asset_default", 1000);
+                State = throttleConfig.GetInt("state_default", 1000);
+                AvatarInfo = throttleConfig.GetInt("avatar_info_default", 1000);
 
                 ResendLimit = throttleConfig.GetInt("resend_limit", 18750);
                 LandLimit = throttleConfig.GetInt("land_limit", 29750);
@@ -112,7 +107,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 TaskLimit = throttleConfig.GetInt("task_limit", 18750);
                 TextureLimit = throttleConfig.GetInt("texture_limit", 55750);
                 AssetLimit = throttleConfig.GetInt("asset_limit", 27500);
-                TransferLimit = throttleConfig.GetInt("transfer_limit", 27500);
                 StateLimit = throttleConfig.GetInt("state_limit", 37000);
                 AvatarInfoLimit = throttleConfig.GetInt("avatar_info_limit", 37000);
 
@@ -122,30 +116,29 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             catch (Exception) { }
         }
 
-        public int GetMinimum(ThrottleOutPacketType type)
+        public int GetRate(ThrottleOutPacketType type)
         {
             switch (type)
             {
                 case ThrottleOutPacketType.Resend:
-                    return ResendMin;
+                    return Resend;
                 case ThrottleOutPacketType.Land:
-                    return LandMin;
+                    return Land;
                 case ThrottleOutPacketType.Wind:
-                    return WindMin;
+                    return Wind;
                 case ThrottleOutPacketType.Cloud:
-                    return CloudMin;
+                    return Cloud;
                 case ThrottleOutPacketType.Task:
-                    return TaskMin;
+                    return Task;
                 case ThrottleOutPacketType.Texture:
-                    return TextureMin;
+                    return Texture;
                 case ThrottleOutPacketType.Asset:
-                    return AssetMin;
-                case ThrottleOutPacketType.Transfer:
-                    return TransferMin;
+                    return Asset;
                 case ThrottleOutPacketType.State:
-                    return StateMin;
+                    return State;
                 case ThrottleOutPacketType.AvatarInfo:
-                    return AvatarInfoMin;
+                    return AvatarInfo;
+//                case ThrottleOutPacketType.Unknown:
                 default:
                     return 0;
             }
@@ -169,12 +162,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     return TextureLimit;
                 case ThrottleOutPacketType.Asset:
                     return AssetLimit;
-                case ThrottleOutPacketType.Transfer:
-                    return TransferLimit;
                 case ThrottleOutPacketType.State:
                     return StateLimit;
                 case ThrottleOutPacketType.AvatarInfo:
                     return AvatarInfoLimit;
+//                case ThrottleOutPacketType.Unknown:
                 default:
                     return 0;
             }
