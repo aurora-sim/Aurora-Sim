@@ -362,9 +362,11 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_inUse)
                 return;
 
-            m_numberOfLoops++;
             if (m_numberOfLoops < NUMBER_OF_LOOPS_TO_WAIT) //Wait for the client to finish connecting fully before sending out bunches of updates
+                {
+                m_numberOfLoops++;
                 return;
+                }
 
             m_inUse = true;
             //This is for stats
@@ -392,8 +394,12 @@ namespace OpenSim.Region.Framework.Scenes
                                 continue;
 
                             //Check for culling here!
-                            if (Culler != null && !Culler.ShowEntityToClient(m_presence, e))
-                                continue;
+                            if (Culler != null)
+                                {
+                                if (!Culler.ShowEntityToClient(m_presence, e))
+                                    continue;
+                                lastGrpsInView.Add(e);
+                                }
 
                             double priority = m_prioritizer.GetUpdatePriority(m_presence, e);
                             //Send the root object first!
