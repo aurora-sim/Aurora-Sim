@@ -851,7 +851,10 @@ namespace Aurora.Modules
 
                 IDictionary<UUID, AssetType> assets = new Dictionary<UUID, AssetType>();
                 UuidGatherer assetGatherer = new UuidGatherer(m_scene.AssetService);
-                bool saveAssets = MainConsole.Instance.CmdPrompt ("Save assets? (Will not be able to load on other grids)", "false").Equals ("true", StringComparison.CurrentCultureIgnoreCase);
+                IAuroraBackupArchiver archiver = m_scene.RequestModuleInterface<IAuroraBackupArchiver> ();
+                bool saveAssets = false;
+                if(archiver.AllowPrompting)
+                    saveAssets = MainConsole.Instance.CmdPrompt ("Save assets? (Will not be able to load on other grids)", "false").Equals ("true", StringComparison.CurrentCultureIgnoreCase);
                         
                 foreach (ISceneEntity entity in entities)
                 {

@@ -49,6 +49,19 @@ namespace Aurora.Modules
 
         #endregion
 
+        private bool m_AllowPrompting = true;
+        public bool AllowPrompting
+        {
+            get
+            {
+                return m_AllowPrompting;
+            }
+            set
+            {
+                m_AllowPrompting = value;
+            }
+        }
+
         private void LoadAuroraArchive(string mod, string[] cmd)
         {
             IScene scene = MainConsole.Instance.ConsoleScene;

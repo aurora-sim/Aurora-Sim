@@ -9,6 +9,7 @@ namespace OpenSim.Region.Framework.Interfaces
 {
     public interface IAuroraBackupArchiver
     {
+        bool AllowPrompting { get; set; }
         void SaveRegionBackup (TarArchiveWriter writer, IScene scene);
         void LoadRegionBackup (TarArchiveReader reader, IScene scene);
     }

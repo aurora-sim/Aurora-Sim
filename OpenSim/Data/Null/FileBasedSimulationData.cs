@@ -118,7 +118,12 @@ namespace OpenSim.Data.Null
             //Add the .temp since we might need to make a backup
             GZipStream m_saveStream = new GZipStream (new FileStream (fileName + ".tmp", FileMode.Create), CompressionMode.Compress);
             TarArchiveWriter writer = new TarArchiveWriter (m_saveStream);
+            IAuroraBackupArchiver archiver = m_scene.RequestModuleInterface<IAuroraBackupArchiver> ();
+            if (archiver != null)
+                archiver.AllowPrompting = false;
             m_scene.RequestModuleInterface<IAuroraBackupArchiver> ().SaveRegionBackup (writer, m_scene);
+            if (archiver != null)
+                archiver.AllowPrompting = true;
             //If we got this far, we assume that everything went well, so now we move the stuff around
             if(File.Exists(fileName))
             {
