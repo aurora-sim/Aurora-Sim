@@ -300,7 +300,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_permissions = new ScenePermissions(this);
 
             // Load region settings
-            m_regInfo.RegionSettings = m_sceneManager.SimulationDataService.LoadRegionSettings(m_regInfo.RegionID);
+            m_regInfo.RegionSettings = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector> ().LoadRegionSettings (m_regInfo.RegionID);
 
             m_sceneGraph = new SceneGraph(this, m_regInfo);
 
@@ -382,6 +382,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (m_sceneGraph.PhysicsScene != null)
                 m_sceneGraph.PhysicsScene.Dispose ();
+
+            SimulationDataService.Shutdown ();
 
             //Tell the neighbors that this region is now down
             INeighborService service = RequestModuleInterface<INeighborService>();

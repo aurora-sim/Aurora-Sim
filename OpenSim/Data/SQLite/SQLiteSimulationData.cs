@@ -68,15 +68,6 @@ namespace OpenSim.Data.SQLite
          *
          **********************************************************************/
 
-        public SQLiteSimulationData()
-        {
-        }
-
-        public SQLiteSimulationData(string connectionString)
-        {
-            Initialise(connectionString);
-        }
-
         /// <summary>
         /// See IRegionDataStore
         /// <list type="bullet">
@@ -209,55 +200,6 @@ namespace OpenSim.Data.SQLite
             if (regionSettingsDa != null)
             {
                 regionSettingsDa = null;
-            }
-        }
-
-        public void StoreRegionSettings(RegionSettings rs)
-        {
-            lock (ds)
-            {
-                DataTable regionsettings = ds.Tables["regionsettings"];
-
-                DataRow settingsRow = regionsettings.Rows.Find(rs.RegionUUID.ToString());
-                if (settingsRow == null)
-                {
-                    settingsRow = regionsettings.NewRow();
-                    fillRegionSettingsRow(settingsRow, rs);
-                    regionsettings.Rows.Add(settingsRow);
-                }
-                else
-                {
-                    fillRegionSettingsRow(settingsRow, rs);
-                }
-
-                Commit();
-            }
-        }
-
-        public RegionSettings LoadRegionSettings(UUID regionUUID)
-        {
-            lock (ds)
-            {
-                DataTable regionsettings = ds.Tables["regionsettings"];
-
-                string searchExp = "regionUUID = '" + regionUUID.ToString() + "'";
-                DataRow[] rawsettings = regionsettings.Select(searchExp);
-                if (rawsettings.Length == 0)
-                {
-                    RegionSettings rs = new RegionSettings();
-                    rs.RegionUUID = regionUUID;
-                    rs.OnSave += StoreRegionSettings;
-
-                    StoreRegionSettings(rs);
-
-                    return rs;
-                }
-                DataRow row = rawsettings[0];
-
-                RegionSettings newSettings = buildRegionSettings(row);
-                newSettings.OnSave += StoreRegionSettings;
-
-                return newSettings;
             }
         }
 

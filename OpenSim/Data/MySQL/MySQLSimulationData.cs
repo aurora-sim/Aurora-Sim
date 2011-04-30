@@ -53,15 +53,6 @@ namespace OpenSim.Data.MySQL
         private string m_connectionString;
         private object m_dbLock = new object();
 
-        public MySQLSimulationData()
-        {
-        }
-
-        public MySQLSimulationData(string connectionString)
-        {
-            Initialise(connectionString);
-        }
-
         public void Initialise(string connectionString)
         {
             m_connectionString = connectionString;
@@ -1029,100 +1020,6 @@ namespace OpenSim.Data.MySQL
             }
 
             return landData;
-        }
-
-        #endregion
-
-        #region Region Settings (legacy)
-
-        public RegionSettings LoadRegionSettings(UUID regionUUID)
-        {
-            RegionSettings rs = null;
-
-            lock (m_dbLock)
-            {
-                using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
-                {
-                    dbcon.Open();
-
-                    using (MySqlCommand cmd = dbcon.CreateCommand())
-                    {
-                        cmd.CommandText = "select * from regionsettings where regionUUID = ?RegionUUID";
-                        cmd.Parameters.AddWithValue("regionUUID", regionUUID);
-
-                        using (IDataReader reader = ExecuteReader(cmd))
-                        {
-                            if (reader.Read())
-                            {
-                                rs = BuildRegionSettings(reader);
-                                rs.OnSave += StoreRegionSettings;
-                            }
-                            else
-                            {
-                                rs = new RegionSettings();
-                                rs.RegionUUID = regionUUID;
-                                rs.OnSave += StoreRegionSettings;
-
-                                StoreRegionSettings(rs);
-                            }
-                        }
-                    }
-                }
-            }
-
-            return rs;
-        }
-
-        public void StoreRegionSettings(RegionSettings rs)
-        {
-            lock (m_dbLock)
-            {
-                using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
-                {
-                    dbcon.Open();
-
-                    using (MySqlCommand cmd = dbcon.CreateCommand())
-                    {
-                        cmd.CommandText = "replace into regionsettings (regionUUID, " +
-                            "block_terraform, block_fly, allow_damage, " +
-                            "restrict_pushing, allow_land_resell, " +
-                            "allow_land_join_divide, block_show_in_search, " +
-                            "agent_limit, object_bonus, maturity, " +
-                            "disable_scripts, disable_collisions, " +
-                            "disable_physics, terrain_texture_1, " +
-                            "terrain_texture_2, terrain_texture_3, " +
-                            "terrain_texture_4, elevation_1_nw, " +
-                            "elevation_2_nw, elevation_1_ne, " +
-                            "elevation_2_ne, elevation_1_se, " +
-                            "elevation_2_se, elevation_1_sw, " +
-                            "elevation_2_sw, water_height, " +
-                            "terrain_raise_limit, terrain_lower_limit, " +
-                            "use_estate_sun, fixed_sun, sun_position, " +
-                            "covenant, Sandbox, sunvectorx, sunvectory, " +
-                            "sunvectorz, loaded_creation_datetime, " +
-                            "loaded_creation_id, map_tile_ID, terrain_tile_ID) values (?RegionUUID, ?BlockTerraform, " +
-                            "?BlockFly, ?AllowDamage, ?RestrictPushing, " +
-                            "?AllowLandResell, ?AllowLandJoinDivide, " +
-                            "?BlockShowInSearch, ?AgentLimit, ?ObjectBonus, " +
-                            "?Maturity, ?DisableScripts, ?DisableCollisions, " +
-                            "?DisablePhysics, ?TerrainTexture1, " +
-                            "?TerrainTexture2, ?TerrainTexture3, " +
-                            "?TerrainTexture4, ?Elevation1NW, ?Elevation2NW, " +
-                            "?Elevation1NE, ?Elevation2NE, ?Elevation1SE, " +
-                            "?Elevation2SE, ?Elevation1SW, ?Elevation2SW, " +
-                            "?WaterHeight, ?TerrainRaiseLimit, " +
-                            "?TerrainLowerLimit, ?UseEstateSun, ?FixedSun, " +
-                            "?SunPosition, ?Covenant, ?Sandbox, " +
-                            "?SunVectorX, ?SunVectorY, ?SunVectorZ, " +
-                            "?LoadedCreationDateTime, ?LoadedCreationID, " +
-                            "?TerrainImageID, ?TerrainMapImageID)";
-
-                        FillRegionSettingsCommand(cmd, rs);
-
-                        ExecuteNonQuery(cmd);
-                    }
-                }
-            }
         }
 
         #endregion

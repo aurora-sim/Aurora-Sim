@@ -57,15 +57,6 @@ namespace OpenSim.Data.MSSQL
         private MSSQLManager _Database;
         private string m_connectionString;
 
-        public MSSQLSimulationData()
-        {
-        }
-
-        public MSSQLSimulationData(string connectionString)
-        {
-            Initialise(connectionString);
-        }
-
         /// <summary>
         /// Initialises the region datastore
         /// </summary>
@@ -813,90 +804,6 @@ VALUES
                 cmd.Parameters.Add(_Database.CreateParameter("@UUID", globalID));
                 conn.Open();
                 cmd.ExecuteNonQuery();
-            }
-        }
-
-        /// <summary>
-        /// Loads the settings of a region.
-        /// </summary>
-        /// <param name="regionUUID">The region UUID.</param>
-        /// <returns></returns>
-        public RegionSettings LoadRegionSettings(UUID regionUUID)
-        {
-            string sql = "select * from regionsettings where regionUUID = @regionUUID";
-            RegionSettings regionSettings;
-            using (SqlConnection conn = new SqlConnection(m_connectionString))
-            using (SqlCommand cmd = new SqlCommand(sql, conn))
-            {
-                cmd.Parameters.Add(_Database.CreateParameter("@regionUUID", regionUUID));
-                conn.Open();
-                using (SqlDataReader reader = cmd.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        regionSettings = BuildRegionSettings(reader);
-                        regionSettings.OnSave += StoreRegionSettings;
-
-                        return regionSettings;
-                    }
-                }
-            }
-
-            //If we reach this point then there are new region settings for that region
-            regionSettings = new RegionSettings();
-            regionSettings.RegionUUID = regionUUID;
-            regionSettings.OnSave += StoreRegionSettings;
-
-            //Store new values
-            StoreNewRegionSettings(regionSettings);
-
-            return regionSettings;
-        }
-
-        /// <summary>
-        /// Store region settings, need to check if the check is really necesary. If we can make something for creating new region.
-        /// </summary>
-        /// <param name="regionSettings">region settings.</param>
-        public void StoreRegionSettings(RegionSettings regionSettings)
-        {
-            //Little check if regionUUID already exist in DB
-            string regionUUID;
-            string sql = "SELECT regionUUID FROM regionsettings WHERE regionUUID = @regionUUID";
-            using (SqlConnection conn = new SqlConnection(m_connectionString))
-            using (SqlCommand cmd = new SqlCommand(sql, conn))
-            {
-                cmd.Parameters.Add(_Database.CreateParameter("@regionUUID", regionSettings.RegionUUID));
-                conn.Open();
-                regionUUID = cmd.ExecuteScalar().ToString();
-            }
-
-            if (string.IsNullOrEmpty(regionUUID))
-            {
-                StoreNewRegionSettings(regionSettings);
-            }
-            else
-            {
-                //This method only updates region settings!!! First call LoadRegionSettings to create new region settings in DB
-                sql =
-                   @"UPDATE [regionsettings] SET [block_terraform] = @block_terraform ,[block_fly] = @block_fly ,[allow_damage] = @allow_damage 
-,[restrict_pushing] = @restrict_pushing ,[allow_land_resell] = @allow_land_resell ,[allow_land_join_divide] = @allow_land_join_divide 
-,[block_show_in_search] = @block_show_in_search ,[agent_limit] = @agent_limit ,[object_bonus] = @object_bonus ,[maturity] = @maturity 
-,[disable_scripts] = @disable_scripts ,[disable_collisions] = @disable_collisions ,[disable_physics] = @disable_physics 
-,[terrain_texture_1] = @terrain_texture_1 ,[terrain_texture_2] = @terrain_texture_2 ,[terrain_texture_3] = @terrain_texture_3 
-,[terrain_texture_4] = @terrain_texture_4 ,[elevation_1_nw] = @elevation_1_nw ,[elevation_2_nw] = @elevation_2_nw 
-,[elevation_1_ne] = @elevation_1_ne ,[elevation_2_ne] = @elevation_2_ne ,[elevation_1_se] = @elevation_1_se ,[elevation_2_se] = @elevation_2_se 
-,[elevation_1_sw] = @elevation_1_sw ,[elevation_2_sw] = @elevation_2_sw ,[water_height] = @water_height ,[terrain_raise_limit] = @terrain_raise_limit 
-,[terrain_lower_limit] = @terrain_lower_limit ,[use_estate_sun] = @use_estate_sun ,[fixed_sun] = @fixed_sun ,[sun_position] = @sun_position 
-,[covenant] = @covenant , [sunvectorx] = @sunvectorx, [sunvectory] = @sunvectory, [sunvectorz] = @sunvectorz,  [Sandbox] = @Sandbox, [loaded_creation_datetime] = @loaded_creation_datetime, [loaded_creation_id] = @loaded_creation_id
- WHERE [regionUUID] = @regionUUID";
-
-                using (SqlConnection conn = new SqlConnection(m_connectionString))
-                using (SqlCommand cmd = new SqlCommand(sql, conn))
-                {
-                    cmd.Parameters.AddRange(CreateRegionSettingParameters(regionSettings));
-                    conn.Open();
-                    cmd.ExecuteNonQuery();
-                }
             }
         }
 

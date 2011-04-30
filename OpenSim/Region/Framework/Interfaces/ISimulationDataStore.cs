@@ -117,19 +117,6 @@ namespace OpenSim.Region.Framework.Interfaces
         short[] LoadWater(UUID regionID, bool RevertMap, int RegionSizeX, int RegionSizeY);
 
         /// <summary>
-        /// Store the given regions settings (this includes some of the Region/Estate pieces)
-        /// </summary>
-        /// <param name="rs"></param>
-        void StoreRegionSettings(RegionSettings rs);
-
-        /// <summary>
-        /// Load stored region settings from the database
-        /// </summary>
-        /// <param name="regionUUID"></param>
-        /// <returns></returns>
-        RegionSettings LoadRegionSettings(UUID regionUUID);
-
-        /// <summary>
         /// Store the given parcel info in the database
         /// </summary>
         /// <param name="args"></param>

@@ -54,6 +54,19 @@ namespace Aurora.Framework
         /// Stores WindLight settings for the given region
         /// </summary>
         /// <param name="wl"></param>
-        void StoreRegionWindlightSettings(UUID RegionID, UUID ID, RegionLightShareData lsd);
+        void StoreRegionWindlightSettings (UUID RegionID, UUID ID, RegionLightShareData lsd);
+
+        /// <summary>
+        /// Store the given regions settings (this includes some of the Region/Estate pieces)
+        /// </summary>
+        /// <param name="rs"></param>
+        void StoreRegionSettings (RegionSettings rs);
+
+        /// <summary>
+        /// Load stored region settings from the database
+        /// </summary>
+        /// <param name="regionUUID"></param>
+        /// <returns></returns>
+        RegionSettings LoadRegionSettings (UUID regionUUID);
     }
 }
