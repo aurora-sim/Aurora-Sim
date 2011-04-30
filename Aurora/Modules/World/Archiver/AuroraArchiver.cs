@@ -14,6 +14,7 @@ using Aurora.Simulation.Base;
 using Nini.Config;
 using Microsoft.Win32;
 using System.Windows.Forms;
+using System.Threading;
 using log4net;
 
 namespace Aurora.Modules
@@ -49,16 +50,19 @@ namespace Aurora.Modules
 
         #endregion
 
-        private bool m_AllowPrompting = true;
+        private Int64 m_AllowPrompting = 0;
         public bool AllowPrompting
         {
             get
             {
-                return m_AllowPrompting;
+                return Interlocked.Read(ref m_AllowPrompting) == 0;
             }
             set
             {
-                m_AllowPrompting = value;
+                if (value)
+                    Interlocked.Increment (ref m_AllowPrompting);
+                else
+                    Interlocked.Decrement (ref m_AllowPrompting);
             }
         }
 
