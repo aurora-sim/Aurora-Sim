@@ -7,6 +7,12 @@ using OpenSim.Framework.Serialization;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
+    public interface IAuroraBackupArchiver
+    {
+        void SaveRegionBackup (TarArchiveWriter writer, IScene scene);
+        void LoadRegionBackup (TarArchiveReader reader, IScene scene);
+    }
+
     public interface IAuroraBackupModule
     {
         bool IsArchiving { get; }

@@ -18,7 +18,7 @@ using log4net;
 
 namespace Aurora.Modules
 {
-    public class AuroraArchiver : IService
+    public class AuroraArchiver : IService, IAuroraBackupArchiver
     {
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -34,6 +34,9 @@ namespace Aurora.Modules
             RegistryKey key = Registry.ClassesRoot.CreateSubKey(ext + "\\DefaultIcon");
             key.SetValue("", Application.StartupPath + "\\CrateDownload.ico");
             key.Close();
+
+            //Register the interface
+            registry.RegisterModuleInterface<IAuroraBackupArchiver> (this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
