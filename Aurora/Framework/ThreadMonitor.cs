@@ -50,7 +50,7 @@ namespace Aurora.Framework
             Thread thread = new Thread(Run);
             thread.IsBackground = true;
             thread.Name = "ThreadMonitor";
-            thread.Priority = ThreadPriority.BelowNormal;
+            thread.Priority = ThreadPriority.Normal;
             thread.Start();
         }
 
