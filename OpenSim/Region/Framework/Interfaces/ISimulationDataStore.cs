@@ -140,5 +140,10 @@ namespace OpenSim.Region.Framework.Interfaces
         /// Shutdown and exit the module
         /// </summary>
         void Shutdown();
+
+        /// <summary>
+        /// The name of the plugin
+        /// </summary>
+        string Name { get; }
     }
 }

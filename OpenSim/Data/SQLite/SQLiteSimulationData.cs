@@ -68,6 +68,14 @@ namespace OpenSim.Data.SQLite
          *
          **********************************************************************/
 
+        public string Name
+        {
+            get
+            {
+                return "SQLite";
+            }
+        }
+
         /// <summary>
         /// See IRegionDataStore
         /// <list type="bullet">

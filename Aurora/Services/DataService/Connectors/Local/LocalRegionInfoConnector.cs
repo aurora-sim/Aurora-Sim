@@ -190,7 +190,8 @@ namespace Aurora.Services.DataService
                     settings.SunPosition = double.Parse (query["sun_position"][i]);
                     settings.Covenant = UUID.Parse (query["covenant"][i]);
                     if(query.ContainsKey("Sandbox"))
-                        settings.Sandbox = int.Parse (query["Sandbox"][i]) == 1;
+                        if(query["Sandbox"][i] != null)
+                            settings.Sandbox = int.Parse (query["Sandbox"][i]) == 1;
                     settings.SunVector = new Vector3 (float.Parse (query["sunvectorx"][i]),
                         float.Parse (query["sunvectory"][i]),
                         float.Parse (query["sunvectorz"][i]));
@@ -220,7 +221,7 @@ namespace Aurora.Services.DataService
                 rs.TerrainTexture2, rs.TerrainTexture3, rs.TerrainTexture4, rs.Elevation1NW, rs.Elevation2NW,
                 rs.Elevation1NE, rs.Elevation2NE, rs.Elevation1SE, rs.Elevation2SE, rs.Elevation1SW, rs.Elevation2SW,
                 rs.WaterHeight, rs.TerrainRaiseLimit, rs.TerrainLowerLimit, rs.UseEstateSun, rs.FixedSun, rs.SunPosition,
-                rs.Covenant, rs.Sandbox, rs.SunVector.X, rs.SunVector.Y, rs.SunVector.Z, rs.LoadedCreationID, rs.LoadedCreationDateTime,
+                rs.Covenant, rs.Sandbox, rs.SunVector.X, rs.SunVector.Y, rs.SunVector.Z, (rs.LoadedCreationID == null ? "" : rs.LoadedCreationID), rs.LoadedCreationDateTime,
                 rs.TerrainMapImageID, rs.TerrainImageID, rs.MinimumAge, rs.CovenantLastUpdated, OSDParser.SerializeJsonString(rs.Generic)});
         }
 

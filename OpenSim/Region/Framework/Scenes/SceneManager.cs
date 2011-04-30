@@ -132,31 +132,32 @@ namespace OpenSim.Region.Framework.Scenes
 
             string StorageDLL = "";
 
-            string dllName = String.Empty;
+            string name = String.Empty;
             string connString = String.Empty;
 
             // Try reading the [DatabaseService] section, if it exists
             IConfig dbConfig = openSim.ConfigSource.Configs["DatabaseService"];
             if (dbConfig != null)
-            {
-                dllName = dbConfig.GetString("StorageProvider", String.Empty);
                 connString = dbConfig.GetString("ConnectionString", String.Empty);
-            }
 
             // Try reading the [SimulationDataStore] section
             IConfig simConfig = openSim.ConfigSource.Configs["SimulationDataStore"];
             if (simConfig != null)
             {
-                dllName = simConfig.GetString("StorageProvider", dllName);
+                name = simConfig.GetString("DatabaseLoaderName", "FileBasedDatabase");
                 connString = simConfig.GetString("ConnectionString", connString);
             }
 
-            // We tried, but this doesn't exist. We can't proceed
-            if (dllName == String.Empty)
-                dllName = "OpenSim.Data.Null.dll";
+            ISimulationDataStore[] stores = AuroraModuleLoader.PickupModules<ISimulationDataStore> ().ToArray ();
+            foreach (ISimulationDataStore store in stores)
+            {
+                if (store.Name == name)
+                {
+                    m_simulationDataService = store;
+                    break;
+                }
+            }
 
-            m_simulationDataService = AuroraModuleLoader.LoadPlugin<ISimulationDataStore>(Util.BasePathCombine(dllName));
-            
             if (m_simulationDataService == null)
             {
                 m_log.ErrorFormat("[SceneManager]: FAILED TO LOAD THE SIMULATION SERVICE AT '{0}', QUITING...", StorageDLL);

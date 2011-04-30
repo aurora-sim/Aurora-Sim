@@ -144,7 +144,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.RegionReady
                         m_oarFileLoading = false;
 
                         IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
-                        if (backup != null)
+                        if (backup != null && backup.LoadPrims)
                             backup.ProcessPrimBackupTaints(false, false);
 
                         c.From = "RegionReady";

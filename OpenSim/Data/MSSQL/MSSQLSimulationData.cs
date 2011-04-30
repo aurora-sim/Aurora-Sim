@@ -57,6 +57,14 @@ namespace OpenSim.Data.MSSQL
         private MSSQLManager _Database;
         private string m_connectionString;
 
+        public string Name
+        {
+            get
+            {
+                return "MSSQL";
+            }
+        }
+
         /// <summary>
         /// Initialises the region datastore
         /// </summary>

@@ -51,7 +51,15 @@ namespace OpenSim.Data.MySQL
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_connectionString;
-        private object m_dbLock = new object();
+        private object m_dbLock = new object ();
+
+        public string Name
+        {
+            get
+            {
+                return "MySQL";
+            }
+        }
 
         public void Initialise(string connectionString)
         {
