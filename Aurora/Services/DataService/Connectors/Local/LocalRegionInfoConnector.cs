@@ -26,7 +26,8 @@ namespace Aurora.Services.DataService
                 if (source.Configs[Name] != null)
                     defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-                GD.ConnectToDatabase(defaultConnectionString, "RegionInfo", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                GD.ConnectToDatabase (defaultConnectionString, "RegionInfo", source.Configs["AuroraConnectors"].GetBoolean ("ValidateTables", true));
+                GD.ConnectToDatabase (defaultConnectionString, "Generics", source.Configs["AuroraConnectors"].GetBoolean ("ValidateTables", true));
 
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
@@ -156,19 +157,19 @@ namespace Aurora.Services.DataService
                 for (int i = 0; i < query.ElementAt (0).Value.Count; i++)
                 {
                     settings.RegionUUID = UUID.Parse (query["regionUUID"][i]);
-                    settings.BlockTerraform = bool.Parse (query["block_terraform"][i]);
-                    settings.BlockFly = bool.Parse (query["block_fly"][i]);
-                    settings.AllowDamage = bool.Parse (query["allow_damage"][i]);
-                    settings.RestrictPushing = bool.Parse (query["restrict_pushing"][i]);
-                    settings.AllowLandResell = bool.Parse (query["allow_land_resell"][i]);
-                    settings.AllowLandJoinDivide = bool.Parse (query["allow_land_join_divide"][i]);
-                    settings.BlockShowInSearch = bool.Parse (query["block_show_in_search"][i]);
+                    settings.BlockTerraform = int.Parse (query["block_terraform"][i]) == 1;
+                    settings.BlockFly = int.Parse (query["block_fly"][i]) == 1;
+                    settings.AllowDamage = int.Parse (query["allow_damage"][i]) == 1;
+                    settings.RestrictPushing = int.Parse (query["restrict_pushing"][i]) == 1;
+                    settings.AllowLandResell = int.Parse (query["allow_land_resell"][i]) == 1;
+                    settings.AllowLandJoinDivide = int.Parse (query["allow_land_join_divide"][i]) == 1;
+                    settings.BlockShowInSearch = int.Parse (query["block_show_in_search"][i]) == 1;
                     settings.AgentLimit = int.Parse (query["agent_limit"][i]);
                     settings.ObjectBonus = double.Parse (query["object_bonus"][i]);
                     settings.Maturity = int.Parse (query["maturity"][i]);
-                    settings.DisableScripts = bool.Parse (query["disable_scripts"][i]);
-                    settings.DisableCollisions = bool.Parse (query["disable_collisions"][i]);
-                    settings.DisablePhysics = bool.Parse (query["disable_physics"][i]);
+                    settings.DisableScripts = int.Parse (query["disable_scripts"][i]) == 1;
+                    settings.DisableCollisions = int.Parse (query["disable_collisions"][i]) == 1;
+                    settings.DisablePhysics = int.Parse (query["disable_physics"][i]) == 1;
                     settings.TerrainTexture1 = UUID.Parse (query["terrain_texture_1"][i]);
                     settings.TerrainTexture2 = UUID.Parse (query["terrain_texture_2"][i]);
                     settings.TerrainTexture3 = UUID.Parse (query["terrain_texture_3"][i]);
@@ -184,11 +185,12 @@ namespace Aurora.Services.DataService
                     settings.WaterHeight = double.Parse (query["water_height"][i]);
                     settings.TerrainRaiseLimit = double.Parse (query["terrain_raise_limit"][i]);
                     settings.TerrainLowerLimit = double.Parse (query["terrain_lower_limit"][i]);
-                    settings.UseEstateSun = bool.Parse (query["use_estate_sun"][i]);
-                    settings.FixedSun = bool.Parse (query["fixed_sun"][i]);
+                    settings.UseEstateSun = int.Parse (query["use_estate_sun"][i]) == 1;
+                    settings.FixedSun = int.Parse (query["fixed_sun"][i]) == 1;
                     settings.SunPosition = double.Parse (query["sun_position"][i]);
                     settings.Covenant = UUID.Parse (query["covenant"][i]);
-                    settings.Sandbox = bool.Parse (query["Sandbox"][i]);
+                    if(query.ContainsKey("Sandbox"))
+                        settings.Sandbox = int.Parse (query["Sandbox"][i]) == 1;
                     settings.SunVector = new Vector3 (float.Parse (query["sunvectorx"][i]),
                         float.Parse (query["sunvectory"][i]),
                         float.Parse (query["sunvectorz"][i]));

@@ -805,7 +805,7 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="regionID">the region UUID</param>
         /// <returns>Heightfield data</returns>
-        public short[] LoadTerrain(UUID regionID, bool revert, int RegionSizeX, int RegionSizeY)
+        public short[] LoadTerrain(IScene scene, bool revert, int RegionSizeX, int RegionSizeY)
         {
             lock (ds)
             {
@@ -823,7 +823,7 @@ namespace OpenSim.Data.SQLite
 
                 using (SqliteCommand cmd = new SqliteCommand(sql, m_conn))
                 {
-                    cmd.Parameters.Add(new SqliteParameter(":RegionUUID", regionID.ToString()));
+                    cmd.Parameters.Add (new SqliteParameter (":RegionUUID", scene.RegionInfo.RegionID.ToString ()));
 
                     using (IDataReader row = cmd.ExecuteReader())
                     {
@@ -858,7 +858,7 @@ namespace OpenSim.Data.SQLite
                                     }
                                 }
 
-                                this.StoreTerrain(map, regionID, revert);
+                                this.StoreTerrain (map, scene.RegionInfo.RegionID, revert);
                                 return map;
                             }
                             else

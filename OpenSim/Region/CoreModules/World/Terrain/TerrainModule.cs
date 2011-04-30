@@ -478,7 +478,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             try
             {
-                short[] map = m_scene.SimulationDataService.LoadTerrain(m_scene.RegionInfo.RegionID, true, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+                short[] map = m_scene.SimulationDataService.LoadTerrain(m_scene, true, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 if (map == null)
                 {
                     m_revert = m_channel.MakeCopy();
@@ -581,7 +581,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             try
             {
-                short[] map = m_scene.SimulationDataService.LoadTerrain(m_scene.RegionInfo.RegionID, false, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+                short[] map = m_scene.SimulationDataService.LoadTerrain(m_scene, false, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 if (map == null)
                 {
                     m_log.Info("[TERRAIN]: No default terrain. Generating a new terrain.");

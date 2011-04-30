@@ -730,6 +730,8 @@ namespace Aurora.DataManager.MSSQL
         {
             switch (type)
             {
+                case ColumnTypes.Double:
+                    return "DOUBLE";
                 case ColumnTypes.Integer11:
                     return "INT(11)";
                 case ColumnTypes.Integer30:
@@ -863,6 +865,8 @@ namespace Aurora.DataManager.MSSQL
             //we'll base our names on lowercase
             switch (tStr)
             {
+                case "double":
+                    return ColumnTypes.Double;
                 case "int(11)":
                     return ColumnTypes.Integer11;
                 case "int(30)":

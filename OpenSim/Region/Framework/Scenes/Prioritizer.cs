@@ -197,7 +197,7 @@ namespace OpenSim.Region.Framework.Scenes
             bool adjustRootPriority = true;
             try
             {
-                switch (UpdatePrioritizationScheme)
+                /*switch (UpdatePrioritizationScheme)
                 {
                     case UpdatePrioritizationSchemes.Time:
                         priority = GetPriorityByTime();
@@ -214,13 +214,13 @@ namespace OpenSim.Region.Framework.Scenes
                     case UpdatePrioritizationSchemes.BestAvatarResponsiveness:
                         priority = GetPriorityByBestAvatarResponsiveness(client, entity);
                         break;
-                    case UpdatePrioritizationSchemes.OOB:
+                    case UpdatePrioritizationSchemes.OOB:*/
                         adjustRootPriority = false; //It doesn't need it
                         priority = GetPriorityByOOBDistance(client, entity);
-                        break;
+                        /*break;
                     default:
                         throw new InvalidOperationException("UpdatePrioritizationScheme not defined.");
-                }
+                }*/
             }
             catch (Exception ex)
             {

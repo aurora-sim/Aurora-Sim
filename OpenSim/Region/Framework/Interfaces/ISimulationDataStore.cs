@@ -100,7 +100,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="regionID">the region UUID</param>
         /// <returns>Heightfield data</returns>
-        short[] LoadTerrain(UUID regionID, bool RevertMap, int RegionSizeX, int RegionSizeY);
+        short[] LoadTerrain(IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY);
 
         /// <summary>
         /// Store a water revision in region storage

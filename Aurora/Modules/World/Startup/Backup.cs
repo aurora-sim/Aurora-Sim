@@ -849,7 +849,7 @@ namespace Aurora.Modules
                 {
                     AssetBase asset = m_scene.AssetService.GetCached(assetID.ToString());
                     if (asset != null)
-                        WriteAsset(asset, writer); //Write it syncronously since we havn't 
+                        WriteAsset(assetID.ToString(), asset, writer); //Write it syncronously since we havn't 
                     else
                     {
                         foundAllAssets = false; //Not all are cached
@@ -886,14 +886,17 @@ namespace Aurora.Modules
                     return;
                 }
                 //Add the asset
-                WriteAsset(asset, writer);
+                WriteAsset(id, asset, writer);
                 if (m_missingAssets.Count == 0)
                     m_isArchiving = false;
             }
 
-            private void WriteAsset(AssetBase asset, TarArchiveWriter writer)
+            private void WriteAsset(string id, AssetBase asset, TarArchiveWriter writer)
             {
-                writer.WriteFile("assets", asset.Data);
+                if (asset != null)
+                    writer.WriteFile ("assets", asset.Data);
+                else
+                    m_log.WarnFormat ("Could not find asset {0}", id);
             }
 
             public void BeginLoadModuleFromArchive(IScene scene)

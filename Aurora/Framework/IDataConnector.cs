@@ -99,6 +99,7 @@ namespace Aurora.Framework
         Char32,
         Date,
         DateTime,
+        Double,
         Integer11,
         Integer30,
         String,
@@ -118,7 +119,8 @@ namespace Aurora.Framework
         String8196,
         Text,
         MediumText,
-        LongText
+        LongText,
+        Unknown
     }
     public class ColumnDefinition
     {

@@ -153,9 +153,9 @@ namespace Aurora.DataManager.Migration
                     {
                         executingMigrator.Migrate(genericData);
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        
+                        throw new MigrationOperationException (string.Format ("Migrating to version {0} failed, {1}.", currentMigrator.Version, ex.ToString()));
                     }
                     executed = true;
                     if (validateTables)

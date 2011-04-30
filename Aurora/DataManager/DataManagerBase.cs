@@ -100,7 +100,9 @@ namespace Aurora.DataManager
 
             if (TableExists(destinationTableName))
             {
-                throw new MigrationOperationException("Cannot copy table to new name, table with same name already exists: " + destinationTableName);
+                this.DropTable (destinationTableName);
+                if (TableExists(destinationTableName))
+                    throw new MigrationOperationException("Cannot copy table to new name, table with same name already exists: " + destinationTableName);
             }
 
             if (!VerifyTableExists(sourceTableName, columnDefinitions))

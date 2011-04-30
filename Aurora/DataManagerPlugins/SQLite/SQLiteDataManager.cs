@@ -751,6 +751,8 @@ namespace Aurora.DataManager.SQLite
         {
             switch (type)
             {
+                case ColumnTypes.Double:
+                    return "DOUBLE";
                 case ColumnTypes.Integer11:
                     return "INT(11)";
                 case ColumnTypes.Integer30:
@@ -803,6 +805,8 @@ namespace Aurora.DataManager.SQLite
                     return "DATE";
                 case ColumnTypes.DateTime:
                     return "DATETIME";
+                case ColumnTypes.Unknown:
+                    return "unknown";
                 default:
                     throw new DataManagerException("Unknown column type.");
             }
@@ -838,6 +842,8 @@ namespace Aurora.DataManager.SQLite
             //we'll base our names on lowercase
             switch (tStr)
             {
+                case "double":
+                    return ColumnTypes.Double;
                 case "integer":
                     return ColumnTypes.Integer11;
                 case "int(11)":
@@ -884,8 +890,14 @@ namespace Aurora.DataManager.SQLite
                     return ColumnTypes.String8196;
                 case "blob":
                     return ColumnTypes.Blob;
+                case "float":
+                    return ColumnTypes.Unknown;
+                case "tinyint(4)":
+                    return ColumnTypes.Unknown;
+                case "int unsigned":
+                    return ColumnTypes.Unknown;
                 default:
-                    throw new Exception("You've discovered some type in SQLite that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType.");
+                    throw new Exception("You've discovered some type in SQLite that's not reconized by Aurora (" + typeString + "), please place the correct conversion in ConvertTypeToColumnType.");
             }
         }
 
