@@ -138,7 +138,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 = String.Format("{0}{1}.r32", ArchiveConstants.TERRAINS_PATH, m_scene.RegionInfo.RegionName);
 
             MemoryStream ms = new MemoryStream();
-            m_terrainModule.SaveToStream(terrainPath, ms);
+            m_terrainModule.SaveToStream(m_terrainModule.TerrainMap, terrainPath, ms);
             m_archiveWriter.WriteFile(terrainPath, ms.ToArray());
             ms.Close();
 

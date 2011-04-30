@@ -53,6 +53,7 @@ namespace OpenSim.Region.Framework.Interfaces
         void LoadFromStream(string filename, Stream stream);
         void LoadFromStream(string filename, System.Uri pathToTerrainHeightmap);
         void LoadFromStream(string filename, Stream stream, int offsetX, int offsetY);
+        void LoadRevertMapFromStream (string filename, Stream stream, int offsetX, int offsetY);
         /// <summary>
         /// Save a terrain to a stream.
         /// </summary>
@@ -60,7 +61,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// Only required here to identify the image type.  Not otherwise used in the saving itself.
         /// </param>
         /// <param name="stream"></param>
-        void SaveToStream(string filename, Stream stream);
+        void SaveToStream(ITerrainChannel channel, string filename, Stream stream);
 
         void InstallPlugin(string name, ITerrainEffect plug);
 

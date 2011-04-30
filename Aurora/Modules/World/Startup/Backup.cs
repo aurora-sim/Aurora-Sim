@@ -813,15 +813,20 @@ namespace Aurora.Modules
                 m_log.Info("[Archive]: Finished writing parcels to archive");
                 m_log.Info("[Archive]: Writing terrain to archive");
 
-                writer.WriteDir("terrain");
+                writer.WriteDir ("terrain");
+                writer.WriteDir ("revertterrain");
 
-                ITerrainModule tModule = scene.RequestModuleInterface<ITerrainModule>();
+                ITerrainModule tModule = scene.RequestModuleInterface<ITerrainModule> ();
                 if (tModule != null)
                 {
-                    MemoryStream s = new MemoryStream();
-                    tModule.SaveToStream(scene.RegionInfo.RegionID.ToString() + ".r32", s);
-                    writer.WriteFile("terrain/" + scene.RegionInfo.RegionID.ToString() + ".r32", s.ToArray());
-                    s.Close();
+                    MemoryStream s = new MemoryStream ();
+                    tModule.SaveToStream (tModule.TerrainMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
+                    writer.WriteFile ("terrain/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
+                    s.Close ();
+                    s = new MemoryStream ();
+                    tModule.SaveToStream (tModule.TerrainRevertMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
+                    writer.WriteFile ("revertterrain/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
+                    s.Close ();
                 }
 
                 m_log.Info("[Archive]: Finished writing terrain to archive");
@@ -832,13 +837,15 @@ namespace Aurora.Modules
 
                 IDictionary<UUID, AssetType> assets = new Dictionary<UUID, AssetType>();
                 UuidGatherer assetGatherer = new UuidGatherer(m_scene.AssetService);
-
+                bool saveAssets = MainConsole.Instance.CmdPrompt ("Save assets? (Will not be able to load on other grids)", "false").Equals ("true", StringComparison.CurrentCultureIgnoreCase);
+                        
                 foreach (ISceneEntity entity in entities)
                 {
                     //Write all entities
                     writer.WriteFile("entities/" + entity.UUID.ToString(), ((ISceneObject)entity).ToXml2());
                     //Get all the assets too
-                    assetGatherer.GatherAssetUuids(entity, assets, scene);
+                    if(saveAssets)
+                        assetGatherer.GatherAssetUuids(entity, assets, scene);
                 }
 
                 m_log.Info("[Archive]: Finished writing entities to archive");
@@ -967,13 +974,21 @@ namespace Aurora.Modules
                         m_parcels.Add(parcel);
                     }
                 }
-                else if (filePath.StartsWith("terrain/"))
+                else if (filePath.StartsWith ("terrain/"))
                 {
-                    ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule>();
+                    ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule> ();
 
-                    MemoryStream ms = new MemoryStream(data);
-                    terrainModule.LoadFromStream(filePath, ms, 0, 0);
-                    ms.Close();
+                    MemoryStream ms = new MemoryStream (data);
+                    terrainModule.LoadFromStream (filePath, ms, 0, 0);
+                    ms.Close ();
+                }
+                else if (filePath.StartsWith ("revertterrain/"))
+                {
+                    ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule> ();
+
+                    MemoryStream ms = new MemoryStream (data);
+                    terrainModule.LoadRevertMapFromStream (filePath, ms, 0, 0);
+                    ms.Close ();
                 }
                 else if (filePath.StartsWith("entities/"))
                 {

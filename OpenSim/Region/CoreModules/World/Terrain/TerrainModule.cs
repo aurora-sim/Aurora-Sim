@@ -135,6 +135,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_scenes.Add(scene);
             m_terrainModules.Add(this);
 
+            m_scene.RegisterModuleInterface<ITerrainModule> (this);
+
+            if (firstScene)
+                AddConsoleCommands ();
+
+            InstallDefaultEffects ();
+            LoadPlugins ();
+            
             if (!m_noTerrain)
             {
                 LoadWorldHeightmap();
@@ -143,18 +151,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 UpdateWaterHeight(scene.RegionInfo.RegionSettings.WaterHeight);
             }
 
-            m_scene.RegisterModuleInterface<ITerrainModule>(this);
             m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
             m_scene.EventManager.OnClosingClient += OnClosingClient;
             m_scene.EventManager.OnSignificantClientMovement += EventManager_OnSignificantClientMovement;
             m_scene.AuroraEventManager.OnGenericEvent += AuroraEventManager_OnGenericEvent;
             m_scene.EventManager.OnNewPresence += OnNewPresence;
-
-            if (firstScene)
-                AddConsoleCommands();
-
-            InstallDefaultEffects();
-            LoadPlugins();
 
             m_queueTimer.Enabled = false;
             m_queueTimer.AutoReset = true;
@@ -894,8 +895,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                             if (channel != null)
                             {
                                 channel.Scene = m_scene;
-                                if (m_channel.Height == channel.Height &&
-                                    m_channel.Width == channel.Width)
+                                if (m_channel == null || (m_channel.Height == channel.Height &&
+                                    m_channel.Width == channel.Width))
                                 {
                                     m_channel = channel;
                                     m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
@@ -941,6 +942,69 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             throw new TerrainException(String.Format("unable to load heightmap from file {0}: no loader available for that format", filename));
         }
 
+        /// <summary>
+        /// Loads a terrain file from a stream and installs it in the scene.
+        /// </summary>
+        /// <param name="filename">Filename to terrain file. Type is determined by extension.</param>
+        /// <param name="stream"></param>
+        public void LoadRevertMapFromStream (string filename, Stream stream, int offsetX, int offsetY)
+        {
+            foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
+            {
+                if (filename.EndsWith (loader.Key))
+                {
+                    lock (m_scene)
+                    {
+                        try
+                        {
+                            ITerrainChannel channel = loader.Value.LoadStream (stream, m_scene);
+                            if (channel != null)
+                            {
+                                channel.Scene = m_scene;
+                                if (m_revert == null || (m_revert.Height == channel.Height &&
+                                    m_revert.Width == channel.Width))
+                                {
+                                    m_revert = channel;
+                                }
+                                else
+                                {
+                                    //Make sure it is in bounds
+                                    if ((offsetX + channel.Width) > m_revert.Width ||
+                                            (offsetY + channel.Height) > m_revert.Height)
+                                    {
+                                        m_log.Error ("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        //Merge the terrains together at the specified offset
+                                        for (int x = offsetX; x < offsetX + channel.Width; x++)
+                                        {
+                                            for (int y = offsetY; y < offsetY + channel.Height; y++)
+                                            {
+                                                m_revert[x, y] = channel[x - offsetX, y - offsetY];
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        catch (NotImplementedException)
+                        {
+                            m_log.Error ("[TERRAIN]: Unable to load heightmap, the " + loader.Value +
+                                        " parser does not support file loading. (May be save only)");
+                            throw new TerrainException (String.Format ("unable to load heightmap: parser {0} does not support loading", loader.Value));
+                        }
+                    }
+
+                    m_log.Info ("[TERRAIN]: File (" + filename + ") loaded successfully");
+                    return;
+                }
+            }
+            m_log.Error ("[TERRAIN]: Unable to load heightmap, no file loader available for that format.");
+            throw new TerrainException (String.Format ("unable to load heightmap from file {0}: no loader available for that format", filename));
+        }
+
         private static Stream URIFetch(Uri uri)
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
@@ -980,7 +1044,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         /// <param name="filename">The destination filename.  Used here only to identify the image type</param>
         /// <param name="stream"></param>
-        public void SaveToStream(string filename, Stream stream)
+        public void SaveToStream(ITerrainChannel channel, string filename, Stream stream)
         {
             try
             {
@@ -988,7 +1052,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 {
                     if (filename.EndsWith(loader.Key))
                     {
-                        loader.Value.SaveStream(stream, m_channel);
+                        loader.Value.SaveStream (stream, channel);
                         return;
                     }
                 }
