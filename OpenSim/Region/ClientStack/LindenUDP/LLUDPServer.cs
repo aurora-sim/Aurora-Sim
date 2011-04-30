@@ -63,11 +63,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>Number of prim updates to put on the queue each time the 
         /// OnQueueEmpty event is triggered for updates</summary>
         public int PrimUpdatesPerCallback;
+        /// <summary>Number of avatar update packets to put on the queue each time the
+        /// OnQueueEmpty event is triggered</summary>
+        public int AvatarUpdatesPerCallBack;
         /// <summary>Number of texture packets to put on the queue each time the
         /// OnQueueEmpty event is triggered for textures</summary>
         public int TextureSendLimit;
-        /// <summary>Number of texture packets to put on the queue each time the
-        /// OnQueueEmpty event is triggered for textures</summary>
+
         public int ClientTimeOut;
 
         /// <summary>Handlers for incoming packets</summary>
@@ -155,19 +157,21 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_recvBufferSize = config.GetInt("client_socket_rcvbuf_size", 0);
                 sceneThrottleBps = config.GetInt("scene_throttle_max_bps", 0);
 
-                PrimUpdatesPerCallback = config.GetInt("PrimUpdatesPerCallback", 100);
-                TextureSendLimit = config.GetInt("TextureSendLimit", 20);
+                PrimUpdatesPerCallback = config.GetInt("PrimUpdatesPerCallback", 60);
+                AvatarUpdatesPerCallBack = config.GetInt("AvatarUpdatesPerCallback", 80);
+                TextureSendLimit = config.GetInt("TextureSendLimit", 25);
 
                 m_defaultRTO = config.GetInt("DefaultRTO", 1000);
                 m_maxRTO = config.GetInt("MaxRTO", 20000);
-                ClientTimeOut = config.GetInt("ClientTimeOut", 60);
+                ClientTimeOut = config.GetInt("ClientTimeOut", 500);
                 m_disableFacelights = config.GetBoolean("DisableFacelights", false);
             }
             else
             {
-                PrimUpdatesPerCallback = 100;
-                TextureSendLimit = 20;
-                ClientTimeOut = 60;
+                PrimUpdatesPerCallback = 60;
+                AvatarUpdatesPerCallBack = 80;
+                TextureSendLimit = 25;
+                ClientTimeOut = 500;
             }
 
             #region BinaryStats
@@ -217,6 +221,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //Then start the thread for it with an infinite loop time and no 
             //  sleep overall as the Update delete does it on it's own
             incomingPacketMonitor.StartMonitor(0, 0);
+
             outgoingPacketMonitor.StartTrackingThread(0, OutgoingPacketHandlerLoop);
             outgoingPacketMonitor.StartMonitor(0, 0);
             
@@ -557,6 +562,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     // Add this packet to the list of ACK responses we are waiting on from the server
                     udpClient.NeedAcks.Add(outgoingPacket);
                     Interlocked.Add(ref udpClient.UnackedBytes, outgoingPacket.Buffer.DataLength);
+                    if (outgoingPacket.UnackedMethod != null)
+                        {
+                        }
                 }
             }
 
@@ -951,13 +959,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 return false;
             if (!m_scene.ShouldRunHeartbeat)
                 return false;
-            
+
             // Typecast the function to an Action<IClientAPI> once here to avoid allocating a new
             // Action generic every round
             Action<IClientAPI> clientPacketHandler = ClientOutgoingPacketHandler;
 
             try
-            {
+                {
                 m_packetSent = false;
 
                 #region Update Timers
@@ -977,26 +985,26 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 // Check for pending outgoing resends every 100ms
                 if (m_elapsedMSOutgoingPacketHandler >= 100)
-                {
+                    {
                     m_resendUnacked = true;
                     m_elapsedMSOutgoingPacketHandler = 0;
                     m_elapsed100MSOutgoingPacketHandler += 1;
-                }
+                    }
 
                 // Check for pending outgoing ACKs every 500ms
                 if (m_elapsed100MSOutgoingPacketHandler >= 5)
-                {
+                    {
                     m_sendAcks = true;
                     m_elapsed100MSOutgoingPacketHandler = 0;
                     m_elapsed500MSOutgoingPacketHandler += 1;
-                }
+                    }
 
                 // Send pings to clients every 5000ms
                 if (m_elapsed500MSOutgoingPacketHandler >= 10)
-                {
+                    {
                     m_sendPing = true;
                     m_elapsed500MSOutgoingPacketHandler = 0;
-                }
+                    }
 
                 #endregion Update Timers
 
@@ -1008,11 +1016,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 // token bucket could get more tokens
                 if (!m_packetSent)
                     Thread.Sleep((int)TickCountResolution);
-            }
+                }
             catch (Exception ex)
-            {
+                {
                 m_log.Error("[LLUDPSERVER]: OutgoingPacketHandler loop threw an exception: " + ex.Message, ex);
-            }
+                }
             return true;
         }
 
