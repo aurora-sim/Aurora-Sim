@@ -173,15 +173,22 @@ namespace OpenSim.Services.GridService
 
             foreach (GridRegistrationURLs url in urls)
             {
-                foreach (IGridRegistrationUrlModule module in m_modules.Values)
+                if(url.HostNames == null || url.Ports == null || url.URLS == null)
                 {
-                    module.AddExistingUrlForClient (url.SessionID.ToString (), url.RegionHandle, url.URLS[module.UrlName], url.Ports[module.UrlName]);
+                    RemoveUrlsForClient(url.SessionID.ToString(), url.RegionHandle);
                 }
-                if (m_useSessionTime && url.Expiration.AddHours(m_timeBeforeTimeout / 8) < DateTime.Now) //Check to see whether the expiration is soon before updating
+                else
                 {
-                    //Fix the expiration time
-                    url.Expiration = DateTime.Now.AddHours(m_timeBeforeTimeout);
-                    InnerUpdateUrlsForClient(url);
+                    foreach (IGridRegistrationUrlModule module in m_modules.Values)
+                    {
+                        module.AddExistingUrlForClient (url.SessionID.ToString (), url.RegionHandle, url.URLS[module.UrlName], url.Ports[module.UrlName]);
+                    }
+                    if (m_useSessionTime && url.Expiration.AddHours(m_timeBeforeTimeout / 8) < DateTime.Now) //Check to see whether the expiration is soon before updating
+                    {
+                        //Fix the expiration time
+                        url.Expiration = DateTime.Now.AddHours(m_timeBeforeTimeout);
+                        InnerUpdateUrlsForClient(url);
+                    }
                 }
             }
         }
@@ -197,13 +204,20 @@ namespace OpenSim.Services.GridService
             OSDMap retVal = new OSDMap();
             if (urls != null)
             {
-                urls.Expiration = DateTime.Now.AddHours(m_timeBeforeTimeout);
-                urls.SessionID = SessionID;
-                urls.RegionHandle = RegionHandle;
-                foreach (KeyValuePair<string, OSD> module in urls.URLS)
+                if(urls.HostNames == null || urls.Ports == null || urls.URLS == null)
                 {
-                    //Build the URL
-                    retVal[module.Key] = urls.HostNames[module.Key] + ":" + urls.Ports[module.Key] + module.Value.AsString ();
+                    RemoveUrlsForClient(urls.SessionID.ToString(), urls.RegionHandle);
+                }
+                else
+                {
+                    urls.Expiration = DateTime.Now.AddHours(m_timeBeforeTimeout);
+                    urls.SessionID = SessionID;
+                    urls.RegionHandle = RegionHandle;
+                    foreach (KeyValuePair<string, OSD> module in urls.URLS)
+                    {
+                        //Build the URL
+                        retVal[module.Key] = urls.HostNames[module.Key] + ":" + urls.Ports[module.Key] + module.Value.AsString ();
+                    }
                 }
                 return retVal;
             }
@@ -346,12 +360,6 @@ namespace OpenSim.Services.GridService
                 Expiration = retVal["Expiration"].AsDate ();
                 HostNames = retVal["HostName"] as OSDMap;
                 Ports = retVal["Port"] as OSDMap;
-                if (URLS == null)
-                    URLS = new OSDMap ();
-                if (HostNames == null)
-                    HostNames = new OSDMap ();
-                if (Ports == null)
-                    Ports = new OSDMap ();
             }
 
             public override IDataTransferable Duplicate()

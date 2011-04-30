@@ -3930,13 +3930,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
         }
 
-        public void DequeueUpdates(Int64 nupdates)
+        public void DequeueUpdates(int nprimdates, int navadates)
         {
             IScenePresence sp = m_scene.GetScenePresence (AgentId);
             if (sp != null)
             {
                 ISceneViewer viewer = sp.SceneViewer;
-                viewer.SendPrimUpdates (nupdates);
+                viewer.SendPrimUpdates(nprimdates, navadates);
             }
         }
 
@@ -3946,21 +3946,32 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             ISceneViewer viewer = m_scene.GetScenePresence (AgentId).SceneViewer;
             while (m_UpdatesQueue.Count > 0)
-                viewer.SendPrimUpdates (m_udpServer.PrimUpdatesPerCallback);
+                viewer.SendPrimUpdates(m_udpServer.PrimUpdatesPerCallback, m_udpServer.PrimUpdatesPerCallback);
         }
 
         #endregion Primitive Packet/Data Sending Methods
 
         void HandleQueueEmpty(object o )
-        {
-            int [] atmp = (int[] ) o;
+            {
+        // arraytmp  0 contains current number of packets in task
+        // arraytmp  1 contains current number of packets in avatarinfo
+        // arraytmp  2 contains current number of packets in texture
 
-            if(m_udpServer.PrimUpdatesPerCallback > atmp[0])
-                DequeueUpdates(m_udpServer.PrimUpdatesPerCallback);
+            int[] arraytmp = (int[])o;
+            int ptmp = m_udpServer.PrimUpdatesPerCallback;
+            int atmp = m_udpServer.PrimUpdatesPerCallback;
 
-            if(m_udpServer.TextureSendLimit > atmp[1])
+            if (ptmp < arraytmp[0])
+                ptmp = 0;
+            if (atmp < arraytmp[1])
+                atmp = 0;
+
+            if (ptmp + atmp != 0)
+                DequeueUpdates(ptmp,atmp);
+
+            if (m_udpServer.TextureSendLimit > arraytmp[2])
                 ProcessTextureRequests(m_udpServer.TextureSendLimit);
-        }
+            }
 
         void ProcessTextureRequests(int numPackets)
             {
