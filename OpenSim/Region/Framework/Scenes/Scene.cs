@@ -157,9 +157,10 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_authenticateHandler; }
         }
 
+        protected ISimulationDataStore m_simDataStore;
         public ISimulationDataStore SimulationDataService
         {
-            get { return m_sceneManager.SimulationDataService; }
+            get { return m_simDataStore; }
         }
 
         public bool ShuttingDown
@@ -290,7 +291,8 @@ namespace OpenSim.Region.Framework.Scenes
             m_clientServer = clientServer;
             clientServer.AddScene (this);
 
-            m_sceneManager = RequestModuleInterface<SceneManager>();
+            m_sceneManager = RequestModuleInterface<SceneManager> ();
+            m_simDataStore = m_sceneManager.GetSimulationDataStore ();
 
             m_config = m_sceneManager.ConfigSource;
             m_authenticateHandler = authen;

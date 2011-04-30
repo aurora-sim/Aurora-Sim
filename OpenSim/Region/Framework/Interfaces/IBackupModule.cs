@@ -21,6 +21,11 @@ namespace OpenSim.Region.Framework.Interfaces
         bool LoadPrims { get; set; }
 
         /// <summary>
+        /// Should we save prims for this region?
+        /// </summary>
+        bool SavePrims { get; set; }
+
+        /// <summary>
         /// Should we load parcels for this region?
         /// </summary>
         bool LoadParcels { get; set; }

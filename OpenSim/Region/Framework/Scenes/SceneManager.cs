@@ -589,6 +589,11 @@ namespace OpenSim.Region.Framework.Scenes
             return scene;
         }
 
+        public ISimulationDataStore GetSimulationDataStore()
+        {
+            return m_simulationDataService.Copy();
+        }
+
         #endregion
 
         #region Reset a region

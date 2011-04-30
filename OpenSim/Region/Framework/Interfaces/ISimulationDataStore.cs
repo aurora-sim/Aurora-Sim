@@ -139,11 +139,16 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <summary>
         /// Shutdown and exit the module
         /// </summary>
-        void Shutdown();
+        void Shutdown ();
 
         /// <summary>
         /// The name of the plugin
         /// </summary>
         string Name { get; }
+
+        /// <summary>
+        /// Make a copy of the given data store
+        /// </summary>
+        ISimulationDataStore Copy ();
     }
 }

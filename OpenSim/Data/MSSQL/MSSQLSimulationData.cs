@@ -1586,5 +1586,10 @@ VALUES
         #endregion
 
         #endregion
+
+        public ISimulationDataStore Copy ()
+        {
+            return this;
+        }
     }
 }

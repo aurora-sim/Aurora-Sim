@@ -84,7 +84,7 @@ namespace Aurora.Modules
                 //Wait until other threads are done with backup before backing up so that we get everything
                 Thread.Sleep(100);
             }
-            if (m_backup[scene].LoadPrims)
+            if (m_backup[scene].SavePrims)
                 m_backup[scene].ProcessPrimBackupTaints(true, false);
         }
 
@@ -127,6 +127,7 @@ namespace Aurora.Modules
             protected bool m_haveLoadedPrims = false;
             protected bool m_haveLoadedParcels = false;
             protected bool m_shouldLoadPrims = true;
+            protected bool m_shouldSavePrims = true;
             protected bool m_shouldLoadParcels = true;
 
             public bool LoadParcels
@@ -139,6 +140,12 @@ namespace Aurora.Modules
             {
                 get { return m_shouldLoadPrims; }
                 set { m_shouldLoadPrims = value; }
+            }
+
+            public bool SavePrims
+            {
+                get { return m_shouldSavePrims; }
+                set { m_shouldSavePrims = value; }
             }
 
             #endregion
@@ -162,7 +169,7 @@ namespace Aurora.Modules
             /// </summary>
             protected void UpdateStorageBackup()
             {
-                if (m_scene.Frame % m_update_backup == 0 && m_shouldLoadPrims) //Don't do this every time
+                if (m_scene.Frame % m_update_backup == 0 && m_shouldSavePrims) //Don't do this every time
                 {
                     //Check every min persistant times as well except when it is set to 0
                     if (!m_backingup || (m_lastRanBackupInHeartbeat.Ticks > DateTime.Now.Ticks
@@ -331,7 +338,7 @@ namespace Aurora.Modules
             /// <param name="uuid"></param>
             public void DeleteFromStorage(UUID uuid)
             {
-                if (!LoadPrims)
+                if (!SavePrims)
                     return;
 
                 lock (m_needsDeleted)
@@ -473,7 +480,7 @@ namespace Aurora.Modules
             /// <param name="sceneObjectGroup"></param>
             public void AddPrimBackupTaint (ISceneEntity sceneObjectGroup)
             {
-                if (!LoadPrims)
+                if (!SavePrims)
                     return;
 
                 lock (m_backupTaintedPrims)
@@ -493,7 +500,7 @@ namespace Aurora.Modules
             /// </summary>
             public void ProcessPrimBackupTaints(bool forced, bool backupAll)
             {
-                if (m_backingup || !m_shouldLoadPrims) //No loading, no saving
+                if (m_backingup || !m_shouldSavePrims) //No loading, no saving
                     return;
                 m_backingup = true;
                 try

@@ -1990,5 +1990,10 @@ namespace OpenSim.Data.MySQL
             cmd.Parameters.AddWithValue("State", s.State);
             cmd.Parameters.AddWithValue("Media", null == s.Media ? null : s.Media.ToXml());
         }
+
+        public ISimulationDataStore Copy ()
+        {
+            return this;
+        }
     }
 }

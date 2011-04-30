@@ -2540,5 +2540,10 @@ namespace OpenSim.Data.SQLite
                 return DbType.String;
             }
         }
+
+        public ISimulationDataStore Copy ()
+        {
+            return this;
+        }
     }
 }

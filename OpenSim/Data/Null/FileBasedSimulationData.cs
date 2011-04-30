@@ -72,6 +72,11 @@ namespace OpenSim.Data.Null
             }
         }
 
+        public ISimulationDataStore Copy ()
+        {
+            return new FileBasedSimulationData ();
+        }
+
         public void Initialise(string dbfile)
         {
             return;
@@ -187,7 +192,7 @@ namespace OpenSim.Data.Null
                 if (backupModule != null)
                 {
                     //No loading of prims
-                    backupModule.LoadPrims = false;
+                    backupModule.SavePrims = false;
                 }
             }
             ITerrainModule terrainModule = scene.RequestModuleInterface<ITerrainModule> ();
