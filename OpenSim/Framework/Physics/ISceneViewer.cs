@@ -75,7 +75,7 @@ namespace OpenSim.Framework
         /// It loops through the available updates and sends them out (no waiting)
         /// </summary>
         /// <param name="numUpdates">The number of updates to send</param>
-        void SendPrimUpdates(Int64 numUpdates);
+        void SendPrimUpdates(int numPrimUpdates, int numAvaUpdates);
 
         /// <summary>
         /// Once the packet has been sent, allow newer updates to be sent for the given entity

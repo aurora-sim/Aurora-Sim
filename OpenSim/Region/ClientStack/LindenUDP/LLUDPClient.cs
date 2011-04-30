@@ -383,6 +383,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             int task = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f ); pos += 4;
             int texture = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f ); pos += 4;
             int asset = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f );
+
+            int total = resend + land + wind + cloud + task + texture + asset;
+
             // These are subcategories of task that we allocate a percentage to
             int state = (int)(task * STATE_TASK_PERCENTAGE);
             task -= state;
@@ -399,7 +402,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // Make sure none of the throttles are set below our packet MTU,
             // otherwise a throttle could become permanently clogged
 
-            int total = resend + land + wind + cloud + task + texture + asset + transfer + state + avatarinfo;
 
             Rates[(int)ThrottleOutPacketType.Resend] = resend;
             Rates[(int)ThrottleOutPacketType.Land] = land;
@@ -539,8 +541,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_nextOnQueueEmpty = 0;
                 // Asynchronously run the callback
                 int ptmp = m_outbox.queues[MapCatsToPriority[(int)ThrottleOutPacketType.Task]].Count;
+                int atmp = m_outbox.queues[MapCatsToPriority[(int)ThrottleOutPacketType.AvatarInfo]].Count;
                 int ttmp = m_outbox.queues[MapCatsToPriority[(int)ThrottleOutPacketType.Texture]].Count;
-                int [] arg = {ptmp,ttmp};
+                int [] arg = {ptmp,atmp,ttmp};
                 Util.FireAndForget(FireQueueEmpty, arg);
                 }
 
@@ -612,16 +615,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         }
 
         /// <summary>
-        /// Does an early check to see if this queue empty callback is already
-        /// running, then asynchronously firing the event
-        /// </summary>
-        /// <param name="throttleIndex">Throttle category to fire the callback
-        /// for</param>
-        private void BeginFireQueueEmpty()
-        {
-        }
-
-        /// <summary>
         /// Fires the OnQueueEmpty callback and sets the minimum time that it
         /// can be called again
         /// </summary>
@@ -630,7 +623,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// signature</param>
         private void FireQueueEmpty(object o)
         {
-            const int MIN_CALLBACK_MS = 50;
+            const int MIN_CALLBACK_MS = 20;
 
             QueueEmpty callback = OnQueueEmpty;
             
@@ -643,8 +636,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
 
             m_nextOnQueueEmpty = start + MIN_CALLBACK_MS;
-            if (m_nextOnQueueEmpty == 0)
-                m_nextOnQueueEmpty = 1;
+//            if (m_nextOnQueueEmpty == 0)
+//                m_nextOnQueueEmpty = 1;
         }
     }
 }
