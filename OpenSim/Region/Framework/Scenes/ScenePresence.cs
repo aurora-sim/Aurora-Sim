@@ -1914,8 +1914,10 @@ namespace OpenSim.Region.Framework.Scenes
             PhysicsCharacter actor = m_physicsActor;
             if (actor != null)
             {
-                actor.SetMovementForce((rotation == Quaternion.Identity ? vec : (vec * rotation)));
+                Vector3 direc = (rotation == Quaternion.Identity ? vec : (vec * rotation));
                 Rotation = rotation;
+                direc.Normalize();
+                actor.SetMovementForce(direc * 1.2f);
             }
         }
 
