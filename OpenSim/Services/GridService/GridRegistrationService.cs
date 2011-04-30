@@ -204,9 +204,9 @@ namespace OpenSim.Services.GridService
             OSDMap retVal = new OSDMap();
             if (urls != null)
             {
-                if(url.HostNames == null || url.Ports == null || url.URLS == null)
+                if(urls.HostNames == null || urls.Ports == null || urls.URLS == null)
                 {
-                    RemoveUrlsForClient(url.SessionID.ToString(), url.RegionHandle);
+                    RemoveUrlsForClient(urls.SessionID.ToString(), urls.RegionHandle);
                 }
                 else
                 {
