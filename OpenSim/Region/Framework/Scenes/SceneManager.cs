@@ -211,6 +211,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void Close()
         {
+            if (m_localScenes == null)
+                return;
             Scene[] scenes = new Scene[m_localScenes.Count];
             m_localScenes.CopyTo(scenes, 0);
             // collect known shared modules in sharedModules
