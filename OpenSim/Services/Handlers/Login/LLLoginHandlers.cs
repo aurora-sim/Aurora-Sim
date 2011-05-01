@@ -73,13 +73,22 @@ namespace OpenSim.Services
             if (requestData != null)
             {
                 if (requestData.ContainsKey("first") && requestData["first"] != null &&
-                    requestData.ContainsKey("last") && requestData["last"] != null &&
-                    requestData.ContainsKey("passwd") && requestData["passwd"] != null)
+                    requestData.ContainsKey ("last") && requestData["last"] != null &&
+                    ((requestData.ContainsKey ("passwd") && requestData["passwd"] != null) ||
+                    (requestData.ContainsKey ("web_login_key") && requestData["web_login_key"] != null)))
                 {
                     string first = requestData["first"].ToString();
                     string last = requestData["last"].ToString();
-                    string name = requestData.ContainsKey("name") ? requestData["name"].ToString() : "";
-                    string passwd = requestData["passwd"].ToString();
+                    string name = requestData.ContainsKey ("name") ? requestData["name"].ToString () : "";
+                    string passwd = "";
+                    string authType = "UserAccount";
+                    if (!requestData.ContainsKey ("web_login_key"))
+                        passwd = requestData["passwd"].ToString ();
+                    else
+                    {
+                        passwd = requestData["web_login_key"].ToString ();
+                        authType = "WebLoginKey";
+                    }
                     string startLocation = string.Empty;
                     UUID scopeID = UUID.Zero;
                     if (requestData["scope_id"] != null)
@@ -118,7 +127,7 @@ namespace OpenSim.Services
                         tosAccepted = requestData["agree_to_tos"].ToString();
                     }
                     string loginName = (name == "" || name == null) ? first + " " + last : name;
-                    reply = m_LocalService.VerifyClient(loginName, "UserAccount", passwd, scopeID,
+                    reply = m_LocalService.VerifyClient(loginName, authType, passwd, scopeID,
                         tosExists, tosAccepted, mac, clientVersion, out secureSessionID);
                     if (reply == null)
                     {
