@@ -858,6 +858,8 @@ namespace Aurora.Modules
                         
                 foreach (ISceneEntity entity in entities)
                 {
+                    if (entity.IsAttachment)
+                        continue;
                     //Write all entities
                     writer.WriteFile("entities/" + entity.UUID.ToString(), ((ISceneObject)entity).ToXml2());
                     //Get all the assets too
