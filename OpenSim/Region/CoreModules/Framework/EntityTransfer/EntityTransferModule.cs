@@ -157,10 +157,12 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 List<GridRegion> regions = sp.Scene.GridService.GetRegionRange (sp.Scene.RegionInfo.ScopeID, x - 8192, x + 8192, y - 8192, y + 8192);
                 foreach (GridRegion r in regions)
                 {
-                    if (r.RegionLocX < x && r.RegionLocX + r.RegionSizeX > x &&
-                        r.RegionLocY < y && r.RegionLocY + r.RegionSizeY > y)
+                    if (r.RegionLocX <= x && r.RegionLocX + r.RegionSizeX > x &&
+                        r.RegionLocY <= y && r.RegionLocY + r.RegionSizeY > y)
                     {
                         reg = r;
+                        position.X += x - reg.RegionLocX;
+                        position.Y += y - reg.RegionLocY;
                         break;
                     }
                 }
