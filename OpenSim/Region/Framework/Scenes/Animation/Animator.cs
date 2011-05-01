@@ -227,7 +227,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 return "TURNLEFT";
             }
             if (heldTurnRight && yawNeg && !heldForward &&
-                !heldBack && !actor.IsJumping && actor != null &&
+                !heldBack && actor != null && !actor.IsJumping &&
                 !actor.Flying && move.Z == 0 &&
                 fallVelocity == 0.0f && !heldUp &&
                 !heldDown && move.CompareTo(Vector3.Zero) == 0)
@@ -403,12 +403,13 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             }
             else if (m_movementAnimation == "LAND")
             {
-                if (actor.Velocity.Z != 0)
+                if (actor != null && actor.Velocity.Z != 0)
                 {
                     if (actor.Velocity.Z < SOFTLAND_FORCE)
                         return "LAND";
                     return "SOFT_LAND";
                 }
+                return "LAND";
             }
 
             m_animTickFall = 0;
