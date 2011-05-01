@@ -2163,13 +2163,13 @@ namespace OpenSim.Region.Framework.Scenes
                 //RemoveFromPhysicalScene();
                 // This constant has been inferred from experimentation
                 // I'm not sure what this value should be, so I tried a few values.
-                timeStep = 0.025f;
+                /*timeStep = 0.025f;
                 pos2 = AbsolutePosition;
                 pos2.X = pos2.X + (vel.X * timeStep);
                 pos2.Y = pos2.Y + (vel.Y * timeStep);
                 pos2.Z = pos2.Z + (vel.Z * timeStep);
                 //Velocity = (AbsolutePosition - pos2) * 2;
-                AbsolutePosition = pos2;
+                AbsolutePosition = pos2;*/
                 return true;
             }
             return false;
