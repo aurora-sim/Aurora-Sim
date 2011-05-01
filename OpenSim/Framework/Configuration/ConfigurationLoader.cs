@@ -62,6 +62,8 @@ namespace OpenSim.Framework
 
         public string iniFilePath = "";
 
+        public Dictionary<string, string> m_defines = new Dictionary<string, string> ();
+
         /// <summary>
         /// Loads the region configuration
         /// </summary>
@@ -199,6 +201,8 @@ namespace OpenSim.Framework
                 AddIncludes(sources, ref i);
             }
 
+            FixDefines (ref m_config);
+
             if (!iniFileExists)
             {
                 m_log.FatalFormat("[CONFIG]: Could not load any configuration");
@@ -209,6 +213,29 @@ namespace OpenSim.Framework
             m_config.Merge(argvSource);
 
             return m_config;
+        }
+
+        private void FixDefines (ref IConfigSource m_config)
+        {
+            if (m_defines.Count == 0)
+                return;
+
+            foreach (IConfig config in m_config.Configs)
+            {
+                int i = 0;
+                foreach (string value in config.GetValues ())
+                {
+                    foreach (string def in m_defines.Keys)
+                    {
+                        if (value.Contains (def))
+                        {
+                            string newValue = value.Replace (def, m_defines[def]);
+                            config.Set (config.GetKeys ()[i], newValue);
+                        }
+                    }
+                    i++;
+                }
+            }
         }
 
         /// <summary>
@@ -227,7 +254,12 @@ namespace OpenSim.Framework
                 string[] keys = config.GetKeys();
                 foreach (string k in keys)
                 {
-                    if (k.StartsWith("Include-"))
+                    if (k.StartsWith ("Define-"))
+                    {
+                        if(!m_defines.ContainsKey(k.Remove (0, 7)))
+                            m_defines.Add (k.Remove (0, 7), config.GetString (k));
+                    }
+                    else if (k.StartsWith("Include-"))
                     {
                         // read the config file to be included.
                         string file = config.GetString(k);
