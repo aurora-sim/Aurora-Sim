@@ -506,10 +506,10 @@ namespace Aurora.Modules
                 {
                     charterMember = OpenMetaverse.Utils.StringToBytes(UPI.MembershipGroup);
                 }
-                remoteClient.SendAvatarProperties(UPI.PrincipalID, "",
+                remoteClient.SendAvatarProperties(UPI.PrincipalID, UPI.AboutText,
                                                   Util.ToDateTime(UPI.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-                                                  charterMember, "", (uint)(TargetAccount.UserFlags & agentOnline),
-                                                  UUID.Zero, UUID.Zero, "", UUID.Zero);
+                                                  charterMember, UPI.FirstLifeAboutText, (uint)(TargetAccount.UserFlags & agentOnline),
+                                                  UPI.FirstLifeImage, UPI.Image, UPI.WebURL, UPI.Partner);
 
             }
         }
