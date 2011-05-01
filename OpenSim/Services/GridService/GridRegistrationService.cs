@@ -90,6 +90,7 @@ namespace OpenSim.Services.GridService
             registry.RegisterModuleInterface<IGridRegistrationService>(this);
             m_registry = registry;
             m_simulationBase = registry.RequestModuleInterface<ISimulationBase>();
+            m_simulationBase.EventManager.OnGenericEvent += EventManager_OnGenericEvent;
 
             m_configurationConfig = config.Configs["Configuration"];
             m_loadBalancer.SetConfig (m_configurationConfig);
@@ -103,15 +104,33 @@ namespace OpenSim.Services.GridService
                 ReadConfiguration(m_permissionConfig);
         }
 
+        object EventManager_OnGenericEvent (string FunctionName, object parameters)
+        {
+            if (FunctionName == "GridRegionSuccessfullyRegistered")
+            {
+                object[] param = (object[])parameters;
+                OSDMap resultMap = (OSDMap)param[0];
+                UUID SecureSessionID = (UUID)param[1];
+                GridRegion rinfo = (GridRegion)param[2];
+                OSDMap urls = GetUrlForRegisteringClient (SecureSessionID.ToString (), rinfo.RegionHandle);
+                resultMap["URLs"] = urls;
+                resultMap["TimeBeforeReRegister"] = m_registry.RequestModuleInterface<IGridRegistrationService> ().ExpiresTime;
+                param[0] = resultMap;
+                parameters = param;
+            }
+
+            return null;
+        }
+
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
-            m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            LoadFromDatabase();
         }
 
         public void FinishedStartup()
         {
+            m_registry.RequestModuleInterface<IAsyncMessageRecievedService> ().OnMessageReceived += OnMessageReceived;
+            m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector> ();
+            LoadFromDatabase ();
         }
         
         /// <summary>

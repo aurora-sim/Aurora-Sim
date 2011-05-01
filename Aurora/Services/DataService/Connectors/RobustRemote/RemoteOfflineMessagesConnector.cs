@@ -47,36 +47,24 @@ namespace Aurora.Services.DataService
 
         public GridInstantMessage[] GetOfflineMessages(UUID PrincipalID)
         {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
+            OSDMap map = new OSDMap ();
 
-            sendData["PRINCIPALID"] = PrincipalID;
-            sendData["METHOD"] = "getofflinemessages";
+            map["PrincipalID"] = PrincipalID;
+            map["Method"] = "getofflinemessages";
 
-            string reqString = WebUtils.BuildQueryString(sendData);
             List<GridInstantMessage> Messages = new List<GridInstantMessage>();
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(), "RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> urls = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (PrincipalID.ToString (), "RemoteServerURI");
+                foreach (string url in urls)
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI + "/auroradata",
-                           reqString);
-                    if (reply != string.Empty)
+                    OSDMap result = WebUtils.PostToService (url + "osd", map, true, false);
+                    OSDArray array = (OSDArray)OSDParser.DeserializeJson (result["_RawResult"]);
+                    foreach (OSD o in array)
                     {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        foreach (object f in replyData)
-                        {
-                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
-                            if (value.Value is Dictionary<string, object>)
-                            {
-                                Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                                GridInstantMessage message = new GridInstantMessage();
-                                message.FromKVP(valuevalue);
-                                Messages.Add(message);
-                            }
-                        }
+                        GridInstantMessage message = new GridInstantMessage ();
+                        message.FromOSD ((OSDMap)o);
+                        Messages.Add (message);
                     }
                 }
                 return Messages.ToArray();
@@ -90,20 +78,16 @@ namespace Aurora.Services.DataService
 
         public void AddOfflineMessage(GridInstantMessage message)
         {
-            Dictionary<string, object> sendData = message.ToKeyValuePairs();
+            OSDMap sendData = message.ToOSD();
 
-            sendData["METHOD"] = "addofflinemessage";
-
-            string reqString = WebUtils.BuildQueryString(sendData);
+            sendData["Method"] = "addofflinemessage";
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(message.toAgentID.ToString(), "RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> urls = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (message.toAgentID.ToString (), "RemoteServerURI");
+                foreach (string url in urls)
                 {
-                    AsynchronousRestObjectRequester.MakeRequest("POST",
-                           m_ServerURI + "/auroradata",
-                           reqString);
+                    WebUtils.PostToService (url + "osd", sendData, false, false);
                 }
             }
             catch (Exception e)

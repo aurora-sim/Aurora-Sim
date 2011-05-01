@@ -279,9 +279,8 @@ namespace OpenSim.Services
             resultMap["Result"] = result;
             if (result == "")
             {
-                OSDMap urls = m_registry.RequestModuleInterface<IGridRegistrationService>().GetUrlForRegisteringClient(SecureSessionID.ToString(), rinfo.RegionHandle);
-                resultMap["URLs"] = urls;
-                resultMap["TimeBeforeReRegister"] = m_registry.RequestModuleInterface<IGridRegistrationService>().ExpiresTime;
+                object[] o = new object[3] { resultMap, SecureSessionID, rinfo };
+                m_registry.RequestModuleInterface<ISimulationBase> ().EventManager.FireGenericEventHandler ("GridRegionSuccessfullyRegistered", o);
             }
 
             return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(resultMap));

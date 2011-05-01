@@ -25,6 +25,7 @@ namespace OpenSim.Services
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private ProfileInfoHandler ProfileHandler = new ProfileInfoHandler();
+        private OfflineMessagesInfoHandler OfflineMessagesHandler = new OfflineMessagesInfoHandler ();
         
         protected ulong m_regionHandle;
         protected IRegistryCore m_registry;
@@ -103,6 +104,18 @@ namespace OpenSim.Services
                             if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.High))
                                 return FailureResult ();
                         return ProfileHandler.AddPick (args);
+                    #endregion
+                    #region Offline Messages
+                    case "addofflinemessage":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult ();
+                        return OfflineMessagesHandler.AddOfflineMessage (args);
+                    case "getofflinemessages":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult ();
+                        return OfflineMessagesHandler.GetOfflineMessages (args);
                     #endregion
                 }
             }
@@ -338,6 +351,106 @@ namespace OpenSim.Services
             xw.Flush();
 
             return ms.ToArray();
+        }
+    }
+
+    public class OfflineMessagesInfoHandler
+    {
+        IOfflineMessagesConnector OfflineMessagesConnector;
+        public OfflineMessagesInfoHandler ()
+        {
+            OfflineMessagesConnector = DataManager.RequestPlugin<IOfflineMessagesConnector> ("IOfflineMessagesConnectorLocal");
+        }
+
+        public byte[] GetOfflineMessages (OSDMap request)
+        {
+            OSDArray result = new OSDArray ();
+
+            UUID PrincipalID = request["PrincipalID"].AsUUID ();
+            GridInstantMessage[] Messages = OfflineMessagesConnector.GetOfflineMessages (PrincipalID);
+
+            int i = 0;
+            foreach (GridInstantMessage Message in Messages)
+            {
+                result.Add (Message.ToOSD ());
+                i++;
+            }
+
+            string xmlString = OSDParser.SerializeJsonString (result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding ();
+            return encoding.GetBytes (xmlString);
+        }
+
+        public byte[] AddOfflineMessage (OSDMap request)
+        {
+            GridInstantMessage message = new GridInstantMessage ();
+            message.FromOSD (request);
+            OfflineMessagesConnector.AddOfflineMessage (message);
+
+            return SuccessResult ();
+        }
+
+        private byte[] SuccessResult ()
+        {
+            XmlDocument doc = new XmlDocument ();
+
+            XmlNode xmlnode = doc.CreateNode (XmlNodeType.XmlDeclaration,
+                    "", "");
+
+            doc.AppendChild (xmlnode);
+
+            XmlElement rootElement = doc.CreateElement ("", "ServerResponse",
+                    "");
+
+            doc.AppendChild (rootElement);
+
+            XmlElement result = doc.CreateElement ("", "Result", "");
+            result.AppendChild (doc.CreateTextNode ("Success"));
+
+            rootElement.AppendChild (result);
+
+            return DocToBytes (doc);
+        }
+
+        private byte[] DocToBytes (XmlDocument doc)
+        {
+            MemoryStream ms = new MemoryStream ();
+            XmlTextWriter xw = new XmlTextWriter (ms, null);
+            xw.Formatting = Formatting.Indented;
+            doc.WriteTo (xw);
+            xw.Flush ();
+
+            return ms.ToArray ();
+        }
+
+        // http://social.msdn.microsoft.com/forums/en-US/csharpgeneral/thread/68f7ca38-5cd1-411f-b8d4-e4f7a688bc03
+        // By: A Million Lemmings
+        public string ConvertDecString (int dvalue)
+        {
+
+            string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+            string retVal = string.Empty;
+
+            double value = Convert.ToDouble (dvalue);
+
+            do
+            {
+
+                double remainder = value - (26 * Math.Truncate (value / 26));
+
+                retVal = retVal + CHARS.Substring ((int)remainder, 1);
+
+                value = Math.Truncate (value / 26);
+
+            }
+            while (value > 0);
+
+
+
+            return retVal;
+
         }
     }
 }

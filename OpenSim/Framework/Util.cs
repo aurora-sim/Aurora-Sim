@@ -1608,9 +1608,9 @@ namespace OpenSim.Framework
                 else if (map[key].Type == OSDType.String)
                     retVal.Add(key, map[key].AsString());
                 else if (map[key].Type == OSDType.URI)
-                    retVal.Add(key, map[key].AsUri());
+                    retVal.Add (key, map[key].AsUri ());
                 else if (map[key].Type == OSDType.UUID)
-                    retVal.Add(key, map[key].AsUUID());
+                    retVal.Add (key, map[key].AsUUID ());
                 else
                     retVal.Add(key, (object)map[key].AsString());
             }
