@@ -979,7 +979,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             AbsolutePosition = pos;
 
-            Vector3 look = new Vector3(0.99f, 0.042f, 0);
+            int xmult = m_savedVelocity.X > 0 ? 1 : -1;
+            int ymult = m_savedVelocity.Y > 0 ? 1 : -1;
+            Vector3 look = new Vector3 (0.99f * xmult, 0.042f * ymult, 0);
 
             //Put the agent in an allowed area and above the terrain.
             IParcelManagementModule parcelManagement = RequestModuleInterface<IParcelManagementModule>();
