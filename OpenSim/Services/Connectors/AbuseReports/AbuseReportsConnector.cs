@@ -60,7 +60,7 @@ namespace OpenSim.Services.Connectors
                     ar.Add("METHOD", "AddAbuseReport");
 
                     SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/abusereport",
+                        m_ServerURI,
                         WebUtils.BuildQueryString(ar));
                 }
             }
@@ -79,7 +79,7 @@ namespace OpenSim.Services.Connectors
                 send.Add("METHOD", "GetAbuseReport");
                 List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 return new AbuseReport(WebUtils.ParseXmlResponse(SynchronousRestFormsRequester.MakeRequest("POST",
-                    m_ServerURIs[0] + "/abusereport",
+                    m_ServerURIs[0],
                     WebUtils.BuildQueryString(send))));
             }
             catch (Exception e)
@@ -100,7 +100,7 @@ namespace OpenSim.Services.Connectors
                 send.Add("METHOD", "GetAbuseReports");
                 List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 Dictionary<string, object> ars = WebUtils.ParseXmlResponse(SynchronousRestFormsRequester.MakeRequest("POST",
-                    m_ServerURIs[0] + "/abusereport",
+                    m_ServerURIs[0],
                     WebUtils.BuildQueryString(send)));
                 List<AbuseReport> returnvalue = new List<AbuseReport>();
                 foreach (object ar in ars)
@@ -124,7 +124,7 @@ namespace OpenSim.Services.Connectors
                 send.Add("METHOD", "AddAbuseReport");
                 List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 SynchronousRestFormsRequester.MakeRequest("POST",
-                    m_ServerURIs[0] + "/abusereport",
+                    m_ServerURIs[0],
                     WebUtils.BuildQueryString(send));
             }
             catch (Exception e)

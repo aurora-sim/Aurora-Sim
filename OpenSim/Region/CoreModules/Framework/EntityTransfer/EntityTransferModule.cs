@@ -154,23 +154,36 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             
             if (reg == null)
             {
-                // TP to a place that doesn't exist (anymore)
-                // Inform the viewer about that
-                sp.ControllingClient.SendTeleportFailed("The region you tried to teleport to doesn't exist anymore");
+                List<GridRegion> regions = sp.Scene.GridService.GetRegionRange (sp.Scene.RegionInfo.ScopeID, x - 8192, x + 8192, y - 8192, y + 8192);
+                foreach (GridRegion r in regions)
+                {
+                    if (r.RegionLocX < x && r.RegionLocX + r.RegionSizeX > x &&
+                        r.RegionLocY < y && r.RegionLocY + r.RegionSizeY > y)
+                    {
+                        reg = r;
+                        break;
+                    }
+                }
+                if (reg == null)
+                {
+                    // TP to a place that doesn't exist (anymore)
+                    // Inform the viewer about that
+                    sp.ControllingClient.SendTeleportFailed ("The region you tried to teleport to doesn't exist anymore");
 
-                // and set the map-tile to '(Offline)'
-                int regX, regY;
-                Util.UlongToInts(regionHandle, out regX, out regY);
+                    // and set the map-tile to '(Offline)'
+                    int regX, regY;
+                    Util.UlongToInts (regionHandle, out regX, out regY);
 
-                MapBlockData block = new MapBlockData();
-                block.X = (ushort)(regX / Constants.RegionSize);
-                block.Y = (ushort)(regY / Constants.RegionSize);
-                block.Access = 254; // == not there
+                    MapBlockData block = new MapBlockData ();
+                    block.X = (ushort)(regX / Constants.RegionSize);
+                    block.Y = (ushort)(regY / Constants.RegionSize);
+                    block.Access = 254; // == not there
 
-                List<MapBlockData> blocks = new List<MapBlockData>();
-                blocks.Add(block);
-                sp.ControllingClient.SendMapBlock(blocks, 0);
-                return;
+                    List<MapBlockData> blocks = new List<MapBlockData> ();
+                    blocks.Add (block);
+                    sp.ControllingClient.SendMapBlock (blocks, 0);
+                    return;
+                }
             }
             Teleport(sp, reg, position, lookAt, teleportFlags);
         }
