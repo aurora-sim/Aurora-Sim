@@ -30,8 +30,8 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("accountType", ColumnTypes.Char32, true)));
             AddSchema("tokens", ColDefs(
                 ColDef("UUID", ColumnTypes.Char36, true),
-                ColDef("token", ColumnTypes.String255),
-                ColDef("validity", ColumnTypes.Date)));
+                ColDef("token", ColumnTypes.String255, true),
+                ColDef ("validity", ColumnTypes.DateTime)));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)
