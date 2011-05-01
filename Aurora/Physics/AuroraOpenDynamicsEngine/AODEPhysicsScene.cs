@@ -1451,7 +1451,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     m_currentmaxContactsbeforedeath = Math.Max(100, (int)(maxContactsbeforedeath * TimeDilation));
                     contacts = new d.ContactGeom[Math.Max(5, (int)(m_timeDilation * contactsPerCollision))];
-                    m_log.WarnFormat("[ODE]: AutoConfig: changing contact amount to {0}, {1}%", contacts.Length, (m_timeDilation * contactsPerCollision) / contactsPerCollision * 100);
+                    //m_log.WarnFormat("[ODE]: AutoConfig: changing contact amount to {0}, {1}%", contacts.Length, (m_timeDilation * contactsPerCollision) / contactsPerCollision * 100);
                 }
             }
 
@@ -2463,7 +2463,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // process 5 frames if the sim is running slow
             if (m_EnableAutoConfig && TimeDilation < 0.75f && m_physicsiterations > 5)
             {
-                m_log.Warn("[ODE]: Sim is lagging, changing to half resolution");
+                //m_log.Warn("[ODE]: Sim is lagging, changing to half resolution");
                 // Instead of trying to catch up, it'll do 5 physics frames only
                 step_time = ODE_STEPSIZE;
                 m_physicsiterations = 5;
@@ -2481,7 +2481,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             else if (m_EnableAutoConfig && TimeDilation > 0.75f && m_physicsiterations < 10 &&
                 m_timeBetweenRevertingAutoConfigIterations == 0) //Wait for 50 frames before doing the next step down
             {
-                m_log.Warn("[ODE]: Sim is not lagging, changing to full resolution");
+                //m_log.Warn("[ODE]: Sim is not lagging, changing to full resolution");
                 step_time = ODE_STEPSIZE;
                 m_physicsiterations++;
                 m_timeBetweenRevertingAutoConfigIterations = 50;

@@ -107,13 +107,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         protected void MakeChildAgent (IScenePresence presence)
         {
-            IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
-            foreach (AvatarAttachment att in appearance.Appearance.GetAttachments ())
-            {
-                //Don't fire events as we just want to remove them 
-                //  and we don't want to remove the attachment from the av either
-                DetachSingleAttachmentToInventoryInternal(att.ItemID, presence.ControllingClient, false);
-            }
         }
 
         protected void SubscribeToClientEvents(IClientAPI client)
@@ -350,20 +343,32 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         #region Detach
 
-        public void DetachSingleAttachmentToInventory(UUID itemID, IClientAPI remoteClient)
+        public void DetachSingleAttachmentToInventory (UUID itemID, IClientAPI remoteClient)
         {
+            ISceneEntity[] attachments = GetAttachmentsForAvatar (remoteClient.AgentId);
             IScenePresence presence;
-            if (m_scene.TryGetScenePresence(remoteClient.AgentId, out presence))
+            if (m_scene.TryGetScenePresence (remoteClient.AgentId, out presence))
             {
                 IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
                 appearance.Appearance.DetachAttachment (itemID);
 
-                m_log.Debug("[ATTACHMENTS MODULE]: Detaching from UserID: " + remoteClient.AgentId + ", ItemID: " + itemID);
+                m_log.Debug ("[ATTACHMENTS MODULE]: Detaching from UserID: " + remoteClient.AgentId + ", ItemID: " + itemID);
                 if (AvatarFactory != null)
-                    AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
+                    AvatarFactory.QueueAppearanceSave (remoteClient.AgentId);
             }
 
-            DetachSingleAttachmentToInventoryInternal(itemID, remoteClient, true);
+            DetachSingleAttachmentToInventoryInternal (itemID, remoteClient, true);
+            //Find the attachment we are trying to edit by ItemID
+            foreach (ISceneEntity grp in attachments)
+            {
+                if (grp.RootChild.FromUserInventoryItemID == itemID)
+                {
+                    //And from storage as well
+                    IBackupModule backup = presence.Scene.RequestModuleInterface<IBackupModule> ();
+                    if (backup != null)
+                        backup.DeleteSceneObjects (new ISceneEntity[1]{grp}, false);
+                }
+            }
         }
 
         public void DetachSingleAttachmentToGround(UUID itemID, IClientAPI remoteClient)
@@ -515,7 +520,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                         continue;
                     }
                     //Save it and prep it for transfer
-                    DetachSingleAttachmentToInventoryInternal(attachments[i].RootChild.FromUserInventoryItemID, presence.ControllingClient, false);
+                    DetachSingleAttachmentGroupToInventoryInternal (attachments[i].RootChild.FromUserInventoryItemID, presence.ControllingClient, false, attachments[i]);
                 }
             }
         }
@@ -742,52 +747,53 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             {
                 if (group.RootChild.FromUserInventoryItemID == itemID)
                 {
-                    if (fireEvent)
-                    {
-                        m_scene.EventManager.TriggerOnAttach(group.LocalId, itemID, UUID.Zero);
-
-                        group.DetachToInventoryPrep();
-                    }
-
-                    IScenePresence presence = m_scene.GetScenePresence (remoteClient.AgentId);
-                    if (presence != null)
-                    {
-                        AvatarAttachments attModule = presence.RequestModuleInterface<AvatarAttachments>();
-                        if (attModule != null)
-                            attModule.RemoveAttachment(group);
-                    }
-
-                    m_log.Debug("[ATTACHMENTS MODULE]: Saving attachpoint: " + ((uint)group.GetAttachmentPoint()).ToString());
-
-                    //Update the saved attach points
-                    if (group.RootChild.AttachedPos != group.RootChild.SavedAttachedPos ||
-                        group.RootChild.SavedAttachmentPoint != group.RootChild.AttachmentPoint)
-                    {
-                        group.RootChild.SavedAttachedPos = group.RootChild.AttachedPos;
-                        group.RootChild.SavedAttachmentPoint = group.RootChild.AttachmentPoint;
-                        //Make sure we get updated
-                        group.HasGroupChanged = true;
-                    }
-
-                    // If an item contains scripts, it's always changed.
-                    // This ensures script state is saved on detach
-                    foreach (ISceneChildEntity p in group.ChildrenEntities())
-                    {
-                        if (p.Inventory.ContainsScripts())
-                        {
-                            group.HasGroupChanged = true;
-                            break;
-                        }
-                    }
-
-                    UpdateKnownItem(remoteClient, group, group.RootChild.FromUserInventoryItemID, group.OwnerID);
-
-                    IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
-                    if (backup != null)
-                        backup.DeleteSceneObjects(new ISceneEntity[1] { group }, true);
-                    return; //All done, end
+                    DetachSingleAttachmentGroupToInventoryInternal (itemID, remoteClient, fireEvent, group);
+                    return;
                 }
             }
+        }
+
+        private void DetachSingleAttachmentGroupToInventoryInternal (UUID itemID, IClientAPI remoteClient, bool fireEvent, ISceneEntity group)
+        {
+            if (fireEvent)
+            {
+                m_scene.EventManager.TriggerOnAttach (group.LocalId, itemID, UUID.Zero);
+
+                group.DetachToInventoryPrep ();
+            }
+
+            IScenePresence presence = m_scene.GetScenePresence (remoteClient.AgentId);
+            if (presence != null)
+            {
+                AvatarAttachments attModule = presence.RequestModuleInterface<AvatarAttachments> ();
+                if (attModule != null)
+                    attModule.RemoveAttachment (group);
+            }
+
+            m_log.Debug ("[ATTACHMENTS MODULE]: Saving attachpoint: " + ((uint)group.GetAttachmentPoint ()).ToString ());
+
+            //Update the saved attach points
+            if (group.RootChild.AttachedPos != group.RootChild.SavedAttachedPos ||
+                group.RootChild.SavedAttachmentPoint != group.RootChild.AttachmentPoint)
+            {
+                group.RootChild.SavedAttachedPos = group.RootChild.AttachedPos;
+                group.RootChild.SavedAttachmentPoint = group.RootChild.AttachmentPoint;
+                //Make sure we get updated
+                group.HasGroupChanged = true;
+            }
+
+            // If an item contains scripts, it's always changed.
+            // This ensures script state is saved on detach
+            foreach (ISceneChildEntity p in group.ChildrenEntities ())
+            {
+                if (p.Inventory.ContainsScripts ())
+                {
+                    group.HasGroupChanged = true;
+                    break;
+                }
+            }
+
+            UpdateKnownItem (remoteClient, group, group.RootChild.FromUserInventoryItemID, group.OwnerID);
         }
 
         /// <summary>
@@ -807,7 +813,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             {
                 if (!grp.HasGroupChanged)
                 {
-                    m_log.WarnFormat("[ATTACHMENTS MODULE]: Save request for {0} which is unchanged", grp.UUID);
+                    //m_log.WarnFormat("[ATTACHMENTS MODULE]: Save request for {0} which is unchanged", grp.UUID);
                     return;
                 }
 

@@ -546,6 +546,7 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_pos = value; }
         }
 
+        private Vector3 m_savedVelocity;
         /// <summary>
         /// Current velocity of the avatar.
         /// </summary>
@@ -557,7 +558,9 @@ namespace OpenSim.Region.Framework.Scenes
                 if (actor != null)
                     return actor.Velocity;
 
-                return Vector3.Zero;
+                Vector3 vel = m_savedVelocity;
+                m_savedVelocity = Vector3.Zero;
+                return vel;
             }
             set
             {
@@ -571,9 +574,11 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     catch (Exception e)
                     {
-                        m_log.Error("[SCENEPRESENCE]: VELOCITY " + e.Message);
+                        m_log.Error ("[SCENEPRESENCE]: VELOCITY " + e.Message);
                     }
                 }
+                else
+                    m_savedVelocity = value;
             }
         }
 
@@ -784,6 +789,7 @@ namespace OpenSim.Region.Framework.Scenes
                 Name, m_scene.RegionInfo.RegionName);
 
             AddToPhysicalScene(isFlying, false);
+            m_physicsActor.Position += m_savedVelocity * 0.04f;
             NotInTransit();
 
             if (m_forceFly)
@@ -979,9 +985,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             AbsolutePosition = pos;
 
-            Vector3 look = Velocity;
-            if (look == Vector3.Zero)
-                look = new Vector3(0.99f, 0.042f, 0);
+            Vector3 look = new Vector3(0.99f, 0.042f, 0);
 
             //Put the agent in an allowed area and above the terrain.
             IParcelManagementModule parcelManagement = RequestModuleInterface<IParcelManagementModule>();
@@ -2160,15 +2164,15 @@ namespace OpenSim.Region.Framework.Scenes
             else
             {
                 //Crossings are much nastier if this code is enabled
-                /*RemoveFromPhysicalScene();
+                //RemoveFromPhysicalScene();
                 // This constant has been inferred from experimentation
                 // I'm not sure what this value should be, so I tried a few values.
-                timeStep = 0.04f;
+                timeStep = 0.01f;
                 pos2 = AbsolutePosition;
                 pos2.X = pos2.X + (vel.X * timeStep);
                 pos2.Y = pos2.Y + (vel.Y * timeStep);
                 pos2.Z = pos2.Z + (vel.Z * timeStep);
-                m_pos = pos2;*/
+                m_pos = pos2;
                 return true;
             }
             return false;
@@ -2244,7 +2248,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_scene.EventManager.TriggerSignificantClientMovement(m_controllingClient);
 
-            //m_velocity = cAgentData.Velocity;
+            m_savedVelocity = cAgentData.Velocity;
         }
 
         public void CopyTo(AgentData cAgent)
@@ -2327,6 +2331,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_headrotation = cAgent.HeadRotation;
                 m_bodyRot = cAgent.BodyRotation;
                 m_AgentControlFlags = (AgentManager.ControlFlags)cAgent.ControlFlags;
+                m_savedVelocity = cAgent.Velocity;
 
                 //if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
                 //    m_godLevel = cAgent.GodLevel;
@@ -2462,14 +2467,17 @@ namespace OpenSim.Region.Framework.Scenes
 
             CollisionPlane = Vector4.UnitW;
 
-            //Fire events for attachments
-            IAttachmentsModule attModule = Scene.RequestModuleInterface<IAttachmentsModule>();
-            if (attModule != null)
+            if (coldata.Keys.Count > 0)
             {
-                ISceneEntity[] attachments = attModule.GetAttachmentsForAvatar (UUID);
-                foreach (ISceneEntity grp in attachments)
+                //Fire events for attachments
+                IAttachmentsModule attModule = Scene.RequestModuleInterface<IAttachmentsModule> ();
+                if (attModule != null)
                 {
-                    grp.FireAttachmentCollisionEvents(e);
+                    ISceneEntity[] attachments = attModule.GetAttachmentsForAvatar (UUID);
+                    foreach (ISceneEntity grp in attachments)
+                    {
+                        grp.FireAttachmentCollisionEvents (e);
+                    }
                 }
             }
 
