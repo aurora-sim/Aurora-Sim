@@ -276,7 +276,6 @@ namespace Aurora.Modules
 
                 if (im.dialog == (byte)InstantMessageDialog.InventoryOffered)
                 {
-                    OfflineMessagesConnector.AddOfflineMessage(im);
                     IClientAPI client = FindClient(new UUID(im.fromAgentID));
                     if (client == null)
                         return;

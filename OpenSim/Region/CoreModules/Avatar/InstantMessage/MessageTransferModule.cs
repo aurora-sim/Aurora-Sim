@@ -530,8 +530,11 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     }
                     else
                     {
+                        //Add to the cache
+                        if (!IMUsersCache.ContainsKey (kvp.Key))
+                            IMUsersCache.Add (kvp.Key, kvp.Value);
                         //Send the IM, and it made it to the user, return true
-                        return;
+                        continue;
                     }
                 }
                 else
@@ -640,6 +643,9 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 }
                 else
                 {
+                    //Add to the cache
+                    if(!IMUsersCache.ContainsKey(toAgentID))
+                        IMUsersCache.Add (toAgentID, HTTPPath);
                     //Send the IM, and it made it to the user, return true
                     result(true);
                     return;

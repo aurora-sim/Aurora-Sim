@@ -175,95 +175,91 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
                 IScenePresence user = scene.GetScenePresence (receipientID);
                 UUID copyID;
 
-                // First byte is the asset type
-                AssetType assetType = (AssetType)im.binaryBucket[0];
-                
-                if (AssetType.Folder == assetType)
-                {
-                    UUID folderID = new UUID(im.binaryBucket, 1);
-                    
-                    m_log.DebugFormat("[INVENTORY TRANSFER]: Inserting original folder {0} "+
-                            "into agent {1}'s inventory",
-                            folderID, new UUID(im.toAgentID));
-
-                    InventoryFolderBase folderCopy = null;
-                    ILLClientInventory inventoryModule = scene.RequestModuleInterface<ILLClientInventory>();
-                    if (inventoryModule != null)
-                        folderCopy = inventoryModule.GiveInventoryFolder(receipientID, client.AgentId, folderID, UUID.Zero);
-                    
-                    if (folderCopy == null)
-                    {
-                        client.SendAgentAlertMessage("Can't find folder to give. Nothing given.", false);
-                        return;
-                    }
-                                                           
-                    // The outgoing binary bucket should contain only the byte which signals an asset folder is
-                    // being copied and the following bytes for the copied folder's UUID
-                    copyID = folderCopy.ID;
-                    byte[] copyIDBytes = copyID.GetBytes();
-                    im.binaryBucket = new byte[1 + copyIDBytes.Length];
-                    im.binaryBucket[0] = (byte)AssetType.Folder;
-                    Array.Copy(copyIDBytes, 0, im.binaryBucket, 1, copyIDBytes.Length);
-                    
-                    if (user != null)
-                    {
-                        user.ControllingClient.SendBulkUpdateInventory(folderCopy);
-                    }
-
-                    im.imSessionID = folderID.Guid;
-                }
-                else
-                {
-                    // First byte of the array is probably the item type
-                    // Next 16 bytes are the UUID
-
-                    UUID itemID = new UUID(im.binaryBucket, 1);
-
-                    m_log.DebugFormat("[INVENTORY TRANSFER]: (giving) Inserting item {0} "+
-                            "into agent {1}'s inventory",
-                            itemID, new UUID(im.toAgentID));
-
-                    InventoryItemBase itemCopy = null;
-                    ILLClientInventory inventoryModule = scene.RequestModuleInterface<ILLClientInventory>();
-                    if(inventoryModule != null)
-                        itemCopy = inventoryModule.GiveInventoryItem(
-                            new UUID(im.toAgentID),
-                            client.AgentId, itemID, UUID.Zero);
-
-                    if (itemCopy == null)
-                    {
-                        client.SendAgentAlertMessage("Can't find item to give. Nothing given.", false);
-                        return;
-                    }
-                    
-                    copyID = itemCopy.ID;
-                    Array.Copy(copyID.GetBytes(), 0, im.binaryBucket, 1, 16);
-                    
-                    if (user != null)
-                    {
-                        user.ControllingClient.SendBulkUpdateInventory(itemCopy);
-                    }
-
-                    im.imSessionID = itemID.Guid;
-                }
-
                 // Send the IM to the recipient. The item is already
                 // in their inventory, so it will not be lost if
                 // they are offline.
                 //
                 if (user != null)
                 {
-                    user.ControllingClient.SendInstantMessage(im);
+                    // First byte is the asset type
+                    AssetType assetType = (AssetType)im.binaryBucket[0];
+
+                    if (AssetType.Folder == assetType)
+                    {
+                        UUID folderID = new UUID (im.binaryBucket, 1);
+
+                        m_log.DebugFormat ("[INVENTORY TRANSFER]: Inserting original folder {0} " +
+                                "into agent {1}'s inventory",
+                                folderID, new UUID (im.toAgentID));
+
+                        InventoryFolderBase folderCopy = null;
+                        ILLClientInventory inventoryModule = scene.RequestModuleInterface<ILLClientInventory> ();
+                        if (inventoryModule != null)
+                            folderCopy = inventoryModule.GiveInventoryFolder (receipientID, client.AgentId, folderID, UUID.Zero);
+
+                        if (folderCopy == null)
+                        {
+                            client.SendAgentAlertMessage ("Can't find folder to give. Nothing given.", false);
+                            return;
+                        }
+
+                        // The outgoing binary bucket should contain only the byte which signals an asset folder is
+                        // being copied and the following bytes for the copied folder's UUID
+                        copyID = folderCopy.ID;
+                        byte[] copyIDBytes = copyID.GetBytes ();
+                        im.binaryBucket = new byte[1 + copyIDBytes.Length];
+                        im.binaryBucket[0] = (byte)AssetType.Folder;
+                        Array.Copy (copyIDBytes, 0, im.binaryBucket, 1, copyIDBytes.Length);
+
+                        if (user != null)
+                        {
+                            user.ControllingClient.SendBulkUpdateInventory (folderCopy);
+                        }
+
+                        im.imSessionID = folderID.Guid;
+                    }
+                    else
+                    {
+                        // First byte of the array is probably the item type
+                        // Next 16 bytes are the UUID
+
+                        UUID itemID = new UUID (im.binaryBucket, 1);
+
+                        m_log.DebugFormat ("[INVENTORY TRANSFER]: (giving) Inserting item {0} " +
+                                "into agent {1}'s inventory",
+                                itemID, new UUID (im.toAgentID));
+
+                        InventoryItemBase itemCopy = null;
+                        ILLClientInventory inventoryModule = scene.RequestModuleInterface<ILLClientInventory> ();
+                        if (inventoryModule != null)
+                            itemCopy = inventoryModule.GiveInventoryItem (
+                                new UUID (im.toAgentID),
+                                new UUID (im.fromAgentID), itemID, UUID.Zero);
+
+                        if (itemCopy == null)
+                        {
+                            client.SendAgentAlertMessage ("Can't find item to give. Nothing given.", false);
+                            return;
+                        }
+
+                        copyID = itemCopy.ID;
+                        Array.Copy (copyID.GetBytes (), 0, im.binaryBucket, 1, 16);
+
+                        if (user != null)
+                        {
+                            user.ControllingClient.SendBulkUpdateInventory (itemCopy);
+                        }
+
+                        im.imSessionID = itemID.Guid;
+                    }
+
+                    user.ControllingClient.SendInstantMessage (im);
                     return;
                 }
                 else
                 {
                     if (m_TransferModule != null)
-                        m_TransferModule.SendInstantMessage(im, delegate(bool success) 
-                        {
-                            if (!success)
-                                client.SendAlertMessage("User not online. Inventory has been saved");
-                        });
+                        m_TransferModule.SendInstantMessage (im);
                 }
             }
             else if (im.dialog == (byte) InstantMessageDialog.InventoryAccepted)
@@ -277,7 +273,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
                 else
                 {
                     if (m_TransferModule != null)
-                        m_TransferModule.SendInstantMessage(im, delegate(bool success) {});
+                        m_TransferModule.SendInstantMessage(im);
                 }
             }
             else if (im.dialog == (byte) InstantMessageDialog.InventoryDeclined)
@@ -345,7 +341,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
                 else
                 {
                     if (m_TransferModule != null)
-                        m_TransferModule.SendInstantMessage(im, delegate(bool success) {});
+                        m_TransferModule.SendInstantMessage(im);
                 }
             }
         }

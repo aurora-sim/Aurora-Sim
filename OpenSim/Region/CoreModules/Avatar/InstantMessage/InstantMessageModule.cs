@@ -205,12 +205,40 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         /// <param name="msg"></param>
         private void OnGridInstantMessage(GridInstantMessage msg)
         {
-            // Just call the Text IM handler above
-            // This event won't be raised unless we have that agent,
-            // so we can depend on the above not trying to send
-            // via grid again
-            //
-            OnInstantMessage(null, msg);
+            byte dialog = msg.dialog;
+
+            if (dialog != (byte)InstantMessageDialog.MessageFromAgent
+                && dialog != (byte)InstantMessageDialog.StartTyping
+                && dialog != (byte)InstantMessageDialog.StopTyping
+                && dialog != (byte)InstantMessageDialog.MessageFromObject)
+            {
+                return;
+            }
+
+            if (m_TransferModule != null)
+            {
+                UserAccount account = m_scenes[0].UserAccountService.GetUserAccount (m_scenes[0].RegionInfo.ScopeID, new UUID (msg.fromAgentID));
+                if (account != null)
+                    msg.fromAgentName = account.Name;
+                else
+                    msg.fromAgentName = msg.fromAgentName + "(No account found for this user)";
+
+                foreach (Scene scene in m_scenes)
+                {
+                    IScenePresence presence = null;
+                    if (scene.TryGetScenePresence (new UUID (msg.toAgentID), out presence))
+                    {
+                        presence.ControllingClient.SendInstantMessage (msg);
+                        return;
+                    }
+                }
+                if (dialog == (uint)InstantMessageDialog.StartTyping ||
+                            dialog == (uint)InstantMessageDialog.StopTyping ||
+                            dialog == (uint)InstantMessageDialog.MessageFromObject)
+                {
+                    return;
+                }
+            }
         }
     }
 }
