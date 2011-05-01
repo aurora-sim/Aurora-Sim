@@ -499,7 +499,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         Interlocked.Exchange (ref m_CheckingEvents, 0);
                 }
 
-                if (NextSleepersTest.Ticks != DateTime.MaxValue.Ticks)
+                if (ScriptEvents.Count == 0 && NextSleepersTest.Ticks != DateTime.MaxValue.Ticks)
                     timeToSleep = (int)(NextSleepersTest - DateTime.Now).TotalMilliseconds;
                 if (timeToSleep < 5)
                     timeToSleep = 5;
