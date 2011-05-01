@@ -3958,12 +3958,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         // arraytmp  2 contains current number of packets in texture
 
             int[] arraytmp = (int[])o;
-            int ptmp = m_udpServer.PrimUpdatesPerCallback;
-            int atmp = m_udpServer.PrimUpdatesPerCallback;
+            int ptmp = m_udpServer.PrimUpdatesPerCallback - arraytmp[0];
+            int atmp = m_udpServer.AvatarUpdatesPerCallBack - arraytmp[1];
 
-            if (ptmp < arraytmp[0])
+            if (ptmp < 0)
                 ptmp = 0;
-            if (atmp < arraytmp[1])
+            if (atmp < 0)
                 atmp = 0;
 
             if (ptmp + atmp != 0)

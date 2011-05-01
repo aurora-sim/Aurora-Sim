@@ -634,7 +634,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// signature</param>
         private void FireQueueEmpty(object o)
         {
-            const int MIN_CALLBACK_MS = 20;
+            const int MIN_CALLBACK_MS = 30;
 
             QueueEmpty callback = OnQueueEmpty;
             

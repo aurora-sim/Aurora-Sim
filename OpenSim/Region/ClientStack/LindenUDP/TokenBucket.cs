@@ -87,9 +87,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     tokensPerMS = 0;
                 else
                 {
-                    int bpms = (int)((float)value / 1000.0f);
+                    float bpms = (int)((float)value / 1000.0f);
 
-                    if (bpms <= 0)
+                    if (bpms <= 0.5f)
                         tokensPerMS = .5f; // .5 byte/ms is the minimum granularity
                     else
                         tokensPerMS = bpms;
@@ -188,7 +188,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <returns>True if tokens were added to the bucket, otherwise false</returns>
         public bool Drip()
         {
-            if (tokensPerMS == 0)
+            if (tokensPerMS <= 0)
             {
                 content = maxBurst;
                 return true;
@@ -209,12 +209,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 content = Math.Min(content + dripAmount, maxBurst);
                 lastDrip = now;
-
+/*
                 if (dripAmount < 0 || content < 0)
                     // sim has been idle for too long, integer has overflown
                     // previous calculation is meaningless, let's put it at correct max
                     content = maxBurst;
-
+*/
                 return true;
             }
         }
