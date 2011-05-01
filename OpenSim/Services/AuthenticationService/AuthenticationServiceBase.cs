@@ -75,8 +75,7 @@ namespace OpenSim.Services.AuthenticationService
             {
                 auth = new AuthData();
                 auth.PrincipalID = principalID;
-                auth.AccountType = "UserAccount";
-                auth.WebLoginKey = UUID.Zero.ToString();
+                auth.AccountType = authType;
             }
             auth.PasswordHash = md5PasswdHash;
             auth.PasswordSalt = passwordSalt;
@@ -110,8 +109,7 @@ namespace OpenSim.Services.AuthenticationService
             {
                 auth = new AuthData();
                 auth.PrincipalID = principalID;
-                auth.AccountType = "UserAccount";
-                auth.WebLoginKey = UUID.Zero.ToString();
+                auth.AccountType = authType;
             }
             auth.PasswordHash = md5PasswdHash;
             auth.PasswordSalt = passwordSalt;

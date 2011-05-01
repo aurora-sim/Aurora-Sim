@@ -58,8 +58,7 @@ namespace Aurora.Services.DataService
                 data.PrincipalID = UUID.Parse(query[i]);
                 data.PasswordHash = query[i + 1];
                 data.PasswordSalt = query[i + 2];
-                data.WebLoginKey = query[i + 3];
-                data.AccountType = query[i + 4];
+                data.AccountType = query[i + 3];
             }
             return data;
         }
@@ -68,8 +67,8 @@ namespace Aurora.Services.DataService
         {
             GD.Delete (m_realm, new string[1] {"UUID"}, new object[1] { data.PrincipalID });
             return GD.Insert (m_realm, new string[] { "UUID", "passwordHash", "passwordSalt",
-                "webLoginKey", "accountType" }, new object[] { data.PrincipalID, 
-                    data.PasswordHash, data.PasswordSalt, data.WebLoginKey, data.AccountType });
+                "accountType" }, new object[] { data.PrincipalID, 
+                    data.PasswordHash, data.PasswordSalt, data.AccountType });
         }
 
         public bool SetDataItem(UUID principalID, string item, string value)

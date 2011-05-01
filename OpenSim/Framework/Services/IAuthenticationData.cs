@@ -38,7 +38,6 @@ namespace OpenSim.Framework
         public UUID PrincipalID;
         public string PasswordHash;
         public string PasswordSalt;
-        public string WebLoginKey;
         public string AccountType;
     }
 
