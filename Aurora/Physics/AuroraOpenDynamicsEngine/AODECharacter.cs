@@ -167,9 +167,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-            _position.X = (float)parent_scene.Region.RegionSizeX * 0.5f;
-            _position.Y = (float)parent_scene.Region.RegionSizeY * 0.5f;
-            _position.Z = parent_scene.GetTerrainHeightAtXY(_position.X, _position.Y) + 10f;
+                _position.X = (float)parent_scene.Region.RegionSizeX * 0.5f;
+                _position.Y = (float)parent_scene.Region.RegionSizeY * 0.5f;
+                _position.Z = parent_scene.GetTerrainHeightAtXY(_position.X, _position.Y) + 10f;
                     
                 m_taintPosition.X = _position.X;
                 m_taintPosition.Y = _position.Y;
@@ -855,36 +855,41 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Check for underground
 
-            float groundHeight = _parent_scene.GetTerrainHeightAtXY (
-                        tempPos.X + (tempPos.X == 0 ? tempPos.X : timeStep * 0.75f * vel.X),
-                        tempPos.Y + (tempPos.Y == 0 ? tempPos.Y : timeStep * 0.75f * vel.Y));
-
-            if ((tempPos.Z - AvatarHalfsize) < groundHeight)
+            if (!(Position.X < 0.25f || Position.Y < 0.25f ||
+                Position.X > _parent_scene.Region.RegionSizeX - .25f ||
+                Position.Y > _parent_scene.Region.RegionSizeY - .25f))
             {
-                if (!flying)
+                float groundHeight = _parent_scene.GetTerrainHeightAtXY (
+                           tempPos.X + (tempPos.X == 0 ? tempPos.X : timeStep * 0.75f * vel.X),
+                           tempPos.Y + (tempPos.Y == 0 ? tempPos.Y : timeStep * 0.75f * vel.Y));
+
+                if ((tempPos.Z - AvatarHalfsize) < groundHeight)
                 {
-                    //if (_target_velocity.Z < 0)
+                    if (!flying)
+                    {
+                        //if (_target_velocity.Z < 0)
                         _target_velocity.Z = 0;
-                    vec.Z = -vel.Z * PID_D * 2f + ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P * 100.0f);
+                        vec.Z = -vel.Z * PID_D * 2f + ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P * 100.0f);
+                    }
+                    else
+                        vec.Z = ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P);
+                }
+                if (tempPos.Z - AvatarHalfsize - groundHeight < 0.12f)
+                {
+                    m_iscolliding = true;
+                    m_iscollidingGround = true;
+                    flying = false; // ground the avatar
+                    ContactPoint point = new ContactPoint ();
+                    point.PenetrationDepth = vel.Z;
+                    point.Position = Position;
+                    point.SurfaceNormal = Vector3.Zero;
+
+                    //0 is the ground localID
+                    this.AddCollisionEvent (0, point);
                 }
                 else
-                    vec.Z = ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P);
+                    m_iscollidingGround = false;
             }
-            if (tempPos.Z - AvatarHalfsize - groundHeight < 0.12f)
-            {
-                m_iscolliding = true;
-                m_iscollidingGround = true;
-                flying = false; // ground the avatar
-                ContactPoint point = new ContactPoint();
-                point.PenetrationDepth = vel.Z;
-                point.Position = Position;
-                point.SurfaceNormal = Vector3.Zero;
-
-                //0 is the ground localID
-                this.AddCollisionEvent (0, point);
-            }
-            else
-                m_iscollidingGround = false;
 
             #endregion
 
@@ -1232,7 +1237,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             bool needfixbody = false;
 
-            if (_position.X < 0.0f)
+            /*if (_position.X < 0.0f)
             {
                 needfixbody = true;
                 _position.X = 0.1f;
@@ -1252,7 +1257,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 needfixbody = true;
                 _position.Y = (int)_parent_scene.Region.RegionSizeY - 0.1f;
-            }
+            }*/
 
             if (needfixbody)
                 d.BodySetPosition(Body, _position.X, _position.Y, _position.Z);

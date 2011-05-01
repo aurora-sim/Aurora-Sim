@@ -219,7 +219,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             float fallVelocity = (actor != null) ? actor.Velocity.Z : 0.0f;
 
             if (heldTurnLeft && yawPos && !heldForward &&
-                !heldBack && !actor.IsJumping && actor != null &&
+                !heldBack && actor != null && !actor.IsJumping &&
                 !actor.Flying && move.Z == 0 &&
                 fallVelocity == 0.0f && !heldUp &&
                 !heldDown && move.CompareTo(Vector3.Zero) == 0)

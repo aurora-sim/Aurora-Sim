@@ -789,7 +789,8 @@ namespace OpenSim.Region.Framework.Scenes
                 Name, m_scene.RegionInfo.RegionName);
 
             AddToPhysicalScene(isFlying, false);
-            m_physicsActor.Position += m_savedVelocity * 0.04f;
+            m_physicsActor.Position += m_savedVelocity * 0.25f;
+            m_physicsActor.Velocity = m_savedVelocity * 0.25f;
             NotInTransit();
 
             if (m_forceFly)
@@ -807,13 +808,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_sceneViewer.Reset();
 
             IsChildAgent = false;
-
-            // send the animations of the other presences to me
-            m_scene.ForEachScenePresence(delegate(IScenePresence presence)
-            {
-                if (presence != this)
-                    presence.Animator.SendAnimPackToClient(ControllingClient);
-            });
 
             IAttachmentsModule attMod = Scene.RequestModuleInterface<IAttachmentsModule>();
             if (attMod != null)
@@ -2167,12 +2161,13 @@ namespace OpenSim.Region.Framework.Scenes
                 //RemoveFromPhysicalScene();
                 // This constant has been inferred from experimentation
                 // I'm not sure what this value should be, so I tried a few values.
-                timeStep = 0.01f;
+                timeStep = 0.025f;
                 pos2 = AbsolutePosition;
                 pos2.X = pos2.X + (vel.X * timeStep);
                 pos2.Y = pos2.Y + (vel.Y * timeStep);
                 pos2.Z = pos2.Z + (vel.Z * timeStep);
-                m_pos = pos2;
+                //Velocity = (AbsolutePosition - pos2) * 2;
+                AbsolutePosition = pos2;
                 return true;
             }
             return false;
