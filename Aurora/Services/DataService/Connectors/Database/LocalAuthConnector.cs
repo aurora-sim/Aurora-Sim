@@ -48,9 +48,9 @@ namespace Aurora.Services.DataService
 
         #region IAuthenticationData Members
 
-        public AuthData Get(UUID principalID)
+        public AuthData Get(UUID principalID, string authType)
         {
-            List<string> query = GD.Query("UUID", principalID.ToString(), m_realm, "*");
+            List<string> query = GD.Query (new string[2] { "UUID", "accountType" }, new object[2] { principalID.ToString (), authType }, m_realm, "*");
             AuthData data = null;
             for (int i = 0; i < query.Count; i += 5)
             {

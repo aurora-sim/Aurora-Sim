@@ -386,7 +386,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             try
             {
                 string encpass = Util.Md5Hash(pass);
-                if (m_registry.RequestModuleInterface<IAuthenticationService>().Authenticate(account.PrincipalID, encpass, 1) != string.Empty)
+                if (m_registry.RequestModuleInterface<IAuthenticationService> ().Authenticate (account.PrincipalID, "UserAccount", encpass, 1) != string.Empty)
                 {
                     return account;
                 }

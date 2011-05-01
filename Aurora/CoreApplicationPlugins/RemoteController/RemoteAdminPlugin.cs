@@ -2860,7 +2860,7 @@ namespace OpenSim.CoreApplicationPlugins
                     bool success;
                     if (authenticationService != null)
                     {
-                        success = authenticationService.SetPassword(account.PrincipalID, password);
+                        success = authenticationService.SetPassword (account.PrincipalID, "UserAccount", password);
                         if (!success)
                             m_log.WarnFormat("[RADMIN]: Unable to set password for account {0} {1}.",
                                 firstName, lastName);
@@ -2924,7 +2924,7 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 bool success = false;
                 if (authenticationService != null)
-                    success = authenticationService.SetPassword(account.PrincipalID, password);
+                    success = authenticationService.SetPassword (account.PrincipalID, "UserAccount", password);
                 if (!success) {
                     m_log.WarnFormat("[RADMIN]: Unable to set password for account {0} {1}.",
                        firstName, lastName);

@@ -92,12 +92,12 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 m_log.Info("[SIMIAN AUTH CONNECTOR]: No AuthenticationServerURI specified, disabling connector");
         }
 
-        public bool CheckExists(UUID principalID)
+        public bool CheckExists (UUID principalID, string authType)
         {
             return false;
         }
 
-        public string Authenticate(UUID principalID, string password, int lifetime)
+        public string Authenticate(UUID principalID, string authType, string password, int lifetime)
         {
             NameValueCollection requestArgs = new NameValueCollection
             {
@@ -140,7 +140,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return String.Empty;
         }
 
-        public bool Verify(UUID principalID, string token, int lifetime)
+        public bool Verify (UUID principalID, string authType, string token, int lifetime)
         {
             NameValueCollection requestArgs = new NameValueCollection
             {
@@ -162,7 +162,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return false;
         }
 
-        public bool Release(UUID principalID, string token)
+        public bool Release (UUID principalID, string token, string authType)
         {
             NameValueCollection requestArgs = new NameValueCollection
             {
@@ -184,7 +184,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return false;
         }
 
-        public bool SetPassword(UUID principalID, string passwd)
+        public bool SetPassword (UUID principalID, string authType, string passwd)
         {
             // Fetch the user name first
             NameValueCollection requestArgs = new NameValueCollection
@@ -289,7 +289,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 return String.Empty;
         }
 
-        public bool SetPasswordHashed(UUID principalID, string passwd)
+        public bool SetPasswordHashed (UUID principalID, string authType, string passwd)
         {
             return false;
         }

@@ -50,27 +50,27 @@ namespace OpenSim.Services.AuthenticationService
         protected IAuthenticationData m_Database;
         protected bool m_authenticateUsers = true;
 
-        public bool CheckExists(UUID principalID)
+        public bool CheckExists(UUID principalID, string authType)
         {
-            return  m_Database.Get(principalID) != null;
+            return m_Database.Get (principalID, authType) != null;
         }
 
-        public bool Verify(UUID principalID, string token, int lifetime)
+        public bool Verify (UUID principalID, string authType, string token, int lifetime)
         {
             return m_Database.CheckToken(principalID, token, lifetime);
         }
 
-        public virtual bool Release(UUID principalID, string token)
+        public virtual bool Release (UUID principalID, string token, string authType)
         {
             return m_Database.CheckToken(principalID, token, 0);
         }
 
-        public virtual bool SetPassword(UUID principalID, string password)
+        public virtual bool SetPassword (UUID principalID, string authType, string password)
         {
             string passwordSalt = Util.Md5Hash(UUID.Random().ToString());
             string md5PasswdHash = Util.Md5Hash(Util.Md5Hash(password) + ":" + passwordSalt);
 
-            AuthData auth = m_Database.Get(principalID);
+            AuthData auth = m_Database.Get (principalID, authType);
             if (auth == null)
             {
                 auth = new AuthData();
@@ -90,7 +90,7 @@ namespace OpenSim.Services.AuthenticationService
             return true;
         }
         
-        protected string GetToken(UUID principalID, int lifetime)
+        protected string GetToken (UUID principalID, int lifetime)
         {
             UUID token = UUID.Random();
 
@@ -100,12 +100,12 @@ namespace OpenSim.Services.AuthenticationService
             return String.Empty;
         }
 
-        public virtual bool SetPasswordHashed(UUID principalID, string Hashedpassword)
+        public virtual bool SetPasswordHashed (UUID principalID, string authType, string Hashedpassword)
         {
             string passwordSalt = Util.Md5Hash(UUID.Random().ToString());
             string md5PasswdHash = Util.Md5Hash(Hashedpassword + ":" + passwordSalt);
 
-            AuthData auth = m_Database.Get(principalID);
+            AuthData auth = m_Database.Get (principalID, authType);
             if (auth == null)
             {
                 auth = new AuthData();

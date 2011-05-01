@@ -118,7 +118,7 @@ namespace OpenSim.Services
                         tosAccepted = requestData["agree_to_tos"].ToString();
                     }
                     string loginName = (name == "" || name == null) ? first + " " + last : name;
-                    reply = m_LocalService.VerifyClient(loginName, passwd, scopeID,
+                    reply = m_LocalService.VerifyClient(loginName, "UserAccount", passwd, scopeID,
                         tosExists, tosAccepted, mac, clientVersion, out secureSessionID);
                     if (reply == null)
                     {
@@ -201,7 +201,7 @@ namespace OpenSim.Services
                         tosAccepted = map["agree_to_tos"].ToString();
                     }
                     string loginName = map["name"].AsString() == "" ? map["first"].AsString() + " " + map["last"].AsString() : map["name"].AsString();
-                    reply = m_LocalService.VerifyClient(loginName, map["passwd"].AsString(), scopeID,
+                    reply = m_LocalService.VerifyClient(loginName, "UserAccount", map["passwd"].AsString(), scopeID,
                         tosExists, tosAccepted, "", "", out secureSessionID);
                     if (reply == null)
                     {

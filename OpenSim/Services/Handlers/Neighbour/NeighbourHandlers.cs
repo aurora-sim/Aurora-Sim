@@ -187,9 +187,9 @@ namespace OpenSim.Services
             if (m_AuthenticationService != null)
             {
                 //Set password on the incoming region
-                if (m_AuthenticationService.CheckExists(aRegion.RegionID))
+                if (m_AuthenticationService.CheckExists (aRegion.RegionID, "Neighbor"))
                 {
-                    if (m_AuthenticationService.Authenticate(aRegion.RegionID, aRegion.Password.ToString(), 100) == "")
+                    if (m_AuthenticationService.Authenticate (aRegion.RegionID, "Neighbor", aRegion.Password.ToString (), 100) == "")
                     {
                         m_log.Warn("[RegionPostHandler]: Authentication failed for region " + aRegion.RegionName);
                         return result;
@@ -198,7 +198,7 @@ namespace OpenSim.Services
                         m_log.InfoFormat("[RegionPostHandler]: Authentication succeeded for {0}", aRegion.RegionName);
                 }
                 else //Set the password then
-                    m_AuthenticationService.SetPasswordHashed(aRegion.RegionID, aRegion.Password.ToString());
+                    m_AuthenticationService.SetPasswordHashed (aRegion.RegionID, "Neighbor", aRegion.Password.ToString ());
             }
 
             // Finally!
@@ -230,9 +230,9 @@ namespace OpenSim.Services
             if (m_AuthenticationService != null)
             {
                 //Set password on the incoming region
-                if (m_AuthenticationService.CheckExists(aRegion.RegionID))
+                if (m_AuthenticationService.CheckExists (aRegion.RegionID, "Neighbor"))
                 {
-                    if (m_AuthenticationService.Authenticate(aRegion.RegionID, aRegion.Password.ToString(), 100) == "")
+                    if (m_AuthenticationService.Authenticate (aRegion.RegionID, "Neighbor", aRegion.Password.ToString (), 100) == "")
                     {
                         m_log.Warn("[RegionPostHandler]: Authentication failed for region " + aRegion.RegionName);
                         return result;
@@ -241,7 +241,7 @@ namespace OpenSim.Services
                         m_log.InfoFormat("[RegionPostHandler]: Authentication succeeded for {0}", aRegion.RegionName);
                 }
                 else //Set the password then
-                    m_AuthenticationService.SetPasswordHashed(aRegion.RegionID, aRegion.Password.ToString());
+                    m_AuthenticationService.SetPasswordHashed (aRegion.RegionID, "Neighbor", aRegion.Password.ToString ());
             }
 
             // Finally!
@@ -286,9 +286,9 @@ namespace OpenSim.Services
             if (m_AuthenticationService != null)
             {
                 //Set password on the incoming region
-                if (m_AuthenticationService.CheckExists(aRegion.RegionID))
+                if (m_AuthenticationService.CheckExists (aRegion.RegionID, "Neighbor"))
                 {
-                    if (m_AuthenticationService.Authenticate(aRegion.RegionID, aRegion.Password.ToString(), 100) == "")
+                    if (m_AuthenticationService.Authenticate (aRegion.RegionID, "Neighbor", aRegion.Password.ToString (), 100) == "")
                     {
                         m_log.Warn("[RegionPostHandler]: Authentication failed for region " + aRegion.RegionName);
                         return result;

@@ -50,9 +50,9 @@ namespace OpenSim.Services.Interfaces
 
     public interface ILoginService
     {
-        LoginResponse VerifyClient(string Name, string passwd, UUID scopeID, bool tosExists,
+        LoginResponse VerifyClient (string Name, string authType, string passwd, UUID scopeID, bool tosExists,
             string tosAccepted, string mac, string clientVersion, out UUID secureSession);
-        LoginResponse VerifyClient(UUID AgentID, string passwd, UUID scopeID, bool tosExists,
+        LoginResponse VerifyClient (UUID AgentID, string authType, string passwd, UUID scopeID, bool tosExists,
             string tosAccepted, string mac, string clientVersion, out UUID secureSession);
         LoginResponse Login(string Name, string passwd, string startLocation, UUID scopeID,
             string clientVersion, string channel, string mac, string id0, IPEndPoint clientIP, Hashtable requestData, UUID secureSession);

@@ -47,7 +47,7 @@ namespace OpenSim.Framework
     /// </summary>
     public interface IAuthenticationData : IAuroraDataPlugin
     {
-        AuthData Get(UUID principalID);
+        AuthData Get(UUID principalID, string authType);
 
         bool Store(AuthData data);
 

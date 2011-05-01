@@ -246,8 +246,8 @@ For more information, see <a href='http://openid.net/'>http://openid.net/</a>.
                             // Check for form POST data
                             if (passwordValues != null && passwordValues.Length == 1)
                             {
-                                if (account != null && 
-                                    (m_authenticationService.Authenticate(account.PrincipalID, passwordValues[0], 30) != string.Empty))
+                                if (account != null &&
+                                    (m_authenticationService.Authenticate (account.PrincipalID, "UserAccount", passwordValues[0], 30) != string.Empty))
                                     authRequest.IsAuthenticated = true;
                                 else
                                     authRequest.IsAuthenticated = false;

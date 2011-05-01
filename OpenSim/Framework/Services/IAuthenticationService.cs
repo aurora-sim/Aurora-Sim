@@ -44,7 +44,7 @@ namespace OpenSim.Services.Interfaces
         // These methods will return a token, which can be used to access
         // various services.
         //
-        string Authenticate(UUID principalID, string password, int lifetime);
+        string Authenticate(UUID principalID, string authType, string password, int lifetime);
 
         //////////////////////////////////////////////////////
         // Verification
@@ -54,7 +54,7 @@ namespace OpenSim.Services.Interfaces
         // Tokens expire after 30 minutes and can be refreshed by
         // re-verifying.
         //
-        bool Verify(UUID principalID, string token, int lifetime);
+        bool Verify (UUID principalID, string authType, string token, int lifetime);
 
         //////////////////////////////////////////////////////
         // Teardown
@@ -63,7 +63,7 @@ namespace OpenSim.Services.Interfaces
         // invalidates it and it can not subsequently be used
         // or refreshed.
         //
-        bool Release(UUID principalID, string token);
+        bool Release (UUID principalID, string authType, string token);
 
         //////////////////////////////////////////////////////
         // SetPassword for a principal
@@ -74,15 +74,16 @@ namespace OpenSim.Services.Interfaces
         // because it's a bit risky. Such handlers require
         // authentication/authorization.
         //
-        bool SetPassword(UUID principalID, string passwd);
-        bool SetPasswordHashed(UUID UUID, string passwd);
+        bool SetPassword (UUID principalID, string authType, string passwd);
+        bool SetPasswordHashed (UUID UUID, string authType, string passwd);
 
         /// <summary>
         /// Check whether the given principalID has a password set
         /// </summary>
         /// <param name="principalID"></param>
+        /// <param name="authType"></param>
         /// <returns></returns>
-        bool CheckExists(UUID principalID);
+        bool CheckExists(UUID principalID, string authType);
 
         //////////////////////////////////////////////////////
         // Grid

@@ -293,7 +293,7 @@ namespace OpenSim.Services.UserAccountService
 
             bool success = false;
             if (m_AuthenticationService != null)
-                success = m_AuthenticationService.SetPassword(account.PrincipalID, newPassword);
+                success = m_AuthenticationService.SetPassword (account.PrincipalID, "UserAccount", newPassword);
             if (!success)
                 m_log.ErrorFormat("[USER ACCOUNT SERVICE]: Unable to reset password for account {0} {1}.",
                    firstName, lastName);
@@ -336,7 +336,7 @@ namespace OpenSim.Services.UserAccountService
                     bool success;
                     if (m_AuthenticationService != null && password != "")
                     {
-                        success = m_AuthenticationService.SetPasswordHashed(account.PrincipalID, password);
+                        success = m_AuthenticationService.SetPasswordHashed (account.PrincipalID, "Neighbor", password);
                         if (!success)
                             m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0}.",
                                 name);

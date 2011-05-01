@@ -256,7 +256,7 @@ namespace OpenSim.Services.LLLoginService
                 //
                 // We don't support clear passwords here
                 //
-                string token = m_AuthenticationService.Authenticate(account.PrincipalID, passwd, 30);
+                string token = m_AuthenticationService.Authenticate(account.PrincipalID, "UserAccount", passwd, 30);
                 UUID secureSession = UUID.Zero;
                 if ((token == string.Empty) || (token != string.Empty && !UUID.TryParse(token, out secureSession)))
                 {
@@ -277,7 +277,7 @@ namespace OpenSim.Services.LLLoginService
             return response;
         }
 
-        public LoginResponse VerifyClient(string Name, string passwd, UUID scopeID, bool tosExists, string tosAccepted, string mac, string clientVersion, out UUID secureSession)
+        public LoginResponse VerifyClient(string Name, string authType, string passwd, UUID scopeID, bool tosExists, string tosAccepted, string mac, string clientVersion, out UUID secureSession)
         {
             m_log.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0}",
                 Name);
@@ -286,7 +286,7 @@ namespace OpenSim.Services.LLLoginService
             // Get the account and check that it exists
             //
             UserAccount account = m_UserAccountService.GetUserAccount(scopeID, Name);
-            if (!passwd.StartsWith("$1$"))
+            if (passwd.StartsWith("$1$"))
                 passwd = "$1$" + Util.Md5Hash(passwd);
             passwd = passwd.Remove(0, 3); //remove $1$
 
@@ -307,17 +307,17 @@ namespace OpenSim.Services.LLLoginService
 
             //Set the scopeID for the user
             scopeID = account.ScopeID;
-            return InnerVerifyClient(account, passwd, tosExists, tosAccepted, mac, clientVersion, out secureSession);
+            return InnerVerifyClient (account, authType, passwd, tosExists, tosAccepted, mac, clientVersion, out secureSession);
         }
 
-        protected LoginResponse InnerVerifyClient(UserAccount account, string passwd, bool tosExists, string tosAccepted, string mac, string clientVersion, out UUID secureSession)
+        protected LoginResponse InnerVerifyClient(UserAccount account, string authType, string passwd, bool tosExists, string tosAccepted, string mac, string clientVersion, out UUID secureSession)
         {
             secureSession = UUID.Zero;
             
             //
             // Authenticate this user
             //
-            string token = m_AuthenticationService.Authenticate(account.PrincipalID, passwd, 30);
+            string token = m_AuthenticationService.Authenticate (account.PrincipalID, authType, passwd, 30);
             if ((token == string.Empty) || (token != string.Empty && !UUID.TryParse(token, out secureSession)))
             {
                 m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: authentication failed");
@@ -410,7 +410,7 @@ namespace OpenSim.Services.LLLoginService
             return null;
         }
 
-        public LoginResponse VerifyClient(UUID AgentID, string passwd, UUID scopeID, bool tosExists, string tosAccepted, string mac, string clientVersion, out UUID secureSession)
+        public LoginResponse VerifyClient (UUID AgentID, string authType, string passwd, UUID scopeID, bool tosExists, string tosAccepted, string mac, string clientVersion, out UUID secureSession)
         {
             m_log.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0}",
                 AgentID);
@@ -419,9 +419,12 @@ namespace OpenSim.Services.LLLoginService
             // Get the account and check that it exists
             //
             UserAccount account = m_UserAccountService.GetUserAccount(scopeID, AgentID);
-            if (!passwd.StartsWith("$1$"))
-                passwd = "$1$" + Util.Md5Hash(passwd);
-            passwd = passwd.Remove(0, 3); //remove $1$
+            if (authType == "UserAccount")
+            {
+                if (!passwd.StartsWith ("$1$"))
+                    passwd = "$1$" + Util.Md5Hash (passwd);
+                passwd = passwd.Remove (0, 3); //remove $1$
+            }
 
             secureSession = UUID.Zero;
             if (account == null)
@@ -431,7 +434,7 @@ namespace OpenSim.Services.LLLoginService
 
             //Set the scopeID for the user
             scopeID = account.ScopeID;
-            return InnerVerifyClient(account, passwd, tosExists, tosAccepted, mac, clientVersion, out secureSession);
+            return InnerVerifyClient (account, authType, passwd, tosExists, tosAccepted, mac, clientVersion, out secureSession);
         }
 
         public LoginResponse Login(string Name, string passwd, string startLocation, UUID scopeID,

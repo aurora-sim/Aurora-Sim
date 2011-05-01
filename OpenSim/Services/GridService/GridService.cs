@@ -277,10 +277,10 @@ namespace OpenSim.Services.GridService
                     if (m_AuthenticationService == null)
                         return "No authentication possible";
                     //Make sure the key exists
-                    if (!m_AuthenticationService.CheckExists(regionInfos.SessionID))
+                    if (!m_AuthenticationService.CheckExists(regionInfos.SessionID, "SessionID"))
                         return "Bad authentication";
                     //Now verify the key
-                    if (!m_AuthenticationService.Verify(regionInfos.SessionID, regionInfos.AuthToken, 30))
+                    if (!m_AuthenticationService.Verify(regionInfos.SessionID, "SessionID", regionInfos.AuthToken, 30))
                         return "Bad authentication";
                 }
             }
