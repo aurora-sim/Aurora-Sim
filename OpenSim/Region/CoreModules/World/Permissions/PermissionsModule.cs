@@ -63,7 +63,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         enum UserSet
         {
             All,
-            Administrators
+            Administrators,
+            ParcelOwners,
+            None
         };
 
         #endregion
@@ -92,7 +94,18 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         /// permissions are not being bypassed.  This overrides normal permissions.-
         /// </value>
         private UserSet m_allowedScriptEditors = UserSet.All;
-        
+
+
+        /// <value>
+        /// The set of users that are allowed to compile certain scripts.  This is only active if 
+        /// permissions are not being bypassed.  This overrides normal permissions.
+        /// </value>
+        private UserSet m_allowedLSLScriptCompilers = UserSet.All;
+        private UserSet m_allowedCSScriptCompilers = UserSet.All;
+        private UserSet m_allowedVBScriptCompilers = UserSet.All;
+        private UserSet m_allowedJSScriptCompilers = UserSet.All;
+        private UserSet m_allowedYPScriptCompilers = UserSet.All;
+        private UserSet m_allowedAScriptScriptCompilers = UserSet.All;
         private Dictionary<string, bool> GrantLSL = new Dictionary<string, bool>();
         private Dictionary<string, bool> GrantCS = new Dictionary<string, bool>();
         private Dictionary<string, bool> GrantVB = new Dictionary<string, bool>();
@@ -124,6 +137,19 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             m_allowedScriptEditors
                 = ParseUserSetConfigSetting(PermissionsConfig, "allowed_script_editors", m_allowedScriptEditors);
 
+            m_allowedLSLScriptCompilers
+                = ParseUserSetConfigSetting (PermissionsConfig, "allowed_lsl_script_compilers", m_allowedLSLScriptCompilers);
+            m_allowedCSScriptCompilers
+                = ParseUserSetConfigSetting (PermissionsConfig, "allowed_cs_script_compilers", m_allowedCSScriptCompilers);
+            m_allowedJSScriptCompilers
+                = ParseUserSetConfigSetting (PermissionsConfig, "allowed_js_script_compilers", m_allowedJSScriptCompilers);
+            m_allowedVBScriptCompilers
+                = ParseUserSetConfigSetting (PermissionsConfig, "allowed_vb_script_compilers", m_allowedVBScriptCompilers);
+            m_allowedYPScriptCompilers
+                = ParseUserSetConfigSetting (PermissionsConfig, "allowed_yp_script_compilers", m_allowedYPScriptCompilers);
+            m_allowedAScriptScriptCompilers
+                = ParseUserSetConfigSetting (PermissionsConfig, "allowed_ascript_script_compilers", m_allowedAScriptScriptCompilers);
+            
             string permissionModules = PermissionsConfig.GetString("Modules", "DefaultPermissionsModule");
 
             List<string> modules = new List<string>(permissionModules.Split(','));
@@ -436,8 +462,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             
             // Temporary measure to allow 'gods' to be specified in config for consistency's sake.  In the long term
             // this should disappear.
-            if ("gods" == rawSetting.ToLower())
-                rawSetting = UserSet.Administrators.ToString();
+            if ("gods" == rawSetting.ToLower ())
+                rawSetting = UserSet.Administrators.ToString ();
             
             // Doing it this was so that we can do a case insensitive conversion
             try
@@ -1052,8 +1078,10 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         {
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
-                            
-            if (m_allowedScriptEditors == UserSet.Administrators && !IsAdministrator(user))
+
+            if (m_allowedScriptEditors == UserSet.Administrators && !IsAdministrator (user))
+                return false;
+            if (m_allowedScriptEditors == UserSet.ParcelOwners && !GenericParcelPermission(user, scene.GetScenePresence(user).AbsolutePosition, 0))
                 return false;
             
             // Ordinarily, if you can view it, you can edit it
@@ -1820,8 +1848,12 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
             if ((int)InventoryType.LSL == invType)
-                if (m_allowedScriptCreators == UserSet.Administrators && !IsAdministrator(userID))
+            {
+                if (m_allowedScriptCreators == UserSet.Administrators && !IsAdministrator (userID))
                     return false;
+                if (m_allowedScriptCreators == UserSet.ParcelOwners && !GenericParcelPermission (userID, m_scene.GetScenePresence (userID).AbsolutePosition, 0))
+                    return false;
+            }
 
             ISceneChildEntity part = m_scene.GetSceneObjectPart (objectID);
             if (part.OwnerID == userID)
@@ -1845,8 +1877,12 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
             if ((int)InventoryType.LSL == invType)
-                if (m_allowedScriptCreators == UserSet.Administrators && !IsAdministrator(userID))
+            {
+                if (m_allowedScriptCreators == UserSet.Administrators && !IsAdministrator (userID))
                     return false;
+                if (m_allowedScriptCreators == UserSet.ParcelOwners && !GenericParcelPermission (userID, m_scene.GetScenePresence (userID).AbsolutePosition, 0))
+                    return false;
+            }
 
             if ((int)InventoryType.Landmark == invType)
             {
@@ -1926,34 +1962,48 @@ namespace OpenSim.Region.CoreModules.World.Permissions
              //m_log.DebugFormat("check if {0} is allowed to compile {1}", ownerUUID, scriptType);
             switch (scriptType) {
                 case "lsl":
-                    if (GrantLSL.Count == 0 || GrantLSL.ContainsKey(ownerUUID.ToString())) {
+                    if ((m_allowedLSLScriptCompilers == UserSet.Administrators && !IsAdministrator (ownerUUID)) ||
+                        (m_allowedLSLScriptCompilers == UserSet.ParcelOwners && !GenericParcelPermission (ownerUUID, scene.GetScenePresence (ownerUUID).AbsolutePosition, 0)) ||
+                        GrantLSL.Count == 0 || GrantLSL.ContainsKey(ownerUUID.ToString())) {
                         return(true);
                     }
                     break;
                 case "cs":
-                    if (GrantCS.Count == 0 || GrantCS.ContainsKey(ownerUUID.ToString())) {
+                    if ((m_allowedCSScriptCompilers == UserSet.Administrators && !IsAdministrator (ownerUUID)) ||
+                        (m_allowedCSScriptCompilers == UserSet.ParcelOwners && !GenericParcelPermission (ownerUUID, scene.GetScenePresence (ownerUUID).AbsolutePosition, 0)) ||
+                        GrantCS.Count == 0 || GrantCS.ContainsKey (ownerUUID.ToString ()))
+                    {
                         return(true);
                     }
                     break;
                 case "vb":
-                    if (GrantVB.Count == 0 || GrantVB.ContainsKey(ownerUUID.ToString())) {
+                    if ((m_allowedVBScriptCompilers == UserSet.Administrators && !IsAdministrator (ownerUUID)) ||
+                        (m_allowedVBScriptCompilers == UserSet.ParcelOwners && !GenericParcelPermission (ownerUUID, scene.GetScenePresence (ownerUUID).AbsolutePosition, 0)) ||
+                        GrantVB.Count == 0 || GrantVB.ContainsKey (ownerUUID.ToString ()))
+                    {
                         return(true);
                     }
                     break;
                 case "js":
-                    if (GrantJS.Count == 0 || GrantJS.ContainsKey(ownerUUID.ToString()))
+                    if ((m_allowedJSScriptCompilers == UserSet.Administrators && !IsAdministrator (ownerUUID)) ||
+                        (m_allowedJSScriptCompilers == UserSet.ParcelOwners && !GenericParcelPermission (ownerUUID, scene.GetScenePresence (ownerUUID).AbsolutePosition, 0)) ||
+                        GrantJS.Count == 0 || GrantJS.ContainsKey (ownerUUID.ToString ()))
                     {
                         return (true);
                     }
                     break;
                 case "yp":
-                    if (GrantYP.Count == 0 || GrantYP.ContainsKey(ownerUUID.ToString()))
+                    if ((m_allowedYPScriptCompilers == UserSet.Administrators && !IsAdministrator (ownerUUID)) ||
+                        (m_allowedYPScriptCompilers == UserSet.ParcelOwners && !GenericParcelPermission (ownerUUID, scene.GetScenePresence (ownerUUID).AbsolutePosition, 0)) ||
+                        GrantYP.Count == 0 || GrantYP.ContainsKey (ownerUUID.ToString ()))
                     {
                         return (true);
                     }
                     break;
                 case "ascript":
-                    if (GrantAScript.Count == 0 || GrantAScript.ContainsKey(ownerUUID.ToString()))
+                    if ((m_allowedAScriptScriptCompilers == UserSet.Administrators && !IsAdministrator (ownerUUID)) ||
+                        (m_allowedAScriptScriptCompilers == UserSet.ParcelOwners && !GenericParcelPermission (ownerUUID, scene.GetScenePresence (ownerUUID).AbsolutePosition, 0)) ||
+                        GrantAScript.Count == 0 || GrantAScript.ContainsKey (ownerUUID.ToString ()))
                     {
                         return (true);
                     }
