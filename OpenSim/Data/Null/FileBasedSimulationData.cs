@@ -62,7 +62,7 @@ namespace OpenSim.Data.Null
         protected IScene m_scene;
         protected bool m_keepOldSave = true;
         protected bool m_oldSaveHasBeenSaved = false;
-        protected string m_oldSaveDirectory = "backups";
+        protected string m_oldSaveDirectory = "Backups";
 
         public string Name
         {
@@ -90,6 +90,8 @@ namespace OpenSim.Data.Null
                 m_saveAppenedFileName = config.GetString ("ApendedSaveFileName", m_saveAppenedFileName);
                 m_saveChanges = config.GetBoolean ("SaveChanges", m_saveChanges);
                 m_timeBetweenSaves = config.GetInt ("TimeBetweenSaves", m_timeBetweenSaves);
+                m_keepOldSave = config.GetBoolean ("SavePreviousBackup", m_keepOldSave);
+                m_oldSaveDirectory = config.GetString ("PreviousBackupDirectory", m_oldSaveDirectory);
             }
 
             if (m_saveChanges && m_timeBetweenSaves != 0)
