@@ -789,8 +789,9 @@ namespace OpenSim.Region.Framework.Scenes
                 Name, m_scene.RegionInfo.RegionName);
 
             AddToPhysicalScene(isFlying, false);
-            m_physicsActor.Position += m_savedVelocity * 0.25f;
+            //m_physicsActor.Position += m_savedVelocity * 0.25f;
             m_physicsActor.Velocity = m_savedVelocity * 0.25f;
+            m_savedVelocity = Vector3.Zero;
             NotInTransit();
 
             if (m_forceFly)
@@ -981,7 +982,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             int xmult = m_savedVelocity.X > 0 ? 1 : -1;
             int ymult = m_savedVelocity.Y > 0 ? 1 : -1;
-            Vector3 look = new Vector3 (0.99f * xmult, 0.042f * ymult, 0);
+            Vector3 look = new Vector3 (0.99f * xmult, 0.99f * ymult, 0);
 
             //Put the agent in an allowed area and above the terrain.
             IParcelManagementModule parcelManagement = RequestModuleInterface<IParcelManagementModule>();
