@@ -55,5 +55,7 @@ namespace OpenSim.Framework
         bool SetToken(UUID principalID, string token, int lifetime);
 
         bool CheckToken(UUID principalID, string token, int lifetime);
+
+        bool Delete (UUID principalID, string authType);
     }
 }

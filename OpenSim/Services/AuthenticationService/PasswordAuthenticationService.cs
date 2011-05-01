@@ -94,14 +94,27 @@ namespace OpenSim.Services.AuthenticationService
 
             if (data != null)
             {
-                string hashed = Util.Md5Hash(password + ":" +
-                        data.PasswordSalt);
-
-                m_log.DebugFormat("[PASS AUTH]: got {0}; hashed = {1}; stored = {2}", password, hashed, data.PasswordHash);
-
-                if (data.PasswordHash == hashed)
+                if (authType != "UserAccount")
                 {
-                    return GetToken(principalID, lifetime);
+                    if (data.PasswordHash == password)
+                    {
+                        //Really should be moved out in the future
+                        if (authType == "WebLoginKey")
+                            this.Remove (principalID, authType); //Only allow it to be used once
+                        return GetToken (principalID, lifetime);
+                    }
+                }
+                else
+                {
+                    string hashed = Util.Md5Hash (password + ":" +
+                            data.PasswordSalt);
+
+                    m_log.DebugFormat ("[PASS AUTH]: got {0}; hashed = {1}; stored = {2}", password, hashed, data.PasswordHash);
+
+                    if (data.PasswordHash == hashed)
+                    {
+                        return GetToken (principalID, lifetime);
+                    }
                 }
             }
 

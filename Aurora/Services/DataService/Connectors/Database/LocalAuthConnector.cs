@@ -77,6 +77,11 @@ namespace Aurora.Services.DataService
                 new string[1] { "UUID" }, new object[1] { principalID });
         }
 
+        public bool Delete (UUID principalID, string authType)
+        {
+            return GD.Delete (m_realm, new string[2] { "UUID", "accountType" }, new object[2] { principalID, authType });
+        }
+
         public bool SetToken(UUID principalID, string token, int lifetime)
         {
             if (System.Environment.TickCount - m_LastExpire > 30000)

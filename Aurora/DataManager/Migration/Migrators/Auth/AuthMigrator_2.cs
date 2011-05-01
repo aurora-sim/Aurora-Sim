@@ -5,11 +5,11 @@ using Aurora.Framework;
 
 namespace Aurora.DataManager.Migration.Migrators
 {
-    public class AuthMigrator_1 : Migrator
+    public class AuthMigrator_2 : Migrator
     {
-        public AuthMigrator_1()
+        public AuthMigrator_2()
         {
-            Version = new Version(0, 0, 1);
+            Version = new Version(0, 0, 2);
             MigrationName = "Auth";
 
             schema = new List<Rec<string, ColumnDefinition[]>>();
@@ -17,13 +17,13 @@ namespace Aurora.DataManager.Migration.Migrators
             //
             // Change summery:
             //
-            //   Remove the webLoginKey pieces (as it shouldn't be used in this way)
+            //   Make the password hash much longer to accommodate other types of passwords)
             //
 
             AddSchema("auth", ColDefs(
                 ColDef("UUID", ColumnTypes.Char36, true),
-                ColDef("passwordHash", ColumnTypes.Char32),
-                ColDef("passwordSalt", ColumnTypes.Char32),
+                ColDef("passwordHash", ColumnTypes.String1024),
+                ColDef ("passwordSalt", ColumnTypes.String1024),
                 ColDef("accountType", ColumnTypes.Char32, true)));
             AddSchema("tokens", ColDefs(
                 ColDef("UUID", ColumnTypes.Char36, true),

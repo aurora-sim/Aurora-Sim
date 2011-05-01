@@ -286,9 +286,12 @@ namespace OpenSim.Services.LLLoginService
             // Get the account and check that it exists
             //
             UserAccount account = m_UserAccountService.GetUserAccount(scopeID, Name);
-            if (passwd.StartsWith("$1$"))
-                passwd = "$1$" + Util.Md5Hash(passwd);
-            passwd = passwd.Remove(0, 3); //remove $1$
+            if (authType == "UserAccount")
+            {
+                if (passwd.StartsWith ("$1$"))
+                    passwd = "$1$" + Util.Md5Hash (passwd);
+                passwd = passwd.Remove (0, 3); //remove $1$
+            }
 
             secureSession = UUID.Zero;
             if (account == null)

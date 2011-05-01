@@ -88,6 +88,11 @@ namespace OpenSim.Services.AuthenticationService
             m_log.InfoFormat("[AUTHENTICATION DB]: Set password for principalID {0}", principalID);
             return true;
         }
+
+        public virtual bool Remove (UUID principalID, string authType)
+        {
+            return m_Database.Delete (principalID, authType);
+        }
         
         protected string GetToken (UUID principalID, int lifetime)
         {
