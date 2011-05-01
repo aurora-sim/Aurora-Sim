@@ -520,7 +520,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (!Flying)
             {
-                if (force.Z >= 1.0f)
+                if (force.Z >= 0.5f)
                 {
                     if (!_parent_scene.m_allowJump)
                         return;

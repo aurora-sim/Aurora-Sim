@@ -499,11 +499,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // Centeral contact friction and bounce
             // ckrinke 11/10/08 Enabling soft_erp but not soft_cfm until I figure out why
             // an avatar falls through in Z but not in X or Y when walking on a prim.
-            contact.surface.mode |= d.ContactFlags.SoftERP;
+            contact.surface.mode = (d.ContactFlags.Slip1 | d.ContactFlags.Bounce | d.ContactFlags.Slip2);
             contact.surface.mu = nmAvatarObjectContactFriction;
             contact.surface.bounce = nmAvatarObjectContactBounce;
-            contact.surface.soft_cfm = 0.010f;
-            contact.surface.soft_erp = 0.010f;
+            contact.surface.soft_cfm = 0.00010f;
+            contact.surface.soft_erp = 0.00010f;
+            contact.surface.slip1 = 0.1f;
+            contact.surface.slip2 = 0.1f;
 
             // Prim contact friction and bounce
             // This is the *non* moving version of friction and bounce
@@ -513,8 +515,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             AvatarMovementprimContact.surface.mode = d.ContactFlags.Slip1;
             AvatarMovementprimContact.surface.mu = nmAvatarObjectContactFriction;
             AvatarMovementprimContact.surface.bounce = nmAvatarObjectContactBounce;
-            AvatarMovementprimContact.surface.soft_cfm = 0.010f;
-            AvatarMovementprimContact.surface.soft_erp = 0.010f;
+            AvatarMovementprimContact.surface.slip1 = 0.001f;
+            AvatarMovementprimContact.surface.soft_cfm = 0.0010f;
+            AvatarMovementprimContact.surface.soft_erp = 0.0010f;
             //AvatarMovementprimContact.surface.mode |= d.ContactFlags.Bounce;
             //AvatarMovementprimContact.surface.mu = mAvatarObjectContactFriction;
             //AvatarMovementprimContact.surface.bounce = mAvatarObjectContactBounce;
