@@ -174,5 +174,11 @@ namespace Aurora.Framework
             {
             }
         }
+
+        public void ClearEvents ()
+        {
+            lock (queue)
+                queue.Clear ();
+        }
     }
 }

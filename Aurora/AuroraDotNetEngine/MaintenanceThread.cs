@@ -348,6 +348,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             EventProcessorIsRunning = false;
             ScriptChangeIsRunning = false;
             m_numWorkers = 0;
+            threadpool.ClearEvents ();
+            Scriptthreadpool.ClearEvents ();
         }
 
         #endregion

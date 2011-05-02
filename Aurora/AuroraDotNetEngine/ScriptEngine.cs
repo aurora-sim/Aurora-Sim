@@ -417,6 +417,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             string go = MainConsole.Instance.CmdPrompt ("Are you sure you want to restart all scripts? (This also wipes the script state saves database, which could cause loss of information in your scripts)", "no");
             if (go.Equals ("yes", StringComparison.CurrentCultureIgnoreCase))
             {
+                //Clear out all of the data on the threads that we have just to make sure everything is all clean
+                this.MaintenanceThread.DisableThreads ();
+                this.MaintenanceThread.PokeThreads ();
                 ScriptData[] scripts = ScriptProtection.GetAllScripts ();
                 ScriptProtection.Reset (true);
                 foreach (ScriptData ID in scripts)
