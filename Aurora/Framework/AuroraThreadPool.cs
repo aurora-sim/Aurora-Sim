@@ -16,6 +16,7 @@ namespace Aurora.Framework
         public int Threads = 0;
         public int InitialSleepTime = 10;
         public int MaxSleepTime = 100;
+        public int SleepIncrementTime = 10;
     }
 
     public class AuroraThreadPool
@@ -28,7 +29,6 @@ namespace Aurora.Framework
         Queue<QueueItem> queue = new Queue<QueueItem> ();
         public int nthreads;
         public int nSleepingthreads;
-        private int SleepTimeStep;
 
         public AuroraThreadPool(AuroraThreadPoolStartInfo info)
         {
@@ -37,7 +37,6 @@ namespace Aurora.Framework
             Sleeping = new int[m_info.Threads];
             nthreads = 0;
             nSleepingthreads = 0;
-            SleepTimeStep = m_info.MaxSleepTime;
             // lets threads check for work a bit faster in case we have all sleeping and awake interrupt fails
         }
 
@@ -61,7 +60,7 @@ namespace Aurora.Framework
 
                     if (item == null)
                     {
-                        OurSleepTime += SleepTimeStep;
+                        OurSleepTime += m_info.SleepIncrementTime;
                         if (OurSleepTime > m_info.MaxSleepTime)
                         {
                             Threads[ThreadNumber] = null;
@@ -72,7 +71,7 @@ namespace Aurora.Framework
                         {
                             Interlocked.Exchange(ref Sleeping[ThreadNumber], 1);
                             Interlocked.Increment(ref nSleepingthreads);
-                            try { Thread.Sleep(m_info.MaxSleepTime); }
+                            try { Thread.Sleep (OurSleepTime); }
                             catch (ThreadInterruptedException) { }
                             Interlocked.Decrement(ref nSleepingthreads);
                             Interlocked.Exchange(ref Sleeping[ThreadNumber], 0);

@@ -97,7 +97,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             AuroraThreadPoolStartInfo info = new AuroraThreadPoolStartInfo();
             info.priority = ThreadPriority.Normal;
             info.Threads = 1;
-            info.MaxSleepTime = Engine.Config.GetInt ("SleepTime", 300);
+            info.MaxSleepTime = Engine.Config.GetInt ("SleepTime", 100);
+            info.SleepIncrementTime = Engine.Config.GetInt ("SleepIncrementTime", 10);
             cmdThreadpool = new AuroraThreadPool (info);
             scriptChangeThreadpool = new AuroraThreadPool (info);
 
@@ -106,7 +107,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             AuroraThreadPoolStartInfo sinfo = new AuroraThreadPoolStartInfo();
             sinfo.priority = ThreadPriority.Normal;
             sinfo.Threads = MaxScriptThreads;
-            sinfo.MaxSleepTime = Engine.Config.GetInt("SleepTime", 300);
+            sinfo.MaxSleepTime = Engine.Config.GetInt ("SleepTime", 100);
+            sinfo.SleepIncrementTime = Engine.Config.GetInt ("SleepIncrementTime", 10);
             scriptThreadpool = new AuroraThreadPool (sinfo);
             
             AppDomain.CurrentDomain.AssemblyResolve += m_ScriptEngine.AssemblyResolver.OnAssemblyResolve;
