@@ -120,6 +120,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <returns></returns>
         public bool ScriptChangeQueue()
         {
+            if (m_ScriptEngine.Worlds.Count == 0)
+                return true;
+
             IMonitorModule module = m_ScriptEngine.Worlds[0].RequestModuleInterface<IMonitorModule>();
             int StartTime = Util.EnvironmentTickCount();
 
@@ -528,6 +531,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void EventSchExec (QueueItemStruct QIS)
         {
+            if (QIS.ID == null)
+                return;
+
             if (!QIS.ID.Running)
             {
                 //do only state_entry and on_rez

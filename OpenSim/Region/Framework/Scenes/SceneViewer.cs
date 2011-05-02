@@ -131,8 +131,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void QueuePresenceForUpdate (IScenePresence presence, PrimUpdateFlags flags)
         {
-            if (Culler != null && !Culler.ShowEntityToClient(m_presence, presence))
+            if (Culler != null && !Culler.ShowEntityToClient (m_presence, presence))
+            {
+                //They are out of view and they changed, we need to update them when they do come in view
+                lastPresencesInView.Remove (presence);
                 return; // if 2 far ignore
+            }
 
             lock (m_presenceUpdatesToSend)
             {
@@ -163,8 +167,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void QueuePresenceForAnimationUpdate(IScenePresence presence, AnimationGroup animation)
         {
-            if (Culler != null && !Culler.ShowEntityToClient(m_presence, presence))
+            if (Culler != null && !Culler.ShowEntityToClient (m_presence, presence))
+            {
+                //They are out of view and they changed, we need to update them when they do come in view
+                lastPresencesInView.Remove (presence);
                 return; // if 2 far ignore
+            }
 
             lock (m_presenceAnimationsToSend)
             {
@@ -180,8 +188,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="part"></param>
         public void QueuePartForUpdate (ISceneChildEntity part, PrimUpdateFlags flags)
         {
-            if (Culler != null && !Culler.ShowEntityToClient(m_presence, part.ParentEntity))
+            if (Culler != null && !Culler.ShowEntityToClient (m_presence, part.ParentEntity))
+            {
+                //They are out of view and they changed, we need to update them when they do come in view
+                lastGrpsInView.Remove (part.ParentEntity);
                 return; // if 2 far ignore
+            }
 
             EntityUpdate o = new EntityUpdate (part, flags);
             QueueEntityUpdate (o);
@@ -283,14 +295,15 @@ namespace OpenSim.Region.Framework.Scenes
                     if (e.IsDeleted)
                         continue;
 
-                    //Check for culling here!
-                    if (!Culler.ShowEntityToClient(m_presence, e))
-                        continue; // if 2 far ignore
-
-                    NewGrpsInView.Add (e);
-
-                    if (lastGrpsInView.Contains (e))
+                    if (lastGrpsInView.Contains (e)) //If we've already sent it, don't send it again
                         continue;
+
+                    if (Culler != null)
+                    {
+                        if (!Culler.ShowEntityToClient (m_presence, e))
+                            continue;
+                        NewGrpsInView.Add (e);
+                    }
 
                     //Send the root object first!
                     EntityUpdate rootupdate = new EntityUpdate (e.RootChild, PrimUpdateFlags.FullUpdate);
@@ -312,7 +325,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
             entities = null;
-            lastGrpsInView.Clear ();
             lastGrpsInView.UnionWith (NewGrpsInView);
             NewGrpsInView.Clear ();
 
@@ -356,224 +368,226 @@ namespace OpenSim.Region.Framework.Scenes
         /// It loops through the available updates and sends them out (no waiting)
         /// </summary>
         /// <param name="numUpdates">The number of updates to send</param>
-        public void SendPrimUpdates(int numPrimUpdates, int numAvaUpdates)
-            {
+        public void SendPrimUpdates (int numPrimUpdates, int numAvaUpdates)
+        {
             if (m_inUse)
                 return;
 
             if (m_numberOfLoops < NUMBER_OF_LOOPS_TO_WAIT) //Wait for the client to finish connecting fully before sending out bunches of updates
-                {
+            {
                 m_numberOfLoops++;
                 return;
-                }
+            }
 
             m_inUse = true;
             //This is for stats
-            int AgentMS = Util.EnvironmentTickCount();
+            int AgentMS = Util.EnvironmentTickCount ();
 
             #region New client entering the Scene, requires all objects in the Scene
 
             ///If we havn't started processing this client yet, we need to send them ALL the prims that we have in this Scene (and deal with culling as well...)
             if (!m_SentInitialObjects && m_presence.DrawDistance != 0.0f)
-                {
+            {
                 //If they are not in this region, we check to make sure that we allow seeing into neighbors
                 if (!m_presence.IsChildAgent || (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor) && m_prioritizer != null)
-                    {
+                {
                     m_SentInitialObjects = true;
-                    ISceneEntity[] entities = m_presence.Scene.Entities.GetEntities();
+                    ISceneEntity[] entities = m_presence.Scene.Entities.GetEntities ();
                     PriorityQueue<EntityUpdate, double> m_entsqueue = new PriorityQueue<EntityUpdate, double> (entities.Length, DoubleComparer);
                     List<ISceneEntity> NewGrpsInView = new List<ISceneEntity> ();
                     // build a prioritized list of things we need to send
 
                     foreach (ISceneEntity e in entities)
-                        {
+                    {
                         if (e != null && e is SceneObjectGroup)
-                            {
+                        {
                             if (e.IsDeleted)
+                                continue;
+
+                            if (lastGrpsInView.Contains (e))
                                 continue;
 
                             //Check for culling here!
                             if (Culler != null)
-                                {
-                                if (!Culler.ShowEntityToClient(m_presence, e))
+                            {
+                                if (!Culler.ShowEntityToClient (m_presence, e))
                                     continue;
-                                lastGrpsInView.Add(e);
-                                }
+                                NewGrpsInView.Add (e);
+                            }
 
-                            NewGrpsInView.Add (e);
                             //Send the root object first!
-                            EntityUpdate rootupdate = new EntityUpdate(e.RootChild, PrimUpdateFlags.FullUpdate);
-                            PriorityQueueItem<EntityUpdate, double> rootitem = new PriorityQueueItem<EntityUpdate, double>();
+                            EntityUpdate rootupdate = new EntityUpdate (e.RootChild, PrimUpdateFlags.FullUpdate);
+                            PriorityQueueItem<EntityUpdate, double> rootitem = new PriorityQueueItem<EntityUpdate, double> ();
                             rootitem.Value = rootupdate;
                             rootitem.Priority = m_prioritizer.GetUpdatePriority (m_presence, e.RootChild);
-                            m_entsqueue.Enqueue(rootitem);
+                            m_entsqueue.Enqueue (rootitem);
 
-                            foreach (ISceneChildEntity child in e.ChildrenEntities())
-                                {
+                            foreach (ISceneChildEntity child in e.ChildrenEntities ())
+                            {
                                 if (child == e.RootChild)
                                     continue; //Already sent
-                                EntityUpdate update = new EntityUpdate(child, PrimUpdateFlags.FullUpdate);
-                                PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double>();
+                                EntityUpdate update = new EntityUpdate (child, PrimUpdateFlags.FullUpdate);
+                                PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double> ();
                                 item.Value = update;
                                 item.Priority = m_prioritizer.GetUpdatePriority (m_presence, child);
-                                m_entsqueue.Enqueue(item);
-                                }
+                                m_entsqueue.Enqueue (item);
                             }
                         }
+                    }
                     //Merge the last seen lists
-                    lastGrpsInView.Clear ();
                     lastGrpsInView.UnionWith (NewGrpsInView);
+                    NewGrpsInView.Clear ();
                     entities = null;
                     // send them 
-                    SendQueued(m_entsqueue);
-                    }
+                    SendQueued (m_entsqueue);
                 }
+            }
 
             int presenceNumToSend = numAvaUpdates;
             lock (m_presenceUpdatesToSend)
-                {
+            {
                 //Send the numUpdates of them if that many
                 // if we don't have that many, we send as many as possible, then switch to objects
                 if (m_presenceUpdatesToSend.Count != 0)
-                    {
+                {
                     try
-                        {
+                    {
                         int count = m_presenceUpdatesToSend.Count > presenceNumToSend ? presenceNumToSend : m_presenceUpdatesToSend.Count;
-                        List<EntityUpdate> updates = new List<EntityUpdate>();
+                        List<EntityUpdate> updates = new List<EntityUpdate> ();
                         for (int i = 0; i < count; i++)
-                            {
+                        {
                             EntityUpdate update = ((EntityUpdate)m_presenceUpdatesToSend[0]);
-                            if (m_EntitiesInPacketQueue.Contains(update.Entity.UUID))
-                                {
-                                m_presenceUpdatesToSend.RemoveAt(0);
-                                m_presenceUpdatesToSend.Insert(m_presenceUpdatesToSend.Count, update.Entity.UUID, update);
-                                continue;
-                                }
-                            updates.Add(update);
-                            m_EntitiesInPacketQueue.Add(update.Entity.UUID);
-                            m_presenceUpdatesToSend.RemoveAt(0);
-                            }
-                        if (updates.Count != 0)
+                            if (m_EntitiesInPacketQueue.Contains (update.Entity.UUID))
                             {
+                                m_presenceUpdatesToSend.RemoveAt (0);
+                                m_presenceUpdatesToSend.Insert (m_presenceUpdatesToSend.Count, update.Entity.UUID, update);
+                                continue;
+                            }
+                            updates.Add (update);
+                            m_EntitiesInPacketQueue.Add (update.Entity.UUID);
+                            m_presenceUpdatesToSend.RemoveAt (0);
+                        }
+                        if (updates.Count != 0)
+                        {
                             presenceNumToSend -= updates.Count;
                             //Make sure we don't have an update for us
                             if (updates[0].Entity.UUID == m_presence.UUID)
                                 m_ourPresenceHasUpdate = false;
-                            m_presence.ControllingClient.SendAvatarUpdate(updates);
-                            }
-                        }
-                    catch (Exception ex)
-                        {
-                        m_log.WarnFormat("[SceneViewer]: Exception while running presence loop: {0}", ex.ToString());
+                            m_presence.ControllingClient.SendAvatarUpdate (updates);
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        m_log.WarnFormat ("[SceneViewer]: Exception while running presence loop: {0}", ex.ToString ());
+                    }
                 }
+            }
 
             lock (m_presenceAnimationsToSend)
-                {
+            {
                 //Send the numUpdates of them if that many
                 // if we don't have that many, we send as many as possible, then switch to objects
                 if (m_presenceAnimationsToSend.Count != 0 && presenceNumToSend > 0)
-                    {
+                {
                     try
-                        {
+                    {
                         int count = m_presenceAnimationsToSend.Count > presenceNumToSend ? presenceNumToSend : m_presenceAnimationsToSend.Count;
                         for (int i = 0; i < count; i++)
-                            {
-                            AnimationGroup update = ((AnimationGroup)m_presenceAnimationsToSend[0]);
-                            if (m_AnimationsInPacketQueue.Contains(update.AvatarID))
-                                {
-                                m_presenceAnimationsToSend.RemoveAt(0);
-                                m_presenceAnimationsToSend.Insert(m_presenceAnimationsToSend.Count, update.AvatarID, update);
-                                continue;
-                                }
-                            m_AnimationsInPacketQueue.Add(update.AvatarID);
-                            m_presenceAnimationsToSend.RemoveAt(0);
-                            m_presence.ControllingClient.SendAnimations(update);
-                            }
-                        }
-                    catch (Exception ex)
                         {
-                        m_log.WarnFormat("[SceneViewer]: Exception while running presence loop: {0}", ex.ToString());
+                            AnimationGroup update = ((AnimationGroup)m_presenceAnimationsToSend[0]);
+                            if (m_AnimationsInPacketQueue.Contains (update.AvatarID))
+                            {
+                                m_presenceAnimationsToSend.RemoveAt (0);
+                                m_presenceAnimationsToSend.Insert (m_presenceAnimationsToSend.Count, update.AvatarID, update);
+                                continue;
+                            }
+                            m_AnimationsInPacketQueue.Add (update.AvatarID);
+                            m_presenceAnimationsToSend.RemoveAt (0);
+                            m_presence.ControllingClient.SendAnimations (update);
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        m_log.WarnFormat ("[SceneViewer]: Exception while running presence loop: {0}", ex.ToString ());
+                    }
                 }
+            }
 
             int primsNumToSend = numPrimUpdates;
-            
+
             lock (m_objectPropertiesToSend)
-                {
+            {
                 //Send the numUpdates of them if that many
                 // if we don't have that many, we send as many as possible, then switch to objects
                 if (m_objectPropertiesToSend.Count != 0)
-                    {
+                {
                     try
-                        {
-                        List<IEntity> entities = new List<IEntity>();
+                    {
+                        List<IEntity> entities = new List<IEntity> ();
                         int count = m_objectPropertiesToSend.Count > primsNumToSend ? primsNumToSend : m_objectPropertiesToSend.Count;
                         for (int i = 0; i < count; i++)
-                            {
-                            ISceneChildEntity entity = ((ISceneChildEntity)m_objectPropertiesToSend[0]);
-                            if (m_PropertiesInPacketQueue.Contains(entity.UUID))
-                                {
-                                m_objectPropertiesToSend.RemoveAt(0);
-                                m_objectPropertiesToSend.Insert(m_objectPropertiesToSend.Count, entity.UUID, entity);
-                                continue;
-                                }
-                            m_PropertiesInPacketQueue.Add(entity.UUID);
-                            m_objectPropertiesToSend.RemoveAt(0);
-                            entities.Add(entity);
-                            }
-                        if (entities.Count > 0)
-                            {
-                            primsNumToSend -= entities.Count;
-                            m_presence.ControllingClient.SendObjectPropertiesReply(entities);
-                            }
-                        }
-                    catch (Exception ex)
                         {
-                        m_log.WarnFormat("[SceneViewer]: Exception while running presence loop: {0}", ex.ToString());
+                            ISceneChildEntity entity = ((ISceneChildEntity)m_objectPropertiesToSend[0]);
+                            if (m_PropertiesInPacketQueue.Contains (entity.UUID))
+                            {
+                                m_objectPropertiesToSend.RemoveAt (0);
+                                m_objectPropertiesToSend.Insert (m_objectPropertiesToSend.Count, entity.UUID, entity);
+                                continue;
+                            }
+                            m_PropertiesInPacketQueue.Add (entity.UUID);
+                            m_objectPropertiesToSend.RemoveAt (0);
+                            entities.Add (entity);
+                        }
+                        if (entities.Count > 0)
+                        {
+                            primsNumToSend -= entities.Count;
+                            m_presence.ControllingClient.SendObjectPropertiesReply (entities);
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        m_log.WarnFormat ("[SceneViewer]: Exception while running presence loop: {0}", ex.ToString ());
+                    }
                 }
+            }
 
             lock (m_objectUpdatesToSend)
-                {
+            {
                 if (m_objectUpdatesToSend.Count != 0)
-                    {
+                {
                     try
-                        {
+                    {
                         int count = m_objectUpdatesToSend.Count > primsNumToSend ? primsNumToSend : m_objectUpdatesToSend.Count;
-                        List<EntityUpdate> updates = new List<EntityUpdate>();
+                        List<EntityUpdate> updates = new List<EntityUpdate> ();
                         for (int i = 0; i < count; i++)
-                            {
-                            EntityUpdate update = ((EntityUpdate)m_objectUpdatesToSend[0]);
-                            if (m_EntitiesInPacketQueue.Contains(update.Entity.UUID))
-                                {
-                                m_objectUpdatesToSend.RemoveAt(0);
-                                m_objectUpdatesToSend.Insert(m_objectUpdatesToSend.Count, update.Entity.UUID, update);
-                                continue;
-                                }
-                            updates.Add(update);
-                            m_EntitiesInPacketQueue.Add(update.Entity.UUID);
-                            m_objectUpdatesToSend.RemoveAt(0);
-                            }
-                        m_presence.ControllingClient.SendPrimUpdate(updates);
-                        }
-                    catch (Exception ex)
                         {
-                        m_log.WarnFormat("[SceneViewer]: Exception while running object loop: {0}", ex.ToString());
+                            EntityUpdate update = ((EntityUpdate)m_objectUpdatesToSend[0]);
+                            if (m_EntitiesInPacketQueue.Contains (update.Entity.UUID))
+                            {
+                                m_objectUpdatesToSend.RemoveAt (0);
+                                m_objectUpdatesToSend.Insert (m_objectUpdatesToSend.Count, update.Entity.UUID, update);
+                                continue;
+                            }
+                            updates.Add (update);
+                            m_EntitiesInPacketQueue.Add (update.Entity.UUID);
+                            m_objectUpdatesToSend.RemoveAt (0);
                         }
+                        m_presence.ControllingClient.SendPrimUpdate (updates);
+                    }
+                    catch (Exception ex)
+                    {
+                        m_log.WarnFormat ("[SceneViewer]: Exception while running object loop: {0}", ex.ToString ());
                     }
                 }
+            }
 
             //Add the time to the stats tracker
-            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_presence.Scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_presence.Scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
+            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_presence.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_presence.Scene.RegionInfo.RegionID.ToString (), "Agent Update Count");
             if (reporter != null)
-                reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(AgentMS));
+                reporter.AddAgentTime (Util.EnvironmentTickCountSubtract (AgentMS));
 
             m_inUse = false;
-            }
+        }
 
         /// <summary>
         /// Once the packet has been sent, allow newer updates to be sent for the given entity
