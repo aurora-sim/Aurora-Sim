@@ -193,13 +193,13 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 { "UserID", principalID.ToString() }
             };
 
-            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
-            if (response["Success"].AsBoolean() && response["User"] is OSDMap)
+            OSDMap response = WebUtils.PostToService (m_serverUrl, requestArgs);
+            if (response["Success"].AsBoolean () && response["User"] is OSDMap)
             {
                 OSDMap userMap = (OSDMap)response["User"];
-                string identifier = userMap["Name"].AsString();
+                string identifier = userMap["Name"].AsString ();
 
-                if (!String.IsNullOrEmpty(identifier))
+                if (!String.IsNullOrEmpty (identifier))
                 {
                     // Add/update the md5hash identity
                     // TODO: Support salts when AddIdentity does
@@ -213,19 +213,66 @@ namespace OpenSim.Services.Connectors.SimianGrid
                         { "UserID", principalID.ToString() }
                     };
 
-                    response = WebUtils.PostToService(m_serverUrl, requestArgs);
-                    bool success = response["Success"].AsBoolean();
+                    response = WebUtils.PostToService (m_serverUrl, requestArgs);
+                    bool success = response["Success"].AsBoolean ();
 
                     if (!success)
-                        m_log.WarnFormat("[SIMIAN AUTH CONNECTOR]: Failed to set password for {0} ({1})", identifier, principalID);
+                        m_log.WarnFormat ("[SIMIAN AUTH CONNECTOR]: Failed to set password for {0} ({1})", identifier, principalID);
 
                     return success;
                 }
             }
             else
             {
-                m_log.Warn("[SIMIAN AUTH CONNECTOR]: Failed to retrieve identities for " + principalID + ": " +
-                    response["Message"].AsString());
+                m_log.Warn ("[SIMIAN AUTH CONNECTOR]: Failed to retrieve identities for " + principalID + ": " +
+                    response["Message"].AsString ());
+            }
+
+            return false;
+        }
+
+        public bool SetPlainPassword (UUID principalID, string authType, string passwd)
+        {
+            // Fetch the user name first
+            NameValueCollection requestArgs = new NameValueCollection
+            {
+                { "RequestMethod", "GetUser" },
+                { "UserID", principalID.ToString() }
+            };
+
+            OSDMap response = WebUtils.PostToService (m_serverUrl, requestArgs);
+            if (response["Success"].AsBoolean () && response["User"] is OSDMap)
+            {
+                OSDMap userMap = (OSDMap)response["User"];
+                string identifier = userMap["Name"].AsString ();
+
+                if (!String.IsNullOrEmpty (identifier))
+                {
+                    // Add/update the md5hash identity
+                    // TODO: Support salts when AddIdentity does
+                    // TODO: Create an a1hash too for WebDAV logins
+                    requestArgs = new NameValueCollection
+                    {
+                        { "RequestMethod", "AddIdentity" },
+                        { "Identifier", identifier },
+                        { "Credential", "$1$" + Utils.MD5String(Utils.MD5String(passwd)) },
+                        { "Type", "md5hash" },
+                        { "UserID", principalID.ToString() }
+                    };
+
+                    response = WebUtils.PostToService (m_serverUrl, requestArgs);
+                    bool success = response["Success"].AsBoolean ();
+
+                    if (!success)
+                        m_log.WarnFormat ("[SIMIAN AUTH CONNECTOR]: Failed to set password for {0} ({1})", identifier, principalID);
+
+                    return success;
+                }
+            }
+            else
+            {
+                m_log.Warn ("[SIMIAN AUTH CONNECTOR]: Failed to retrieve identities for " + principalID + ": " +
+                    response["Message"].AsString ());
             }
 
             return false;

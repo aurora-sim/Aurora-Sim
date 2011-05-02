@@ -127,5 +127,26 @@ namespace OpenSim.Services.AuthenticationService
             m_log.InfoFormat("[AUTHENTICATION DB]: Set password for principalID {0}", principalID);
             return true;
         }
+
+        public virtual bool SetPlainPassword (UUID principalID, string authType, string pass)
+        {
+            AuthData auth = m_Database.Get (principalID, authType);
+            if (auth == null)
+            {
+                auth = new AuthData ();
+                auth.PrincipalID = principalID;
+                auth.AccountType = authType;
+            }
+            auth.PasswordHash = pass;
+            auth.PasswordSalt = "";
+            if (!m_Database.Store (auth))
+            {
+                m_log.DebugFormat ("[AUTHENTICATION DB]: Failed to store authentication data");
+                return false;
+            }
+
+            m_log.InfoFormat ("[AUTHENTICATION DB]: Set password for principalID {0}", principalID);
+            return true;
+        }
     }
 }

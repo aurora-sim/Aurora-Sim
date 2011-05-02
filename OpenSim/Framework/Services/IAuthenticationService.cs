@@ -76,6 +76,7 @@ namespace OpenSim.Services.Interfaces
         //
         bool SetPassword (UUID principalID, string authType, string passwd);
         bool SetPasswordHashed (UUID UUID, string authType, string passwd);
+        bool SetPlainPassword (UUID principalID, string authType, string passwd);
 
         /// <summary>
         /// Check whether the given principalID has a password set
