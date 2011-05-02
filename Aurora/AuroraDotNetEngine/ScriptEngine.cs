@@ -120,9 +120,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             get { return m_consoleDisabled; }
             set 
             { 
-                m_consoleDisabled = value; 
-                //Poke the threads to make sure they run
-                MaintenanceThread.PokeThreads();
+                m_consoleDisabled = value;
+                if (!value)
+                {
+                    //Poke the threads to make sure they run
+                    MaintenanceThread.PokeThreads ();
+                }
+                else
+                    MaintenanceThread.DisableThreads ();
             }
         }
 
@@ -135,8 +140,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             set
             {
                 m_disabled = value;
-                //Poke the threads to make sure they run
-                MaintenanceThread.PokeThreads();
+                if (!value)
+                {
+                    //Poke the threads to make sure they run
+                    MaintenanceThread.PokeThreads ();
+                }
+                else
+                    MaintenanceThread.DisableThreads ();
             }
         }
 
@@ -516,7 +526,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool PostScriptEvent(UUID itemID, UUID primID, EventParams p, EventPriority priority)
         {
             ScriptData ID = ScriptProtection.GetScript(primID, itemID);
-            if (ID == null)
+            if (ID == null || !ID.Running)
                 return false;
             return AddToScriptQueue(ID,
                     p.EventName, p.DetectParams, priority, p.Params);
@@ -572,7 +582,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     lsl_p[i] = p[i];
             }
 
-            return AddToObjectQueue(primID, name, new DetectParams[0], -1, lsl_p);
+            return AddToObjectQueue(primID, name, new DetectParams[0], lsl_p);
         }
 
         /// <summary>

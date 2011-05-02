@@ -483,7 +483,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             }
         }
 
-        private bool SaveAssets()
+        private void SaveAssets()
         {
             AssetSaverIsRunning = true;
             lock (AssetsToAdd)
@@ -495,7 +495,6 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             }
             AssetsToAdd.Clear();
             AssetSaverIsRunning = false;
-            return false;
         }
 
         /// <summary>

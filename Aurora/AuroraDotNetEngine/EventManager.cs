@@ -824,9 +824,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 ID.RemoveLandCollisionEvents = false;
 
 
-            if ((ID.Script.GetStateEventFlags(ID.State) & (long)eventType) == 0)
-                return false; //If the script doesn't contain the state, don't even bother queueing it
-            
+            if (eventType != scriptEvents.changed)
+            {
+                if ((ID.Script.GetStateEventFlags (ID.State) & (long)eventType) == 0)
+                    return false; //If the script doesn't contain the state, don't even bother queueing it
+            }
+
             //Make sure we can execute events at position
             if (!m_scriptEngine.PipeEventsForScript(ID.Part))
                 return false;

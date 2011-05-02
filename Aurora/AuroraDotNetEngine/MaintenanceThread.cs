@@ -118,19 +118,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// This loop deals with starting and stoping scripts
         /// </summary>
         /// <returns></returns>
-        public bool ScriptChangeQueue()
+        public void ScriptChangeQueue()
         {
             if (m_ScriptEngine.Worlds.Count == 0)
-                return true;
+                return;
 
             IMonitorModule module = m_ScriptEngine.Worlds[0].RequestModuleInterface<IMonitorModule>();
             int StartTime = Util.EnvironmentTickCount();
 
             if (!Started) //Break early
-                return true;
+                return;
 
             if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled)
-                return true;
+                return;
 
             ScriptChangeIsRunning = true;
 
@@ -174,7 +174,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
                 threadpool.QueueEvent(ScriptChangeQueue, 2); //Requeue us
                 Thread.Sleep(5);
-                return false;
+                return;
             }
 
             if (!FiredStartupEvent)
@@ -204,26 +204,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
                 }
             }
-
-            return false;
         }
 
-        public bool CmdHandlerQueue()
+        public void CmdHandlerQueue()
         {
             if (m_ScriptEngine.Worlds.Count == 0)
             {
                 CmdHandlerQueueIsRunning = false;
-                return false;
+                return;
             }
             CmdHandlerQueueIsRunning = true;
             IMonitorModule module = m_ScriptEngine.Worlds[0].RequestModuleInterface<IMonitorModule>();
             int StartTime = Util.EnvironmentTickCount();
 
             if (!Started) //Break early
-                return true;
+                return;
 
             if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled)
-                return true;
+                return;
 
             //Check timers, etc
             bool didAnything = false;
@@ -246,15 +244,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
             }
 
-            if (didAnything)
-            {
-                CmdHandlerQueueIsRunning = true;
+            if (didAnything) //If we did something, run us again soon
                 threadpool.QueueEvent (CmdHandlerQueue, 2);
-            }
             else
                 CmdHandlerQueueIsRunning = false;
-            return false;
         }
+
         #endregion
 
         #region Add
@@ -330,30 +325,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 threadpool.QueueEvent(ScriptChangeQueue, 2);
             }
-            else if (thread == "CmdHandlerQueue")
+            else if (thread == "CmdHandlerQueue" && !CmdHandlerQueueIsRunning)
             {
                 threadpool.QueueEvent (CmdHandlerQueue, 2);
             }
         }
-
-        #endregion
 
         /// <summary>
         /// Makes sure that all the threads that need to be running are running and starts them if they need to be running
         /// </summary>
         public void PokeThreads()
         {
+            if (LUQueue.Count () > 0 && !ScriptChangeIsRunning)
+                StartThread ("Change");
+            if (!CmdHandlerQueueIsRunning)
+                StartThread ("CmdHandlerQueue");
+        }
+
+        public void DisableThreads ()
+        {
             CmdHandlerQueueIsRunning = false;
             EventProcessorIsRunning = false;
             ScriptChangeIsRunning = false;
-            if (LUQueue.Count () != 0)
-                StartThread ("Change");
-            //if (!CmdHandlerQueueIsRunning)
-                StartThread ("CmdHandlerQueue");
             m_numWorkers = 0;
-            // if (!EventProcessorIsRunning) //Can't check the count on this one, so poke it anyway
-            // StartThread("Event");
         }
+
+        #endregion
 
         #region Scripts events scheduler control
 
@@ -448,7 +445,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public bool loop()
+        public void loop()
         {
             while (!m_ScriptEngine.ConsoleDisabled && !m_ScriptEngine.Disabled)
             {
@@ -526,7 +523,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
                 Thread.Sleep (timeToSleep);
             }
-            return false;
         }
 
         public void EventSchExec (QueueItemStruct QIS)

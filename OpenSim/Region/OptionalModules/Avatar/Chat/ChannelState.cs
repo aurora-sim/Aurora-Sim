@@ -162,9 +162,9 @@ namespace OpenSim.Region.OptionalModules.Avatar.Chat
 
             cs.Server               = Substitute(rs, config.GetString("server", null));
             m_log.DebugFormat("[IRC-Channel-{0}] Server : <{1}>", cs.idn, cs.Server);
-            cs.Password             = Substitute(rs, config.GetString("password", null));
+            cs.Password             = Substitute(rs, config.GetString("password", ""));
             // probably not a good idea to put a password in the log file
-            cs.User                 = Substitute(rs, config.GetString("user", null));
+            cs.User                 = Substitute(rs, config.GetString("user", ""));
             cs.IrcChannel           = Substitute(rs, config.GetString("channel", null));
             m_log.DebugFormat("[IRC-Channel-{0}] IrcChannel : <{1}>", cs.idn, cs.IrcChannel);
             cs.Port                 = Convert.ToUInt32(Substitute(rs, config.GetString("port", Convert.ToString(cs.Port))));

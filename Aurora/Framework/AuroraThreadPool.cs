@@ -20,13 +20,12 @@ namespace Aurora.Framework
 
     public class AuroraThreadPool
     {
-        public delegate bool QueueItem();
-        public delegate bool QueueItem2(object o);
+        public delegate void QueueItem();
 
         AuroraThreadPoolStartInfo m_info = null;
         Thread[] Threads = null;
         int[] Sleeping;
-        Queue queue = new Queue();
+        Queue<QueueItem> queue = new Queue<QueueItem> ();
         public int nthreads;
         public int nSleepingthreads;
         private int SleepTimeStep;
@@ -54,20 +53,13 @@ namespace Aurora.Framework
                 try
                 {
                     QueueItem item = null;
-                    object[] o = null;
                     lock (queue)
                     {
                         if (queue.Count != 0)
-                        {
-                            object queueItem = queue.Dequeue();
-                            if (queueItem is QueueItem)
-                                item = queueItem as QueueItem;
-                            else
-                                o = queueItem as object[];
-                        }
+                            item = queue.Dequeue ();
                     }
 
-                    if (item == null && o == null)
+                    if (item == null)
                     {
                         OurSleepTime += SleepTimeStep;
                         if (OurSleepTime > m_info.MaxSleepTime)
@@ -98,10 +90,7 @@ namespace Aurora.Framework
                         // This control loop whould then have to look for those delayed requests.
                         // UBIT
                         OurSleepTime = m_info.InitialSleepTime;
-                        if (item != null)
-                            item.Invoke();
-                        else
-                            (o[0] as QueueItem2).Invoke(o[1]);
+                        item.Invoke();
                     }
                 }
                 catch { }
@@ -119,59 +108,6 @@ namespace Aurora.Framework
             }
 
             if (nthreads - nSleepingthreads < queue.Count && nthreads < Threads.Length)
-            {
-                lock (Threads)
-                {
-                    for (int i = 0; i < Threads.Length; i++)
-                    {
-                        if (Threads[i] == null)
-                        {
-                            Thread thread = new Thread (ThreadStart);
-                            thread.Priority = m_info.priority;
-                            thread.Name = "AuroraThrPool#" + i.ToString ();
-                            thread.IsBackground = true;
-                            try
-                            {
-                                thread.Start (new int[] { i });
-                                Threads[i] = thread;
-                                Sleeping[i] = 0;
-                                nthreads++;
-                            }
-                            catch
-                            {
-                            }
-                            return;
-                        }
-                    }
-                }
-            }
-            else if (nSleepingthreads > 0)
-            {
-                lock (Threads)
-                {
-                    for (int i = 0; i < Threads.Length; i++)
-                    {
-                        if (Sleeping[i] == 1 && Threads[i].ThreadState == ThreadState.WaitSleepJoin)
-                        {
-                            Threads[i].Interrupt (); // if we have a sleeping one awake it
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-
-        public void QueueEvent2 (QueueItem2 delegat, int Priority, object obj)
-        {
-            if (delegat == null)
-                return;
-            object[] o = new object[] { delegat, obj };
-            lock (queue)
-            {
-                queue.Enqueue (o);
-            }
-
-            if (nthreads < queue.Count && nthreads < Threads.Length)
             {
                 lock (Threads)
                 {

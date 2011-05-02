@@ -567,8 +567,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         public void CreateFromData(UUID itemID, UUID objectID,
                                    OSD data)
         {
+            IScene scene = findPrimsScene(objectID);
+            if(scene == null)
+                return;
             ISceneChildEntity part =
-                findPrimsScene(objectID).GetSceneObjectPart(
+                scene.GetSceneObjectPart (
                     objectID);
 
             if (part == null)

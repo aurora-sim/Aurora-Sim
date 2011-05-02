@@ -612,7 +612,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Chat
 
         public void ProcessIRCCommand(string command)
         {
-
+            m_log.Warn (command);
             string[] commArgs;
             string c_server = m_server;
 
@@ -702,7 +702,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Chat
                     m_pending   = false;
                     break;
                 case "NOTICE" :
-                    // m_log.WarnFormat("[IRC-Connector-{0}] [{1}] {2}", idn, cmd, parms.Split(CS_SPACE,2)[1]);
+                    //m_log.WarnFormat("[IRC-Connector-{0}] [{1}] {2}", idn, cmd, parms.Split(CS_SPACE,2)[1]);
                     break;
                 case "ERROR"  :
                     m_log.ErrorFormat("[IRC-Connector-{0}] [{1}] {2}", idn, cmd, parms.Split(CS_SPACE,2)[1]);

@@ -359,7 +359,7 @@ namespace Aurora.Modules
             }
         }
 
-        private bool GetMapItems()
+        private void GetMapItems()
         {
             itemRequesterIsRunning = true;
             for (int i = 0; i < m_itemsToRequest.Count; i++)
@@ -389,7 +389,6 @@ namespace Aurora.Modules
                 }
             }
             itemRequesterIsRunning = false;
-            return true;
         }
 
 		/// <summary>
@@ -480,7 +479,7 @@ namespace Aurora.Modules
             public IClientAPI remoteClient;
         }
 
-        private bool GetMapBlocks()
+        private void GetMapBlocks()
         {
             try
             {
@@ -535,7 +534,6 @@ namespace Aurora.Modules
             {
             }
             blockRequesterIsRunning = false;
-            return true;
         }
         
         protected MapBlockData MapBlockFromGridRegion(GridRegion r)
