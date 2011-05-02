@@ -93,12 +93,7 @@ namespace OpenSim.Framework
         {
             get
             {
-                if (m_estateSettings == null)
-                {
-                    m_estateSettings = new EstateSettings();
-                }
-
-                return m_estateSettings;
+               return m_estateSettings;
             }
 
             set { m_estateSettings = value; }

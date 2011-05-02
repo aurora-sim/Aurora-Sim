@@ -309,7 +309,8 @@ namespace OpenSim.Services.Interfaces
             TerrainImage = ConvertFrom.RegionSettings.TerrainImageID;
             TerrainMapImage = ConvertFrom.RegionSettings.TerrainMapImageID;
             Access = ConvertFrom.AccessLevel;
-            EstateOwner = ConvertFrom.EstateSettings.EstateOwner;
+            if(ConvertFrom.EstateSettings != null)
+                EstateOwner = ConvertFrom.EstateSettings.EstateOwner;
             m_RegionSizeX = ConvertFrom.RegionSizeX;
             m_RegionSizeY = ConvertFrom.RegionSizeY;
             m_RegionSizeZ = ConvertFrom.RegionSizeZ;

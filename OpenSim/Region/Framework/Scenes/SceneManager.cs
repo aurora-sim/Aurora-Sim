@@ -732,8 +732,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 module.Initialise(scene, m_config, m_OpenSimBase);
             }
-            if (OnAddedScene != null)
-                OnAddedScene(scene);
         }
 
         public void PostInitModules(Scene scene)
@@ -750,6 +748,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 module.PostFinishStartup(scene, m_config, m_OpenSimBase);
             }
+            if (OnAddedScene != null)
+                OnAddedScene (scene);
         }
 
         public void StartupCompleteModules()
