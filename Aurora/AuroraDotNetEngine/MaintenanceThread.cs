@@ -340,10 +340,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         public void PokeThreads()
         {
-            if (LUQueue.Count () != 0 && !ScriptChangeIsRunning)
+            CmdHandlerQueueIsRunning = false;
+            EventProcessorIsRunning = false;
+            ScriptChangeIsRunning = false;
+            if (LUQueue.Count () != 0)
                 StartThread ("Change");
-            if (!CmdHandlerQueueIsRunning)
+            //if (!CmdHandlerQueueIsRunning)
                 StartThread ("CmdHandlerQueue");
+            m_numWorkers = 0;
             // if (!EventProcessorIsRunning) //Can't check the count on this one, so poke it anyway
             // StartThread("Event");
         }
@@ -443,7 +447,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public bool loop()
         {
-            while (true)
+            while (!m_ScriptEngine.ConsoleDisabled && !m_ScriptEngine.Disabled)
             {
                 QueueItemStruct QIS;
                 

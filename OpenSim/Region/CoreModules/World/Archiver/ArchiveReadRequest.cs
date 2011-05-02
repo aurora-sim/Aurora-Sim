@@ -268,7 +268,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         }
                         sceneObjectsLoadedCount++;
                         if (sceneObjectsLoadedCount % 250 == 0)
-                            m_log.Debug("[ARCHIVER]: Loaded " + sceneObjectsLoadedCount + " objects...");
+                            m_log.Info("[ARCHIVER]: Loaded " + sceneObjectsLoadedCount + " objects...");
                     }
                     else if (!m_skipAssets && filePath.StartsWith (ArchiveConstants.ASSETS_PATH))
                     {
@@ -278,7 +278,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                             failedAssetRestores++;
 
                         if ((successfulAssetRestores + failedAssetRestores) % 250 == 0)
-                            m_log.Debug ("[ARCHIVER]: Loaded " + successfulAssetRestores + " assets and failed to load " + failedAssetRestores + " assets...");
+                            m_log.Info ("[ARCHIVER]: Loaded " + successfulAssetRestores + " assets and failed to load " + failedAssetRestores + " assets...");
                     }
                     else if (filePath.StartsWith (ArchiveConstants.TERRAINS_PATH))
                     {

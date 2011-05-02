@@ -114,7 +114,9 @@ namespace OpenSim.Data.Null
         {
             if (!m_saveChanges)
                 return;
-
+            IBackupModule backupModule = m_scene.RequestModuleInterface<IBackupModule> ();
+            if (backupModule != null && backupModule.LoadingPrims) //Something is changing lots of prims
+                return;
             m_log.Info ("[FileBasedSimulationData]: Saving Backup for region " + m_scene.RegionInfo.RegionName);
             string fileName = m_scene.RegionInfo.RegionName + m_saveAppenedFileName + ".abackup";
             //Add the .temp since we might need to make a backup
@@ -149,7 +151,15 @@ namespace OpenSim.Data.Null
 
         protected void ReadBackup (IScene scene)
         {
-            GZipStream m_loadStream = new GZipStream (ArchiveHelpers.GetStream (m_fileName), CompressionMode.Decompress);
+            GZipStream m_loadStream;
+            try
+            {
+                m_loadStream = new GZipStream (ArchiveHelpers.GetStream (m_fileName), CompressionMode.Decompress);
+            }
+            catch
+            {
+                return;
+            }
             TarArchiveReader reader = new TarArchiveReader (m_loadStream);
 
             byte[] data;
