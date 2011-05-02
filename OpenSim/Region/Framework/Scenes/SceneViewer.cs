@@ -630,12 +630,16 @@ namespace OpenSim.Region.Framework.Scenes
         private void SendQueued (PriorityQueue<EntityUpdate, double> m_entsqueue)
         {
             PriorityQueueItem<EntityUpdate, double> up;
-
+            List<EntityUpdate> updates = new List<EntityUpdate> ();
             //Enqueue them all
             while (m_entsqueue.TryDequeue (out up))
             {
-                QueueEntityUpdate (up.Value);
+                updates.Add (up.Value);
             }
+            //Priorities are backwards, gotta flip them around
+            updates.Reverse ();
+            foreach (EntityUpdate update in updates)
+                QueueEntityUpdate (update);
 
             m_lastUpdatePos = (m_presence.IsChildAgent) ?
                 m_presence.AbsolutePosition :
