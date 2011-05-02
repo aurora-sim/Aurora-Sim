@@ -47,11 +47,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private ScriptEngine m_ScriptEngine;
         private bool FiredStartupEvent = false;
-        public AuroraThreadPool threadpool = null;
-        public AuroraThreadPool Scriptthreadpool = null;
+        public AuroraThreadPool cmdThreadpool = null;
+        public AuroraThreadPool scriptChangeThreadpool = null;
+        public AuroraThreadPool scriptThreadpool = null;
         public bool ScriptChangeIsRunning = false;
         public bool EventProcessorIsRunning = false;
-        public bool CmdHandlerQueueIsRunning = false;
+        public Int64 CmdHandlerQueueIsRunning = 0;
         public bool RunInMainProcessingThread = false;
         public bool m_Started = false;
 
@@ -64,9 +65,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 m_Started = true;
 
-                threadpool.QueueEvent(ScriptChangeQueue, 2);
+                scriptChangeThreadpool.QueueEvent (ScriptChangeQueue, 2);
                 //Start the queue because it can't start itself
-                threadpool.QueueEvent(CmdHandlerQueue, 2);
+                cmdThreadpool.QueueEvent (CmdHandlerQueue, 2);
             }
         }
 
@@ -95,9 +96,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             // as it always must be async, so we must run the pool anyway
             AuroraThreadPoolStartInfo info = new AuroraThreadPoolStartInfo();
             info.priority = ThreadPriority.Normal;
-            info.Threads = 2;
-            info.MaxSleepTime = Engine.Config.GetInt("SleepTime", 300);
-            threadpool = new AuroraThreadPool(info);
+            info.Threads = 1;
+            info.MaxSleepTime = Engine.Config.GetInt ("SleepTime", 300);
+            cmdThreadpool = new AuroraThreadPool (info);
+            scriptChangeThreadpool = new AuroraThreadPool (info);
 
 
             MaxScriptThreads = Engine.Config.GetInt("Threads", 100); // leave control threads out of user option
@@ -105,7 +107,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             sinfo.priority = ThreadPriority.Normal;
             sinfo.Threads = MaxScriptThreads;
             sinfo.MaxSleepTime = Engine.Config.GetInt("SleepTime", 300);
-            Scriptthreadpool = new AuroraThreadPool(sinfo);
+            scriptThreadpool = new AuroraThreadPool (sinfo);
             
             AppDomain.CurrentDomain.AssemblyResolve += m_ScriptEngine.AssemblyResolver.OnAssemblyResolve;
         }
@@ -172,7 +174,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     //Fire the events afterward so that they all start at the same time
                     item.ID.FireEvents();
                 }
-                threadpool.QueueEvent(ScriptChangeQueue, 2); //Requeue us
+                scriptChangeThreadpool.QueueEvent (ScriptChangeQueue, 2); //Requeue us
                 Thread.Sleep(5);
                 return;
             }
@@ -210,10 +212,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             if (m_ScriptEngine.Worlds.Count == 0)
             {
-                CmdHandlerQueueIsRunning = false;
+                Interlocked.Exchange (ref CmdHandlerQueueIsRunning, 0);
                 return;
             }
-            CmdHandlerQueueIsRunning = true;
+            Interlocked.Exchange (ref CmdHandlerQueueIsRunning, 1);
             IMonitorModule module = m_ScriptEngine.Worlds[0].RequestModuleInterface<IMonitorModule>();
             int StartTime = Util.EnvironmentTickCount();
 
@@ -245,9 +247,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
 
             if (didAnything) //If we did something, run us again soon
-                threadpool.QueueEvent (CmdHandlerQueue, 2);
+                cmdThreadpool.QueueEvent (CmdHandlerQueue, 2);
             else
-                CmdHandlerQueueIsRunning = false;
+                Interlocked.Exchange (ref CmdHandlerQueueIsRunning, 0);
         }
 
         #endregion
@@ -323,11 +325,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             if (thread == "Change")
             {
-                threadpool.QueueEvent(ScriptChangeQueue, 2);
+                scriptChangeThreadpool.QueueEvent (ScriptChangeQueue, 2);
             }
-            else if (thread == "CmdHandlerQueue" && !CmdHandlerQueueIsRunning)
+            else if (thread == "CmdHandlerQueue" && Interlocked.Read(ref CmdHandlerQueueIsRunning) == 0)
             {
-                threadpool.QueueEvent (CmdHandlerQueue, 2);
+                cmdThreadpool.QueueEvent (CmdHandlerQueue, 2);
             }
         }
 
@@ -338,18 +340,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             if (LUQueue.Count () > 0 && !ScriptChangeIsRunning)
                 StartThread ("Change");
-            if (!CmdHandlerQueueIsRunning)
+            if (Interlocked.Read(ref CmdHandlerQueueIsRunning) == 0)
                 StartThread ("CmdHandlerQueue");
         }
 
         public void DisableThreads ()
         {
-            CmdHandlerQueueIsRunning = false;
+            Interlocked.Exchange (ref CmdHandlerQueueIsRunning, 0);
             EventProcessorIsRunning = false;
             ScriptChangeIsRunning = false;
             m_numWorkers = 0;
-            threadpool.ClearEvents ();
-            Scriptthreadpool.ClearEvents ();
+            cmdThreadpool.ClearEvents ();
+            scriptChangeThreadpool.ClearEvents ();
+            scriptThreadpool.ClearEvents ();
         }
 
         #endregion
@@ -418,7 +421,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (Interlocked.Read (ref m_numWorkers) < ScriptEvents.Count + SleepingScriptEvents.Count)
             {
                 Interlocked.Increment (ref m_numWorkers);
-                Scriptthreadpool.QueueEvent (loop, 2);
+                scriptThreadpool.QueueEvent (loop, 2);
             }
         }
 
@@ -443,7 +446,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (Interlocked.Read (ref m_numWorkers) < ScriptEvents.Count + SleepingScriptEvents.Count)
             {
                 Interlocked.Increment (ref m_numWorkers);
-                Scriptthreadpool.QueueEvent (loop, 2);
+                scriptThreadpool.QueueEvent (loop, 2);
             }
         }
 

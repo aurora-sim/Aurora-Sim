@@ -473,10 +473,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     + "\nNumber of scripts running now: " + ScriptProtection.GetAllScripts ().Length
                     + "\nNumber of app domains: " + AppDomainManager.NumberOfAppDomains
                     + "\nPermission level of app domains: " + AppDomainManager.PermissionLevel
-                    + "\nNumber Engine threads/sleeping: " + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.threadpool.nthreads).ToString ()
-                    + "/" + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.threadpool.nSleepingthreads).ToString ()
-                    + "\nNumber Script threads: " + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.Scriptthreadpool.nthreads).ToString ()
-                    + "/" + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.Scriptthreadpool.nSleepingthreads).ToString ());
+                    + "\nNumber Script Event threads: " + (MaintenanceThread.scriptThreadpool == null ? 0 : MaintenanceThread.scriptThreadpool.nthreads).ToString ()
+                    + "/" + (MaintenanceThread.scriptThreadpool == null ? 0 : MaintenanceThread.scriptThreadpool.nSleepingthreads).ToString ());
         }
 
         protected void AuroraDotNetDisable (string module, string[] cmdparams)
