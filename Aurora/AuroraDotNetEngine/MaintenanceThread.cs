@@ -586,6 +586,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     lock (SleepingScriptEvents)
                     {
                         SleepingScriptEvents.Enqueue (QIS, QIS.CurrentlyAt.SleepTo.Ticks);
+                        SleepingScriptEventCount++;
                     }
                 }
                 else
