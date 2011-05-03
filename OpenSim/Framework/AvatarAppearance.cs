@@ -483,7 +483,7 @@ namespace OpenSim.Framework
             return 0;
         }
 
-        public void DetachAttachment(UUID itemID)
+        public bool DetachAttachment(UUID itemID)
         {
             foreach (KeyValuePair<int, List<AvatarAttachment>> kvp in m_attachments)
             {
@@ -496,9 +496,10 @@ namespace OpenSim.Framework
                     // And remove the list if there are no more attachments here
                     if (m_attachments[kvp.Key].Count == 0)
                         m_attachments.Remove(kvp.Key);
-                    return;
+                    return true;
                 }
             }
+            return false;
         }
 
         public void ClearAttachments()

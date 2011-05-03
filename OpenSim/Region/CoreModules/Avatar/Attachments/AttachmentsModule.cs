@@ -350,7 +350,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             if (m_scene.TryGetScenePresence (remoteClient.AgentId, out presence))
             {
                 IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
-                appearance.Appearance.DetachAttachment (itemID);
+                if (!appearance.Appearance.DetachAttachment (itemID))
+                    return; //Its not attached! What are we doing!
 
                 m_log.Debug ("[ATTACHMENTS MODULE]: Detaching from UserID: " + remoteClient.AgentId + ", ItemID: " + itemID);
                 if (AvatarFactory != null)

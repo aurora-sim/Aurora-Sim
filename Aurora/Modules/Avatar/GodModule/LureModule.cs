@@ -49,6 +49,7 @@ namespace Aurora.Modules
 
 		private IMessageTransferModule m_TransferModule = null;
         private bool m_Enabled = true;
+        private bool m_allowGodTeleports = true;
 
         #endregion
 
@@ -58,7 +59,10 @@ namespace Aurora.Modules
 		{
             IConfig ccmModuleConfig = source.Configs["Messaging"];
             if (ccmModuleConfig != null)
-                m_Enabled = ccmModuleConfig.GetString("LureModule", Name) == Name;
+            {
+                m_Enabled = ccmModuleConfig.GetString ("LureModule", Name) == Name;
+                m_allowGodTeleports = ccmModuleConfig.GetBoolean ("AllowGodTeleports", m_allowGodTeleports);
+            }
 		}
 
         public void AddRegion(Scene scene)
@@ -147,7 +151,7 @@ namespace Aurora.Modules
 
 			GridInstantMessage m;
 
-            if (scene.Permissions.IsAdministrator(client.AgentId))//if we are an admin
+            if (m_allowGodTeleports && scene.Permissions.IsAdministrator (client.AgentId) && presence.GodLevel > 0)//if we are an admin and are in god mode
 			{
                 if (scene.Permissions.IsAdministrator(targetid)) //if they are an admin
 				{
