@@ -278,7 +278,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             {
                 //Add the componet to the map by its name
                 OSD o = component.GetState(oldID);
-                if (o != null && o != new OSD())
+                if (o != null && o.Value() != new OSD().Value())
                     SetComponentState(part, component.Name, o); 
             }
         }
@@ -333,7 +333,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             {
                 //Add the componet to the map by its name
                 OSD o = component.GetState(obj.UUID);
-                if(o != null && o != new OSD())
+                if(o != null && o.Value() != new OSD().Value())
                     ComponentsBody.Add(component.Name, o);
             }
             string result = OSDParser.SerializeJsonString(ComponentsBody);
