@@ -24,6 +24,7 @@
 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+//#define Debug
 
 using System;
 using System.Collections;
@@ -56,6 +57,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool RunInMainProcessingThread = false;
         public bool m_Started = false;
 
+        private const int EMPTY_WORK_KILL_THREAD_TIME = 250;
         private Queue<QueueItemStruct> ScriptEvents = new Queue<QueueItemStruct> ();
         private int ScriptEventCount = 0;
         private int m_CheckingEvents = 0;
@@ -112,7 +114,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             info.priority = ThreadPriority.Normal;
             info.Threads = 1;
             info.MaxSleepTime = Engine.Config.GetInt ("SleepTime", 100);
-            info.SleepIncrementTime = Engine.Config.GetInt ("SleepIncrementTime", 10);
+            info.SleepIncrementTime = Engine.Config.GetInt ("SleepIncrementTime", 1);
             cmdThreadpool = new AuroraThreadPool (info);
             scriptChangeThreadpool = new AuroraThreadPool (info);
 
@@ -122,7 +124,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             sinfo.priority = ThreadPriority.Normal;
             sinfo.Threads = MaxScriptThreads;
             sinfo.MaxSleepTime = Engine.Config.GetInt ("SleepTime", 100);
-            sinfo.SleepIncrementTime = Engine.Config.GetInt ("SleepIncrementTime", 10);
+            sinfo.SleepIncrementTime = Engine.Config.GetInt ("SleepIncrementTime", 1);
             scriptThreadpool = new AuroraThreadPool (sinfo);
             
             AppDomain.CurrentDomain.AssemblyResolve += m_ScriptEngine.AssemblyResolver.OnAssemblyResolve;
@@ -420,6 +422,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 ScriptEvents.Enqueue (QIS);
                 ScriptEventCount++;
+#if Debug
+                m_log.Warn (ScriptEventCount + ", " + QIS.functionName);
+#endif
             }
 
             if (Interlocked.Read (ref m_numWorkers) < ScriptEventCount + (SleepingScriptEventCount / 2) )
@@ -445,6 +450,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 ScriptEvents.Enqueue (QIS);
                 ScriptEventCount++;
+#if Debug
+                m_log.Warn (ScriptEventCount + ", " + QIS.functionName);
+#endif
             }
 
             if (Interlocked.Read (ref m_numWorkers) < ScriptEventCount + (SleepingScriptEventCount / 2))
@@ -456,6 +464,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void loop()
         {
+            int numberOfEmptyWork = 0;
             while (!m_ScriptEngine.ConsoleDisabled && !m_ScriptEngine.Disabled)
             {
                 QueueItemStruct QIS = null;
@@ -533,20 +542,35 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     timeToSleep = (int)(NextSleepersTest - DateTime.Now).TotalMilliseconds;
                 if (timeToSleep < 5)
                     timeToSleep = 5;
-                //m_log.Warn (timeToSleep);
-
-                if (Interlocked.Read (ref m_numWorkers) > (ScriptEventCount + (SleepingScriptEventCount / 2)) || 
-                    Interlocked.Read (ref m_numWorkers) > MaxScriptThreads)
-                {
-                    Interlocked.Decrement (ref m_numWorkers);
-                    break; //Too many threads, kill some off
-                }
 
                 if (SleepingScriptEventCount == 0 && ScriptEventCount == 0)
                 {
-                    Interlocked.Decrement (ref m_numWorkers);
-                    break; //No more events, end
+                    numberOfEmptyWork++;
+                    if (numberOfEmptyWork > EMPTY_WORK_KILL_THREAD_TIME) //Don't break immediately
+                    {
+                        Interlocked.Decrement (ref m_numWorkers);
+                        break; //No more events, end
+                    }
+                    else
+                        timeToSleep += 10;
                 }
+                else if (Interlocked.Read (ref m_numWorkers) > (ScriptEventCount + (SleepingScriptEventCount / 2)) ||
+                    Interlocked.Read (ref m_numWorkers) > MaxScriptThreads)
+                {
+                    numberOfEmptyWork++;
+                    if (numberOfEmptyWork > EMPTY_WORK_KILL_THREAD_TIME) //Don't break immediately
+                    {
+                        Interlocked.Decrement (ref m_numWorkers);
+                        break; //Too many threads, kill some off
+                    }
+                    else
+                        timeToSleep += 5;
+                }
+                else
+                    numberOfEmptyWork = 0;
+#if Debug
+                m_log.Warn (timeToSleep);
+#endif
                 Thread.Sleep (timeToSleep);
             }
         }
