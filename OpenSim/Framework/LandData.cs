@@ -63,7 +63,7 @@ namespace OpenSim.Framework
                                 (uint) ParcelFlags.CreateObjects | (uint) ParcelFlags.AllowOtherScripts |
                                 (uint) ParcelFlags.SoundLocal | (uint)ParcelFlags.AllowVoiceChat;
 
-        private byte _landingType = 0;
+        private byte _landingType = 2;
         private string _name = "Your Parcel";
         private ParcelStatus _status = ParcelStatus.Leased;
         private int _localID = 0;
