@@ -319,7 +319,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger PRIM_FULLBRIGHT = 20;
         public static readonly LSLInteger PRIM_FLEXIBLE = 21;
         public static readonly LSLInteger PRIM_TEXGEN = 22;
-        public static readonly LSLInteger PRIM_POINT_LIGHT = 23; // Huh?
+        public static readonly LSLInteger PRIM_POINT_LIGHT = 23; 
         public static readonly LSLInteger PRIM_CAST_SHADOWS = 24; // Not implemented, here for completeness sake
         public static readonly LSLInteger PRIM_GLOW = 25;
         public static readonly LSLInteger PRIM_TEXT = 26;
@@ -472,6 +472,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger PAY_HIDE = new LSLInteger(-1);
         public static readonly LSLInteger PAY_DEFAULT = new LSLInteger(-2);
 
+        public static readonly LSLInteger PAYMENT_INFO_ON_FILE = 0x1;
+        public static readonly LSLInteger PAYMENT_INFO_USED = 0x2;
+
         public static readonly string NULL_KEY = "00000000-0000-0000-0000-000000000000";
         public static readonly string EOF = "\n\n\n";
         public static readonly double PI = 3.1415926535897932384626433832795;
@@ -506,6 +509,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger DEBUG_CHANNEL = 0x7FFFFFFF;
         public static readonly LSLInteger PUBLIC_CHANNEL = 0x00000000;
 
+        public static readonly LSLInteger OBJECT_UNKNOWN_DETAIL = -1;
         public static readonly LSLInteger OBJECT_NAME = 1;
         public static readonly LSLInteger OBJECT_DESC = 2;
         public static readonly LSLInteger OBJECT_POS = 3;

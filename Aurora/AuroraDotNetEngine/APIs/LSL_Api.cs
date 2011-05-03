@@ -5002,6 +5002,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     reply = "0,0,0,0,0,0";
                     break;
                 case 8: // DATA_PAYINFO (0|1|2|3)
+                    if ((account.UserFlags & ScriptBaseClass.PAYMENT_INFO_ON_FILE) == ScriptBaseClass.PAYMENT_INFO_ON_FILE)
+                        reply = ScriptBaseClass.PAYMENT_INFO_ON_FILE.ToString ();
+                    if ((account.UserFlags & ScriptBaseClass.PAYMENT_INFO_USED) == ScriptBaseClass.PAYMENT_INFO_USED)
+                        reply = ScriptBaseClass.PAYMENT_INFO_USED.ToString ();
                     reply = "0";
                     break;
                 default:
@@ -5977,28 +5981,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             if (src.Data[index] is LSL_Integer || src.Data[index] is Int32)
-                return 1;
+                return ScriptBaseClass.TYPE_INTEGER;
             if (src.Data[index] is LSL_Float || src.Data[index] is Single || src.Data[index] is Double)
-                return 2;
+                return ScriptBaseClass.TYPE_FLOAT;
             if (src.Data[index] is LSL_String || src.Data[index] is String)
             {
                 UUID tuuid;
                 if (UUID.TryParse(src.Data[index].ToString(), out tuuid))
                 {
-                    return 4;
+                    return ScriptBaseClass.TYPE_KEY;
                 }
                 else
                 {
-                    return 3;
+                    return ScriptBaseClass.TYPE_STRING;
                 }
             }
             if (src.Data[index] is LSL_Vector)
-                return 5;
+                return ScriptBaseClass.TYPE_VECTOR;
             if (src.Data[index] is LSL_Rotation)
-                return 6;
+                return ScriptBaseClass.TYPE_ROTATION;
             if (src.Data[index] is LSL_List)
-                return 7;
-            return 0;
+                return 7; //Extension of LSL by us
+            return ScriptBaseClass.TYPE_INVALID;
 
         }
 
@@ -11560,7 +11564,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
                         {
-                            ret.Add(0);
+                            ret.Add (0);
+                        }
+                        else
+                        {
+                            ret.Add (ScriptBaseClass.OBJECT_UNKNOWN_DETAIL);
                         }
                     }
                     return ret;
@@ -11628,6 +11636,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
                         {
                             ret.Add(0);
+                        }
+                        else
+                        {
+                            ret.Add (ScriptBaseClass.OBJECT_UNKNOWN_DETAIL);
                         }
                     }
                     return ret;
