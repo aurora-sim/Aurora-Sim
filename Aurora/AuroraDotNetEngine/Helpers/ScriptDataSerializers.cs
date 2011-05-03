@@ -38,7 +38,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_module = module;
 
             m_manager = module.Worlds[0].RequestModuleInterface<IComponentManager> ();
-            DefaultComponents com = new DefaultComponents (m_componentName);
+            DefaultComponents com = new DefaultComponents (m_componentName, null);
             m_manager.RegisterComponent (com);
         }
 

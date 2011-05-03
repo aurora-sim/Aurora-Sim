@@ -59,75 +59,75 @@ namespace OpenSim.Region.Framework.Scenes.Components
         /// </summary>
         private void RegisterDefaultComponents()
         {
-            DefaultComponents com = new DefaultComponents("APIDTarget");
+            DefaultComponents com = new DefaultComponents("APIDTarget", Quaternion.Identity);
             RegisterComponent(com);
-            com = new DefaultComponents("APIDDamp");
+            com = new DefaultComponents("APIDDamp", 0);
             RegisterComponent(com);
-            com = new DefaultComponents("APIDStrength");
+            com = new DefaultComponents("APIDStrength", 0);
             RegisterComponent(com);
-            com = new DefaultComponents("ParticleSystem");
+            com = new DefaultComponents("ParticleSystem", new byte[0]);
             RegisterComponent(com);
-            com = new DefaultComponents("Expires");
+            com = new DefaultComponents ("Expires", null);
             RegisterComponent(com);
-            com = new DefaultComponents("Rezzed");
+            com = new DefaultComponents("Rezzed", null);
             RegisterComponent(com);
-            com = new DefaultComponents("Damage");
+            com = new DefaultComponents("Damage", 0);
             RegisterComponent(com);
-            com = new DefaultComponents("DIE_AT_EDGE");
+            com = new DefaultComponents("DIE_AT_EDGE", false);
             RegisterComponent(com);
-            com = new DefaultComponents("SitTargetOrientation");
+            com = new DefaultComponents("SitTargetOrientation", Quaternion.Identity);
             RegisterComponent(com);
-            com = new DefaultComponents("SitTargetPosition");
+            com = new DefaultComponents("SitTargetPosition", Vector3.Zero);
             RegisterComponent(com);
-            com = new DefaultComponents("SitTargetOrientationLL");
+            com = new DefaultComponents ("SitTargetOrientationLL", Vector3.Zero);
             RegisterComponent(com);
-            com = new DefaultComponents("RETURN_AT_EDGE");
+            com = new DefaultComponents ("RETURN_AT_EDGE", false);
             RegisterComponent(com);
-            com = new DefaultComponents("BlockGrab");
+            com = new DefaultComponents ("BlockGrab", false);
             RegisterComponent(com);
-            com = new DefaultComponents("StatusSandbox");
+            com = new DefaultComponents("StatusSandbox", false);
             RegisterComponent(com);
-            com = new DefaultComponents("StatusSandboxPos");
+            com = new DefaultComponents("StatusSandboxPos", Vector3.Zero);
             RegisterComponent(com);
-            com = new DefaultComponents("UseSoundQueue");
+            com = new DefaultComponents("UseSoundQueue", 0);
             RegisterComponent(com);
-            com = new DefaultComponents("Sound");
+            com = new DefaultComponents("Sound", UUID.Zero);
             RegisterComponent(com);
-            com = new DefaultComponents("SoundFlags");
+            com = new DefaultComponents("SoundFlags", 0);
             RegisterComponent(com);
-            com = new DefaultComponents("SoundGain");
+            com = new DefaultComponents("SoundGain", 0);
             RegisterComponent(com);
-            com = new DefaultComponents("SoundRadius");
+            com = new DefaultComponents("SoundRadius", 0);
             RegisterComponent(com);
-            com = new DefaultComponents("STATUS_ROTATE_X");
+            com = new DefaultComponents("STATUS_ROTATE_X", 0);
             RegisterComponent(com);
-            com = new DefaultComponents("STATUS_ROTATE_Y");
+            com = new DefaultComponents("STATUS_ROTATE_Y", 0);
             RegisterComponent(com);
-            com = new DefaultComponents("STATUS_ROTATE_Z");
+            com = new DefaultComponents("STATUS_ROTATE_Z", 0);
             RegisterComponent(com);
-            com = new DefaultComponents("PIDTarget");
+            com = new DefaultComponents("PIDTarget", Vector3.Zero);
             RegisterComponent(com);
-            com = new DefaultComponents("PIDActive");
+            com = new DefaultComponents("PIDActive", false);
             RegisterComponent(com);
-            com = new DefaultComponents("PIDTau");
+            com = new DefaultComponents("PIDTau", 0);
             RegisterComponent(com);
-            com = new DefaultComponents("VolumeDetectActive");
+            com = new DefaultComponents("VolumeDetectActive", false);
             RegisterComponent(com);
-            com = new DefaultComponents("CameraEyeOffset");
+            com = new DefaultComponents("CameraEyeOffset", Vector3.Zero);
             RegisterComponent(com);
-            com = new DefaultComponents("CameraAtOffset");
+            com = new DefaultComponents("CameraAtOffset", Vector3.Zero);
             RegisterComponent(com);
-            com = new DefaultComponents("ForceMouselook");
+            com = new DefaultComponents("ForceMouselook", false);
             RegisterComponent(com);
-            com = new DefaultComponents("CRC");
+            com = new DefaultComponents("CRC", 0);
             RegisterComponent(com);
-            com = new DefaultComponents("LocalId");
+            com = new DefaultComponents("LocalId", 0);
             RegisterComponent(com);
-            com = new DefaultComponents("TextureAnimation");
+            com = new DefaultComponents("TextureAnimation", new byte[0]);
             RegisterComponent(com);
-            com = new DefaultComponents("SavedAttachedPos");
+            com = new DefaultComponents("SavedAttachedPos", Vector3.Zero);
             RegisterComponent(com);
-            com = new DefaultComponents("SavedAttachmentPoint");
+            com = new DefaultComponents("SavedAttachmentPoint", 0);
             RegisterComponent(com);
         }
 
@@ -278,7 +278,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             {
                 //Add the componet to the map by its name
                 OSD o = component.GetState(oldID);
-                if (o != null)
+                if (o != null && o != new OSD())
                     SetComponentState(part, component.Name, o); 
             }
         }
@@ -333,7 +333,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             {
                 //Add the componet to the map by its name
                 OSD o = component.GetState(obj.UUID);
-                if(o != null)
+                if(o != null && o != new OSD())
                     ComponentsBody.Add(component.Name, o);
             }
             string result = OSDParser.SerializeJsonString(ComponentsBody);
@@ -377,10 +377,12 @@ namespace OpenSim.Region.Framework.Scenes.Components
     {
         Dictionary<UUID, OSD> m_states = new Dictionary<UUID, OSD>();
         public string m_name;
+        public object m_defaultValue = null;
 
-        public DefaultComponents(string name)
+        public DefaultComponents(string name, object defaultValue)
         {
             m_name = name;
+            m_defaultValue = defaultValue;
         }
 
         public Type BaseType
@@ -395,8 +397,13 @@ namespace OpenSim.Region.Framework.Scenes.Components
 
         public OSD GetState(UUID obj)
         {
-            if(m_states.ContainsKey(obj))
-                return m_states[obj];
+            if (m_states.ContainsKey (obj))
+            {
+                OSD o = m_states[obj];
+                if (o == m_defaultValue)
+                    return null;
+                return o;
+            }
 
             return new OSD();
         }
