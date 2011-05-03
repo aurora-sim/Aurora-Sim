@@ -74,7 +74,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             }
             set
             {
-                m_stateSaveRequired = false;
+                m_stateSaveRequired = value;
                 //Besides setting the value, if we don't need one, save the vars we have for the last state save as well
                 if(!value)
                     m_lastStateSaveValues = GetVars ();

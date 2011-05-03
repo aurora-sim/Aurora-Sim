@@ -943,7 +943,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             LUStruct ls = new LUStruct();
             //Its a change of the script source, needs to be recompiled and such.
             if (id == null)
-                id = new ScriptData(this);
+            {
+                MaintenanceThread.AddScriptChange (new LUStruct[1]{ StartScript (findPrim (partID), itemID, startParam, postOnRez,
+                    (StateSource)stateSource, UUID.Zero) }, LoadPriority.Restart);
+                return;
+            }
             ls.Action = LUType.Reupload;
             id.PostOnRez = postOnRez;
             id.StartParam = startParam;
@@ -1187,13 +1191,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public IScriptPlugin GetScriptPlugin(string Name)
         {
-            lock (ScriptPlugins)
+            foreach (IScriptPlugin plugin in ScriptPlugins)
             {
-                foreach (IScriptPlugin plugin in ScriptPlugins)
-                {
-                    if (plugin.Name == Name)
-                        return plugin;
-                }
+                if (plugin.Name == Name)
+                    return plugin;
             }
             return null;
         }
@@ -1204,12 +1205,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="scene"></param>
         private void AddRegionToScriptModules(Scene scene)
         {
-            lock (ScriptPlugins)
+            foreach (IScriptPlugin plugin in ScriptPlugins)
             {
-                foreach (IScriptPlugin plugin in ScriptPlugins)
-                {
-                    plugin.AddRegion (scene);
-                }
+                plugin.AddRegion (scene);
             }
         }
 
@@ -1223,24 +1221,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 plugin.Initialize(this);
             }
-            lock (ScriptPlugins)
-            {
-                ScriptPlugins.AddRange(sharedPlugins.ToArray());
-            }
+            ScriptPlugins.AddRange(sharedPlugins.ToArray());
         }
 
         public bool DoOneScriptPluginPass()
         {
             bool didAnything = false;
-            lock (ScriptPlugins)
+            foreach (IScriptPlugin plugin in ScriptPlugins)
             {
-                foreach (IScriptPlugin plugin in ScriptPlugins)
-                {
-                    if (didAnything)
-                        plugin.Check ();
-                    else
-                        didAnything = plugin.Check ();
-                }
+                if (didAnything)
+                    plugin.Check ();
+                else
+                    didAnything = plugin.Check ();
             }
             return didAnything;
         }
@@ -1252,12 +1244,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="itemID"></param>
         public void RemoveScript(UUID primID, UUID itemID)
         {
-            lock (ScriptPlugins)
+            foreach (IScriptPlugin plugin in ScriptPlugins)
             {
-                foreach (IScriptPlugin plugin in ScriptPlugins)
-                {
-                    plugin.RemoveScript(primID, itemID);
-                }
+                plugin.RemoveScript (primID, itemID);
             }
         }
 
@@ -1265,18 +1254,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             OSDMap data = new OSDMap ();
 
-            lock (ScriptPlugins)
+            foreach (IScriptPlugin plugin in ScriptPlugins)
             {
-                foreach (IScriptPlugin plugin in ScriptPlugins)
+                try
                 {
-                    try
-                    {
-                        data.Add(plugin.Name, plugin.GetSerializationData(itemID, primID));
-                    }
-                    catch (Exception ex)
-                    {
-                        m_log.Warn("[" + Name + "]: Error attempting to get serialization data, " + ex.ToString());
-                    }
+                    data.Add (plugin.Name, plugin.GetSerializationData (itemID, primID));
+                }
+                catch (Exception ex)
+                {
+                    m_log.Warn ("[" + Name + "]: Error attempting to get serialization data, " + ex.ToString ());
                 }
             }
 

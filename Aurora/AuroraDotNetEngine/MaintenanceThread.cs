@@ -496,6 +496,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             lock (SleepingScriptEvents)
                             {
                                 SleepingScriptEvents.Enqueue (QIS, QIS.EventsProcData.TimeCheck.Ticks);
+                                SleepingScriptEventCount++;
                             }
                             //All done
                             Interlocked.Exchange (ref m_CheckingSleepers, 0);
@@ -508,6 +509,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         Interlocked.Exchange (ref m_CheckingSleepers, 0);
                     }
                 }
+                QIS = null;
                 int timeToSleep = 10;
                 //If we can, get the next event
                 if (Interlocked.CompareExchange (ref m_CheckingEvents, 1, 0) == 0)
@@ -519,11 +521,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             QIS = ScriptEvents.Dequeue ();
                             ScriptEventCount--;
                             Interlocked.Exchange (ref m_CheckingEvents, 0);
-                            EventSchExec (QIS);
                         }
                         else
                             Interlocked.Exchange (ref m_CheckingEvents, 0);
                     }
+                    if(QIS != null)
+                        EventSchExec (QIS);
                 }
 
                 if (ScriptEventCount == 0 && NextSleepersTest.Ticks != DateTime.MaxValue.Ticks)
