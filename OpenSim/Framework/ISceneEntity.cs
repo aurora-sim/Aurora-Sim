@@ -240,6 +240,7 @@ namespace OpenSim.Framework
         bool IsSelected { get; set; }
         ISceneChildEntity LoopSoundMasterPrim { get; set; }
         List<ISceneChildEntity> LoopSoundSlavePrims { get; set; }
+        Vector3 OOBsize { get; } 
 
         #endregion
 

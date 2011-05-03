@@ -281,7 +281,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void DoSignificantClientMovement (object o)
         {
-            ISceneEntity[] entities = m_presence.Scene.Entities.GetEntities (m_presence.AbsolutePosition, m_presence.DrawDistance);
+            ISceneEntity[] entities = m_presence.Scene.Entities.GetEntities (m_presence.AbsolutePosition, m_presence.DrawDistance * 3);
             PriorityQueue<EntityUpdate, double> m_entsqueue = new PriorityQueue<EntityUpdate, double> (entities.Length, DoubleComparer);
 
             // build a prioritized list of things we need to send
