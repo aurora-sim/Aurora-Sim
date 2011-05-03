@@ -38,7 +38,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             CompiledScript = LSL_Converter.Convert(Script);
             PositionMap = LSL_Converter.PositionMap;
 
-            LSL_Converter.Dispose(); //Resets it for next time
+            //Unless we are using the same LSL_Converter more than once, we don't need to do this
+            //LSL_Converter.Dispose(); //Resets it for next time
         }
 
         public string Name

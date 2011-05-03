@@ -357,7 +357,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <returns>String containing the generated C# code.</returns>
         public string Convert(string script)
         {
-            ResetCounters();
+            //Unless we are using the same LSL_Converter instance for all scripts, we don't need to reset this
+            //ResetCounters();
 
             LSL2CSCodeTransformer codeTransformer;
             try

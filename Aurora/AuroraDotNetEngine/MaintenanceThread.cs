@@ -510,7 +510,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     }
                 }
                 QIS = null;
-                int timeToSleep = 10;
+                int timeToSleep = 5;
                 //If we can, get the next event
                 if (Interlocked.CompareExchange (ref m_CheckingEvents, 1, 0) == 0)
                 {
@@ -531,8 +531,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 if (ScriptEventCount == 0 && NextSleepersTest.Ticks != DateTime.MaxValue.Ticks)
                     timeToSleep = (int)(NextSleepersTest - DateTime.Now).TotalMilliseconds;
-                if (timeToSleep < 10)
-                    timeToSleep = 10;
+                if (timeToSleep < 5)
+                    timeToSleep = 5;
                 //m_log.Warn (timeToSleep);
 
                 if (Interlocked.Read (ref m_numWorkers) > (ScriptEventCount + (SleepingScriptEventCount / 2)) || 
