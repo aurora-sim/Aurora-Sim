@@ -3442,30 +3442,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerSetSitAvatarUUID(UUID agentID)
-        {
-            foreach (SceneObjectPart part in ChildrenList)
-            {
-                lock (part.SitTargetAvatar)
-                {
-                    if (!part.SitTargetAvatar.Contains(agentID))
-                        part.SitTargetAvatar.Add(agentID);
-                }
-            }
-        }
-
-        public void TriggerRemoveSitAvatarUUID(UUID agentID)
-        {
-            foreach (SceneObjectPart part in ChildrenList)
-            {
-                lock (part.SitTargetAvatar)
-                {
-                    if (part.SitTargetAvatar.Contains(agentID))
-                        part.SitTargetAvatar.Remove(agentID);
-                }
-            }
-        }
-
         public override string ToString()
         {
             return String.Format("{0} {1} ({2})", Name, UUID, AbsolutePosition);

@@ -4017,22 +4017,24 @@ namespace OpenSim.Region.Framework.Scenes
             //}
         }
 
-        public void SetAvatarOnSitTarget(UUID avatarID)
+        public void SetAvatarOnSitTarget (UUID avatarID)
         {
-            if (ParentGroup != null)
+            lock (SitTargetAvatar)
             {
-                ParentGroup.TriggerSetSitAvatarUUID(avatarID);
-                ParentGroup.TriggerScriptChangedEvent(Changed.LINK);
+                if (!SitTargetAvatar.Contains (avatarID))
+                    SitTargetAvatar.Add (avatarID);
             }
+            TriggerScriptChangedEvent (Changed.LINK);
         }
 
-        public void RemoveAvatarOnSitTarget(UUID avatarID)
+        public void RemoveAvatarOnSitTarget (UUID avatarID)
         {
-            if (ParentGroup != null)
+            lock (SitTargetAvatar)
             {
-                ParentGroup.TriggerRemoveSitAvatarUUID(avatarID);
-                ParentGroup.TriggerScriptChangedEvent(Changed.LINK);
+                if (SitTargetAvatar.Contains (avatarID))
+                    SitTargetAvatar.Remove (avatarID);
             }
+            TriggerScriptChangedEvent (Changed.LINK);
         }
 
         public void SetAxisRotation(int axis, int rotate)
