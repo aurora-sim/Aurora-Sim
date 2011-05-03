@@ -1742,6 +1742,9 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
         public void TriggerEstateSunUpdate()
         {
+            if (m_scene.RegionInfo.EstateSettings == null)
+                return;
+
             float sun;
             if (m_scene.RegionInfo.RegionSettings.UseEstateSun)
             {
