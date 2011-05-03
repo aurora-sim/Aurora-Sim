@@ -220,7 +220,7 @@ namespace OpenSim.Data.Null
                 ITerrainChannel channel = new TerrainChannel (false, scene);
                 MemoryStream ms = new MemoryStream (m_revertTerrain);
                 if (terrainModule != null)
-                    terrainModule.LoadFromStream (".r32", ms, 0, 0);
+                    terrainModule.LoadRevertMapFromStream (".r32", ms, 0, 0);
                 ms.Close ();
                 m_revertTerrain = null;
                 return terrainModule.TerrainRevertMap.GetSerialised (scene);
