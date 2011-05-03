@@ -50,9 +50,10 @@ namespace OpenSim.Framework.Serialization.External
         {
             InventoryItemBase item = new InventoryItemBase();
 
-            MemoryStream sr = new MemoryStream(serialization);
-            XmlTextReader xtr = new XmlTextReader(sr);
-
+            //MemoryStream mr = new MemoryStream(serialization);
+            StringReader reader = new StringReader (Encoding.ASCII.GetString (serialization, 0, serialization.Length));
+            //StreamReader sr = new StreamReader (mr, Encoding.ASCII);
+            XmlReader xtr = XmlTextReader.Create (reader);
             xtr.ReadStartElement("InventoryItem");
 
             item.Name = xtr.ReadElementString("Name");
@@ -77,7 +78,6 @@ namespace OpenSim.Framework.Serialization.External
             xtr.ReadEndElement();
 
             xtr.Close();
-            sr.Close();
 
             return item;
         }
