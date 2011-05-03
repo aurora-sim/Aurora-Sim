@@ -267,7 +267,25 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             else
                 return;
 
-            DeliverMessage(type, channel, name, id, msg, position, -1);
+            DeliverMessage(type, channel, name, id, msg, position, -1, UUID.Zero);
+        }
+
+        public void DeliverMessage (ChatTypeEnum type, int channel, string name, UUID id, UUID toID, string msg)
+        {
+            Vector3 position;
+            ISceneChildEntity source;
+            IScenePresence avatar;
+
+            if ((source = m_scene.GetSceneObjectPart (id)) != null)
+                position = source.AbsolutePosition;
+            else if ((avatar = m_scene.GetScenePresence (id)) != null)
+                position = avatar.AbsolutePosition;
+            else if (ChatTypeEnum.Region == type)
+                position = CenterOfRegion;
+            else
+                return;
+
+            DeliverMessage (type, channel, name, id, msg, position, -1, toID);
         }
 
         public void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, string msg, float Range)
@@ -285,7 +303,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             else
                 return;
 
-            DeliverMessage(type, channel, name, id, msg, position, Range);
+            DeliverMessage(type, channel, name, id, msg, position, Range, UUID.Zero);
         }
 
         /// <summary>
@@ -301,7 +319,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         /// <param name="name">name of sender (object or avatar)</param>
         /// <param name="id">key of sender (object or avatar)</param>
         /// <param name="msg">msg to sent</param>
-        public void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, string msg, Vector3 position, float Range)
+        public void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, string msg, Vector3 position, float Range, UUID toID)
         {
             //Make sure that the cmd handler thread is running
             m_scriptModule.PokeThreads ();
@@ -322,6 +340,11 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
                 ISceneChildEntity sPart = m_scene.GetSceneObjectPart (li.GetHostID ());
                 if (sPart == null)
                     continue;
+
+                if (toID != UUID.Zero)
+                    if (sPart.UUID != toID &&
+                        sPart.AttachedAvatar != toID)
+                        continue; //Only allow the message to go on if it is an attachment with the given avatars ID or the part ID is right
 
                 double dis =  Util.GetDistanceTo(sPart.AbsolutePosition, position);
                 switch (type)
@@ -404,9 +427,9 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         private void DeliverClientMessage(Object sender, OSChatMessage e)
         {
             if (null != e.Sender)
-                DeliverMessage(e.Type, e.Channel, e.Sender.Name, e.Sender.AgentId, e.Message, e.Position, -1);
+                DeliverMessage(e.Type, e.Channel, e.Sender.Name, e.Sender.AgentId, e.Message, e.Position, -1, UUID.Zero);
             else
-                DeliverMessage(e.Type, e.Channel, e.From, UUID.Zero, e.Message, e.Position, -1);
+                DeliverMessage(e.Type, e.Channel, e.From, UUID.Zero, e.Message, e.Position, -1, UUID.Zero);
         }
 
         public OSD GetSerializationData (UUID itemID, UUID primID)

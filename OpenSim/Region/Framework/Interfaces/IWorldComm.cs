@@ -78,8 +78,9 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="name">name of sender (object or avatar)</param>
         /// <param name="id">key of sender (object or avatar)</param>
         /// <param name="msg">msg to sent</param>
-        void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, string msg);
-        void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, string msg, float Range);
+        void DeliverMessage (ChatTypeEnum type, int channel, string name, UUID id, string msg);
+        void DeliverMessage (ChatTypeEnum type, int channel, string name, UUID id, UUID to, string msg);
+        void DeliverMessage (ChatTypeEnum type, int channel, string name, UUID id, string msg, float Range);
 
         /// <summary>
         /// Are there any listen events ready to be dispatched?

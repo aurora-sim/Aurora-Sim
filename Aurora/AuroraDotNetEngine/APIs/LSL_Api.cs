@@ -984,7 +984,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
-
             if (text.Length > 1023)
                 text = text.Substring(0, 1023);
 
@@ -997,28 +996,40 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 m_comms.DeliverMessage(ChatTypeEnum.Shout, channelID, m_host.Name, m_host.UUID, text);
         }
 
-        public void llRegionSay(int channelID, string text)
+        public void llRegionSay (int channelID, string text)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            if (channelID == 0)
-            {
-                ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "LSL", m_host, "LSL");
-            	if (text.Length > 1023)
-                text = text.Substring(0, 1023);
-
-            	
-
-            	if (m_comms != null)
-                    m_comms.DeliverMessage(ChatTypeEnum.Region, channelID, m_host.Name, m_host.UUID, text);
-            }
-
+            ScriptProtection.CheckThreatLevel (ThreatLevel.None, "LSL", m_host, "LSL");
             if (text.Length > 1023)
-                text = text.Substring(0, 1023);
+                text = text.Substring (0, 1023);
 
-            
+            if (channelID == 0) //0 isn't normally allowed, so check against a higher threat level
+                ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "LSL", m_host, "LSL");
 
             if (m_comms != null)
-                m_comms.DeliverMessage(ChatTypeEnum.Region, channelID, m_host.Name, m_host.UUID, text);
+                m_comms.DeliverMessage (ChatTypeEnum.Region, channelID, m_host.Name, m_host.UUID, text);
+        }
+
+        public void llRegionSayTo (LSL_Key toID, int channelID, string text)
+        {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.None, "LSL", m_host, "LSL");
+
+            IChatModule chatModule = World.RequestModuleInterface<IChatModule> ();
+
+            if (text.Length > 1023)
+                text = text.Substring (0, 1023);
+            if (channelID == 0)
+            {
+                IScenePresence presence = World.GetScenePresence (UUID.Parse (toID.m_string));
+                if (presence != null)
+                {
+                    if (chatModule != null)
+                        chatModule.TrySendChatMessage (presence, m_host.AbsolutePosition, m_host.AbsolutePosition,
+                            m_host.UUID, m_host.Name, ChatTypeEnum.Say, text, ChatSourceType.Object, 10000);
+                }
+            }
+
+            if (m_comms != null)
+                m_comms.DeliverMessage (ChatTypeEnum.Region, channelID, m_host.Name, m_host.UUID, UUID.Parse (toID.m_string), text);
         }
 
         public LSL_Integer llListen(int channelID, string name, string ID, string msg)
@@ -6980,6 +6991,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
             // Make scripts designed for LSO happy
             return 16384;
+        }
+
+        public LSL_Integer llGetSPMaxMemory ()
+        {
+            //TODO: Not implemented!
+            return 0;
+        }
+
+        public LSL_Integer llGetUsedMemory ()
+        {
+            //TODO: Not implemented!
+            return 0;
+        }
+
+        public void llScriptProfiler (LSL_Integer profilerFlags)
+        {
+            //TODO: We don't support this, not implemented
         }
 
         public LSL_Integer llGetFreeURLs()
