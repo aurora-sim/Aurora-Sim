@@ -285,7 +285,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     /// <summary>
     /// Queue item structure
     /// </summary>
-    public struct QueueItemStruct
+    public class QueueItemStruct
     {
         public ScriptData ID;
         //Name of the method to fire

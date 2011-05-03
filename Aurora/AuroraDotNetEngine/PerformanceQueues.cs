@@ -49,49 +49,72 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
     public class StartPerformanceQueue
     {
-        Queue FirstStartQueue = new Queue(10000);
-        Queue SuspendedQueue = new Queue(100); //Smaller, we don't get this very often
-        Queue ContinuedQueue = new Queue(10000);
+        Queue FirstStartQueue = new Queue (10000);
+        Queue SuspendedQueue = new Queue (100); //Smaller, we don't get this very often
+        Queue ContinuedQueue = new Queue (10000);
+
+        int FirstStartQueueCount = 0;
+        int SuspendedQueueCount = 0;
+        int ContinuedQueueCount = 0;
+
         public bool GetNext(out object Item)
         {
             Item = null;
-            if (FirstStartQueue.Count != 0)
+            lock (FirstStartQueue)
             {
-                lock (FirstStartQueue)
-                    Item = FirstStartQueue.Dequeue();
-                return true;
+                if (FirstStartQueue.Count != 0)
+                {
+                    FirstStartQueueCount--;
+                    Item = FirstStartQueue.Dequeue ();
+                    return true;
+                }
             }
-            if (SuspendedQueue.Count != 0)
+            lock (SuspendedQueue)
             {
-                lock (SuspendedQueue)
-                    Item = SuspendedQueue.Dequeue();
-                return true;
+                if (SuspendedQueue.Count != 0)
+                {
+                    SuspendedQueueCount--;
+                    Item = SuspendedQueue.Dequeue ();
+                    return true;
+                }
             }
-            if (ContinuedQueue.Count != 0)
+            lock (ContinuedQueue)
             {
-                lock (ContinuedQueue)
-                    Item = ContinuedQueue.Dequeue();
-                return true;
+                if (ContinuedQueue.Count != 0)
+                {
+                    ContinuedQueueCount--;
+                    Item = ContinuedQueue.Dequeue ();
+                    return true;
+                }
             }
             return false;
         }
 
         public int Count()
         {
-            return ContinuedQueue.Count + SuspendedQueue.Count + FirstStartQueue.Count;
+            return ContinuedQueueCount + SuspendedQueueCount + FirstStartQueueCount;
         }
 
         public void Add(object item, LoadPriority priority)
         {
             if (priority == LoadPriority.FirstStart)
                 lock (FirstStartQueue)
-                    FirstStartQueue.Enqueue(item);
+                {
+                    FirstStartQueueCount++;
+                    FirstStartQueue.Enqueue (item);
+                }
             if (priority == LoadPriority.Restart)
                 lock (SuspendedQueue)
-                    SuspendedQueue.Enqueue(item);
+                {
+                    SuspendedQueueCount++;
+                    SuspendedQueue.Enqueue (item);
+                }
             if (priority == LoadPriority.Stop)
                 lock (ContinuedQueue)
-                    ContinuedQueue.Enqueue(item);
+                {
+                    ContinuedQueueCount++;
+                    ContinuedQueue.Enqueue (item);
+                }
         }
     }
 
