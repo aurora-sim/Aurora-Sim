@@ -118,6 +118,8 @@ namespace Aurora.DataManager.SQLite
         protected void CloseReaderCommand(SqliteCommand cmd)
         {
             cmd.Connection.Close();
+            cmd.Parameters.Clear ();
+            cmd.Dispose ();
         }
 
         public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue)
@@ -390,6 +392,8 @@ namespace Aurora.DataManager.SQLite
             cmd.CommandText = query;
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
+            values = null;
+            keys = null;
             return true;
         }
 

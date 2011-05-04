@@ -131,7 +131,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 
                 while ((data = archive.ReadEntry(out filePath, out entryType)) != null)
                 {
-                    if (filePath.StartsWith(ArchiveConstants.ASSETS_PATH))
+                    /*if (filePath.StartsWith(ArchiveConstants.ASSETS_PATH))
                     {
                         if (LoadAsset(filePath, data))
                             successfulAssetRestores++;
@@ -139,11 +139,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                             failedAssetRestores++;
     
                         if ((successfulAssetRestores) % 50 == 0)
-                            m_log.DebugFormat(
+                            m_log.InfoFormat(
                                 "[INVENTORY ARCHIVER]: Loaded {0} assets...", 
                                 successfulAssetRestores);
                     }
-                    else if (filePath.StartsWith(ArchiveConstants.INVENTORY_PATH))
+                    else */if (filePath.StartsWith(ArchiveConstants.INVENTORY_PATH))
                     {
                         filePath = filePath.Substring(ArchiveConstants.INVENTORY_PATH.Length);
                         
@@ -157,32 +157,34 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
     
                         if (TarArchiveReader.TarEntryType.TYPE_DIRECTORY != entryType)
                         {
-                            InventoryItemBase item = LoadItem(data, foundFolder);
+                            InventoryItemBase item = LoadItem (data, foundFolder);
     
                             if (item != null)
                             {
                                 successfulItemRestores++;
 
                                 if ((successfulItemRestores) % 50 == 0)
-                                    m_log.DebugFormat(
+                                    m_log.InfoFormat(
                                         "[INVENTORY ARCHIVER]: Loaded {0} items...",
-                                        successfulAssetRestores);
+                                        successfulItemRestores);
                                 
                                 // If we aren't loading the folder containing the item then well need to update the 
                                 // viewer separately for that item.
                                 if (loadAll && !loadedNodes.Contains(foundFolder))
                                     loadedNodes.Add(item);
                             }
+                            item = null;
                         }
                     }
                 }
                 
                 archive.Close();
-                
-                m_log.DebugFormat(
+                m_loadStream.Close ();
+
+                m_log.InfoFormat (
                     "[INVENTORY ARCHIVER]: Successfully loaded {0} assets with {1} failures", 
                     successfulAssetRestores, failedAssetRestores);
-                m_log.InfoFormat("[INVENTORY ARCHIVER]: Successfully loaded {0} items", successfulItemRestores);
+                m_log.InfoFormat ("[INVENTORY ARCHIVER]: Successfully loaded {0} items", successfulItemRestores);
                 
                 return loadedNodes;
             }

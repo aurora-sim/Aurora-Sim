@@ -48,7 +48,12 @@ namespace OpenSim.Services.Connectors
 
         private IRegistryCore m_registry;
 
-        public virtual bool CreateUserInventory(UUID principalID)
+        public virtual bool CreateUserInventory (UUID principalID)
+        {
+            return false;
+        }
+
+        public virtual bool CreateUserRootFolder (UUID principalID)
         {
             return false;
         }

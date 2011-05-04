@@ -154,6 +154,11 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return success;
         }
 
+        public bool CreateUserRootFolder (UUID principalID)
+        {
+            return false;
+        }
+
         /// <summary>
         /// Gets the skeleton of the inventory -- folders only
         /// </summary>

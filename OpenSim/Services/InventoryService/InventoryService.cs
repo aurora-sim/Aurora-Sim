@@ -82,6 +82,20 @@ namespace OpenSim.Services.InventoryService
         {
         }
 
+        public virtual bool CreateUserRootFolder (UUID principalID)
+        {
+            bool result = false;
+
+            InventoryFolderBase rootFolder = GetRootFolder (principalID);
+
+            if (rootFolder == null)
+            {
+                rootFolder = CreateFolder (principalID, UUID.Zero, (int)AssetType.RootFolder, "My Inventory");
+                result = true;
+            }
+            return result;
+        }
+
         public virtual bool CreateUserInventory(UUID principalID)
         {
             // This is braindeaad. We can't ever communicate that we fixed

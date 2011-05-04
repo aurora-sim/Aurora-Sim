@@ -50,6 +50,13 @@ namespace OpenSim.Services.Interfaces
         bool CreateUserInventory(UUID user);
 
         /// <summary>
+        /// Create the root folder for a given user
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        bool CreateUserRootFolder (UUID principalID);
+
+        /// <summary>
         /// Gets the skeleton of the inventory -- folders only
         /// </summary>
         /// <param name="userId"></param>

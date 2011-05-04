@@ -133,14 +133,17 @@ namespace OpenSim.Services.InventoryService
             InventoryFolderBase root = InventoryService.GetRootFolder(LibraryOwner);
             while (root != null)
             {
+                MainConsole.Instance.Output ("Removing folder " + root.Name, log4net.Core.Level.Info);
                 InventoryService.ForcePurgeFolder(root);
                 root = InventoryService.GetRootFolder(LibraryOwner);
             }
             List<InventoryFolderBase> rootFolders = InventoryService.GetRootFolders(LibraryOwner);
             foreach(InventoryFolderBase rFolder in rootFolders)
             {
+                MainConsole.Instance.Output ("Removing folder " + rFolder.Name, log4net.Core.Level.Info);
                 InventoryService.ForcePurgeFolder(rFolder);
             }
+            MainConsole.Instance.Output ("Finished removing default inventory", log4net.Core.Level.Info);
         }
     }
 }
