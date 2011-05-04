@@ -182,43 +182,6 @@ COMMIT;
 :VERSION 5			#---------------------
 BEGIN;
 
-create table regionsettings (
-	regionUUID char(36) not null,
-	block_terraform integer not null,
-	block_fly integer not null,
-	allow_damage integer not null,
-	restrict_pushing integer not null,
-	allow_land_resell integer not null,
-	allow_land_join_divide integer not null,
-	block_show_in_search integer not null,
-	agent_limit integer not null,
-	object_bonus float not null,
-	maturity integer not null,
-	disable_scripts integer not null,
-	disable_collisions integer not null,
-	disable_physics integer not null,
-	terrain_texture_1 char(36) not null,
-	terrain_texture_2 char(36) not null,
-	terrain_texture_3 char(36) not null,
-	terrain_texture_4 char(36) not null,
-	elevation_1_nw float not null,
-	elevation_2_nw float not null,
-	elevation_1_ne float not null,
-	elevation_2_ne float not null,
-	elevation_1_se float not null,
-	elevation_2_se float not null,
-	elevation_1_sw float not null,
-	elevation_2_sw float not null,
-	water_height float not null,
-	terrain_raise_limit float not null,
-	terrain_lower_limit float not null,
-	use_estate_sun integer not null,
-	fixed_sun integer not null,
-	sun_position float not null,
-	covenant char(36),
-	primary key(regionUUID)
-);
-
 COMMIT;
 
 
@@ -231,7 +194,6 @@ alter table migrations ENGINE = InnoDB;
 alter table primitems ENGINE = InnoDB;
 alter table prims ENGINE = InnoDB;
 alter table primshapes ENGINE = InnoDB;
-alter table regionsettings ENGINE = InnoDB;
 alter table terrain ENGINE = InnoDB;
 
 COMMIT;
@@ -318,8 +280,6 @@ COMMIT;
 # 1 "010_RegionStore.sql"
 BEGIN;
 
-DELETE FROM regionsettings;
-
 COMMIT;
 
 
@@ -345,46 +305,6 @@ COMMIT;
 
 :VERSION 13			#---------------------
 begin;
-
-drop table regionsettings;
-
-CREATE TABLE `regionsettings` (
-  `regionUUID` char(36) NOT NULL,
-  `block_terraform` int(11) NOT NULL,
-  `block_fly` int(11) NOT NULL,
-  `allow_damage` int(11) NOT NULL,
-  `restrict_pushing` int(11) NOT NULL,
-  `allow_land_resell` int(11) NOT NULL,
-  `allow_land_join_divide` int(11) NOT NULL,
-  `block_show_in_search` int(11) NOT NULL,
-  `agent_limit` int(11) NOT NULL,
-  `object_bonus` float NOT NULL,
-  `maturity` int(11) NOT NULL,
-  `disable_scripts` int(11) NOT NULL,
-  `disable_collisions` int(11) NOT NULL,
-  `disable_physics` int(11) NOT NULL,
-  `terrain_texture_1` char(36) NOT NULL,
-  `terrain_texture_2` char(36) NOT NULL,
-  `terrain_texture_3` char(36) NOT NULL,
-  `terrain_texture_4` char(36) NOT NULL,
-  `elevation_1_nw` float NOT NULL,
-  `elevation_2_nw` float NOT NULL,
-  `elevation_1_ne` float NOT NULL,
-  `elevation_2_ne` float NOT NULL,
-  `elevation_1_se` float NOT NULL,
-  `elevation_2_se` float NOT NULL,
-  `elevation_1_sw` float NOT NULL,
-  `elevation_2_sw` float NOT NULL,
-  `water_height` float NOT NULL,
-  `terrain_raise_limit` float NOT NULL,
-  `terrain_lower_limit` float NOT NULL,
-  `use_estate_sun` int(11) NOT NULL,
-  `fixed_sun` int(11) NOT NULL,
-  `sun_position` float NOT NULL,
-  `covenant` char(36) default NULL,
-  `Sandbox` tinyint(4) NOT NULL,
-  PRIMARY KEY  (`regionUUID`)
-) ENGINE=InnoDB;
 
 commit;
 
@@ -462,10 +382,6 @@ commit;
 
 begin;
 
-ALTER TABLE regionsettings ADD COLUMN sunvectorx double NOT NULL default 0;
-ALTER TABLE regionsettings ADD COLUMN sunvectory double NOT NULL default 0;
-ALTER TABLE regionsettings ADD COLUMN sunvectorz double NOT NULL default 0;
-
 commit;
 
 
@@ -489,20 +405,6 @@ COMMIT;
 :VERSION 24			#---------------------
 
 BEGIN;
-
-alter table regionsettings change column `object_bonus` `object_bonus` double NOT NULL;
-alter table regionsettings change column `elevation_1_nw` `elevation_1_nw` double NOT NULL;
-alter table regionsettings change column `elevation_2_nw` `elevation_2_nw` double NOT NULL;
-alter table regionsettings change column `elevation_1_ne` `elevation_1_ne` double NOT NULL;
-alter table regionsettings change column `elevation_2_ne` `elevation_2_ne` double NOT NULL;
-alter table regionsettings change column `elevation_1_se` `elevation_1_se` double NOT NULL;
-alter table regionsettings change column `elevation_2_se` `elevation_2_se` double NOT NULL;
-alter table regionsettings change column `elevation_1_sw` `elevation_1_sw` double NOT NULL;
-alter table regionsettings change column `elevation_2_sw` `elevation_2_sw` double NOT NULL;
-alter table regionsettings change column `water_height` `water_height` double NOT NULL;
-alter table regionsettings change column `terrain_raise_limit` `terrain_raise_limit` double NOT NULL;
-alter table regionsettings change column `terrain_lower_limit` `terrain_lower_limit` double NOT NULL;
-alter table regionsettings change column `sun_position` `sun_position` double NOT NULL;
 
 COMMIT;
 
@@ -701,103 +603,27 @@ COMMIT;
 
 BEGIN;
 
-ALTER TABLE regionsettings ADD COLUMN loaded_creation_date varchar(20) default NULL;
-ALTER TABLE regionsettings ADD COLUMN loaded_creation_time varchar(20) default NULL;
-ALTER TABLE regionsettings ADD COLUMN loaded_creation_id varchar(64) default NULL;
-
 COMMIT;
 
 :VERSION 31			#---------------------
 
 BEGIN;
 
-ALTER TABLE regionsettings DROP COLUMN loaded_creation_date;
-ALTER TABLE regionsettings DROP COLUMN loaded_creation_time;
-ALTER TABLE regionsettings ADD COLUMN loaded_creation_datetime int unsigned NOT NULL default 0;
-
 COMMIT;
 
 :VERSION 32
 
 BEGIN;
-CREATE TABLE `regionwindlight` (
-  `region_id` varchar(36) NOT NULL DEFAULT '000000-0000-0000-0000-000000000000',
-  `water_color_r` float(9,6) unsigned NOT NULL DEFAULT '4.000000',
-  `water_color_g` float(9,6) unsigned NOT NULL DEFAULT '38.000000',
-  `water_color_b` float(9,6) unsigned NOT NULL DEFAULT '64.000000',
-  `water_fog_density_exponent` float(3,1) unsigned NOT NULL DEFAULT '4.0',
-  `underwater_fog_modifier` float(3,2) unsigned NOT NULL DEFAULT '0.25',
-  `reflection_wavelet_scale_1` float(3,1) unsigned NOT NULL DEFAULT '2.0',
-  `reflection_wavelet_scale_2` float(3,1) unsigned NOT NULL DEFAULT '2.0',
-  `reflection_wavelet_scale_3` float(3,1) unsigned NOT NULL DEFAULT '2.0',
-  `fresnel_scale` float(3,2) unsigned NOT NULL DEFAULT '0.40',
-  `fresnel_offset` float(3,2) unsigned NOT NULL DEFAULT '0.50',
-  `refract_scale_above` float(3,2) unsigned NOT NULL DEFAULT '0.03',
-  `refract_scale_below` float(3,2) unsigned NOT NULL DEFAULT '0.20',
-  `blur_multiplier` float(4,3) unsigned NOT NULL DEFAULT '0.040',
-  `big_wave_direction_x` float(3,2) NOT NULL DEFAULT '1.05',
-  `big_wave_direction_y` float(3,2) NOT NULL DEFAULT '-0.42',
-  `little_wave_direction_x` float(3,2) NOT NULL DEFAULT '1.11',
-  `little_wave_direction_y` float(3,2) NOT NULL DEFAULT '-1.16',
-  `normal_map_texture` varchar(36) NOT NULL DEFAULT '822ded49-9a6c-f61c-cb89-6df54f42cdf4',
-  `horizon_r` float(3,2) unsigned NOT NULL DEFAULT '0.25',
-  `horizon_g` float(3,2) unsigned NOT NULL DEFAULT '0.25',
-  `horizon_b` float(3,2) unsigned NOT NULL DEFAULT '0.32',
-  `horizon_i` float(3,2) unsigned NOT NULL DEFAULT '0.32',
-  `haze_horizon` float(3,2) unsigned NOT NULL DEFAULT '0.19',
-  `blue_density_r` float(3,2) unsigned NOT NULL DEFAULT '0.12',
-  `blue_density_g` float(3,2) unsigned NOT NULL DEFAULT '0.22',
-  `blue_density_b` float(3,2) unsigned NOT NULL DEFAULT '0.38',
-  `blue_density_i` float(3,2) unsigned NOT NULL DEFAULT '0.38',
-  `haze_density` float(3,2) unsigned NOT NULL DEFAULT '0.70',
-  `density_multiplier` float(3,2) unsigned NOT NULL DEFAULT '0.18',
-  `distance_multiplier` float(4,1) unsigned NOT NULL DEFAULT '0.8',
-  `max_altitude` int(4) unsigned NOT NULL DEFAULT '1605',
-  `sun_moon_color_r` float(3,2) unsigned NOT NULL DEFAULT '0.24',
-  `sun_moon_color_g` float(3,2) unsigned NOT NULL DEFAULT '0.26',
-  `sun_moon_color_b` float(3,2) unsigned NOT NULL DEFAULT '0.30',
-  `sun_moon_color_i` float(3,2) unsigned NOT NULL DEFAULT '0.30',
-  `sun_moon_position` float(4,3) unsigned NOT NULL DEFAULT '0.317',
-  `ambient_r` float(3,2) unsigned NOT NULL DEFAULT '0.35',
-  `ambient_g` float(3,2) unsigned NOT NULL DEFAULT '0.35',
-  `ambient_b` float(3,2) unsigned NOT NULL DEFAULT '0.35',
-  `ambient_i` float(3,2) unsigned NOT NULL DEFAULT '0.35',
-  `east_angle` float(3,2) unsigned NOT NULL DEFAULT '0.00',
-  `sun_glow_focus` float(3,2) unsigned NOT NULL DEFAULT '0.10',
-  `sun_glow_size` float(3,2) unsigned NOT NULL DEFAULT '1.75',
-  `scene_gamma` float(4,2) unsigned NOT NULL DEFAULT '1.00',
-  `star_brightness` float(3,2) unsigned NOT NULL DEFAULT '0.00',
-  `cloud_color_r` float(3,2) unsigned NOT NULL DEFAULT '0.41',
-  `cloud_color_g` float(3,2) unsigned NOT NULL DEFAULT '0.41',
-  `cloud_color_b` float(3,2) unsigned NOT NULL DEFAULT '0.41',
-  `cloud_color_i` float(3,2) unsigned NOT NULL DEFAULT '0.41',
-  `cloud_x` float(3,2) unsigned NOT NULL DEFAULT '1.00',
-  `cloud_y` float(3,2) unsigned NOT NULL DEFAULT '0.53',
-  `cloud_density` float(3,2) unsigned NOT NULL DEFAULT '1.00',
-  `cloud_coverage` float(3,2) unsigned NOT NULL DEFAULT '0.27',
-  `cloud_scale` float(3,2) unsigned NOT NULL DEFAULT '0.42',
-  `cloud_detail_x` float(3,2) unsigned NOT NULL DEFAULT '1.00',
-  `cloud_detail_y` float(3,2) unsigned NOT NULL DEFAULT '0.53',
-  `cloud_detail_density` float(3,2) unsigned NOT NULL DEFAULT '0.12',
-  `cloud_scroll_x` float(3,2) unsigned NOT NULL DEFAULT '0.20',
-  `cloud_scroll_x_lock` tinyint(1) unsigned NOT NULL DEFAULT '0',
-  `cloud_scroll_y` float(3,2) unsigned NOT NULL DEFAULT '0.01',
-  `cloud_scroll_y_lock` tinyint(1) unsigned NOT NULL DEFAULT '0',
-  `draw_classic_clouds` tinyint(1) unsigned NOT NULL DEFAULT '1',
-  PRIMARY KEY (`region_id`)
-);
-
+COMMIT;
 
 :VERSION 33			#---------------------
 
 BEGIN;
-ALTER TABLE regionsettings ADD map_tile_ID CHAR(36) NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
 COMMIT;
 
 :VERSION 34         #---------------------
 
 BEGIN;
-ALTER TABLE `regionwindlight`  CHANGE COLUMN `cloud_scroll_x` `cloud_scroll_x` FLOAT(4,2) NOT NULL DEFAULT '0.20' AFTER `cloud_detail_density`,  CHANGE COLUMN `cloud_scroll_y` `cloud_scroll_y` FLOAT(4,2) NOT NULL DEFAULT '0.01' AFTER `cloud_scroll_x_lock`;
 COMMIT;
 
 :VERSION 35         #---------------------
@@ -827,7 +653,6 @@ COMMIT;
 :VERSION 38         #---------------------
 
 BEGIN;
-ALTER TABLE regionsettings ADD terrain_tile_ID CHAR(36) NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
 COMMIT;
 
 :VERSION 39         #---------------------
@@ -848,14 +673,11 @@ COMMIT;
 :VERSION 41         #---------------------
 
 BEGIN;
-ALTER TABLE regionsettings ADD minimum_age integer NOT NULL DEFAULT '0';
 COMMIT;
 
 :VERSION 42         #---------------------
 
 BEGIN;
-ALTER TABLE regionsettings ADD covenantlastupdated VARCHAR(36) NOT NULL DEFAULT '0';
-ALTER TABLE regionsettings ADD generic VARCHAR(8196) NOT NULL DEFAULT '';
 COMMIT;
 
 :VERSION 43         #---------------------

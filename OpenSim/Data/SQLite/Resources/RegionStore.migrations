@@ -170,93 +170,17 @@ COMMIT;
 
 BEGIN;
 
-create table regionsettings (
-	regionUUID char(36) not null,
-	block_terraform integer not null,
-	block_fly integer not null,
-	allow_damage integer not null,
-	restrict_pushing integer not null,
-	allow_land_resell integer not null,
-	allow_land_join_divide integer not null,
-	block_show_in_search integer not null,
-	agent_limit integer not null,
-	object_bonus float not null,
-	maturity integer not null,
-	disable_scripts integer not null,
-	disable_collisions integer not null,
-	disable_physics integer not null,
-	terrain_texture_1 char(36) not null,
-	terrain_texture_2 char(36) not null,
-	terrain_texture_3 char(36) not null,
-	terrain_texture_4 char(36) not null,
-	elevation_1_nw float not null,
-	elevation_2_nw float not null,
-	elevation_1_ne float not null,
-	elevation_2_ne float not null,
-	elevation_1_se float not null,
-	elevation_2_se float not null,
-	elevation_1_sw float not null,
-	elevation_2_sw float not null,
-	water_height float not null,
-	terrain_raise_limit float not null,
-	terrain_lower_limit float not null,
-	use_estate_sun integer not null,
-	fixed_sun integer not null,
-	sun_position float not null,
-	covenant char(36));
-
 COMMIT;
 
 :VERSION 5
 
 BEGIN;
 
-delete from regionsettings;
-
 COMMIT;
 
 :VERSION 6
 
 BEGIN TRANSACTION;
-
-drop table regionsettings;
-CREATE TABLE regionsettings (
-  regionUUID char(36) NOT NULL,
-  block_terraform int(11) NOT NULL,
-  block_fly int(11) NOT NULL,
-  allow_damage int(11) NOT NULL,
-  restrict_pushing int(11) NOT NULL,
-  allow_land_resell int(11) NOT NULL,
-  allow_land_join_divide int(11) NOT NULL,
-  block_show_in_search int(11) NOT NULL,
-  agent_limit int(11) NOT NULL,
-  object_bonus float NOT NULL,
-  maturity int(11) NOT NULL,
-  disable_scripts int(11) NOT NULL,
-  disable_collisions int(11) NOT NULL,
-  disable_physics int(11) NOT NULL,
-  terrain_texture_1 char(36) NOT NULL,
-  terrain_texture_2 char(36) NOT NULL,
-  terrain_texture_3 char(36) NOT NULL,
-  terrain_texture_4 char(36) NOT NULL,
-  elevation_1_nw float NOT NULL,
-  elevation_2_nw float NOT NULL,
-  elevation_1_ne float NOT NULL,
-  elevation_2_ne float NOT NULL,
-  elevation_1_se float NOT NULL,
-  elevation_2_se float NOT NULL,
-  elevation_1_sw float NOT NULL,
-  elevation_2_sw float NOT NULL,
-  water_height float NOT NULL,
-  terrain_raise_limit float NOT NULL,
-  terrain_lower_limit float NOT NULL,
-  use_estate_sun int(11) NOT NULL,
-  fixed_sun int(11) NOT NULL,
-  sun_position float NOT NULL,
-  covenant char(36) default NULL,
-  sandbox tinyint(4) NOT NULL,
-  PRIMARY KEY  (regionUUID)
-);
 
 COMMIT;
 
@@ -330,10 +254,6 @@ COMMIT;
 :VERSION 14
 
 begin;
-
-ALTER TABLE regionsettings ADD COLUMN sunvectorx double NOT NULL default 0;
-ALTER TABLE regionsettings ADD COLUMN sunvectory double NOT NULL default 0;
-ALTER TABLE regionsettings ADD COLUMN sunvectorz double NOT NULL default 0;
 
 commit;
 
@@ -451,8 +371,6 @@ COMMIT;
 
 BEGIN;
 
-ALTER TABLE regionsettings ADD COLUMN map_tile_ID varchar(50) NOT NULL default '00000000-0000-0000-0000-000000000000';
-  
 COMMIT;
 
 :VERSION 20
@@ -467,17 +385,12 @@ COMMIT;
 
 BEGIN;
 
-ALTER TABLE prims ADD COLUMN Generic varchar(8196) NOT NULL DEFAULT '';
-ALTER TABLE regionsettings ADD COLUMN terrain_tile_ID char(36) NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
-
 COMMIT;
 
 :VERSION 22
 
 BEGIN;
 
-ALTER TABLE regionsettings ADD COLUMN loaded_creation_datetime int unsigned NOT NULL default 0;
-ALTER TABLE regionsettings ADD COLUMN loaded_creation_id varchar(64) default NULL;
 ALTER TABLE prims ADD COLUMN PassTouches tinyint not null default 0;
 ALTER TABLE prims ADD COLUMN LinkNumber integer not null default 0;
 
@@ -496,16 +409,11 @@ COMMIT;
 
 begin;
 
-ALTER TABLE regionsettings ADD COLUMN minimum_age integer NOT NULL default 0;
-
 commit;
 
 :VERSION 25
 
 begin;
-
-ALTER TABLE regionsettings ADD COLUMN covenantlastupdated varchar(36) NOT NULL default '0';
-ALTER TABLE regionsettings ADD COLUMN generic varchar(8196) NOT NULL default '';
 
 commit;
 
