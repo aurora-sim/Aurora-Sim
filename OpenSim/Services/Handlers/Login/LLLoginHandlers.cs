@@ -72,14 +72,15 @@ namespace OpenSim.Services
 
             if (requestData != null)
             {
-                if (requestData.ContainsKey("first") && requestData["first"] != null &&
-                    requestData.ContainsKey ("last") && requestData["last"] != null &&
+                if (((requestData.ContainsKey("first") && requestData["first"] != null &&
+                    requestData.ContainsKey ("last") && requestData["last"] != null) ||
+                    requestData.ContainsKey ("username") && requestData["username"] != null) &&
                     ((requestData.ContainsKey ("passwd") && requestData["passwd"] != null) ||
                     (requestData.ContainsKey ("web_login_key") && requestData["web_login_key"] != null)))
                 {
-                    string first = requestData["first"].ToString();
-                    string last = requestData["last"].ToString();
-                    string name = requestData.ContainsKey ("name") ? requestData["name"].ToString () : "";
+                    string first = requestData.ContainsKey ("first") ? requestData["first"].ToString () : "";
+                    string last = requestData.ContainsKey ("last") ? requestData["last"].ToString () : "";
+                    string name = requestData.ContainsKey ("username") ? requestData["username"].ToString () : "";
                     string passwd = "";
                     string authType = "UserAccount";
                     if (!requestData.ContainsKey ("web_login_key"))

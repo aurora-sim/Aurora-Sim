@@ -243,51 +243,29 @@ namespace OpenSim.Services.UserAccountService
         /// <param name="cmdparams">string array with parameters: firstname, lastname, password, locationX, locationY, email</param>
         protected void HandleCreateUser(string module, string[] cmdparams)
         {
-            string firstName;
-            string lastName;
+            string name;
             string password;
             string email;
 
-            List<char> excluded = new List<char>(new char[] { ' ' });
+            name = MainConsole.Instance.CmdPrompt("Name", "Default User");
 
-            if (cmdparams.Length < 3)
-                firstName = MainConsole.Instance.CmdPrompt("First name", "Default", excluded);
-            else firstName = cmdparams[2];
+            password = MainConsole.Instance.PasswdPrompt("Password");
 
-            if (cmdparams.Length < 4)
-                lastName = MainConsole.Instance.CmdPrompt("Last name", "User", excluded);
-            else lastName = cmdparams[3];
+            email = MainConsole.Instance.CmdPrompt("Email", "");
 
-            if (cmdparams.Length < 5)
-                password = MainConsole.Instance.PasswdPrompt("Password");
-            else password = cmdparams[4];
-
-            if (cmdparams.Length < 6)
-                email = MainConsole.Instance.CmdPrompt("Email", "");
-            else email = cmdparams[5];
-
-            CreateUser(firstName + " " + lastName, Util.Md5Hash(password), email);
+            CreateUser(name, Util.Md5Hash(password), email);
         }
 
         protected void HandleResetUserPassword(string module, string[] cmdparams)
         {
-            string firstName;
-            string lastName;
+            string name;
             string newPassword;
 
-            if (cmdparams.Length < 4)
-                firstName = MainConsole.Instance.CmdPrompt("First name");
-            else firstName = cmdparams[3];
+            name = MainConsole.Instance.CmdPrompt("Name");
 
-            if (cmdparams.Length < 5)
-                lastName = MainConsole.Instance.CmdPrompt("Last name");
-            else lastName = cmdparams[4];
+            newPassword = MainConsole.Instance.PasswdPrompt("New password");
 
-            if (cmdparams.Length < 6)
-                newPassword = MainConsole.Instance.PasswdPrompt("New password");
-            else newPassword = cmdparams[5];
-
-            UserAccount account = GetUserAccount(UUID.Zero, firstName, lastName);
+            UserAccount account = GetUserAccount (UUID.Zero, name);
             if (account == null)
                 m_log.ErrorFormat("[USER ACCOUNT SERVICE]: No such user");
 
@@ -295,10 +273,10 @@ namespace OpenSim.Services.UserAccountService
             if (m_AuthenticationService != null)
                 success = m_AuthenticationService.SetPassword (account.PrincipalID, "UserAccount", newPassword);
             if (!success)
-                m_log.ErrorFormat("[USER ACCOUNT SERVICE]: Unable to reset password for account {0} {1}.",
-                   firstName, lastName);
+                m_log.ErrorFormat("[USER ACCOUNT SERVICE]: Unable to reset password for account {0}.",
+                   name);
             else
-                m_log.InfoFormat("[USER ACCOUNT SERVICE]: Password reset for user {0} {1}", firstName, lastName);
+                m_log.InfoFormat ("[USER ACCOUNT SERVICE]: Password reset for user {0}", name);
         }
 
         #endregion
