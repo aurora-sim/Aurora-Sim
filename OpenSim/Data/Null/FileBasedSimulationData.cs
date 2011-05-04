@@ -53,12 +53,15 @@ namespace OpenSim.Data.Null
         protected string m_saveAppenedFileName = "";
         protected string m_loadAppenedFileName = "";
         protected int m_timeBetweenSaves = 5;
+        protected int m_timeBetweenBackupSaves = 1440;//One day
         protected bool m_saveChanges = true;
+        protected bool m_saveBackupChanges = true;
         protected List<SceneObjectGroup> m_groups = new List<SceneObjectGroup> ();
         protected byte[] m_terrain;
         protected byte[] m_revertTerrain;
         protected bool m_loaded = false;
         protected Timer m_saveTimer = null;
+        protected Timer m_backupSaveTimer = null;
         protected IScene m_scene;
         protected bool m_keepOldSave = true;
         protected bool m_oldSaveHasBeenSaved = false;
@@ -92,6 +95,8 @@ namespace OpenSim.Data.Null
                 m_timeBetweenSaves = config.GetInt ("TimeBetweenSaves", m_timeBetweenSaves);
                 m_keepOldSave = config.GetBoolean ("SavePreviousBackup", m_keepOldSave);
                 m_oldSaveDirectory = config.GetString ("PreviousBackupDirectory", m_oldSaveDirectory);
+                m_saveBackupChanges = config.GetBoolean ("SaveTimedPreviousBackup", m_keepOldSave);
+                m_timeBetweenBackupSaves = config.GetInt ("TimeBetweenBackupSaves", m_timeBetweenBackupSaves);
             }
 
             if (m_saveChanges && m_timeBetweenSaves != 0)
@@ -101,16 +106,28 @@ namespace OpenSim.Data.Null
                 m_saveTimer.Start ();
             }
 
+            if (m_saveChanges && m_timeBetweenBackupSaves != 0)
+            {
+                m_backupSaveTimer = new Timer (m_timeBetweenBackupSaves * 60 * 1000);
+                m_backupSaveTimer.Elapsed += m_saveTimer_Elapsed;
+                m_backupSaveTimer.Start ();
+            }
+
             m_scene = scene;
             m_fileName = scene.RegionInfo.RegionName + m_loadAppenedFileName + ".abackup";
         }
 
         void m_saveTimer_Elapsed (object sender, ElapsedEventArgs e)
         {
-            SaveBackup ();
+            SaveBackup ("");
         }
 
-        protected void SaveBackup ()
+        void m_backupSaveTimer_Elapsed (object sender, ElapsedEventArgs e)
+        {
+            SaveBackup (m_oldSaveDirectory + "/");
+        }
+
+        protected void SaveBackup (string appendedFilePath)
         {
             if (!m_saveChanges)
                 return;
@@ -118,7 +135,7 @@ namespace OpenSim.Data.Null
             if (backupModule != null && backupModule.LoadingPrims) //Something is changing lots of prims
                 return;
             m_log.Info ("[FileBasedSimulationData]: Saving Backup for region " + m_scene.RegionInfo.RegionName);
-            string fileName = m_scene.RegionInfo.RegionName + m_saveAppenedFileName + ".abackup";
+            string fileName = appendedFilePath + m_scene.RegionInfo.RegionName + m_saveAppenedFileName + ".abackup";
             //Add the .temp since we might need to make a backup
             GZipStream m_saveStream = new GZipStream (new FileStream (fileName + ".tmp", FileMode.Create), CompressionMode.Compress);
             TarArchiveWriter writer = new TarArchiveWriter (m_saveStream);
@@ -246,7 +263,7 @@ namespace OpenSim.Data.Null
 
         public void Shutdown ()
         {
-            SaveBackup ();
+            SaveBackup ("");
         }
 
 
