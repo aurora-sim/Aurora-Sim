@@ -67,7 +67,7 @@ namespace OpenSim.Region.CoreModules
                 LastEstateOwner = account.Name;
 
                 List<EstateSettings> ownerEstates = EstateConnector.GetEstates (account.PrincipalID);
-                string response = ownerEstates != null ? "yes" : "no";
+                string response = (ownerEstates != null && ownerEstates.Count > 0) ? "yes" : "no";
                 if (ownerEstates != null && ownerEstates.Count > 0)
                 {
                     m_log.WarnFormat("Found user. {0} has {1} estates currently. {2}", account.Name, ownerEstates.Count,
