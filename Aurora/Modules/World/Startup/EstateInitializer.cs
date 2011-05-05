@@ -86,7 +86,7 @@ namespace OpenSim.Region.CoreModules
                 if (response == "no")
                 {
                     // Create a new estate
-                    ES.EstateName = MainConsole.Instance.CmdPrompt("New estate name", scene.RegionInfo.EstateSettings.EstateName);
+                    ES.EstateName = MainConsole.Instance.CmdPrompt("New estate name", "My Estate");
 
                     //Set to auto connect to this region next
                     LastEstateName = ES.EstateName;
