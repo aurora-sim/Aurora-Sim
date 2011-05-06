@@ -124,8 +124,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         protected void OpenRegionManager(string module, string[] cmdparams)
         {
-            System.Threading.Thread thread = new Thread(StartRegionManagerThread);
-            thread.Start();
+            StartRegionManagerThread ();
         }
 
         protected void StartRegionManagerThread()
