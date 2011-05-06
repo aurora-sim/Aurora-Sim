@@ -425,3 +425,9 @@ ALTER TABLE terrain ADD COLUMN X varchar(10) NOT NULL DEFAULT '-1';
 ALTER TABLE terrain ADD COLUMN Y varchar(10) NOT NULL DEFAULT '-1';
 
 COMMIT;
+
+:VERSION 27        
+
+BEGIN;
+ALTER TABLE prims ADD COLUMN Generic VARCHAR(8196) not null default '';
+COMMIT;
