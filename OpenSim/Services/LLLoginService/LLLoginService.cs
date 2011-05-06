@@ -515,9 +515,9 @@ namespace OpenSim.Services.LLLoginService
                         return LLFailedLoginResponse.InventoryProblem;
                     }
                 }
-                //if (m_InventoryService.CreateUserRootFolder (account.PrincipalID))
+                if (m_InventoryService.CreateUserRootFolder (account.PrincipalID))
                     ///Gotta refetch... since something went wrong
-                //    inventorySkel = m_InventoryService.GetInventorySkeleton (account.PrincipalID);
+                    inventorySkel = m_InventoryService.GetInventorySkeleton (account.PrincipalID);
 
                 // Get active gestures
                 List<InventoryItemBase> gestures = m_InventoryService.GetActiveGestures(account.PrincipalID);
