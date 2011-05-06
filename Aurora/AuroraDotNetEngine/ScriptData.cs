@@ -345,6 +345,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (State != state)
             {
                 m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue (this, false);
+                this.IgnoreNew = false;
                 m_ScriptEngine.MaintenanceThread.AddEventSchQueue (this, "state_exit",
                     new DetectParams[0], EventPriority.FirstStart, new object[0] { });
 
