@@ -201,9 +201,12 @@ namespace Aurora.Services.DataService
                     settings.TerrainImageID = UUID.Parse (query["terrain_tile_ID"][i]);
                     settings.MinimumAge = int.Parse (query["minimum_age"][i]);
                     settings.CovenantLastUpdated = int.Parse (query["covenantlastupdated"][i]);
-                    OSD o = OSDParser.DeserializeJson (query["generic"][i]);
-                    if (o.Type == OSDType.Map)
-                        settings.Generic = (OSDMap)o;
+                    if (query.ContainsKey ("generic") && query["generic"].Count > i && query["generic"][i] != null)
+                    {
+                        OSD o = OSDParser.DeserializeJson (query["generic"][i]);
+                        if (o.Type == OSDType.Map)
+                            settings.Generic = (OSDMap)o;
+                    }
                 }
             }
             settings.OnSave += StoreRegionSettings;
