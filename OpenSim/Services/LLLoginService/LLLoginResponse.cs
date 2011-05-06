@@ -196,6 +196,7 @@ namespace OpenSim.Services.LLLoginService
         private IConfigSource m_source;
 
         private BuddyList m_buddyList = null;
+        private IRegistryCore m_registry;
 
         public LLLoginResponse()
         {
@@ -223,9 +224,10 @@ namespace OpenSim.Services.LLLoginService
             GridRegion destination, List<InventoryFolderBase> invSkel, FriendInfo[] friendsList, IInventoryService invService, ILibraryService libService,
             string where, string startlocation, Vector3 position, Vector3 lookAt, List<InventoryItemBase> gestures,
             GridRegion home, IPEndPoint clientIP, string AdultMax, string AdultRating,
-            ArrayList eventValues, ArrayList classifiedValues, string seedCap, IConfigSource source, string DisplayName)
+            ArrayList eventValues, ArrayList classifiedValues, string seedCap, IConfigSource source, string DisplayName, IRegistryCore registry)
             : this()
         {
+            m_registry = registry;
             m_source = source;
             SeedCapability = seedCap;
 
@@ -459,7 +461,10 @@ namespace OpenSim.Services.LLLoginService
                 if (SearchURL != String.Empty)
                     responseData["search"] = SearchURL;
 
-                if (MapTileURL != String.Empty)
+                IMapService mapService = m_registry.RequestModuleInterface<IMapService> ();
+                if (mapService != null)
+                    responseData["map-server-url"] = mapService.GetURLOfMap ();
+                else if (MapTileURL != String.Empty)
                     responseData["map-server-url"] = MapTileURL;
 
                 if (WebProfileURL != String.Empty)

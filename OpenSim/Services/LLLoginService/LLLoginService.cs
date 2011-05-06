@@ -716,7 +716,7 @@ namespace OpenSim.Services.LLLoginService
 
                 LLLoginResponse response = new LLLoginResponse(account, aCircuit, guinfo, destination, inventorySkel, friendsList, m_InventoryService, m_LibraryService,
                     where, startLocation, position, lookAt, gestures, home, clientIP, MaxMaturity, MaturityRating,
-                    eventCategories, classifiedCategories, FillOutSeedCap (aCircuit, destination, clientIP, account.PrincipalID), m_config, DisplayName);
+                    eventCategories, classifiedCategories, FillOutSeedCap (aCircuit, destination, clientIP, account.PrincipalID), m_config, DisplayName, m_registry);
 
                 m_log.InfoFormat("[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " + destination.RegionName + ", tried to login to " + startLocation + " at " + position.ToString() + ".");
                 return response;
