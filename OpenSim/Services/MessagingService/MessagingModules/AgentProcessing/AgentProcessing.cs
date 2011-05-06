@@ -276,19 +276,19 @@ namespace OpenSim.Services.MessagingService
                 {
                     //m_log.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
 
-                    IRegionCapsService regionCaps = m_registry.RequestModuleInterface<ICapsService>().GetCapsForRegion(neighbor.RegionHandle);
+                    IRegionCapsService regionCaps = m_registry.RequestModuleInterface<ICapsService> ().GetCapsForRegion (neighbor.RegionHandle);
                     if (regionCaps == null) //If there isn't a region caps, there isn't an agent in this sim
                         continue;
                     List<UUID> usersInformed = new List<UUID>();
                     foreach (IRegionClientCapsService regionClientCaps in regionCaps.GetClients())
                     {
-                        if (usersInformed.Contains(regionClientCaps.AgentID)) //Only inform agents once
+                        if (usersInformed.Contains (regionClientCaps.AgentID) || !regionClientCaps.RootAgent) //Only inform agents once
                             continue;
 
                         AgentCircuitData regionCircuitData = regionClientCaps.CircuitData.Copy();
                         regionCircuitData.child = true; //Fix child agent status
                         string reason; //Tell the region about it
-                        if (!InformClientOfNeighbor(regionClientCaps.AgentID, requestingRegion.RegionHandle,
+                        if (!InformClientOfNeighbor (regionClientCaps.AgentID, regionClientCaps.RegionHandle,
                             regionCircuitData, requestingRegion, (uint)TeleportFlags.Default, null, out reason))
                             informed = false;
                         else
