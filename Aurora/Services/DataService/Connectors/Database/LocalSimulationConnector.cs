@@ -56,6 +56,26 @@ namespace Aurora.Services.DataService
             //Remove the old terrain
             GD.Delete (m_terrainRealm, new string[1] { "RegionUUID" }, new object[1] { regionID });
 
+            /*
+            int regionLength = (int)Math.Sqrt(ter.Length);
+            for(int x = 0; x < (regionLength/Constants.RegionSize); x++)
+            {
+                for(int y = 0; y < (regionLength/Constants.RegionSize); y++)
+                {
+                    byte[] heightmap = new byte[Constants.RegionSize * Constants.RegionSize * sizeof (short)];
+                    int ii = 0;
+                    int initial = x * Constants.RegionSize + y;
+                    for (int i = x * Constants.RegionSize + y; i < initial + Constants.RegionSize * Constants.RegionSize; i++)
+                    {
+                        Utils.Int16ToBytes (ter[i], heightmap, ii);
+                        ii += 2;
+                    }
+                    GD.Insert (m_terrainRealm, new object[5] { regionID, heightmap, Revert ? 2 : 1, x, y });
+                    heightmap  = null;
+                }
+            }
+            */
+
             byte[] heightmap = new byte[ter.Length * sizeof (short)];
             int ii = 0;
             for (int i = 0; i < ter.Length; i++)
@@ -64,12 +84,33 @@ namespace Aurora.Services.DataService
                 ii += 2;
             }
             GD.Insert (m_terrainRealm, new object[5] { regionID, heightmap, Revert ? 2 : 1, 0, 0 });
+            heightmap  = null;
         }
 
         public void StoreWater (short[] water, UUID regionID, bool Revert)
         {
             //Remove the old terrain
             GD.Delete (m_terrainRealm, new string[1] { "RegionUUID" }, new object[1] { regionID });
+
+            /*
+            int regionLength = (int)Math.Sqrt(ter.Length);
+            for(int x = 0; x < (regionLength/Constants.RegionSize); x++)
+            {
+                for(int y = 0; y < (regionLength/Constants.RegionSize); y++)
+                {
+                    byte[] heightmap = new byte[Constants.RegionSize * Constants.RegionSize * sizeof (short)];
+                    int ii = 0;
+                    int initial = x * Constants.RegionSize + y;
+                    for (int i = x * Constants.RegionSize + y; i < initial + Constants.RegionSize * Constants.RegionSize; i++)
+                    {
+                        Utils.Int16ToBytes (ter[i], heightmap, ii);
+                        ii += 2;
+                    }
+                    GD.Insert (m_terrainRealm, new object[5] { regionID, heightmap, Revert ? 2 : 1, x, y });
+                    heightmap  = null;
+                }
+            }
+            */
 
             byte[] heightmap = new byte[water.Length * sizeof (short)];
             int ii = 0;
@@ -83,6 +124,7 @@ namespace Aurora.Services.DataService
 
         public short[] LoadTerrain (UUID regionID, bool Revert, int RegionSizeX, int RegionSizeY)
         {
+            short[] map = new short[RegionSizeX * RegionSizeX];
             using (IDataReader reader = GD.QueryData (string.Format ("where RegionUUID = {0} and Revert = {1} order by Revision desc limit 1", regionID.ToString (), Revert.ToString ()), m_terrainRealm, "Heightfield,X,Y"))
             {
                 while (reader.Read ())
@@ -120,8 +162,19 @@ namespace Aurora.Services.DataService
                     }
                     else
                     {
+                        /*
+                        int mapX = int.Parse(reader["X"].ToString ());
+                        int mapY = int.Parse(reader["Y"].ToString ());
                         byte[] heightmap = (byte[])reader["Heightfield"];
-                        short[] map = new short[RegionSizeX * RegionSizeX];
+                        int ii = (mapX * Constants.RegionSize) + mapY;
+                        for (int i = 0; i < heightmap.Length; i += sizeof (short))
+                        {
+                            map[ii] = Utils.BytesToInt16 (heightmap, i);
+                            ii++;
+                        }
+                        heightmap = null;
+                        */
+                        byte[] heightmap = (byte[])reader["Heightfield"];
                         int ii = 0;
                         for (int i = 0; i < heightmap.Length; i += sizeof (short))
                         {
@@ -176,6 +229,18 @@ namespace Aurora.Services.DataService
                     }
                     else
                     {
+                        /*
+                        int mapX = int.Parse(reader["X"].ToString ());
+                        int mapY = int.Parse(reader["Y"].ToString ());
+                        byte[] heightmap = (byte[])reader["Heightfield"];
+                        int ii = (mapX * Constants.RegionSize) + mapY;
+                        for (int i = 0; i < heightmap.Length; i += sizeof (short))
+                        {
+                            map[ii] = Utils.BytesToInt16 (heightmap, i);
+                            ii++;
+                        }
+                        heightmap = null;
+                        */
                         byte[] heightmap = (byte[])reader["Heightfield"];
                         short[] map = new short[RegionSizeX * RegionSizeX];
                         int ii = 0;
