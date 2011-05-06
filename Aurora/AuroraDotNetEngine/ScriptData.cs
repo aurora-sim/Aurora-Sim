@@ -345,7 +345,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (State != state)
             {
                 m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue (this, false);
-                this.IgnoreNew = false;
+                m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew (this, false); // accept new events
                 m_ScriptEngine.MaintenanceThread.AddEventSchQueue (this, "state_exit",
                     new DetectParams[0], EventPriority.FirstStart, new object[0] { });
 
@@ -588,7 +588,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     //Close the previous script
                     CloseAndDispose (false); //We don't want to back it up
                     Interlocked.Increment (ref VersionID);
-                    IgnoreNew = false;
+                    m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew (this, false); // accept new events
                 }
 
                 //Try to find a previously compiled script in this instance

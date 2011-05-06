@@ -333,7 +333,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             {
                 //Add the componet to the map by its name
                 OSD o = component.GetState(obj.UUID);
-                if(o != null && o.Value() != new OSD().Value())
+                if(o != null)
                     ComponentsBody.Add(component.Name, o);
             }
             string result = OSDParser.SerializeJsonString(ComponentsBody);
