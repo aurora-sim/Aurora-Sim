@@ -24,7 +24,7 @@ namespace OpenSim.Services.Handlers.Map
         private uint m_port = 8005;
         private IHttpServer m_server;
         private IRegistryCore m_registry;
-        private bool m_enabled = true;
+        private bool m_enabled = false;
         private bool m_cacheEnabled = true;
         private float m_cacheExpires = 24;
 
