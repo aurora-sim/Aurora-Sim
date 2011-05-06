@@ -2017,7 +2017,18 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             land.LandData.OtherCleanTime = otherCleanTime;
 
+            ResetRezzedObjectTime(land);
+
             UpdateLandObject(localID, land.LandData);
+        }
+        
+        private void ResetRezzedObjectTime(ILandObject land)
+        {
+            IPrimCountModule primCount = m_scene.RequestModuleInterface<IPrimCountModule> ();
+            foreach (ISceneEntity sog in primCount.GetPrimCounts (land.LandData.GlobalID).Objects)
+            {
+                 sog.RootChild.Rezzed = DateTime.Now;
+            }
         }
 
         public void ClientOnParcelFreezeUser(IClientAPI client, UUID parcelowner, uint flags, UUID target)
