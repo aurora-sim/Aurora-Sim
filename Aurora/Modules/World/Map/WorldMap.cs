@@ -116,8 +116,7 @@ namespace Aurora.Modules
 
                 m_scene.RegisterModuleInterface<IWorldMapModule>(this);
 
-                MainConsole.Instance.Commands.AddCommand(this.Name, false,
-                    "update map",
+                MainConsole.Instance.Commands.AddCommand("update map",
                     "update map",
                     "Updates the image of the world map", HandleUpdateWorldMapConsoleCommand);
 
@@ -526,7 +525,7 @@ namespace Aurora.Modules
                     //Fill in blank ones
                     FillInMap(mapBlocks, item.minX, item.minY, item.maxX, item.maxY);
 
-                    item.remoteClient.SendMapBlock(mapBlocks, item.mapBlocks);
+                    item.remoteClient.SendMapBlock(mapBlocks, 2/*item.mapBlocks*/);
                 }
                 m_blockitemsToRequest.Clear();
             }
