@@ -76,7 +76,7 @@ namespace OpenSim.Region.CoreModules
                     {
                         m_log.Warn(ownerEstates[i].EstateName);
                     }
-                    response = MainConsole.Instance.CmdPrompt("Do you wish to join one of these existing estates? (Options are {yes, no})", LastEstateChoise, new List<string>() { "yes", "no" });
+                    response = MainConsole.Instance.CmdPrompt ("Do you wish to join one of these existing estates? (Options are {yes, no})", response, new List<string> () { "yes", "no" });
                 }
                 else
                 {
