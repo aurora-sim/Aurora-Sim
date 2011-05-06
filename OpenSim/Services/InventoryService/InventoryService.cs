@@ -90,7 +90,22 @@ namespace OpenSim.Services.InventoryService
 
             if (rootFolder == null)
             {
-                rootFolder = CreateFolder (principalID, UUID.Zero, (int)AssetType.RootFolder, "My Inventory");
+                List<InventoryFolderBase> rootFolders = GetInventorySkeleton (principalID);
+                if (rootFolders.Count == 0)
+                    rootFolder = CreateFolder (principalID, UUID.Zero, (int)AssetType.RootFolder, "My Inventory");
+                else
+                {
+                    rootFolder = new InventoryFolderBase ();
+
+                    rootFolder.Name = "My Inventory";
+                    rootFolder.Type = (short)AssetType.RootFolder;
+                    rootFolder.Version = 1;
+                    rootFolder.ID = rootFolders[0].ParentID;
+                    rootFolder.Owner = principalID;
+                    rootFolder.ParentID = UUID.Zero;
+
+                    m_Database.StoreFolder(rootFolder);
+                }
                 result = true;
             }
             return result;
