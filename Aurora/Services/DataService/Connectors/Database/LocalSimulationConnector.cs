@@ -132,7 +132,7 @@ namespace Aurora.Services.DataService
                     if (reader["X"].ToString () == "-1")
                     {
                         byte[] heightmap = (byte[])reader["Heightfield"];
-                        short[] map = new short[RegionSizeX * RegionSizeX];
+                        //short[] map = new short[RegionSizeX * RegionSizeX];
                         double[,] terrain = null;
                         terrain = new double[RegionSizeX, RegionSizeY];
                         terrain.Initialize ();
