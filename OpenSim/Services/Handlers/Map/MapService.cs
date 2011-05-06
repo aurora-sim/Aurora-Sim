@@ -24,13 +24,37 @@ namespace OpenSim.Services.Handlers.Map
         private uint m_port = 8005;
         private IHttpServer m_server;
         private IRegistryCore m_registry;
+        private bool m_enabled = true;
+        private bool m_cacheEnabled = true;
+        private float m_cacheExpires = 24;
 
         public void Initialize (IConfigSource config, IRegistryCore registry)
         {
             m_registry = registry;
+            IConfig mapConfig = config.Configs["MapService"];
+            if (mapConfig != null)
+            {
+                m_enabled = mapConfig.GetBoolean ("Enabled", m_enabled);
+                m_cacheEnabled = mapConfig.GetBoolean ("CacheEnabled", m_cacheEnabled);
+                m_cacheExpires = mapConfig.GetFloat ("CacheExpires", m_cacheExpires);
+            }
+            if(!m_enabled)
+                return;
+
+            if (m_cacheEnabled)
+                CreateCacheDirectories ();
+
             registry.RegisterModuleInterface<IMapService> (this);
             m_server = registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (m_port);
             m_server.AddHTTPHandler ("/MapService/", MapRequest);
+        }
+
+        private void CreateCacheDirectories ()
+        {
+            if (!Directory.Exists ("assetcache"))
+                Directory.CreateDirectory ("assetcache");
+            if(!Directory.Exists("assetcache/mapzoomlevels"))
+                Directory.CreateDirectory ("assetcache/mapzoomlevels");
         }
 
         public void Start (IConfigSource config, IRegistryCore registry)
@@ -55,7 +79,15 @@ namespace OpenSim.Services.Handlers.Map
             if (!uri.StartsWith ("map"))
                 return null;
             string[] splitUri = uri.Split ('-');
-            byte[] jpeg = new byte[0];
+            byte[] jpeg = FindCachedImage(uri);
+            if (jpeg.Length != 0)
+            {
+                reply["str_response_string"] = Convert.ToBase64String (jpeg);
+                reply["int_response_code"] = 200;
+                reply["content_type"] = "image/jpeg";
+
+                return reply;
+            }
             try
             {
                 int mapLayer = int.Parse (uri.Substring (4, 1));
@@ -87,16 +119,17 @@ namespace OpenSim.Services.Handlers.Map
                 }
 
                 int SizeOfImage = Constants.RegionSize * mapLayer;
-                int[] pwt = new int[3] { 256, 512, 1024/*, 2048 */};
-                int RealSizeOfImage = pwt[0];
+                int RealSizeOfImage = 256;
+                int XRealSizeOfImage = 256;
+                int[] pwt = new int[4] { 256, 512, 1024, 2048 };
                 for (int i = 0; i < pwt.Length; i++)
                 {
                     if (pwt[i] >= SizeOfImage && i > 0 && pwt[i - 1] < SizeOfImage)
-                        RealSizeOfImage = pwt[i];
+                        XRealSizeOfImage = pwt[i];
                 }
-                //Force to 1024 only... the viewer can't seem to handle larger well
-                RealSizeOfImage = SizeOfImage > pwt[2] ? pwt[2] : RealSizeOfImage;
-                SizeOfImage = RealSizeOfImage;
+                //Force to 512 only... the viewer can't seem to handle larger well
+                //RealSizeOfImage = SizeOfImage > pwt[1] ? pwt[1] : RealSizeOfImage;
+                SizeOfImage = (int)(RealSizeOfImage / ((float)XRealSizeOfImage / (float)SizeOfImage));
                 Bitmap mapTexture = new Bitmap (RealSizeOfImage, RealSizeOfImage);
                 Graphics g = Graphics.FromImage (mapTexture);
                 SolidBrush sea = new SolidBrush (Color.FromArgb (29, 71, 95));
@@ -122,6 +155,7 @@ namespace OpenSim.Services.Handlers.Map
 
                 // Write the stream to a byte array for output
                 jpeg = imgstream.ToArray ();
+                SaveCachedImage (uri, jpeg);
             }
             catch
             {
@@ -152,6 +186,7 @@ namespace OpenSim.Services.Handlers.Map
 
                     // Write the stream to a byte array for output
                     jpeg = imgstream.ToArray ();
+                    SaveCachedImage (uri, jpeg);
                 }
             }
             reply["str_response_string"] = Convert.ToBase64String (jpeg);
@@ -172,6 +207,30 @@ namespace OpenSim.Services.Handlers.Map
                     return encoders[j];
             }
             return null;
+        }
+
+        private byte[] FindCachedImage (string name)
+        {
+            if (!m_cacheEnabled)
+                return new byte[0];
+
+            string fullPath = Path.Combine ("assetcache", Path.Combine ("mapzoomlevels", name));
+            if (File.Exists (fullPath))
+            {
+                //Make sure the time is ok
+                if(DateTime.Now < File.GetLastWriteTime (fullPath).AddHours(m_cacheExpires))
+                    return File.ReadAllBytes (fullPath);
+            }
+            return new byte[0];
+        }
+
+        private void SaveCachedImage (string name, byte[] data)
+        {
+            if (!m_cacheEnabled)
+                return;
+
+            string fullPath = Path.Combine ("assetcache", Path.Combine ("mapzoomlevels", name));
+            File.WriteAllBytes (fullPath, data);
         }
     }
 }
