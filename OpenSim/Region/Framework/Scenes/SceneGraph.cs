@@ -2188,11 +2188,14 @@ namespace OpenSim.Region.Framework.Scenes
             children.Sort(LinkSetSorter);
 
             entity.ClearChildren();
-
+            IComponentManager manager = m_parentScene.RequestModuleInterface<IComponentManager> ();
             foreach (ISceneChildEntity child in children)
             {
+                UUID oldID = child.UUID;
                 child.ResetEntityIDs();
-                entity.AddChild(child, child.LinkNum);
+                entity.AddChild (child, child.LinkNum);
+                if (manager != null)
+                    manager.ResetComponentIDsToNewObject (oldID, child);
             }
         }
         
