@@ -258,7 +258,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 MainConsole.Instance.Commands.AddCommand ("ADNE enable", "ADNE enable", "Reenables the script engine", AuroraDotNetEnable);
 
                 // Create all objects we'll be using
-                ScriptProtection = new ScriptProtectionModule (Config);
+                ScriptProtection = new ScriptProtectionModule (this, Config);
 
                 EventManager = new EventManager (this);
 

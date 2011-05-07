@@ -57,17 +57,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         private uint PERM_TRANS = (uint)8192;
         private uint PERM_LOCKED = (uint)540672;
         
-        /// <value>
-        /// Different user set names that come in from the configuration file.
-        /// </value>
-        enum UserSet
-        {
-            All,
-            Administrators,
-            ParcelOwners,
-            None
-        };
-
         #endregion
 
         #region Bypass Permissions / Debug Permissions Stuff
@@ -132,23 +121,23 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             m_ParcelOwnerIsGod = PermissionsConfig.GetBoolean("parcel_owner_is_god", m_ParcelOwnerIsGod);
             m_allowAdminFriendEditRights = PermissionsConfig.GetBoolean("allow_god_friends_edit_with_rights", m_allowAdminFriendEditRights);
 
-            m_allowedScriptCreators 
-                = ParseUserSetConfigSetting(PermissionsConfig, "allowed_script_creators", m_allowedScriptCreators);
+            m_allowedScriptCreators
+                = UserSetHelpers.ParseUserSetConfigSetting (PermissionsConfig, "allowed_script_creators", m_allowedScriptCreators);
             m_allowedScriptEditors
-                = ParseUserSetConfigSetting(PermissionsConfig, "allowed_script_editors", m_allowedScriptEditors);
+                = UserSetHelpers.ParseUserSetConfigSetting (PermissionsConfig, "allowed_script_editors", m_allowedScriptEditors);
 
             m_allowedLSLScriptCompilers
-                = ParseUserSetConfigSetting (PermissionsConfig, "allowed_lsl_script_compilers", m_allowedLSLScriptCompilers);
+                = UserSetHelpers.ParseUserSetConfigSetting (PermissionsConfig, "allowed_lsl_script_compilers", m_allowedLSLScriptCompilers);
             m_allowedCSScriptCompilers
-                = ParseUserSetConfigSetting (PermissionsConfig, "allowed_cs_script_compilers", m_allowedCSScriptCompilers);
+                = UserSetHelpers.ParseUserSetConfigSetting (PermissionsConfig, "allowed_cs_script_compilers", m_allowedCSScriptCompilers);
             m_allowedJSScriptCompilers
-                = ParseUserSetConfigSetting (PermissionsConfig, "allowed_js_script_compilers", m_allowedJSScriptCompilers);
+                = UserSetHelpers.ParseUserSetConfigSetting (PermissionsConfig, "allowed_js_script_compilers", m_allowedJSScriptCompilers);
             m_allowedVBScriptCompilers
-                = ParseUserSetConfigSetting (PermissionsConfig, "allowed_vb_script_compilers", m_allowedVBScriptCompilers);
+                = UserSetHelpers.ParseUserSetConfigSetting (PermissionsConfig, "allowed_vb_script_compilers", m_allowedVBScriptCompilers);
             m_allowedYPScriptCompilers
-                = ParseUserSetConfigSetting (PermissionsConfig, "allowed_yp_script_compilers", m_allowedYPScriptCompilers);
+                = UserSetHelpers.ParseUserSetConfigSetting (PermissionsConfig, "allowed_yp_script_compilers", m_allowedYPScriptCompilers);
             m_allowedAScriptScriptCompilers
-                = ParseUserSetConfigSetting (PermissionsConfig, "allowed_ascript_script_compilers", m_allowedAScriptScriptCompilers);
+                = UserSetHelpers.ParseUserSetConfigSetting (PermissionsConfig, "allowed_ascript_script_compilers", m_allowedAScriptScriptCompilers);
             
             string permissionModules = PermissionsConfig.GetString("Modules", "DefaultPermissionsModule");
 
@@ -445,41 +434,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 return false;
 
             return m_groupsModule.GroupPermissionCheck(userID, groupID, (OpenMetaverse.GroupPowers)powers);
-        }
-            
-        /// <summary>
-        /// Parse a user set configuration setting
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="settingName"></param>
-        /// <param name="defaultValue">The default value for this attribute</param>
-        /// <returns>The parsed value</returns>
-        private static UserSet ParseUserSetConfigSetting(IConfig config, string settingName, UserSet defaultValue)
-        {
-            UserSet userSet = defaultValue;
-            
-            string rawSetting = config.GetString(settingName, defaultValue.ToString());
-            
-            // Temporary measure to allow 'gods' to be specified in config for consistency's sake.  In the long term
-            // this should disappear.
-            if ("gods" == rawSetting.ToLower ())
-                rawSetting = UserSet.Administrators.ToString ();
-            
-            // Doing it this was so that we can do a case insensitive conversion
-            try
-            {
-                userSet = (UserSet)Enum.Parse(typeof(UserSet), rawSetting, true);
-            }
-            catch 
-            {
-                m_log.ErrorFormat(
-                    "[PERMISSIONS]: {0} is not a valid {1} value, setting to {2}",
-                    rawSetting, settingName, userSet);
-            }
-            
-            //m_log.DebugFormat("[PERMISSIONS]: {0} {1}", settingName, userSet);
-            
-            return userSet;
         }
 
         /// <summary>

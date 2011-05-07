@@ -10,6 +10,7 @@ using OpenSim.Framework;
 using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
@@ -18,16 +19,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         #region Declares
 
         private IConfig m_config;
+        private ScriptEngine m_scriptEngine;
         private bool allowHTMLLinking = true;
 
         //Threat Level for scripts.
         private ThreatLevel m_MaxThreatLevel = 0;
         //List of all enabled APIs for scripts
         private List<string> EnabledAPIs = new List<string>();
-        //Which owners have access to which functions
-        private Dictionary<string, List<UUID> > m_FunctionPerms = new Dictionary<string, List<UUID> >();
         //Keeps track of whether the source has been compiled before
         public Dictionary<string, string> PreviouslyCompiled = new Dictionary<string, string>();
+        public Dictionary<ThreatLevel, ThreatLevelDefinition> m_threatLevels = new Dictionary<ThreatLevel, ThreatLevelDefinition> ();
         
         public Dictionary<UUID, UUID> ScriptsItems = new Dictionary<UUID, UUID>();
         public Dictionary<UUID, Dictionary<UUID, ScriptData>> Scripts = new Dictionary<UUID, Dictionary<UUID, ScriptData>>();
@@ -44,23 +45,182 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         
         #region Constructor
         
-        public ScriptProtectionModule(IConfig config)
+        public ScriptProtectionModule(ScriptEngine engine, IConfig config)
 		{
             m_config = config;
+            m_scriptEngine = engine;
             EnabledAPIs = new List<string>(config.GetString("AllowedAPIs", "LSL").Split(','));
 
             allowHTMLLinking = config.GetBoolean("AllowHTMLLinking", true);
-            GetThreatLevel();
+
+            m_threatLevels.Add (ThreatLevel.None, new ThreatLevelDefinition (ThreatLevel.None, UserSetHelpers.ParseUserSetConfigSetting (config, "NoneUserSet", UserSet.None), this));
+            m_threatLevels.Add (ThreatLevel.Nuisance, new ThreatLevelDefinition (ThreatLevel.Nuisance, UserSetHelpers.ParseUserSetConfigSetting (config, "NuisanceUserSet", UserSet.None), this));
+            m_threatLevels.Add (ThreatLevel.VeryLow, new ThreatLevelDefinition (ThreatLevel.VeryLow, UserSetHelpers.ParseUserSetConfigSetting (config, "VeryLowUserSet", UserSet.None), this));
+            m_threatLevels.Add (ThreatLevel.Low, new ThreatLevelDefinition (ThreatLevel.Low, UserSetHelpers.ParseUserSetConfigSetting (config, "LowUserSet", UserSet.None), this));
+            m_threatLevels.Add (ThreatLevel.Moderate, new ThreatLevelDefinition (ThreatLevel.Moderate, UserSetHelpers.ParseUserSetConfigSetting (config, "ModerateUserSet", UserSet.None), this));
+            m_threatLevels.Add (ThreatLevel.High, new ThreatLevelDefinition (ThreatLevel.High, UserSetHelpers.ParseUserSetConfigSetting (config, "HighUserSet", UserSet.None), this));
+            m_threatLevels.Add (ThreatLevel.VeryHigh, new ThreatLevelDefinition (ThreatLevel.VeryHigh, UserSetHelpers.ParseUserSetConfigSetting (config, "VeryHighUserSet", UserSet.None), this));
+            m_threatLevels.Add (ThreatLevel.Severe, new ThreatLevelDefinition (ThreatLevel.Severe, UserSetHelpers.ParseUserSetConfigSetting (config, "SevereUserSet", UserSet.None), this));
 		}
         
 		#endregion
         
         #region ThreatLevels
-		
-		public ThreatLevel GetThreatLevel()
+
+        public class ThreatLevelDefinition
+        {
+            private ThreatLevel m_threatLevel = ThreatLevel.None;
+            private UserSet m_userSet = UserSet.None;
+            private ScriptProtectionModule m_scriptProtectionModule = null;
+            /// <summary>
+            /// Which owners have access to which functions
+            /// </summary>
+            private Dictionary<string, List<UUID>> m_FunctionPerms = new Dictionary<string, List<UUID>> ();
+            private List<UUID> m_allowedUsers = new List<UUID> ();
+
+            public ThreatLevelDefinition (ThreatLevel threatLevel, UserSet userSet, ScriptProtectionModule module)
+            {
+                m_threatLevel = threatLevel;
+                m_userSet = userSet;
+                m_scriptProtectionModule = module;
+
+                string perm = m_scriptProtectionModule.m_config.GetString ("Allow_" + m_threatLevel.ToString(), "");
+                if (perm != "")
+                {
+                    string[] ids = perm.Split (',');
+                    foreach (string id in ids)
+                    {
+                        string current = id.Trim ();
+                        UUID uuid;
+
+                        if (UUID.TryParse (current, out uuid))
+                        {
+                            if (uuid != UUID.Zero)
+                                m_allowedUsers.Add (uuid);
+                        }
+                    }
+                }
+                perm = m_scriptProtectionModule.m_config.GetString ("Allow_All", "");
+                if (perm != "")
+                {
+                    string[] ids = perm.Split (',');
+                    foreach (string id in ids)
+                    {
+                        string current = id.Trim ();
+                        UUID uuid;
+
+                        if (UUID.TryParse (current, out uuid))
+                        {
+                            if (uuid != UUID.Zero)
+                                m_allowedUsers.Add (uuid);
+                        }
+                    }
+                }
+            }
+
+            public void CheckThreatLevel (string function, ISceneChildEntity m_host, string API)
+            {
+                if (CheckUser (m_host))
+                    return;
+
+                List<UUID> FunctionPerms = new List<UUID> ();
+                if (!m_FunctionPerms.TryGetValue (function, out FunctionPerms))
+                {
+                    string perm = m_scriptProtectionModule.m_config.GetString ("Allow_" + function, "");
+                    if (perm == "")
+                    {
+                        FunctionPerms = null; // a null value is default, which means check against the max threat level
+                    }
+                    else
+                    {
+                        bool allowed;
+
+                        if (bool.TryParse (perm, out allowed))
+                        {
+                            // Boolean given
+                            if (allowed)
+                            {
+                                FunctionPerms = new List<UUID> ();
+                                FunctionPerms.Add (UUID.Zero);
+                            }
+                            else
+                                FunctionPerms = new List<UUID> (); // Empty list = none
+                        }
+                        else
+                        {
+                            FunctionPerms = new List<UUID> ();
+
+                            string[] ids = perm.Split (new char[] { ',' });
+                            foreach (string id in ids)
+                            {
+                                string current = id.Trim ();
+                                UUID uuid;
+
+                                if (UUID.TryParse (current, out uuid))
+                                {
+                                    if (uuid != UUID.Zero)
+                                        FunctionPerms.Add (uuid);
+                                }
+                            }
+                        }
+                        m_FunctionPerms[function] = FunctionPerms;
+                    }
+                }
+
+                // If the list is null, then the value was true / undefined
+                // Threat level governs permissions in this case
+                //
+                // If the list is non-null, then it is a list of UUIDs allowed
+                // to use that particular function. False causes an empty
+                // list and therefore means "no one"
+                //
+                // To allow use by anyone, the list contains UUID.Zero
+                //
+                if (FunctionPerms == null) // No list = true
+                {
+                    if (m_threatLevel > m_scriptProtectionModule.m_MaxThreatLevel)
+                        m_scriptProtectionModule.Error ("Runtime Error: ",
+                            String.Format (
+                                "{0} permission denied.  Allowed threat level is {1} but function threat level is {2}.",
+                                function, m_scriptProtectionModule.m_MaxThreatLevel, m_threatLevel));
+                }
+                else
+                {
+                    if (!FunctionPerms.Contains (UUID.Zero))
+                    {
+                        if (!FunctionPerms.Contains (m_host.OwnerID))
+                            m_scriptProtectionModule.Error ("Runtime Error: ",
+                                String.Format ("{0} permission denied.  Prim owner is not in the list of users allowed to execute this function.",
+                                function));
+                    }
+                }
+            }
+
+            private bool CheckUser (ISceneChildEntity host)
+            {
+                if (m_allowedUsers.Contains (host.OwnerID))
+                    return true;
+
+                IScenePresence av = host.ParentEntity.Scene.GetScenePresence (host.OwnerID);
+                ILandObject lo = null;
+                if(av != null)
+                    lo = host.ParentEntity.Scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(av.AbsolutePosition.X, av.AbsolutePosition.Y);
+                if ((m_userSet == UserSet.Administrators && host.ParentEntity.Scene.Permissions.IsAdministrator (host.OwnerID)) ||
+                        (m_userSet == UserSet.ParcelOwners && host.ParentEntity.Scene.Permissions.GenericParcelPermission (host.OwnerID, lo, 0)))
+                    return true;
+                return false;
+            }
+
+            public override string ToString ()
+            {
+                return string.Format ("ThreatLevel: {0}, UserSet : {1}", m_threatLevel.ToString (), m_userSet.ToString ());
+            }
+        }
+
+        public ThreatLevelDefinition GetThreatLevel ()
 		{
 			if(m_MaxThreatLevel != 0)
-				return m_MaxThreatLevel;
+				return m_threatLevels[m_MaxThreatLevel];
             string risk = m_config.GetString("FunctionThreatLevel", "VeryLow");
 			switch (risk)
 			{
@@ -88,7 +248,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 				default:
 					break;
 			}
-            return m_MaxThreatLevel;
+            return m_threatLevels[m_MaxThreatLevel];
 		}
 
         public bool CheckAPI(string Name)
@@ -100,77 +260,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 		
 		public void CheckThreatLevel(ThreatLevel level, string function, ISceneChildEntity m_host, string API)
         {
-            List<UUID> FunctionPerms = new List<UUID>();
-            if (!m_FunctionPerms.TryGetValue(function, out FunctionPerms))
-            {
-                string perm = m_config.GetString("Allow_" + function, "");
-                if (perm == "")
-                {
-                    FunctionPerms = null;// a null value is default
-                }
-                else
-                {
-                    bool allowed;
-
-                    if (bool.TryParse(perm, out allowed))
-                    {
-                        // Boolean given
-                        if (allowed)
-                        {
-                            FunctionPerms = new List<UUID>();
-                            FunctionPerms.Add(UUID.Zero);
-                        }
-                        else
-                            FunctionPerms = new List<UUID>(); // Empty list = none
-                    }
-                    else
-                    {
-                        FunctionPerms = new List<UUID>();
-
-                        string[] ids = perm.Split(new char[] {','});
-                        foreach (string id in ids)
-                        {
-                            string current = id.Trim();
-                            UUID uuid;
-
-                            if (UUID.TryParse(current, out uuid))
-                            {
-                                if (uuid != UUID.Zero)
-                                    FunctionPerms.Add(uuid);
-                            }
-                        }
-                    }
-                m_FunctionPerms[function] = FunctionPerms;
-                }
-            }
-
-            // If the list is null, then the value was true / undefined
-            // Threat level governs permissions in this case
-            //
-            // If the list is non-null, then it is a list of UUIDs allowed
-            // to use that particular function. False causes an empty
-            // list and therefore means "no one"
-            //
-            // To allow use by anyone, the list contains UUID.Zero
-            //
-            if (FunctionPerms == null) // No list = true
-            {
-                if (level > m_MaxThreatLevel)
-                    Error("Runtime Error: ",
-                        String.Format(
-                            "{0} permission denied.  Allowed threat level is {1} but function threat level is {2}.",
-                            function, m_MaxThreatLevel, level));
-            }
-            else
-            {
-                if (!FunctionPerms.Contains(UUID.Zero))
-                {
-                    if (!FunctionPerms.Contains(m_host.OwnerID))
-                        Error("Runtime Error: ",
-                            String.Format("{0} permission denied.  Prim owner is not in the list of users allowed to execute this function.",
-                            function));
-                }
-            }
+            m_threatLevels[level].CheckThreatLevel (function, m_host, API);
         }
 
 		internal void Error(string surMessage, string msg)
