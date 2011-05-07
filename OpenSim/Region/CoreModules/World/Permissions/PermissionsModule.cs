@@ -104,6 +104,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         private IGroupsModule m_groupsModule;
         private IMoapModule m_moapModule;
         private IParcelManagementModule m_parcelManagement;
+        private List<UUID> m_allowedAdministrators = new List<UUID> ();
 
         #endregion
 
@@ -139,6 +140,24 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             m_allowedAScriptScriptCompilers
                 = UserSetHelpers.ParseUserSetConfigSetting (PermissionsConfig, "allowed_ascript_script_compilers", m_allowedAScriptScriptCompilers);
             
+            string perm = PermissionsConfig.GetString ("Allowed_Administrators", "");
+            if (perm != "")
+            {
+                string[] ids = perm.Split (',');
+                foreach (string id in ids)
+                {
+                    string current = id.Trim ();
+                    UUID uuid;
+
+                    if (UUID.TryParse (current, out uuid))
+                    {
+                        if (uuid != UUID.Zero)
+                            m_allowedAdministrators.Add (uuid);
+                    }
+                }
+            }
+            
+
             string permissionModules = PermissionsConfig.GetString("Modules", "DefaultPermissionsModule");
 
             List<string> modules = new List<string>(permissionModules.Split(','));
@@ -444,6 +463,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         protected bool IsAdministrator(UUID user)
         {
             if (user == UUID.Zero) return false;
+
+            if (m_allowedAdministrators.Contains (user))
+                return true;
 
             if (m_RegionOwnerIsGod && m_scene.RegionInfo.EstateSettings.EstateOwner == user)
                 return true;

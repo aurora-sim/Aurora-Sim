@@ -120,25 +120,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
             if (m_scriptType == null)
                 m_scriptType = m_Script.GetType();
-            try
+            // Fill in the events for this state, cache the results in the map
+            foreach (KeyValuePair<string, scriptEvents> kvp in m_eventFlagsMap)
             {
-                // Fill in the events for this state, cache the results in the map
-                foreach (KeyValuePair<string, scriptEvents> kvp in m_eventFlagsMap)
+                try
                 {
                     MethodInfo ev = null;
                     string evname = state == "" ? "" : state + "_event_";
                     evname += kvp.Key;
                     //m_log.Debug("Trying event "+evname);
 
-                    ev = m_scriptType.GetMethod(evname);
+                    ev = m_scriptType.GetMethod (evname);
                     if (ev != null)
                         //m_log.Debug("Found handler for " + kvp.Key);
                         eventFlags |= kvp.Value;
                 }
-            }
-            catch (Exception)
-            {
-                //m_log.Debug("Exeption in GetMethod:\n"+e.ToString());
+                catch (Exception)
+                {
+                    //m_log.Debug("Exeption in GetMethod:\n"+e.ToString());
+                }
             }
 
             // Save the flags we just computed and return the result
