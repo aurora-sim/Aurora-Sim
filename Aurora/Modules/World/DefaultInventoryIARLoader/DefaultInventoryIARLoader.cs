@@ -131,13 +131,14 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
                 List<InventoryNodeBase> nodes = new List<InventoryNodeBase>(archread.Execute(true));
                 if (nodes.Count == 0)
                     return;
-                InventoryFolderImpl f = new InventoryFolderImpl((InventoryFolderBase)nodes[0]);
+                InventoryFolderBase f = (InventoryFolderBase)nodes[0];
 
-                TraverseFolders(f, nodes[0].ID, m_MockScene);
+                TraverseFolders(nodes[0].ID, m_MockScene);
                 //This is our loaded folder
                 //Fix the name for later
                 f.Name = iarFileName;
                 f.ParentID = UUID.Zero;
+                //f.Type = (int)AssetType.RootFolder;
                 m_MockScene.InventoryService.UpdateFolder(f);
             }
             catch (Exception e)
@@ -150,25 +151,23 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
             }
         }
 
-        private void TraverseFolders(InventoryFolderImpl folderimp, UUID ID, Scene m_MockScene)
+        private void TraverseFolders(UUID ID, Scene m_MockScene)
         {
-            InventoryCollection col = m_MockScene.InventoryService.GetFolderContent(m_service.LibraryOwner, ID);
-            foreach (InventoryItemBase item in col.Items)
+            List<InventoryFolderBase> folders = m_MockScene.InventoryService.GetFolderFolders(m_service.LibraryOwner, ID);
+            foreach (InventoryFolderBase folder in folders)
             {
-                folderimp.Items[item.ID] = item;
-            }
-            foreach (InventoryFolderBase folder in col.Folders)
-            {
-                InventoryFolderImpl childFolder = new InventoryFolderImpl(folder);
                 foreach (KeyValuePair<String, AssetType> type in m_assetTypes)
                 {
-                    if (childFolder.Name.ToLower().StartsWith(type.Key.ToLower()))
+                    if (folder.Name.ToLower ().StartsWith (type.Key.ToLower ()))
                     {
-                        childFolder.Type = (short)type.Value;
+                        if (folder.Type == (short)type.Value)
+                            break;
+                        folder.Type = (short)type.Value;
+                        m_MockScene.InventoryService.UpdateFolder (folder);
+                        break;
                     }
                 }
-                TraverseFolders(childFolder, folder.ID, m_MockScene);
-                folderimp.AddChildFolder(childFolder);
+                TraverseFolders(folder.ID, m_MockScene);
             }
         }
 

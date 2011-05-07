@@ -482,6 +482,7 @@ namespace OpenSim.Services.InventoryService
                 if (folder.Version > check.Version)
                     return false;
                 check.Version = (ushort)folder.Version;
+                check.Type = folder.Type;
                 return m_Database.StoreFolder (check);
             }
 

@@ -1071,9 +1071,9 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
         protected virtual InventoryItemBase GetItem(UUID agentID, UUID itemID)
         {
-            IInventoryService invService = m_scene.RequestModuleInterface<IInventoryService>();
-            InventoryItemBase assetRequestItem = new InventoryItemBase(itemID, agentID);
-            assetRequestItem = invService.GetItem(assetRequestItem);
+            IInventoryService invService = m_scene.RequestModuleInterface<IInventoryService> ();
+            InventoryItemBase assetRequestItem = new InventoryItemBase (itemID, agentID);
+            assetRequestItem = invService.GetItem (assetRequestItem);
             return assetRequestItem;
         }
 

@@ -767,7 +767,7 @@ namespace OpenSim.Services.LLLoginService
             RootHash["name"] = library.LibraryName;
             RootHash["parent_id"] = UUID.Zero.ToString();
             RootHash["version"] = (Int32)1;
-            RootHash["type_default"] = (Int32)8;
+            RootHash["type_default"] = (Int32)9;
             RootHash["folder_id"] = "00000112-000f-0000-0000-000100bba000";
             AgentInventoryArray.Add(RootHash);
 
