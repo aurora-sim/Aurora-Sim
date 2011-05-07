@@ -771,7 +771,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     //It's being rezzed, add it to the scene if it doesn't already have a rez date
                     if(part.Rezzed != Util.ToDateTime(Util.EnvironmentTickCount()))
-                        part.Rezzed = DateTime.Now;
+                        part.Rezzed = DateTime.UtcNow;
                     if (part.Shape == null)
                         continue;
 
@@ -1286,7 +1286,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_rootPart.ApplyPhysics(m_rootPart.GetEffectiveObjectFlags(), m_rootPart.VolumeDetectActive, true);
             HasGroupChanged = true;
             m_ValidgrpOOB = false;
-            RootPart.Rezzed = DateTime.Now;
+            RootPart.Rezzed = DateTime.UtcNow;
             RootPart.RemFlag(PrimFlags.TemporaryOnRez);
             m_rootPart.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }

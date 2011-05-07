@@ -2015,9 +2015,9 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (!m_scene.Permissions.CanEditParcel(remoteClient.AgentId, land))
                 return;
 
+            if(land.LandData.OtherCleanTime != otherCleanTime)
+                ResetRezzedObjectTime (land);
             land.LandData.OtherCleanTime = otherCleanTime;
-
-            ResetRezzedObjectTime(land);
 
             UpdateLandObject(localID, land.LandData);
         }
@@ -2027,7 +2027,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             IPrimCountModule primCount = m_scene.RequestModuleInterface<IPrimCountModule> ();
             foreach (ISceneEntity sog in primCount.GetPrimCounts (land.LandData.GlobalID).Objects)
             {
-                 sog.RootChild.Rezzed = DateTime.Now;
+                sog.RootChild.Rezzed = DateTime.UtcNow;
             }
         }
 
