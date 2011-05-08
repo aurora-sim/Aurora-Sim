@@ -558,7 +558,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     Interlocked.Read (ref m_numWorkers) > MaxScriptThreads)
                 {
                     numberOfEmptyWork++;
-                    if (numberOfEmptyWork > EMPTY_WORK_KILL_THREAD_TIME) //Don't break immediately
+                    if (numberOfEmptyWork > (EMPTY_WORK_KILL_THREAD_TIME / 3)) //Don't break immediately
                     {
                         Interlocked.Decrement (ref m_numWorkers);
                         break; //Too many threads, kill some off
