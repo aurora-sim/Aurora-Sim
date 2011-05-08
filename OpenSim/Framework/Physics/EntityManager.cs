@@ -182,7 +182,8 @@ namespace OpenSim.Framework
 
                 m_objectEntities.ForEach (delegate (ISceneEntity entity)
                 {
-                    if ((entity.AbsolutePosition - pos).LengthSquared () < radius * radius)
+                    //Add attachments as well, as they might be needed
+                    if ((entity.AbsolutePosition - pos).LengthSquared () < radius * radius || entity.IsAttachment)
                         tmp.Add (entity);
                 });
                 return tmp.ToArray ();

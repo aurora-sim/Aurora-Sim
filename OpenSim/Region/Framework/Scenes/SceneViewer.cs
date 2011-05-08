@@ -377,6 +377,19 @@ namespace OpenSim.Region.Framework.Scenes
             IAvatarAppearanceModule module = presence.RequestModuleInterface<IAvatarAppearanceModule>();
             if(module != null)
                 module.SendAppearanceToAgent(m_presence);
+            //We need to send all attachments of this avatar as well
+            IAttachmentsModule attmodule = m_presence.Scene.RequestModuleInterface<IAttachmentsModule>();
+            if (attmodule != null)
+            {
+                ISceneEntity[] entities = attmodule.GetAttachmentsForAvatar (m_presence.UUID);
+                foreach (ISceneEntity entity in entities)
+                {
+                    foreach (ISceneChildEntity child in entity.ChildrenEntities ())
+                    {
+                        QueuePartForUpdate (child, PrimUpdateFlags.FullUpdate);
+                    }
+                }
+            }
         }
 
         #endregion

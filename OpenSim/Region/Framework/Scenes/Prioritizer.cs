@@ -166,8 +166,9 @@ namespace OpenSim.Region.Framework.Scenes
                 IScenePresence pEntity = (IScenePresence)entity;
                 if (pEntity.SittingOnUUID != UUID.Zero)
                 {
-                    ISceneEntity sittingEntity = pEntity.Scene.GetSceneObjectPart (pEntity.SittingOnUUID).ParentEntity;
-                    entityPosToCheckFrom = sittingEntity.AbsolutePosition;
+                    ISceneChildEntity sittingEntity = pEntity.Scene.GetSceneObjectPart (pEntity.SittingOnUUID);
+                    if(sittingEntity != null)
+                        entityPosToCheckFrom = sittingEntity.AbsolutePosition;
                 }
             }
             //If the distance is greater than the clients draw distance, its out of range
@@ -178,60 +179,60 @@ namespace OpenSim.Region.Framework.Scenes
                 if (childEntity != null && HardCullingCheck(childEntity))
                 {
                     #region Side culling check (X, Y, Z) plane checks
-                    if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition + new Vector3 (childEntity.OOBsize.X, 0, 0)) <
+                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom + new Vector3 (childEntity.OOBsize.X, 0, 0)) <
                         DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition - new Vector3 (childEntity.OOBsize.X, 0, 0)) <
+                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom - new Vector3 (childEntity.OOBsize.X, 0, 0)) <
                         DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition + new Vector3 (0, childEntity.OOBsize.Y, 0)) <
+                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom + new Vector3 (0, childEntity.OOBsize.Y, 0)) <
                         DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition - new Vector3 (0, childEntity.OOBsize.Y, 0)) <
+                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom - new Vector3 (0, childEntity.OOBsize.Y, 0)) <
                         DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition + new Vector3 (0, 0, childEntity.OOBsize.Z)) <
+                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom + new Vector3 (0, 0, childEntity.OOBsize.Z)) <
                         DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition - new Vector3 (0, 0, childEntity.OOBsize.Z)) <
+                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom - new Vector3 (0, 0, childEntity.OOBsize.Z)) <
                         DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
                     #endregion
                     #region Corner checks ((x,y),(-x,-y),(x,-y),(-x,y), (y,z),(-y,-z),(y,-z),(-y,z), (x,z),(-x,-z),(x,-z),(-x,z))
-                    if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition + new Vector3 (childEntity.OOBsize.X, childEntity.OOBsize.Y, 0)) <
+                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom + new Vector3 (childEntity.OOBsize.X, childEntity.OOBsize.Y, 0)) <
                         DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition - new Vector3 (childEntity.OOBsize.X, childEntity.OOBsize.Y, 0)) <
+                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom - new Vector3 (childEntity.OOBsize.X, childEntity.OOBsize.Y, 0)) <
                         DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition + new Vector3 (childEntity.OOBsize.X, -childEntity.OOBsize.Y, 0)) <
+                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom + new Vector3 (childEntity.OOBsize.X, -childEntity.OOBsize.Y, 0)) <
                         DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition - new Vector3 (childEntity.OOBsize.X, -childEntity.OOBsize.Y, 0)) <
+                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom - new Vector3 (childEntity.OOBsize.X, -childEntity.OOBsize.Y, 0)) <
                         DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition + new Vector3 (0, childEntity.OOBsize.Y, childEntity.OOBsize.Z)) <
+                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom + new Vector3 (0, childEntity.OOBsize.Y, childEntity.OOBsize.Z)) <
                         DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition - new Vector3 (0, childEntity.OOBsize.Y, childEntity.OOBsize.Z)) <
+                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom - new Vector3 (0, childEntity.OOBsize.Y, childEntity.OOBsize.Z)) <
                         DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition + new Vector3 (0, childEntity.OOBsize.Y, -childEntity.OOBsize.Z)) <
+                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom + new Vector3 (0, childEntity.OOBsize.Y, -childEntity.OOBsize.Z)) <
                         DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition - new Vector3 (0, childEntity.OOBsize.Y, -childEntity.OOBsize.Z)) <
+                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom - new Vector3 (0, childEntity.OOBsize.Y, -childEntity.OOBsize.Z)) <
                         DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition + new Vector3 (childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
+                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom + new Vector3 (childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
                         DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition - new Vector3 (childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
+                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom - new Vector3 (childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
                         DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition + new Vector3 (-childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
+                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom + new Vector3 (-childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
                         DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition - new Vector3 (-childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
+                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom - new Vector3 (-childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
                         DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
                     #endregion
