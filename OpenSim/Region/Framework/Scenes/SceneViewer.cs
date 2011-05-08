@@ -137,6 +137,13 @@ namespace OpenSim.Region.Framework.Scenes
                 lastPresencesInView.Remove (presence);
                 return; // if 2 far ignore
             }
+            if (!lastPresencesInView.Contains (presence))
+            {
+                //The presence just entered our view, we need to send a full update
+                SendFullUpdateForPresence (presence);
+                lastPresencesInView.Add (presence);
+                return;
+            }
 
             lock (m_presenceUpdatesToSend)
             {
@@ -193,6 +200,11 @@ namespace OpenSim.Region.Framework.Scenes
                 //They are out of view and they changed, we need to update them when they do come in view
                 lastGrpsInView.Remove (part.ParentEntity);
                 return; // if 2 far ignore
+            }
+            if (!lastGrpsInView.Contains (part.ParentEntity))
+            {
+                //This object entered our draw distance on its own, and we havn't seen it before
+                flags = PrimUpdateFlags.FullUpdate;
             }
 
             EntityUpdate o = new EntityUpdate (part, flags);
@@ -343,20 +355,28 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!Culler.ShowEntityToClient(m_presence, presence))
                         continue; // if 2 far ignore
 
-                    NewPresencesInView.Add(presence);
+                    NewPresencesInView.Add (presence);
 
-                    if (lastPresencesInView.Contains(presence))
+                    if (lastPresencesInView.Contains (presence))
                         continue; //Don't resend the update
 
-                    m_presence.ControllingClient.SendAvatarDataImmediate(presence);
-                    //Send the animations too
-                    presence.Animator.SendAnimPackToClient(m_presence.ControllingClient);
+                    SendFullUpdateForPresence (presence);
                 }
             }
             presences = null;
-            lastPresencesInView.Clear();
             lastPresencesInView.UnionWith(NewPresencesInView);
             NewPresencesInView.Clear();
+        }
+
+        protected void SendFullUpdateForPresence (IScenePresence presence)
+        {
+            m_presence.ControllingClient.SendAvatarDataImmediate (presence);
+            //Send the animations too
+            presence.Animator.SendAnimPackToClient (m_presence.ControllingClient);
+            //Send the presence of this agent to us
+            IAvatarAppearanceModule module = presence.RequestModuleInterface<IAvatarAppearanceModule>();
+            if(module != null)
+                module.SendAppearanceToAgent(m_presence);
         }
 
         #endregion

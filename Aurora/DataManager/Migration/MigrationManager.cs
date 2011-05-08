@@ -140,7 +140,7 @@ namespace Aurora.DataManager.Migration
                         {
                             C5.Rec<string, ColumnDefinition[]> rec;
                             currentMigrator.DebugTestThatAllTablesValidate (genericData, out rec);
-                            m_log.Fatal (string.Format ("FAILED TO REVALIDATE MIGRATION {0}-{1}, FIXING TABLE FORCABLY... NEW TABLE NAME {2}", currentMigrator.MigrationName, currentMigrator.Version, rec.X1 + "_broken"));
+                            m_log.Fatal (string.Format ("FAILED TO REVALIDATE MIGRATION {0}-{1}, FIXING TABLE FORCIBLY... NEW TABLE NAME {2}", currentMigrator.MigrationName, currentMigrator.Version, rec.X1 + "_broken"));
                             genericData.RenameTable (rec.X1, rec.X1 + "_broken");
                             currentMigrator.Migrate (genericData);
                             validated = currentMigrator.Validate (genericData);
