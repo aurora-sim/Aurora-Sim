@@ -472,11 +472,11 @@ namespace Aurora.Modules
             }
             if (!scene.Permissions.GenericParcelPermission(userID, ILO, (ulong)GroupPowers.None))
             {
-                if (ILO.LandData.LandingType == 2) //Blocked, force this person off this land
+                if (ILO.LandData.LandingType == (int)LandingType.None) //Blocked, force this person off this land
                 {
                     //Find a new parcel for them
                     List<ILandObject> Parcels = parcelManagement.ParcelsNearPoint(Position);
-                    if (Parcels.Count == 0)
+                    if (Parcels.Count > 1)
                     {
                         IScenePresence SP;
                         scene.TryGetScenePresence(userID, out SP);
@@ -512,7 +512,7 @@ namespace Aurora.Modules
                         }
                     }
                 }
-                else if (ILO.LandData.LandingType == 1) //Move to tp spot
+                else if (ILO.LandData.LandingType == (int)LandingType.LandingPoint) //Move to tp spot
                     if (ILO.LandData.UserLocation != Vector3.Zero)
                         newPosition = ILO.LandData.UserLocation;
                     else // Dump them at the nearest region corner since they havn't set a landing point
@@ -558,7 +558,7 @@ namespace Aurora.Modules
                 }
             }
 
-            newPosition = Position;
+            //newPosition = Position;
             reason = "";
             return true;
         }
