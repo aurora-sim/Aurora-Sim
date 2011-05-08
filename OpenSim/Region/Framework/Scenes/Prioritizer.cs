@@ -146,8 +146,21 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_cachedYOffset > scene.RegionInfo.RegionSizeY)
                     posToCheckFrom.Y = scene.RegionInfo.RegionSizeY - (scene.RegionInfo.RegionSizeY - (client.AbsolutePosition.Y + m_cachedYOffset));
             }
+            Vector3 entityPosToCheckFrom = entity.AbsolutePosition;
+            if (entity is ISceneEntity)
+            {
+                //We need to check whether this object is an attachment, and if so, set it so that we check from the avatar's
+                // position, rather than from the offset of the attachment
+                ISceneEntity sEntity = (ISceneEntity)entity;
+                if (sEntity.IsAttachment)
+                {
+                    IScenePresence attachedAvatar = sEntity.Scene.GetScenePresence (sEntity.RootChild.AttachedAvatar);
+                    if (attachedAvatar != null)
+                        entityPosToCheckFrom = attachedAvatar.AbsolutePosition;
+                }
+            }
             //If the distance is greater than the clients draw distance, its out of range
-            if (Vector3.DistanceSquared (posToCheckFrom, entity.AbsolutePosition) >
+            if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom) >
                 DD * DD) //Use squares to make it faster than having to do the sqrt
             {
                 ISceneEntity childEntity = (entity as ISceneEntity);
