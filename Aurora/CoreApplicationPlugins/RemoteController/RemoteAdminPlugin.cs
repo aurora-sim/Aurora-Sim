@@ -2888,7 +2888,7 @@ namespace OpenSim.CoreApplicationPlugins
 
                     if (inventoryService != null)
                     {
-                        success = inventoryService.CreateUserInventory(account.PrincipalID);
+                        success = inventoryService.CreateUserInventory(account.PrincipalID, false);
                         if (!success)
                             m_log.WarnFormat("[RADMIN]: Unable to create inventory for account {0} {1}.",
                                 firstName, lastName);

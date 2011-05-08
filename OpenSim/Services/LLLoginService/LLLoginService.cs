@@ -469,6 +469,31 @@ namespace OpenSim.Services.LLLoginService
                         return resp;
                     }
                 }
+                
+
+                //
+                // Get the user's inventory
+                //
+                if (m_RequireInventory && m_InventoryService == null)
+                {
+                    m_log.WarnFormat("[LLOGIN SERVICE]: Login failed, reason: inventory service not set up");
+                    return LLFailedLoginResponse.InventoryProblem;
+                }
+                List<InventoryFolderBase> inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
+                if (m_RequireInventory && ((inventorySkel == null) || (inventorySkel != null && inventorySkel.Count == 0)))
+                {
+                    m_InventoryService.CreateUserInventory(account.PrincipalID, m_DefaultUserAvatarArchive == "");
+                    inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
+                    if (m_RequireInventory && ((inventorySkel == null) || (inventorySkel != null && inventorySkel.Count == 0)))
+                    {
+                        m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: unable to retrieve user inventory");
+                        return LLFailedLoginResponse.InventoryProblem;
+                    }
+                }
+                if (m_InventoryService.CreateUserRootFolder (account.PrincipalID))
+                    ///Gotta refetch... since something went wrong
+                    inventorySkel = m_InventoryService.GetInventorySkeleton (account.PrincipalID);
+
                 if (profileData != null)
                 {
                     IUserProfileInfo UPI = profileData.GetUserProfile(account.PrincipalID);
@@ -495,29 +520,6 @@ namespace OpenSim.Services.LLLoginService
                     if(UPI.DisplayName != "")
                         DisplayName = UPI.DisplayName;
                 }
-
-                //
-                // Get the user's inventory
-                //
-                if (m_RequireInventory && m_InventoryService == null)
-                {
-                    m_log.WarnFormat("[LLOGIN SERVICE]: Login failed, reason: inventory service not set up");
-                    return LLFailedLoginResponse.InventoryProblem;
-                }
-                List<InventoryFolderBase> inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
-                if (m_RequireInventory && ((inventorySkel == null) || (inventorySkel != null && inventorySkel.Count == 0)))
-                {
-                    m_InventoryService.CreateUserInventory(account.PrincipalID);
-                    inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
-                    if (m_RequireInventory && ((inventorySkel == null) || (inventorySkel != null && inventorySkel.Count == 0)))
-                    {
-                        m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: unable to retrieve user inventory");
-                        return LLFailedLoginResponse.InventoryProblem;
-                    }
-                }
-                if (m_InventoryService.CreateUserRootFolder (account.PrincipalID))
-                    ///Gotta refetch... since something went wrong
-                    inventorySkel = m_InventoryService.GetInventorySkeleton (account.PrincipalID);
 
                 // Get active gestures
                 List<InventoryItemBase> gestures = m_InventoryService.GetActiveGestures(account.PrincipalID);

@@ -94,10 +94,10 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
                 m_log.Warn("Creating user " + m_service.LibraryOwnerName);
                 m_MockScene.UserAccountService.CreateUser (m_service.LibraryOwner, m_service.LibraryOwnerName, "", "");
                 uinfo = m_MockScene.UserAccountService.GetUserAccount (UUID.Zero, m_service.LibraryOwner);
-                m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID);
+                m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID, false);
             }
             if (m_MockScene.InventoryService.GetRootFolder(m_service.LibraryOwner) == null)
-                m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID);
+                m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID, false);
 
             InventoryCollection col = m_MockScene.InventoryService.GetFolderContent(uinfo.PrincipalID, UUID.Zero);
             bool alreadyExists = false;
@@ -121,7 +121,7 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
             if (null == rootFolder)
             {
                 //We need to create the root folder, otherwise the IAR freaks
-                m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID);
+                m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID, false);
             }
 
             InventoryArchiveReadRequest archread = new InventoryArchiveReadRequest(m_MockScene, uinfo, "/", iarFileName, false);

@@ -111,7 +111,7 @@ namespace OpenSim.Services.InventoryService
             return result;
         }
 
-        public virtual bool CreateUserInventory(UUID principalID)
+        public virtual bool CreateUserInventory (UUID principalID, bool createDefaultItems)
         {
             // This is braindeaad. We can't ever communicate that we fixed
             // an existing inventory. Well, just return root folder status,
@@ -158,9 +158,8 @@ namespace OpenSim.Services.InventoryService
             if (!Array.Exists (sysFolders, delegate (InventoryFolderBase f) { if (f.Type == (short)AssetType.TrashFolder) return true; return false; }))
                 CreateFolder(principalID, rootFolder.ID, (int)AssetType.TrashFolder, "Trash");
 
-            if (m_LibraryService != null)
+            if (createDefaultItems && m_LibraryService != null)
             {
-
                 InventoryFolderBase bodypartFolder = GetFolderForType(principalID, AssetType.Bodypart);
                 InventoryFolderBase clothingFolder = GetFolderForType(principalID, AssetType.Clothing);
 

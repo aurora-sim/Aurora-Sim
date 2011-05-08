@@ -48,7 +48,7 @@ namespace OpenSim.Services.Connectors
 
         private IRegistryCore m_registry;
 
-        public virtual bool CreateUserInventory (UUID principalID)
+        public virtual bool CreateUserInventory (UUID principalID, bool createDefaultItems)
         {
             return false;
         }

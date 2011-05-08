@@ -137,7 +137,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public bool CreateUserInventory(UUID userID)
+        public bool CreateUserInventory (UUID userID, bool createDefaultItems)
         {
             NameValueCollection requestArgs = new NameValueCollection
             {

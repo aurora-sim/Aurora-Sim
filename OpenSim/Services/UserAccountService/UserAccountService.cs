@@ -320,14 +320,6 @@ namespace OpenSim.Services.UserAccountService
                                 name);
                     }
 
-                    if (m_InventoryService != null)
-                    {
-                        success = m_InventoryService.CreateUserInventory(account.PrincipalID);
-                        if (!success)
-                            m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to create inventory for account {0}.",
-                                name);
-                    }
-
                     m_log.InfoFormat ("[USER ACCOUNT SERVICE]: Account {0} created successfully", name);
                     //Cache it as well
                     m_cache.Cache (account.PrincipalID, account);
