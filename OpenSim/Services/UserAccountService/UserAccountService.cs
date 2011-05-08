@@ -314,7 +314,7 @@ namespace OpenSim.Services.UserAccountService
                     bool success;
                     if (m_AuthenticationService != null && password != "")
                     {
-                        success = m_AuthenticationService.SetPasswordHashed (account.PrincipalID, "Neighbor", password);
+                        success = m_AuthenticationService.SetPasswordHashed (account.PrincipalID, "UserAccount", password);
                         if (!success)
                             m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0}.",
                                 name);
