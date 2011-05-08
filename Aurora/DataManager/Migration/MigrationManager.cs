@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Aurora.DataManager.Migration.Migrators;
 using Aurora.Framework;
+using log4net;
 
 namespace Aurora.DataManager.Migration
 {
     public class MigrationManager
     {
+        private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
         private readonly IDataConnector genericData;
         private readonly List<Migrator> migrators = new List<Migrator>();
         private bool executed;
@@ -127,7 +130,23 @@ namespace Aurora.DataManager.Migration
 
                     if (!validated)
                     {
-                        throw new MigrationOperationException(string.Format("Current version {0} did not validate. Stopping here so we don't cause any trouble. No changes were made.", currentMigrator.Version));
+                        //Try rerunning the migrator and then the validation
+                        //prepare restore point if something goes wrong
+                        m_log.Fatal (string.Format ("Failed to validate migration {0}-{1}, retrying...", currentMigrator.MigrationName, currentMigrator.Version));
+
+                        currentMigrator.Migrate (genericData);
+                        validated = currentMigrator.Validate (genericData);
+                        if (!validated)
+                        {
+                            C5.Rec<string, ColumnDefinition[]> rec;
+                            currentMigrator.DebugTestThatAllTablesValidate (genericData, out rec);
+                            m_log.Fatal (string.Format ("FAILED TO REVALIDATE MIGRATION {0}-{1}, FIXING TABLE FORCABLY... NEW TABLE NAME {2}", currentMigrator.MigrationName, currentMigrator.Version, rec.X1 + "_broken"));
+                            genericData.RenameTable (rec.X1, rec.X1 + "_broken");
+                            currentMigrator.Migrate (genericData);
+                            validated = currentMigrator.Validate (genericData);
+                            if (!validated)
+                                throw new MigrationOperationException (string.Format ("Current version {0}-{1} did not validate. Stopping here so we don't cause any trouble. No changes were made.", currentMigrator.MigrationName, currentMigrator.Version));
+                        }
                     }
                 }
 

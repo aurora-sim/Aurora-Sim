@@ -83,7 +83,7 @@ namespace Aurora.DataManager
         {
             if (!TableExists(VERSION_TABLE_NAME))
             {
-                CreateTable(VERSION_TABLE_NAME, new[] {new ColumnDefinition {Name = COLUMN_VERSION, Type = ColumnTypes.String100}});
+                CreateTable(VERSION_TABLE_NAME, new[] {new ColumnDefinition {Name = COLUMN_VERSION, IsPrimary = true, Type = ColumnTypes.String100}});
             }
             //Remove previous versions
             Delete(VERSION_TABLE_NAME, new string[1] { COLUMN_NAME }, new object[1] { MigrationName });

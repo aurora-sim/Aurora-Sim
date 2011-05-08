@@ -120,12 +120,26 @@ namespace Aurora.DataManager.Migration
             }
         }
 
-        protected bool TestThatAllTablesValidate(IDataConnector genericData)
+        protected bool TestThatAllTablesValidate (IDataConnector genericData)
         {
             foreach (var s in schema)
             {
-                if (!genericData.VerifyTableExists(s.X1, s.X2))
+                if (!genericData.VerifyTableExists (s.X1, s.X2))
                 {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public bool DebugTestThatAllTablesValidate (IDataConnector genericData, out Rec<string, ColumnDefinition[]> reason)
+        {
+            reason = new Rec<string,ColumnDefinition[]>();
+            foreach (var s in schema)
+            {
+                if (!genericData.VerifyTableExists (s.X1, s.X2))
+                {
+                    reason = s;
                     return false;
                 }
             }
