@@ -785,7 +785,7 @@ namespace OpenSim.Region.Framework.Scenes
             _lastOwnerID = UUID.Zero;
             UUID = UUID.Random();
             Shape = shape;
-            CRC = 0;
+            CRC = 1;
             _ownershipCost = 0;
             _flags = 0;
             _groupID = UUID.Zero;

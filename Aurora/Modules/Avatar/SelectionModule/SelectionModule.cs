@@ -121,15 +121,16 @@ namespace Aurora.Modules
         /// <param name="remoteClient"></param>
         protected void RequestPrim(uint primLocalID, byte cacheMissType, IClientAPI remoteClient)
         {
-            Scene scene = ((Scene)remoteClient.Scene);
             IEntity entity;
-            if (scene.Entities.TryGetChildPrimParent(primLocalID, out entity))
+            if (remoteClient.Scene.Entities.TryGetChildPrimParent (primLocalID, out entity))
             {
-                if (entity is SceneObjectGroup)
+                if (entity is ISceneEntity)
                 {
-                    IScenePresence SP = scene.GetScenePresence(remoteClient.AgentId);
+                    IScenePresence SP = remoteClient.Scene.GetScenePresence (remoteClient.AgentId);
                     //We send a forced because we MUST send a full update, as the client doesn't have this prim
-                    ((SceneObjectGroup)entity).ScheduleGroupUpdateToAvatar (SP, PrimUpdateFlags.ForcedFullUpdate);
+                    ((ISceneEntity)entity).ScheduleGroupUpdateToAvatar (SP, PrimUpdateFlags.ForcedFullUpdate);
+
+                    //m_log.WarnFormat ("[ObjectCache]: Avatar didn't have {0}, miss type {1}, CRC {2}", primLocalID, cacheMissType, ((ISceneEntity)entity).RootChild.CRC);
                 }
             }
         }

@@ -13,7 +13,7 @@ using Nini.Config;
 
 namespace Aurora.Modules
 {
-    public class ObjectCacheModule : ISharedRegionModule, IObjectCache
+    public class ObjectCacheModule : INonSharedRegionModule, IObjectCache
     {
         #region Declares
 
@@ -21,6 +21,7 @@ namespace Aurora.Modules
         protected bool m_Enabled = true;
         private Dictionary<UUID, Dictionary<uint, uint>> ObjectCacheAgents = new Dictionary<UUID, Dictionary<uint, uint>>();
         private string m_filePath = "ObjectCache/";
+        private Scene m_scene;
 
         #endregion
 
@@ -52,7 +53,7 @@ namespace Aurora.Modules
         {
             if (!m_Enabled)
                 return;
-
+            m_scene = scene;
             scene.RegisterModuleInterface<IObjectCache>(this);
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
@@ -174,7 +175,7 @@ namespace Aurora.Modules
                 ObjectCacheAgents[AgentID].Clear ();
                 ObjectCacheAgents.Remove (AgentID);
             }
-            FileStream stream = new FileStream(m_filePath + AgentID + ".oc", FileMode.OpenOrCreate);
+            FileStream stream = new FileStream(m_filePath + AgentID + m_scene.RegionInfo.RegionName + ".oc", FileMode.Create);
             StreamWriter m_streamWriter = new StreamWriter(stream);
             m_streamWriter.WriteLine(SerializeAgentCache(cache));
             m_streamWriter.Close();
@@ -182,7 +183,7 @@ namespace Aurora.Modules
 
         public void LoadFromFileForClient(UUID AgentID)
         {
-            FileStream stream = new FileStream(m_filePath + AgentID + ".oc", FileMode.OpenOrCreate);
+            FileStream stream = new FileStream (m_filePath + AgentID + m_scene.RegionInfo.RegionName + ".oc", FileMode.Create);
             StreamReader m_streamReader = new StreamReader(stream);
             string file = m_streamReader.ReadToEnd();
             m_streamReader.Close();

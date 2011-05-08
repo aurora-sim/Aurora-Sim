@@ -3677,7 +3677,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                     IObjectCache module = Scene.RequestModuleInterface<IObjectCache> ();
                     if (module != null)
+                    {
+                        if (ent.CRC == 0)
+                            ent.CRC++;
                         canUseCached = module.UseCachedObject (AgentId, entity.LocalId, ent.CRC);
+                    }
                     else
                         //No cache module? Don't use cached then, or it won't stop sending ObjectUpdateCached even when the client requests prims
                         canUseCached = false;
@@ -3727,10 +3731,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 try
                 {
                     //Do NOT send cached updates for terse updates
-                    bool isTerse = updateFlags.HasFlag ((PrimUpdateFlags.TerseUpdate));
+                    bool isTerse = updateFlags.HasFlag ((PrimUpdateFlags.TerseUpdate)) && !updateFlags.HasFlag(PrimUpdateFlags.FullUpdate) && !updateFlags.HasFlag(PrimUpdateFlags.ForcedFullUpdate);
                     //ONLY send full updates for attachments unless you want to figure out all the little screwy things with sending compressed updates and attachments
-                    if (entity is SceneObjectPart &&
-                        ((SceneObjectPart)entity).IsAttachment)
+                    if (entity is ISceneChildEntity &&
+                        ((ISceneChildEntity)entity).IsAttachment)
                     {
                         canUseCached = false;
                         canUseImproved = false;
