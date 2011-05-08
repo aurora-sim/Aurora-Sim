@@ -170,6 +170,8 @@ namespace OpenSim.Framework
         void StandUp ();
 
         void SetHeight (float p);
+
+        UUID SittingOnUUID { get; set; }
     }
 
     public interface IAvatarAppearanceModule

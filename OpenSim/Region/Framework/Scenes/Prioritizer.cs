@@ -159,6 +159,17 @@ namespace OpenSim.Region.Framework.Scenes
                         entityPosToCheckFrom = attachedAvatar.AbsolutePosition;
                 }
             }
+            if (entity is IScenePresence)
+            {
+                //We need to check whether this presence is sitting on anything, so that we can check from the object's
+                // position, rather than the offset position of the object that the avatar is sitting on
+                IScenePresence pEntity = (IScenePresence)entity;
+                if (pEntity.SittingOnUUID != UUID.Zero)
+                {
+                    ISceneEntity sittingEntity = pEntity.Scene.GetSceneObjectPart (pEntity.SittingOnUUID).ParentEntity;
+                    entityPosToCheckFrom = sittingEntity.AbsolutePosition;
+                }
+            }
             //If the distance is greater than the clients draw distance, its out of range
             if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom) >
                 DD * DD) //Use squares to make it faster than having to do the sqrt
