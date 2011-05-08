@@ -409,7 +409,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                         return "LAND";
                     return "SOFT_LAND";
                 }
-                return "LAND";
+                //return "LAND";
             }
 
             m_animTickFall = 0;
