@@ -3638,11 +3638,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 bool canUseCached = true;
 
                 // Compressed and cached object updates only make sense for LL primitives
-                if (!(entity is ISceneEntity))
-                {
-                    canUseCompressed = false;
-                    canUseCached = false;
-                }
                 if (entity is ISceneChildEntity)
                 {
                     // Please do not remove this unless you can demonstrate on the OpenSim mailing list that a client
@@ -3692,6 +3687,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                     canUseCompressed = false;
                     canUseImproved = false;
+                }
+                else if (updateFlags.HasFlag (PrimUpdateFlags.ForcedFullUpdate))
+                {
                     //If a full update has been requested, DO THE FULL UPDATE.
                     // Don't try to get out of this.... the monster called RepeatObjectUpdateCachedFromTheServer will occur and eat all your prims!
                     canUseCached = false;

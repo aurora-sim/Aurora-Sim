@@ -764,6 +764,7 @@ namespace OpenSim.Framework
         Sound = 1 << 21,
         Joint = 1 << 22,
         FindBest = 1 << 23,
+        ForcedFullUpdate = UInt32.MaxValue - 1,
         FullUpdate = UInt32.MaxValue,
         TerseUpdate = PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity
                 | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity

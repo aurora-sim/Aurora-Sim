@@ -171,6 +171,8 @@ namespace Aurora.Modules
                 if (!ObjectCacheAgents.ContainsKey(AgentID))
                     return;
                 cache = new Dictionary<uint, uint>(ObjectCacheAgents[AgentID]);
+                ObjectCacheAgents[AgentID].Clear ();
+                ObjectCacheAgents.Remove (AgentID);
             }
             FileStream stream = new FileStream(m_filePath + AgentID + ".oc", FileMode.OpenOrCreate);
             StreamWriter m_streamWriter = new StreamWriter(stream);

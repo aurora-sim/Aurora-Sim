@@ -128,7 +128,8 @@ namespace Aurora.Modules
                 if (entity is SceneObjectGroup)
                 {
                     IScenePresence SP = scene.GetScenePresence(remoteClient.AgentId);
-                    ((SceneObjectGroup)entity).ScheduleGroupUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
+                    //We send a forced because we MUST send a full update, as the client doesn't have this prim
+                    ((SceneObjectGroup)entity).ScheduleGroupUpdateToAvatar (SP, PrimUpdateFlags.ForcedFullUpdate);
                 }
             }
         }
