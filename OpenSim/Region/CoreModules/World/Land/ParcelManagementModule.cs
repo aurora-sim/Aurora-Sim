@@ -1351,6 +1351,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 }
             }
 
+            m_hasSentParcelOverLay.Clear (); //Clear everyone out
             selectedLandObjects.RemoveAt(0);
             if (selectedLandObjects.Count < 1)
             {
