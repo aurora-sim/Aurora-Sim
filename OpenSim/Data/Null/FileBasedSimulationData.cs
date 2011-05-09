@@ -240,6 +240,8 @@ namespace OpenSim.Data.Null
                     terrainModule.LoadRevertMapFromStream (".r32", ms, 0, 0);
                 ms.Close ();
                 m_revertTerrain = null;
+                if (terrainModule.TerrainRevertMap == null)
+                    return null;
                 return terrainModule.TerrainRevertMap.GetSerialised (scene);
             }
             else
@@ -252,6 +254,8 @@ namespace OpenSim.Data.Null
                     terrainModule.LoadFromStream (".r32", ms, 0, 0);
                 ms.Close ();
                 m_terrain = null;
+                if (terrainModule.TerrainMap == null)
+                    return null;
                 return terrainModule.TerrainMap.GetSerialised (scene);
             }
         }

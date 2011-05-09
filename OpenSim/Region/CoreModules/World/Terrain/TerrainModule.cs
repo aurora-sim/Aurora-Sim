@@ -898,6 +898,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                 if (m_channel == null || (m_channel.Height == channel.Height &&
                                     m_channel.Width == channel.Width))
                                 {
+                                    if (m_scene.RegionInfo.RegionSizeX != channel.Width ||
+                                        m_scene.RegionInfo.RegionSizeY != channel.Height)
+                                        return;
                                     m_channel = channel;
                                     m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
                                 }
@@ -964,6 +967,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                 if (m_revert == null || (m_revert.Height == channel.Height &&
                                     m_revert.Width == channel.Width))
                                 {
+                                    if (m_scene.RegionInfo.RegionSizeX != channel.Width ||
+                                        m_scene.RegionInfo.RegionSizeY != channel.Height)
+                                        return;
                                     m_revert = channel;
                                 }
                                 else
@@ -994,6 +1000,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                             m_log.Error ("[TERRAIN]: Unable to load heightmap, the " + loader.Value +
                                         " parser does not support file loading. (May be save only)");
                             throw new TerrainException (String.Format ("unable to load heightmap: parser {0} does not support loading", loader.Value));
+                        }
+                        catch
+                        {
+                            m_log.Error ("[TERRAIN]: Unable to load heightmap");
                         }
                     }
 
