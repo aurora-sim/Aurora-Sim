@@ -266,6 +266,18 @@ namespace OpenSim.Region.Framework.Scenes.Components
             }
         }
 
+        public void RemoveComponents (UUID obj)
+        {
+            if (obj == UUID.Zero)
+                return;
+            //Check whether a Component exists for this name
+            foreach(IComponent comp in m_components.Values)
+            {
+                //Set the State
+                comp.RemoveState (obj);
+            }
+        }
+
         /// <summary>
         /// Change/add all references from the oldID to the new UUID
         /// </summary>

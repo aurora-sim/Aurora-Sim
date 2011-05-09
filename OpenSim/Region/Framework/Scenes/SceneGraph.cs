@@ -1936,19 +1936,13 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //Make an exact copy of the entity
             ISceneEntity copiedEntity = entity.Copy (false);
-            //We need to do an initial randomizing so that we don't copy over any data when resetting
-            foreach (ISceneChildEntity cEntity in copiedEntity.ChildrenEntities())
-            {
-                cEntity.UUID = UUID.Random ();
-            }
             //Add the entity to the scene and back it up
             //Reset the entity IDs
             ResetEntityIDs (copiedEntity);
 
-            //Remove the script state for the new item
             IComponentManager manager = m_parentScene.RequestModuleInterface<IComponentManager> ();
             if (manager != null)
-                manager.RemoveComponentState (copiedEntity.UUID, "ScriptState");
+                manager.RemoveComponents (copiedEntity.UUID);
 
             //Force the prim to backup now that it has been added
             copiedEntity.ForcePersistence ();

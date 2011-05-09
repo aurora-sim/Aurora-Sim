@@ -72,5 +72,12 @@ namespace OpenSim.Region.Framework.Scenes.Components
         /// <param name="UUID"></param>
         /// <param name="name"></param>
         void RemoveComponentState (UUID UUID, string name);
+
+        /// <summary>
+        /// Remove all components for the given object, resets it to null
+        /// </summary>
+        /// <param name="UUID"></param>
+        /// <param name="name"></param>
+        void RemoveComponents (UUID obj);
     }
 }
