@@ -70,7 +70,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             return b.CompareTo (a);
         }
-        private Int64 m_numWorkers = 0;
 
         public int MaxScriptThreads = 1;
 
@@ -367,7 +366,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Interlocked.Exchange (ref CmdHandlerQueueIsRunning, 0);
             EventProcessorIsRunning = false;
             ScriptChangeIsRunning = false;
-            m_numWorkers = 0;
             cmdThreadpool.ClearEvents ();
             scriptChangeThreadpool.ClearEvents ();
             scriptThreadpool.ClearEvents ();
@@ -427,9 +425,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 #endif
             }
 
-            if (Interlocked.Read (ref m_numWorkers) < ScriptEventCount + (SleepingScriptEventCount / 2) )
+            if (Interlocked.Read (ref scriptThreadpool.nthreads) < ScriptEventCount + (SleepingScriptEventCount / 2))
             {
-                Interlocked.Increment (ref m_numWorkers);
                 scriptThreadpool.QueueEvent (loop, 2);
             }
         }
@@ -455,9 +452,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 #endif
             }
 
-            if (Interlocked.Read (ref m_numWorkers) < ScriptEventCount + (SleepingScriptEventCount / 2))
+            if (Interlocked.Read (ref scriptThreadpool.nthreads) < ScriptEventCount + (SleepingScriptEventCount / 2))
             {
-                Interlocked.Increment (ref m_numWorkers);
                 scriptThreadpool.QueueEvent (loop, 2);
             }
         }
@@ -548,19 +544,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     numberOfEmptyWork++;
                     if (numberOfEmptyWork > EMPTY_WORK_KILL_THREAD_TIME) //Don't break immediately
                     {
-                        Interlocked.Decrement (ref m_numWorkers);
                         break; //No more events, end
                     }
                     else
                         timeToSleep += 10;
                 }
-                else if (Interlocked.Read (ref m_numWorkers) > (ScriptEventCount + (SleepingScriptEventCount / 2)) ||
-                    Interlocked.Read (ref m_numWorkers) > MaxScriptThreads)
+                else if (Interlocked.Read (ref scriptThreadpool.nthreads) > (ScriptEventCount + (int)(((float)SleepingScriptEventCount / 2f + 0.5f))) ||
+                    Interlocked.Read (ref scriptThreadpool.nthreads) > MaxScriptThreads)
                 {
                     numberOfEmptyWork++;
                     if (numberOfEmptyWork > (EMPTY_WORK_KILL_THREAD_TIME / 3)) //Don't break immediately
                     {
-                        Interlocked.Decrement (ref m_numWorkers);
                         break; //Too many threads, kill some off
                     }
                     else

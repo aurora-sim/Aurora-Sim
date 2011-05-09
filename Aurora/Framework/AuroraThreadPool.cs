@@ -27,8 +27,8 @@ namespace Aurora.Framework
         Thread[] Threads = null;
         int[] Sleeping;
         Queue<QueueItem> queue = new Queue<QueueItem> ();
-        public int nthreads;
-        public int nSleepingthreads;
+        public long nthreads;
+        public long nSleepingthreads;
 
         public AuroraThreadPool(AuroraThreadPoolStartInfo info)
         {
