@@ -3693,7 +3693,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 if (updateFlags.HasFlag (PrimUpdateFlags.FullUpdate))
                 {
-                    canUseCompressed = false;
+                    //canUseCompressed = false;
                     canUseImproved = false;
                 }
                 else if (updateFlags.HasFlag (PrimUpdateFlags.ForcedFullUpdate))
@@ -3764,23 +3764,59 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     {
                         compressedUpdates.Add (update);
                         CompressedFlags Flags = CompressedFlags.None;
-                        if (updateFlags.HasFlag (PrimUpdateFlags.AngularVelocity))
-                            Flags |= CompressedFlags.HasAngularVelocity;
-                        if (updateFlags.HasFlag (PrimUpdateFlags.MediaURL))
-                            Flags |= CompressedFlags.MediaURL;
-                        if (updateFlags.HasFlag (PrimUpdateFlags.ParentID))
-                            Flags |= CompressedFlags.HasParent;
-                        if (updateFlags.HasFlag (PrimUpdateFlags.Particles))
-                            Flags |= CompressedFlags.HasParticles;
-                        if (updateFlags.HasFlag (PrimUpdateFlags.Sound))
-                            Flags |= CompressedFlags.HasSound;
-                        if (updateFlags.HasFlag (PrimUpdateFlags.Text))
-                            Flags |= CompressedFlags.HasText;
-                        if (updateFlags.HasFlag (PrimUpdateFlags.TextureAnim))
-                            Flags |= CompressedFlags.TextureAnimation;
-                        if (updateFlags.HasFlag (PrimUpdateFlags.NameValue) || ((SceneObjectPart)entity).IsAttachment)
-                            Flags |= CompressedFlags.HasNameValues;
+                        if (updateFlags == PrimUpdateFlags.FullUpdate || updateFlags == PrimUpdateFlags.ForcedFullUpdate)
+                        {
+                            //Add the defaults
+                            updateFlags = PrimUpdateFlags.None;
+                            updateFlags |= PrimUpdateFlags.ClickAction;
+                            updateFlags |= PrimUpdateFlags.ExtraData;
+                            updateFlags |= PrimUpdateFlags.Shape;
+                            updateFlags |= PrimUpdateFlags.Material;
+                            updateFlags |= PrimUpdateFlags.Textures;
+                            updateFlags |= PrimUpdateFlags.Rotation;
+                            updateFlags |= PrimUpdateFlags.PrimFlags;
+                            updateFlags |= PrimUpdateFlags.Position;
+                            updateFlags |= PrimUpdateFlags.AngularVelocity;
 
+                            //Must send these as well
+                            if (((SceneObjectPart)entity).Text != "")
+                                updateFlags |= PrimUpdateFlags.Text;
+                            if (((SceneObjectPart)entity).AngularVelocity != Vector3.Zero)
+                                updateFlags |= PrimUpdateFlags.AngularVelocity;
+                            if (((SceneObjectPart)entity).TextureAnimation != null && ((SceneObjectPart)entity).TextureAnimation.Length != 0)
+                                updateFlags |= PrimUpdateFlags.TextureAnim;
+                            if (((SceneObjectPart)entity).Sound != UUID.Zero)
+                                updateFlags |= PrimUpdateFlags.Sound;
+                            if (((SceneObjectPart)entity).ParticleSystem != null && ((SceneObjectPart)entity).ParticleSystem.Length != 0)
+                                updateFlags |= PrimUpdateFlags.Particles;
+                            if (((SceneObjectPart)entity).MediaUrl != "" && ((SceneObjectPart)entity).MediaUrl != null)
+                                updateFlags |= PrimUpdateFlags.MediaURL;
+                            if (((SceneObjectPart)entity).ParentEntity.RootChild.IsAttachment)
+                                updateFlags |= PrimUpdateFlags.AttachmentPoint;
+
+                            //Make sure that we send this! Otherwise, the client will only see one prim
+                            if (((SceneObjectPart)entity).ParentEntity != null)
+                                if (((SceneObjectPart)entity).ParentEntity.ChildrenEntities().Count != 1)
+                                    updateFlags |= PrimUpdateFlags.ParentID;
+                        }
+                            if (updateFlags.HasFlag (PrimUpdateFlags.AngularVelocity))
+                                Flags |= CompressedFlags.HasAngularVelocity;
+                            if (updateFlags.HasFlag (PrimUpdateFlags.MediaURL))
+                                Flags |= CompressedFlags.MediaURL;
+                            if (updateFlags.HasFlag (PrimUpdateFlags.ParentID))
+                                Flags |= CompressedFlags.HasParent;
+                            if (updateFlags.HasFlag (PrimUpdateFlags.Particles))
+                                Flags |= CompressedFlags.HasParticles;
+                            if (updateFlags.HasFlag (PrimUpdateFlags.Sound))
+                                Flags |= CompressedFlags.HasSound;
+                            if (updateFlags.HasFlag (PrimUpdateFlags.Text))
+                                Flags |= CompressedFlags.HasText;
+                            if (updateFlags.HasFlag (PrimUpdateFlags.TextureAnim))
+                                Flags |= CompressedFlags.TextureAnimation;
+                            if (updateFlags.HasFlag (PrimUpdateFlags.NameValue) || ((SceneObjectPart)entity).IsAttachment)
+                                Flags |= CompressedFlags.HasNameValues;
+
+                        compressedUpdates.Add (update);
                         compressedUpdateBlocks.Value.Add (CreateCompressedUpdateBlock ((SceneObjectPart)entity, Flags, updateFlags));
                     }
                     else
@@ -4944,7 +4980,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             catch (Exception e)
             {
                 m_log.Warn("[LLClientView]: exception converting quaternion to bytes, using Quaternion.Identity. Exception: " + e.ToString());
-                OpenMetaverse.Quaternion.Identity.ToBytes(objectData, 36);
+                Quaternion.Identity.ToBytes(objectData, i);
             }
             i += 12;
             Utils.UIntToBytes((uint)updateFlags, objectData, i);
@@ -4973,8 +5009,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 objectData[i] = part.Shape.State; //Tree type
                 i++;
             }
-
-            if ((updateFlags & CompressedFlags.ScratchPad) != 0)
+            else if ((updateFlags & CompressedFlags.ScratchPad) != 0)
             {
                 //Remove the flag, we have no clue what to do with this
                 updateFlags &= ~(CompressedFlags.ScratchPad);
@@ -5041,6 +5076,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
             }
 
+            if ((updateFlags & CompressedFlags.TextureAnimation) != 0)
+            {
+                Utils.UInt64ToBytes ((ulong)part.TextureAnimation.Length, objectData, i);
+                i += 4;
+                Buffer.BlockCopy (part.TextureAnimation, 0, objectData, i, part.TextureAnimation.Length);
+                i += part.TextureAnimation.Length;
+            }
+
             objectData[i] = part.Shape.PathCurve;
             i++;
             Utils.UInt16ToBytes(part.Shape.PathBegin, objectData, i);
@@ -5069,9 +5112,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             i++;
             objectData[i] = (byte)part.Shape.PathSkew;
             i++;
+
             objectData[i] = part.Shape.ProfileCurve;
             i++;
-
             Utils.UInt16ToBytes(part.Shape.ProfileBegin, objectData, i);
             i += 2;
             Utils.UInt16ToBytes(part.Shape.ProfileEnd, objectData, i);
@@ -5092,14 +5135,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 Utils.IntToBytes(0, objectData, i);
                 i += 4;
-            }
-
-            if ((updateFlags & CompressedFlags.TextureAnimation) != 0)
-            {
-                Utils.UInt64ToBytes((ulong)part.TextureAnimation.Length, objectData, i);
-                i += 4;
-                Buffer.BlockCopy(part.TextureAnimation, 0, objectData, i, part.TextureAnimation.Length);
-                i += part.TextureAnimation.Length;
             }
 
             ObjectUpdateCompressedPacket.ObjectDataBlock update = new ObjectUpdateCompressedPacket.ObjectDataBlock();

@@ -130,7 +130,7 @@ namespace Aurora.Modules
                     //We send a forced because we MUST send a full update, as the client doesn't have this prim
                     ((ISceneEntity)entity).ScheduleGroupUpdateToAvatar (SP, PrimUpdateFlags.ForcedFullUpdate);
 
-                    //m_log.WarnFormat ("[ObjectCache]: Avatar didn't have {0}, miss type {1}, CRC {2}", primLocalID, cacheMissType, ((ISceneEntity)entity).RootChild.CRC);
+                    m_log.WarnFormat ("[ObjectCache]: Avatar didn't have {0}, miss type {1}, CRC {2}", primLocalID, cacheMissType, ((ISceneEntity)entity).RootChild.CRC);
                 }
             }
         }
