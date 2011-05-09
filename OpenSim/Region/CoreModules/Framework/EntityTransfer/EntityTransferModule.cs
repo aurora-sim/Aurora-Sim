@@ -711,7 +711,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             if (destination != null && !CrossPrimGroupIntoNewRegion(destination, grp, attemptedPosition))
             {
                 grp.OffsetForNewRegion(oldGroupPosition);
-                grp.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                grp.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                 return false;
             }
             return true;
@@ -913,7 +913,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 {
                     if(sceneObject.RootPart.IsSelected)
                         sceneObject.RootPart.CreateSelected = true;
-                    sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                    sceneObject.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                     return true;
                 }
             }

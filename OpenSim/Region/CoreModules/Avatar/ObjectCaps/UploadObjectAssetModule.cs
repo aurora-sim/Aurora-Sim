@@ -332,7 +332,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 rootGroup.LinkToGroup(allparts[j]);
             }
 
-            rootGroup.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+            rootGroup.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
             pos = m_scene.SceneGraph.GetNewRezLocation(Vector3.Zero, rootpos, UUID.Zero, rot, (byte)1, 1, true, allparts[0].GroupScale(), false);
 
             responsedata["int_response_code"] = 200; //501; //410; //404;

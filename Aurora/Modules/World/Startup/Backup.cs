@@ -1052,7 +1052,7 @@ namespace Aurora.Modules
                     if (m_scene.SceneGraph.AddPrimToScene(sceneObject))
                     {
                         sceneObject.HasGroupChanged = true;
-                        sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                        sceneObject.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                         sceneObject.CreateScriptInstances(0, false, 0, UUID.Zero);
                         sceneObject.ResumeScripts();
                     }

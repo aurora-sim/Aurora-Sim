@@ -899,7 +899,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (ent is SceneObjectGroup)
                     {
-                        ((SceneObjectGroup)ent).ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                        ((SceneObjectGroup)ent).ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                     }
                 }
                 IScenePresence[] presences = scene.Entities.GetPresences();

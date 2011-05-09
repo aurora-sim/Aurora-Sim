@@ -137,7 +137,9 @@ namespace OpenSim.Region.Framework.Scenes
                 lastPresencesInView.Remove (presence);
                 return; // if 2 far ignore
             }
-            if (!lastPresencesInView.Contains (presence))
+            if ((!(m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeX &&
+                    m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeY)) && 
+                    !lastPresencesInView.Contains (presence))
             {
                 //The presence just entered our view, we need to send a full update
                 SendFullUpdateForPresence (presence);
@@ -201,10 +203,11 @@ namespace OpenSim.Region.Framework.Scenes
                 lastGrpsInView.Remove (part.ParentEntity);
                 return; // if 2 far ignore
             }
-            if (!lastGrpsInView.Contains (part.ParentEntity))
+            if ((!(m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeX &&
+                    m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeY)) && !lastGrpsInView.Contains (part.ParentEntity))
             {
                 //This object entered our draw distance on its own, and we havn't seen it before
-                flags = PrimUpdateFlags.FullUpdate;
+                flags = PrimUpdateFlags.ForcedFullUpdate;
             }
 
             EntityUpdate o = new EntityUpdate (part, flags);
@@ -318,7 +321,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
 
                     //Send the root object first!
-                    EntityUpdate rootupdate = new EntityUpdate (e.RootChild, PrimUpdateFlags.FullUpdate);
+                    EntityUpdate rootupdate = new EntityUpdate (e.RootChild, PrimUpdateFlags.ForcedFullUpdate);
                     PriorityQueueItem<EntityUpdate, double> rootitem = new PriorityQueueItem<EntityUpdate, double> ();
                     rootitem.Value = rootupdate;
                     rootitem.Priority = m_prioritizer.GetUpdatePriority (m_presence, e.RootChild);
@@ -328,7 +331,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         if (child == e.RootChild)
                             continue; //Already sent
-                        EntityUpdate update = new EntityUpdate (child, PrimUpdateFlags.FullUpdate);
+                        EntityUpdate update = new EntityUpdate (child, PrimUpdateFlags.ForcedFullUpdate);
                         PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double> ();
                         item.Value = update;
                         item.Priority = m_prioritizer.GetUpdatePriority (m_presence, child);
@@ -386,7 +389,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     foreach (ISceneChildEntity child in entity.ChildrenEntities ())
                     {
-                        QueuePartForUpdate (child, PrimUpdateFlags.FullUpdate);
+                        QueuePartForUpdate (child, PrimUpdateFlags.ForcedFullUpdate);
                     }
                 }
             }
@@ -449,7 +452,7 @@ namespace OpenSim.Region.Framework.Scenes
                             }
 
                             //Send the root object first!
-                            EntityUpdate rootupdate = new EntityUpdate (e.RootChild, PrimUpdateFlags.FullUpdate);
+                            EntityUpdate rootupdate = new EntityUpdate (e.RootChild, PrimUpdateFlags.ForcedFullUpdate);
                             PriorityQueueItem<EntityUpdate, double> rootitem = new PriorityQueueItem<EntityUpdate, double> ();
                             rootitem.Value = rootupdate;
                             rootitem.Priority = m_prioritizer.GetUpdatePriority (m_presence, e.RootChild);
@@ -459,7 +462,7 @@ namespace OpenSim.Region.Framework.Scenes
                             {
                                 if (child == e.RootChild)
                                     continue; //Already sent
-                                EntityUpdate update = new EntityUpdate (child, PrimUpdateFlags.FullUpdate);
+                                EntityUpdate update = new EntityUpdate (child, PrimUpdateFlags.ForcedFullUpdate);
                                 PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double> ();
                                 item.Value = update;
                                 item.Priority = m_prioritizer.GetUpdatePriority (m_presence, child);

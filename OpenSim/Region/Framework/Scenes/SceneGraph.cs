@@ -862,7 +862,7 @@ namespace OpenSim.Region.Framework.Scenes
             string reason;
             if (m_parentScene.Permissions.CanRezObject(1, ownerID, pos, out reason))
             {
-               AddNewPrim(ownerID, groupID, pos, rot, shape);
+                AddNewPrim(ownerID, groupID, pos, rot, shape);
             }
             else
             {
@@ -901,7 +901,7 @@ namespace OpenSim.Region.Framework.Scenes
                 
                 sceneObject.SetGroup(groupID, null);
                 AddPrimToScene(sceneObject);
-                sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
             }
 
 
@@ -1056,7 +1056,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     sog.SetOwnerId(ownerID);
                     sog.SetGroup(groupID, remoteClient);
-                    sog.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                    sog.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
 
                     foreach (ISceneChildEntity child in sog.ChildrenEntities())
                         child.Inventory.ChangeInventoryOwner(ownerID);
@@ -1601,7 +1601,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     duplicatedGroup.CreateScriptInstances(0, false, 0, UUID.Zero);
                     duplicatedGroup.HasGroupChanged = true;
-                    duplicatedGroup.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                    duplicatedGroup.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                     duplicatedGroup.ResumeScripts();
 
                     // required for physics to update it's position
@@ -1762,7 +1762,7 @@ namespace OpenSim.Region.Framework.Scenes
                 parentGroup.HasGroupChanged = true;
                 //parentGroup.RootPart.SendFullUpdateToAllClients(PrimUpdateFlags.FullUpdate);
                 //parentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
-                parentGroup.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                parentGroup.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                 parentGroup.TriggerScriptChangedEvent(Changed.LINK);
             }
             finally
@@ -1812,7 +1812,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // These are not in affected groups and will not be
                     // handled further. Do the honors here.
                     child.ParentEntity.HasGroupChanged = true;
-                    child.ParentEntity.ScheduleGroupUpdate (PrimUpdateFlags.FullUpdate);
+                    child.ParentEntity.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                 }
 
                 foreach (ISceneChildEntity root in rootParts)
@@ -1877,7 +1877,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     g.TriggerScriptChangedEvent(Changed.LINK);
                     g.HasGroupChanged = true; // Persist
-                    g.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                    g.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                 }
                 //Fix undo states now that the linksets have been changed
                 foreach (ISceneChildEntity part in prims)

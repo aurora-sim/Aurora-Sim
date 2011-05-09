@@ -108,7 +108,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Vegetation
                 AdaptTree(ref shape);
 
             m_scene.SceneGraph.AddPrimToScene(sceneObject);
-            sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+            sceneObject.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
             sceneObject.SetGroup(groupID, null);
             
             return sceneObject;

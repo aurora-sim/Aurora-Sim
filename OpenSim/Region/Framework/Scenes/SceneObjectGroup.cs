@@ -1288,7 +1288,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_ValidgrpOOB = false;
             RootPart.Rezzed = DateTime.UtcNow;
             RootPart.RemFlag(PrimFlags.TemporaryOnRez);
-            m_rootPart.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
+            m_rootPart.ScheduleUpdate (PrimUpdateFlags.ForcedFullUpdate);
         }
 
         public void DetachToInventoryPrep()
@@ -1824,7 +1824,7 @@ namespace OpenSim.Region.Framework.Scenes
                     ApplyNextOwnerPermissions();
             }
 
-            part.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
+            part.ScheduleUpdate (PrimUpdateFlags.ForcedFullUpdate);
         }
 
         #endregion
@@ -2179,7 +2179,7 @@ namespace OpenSim.Region.Framework.Scenes
             //This is already set multiple places, no need to do it again
             //HasGroupChanged = true;
             //We need to send this so that we don't have issues with the client not realizing that the prims were unlinked
-            ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+            ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
 
             m_ValidgrpOOB = false;
             return objectGroup;

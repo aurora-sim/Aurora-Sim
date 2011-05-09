@@ -715,7 +715,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
 
             //Now recreate it so that it is selected
-            group.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+            group.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
 
             // In case it is later dropped again, don't let
             // it get cleaned up

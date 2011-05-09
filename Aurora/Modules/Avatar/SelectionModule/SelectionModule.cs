@@ -180,7 +180,7 @@ namespace Aurora.Modules
                 }
                 else
                 {
-                    m_log.Error("[SCENEPACKETHANDLER]: Could not find prim in SelectPrim, killing prim.");
+                    m_log.ErrorFormat ("[SCENEPACKETHANDLER]: Could not find prim {0} in SelectPrim, killing prim.", primLocalID);
                     //Send a kill packet to the viewer so it doesn't come up again
                     remoteClient.SendKillObject(scene.RegionInfo.RegionHandle, new uint[1] { primLocalID });
                 }
@@ -239,7 +239,7 @@ namespace Aurora.Modules
             if (!part.ParentEntity.IsAttachment) //This NEEDS to be done because otherwise rotationalVelocity will break! Only for the editing av as the client stops the rotation for them when they are in edit
             {
                 if (part.ParentEntity.RootChild.AngularVelocity != Vector3.Zero && !part.ParentEntity.IsDeleted)
-                    part.ParentEntity.ScheduleGroupUpdateToAvatar (SP, PrimUpdateFlags.FullUpdate);
+                    part.ParentEntity.ScheduleGroupUpdateToAvatar (SP, PrimUpdateFlags.ForcedFullUpdate);
             }
 
             scene.AuroraEventManager.FireGenericEventHandler("ObjectDeselected", part);

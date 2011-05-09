@@ -3706,7 +3706,7 @@ namespace OpenSim.Region.Framework.Scenes
                 PrimUpdateFlags.Joint | PrimUpdateFlags.Material | PrimUpdateFlags.MediaURL | PrimUpdateFlags.NameValue |
                 PrimUpdateFlags.ParentID | PrimUpdateFlags.Particles | PrimUpdateFlags.PrimData | PrimUpdateFlags.PrimFlags |
                 PrimUpdateFlags.ScratchPad | PrimUpdateFlags.Shape | PrimUpdateFlags.Sound | PrimUpdateFlags.Text |
-                PrimUpdateFlags.TextureAnim | PrimUpdateFlags.Textures | PrimUpdateFlags.ForcedFullUpdate));
+                PrimUpdateFlags.TextureAnim | PrimUpdateFlags.Textures)) && !flags.HasFlag(PrimUpdateFlags.ForcedFullUpdate);
         }
 
         /// <summary>

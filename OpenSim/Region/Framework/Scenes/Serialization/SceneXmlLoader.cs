@@ -158,7 +158,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             {
                 if (scene.SceneGraph.AddPrimToScene(sceneObject))
                 {
-                    sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                    sceneObject.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                     if (startScripts)
                     {
                         sceneObject.CreateScriptInstances(0, false, 0, UUID.Zero);
