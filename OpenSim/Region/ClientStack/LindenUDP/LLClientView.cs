@@ -3685,6 +3685,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         if (ent.CRC == 0)
                             ent.CRC++;
                         canUseCached = module.UseCachedObject (AgentId, entity.LocalId, ent.CRC);
+                        if (!canUseCached)
+                        {
+                        }
                     }
                     else
                         //No cache module? Don't use cached then, or it won't stop sending ObjectUpdateCached even when the client requests prims
@@ -3701,6 +3704,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     //If a full update has been requested, DO THE FULL UPDATE.
                     // Don't try to get out of this.... the monster called RepeatObjectUpdateCachedFromTheServer will occur and eat all your prims!
                     canUseCached = false;
+                    canUseCompressed = false;
+                    canUseImproved = false;
                 }
                 else
                 {
@@ -3779,42 +3784,42 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             updateFlags |= PrimUpdateFlags.AngularVelocity;
 
                             //Must send these as well
-                            if (((SceneObjectPart)entity).Text != "")
+                            if (((ISceneChildEntity)entity).Text != "")
                                 updateFlags |= PrimUpdateFlags.Text;
-                            if (((SceneObjectPart)entity).AngularVelocity != Vector3.Zero)
+                            if (((ISceneChildEntity)entity).AngularVelocity != Vector3.Zero)
                                 updateFlags |= PrimUpdateFlags.AngularVelocity;
-                            if (((SceneObjectPart)entity).TextureAnimation != null && ((SceneObjectPart)entity).TextureAnimation.Length != 0)
+                            if (((ISceneChildEntity)entity).TextureAnimation != null && ((SceneObjectPart)entity).TextureAnimation.Length != 0)
                                 updateFlags |= PrimUpdateFlags.TextureAnim;
-                            if (((SceneObjectPart)entity).Sound != UUID.Zero)
+                            if (((ISceneChildEntity)entity).Sound != UUID.Zero)
                                 updateFlags |= PrimUpdateFlags.Sound;
-                            if (((SceneObjectPart)entity).ParticleSystem != null && ((SceneObjectPart)entity).ParticleSystem.Length != 0)
+                            if (((ISceneChildEntity)entity).ParticleSystem != null && ((SceneObjectPart)entity).ParticleSystem.Length != 0)
                                 updateFlags |= PrimUpdateFlags.Particles;
-                            if (((SceneObjectPart)entity).MediaUrl != "" && ((SceneObjectPart)entity).MediaUrl != null)
+                            if (((ISceneChildEntity)entity).MediaUrl != "" && ((SceneObjectPart)entity).MediaUrl != null)
                                 updateFlags |= PrimUpdateFlags.MediaURL;
-                            if (((SceneObjectPart)entity).ParentEntity.RootChild.IsAttachment)
+                            if (((ISceneChildEntity)entity).ParentEntity.RootChild.IsAttachment)
                                 updateFlags |= PrimUpdateFlags.AttachmentPoint;
 
                             //Make sure that we send this! Otherwise, the client will only see one prim
-                            if (((SceneObjectPart)entity).ParentEntity != null)
-                                if (((SceneObjectPart)entity).ParentEntity.ChildrenEntities().Count != 1)
+                            if (((ISceneChildEntity)entity).ParentEntity != null)
+                                if (((ISceneChildEntity)entity).ParentEntity.ChildrenEntities ().Count != 1)
                                     updateFlags |= PrimUpdateFlags.ParentID;
                         }
-                            if (updateFlags.HasFlag (PrimUpdateFlags.AngularVelocity))
-                                Flags |= CompressedFlags.HasAngularVelocity;
-                            if (updateFlags.HasFlag (PrimUpdateFlags.MediaURL))
-                                Flags |= CompressedFlags.MediaURL;
-                            if (updateFlags.HasFlag (PrimUpdateFlags.ParentID))
-                                Flags |= CompressedFlags.HasParent;
-                            if (updateFlags.HasFlag (PrimUpdateFlags.Particles))
-                                Flags |= CompressedFlags.HasParticles;
-                            if (updateFlags.HasFlag (PrimUpdateFlags.Sound))
-                                Flags |= CompressedFlags.HasSound;
-                            if (updateFlags.HasFlag (PrimUpdateFlags.Text))
-                                Flags |= CompressedFlags.HasText;
-                            if (updateFlags.HasFlag (PrimUpdateFlags.TextureAnim))
-                                Flags |= CompressedFlags.TextureAnimation;
-                            if (updateFlags.HasFlag (PrimUpdateFlags.NameValue) || ((SceneObjectPart)entity).IsAttachment)
-                                Flags |= CompressedFlags.HasNameValues;
+                        if (updateFlags.HasFlag (PrimUpdateFlags.AngularVelocity))
+                            Flags |= CompressedFlags.HasAngularVelocity;
+                        if (updateFlags.HasFlag (PrimUpdateFlags.MediaURL))
+                            Flags |= CompressedFlags.MediaURL;
+                        if (updateFlags.HasFlag (PrimUpdateFlags.ParentID))
+                            Flags |= CompressedFlags.HasParent;
+                        if (updateFlags.HasFlag (PrimUpdateFlags.Particles))
+                            Flags |= CompressedFlags.HasParticles;
+                        if (updateFlags.HasFlag (PrimUpdateFlags.Sound))
+                            Flags |= CompressedFlags.HasSound;
+                        if (updateFlags.HasFlag (PrimUpdateFlags.Text))
+                            Flags |= CompressedFlags.HasText;
+                        if (updateFlags.HasFlag (PrimUpdateFlags.TextureAnim))
+                            Flags |= CompressedFlags.TextureAnimation;
+                        if (updateFlags.HasFlag (PrimUpdateFlags.NameValue) || ((ISceneChildEntity)entity).IsAttachment)
+                            Flags |= CompressedFlags.HasNameValues;
 
                         compressedUpdates.Add (update);
                         compressedUpdateBlocks.Value.Add (CreateCompressedUpdateBlock ((SceneObjectPart)entity, Flags, updateFlags));

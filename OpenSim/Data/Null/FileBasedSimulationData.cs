@@ -210,10 +210,10 @@ namespace OpenSim.Data.Null
                 {
                     MemoryStream ms = new MemoryStream (data);
                     SceneObjectGroup sceneObject = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromXml2Format (ms, (Scene)scene);
-                    foreach (ISceneChildEntity part in sceneObject.ChildrenEntities ())
-                    {
-                        part.LocalId = 0;
-                    }
+                    //foreach (ISceneChildEntity part in sceneObject.ChildrenEntities ())
+                    //{
+                    //    part.LocalId = 0;
+                    //}
 
                     m_groups.Add (sceneObject);
                 }

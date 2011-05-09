@@ -129,7 +129,9 @@ namespace Aurora.Modules
                     IScenePresence SP = remoteClient.Scene.GetScenePresence (remoteClient.AgentId);
                     //We send a forced because we MUST send a full update, as the client doesn't have this prim
                     ((ISceneEntity)entity).ScheduleGroupUpdateToAvatar (SP, PrimUpdateFlags.ForcedFullUpdate);
-
+                    IObjectCache cache = remoteClient.Scene.RequestModuleInterface<IObjectCache> ();
+                    if (cache != null)
+                        cache.RemovePrim (remoteClient.AgentId, entity.LocalId, cacheMissType);
                     m_log.WarnFormat ("[ObjectCache]: Avatar didn't have {0}, miss type {1}, CRC {2}", primLocalID, cacheMissType, ((ISceneEntity)entity).RootChild.CRC);
                 }
             }

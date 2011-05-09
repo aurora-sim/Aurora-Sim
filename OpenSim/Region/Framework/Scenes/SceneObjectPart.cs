@@ -3706,7 +3706,7 @@ namespace OpenSim.Region.Framework.Scenes
                 PrimUpdateFlags.Joint | PrimUpdateFlags.Material | PrimUpdateFlags.MediaURL | PrimUpdateFlags.NameValue |
                 PrimUpdateFlags.ParentID | PrimUpdateFlags.Particles | PrimUpdateFlags.PrimData | PrimUpdateFlags.PrimFlags |
                 PrimUpdateFlags.ScratchPad | PrimUpdateFlags.Shape | PrimUpdateFlags.Sound | PrimUpdateFlags.Text |
-                PrimUpdateFlags.TextureAnim | PrimUpdateFlags.Textures));
+                PrimUpdateFlags.TextureAnim | PrimUpdateFlags.Textures | PrimUpdateFlags.ForcedFullUpdate));
         }
 
         /// <summary>
@@ -3788,7 +3788,8 @@ namespace OpenSim.Region.Framework.Scenes
                         UpdateFlags |= PrimUpdateFlags.ParentID;
 
                 //Increment the CRC code so that the client won't be sent a cached update for this
-                CRC++;
+                if (UpdateFlags != PrimUpdateFlags.PrimFlags)
+                    CRC++;
             }
 
             if (ParentGroup != null)

@@ -182,7 +182,7 @@ namespace Aurora.Modules
 
         public void LoadFromFileForClient(UUID AgentID)
         {
-            FileStream stream = new FileStream (m_filePath + AgentID + m_scene.RegionInfo.RegionName + ".oc", FileMode.Create);
+            FileStream stream = new FileStream (m_filePath + AgentID + m_scene.RegionInfo.RegionName + ".oc", FileMode.OpenOrCreate);
             StreamReader m_streamReader = new StreamReader(stream);
             string file = m_streamReader.ReadToEnd();
             m_streamReader.Close();
@@ -245,6 +245,15 @@ namespace Aurora.Modules
                 }
                 ObjectCacheAgents[AgentID][localID] = CurrentEntityCRC;
                 return false;
+            }
+        }
+
+        public void RemovePrim (UUID AgentID, uint localID, byte cacheMissType)
+        {
+            lock (ObjectCacheAgents)
+            {
+                if (ObjectCacheAgents.ContainsKey (AgentID))
+                    ObjectCacheAgents[AgentID].Remove (localID);
             }
         }
 
