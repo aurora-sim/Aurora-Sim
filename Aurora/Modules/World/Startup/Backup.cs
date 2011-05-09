@@ -101,6 +101,7 @@ namespace Aurora.Modules
         {
             m_manager.ForEachCurrentScene(delegate(Scene scene)
                     {
+                        scene.AuroraEventManager.FireGenericEventHandler ("Backup", null);
                         m_backup[scene].ProcessPrimBackupTaints(true, cmdparams.Length > 1);
                     });
         }

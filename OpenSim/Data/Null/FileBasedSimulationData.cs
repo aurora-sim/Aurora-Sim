@@ -113,8 +113,19 @@ namespace OpenSim.Data.Null
                 m_backupSaveTimer.Start ();
             }
 
+            scene.AuroraEventManager.OnGenericEvent += AuroraEventManager_OnGenericEvent;
+
             m_scene = scene;
             m_fileName = scene.RegionInfo.RegionName + m_loadAppenedFileName + ".abackup";
+        }
+
+        object AuroraEventManager_OnGenericEvent (string FunctionName, object parameters)
+        {
+            if (FunctionName == "Backup")
+            {
+                SaveBackup ("");
+            }
+            return null;
         }
 
         void m_saveTimer_Elapsed (object sender, ElapsedEventArgs e)
