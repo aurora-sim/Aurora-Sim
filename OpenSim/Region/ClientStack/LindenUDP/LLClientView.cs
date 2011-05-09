@@ -493,15 +493,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>
         /// Shut down the client view
         /// </summary>
-        public void Close()
+        public void Close(bool forceClose)
         {
             //m_log.DebugFormat(
             //    "[CLIENT]: Close has been called for {0} attached to scene {1}",
             //    Name, m_scene.RegionInfo.RegionName);
 
-            // Send the STOP packet NOW, otherwise it doesn't get out in time
-            DisableSimulatorPacket disable = (DisableSimulatorPacket)PacketPool.Instance.GetPacket(PacketType.DisableSimulator);
-            OutPacket (disable, ThrottleOutPacketType.Immediate);
+            if (forceClose)
+            {
+                // Send the STOP packet NOW, otherwise it doesn't get out in time
+                DisableSimulatorPacket disable = (DisableSimulatorPacket)PacketPool.Instance.GetPacket (PacketType.DisableSimulator);
+                OutPacket (disable, ThrottleOutPacketType.Immediate);
+            }
 
             IsActive = false;
 
@@ -3637,6 +3640,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 bool canUseImproved = true;
                 bool canUseCached = true;
 
+                bool isTerse = updateFlags.HasFlag ((PrimUpdateFlags.TerseUpdate)) && !updateFlags.HasFlag (PrimUpdateFlags.FullUpdate) && !updateFlags.HasFlag (PrimUpdateFlags.ForcedFullUpdate);
                 // Compressed and cached object updates only make sense for LL primitives
                 if (entity is ISceneChildEntity)
                 {
@@ -3676,7 +3680,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
 
                     IObjectCache module = Scene.RequestModuleInterface<IObjectCache> ();
-                    if (module != null)
+                    if (!isTerse && module != null)
                     {
                         if (ent.CRC == 0)
                             ent.CRC++;
@@ -3731,7 +3735,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 try
                 {
                     //Do NOT send cached updates for terse updates
-                    bool isTerse = updateFlags.HasFlag ((PrimUpdateFlags.TerseUpdate)) && !updateFlags.HasFlag(PrimUpdateFlags.FullUpdate) && !updateFlags.HasFlag(PrimUpdateFlags.ForcedFullUpdate);
                     //ONLY send full updates for attachments unless you want to figure out all the little screwy things with sending compressed updates and attachments
                     if (entity is ISceneChildEntity &&
                         ((ISceneChildEntity)entity).IsAttachment)

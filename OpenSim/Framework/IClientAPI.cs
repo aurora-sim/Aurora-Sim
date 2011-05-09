@@ -1093,7 +1093,7 @@ namespace OpenSim.Framework
         void SetDebugPacketLevel(int newDebug);
 
         void ProcessInPacket(Packet NewPack);
-        void Close();
+        void Close(bool forceClose);
         void Stop();
         void Kick(string message);
 

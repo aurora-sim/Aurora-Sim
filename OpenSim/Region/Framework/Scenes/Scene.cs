@@ -599,7 +599,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public bool RemoveAgent (IScenePresence presence)
         {
-            presence.ControllingClient.Close ();
+            presence.ControllingClient.Close (false);
             if (presence.ParentID != UUID.Zero)
             {
                 presence.StandUp ();

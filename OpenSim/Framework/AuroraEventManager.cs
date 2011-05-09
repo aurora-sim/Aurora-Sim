@@ -56,7 +56,9 @@ namespace Aurora.Framework
         ///      param is an object[], with o[0] the UUID of the avatar and o[1] the AvatarData that is to be updated
         /// GridRegionSuccessfullyRegistered - Aurora.Server, A region has registered with the grid service
         ///      param is an object[], with o[0] the OSDMap which will be sent to the new region, o[1] the SessionID, o[2] the GridRegion that registered
-        /// 
+        /// Backup - The 'backup' console command was triggered, everything should backup
+        ///      no params
+        ///      
         /// </summary>
         public event OnGenericEventHandler OnGenericEvent;
         /// <summary>

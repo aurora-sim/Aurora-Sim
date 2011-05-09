@@ -200,7 +200,7 @@ namespace Aurora.BotManager
             m_scenePresence.Teleport(DEFAULT_START_POSITION);
         }
 
-        public void Close()
+        public void Close(bool forceKill)
         {
             // Pull Client out of Region
             m_log.Info("[RexBot]: Removing bot " + Name);
@@ -1185,12 +1185,12 @@ namespace Aurora.BotManager
 
         public void Stop ()
         {
-            Close ();
+            Close (true);
         }
 
         public void Kick (string message)
         {
-            Close ();
+            Close (true);
         }
 
         public void SendWearables (AvatarWearable[] wearables, int serial)

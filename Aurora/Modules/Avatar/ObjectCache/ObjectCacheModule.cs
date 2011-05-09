@@ -10,7 +10,6 @@ using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Interfaces;
 using Nini.Config;
-
 namespace Aurora.Modules
 {
     public class ObjectCacheModule : INonSharedRegionModule, IObjectCache
@@ -227,11 +226,10 @@ namespace Aurora.Modules
         {
             lock (ObjectCacheAgents)
             {
-                Dictionary<uint, uint> InternalCache;
-                if(ObjectCacheAgents.TryGetValue(AgentID, out InternalCache))
+                if(ObjectCacheAgents.ContainsKey(AgentID))
                 {
                     uint CurrentCachedCRC = 0;
-                    if(InternalCache.TryGetValue(localID, out CurrentCachedCRC ))
+                    if (ObjectCacheAgents[AgentID].TryGetValue (localID, out CurrentCachedCRC))
                     {
                          if (CurrentEntityCRC == CurrentCachedCRC)
                          {
@@ -243,10 +241,9 @@ namespace Aurora.Modules
                 }
                 else
                 {
-                    InternalCache = new Dictionary<uint, uint>();
+                    ObjectCacheAgents[AgentID] = new Dictionary<uint, uint> ();
                 }
-                InternalCache[localID] = CurrentEntityCRC;
-                ObjectCacheAgents[AgentID] = InternalCache;
+                ObjectCacheAgents[AgentID][localID] = CurrentEntityCRC;
                 return false;
             }
         }

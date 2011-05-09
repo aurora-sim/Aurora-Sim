@@ -998,6 +998,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     if(det != null)
                         det.AgentIsAZombie (sp.UUID);
                 }
+                //Send the killing message (DisableSimulator)
+                sp.ControllingClient.Stop ();
                 scene.RemoveAgent (sp);
                 sp = null;
             }
