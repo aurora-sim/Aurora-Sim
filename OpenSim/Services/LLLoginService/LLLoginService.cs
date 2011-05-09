@@ -1179,9 +1179,22 @@ namespace OpenSim.Services.LLLoginService
 
             if (m_CapsService != null && reason != "")
             {
-                OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
-                OSDMap SimSeedCaps = (OSDMap)responseMap["CapsUrls"];
-                regionClientCaps.AddCAPS(SimSeedCaps);
+                try
+                {
+                    OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson (reason);
+                    OSDMap SimSeedCaps = (OSDMap)responseMap["CapsUrls"];
+                    regionClientCaps.AddCAPS (SimSeedCaps);
+                }
+                catch
+                {
+                    //Delete the Caps!
+                    IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing> ();
+                    if (agentProcessor != null && m_CapsService != null)
+                        agentProcessor.LogoutAgent (regionClientCaps);
+                    else if (m_CapsService != null)
+                        m_CapsService.RemoveCAPS (aCircuit.AgentID);
+                    success = false;
+                }
             }
             return success;
         }
