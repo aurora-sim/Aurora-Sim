@@ -546,6 +546,7 @@ namespace OpenSim.Data.MySQL
             // Add all of the children objects to the SOGs
             foreach (SceneObjectPart prim in prims.Values)
             {
+                prim.LocalId = 0; //Reset it!
                 SceneObjectGroup sog;
                 if (prim.UUID != prim.ParentUUID)
                 {

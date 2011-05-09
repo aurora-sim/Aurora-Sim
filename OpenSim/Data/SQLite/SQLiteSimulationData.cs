@@ -581,7 +581,8 @@ namespace OpenSim.Data.SQLite
                             if (uuid == objID) //is new SceneObjectGroup ?
                             {
                                 prim = buildPrim(primRow, scene);
-                                prim.Shape = findPrimShape(uuid);
+                                prim.Shape = findPrimShape (uuid);
+                                prim.LocalId = 0; //Reset it!
                                 if (prim.Shape == null)
                                     continue;
 
