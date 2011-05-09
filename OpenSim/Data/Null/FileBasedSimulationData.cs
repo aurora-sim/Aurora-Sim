@@ -179,6 +179,7 @@ namespace OpenSim.Data.Null
 
         protected void ReadBackup (IScene scene)
         {
+            List<uint> foundLocalIDs = new List<uint> ();
             GZipStream m_loadStream;
             try
             {
@@ -210,10 +211,13 @@ namespace OpenSim.Data.Null
                 {
                     MemoryStream ms = new MemoryStream (data);
                     SceneObjectGroup sceneObject = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromXml2Format (ms, (Scene)scene);
-                    //foreach (ISceneChildEntity part in sceneObject.ChildrenEntities ())
-                    //{
-                    //    part.LocalId = 0;
-                    //}
+                    foreach (ISceneChildEntity part in sceneObject.ChildrenEntities ())
+                    {
+                        if (!foundLocalIDs.Contains (part.LocalId))
+                            foundLocalIDs.Add (part.LocalId);
+                        else
+                            part.LocalId = 0; //Reset it! Only use it once!
+                    }
 
                     m_groups.Add (sceneObject);
                 }

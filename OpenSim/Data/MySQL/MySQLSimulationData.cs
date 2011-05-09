@@ -543,10 +543,14 @@ namespace OpenSim.Data.MySQL
                     objects[prim.UUID] = new SceneObjectGroup(prim, scene);
             }
 
+            List<uint> foundLocalIDs = new List<uint> ();
             // Add all of the children objects to the SOGs
             foreach (SceneObjectPart prim in prims.Values)
             {
-                prim.LocalId = 0; //Reset it!
+                if(!foundLocalIDs.Contains(prim.LocalId))
+                    foundLocalIDs.Add(prim.LocalId);
+                else
+                    prim.LocalId = 0; //Reset it! Only use it once!
                 SceneObjectGroup sog;
                 if (prim.UUID != prim.ParentUUID)
                 {

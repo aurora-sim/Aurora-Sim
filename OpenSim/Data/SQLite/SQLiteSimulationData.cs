@@ -567,6 +567,7 @@ namespace OpenSim.Data.SQLite
                 cmd.CommandText = selectExp;
                 cmd.Connection = m_conn;
 
+                List<uint> foundLocalIDs = new List<uint> ();
                 // Fill root parts
                 using (IDataReader primRow = cmd.ExecuteReader())
                 {
@@ -582,9 +583,13 @@ namespace OpenSim.Data.SQLite
                             {
                                 prim = buildPrim(primRow, scene);
                                 prim.Shape = findPrimShape (uuid);
-                                prim.LocalId = 0; //Reset it!
                                 if (prim.Shape == null)
                                     continue;
+
+                                if (!foundLocalIDs.Contains (prim.LocalId))
+                                    foundLocalIDs.Add (prim.LocalId);
+                                else
+                                    prim.LocalId = 0; //Reset it! Only use it once!
 
                                 SceneObjectGroup group = new SceneObjectGroup(prim, scene);
                                 createdObjects[group.UUID] = group;
@@ -599,7 +604,7 @@ namespace OpenSim.Data.SQLite
                         }
                     }
                 }
-
+                
                 // Now fill the groups with part data
                 using (IDataReader primRow = cmd.ExecuteReader())
                 {
@@ -622,6 +627,10 @@ namespace OpenSim.Data.SQLite
                                     Console.WriteLine("Found an SceneObjectPart without a SceneObjectGroup! ObjectID: " + objID);
                                     continue;
                                 }
+                                if(!foundLocalIDs.Contains(prim.LocalId))
+                                    foundLocalIDs.Add(prim.LocalId);
+                                else
+                                    prim.LocalId = 0; //Reset it! Only use it once!
 
                                 createdObjects[new UUID(objID)].AddChild(prim, prim.LinkNum);
                                 LoadItems(prim);
