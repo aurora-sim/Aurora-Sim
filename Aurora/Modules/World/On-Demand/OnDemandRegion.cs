@@ -27,7 +27,7 @@ namespace Aurora.Modules.World.On_Demand
     /// -- Normal --
     /// Same as always
     /// </summary>
-    public class OnDemandRegionModule : INonSharedRegionModule
+    public class OnDemandRegionModule : INonSharedRegionModule, IActivityDetector
     {
         #region Declares
 
@@ -36,6 +36,7 @@ namespace Aurora.Modules.World.On_Demand
         private bool m_isShuttingDown = false;
         private bool m_isStartingUp = false;
         private bool m_isRunning = false;
+        private List<UUID> m_zombieAgents = new List<UUID> ();
 
         #endregion
 
@@ -50,6 +51,7 @@ namespace Aurora.Modules.World.On_Demand
             if (scene.RegionInfo.Startup != StartupType.Normal)
             {
                 m_scene = scene;
+                scene.StackModuleInterface<IActivityDetector> (this);
                 //Disable the heartbeat for this region
                 scene.ShouldRunHeartbeat = false;
 
@@ -122,6 +124,11 @@ namespace Aurora.Modules.World.On_Demand
         {
             if (m_scene.GetScenePresences ().Count == 1) //This presence hasn't been removed yet, so we check against one
             {
+                if (m_zombieAgents.Contains (presence.UUID))
+                {
+                    m_zombieAgents.Remove (presence.UUID);
+                    return; //It'll be readding an agent, don't kill the sim immediately
+                }
                 //If all clients are out of the region, we can close it again
                 if (m_scene.RegionInfo.Startup == StartupType.Medium)
                 {
@@ -230,6 +237,15 @@ namespace Aurora.Modules.World.On_Demand
         {
             m_scene.ShouldRunHeartbeat = true;
             m_scene.StartHeartbeat ();
+        }
+
+        #endregion
+
+        #region IActivityDetector Members
+
+        public void AgentIsAZombie (UUID agentID)
+        {
+            m_zombieAgents.Add (agentID);
         }
 
         #endregion
