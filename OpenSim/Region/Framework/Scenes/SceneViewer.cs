@@ -331,7 +331,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         if (child == e.RootChild)
                             continue; //Already sent
-                        EntityUpdate update = new EntityUpdate (child, PrimUpdateFlags.ForcedFullUpdate);
+                        EntityUpdate update = new EntityUpdate (child, PrimUpdateFlags.FullUpdate);
                         PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double> ();
                         item.Value = update;
                         item.Priority = m_prioritizer.GetUpdatePriority (m_presence, child);
@@ -452,7 +452,7 @@ namespace OpenSim.Region.Framework.Scenes
                             }
 
                             //Send the root object first!
-                            EntityUpdate rootupdate = new EntityUpdate (e.RootChild, PrimUpdateFlags.ForcedFullUpdate);
+                            EntityUpdate rootupdate = new EntityUpdate (e.RootChild, PrimUpdateFlags.FullUpdate);
                             PriorityQueueItem<EntityUpdate, double> rootitem = new PriorityQueueItem<EntityUpdate, double> ();
                             rootitem.Value = rootupdate;
                             rootitem.Priority = m_prioritizer.GetUpdatePriority (m_presence, e.RootChild);

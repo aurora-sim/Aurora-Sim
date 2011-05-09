@@ -236,19 +236,23 @@ namespace Aurora.Modules
                              //The client knows of the newest version
                              return true;
                          }
-                         //else, update below
                     }
                 }
-                else
-                {
-                    ObjectCacheAgents[AgentID] = new Dictionary<uint, uint> ();
-                }
-                ObjectCacheAgents[AgentID][localID] = CurrentEntityCRC;
                 return false;
             }
         }
 
-        public void RemovePrim (UUID AgentID, uint localID, byte cacheMissType)
+        public void AddCachedObject (UUID AgentID, uint localID, uint CRC)
+        {
+            lock (ObjectCacheAgents)
+            {
+                if (!ObjectCacheAgents.ContainsKey (AgentID))
+                    ObjectCacheAgents[AgentID] = new Dictionary<uint,uint>();
+                ObjectCacheAgents[AgentID][localID] = CRC;
+            }
+        }
+
+        public void RemoveObject (UUID AgentID, uint localID, byte cacheMissType)
         {
             lock (ObjectCacheAgents)
             {

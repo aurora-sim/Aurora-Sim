@@ -69,7 +69,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
                 //Add the console command if it is the default
                 if (m_default)
-                    MainConsole.Instance.Commands.AddCommand("region", false, "create region", "create region", "Create a new region.", AddRegion);
+                    MainConsole.Instance.Commands.AddCommand("create region", "create region", "Create a new region.", AddRegion);
             }
             
             m_openSim.ApplicationRegistry.StackModuleInterface<IRegionLoader>(this);

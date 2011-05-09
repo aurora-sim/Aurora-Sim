@@ -131,7 +131,7 @@ namespace Aurora.Modules
                     ((ISceneEntity)entity).ScheduleGroupUpdateToAvatar (SP, PrimUpdateFlags.ForcedFullUpdate);
                     IObjectCache cache = remoteClient.Scene.RequestModuleInterface<IObjectCache> ();
                     if (cache != null)
-                        cache.RemovePrim (remoteClient.AgentId, entity.LocalId, cacheMissType);
+                        cache.RemoveObject (remoteClient.AgentId, entity.LocalId, cacheMissType);
                     m_log.WarnFormat ("[ObjectCache]: Avatar didn't have {0}, miss type {1}, CRC {2}", primLocalID, cacheMissType, ((ISceneEntity)entity).RootChild.CRC);
                 }
             }

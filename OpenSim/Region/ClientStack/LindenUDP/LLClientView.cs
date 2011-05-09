@@ -3638,8 +3638,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 bool canUseCompressed = true;
                 bool canUseImproved = true;
-                bool canUseCached = true;
+                bool canUseCached = false; //Not possible at the moment without more viewer work... the viewer does some odd things with this
 
+                IObjectCache module = Scene.RequestModuleInterface<IObjectCache> ();
                 bool isTerse = updateFlags.HasFlag ((PrimUpdateFlags.TerseUpdate)) && !updateFlags.HasFlag (PrimUpdateFlags.FullUpdate) && !updateFlags.HasFlag (PrimUpdateFlags.ForcedFullUpdate);
                 // Compressed and cached object updates only make sense for LL primitives
                 if (entity is ISceneChildEntity)
@@ -3679,16 +3680,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             continue;
                     }
 
-                    IObjectCache module = Scene.RequestModuleInterface<IObjectCache> ();
                     if (!isTerse && module != null)
-                    {
-                        if (ent.CRC == 0)
-                            ent.CRC++;
                         canUseCached = module.UseCachedObject (AgentId, entity.LocalId, ent.CRC);
-                        if (!canUseCached)
-                        {
-                        }
-                    }
                     else
                         //No cache module? Don't use cached then, or it won't stop sending ObjectUpdateCached even when the client requests prims
                         canUseCached = false;
@@ -3768,8 +3761,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     else if (!canUseImproved)
                     {
                         compressedUpdates.Add (update);
+                        //We are sending a compressed, which the client will save, add it to the cache
+                        module.AddCachedObject (AgentId, entity.LocalId, ((ISceneChildEntity)entity).CRC);
                         CompressedFlags Flags = CompressedFlags.None;
-                        if (updateFlags == PrimUpdateFlags.FullUpdate || updateFlags == PrimUpdateFlags.ForcedFullUpdate)
+                        if (updateFlags == PrimUpdateFlags.FullUpdate)
                         {
                             //Add the defaults
                             updateFlags = PrimUpdateFlags.None;
@@ -3887,6 +3882,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 packet.RegionData.RegionHandle = m_scene.RegionInfo.RegionHandle;
                 packet.RegionData.TimeDilation = timeDilation;
                 packet.ObjectData = new ObjectUpdateCompressedPacket.ObjectDataBlock[blocks.Count];
+                packet.Type = PacketType.ObjectUpdate;
 
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
