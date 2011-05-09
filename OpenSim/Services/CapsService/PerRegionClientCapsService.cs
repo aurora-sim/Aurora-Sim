@@ -251,6 +251,7 @@ namespace OpenSim.Services.CapsService
         {
             //Remove our SEED cap
             RemoveStreamHandler("SEED", "POST", m_capsUrlBase);
+            RemoveCAPS ();
         }
 
         public virtual string CapsRequest(string request, string path, string param,
@@ -280,7 +281,6 @@ namespace OpenSim.Services.CapsService
             {
                 connector.DeregisterCaps();
             }
-            Close();
         }
 
         public void InformModulesOfRequest()

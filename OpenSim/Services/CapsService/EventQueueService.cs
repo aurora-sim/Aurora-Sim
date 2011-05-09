@@ -494,7 +494,7 @@ namespace OpenSim.Services.CapsService
         public void DeregisterCaps()
         {
             m_service.RemoveStreamHandler("EventQueueGet", "POST", m_capsPath);
-            MainServer.Instance.RemovePollServiceHTTPHandler("", m_capsPath);
+            MainServer.Instance.RemovePollServiceHTTPHandler ("POST", m_capsPath);
         }
 
         #endregion
