@@ -218,13 +218,13 @@ namespace Aurora.Services.DataService
             //Delete the original
             GD.Delete (m_regionSettingsRealm, new string[1] { "regionUUID" }, new object[1] { rs.RegionUUID });
             //Now replace with the new
-            GD.Insert (m_regionSettingsRealm, new object[] { rs.RegionUUID, rs.BlockTerraform, rs.BlockFly, rs.AllowDamage,
-                rs.RestrictPushing, rs.AllowLandResell, rs.AllowLandJoinDivide, rs.BlockShowInSearch, rs.AgentLimit, rs.ObjectBonus,
-                rs.Maturity, rs.DisableScripts, rs.DisableCollisions, rs.DisablePhysics, rs.TerrainTexture1,
+            GD.Insert (m_regionSettingsRealm, new object[] { rs.RegionUUID, rs.BlockTerraform ? 1 : 0, rs.BlockFly ? 1 : 0, rs.AllowDamage ? 1 : 0,
+                rs.RestrictPushing ? 1 : 0, rs.AllowLandResell ? 1 : 0, rs.AllowLandJoinDivide ? 1 : 0, rs.BlockShowInSearch ? 1 : 0, rs.AgentLimit, rs.ObjectBonus,
+                rs.Maturity, rs.DisableScripts ? 1 : 0, rs.DisableCollisions ? 1 : 0, rs.DisablePhysics ? 1 : 0, rs.TerrainTexture1,
                 rs.TerrainTexture2, rs.TerrainTexture3, rs.TerrainTexture4, rs.Elevation1NW, rs.Elevation2NW,
                 rs.Elevation1NE, rs.Elevation2NE, rs.Elevation1SE, rs.Elevation2SE, rs.Elevation1SW, rs.Elevation2SW,
-                rs.WaterHeight, rs.TerrainRaiseLimit, rs.TerrainLowerLimit, rs.UseEstateSun, rs.FixedSun, rs.SunPosition,
-                rs.Covenant, rs.Sandbox, rs.SunVector.X, rs.SunVector.Y, rs.SunVector.Z, (rs.LoadedCreationID == null ? "" : rs.LoadedCreationID), rs.LoadedCreationDateTime,
+                rs.WaterHeight, rs.TerrainRaiseLimit, rs.TerrainLowerLimit, rs.UseEstateSun ? 1 : 0, rs.FixedSun ? 1 : 0, rs.SunPosition,
+                rs.Covenant, rs.Sandbox ? 1 : 0, rs.SunVector.X, rs.SunVector.Y, rs.SunVector.Z, (rs.LoadedCreationID == null ? "" : rs.LoadedCreationID), rs.LoadedCreationDateTime,
                 rs.TerrainMapImageID, rs.TerrainImageID, rs.MinimumAge, rs.CovenantLastUpdated, OSDParser.SerializeJsonString(rs.Generic)});
         }
 
