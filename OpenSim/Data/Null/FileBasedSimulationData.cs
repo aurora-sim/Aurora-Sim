@@ -66,6 +66,7 @@ namespace OpenSim.Data.Null
         protected bool m_keepOldSave = true;
         protected bool m_oldSaveHasBeenSaved = false;
         protected string m_oldSaveDirectory = "Backups";
+        protected string m_loadDirectory = "";
 
         public string Name
         {
@@ -82,9 +83,13 @@ namespace OpenSim.Data.Null
 
         public void Initialise(string dbfile)
         {
-            return;
         }
 
+        /// <summary>
+        /// Read the config for the data loader
+        /// </summary>
+        /// <param name="scene"></param>
+        /// <param name="config"></param>
         protected void ReadConfig (IScene scene, IConfig config)
         {
             if (config != null)
@@ -95,6 +100,7 @@ namespace OpenSim.Data.Null
                 m_timeBetweenSaves = config.GetInt ("TimeBetweenSaves", m_timeBetweenSaves);
                 m_keepOldSave = config.GetBoolean ("SavePreviousBackup", m_keepOldSave);
                 m_oldSaveDirectory = config.GetString ("PreviousBackupDirectory", m_oldSaveDirectory);
+                m_loadDirectory = config.GetString ("LoadBackupDirectory", m_loadDirectory);
                 m_saveBackupChanges = config.GetBoolean ("SaveTimedPreviousBackup", m_keepOldSave);
                 m_timeBetweenBackupSaves = config.GetInt ("TimeBetweenBackupSaves", m_timeBetweenBackupSaves);
             }
@@ -119,6 +125,12 @@ namespace OpenSim.Data.Null
             m_fileName = scene.RegionInfo.RegionName + m_loadAppenedFileName + ".abackup";
         }
 
+        /// <summary>
+        /// Look for the backup event, and if it is there, trigger the backup of the sim
+        /// </summary>
+        /// <param name="FunctionName"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
         object AuroraEventManager_OnGenericEvent (string FunctionName, object parameters)
         {
             if (FunctionName == "Backup")
@@ -128,16 +140,30 @@ namespace OpenSim.Data.Null
             return null;
         }
 
+        /// <summary>
+        /// Save a backup on the timer event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         void m_saveTimer_Elapsed (object sender, ElapsedEventArgs e)
         {
             SaveBackup ("");
         }
 
+        /// <summary>
+        /// Save a backup into the oldSaveDirectory on the timer event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         void m_backupSaveTimer_Elapsed (object sender, ElapsedEventArgs e)
         {
             SaveBackup (m_oldSaveDirectory + "/");
         }
 
+        /// <summary>
+        /// Save a backup of the sim
+        /// </summary>
+        /// <param name="appendedFilePath">The file path where the backup will be saved</param>
         protected void SaveBackup (string appendedFilePath)
         {
             if (!m_saveChanges)
@@ -147,34 +173,38 @@ namespace OpenSim.Data.Null
                 return;
             m_log.Info ("[FileBasedSimulationData]: Saving Backup for region " + m_scene.RegionInfo.RegionName);
             string fileName = appendedFilePath + m_scene.RegionInfo.RegionName + m_saveAppenedFileName + ".abackup";
-            //Add the .temp since we might need to make a backup
+            //Add the .temp since we might need to make a backup and so that if something goes wrong, we don't corrupt the main backup
             GZipStream m_saveStream = new GZipStream (new FileStream (fileName + ".tmp", FileMode.Create), CompressionMode.Compress);
             TarArchiveWriter writer = new TarArchiveWriter (m_saveStream);
             IAuroraBackupArchiver archiver = m_scene.RequestModuleInterface<IAuroraBackupArchiver> ();
-            if (archiver != null)
-                archiver.AllowPrompting = false;
-            m_scene.RequestModuleInterface<IAuroraBackupArchiver> ().SaveRegionBackup (writer, m_scene);
-            if (archiver != null)
-                archiver.AllowPrompting = true;
+            
+            //Turn off prompting so that we don't ask the user questions every time we need to save the backup
+            archiver.AllowPrompting = false;
+            archiver.SaveRegionBackup (writer, m_scene);
+            archiver.AllowPrompting = true;
+
             //If we got this far, we assume that everything went well, so now we move the stuff around
             if(File.Exists(fileName))
             {
+                //If keepOldSave is enabled, the user wants us to move the first backup that we originally loaded from into the oldSaveDirectory
                 if (m_keepOldSave && !m_oldSaveHasBeenSaved)
                 {
+                    //Havn't moved it yet, so make sure the directory exists, then move it
                     m_oldSaveHasBeenSaved = true;
                     if (!Directory.Exists (m_oldSaveDirectory))
                         Directory.CreateDirectory (m_oldSaveDirectory);
                     File.Move (fileName, m_oldSaveDirectory + "/" + m_scene.RegionInfo.RegionName + SerializeDateTime() + m_saveAppenedFileName + ".abackup");
                 }
-                else
+                else //Just remove the file
                     File.Delete (fileName);
             }
+            //Now make it the full file again
             File.Move (fileName + ".tmp", fileName);
         }
 
         private string SerializeDateTime ()
         {
-            return DateTime.Now.Month + "-" + DateTime.Now.Day + "-" + DateTime.Now.Hour + "-" + DateTime.Now.Minute;
+            return "--" + DateTime.Now.Month + "-" + DateTime.Now.Day + "-" + DateTime.Now.Hour + "-" + DateTime.Now.Minute;
         }
 
         protected void ReadBackup (IScene scene)
@@ -183,7 +213,7 @@ namespace OpenSim.Data.Null
             GZipStream m_loadStream;
             try
             {
-                m_loadStream = new GZipStream (ArchiveHelpers.GetStream (m_fileName), CompressionMode.Decompress);
+                m_loadStream = new GZipStream (ArchiveHelpers.GetStream (m_loadDirectory + m_fileName), CompressionMode.Decompress);
             }
             catch
             {
@@ -194,6 +224,7 @@ namespace OpenSim.Data.Null
             byte[] data;
             string filePath;
             TarArchiveReader.TarEntryType entryType;
+            //Load the archive data that we need
             while ((data = reader.ReadEntry (out filePath, out entryType)) != null)
             {
                 if (TarArchiveReader.TarEntryType.TYPE_DIRECTORY == entryType)
@@ -240,7 +271,7 @@ namespace OpenSim.Data.Null
                 IBackupModule backupModule = scene.RequestModuleInterface<IBackupModule> ();
                 if (backupModule != null)
                 {
-                    //No loading of prims
+                    //No saving of prims as we do that, and we don't need any of the other threads running
                     backupModule.SavePrims = false;
                 }
             }
@@ -282,11 +313,15 @@ namespace OpenSim.Data.Null
 
         public void Shutdown ()
         {
+            //The sim is shutting down, we need to save one last backup
             SaveBackup ("");
         }
 
 
-
+        //
+        // We don't implement any of these, as they arn't needed by our implementation
+        // We do all the saving at once, so we don't need to save the objects every few mins
+        //
 
 
         public void Dispose()
@@ -324,8 +359,6 @@ namespace OpenSim.Data.Null
         public void RemoveRegion(UUID regionUUID)
         {
         }
-
-
 
         public void StoreLandObject (ILandObject land)
         {

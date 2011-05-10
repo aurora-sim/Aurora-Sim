@@ -115,6 +115,7 @@ namespace Aurora.Modules
             }
 
             writer.Close();
+            m_log.Info ("[Archive]: Finished saving of archive.");
         }
 
         public void LoadRegionBackup(TarArchiveReader reader, IScene scene)
