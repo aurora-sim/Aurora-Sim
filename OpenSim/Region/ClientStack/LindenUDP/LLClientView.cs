@@ -5077,14 +5077,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
             }
 
-            if ((updateFlags & CompressedFlags.TextureAnimation) != 0)
-            {
-                Utils.UInt64ToBytes ((ulong)part.TextureAnimation.Length, objectData, i);
-                i += 4;
-                Buffer.BlockCopy (part.TextureAnimation, 0, objectData, i, part.TextureAnimation.Length);
-                i += part.TextureAnimation.Length;
-            }
-
             objectData[i] = part.Shape.PathCurve;
             i++;
             Utils.UInt16ToBytes(part.Shape.PathBegin, objectData, i);
@@ -5136,6 +5128,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 Utils.IntToBytes(0, objectData, i);
                 i += 4;
+            }
+
+            if ((updateFlags & CompressedFlags.TextureAnimation) != 0)
+            {
+                Utils.UInt64ToBytes ((ulong)part.TextureAnimation.Length, objectData, i);
+                i += 4;
+                Buffer.BlockCopy (part.TextureAnimation, 0, objectData, i, part.TextureAnimation.Length);
+                i += part.TextureAnimation.Length;
             }
 
             ObjectUpdateCompressedPacket.ObjectDataBlock update = new ObjectUpdateCompressedPacket.ObjectDataBlock();
