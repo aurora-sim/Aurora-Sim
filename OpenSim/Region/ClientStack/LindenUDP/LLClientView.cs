@@ -3680,7 +3680,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             continue;
                     }
 
-                    if (!isTerse && module != null)
+                    if (canUseCached && !isTerse && module != null)
                         canUseCached = module.UseCachedObject (AgentId, entity.LocalId, ent.CRC);
                     else
                         //No cache module? Don't use cached then, or it won't stop sending ObjectUpdateCached even when the client requests prims
