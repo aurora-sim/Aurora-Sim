@@ -5277,7 +5277,7 @@ namespace OpenSim.Region.Framework.Scenes
             IOpenRegionSettingsModule module = ParentGroup.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
             if (module != null)
             {
-                if (shapeBlock.ProfileHollow > module.MaximumHollowSize * 500 &&
+                if (shapeBlock.ProfileHollow > (module.MaximumHollowSize * 500) &&
                     module.MaximumHollowSize != -1) //This is so that it works correctly, since the packet sends (N * 500)
                 {
                     shapeBlock.ProfileHollow = (ushort)(module.MaximumHollowSize * 500);

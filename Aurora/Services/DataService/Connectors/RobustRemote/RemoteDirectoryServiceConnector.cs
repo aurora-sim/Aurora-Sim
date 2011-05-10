@@ -75,6 +75,30 @@ namespace Aurora.Services.DataService
             }
         }
 
+        public void RemoveLandObject (UUID regionID, LandData args)
+        {
+            Dictionary<string, object> sendData = args.ToKeyValuePairs ();
+
+            sendData["METHOD"] = "removelandobject";
+
+            string reqString = WebUtils.BuildXmlResponse (sendData);
+
+            try
+            {
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf ("RemoteServerURI");
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest ("POST",
+                           m_ServerURI,
+                           reqString);
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat ("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString ());
+            }
+        }
+
         public LandData GetParcelInfo(UUID InfoUUID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();

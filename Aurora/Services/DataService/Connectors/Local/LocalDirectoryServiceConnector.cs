@@ -123,6 +123,11 @@ namespace Aurora.Services.DataService
             GD.Replace("searchparcel", Keys.ToArray(), Values.ToArray());
         }
 
+        public void RemoveLandObject (UUID regionID, LandData args)
+        {
+            GD.Delete ("searchparcel", new string[2] { "RegionID", "ParcelID" }, new object[2] { regionID, args.GlobalID });
+        }
+
         private bool[,] ConvertBytesToLandBitmap(byte[] Bitmap)
         {
             bool[,] tempConvertMap = new bool[64, 64];

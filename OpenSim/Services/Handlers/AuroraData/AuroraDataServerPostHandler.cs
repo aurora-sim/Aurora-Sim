@@ -157,9 +157,17 @@ namespace OpenSim.Services
                     #region Search
                     case "addlandobject":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
-                                return FailureResult();
-                        return DirectoryHandler.AddLandObject(request);
+                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult ();
+                        return DirectoryHandler.AddLandObject (request);
+                    case "removelandobject":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult ();
+                        int x,y;
+                        Util.UlongToInts(m_regionHandle, out x, out y);
+                        UUID regionID = this.m_registry.RequestModuleInterface<IGridService> ().GetRegionByPosition (UUID.Zero, x, y).RegionID;
+                        return DirectoryHandler.RemoveLandObject (regionID, request);
                     case "getparcelinfo":
                         if (urlModule != null)
                             if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
@@ -1328,13 +1336,22 @@ namespace OpenSim.Services
             return encoding.GetBytes(xmlString);
         }
 
-        public byte[] AddLandObject(Dictionary<string, object> request)
+        public byte[] AddLandObject (Dictionary<string, object> request)
         {
-            LandData land = new LandData();
-            land.FromKVP(request);
-            DirectoryServiceConnector.AddLandObject(land);
+            LandData land = new LandData ();
+            land.FromKVP (request);
+            DirectoryServiceConnector.AddLandObject (land);
 
-            return SuccessResult();
+            return SuccessResult ();
+        }
+
+        public byte[] RemoveLandObject (UUID regionID, Dictionary<string, object> request)
+        {
+            LandData land = new LandData ();
+            land.FromKVP (request);
+            DirectoryServiceConnector.RemoveLandObject (regionID, land);
+
+            return SuccessResult ();
         }
 
         private byte[] SuccessResult()
