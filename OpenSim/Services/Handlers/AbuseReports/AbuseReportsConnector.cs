@@ -66,6 +66,10 @@ namespace OpenSim.Server.Handlers.AbuseReports
             server.AddStreamHandler(new AbuseReportsHandler(m_AbuseReportsService));
         }
 
+        public void FinishedStartup ()
+        {
+        }
+
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
         }
