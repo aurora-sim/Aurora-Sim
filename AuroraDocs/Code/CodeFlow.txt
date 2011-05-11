@@ -1,0 +1,38 @@
+Understanding the Code Flow of Aurora
+
+Due to the largely asyncronous nature of Aurora, the code flow of Aurora is quite complex and has many paths. 
+However, all start out from the same initial point, as at the base, they all load the same plugins and interfaces.
+This allows Aurora to reuse the code between Standalone and Grid, Aurora.exe and Aurora.Server.exe rather than have different paths for each.
+The only difference between Aurora.Server.exe and Aurora.exe is what modules that each load (you can make Aurora.Server start regions if you try).
+
+1): During Startup, the Application starts off with loading the configuration options from the commands passed into it by the application that started it.
+2): It then reads the basic configuration files (.ini files) and sets up the error/crash reporting and logging utilities.
+3): It loads the ISimulationBase, which begins the main process of staring the Standalone, and it loads the ICommandConsole interface first, so that the console is fully loaded.
+4): It then lets the IApplicationPlugins take over, which begin the loading of the IService modules and the AuroraDataPlugins, which connect to the database and establish connections as necessary.
+
+If you are following the Region (standalone or grid attached region, continue on), if you are following Aurora.Server, skip to the second 5):
+
+5): After the services have started, the regions begin to load from the LoadRegionsPlugin, which loads other modules which can implement different ways of finding regions, such as the database or .ini files.
+6): The region info is passed to the SceneManager, which begins the startup process of the region, as it creates the initial Scene reference and loads the IRegistryCore instance for it with the modules from the ISimulationBase.
+7): The Scene is first passed to the ISharedRegionStartupModules, which do the low level setup of modules, such as estate and physics plugin loading.
+
+If you are following the path of a Grid Attached Region, continue on, if you are following the path of a standalone, skip to number 11
+
+8): The RegisterRegionWithGridModule starts up, and reads the SessionID from the region info, and does the initial contact with Aurora.Server.
+9): It requests that Aurora.Server allow it to connect to the grid and that it give it the URLs for the handlers that Aurora.Server has set up for regions so that it can get the data it needs.
+10): After successfully retrieving the info, it passes the info to other modules that require it, such as the Connectors that take the place of services that just connect to Aurora.Server instead of the database.
+
+Reconvergence of Standalone
+
+11): After this is complete, the IRegionModuleBase plugins (ISharedRegionModule and INonSharedRegionModule) are loaded and started, which load different client interfaces.
+12): After this is done, the ISharedRegionStartupModules are called again, which tells them that the region has finished loading, and they do last minute checks and finish startup of the region.
+13): The OnAddedScene event in the SceneManager is then called, so that IApplicationPlugins can know when a region has finished being started.
+14): The heartbeat is then started so that the region can run and start up, and the SceneManager informs the Scene that it has finished loading.
+15): The Scene then waits for all modules to finish loading, as all modules must finish starting scripts and generating map tiles and other large loads asyncronously, and they use the FinishedStartup method of the Scene to tell the Scene that the module has finished starting the Scene up.
+16): After all modules are loaded and ready, the SceneManager is alerted, and if no more regions are ready to load, it will release the console to the user and it is started.
+
+Aurora.Server startup
+
+5): After the services have started, the connectors, which allow regions to connect via HTTP to Aurora.Server to get/store info, are started
+6): They take the interfaces of the services that have started earlier so that they can serve the information as requested.
+7): Startup then completes when all modules have loaded

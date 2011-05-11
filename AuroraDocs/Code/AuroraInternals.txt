@@ -1,0 +1,77 @@
+The archetecture of Aurora can be broken down into first off, 2 parts, the Region (Aurora.exe), and the Server (Aurora.Server in grid mode, Aurora.exe in standalone). Both of these will be reviewed in detail in this document. The Region server is what runs what the client sees (prims) and deals with client movement. The Server deals with the hosting of assets (textures mainly) and inventory, among other things. 
+
+Structures of Aurora
+
+Some of the main 'heavyweight' interfaces in Aurora are the IScene, the ISimulationBase, and the IRegistryCore interfaces.
+Each of these deal with a different part of Aurora and implement the key pieces that make Aurora run.
+
+The IScene interface is the interface that implements what the client sees and deals with keeping the region running while the client is there.
+It deals with running the heartbeat threads which keep the region running, syncronizing modules, firing events, and connecting clients.
+It implements the IRegistryCore interface, which will be discussed later, and this allows it to connect module interfaces.
+It also fires events (through the AuroraEventManager and the EventManager), that tell listening modules things that are going on in the Scene so that they can act upon it.
+
+The ISimulationBase is the base of both Aurora and Aurora.Server. It is the first interface to be started when running Aurora, and it deals with the loading of the configuration files, the console, 
+and the startup of the IApplicationPlugins. It also creates the first instance of the IRegistryCore interface, and all modules that register with the ISimulationBase will be accessable to any other 
+modules, even ones that have a different instance of IRegistryCore (as the lower level modules are added to upper level implementations of IRegistryCore).
+
+The IRegistryCore module keeps track of what modules are running in Aurora and Aurora.Server while it is running.
+You can request this interface from most core interfaces, including both the IScene and the ISimulationBase, as it is the base of how the modular interface works.
+It has the RegisterModuleInterface<T>(T Module) method, in which you add your module to the list so that other modules can access it, and the RequestModuleInterface<T>() which gets the given module.
+There are more advanced options such as stacking and the getting of more than one module at a time available as well.
+
+
+Modules in Aurora
+
+The Region Servers and the Server are both initially loaded with IApplicationPlugin modules, which mainly deal with loading the regions and any IService modules that are available.
+The IApplicationPlugin modules are the lowest level module that can be implemented in Aurora, and they mainly deal with
+* The setting up of basic pieces, such as the console
+* Loading regions from different configurations
+* Loading higher level (IService normally) modules
+
+Some examples of these would be the LoadRegionsPlugin, ServicesLoader, and the UpdaterPlugin plugins, all of which are in Aurora-Sim and can be reviewed further in the document on IApplicationPlugins.
+These load the initial pieces of Aurora in both Aurora.exe and Aurora.Server.exe.
+Best type of modules to implement here:
+Modules that require startup before any modules and Scenes are loaded, modules that will start up/create regions, modules that require access to low level application functions, such as reading config files and more.
+
+
+The IService modules are loaded after the IApplicationPlugins are loaded, and are mainly used to
+* Load plugins that are used for large services, such as inventory and assets.
+* Load plugins that are used for cross server communications
+
+Some examples of these would be the InventoryService, AssetService, CapsService and many more.
+These services are very important to the usage of Aurora and run most of the core implementations of Aurora.
+Best type of modules to implement here:
+Modules that require startup before most modules are started, modules that access the database regularly, modules that will talk to other servers.
+
+
+Closer look at one service and how it works
+In this subsection, we will be looking at how the AssetService works (in a general way).
+
+Standalone Mode:
+The AssetService is loaded in Aurora.Server and connects to the database as one of the first modules to load in the IService module group, as it is required by other modules.
+It is then free to serve assets to any other modules that request it with an IRegistryCore instance, such as by this line of code "m_registry.RequestModuleInterface<IAssetService>();" 
+
+Grid Mode:
+The AssetService is loaded on Aurora.Server and connects to the database when in use. It is initialized as one of the first IService modules as many other services require the use of the AssetService.
+Besides setting up the AssetService on Aurora.Server, the AssetServiceConnector is started, which allows for remote connections to get/store assets in the AssetService.
+When setting up the AssetServiceConnector, it requests the IAssetService (later when it is needed) from the IRegistryCore instance that it gets in the Start method of IService in the line "m_registry.RequestModuleInterface<IAssetService>();" 
+Now that it has the instance of the AssetService, it is able to set up the HTTP handlers so that the regions in the grid can access the assets that it has.
+
+On the Region side (Aurora.exe), the AssetServicesConnector starts up in place of the AssetService, which requests assets from the HTTP handlers set up prior to this in Aurora.Server.
+After initially contacting Aurora.Server with the RegistrationURL set in the config files by the user, the URLs for all handlers that the region has access to are transfered, and the AssetServiceConnector will read its URL.
+It can now access the AssetService on Aurora.Server securely and get/store assets as it needs.
+
+
+The ISharedRegionStartupModule plugins
+These plugins are loaded by the SceneManager, and deal with setting up low leve parts of the Scene. Some examples of these types of modules would be the PhysicsInitializer and the BackupModule.
+These deal with backup of prims, and the setup of the physics engine and estate services for the region. 
+They load prims from the database into the Scene as well as load other region settings.
+Best type of modules to implement here:
+Low level modules that require setup before the Scene is loaded and may need to be used by other modules, and do not need to do anything else but load parts of the Scene 
+
+
+The IRegionModuleBase plugins (INonSharedRegionModule and ISharedRegionModule)
+These plugins are loaded by the IApplicationPlugin RegionModulesControllerPlugin, and they are region modules only. They deal with setting up certain parts of the user experience, such as the profile and search modules for the client.
+They deal with setting up certain parts of the sim and implementing interfaces that the client will call to get/store information as well as setting up parts of the Scene so that it will run correctly.
+Best type of modules to implement here:
+Modules that deal with implementing client functions, and small scale scene functions, such as the Profile and Search modules.
