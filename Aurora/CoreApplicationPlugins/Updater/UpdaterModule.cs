@@ -16,7 +16,7 @@ namespace OpenSim.CoreApplicationPlugins
     public class UpdaterPlugin : IApplicationPlugin
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private string m_urlToCheckForUpdates = "http://grid.aurora-sim.org/updates.xml";
+        private string m_urlToCheckForUpdates = "http://aurora-sim.org/updates.xml";
 
         public void Initialize(ISimulationBase openSim)
         {
@@ -56,12 +56,11 @@ namespace OpenSim.CoreApplicationPlugins
                 if (float.Parse(UpdaterNode.ChildNodes[2].InnerText) > CurrentVersion && LastestVersionToBlock < float.Parse(UpdaterNode.ChildNodes[2].InnerText))
                 {
                     //Ask if they would like to update
-                    DialogResult result = MessageBox.Show("Aurora Update",
-                        "A new version of Aurora has been released, version " +
+                    DialogResult result = MessageBox.Show("A new version of Aurora has been released, version " +
                         UpdaterNode.ChildNodes[2].InnerText +
                         " released " + UpdaterNode.ChildNodes[3].InnerText +
                         ". Release notes: " + UpdaterNode.ChildNodes[4].InnerText +
-                        ", do you want to download the update?",
+                        ", do you want to download the update?", "Aurora Update",
                         System.Windows.Forms.MessageBoxButtons.YesNo);
 
                     //If so, download the new version

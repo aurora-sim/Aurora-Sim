@@ -67,6 +67,7 @@ namespace OpenSim.Data.Null
         protected bool m_oldSaveHasBeenSaved = false;
         protected string m_oldSaveDirectory = "Backups";
         protected string m_loadDirectory = "";
+        protected bool m_requiresSave = false;
 
         public string Name
         {
@@ -147,7 +148,13 @@ namespace OpenSim.Data.Null
         /// <param name="e"></param>
         void m_saveTimer_Elapsed (object sender, ElapsedEventArgs e)
         {
-            SaveBackup ("");
+            if (m_requiresSave)
+            {
+                SaveBackup ("");
+                m_requiresSave = false;
+            }
+            else
+                m_log.Info ("[FileBasedSimulationData]: Not saving backup, not required");
         }
 
         /// <summary>
@@ -330,34 +337,42 @@ namespace OpenSim.Data.Null
 
         public void StoreObject(SceneObjectGroup obj, UUID regionUUID)
         {
+            m_requiresSave = true;
         }
 
         public void RemoveObject(UUID obj, UUID regionUUID)
         {
+            m_requiresSave = true;
         }
 
         public void StorePrimInventory(UUID primID, ICollection<TaskInventoryItem> items)
         {
+            m_requiresSave = true;
         }
 
         public void StoreTerrain(double[,] ter, UUID regionID)
         {
+            m_requiresSave = true;
         }
 
         public void RemoveObjects(List<UUID> objGroups)
         {
+            m_requiresSave = true;
         }
 
         public void StoreTerrain(short[] terrain, UUID regionID, bool Revert)
         {
+            m_requiresSave = true;
         }
 
         public void StoreWater(short[] water, UUID regionID, bool Revert)
         {
+            m_requiresSave = true;
         }
 
         public void RemoveRegion(UUID regionUUID)
         {
+            m_requiresSave = true;
         }
 
         public void StoreLandObject (ILandObject land)
