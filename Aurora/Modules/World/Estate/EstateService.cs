@@ -491,9 +491,9 @@ namespace Aurora.Modules
                             if (!Parcel.IsBannedFromLand(userID))
                             {
                                 //Now we have to check their userloc
-                                if (ILO.LandData.LandingType == 2)
+                                if (ILO.LandData.LandingType == (int)LandingType.None)
                                     continue; //Blocked, check next one
-                                else if (ILO.LandData.LandingType == 1) //Use their landing spot
+                                else if (ILO.LandData.LandingType == (int)LandingType.LandingPoint) //Use their landing spot
                                     newPosition = Parcel.LandData.UserLocation;
                                 else //They allow for anywhere, so dump them in the center at the ground
                                     newPosition = parcelManagement.GetParcelCenterAtGround(Parcel);
