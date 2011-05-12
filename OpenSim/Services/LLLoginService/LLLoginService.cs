@@ -525,6 +525,11 @@ namespace OpenSim.Services.LLLoginService
                 List<InventoryItemBase> gestures = m_InventoryService.GetActiveGestures(account.PrincipalID);
                 m_log.DebugFormat("[LLOGIN SERVICE]: {0} active gestures", gestures.Count);
 
+                UserInfo guinfo = m_agentInfoService.GetUserInfo (account.PrincipalID.ToString ());
+                //Reset logged in to true if the user was crashed, but don't fire the logged in event yet
+                m_agentInfoService.SetLoggedIn (account.PrincipalID.ToString (), true, false);
+                //Lock it as well
+                m_agentInfoService.LockLoggedInStatus (account.PrincipalID.ToString (), true);
                 //
                 // Clear out any existing CAPS the user may have
                 //
@@ -549,11 +554,6 @@ namespace OpenSim.Services.LLLoginService
                 // Change Online status and get the home region
                 //
                 GridRegion home = null;
-                UserInfo guinfo = m_agentInfoService.GetUserInfo(account.PrincipalID.ToString());
-                //Reset logged in to true if the user was crashed, but don't fire the logged in event yet
-                m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true, false);
-                //Lock it as well
-                m_agentInfoService.LockLoggedInStatus (account.PrincipalID.ToString (), true);
                 if (guinfo != null && (guinfo.HomeRegionID != UUID.Zero) && m_GridService != null)
                 {
                     home = m_GridService.GetRegionByUUID(scopeID, guinfo.HomeRegionID);
