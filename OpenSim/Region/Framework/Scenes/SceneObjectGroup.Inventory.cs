@@ -46,24 +46,22 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void ForceInventoryPersistence()
         {
-            lock (m_partsLock)
+            GetReaderLock ();
+            foreach (SceneObjectPart part in m_partsList)
             {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    part.Inventory.ForceInventoryPersistence();
-                }
+                part.Inventory.ForceInventoryPersistence ();
             }
+            ReleaseReaderLock ();
         }
 
         public void BackupPreparation()
         {
-            lock (m_partsLock)
+            GetReaderLock ();
+            foreach (SceneObjectPart part in m_partsList)
             {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    part.Inventory.SaveScriptStateSaves();
-                }
+                part.Inventory.SaveScriptStateSaves ();
             }
+            ReleaseReaderLock ();
         }
 
         /// <summary>
@@ -75,13 +73,12 @@ namespace OpenSim.Region.Framework.Scenes
             // Don't start scripts if they're turned off in the region!
             if (!m_scene.RegionInfo.RegionSettings.DisableScripts)
             {
-                lock (m_partsLock)
+                GetReaderLock ();
+                foreach (SceneObjectPart part in m_partsList)
                 {
-                    foreach (SceneObjectPart part in m_partsList)
-                    {
-                        part.Inventory.CreateScriptInstances(startParam, postOnRez, stateSource, RezzedFrom);
-                    }
+                    part.Inventory.CreateScriptInstances (startParam, postOnRez, stateSource, RezzedFrom);
                 }
+                ReleaseReaderLock ();
             }
         }
 
@@ -94,13 +91,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// </param>
         public void RemoveScriptInstances(bool sceneObjectBeingDeleted)
         {
-            lock (m_partsLock)
+            GetReaderLock ();
+            foreach (SceneObjectPart part in m_partsList)
             {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    part.Inventory.RemoveScriptInstances(sceneObjectBeingDeleted);
-                }
+                part.Inventory.RemoveScriptInstances (sceneObjectBeingDeleted);
             }
+            ReleaseReaderLock ();
         }
 
         /// <summary>
@@ -253,14 +249,13 @@ namespace OpenSim.Region.Framework.Scenes
                               PermissionMask.Transfer) | 7;
 
             uint ownerMask = 0x7ffffff;
-            lock (m_partsLock)
+            GetReaderLock ();
+            foreach (SceneObjectPart part in m_partsList)
             {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    ownerMask &= part.OwnerMask;
-                    perms &= part.Inventory.MaskEffectivePermissions();
-                }
+                ownerMask &= part.OwnerMask;
+                perms &= part.Inventory.MaskEffectivePermissions ();
             }
+            ReleaseReaderLock ();
 
             if ((ownerMask & (uint)PermissionMask.Modify) == 0)
                 perms &= ~(uint)PermissionMask.Modify;
@@ -285,24 +280,22 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void ApplyNextOwnerPermissions()
         {
-            lock (m_partsLock)
+            GetReaderLock ();
+            foreach (SceneObjectPart part in m_partsList)
             {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    part.ApplyNextOwnerPermissions();
-                }
+                part.ApplyNextOwnerPermissions ();
             }
+            ReleaseReaderLock ();
         }
 
         public void ResumeScripts()
         {
-            lock (m_partsLock)
+            GetReaderLock ();
+            foreach (SceneObjectPart part in m_partsList)
             {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    part.Inventory.ResumeScripts();
-                }
+                part.Inventory.ResumeScripts ();
             }
+            ReleaseReaderLock ();
         }
     }
 }
