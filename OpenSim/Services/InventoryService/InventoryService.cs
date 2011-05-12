@@ -68,6 +68,8 @@ namespace OpenSim.Services.InventoryService
                 m_AllowDelete = invConfig.GetBoolean ("AllowDelete", true);
 
             registry.RegisterModuleInterface<IInventoryService>(this);
+
+            MainConsole.Instance.Commands.AddCommand ("fix inventory", "fix inventory", "If the user's inventory has been corrupted, this function will attempt to fix it", FixInventory);
         }
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
@@ -109,6 +111,81 @@ namespace OpenSim.Services.InventoryService
                 result = true;
             }
             return result;
+        }
+
+        public virtual void FixInventory (string module, string[] cmd)
+        {
+            string userName = MainConsole.Instance.CmdPrompt ("Name of user");
+            UserAccount account = m_UserAccountService.GetUserAccount (UUID.Zero, userName);
+            if (account == null)
+            {
+                m_log.Warn ("Could not find user");
+                return;
+            }
+            InventoryFolderBase rootFolder = GetRootFolder (account.PrincipalID);
+
+            //Fix having a default root folder
+            if (rootFolder == null)
+            {
+                m_log.Warn ("Fixing default root folder...");
+                List<InventoryFolderBase> skel = GetInventorySkeleton (account.PrincipalID);
+                if (skel.Count == 0)
+                {
+                    CreateUserInventory (account.PrincipalID, false);
+                    rootFolder = GetRootFolder (account.PrincipalID);
+                }
+                else
+                {
+                    rootFolder = new InventoryFolderBase ();
+
+                    rootFolder.Name = "My Inventory";
+                    rootFolder.Type = (short)AssetType.RootFolder;
+                    rootFolder.Version = 1;
+                    rootFolder.ID = skel[0].ParentID;
+                    rootFolder.Owner = account.PrincipalID;
+                    rootFolder.ParentID = UUID.Zero;
+                }
+            }
+            //Check against multiple root folders
+            List<InventoryFolderBase> rootFolders = GetRootFolders (account.PrincipalID);
+            if (rootFolders.Count != 1)
+            {
+            }
+            //Fix any root folders that shouldn't be root folders
+            List<InventoryFolderBase> skeleton = GetInventorySkeleton (account.PrincipalID);
+            List<UUID> foundFolders = new List<UUID> ();
+            List<UUID> badFolders = new List<UUID> ();
+            foreach (InventoryFolderBase f in skeleton)
+            {
+                if (!foundFolders.Contains (f.ID))
+                    foundFolders.Add (f.ID);
+                if (f.Name == "My Inventory" && f.ParentID != UUID.Zero)
+                {
+                    //Merge them all together
+                    badFolders.Add (f.ID);
+                }
+            }
+            foreach (InventoryFolderBase f in skeleton)
+            {
+                if ((!foundFolders.Contains(f.ParentID) && f.ParentID != UUID.Zero) || 
+                    f.ID == f.ParentID)
+                {
+                    //The viewer loses the parentID when something goes wrong
+                    //it puts it in the top where My Inventory should be
+                    //We need to put it back in the My Inventory folder, as the sub folders are right for some reason
+                    f.ParentID = rootFolder.ID;
+                    m_Database.StoreFolder (f);
+                    m_log.WarnFormat ("Fixing folder {0}", f.Name);
+                }
+                else if (badFolders.Contains (f.ParentID))
+                {
+                    //Put it back in the My Inventory folder
+                    f.ParentID = rootFolder.ID;
+                    m_Database.StoreFolder (f);
+                    m_log.WarnFormat ("Fixing folder {0}", f.Name);
+                }
+            }
+            m_log.Warn ("Completed the check");
         }
 
         public virtual bool CreateUserInventory (UUID principalID, bool createDefaultItems)
