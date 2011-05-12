@@ -651,6 +651,10 @@ namespace OpenSim.Data.MySQL
             }
         }
 
+        public void Tainted ()
+        {
+        }
+
         public void StorePrimInventory (UUID primID, ICollection<TaskInventoryItem> items)
         {
             lock (m_dbLock)

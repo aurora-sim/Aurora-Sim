@@ -227,6 +227,10 @@ namespace OpenSim.Data.MSSQL
             }
         }
 
+        public void Tainted ()
+        {
+        }
+
         /// <summary>
         /// Stores all object's details apart from inventory
         /// </summary>

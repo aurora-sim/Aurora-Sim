@@ -151,7 +151,7 @@ namespace OpenSim.Data.Null
             if (m_requiresSave)
             {
                 SaveBackup ("");
-                //m_requiresSave = false;
+                m_requiresSave = false;
             }
             else
                 m_log.Info ("[FileBasedSimulationData]: Not saving backup, not required");
@@ -333,6 +333,11 @@ namespace OpenSim.Data.Null
 
         public void Dispose()
         {
+        }
+
+        public void Tainted ()
+        {
+            m_requiresSave = true;
         }
 
         public void StoreObject(SceneObjectGroup obj, UUID regionUUID)

@@ -481,6 +481,8 @@ namespace Aurora.Modules
             /// <param name="sceneObjectGroup"></param>
             public void AddPrimBackupTaint (ISceneEntity sceneObjectGroup)
             {
+                //Tell the database that something has changed
+                m_scene.SimulationDataService.Tainted ();
                 if (!SavePrims)
                     return;
 

@@ -706,6 +706,10 @@ namespace OpenSim.Data.SQLite
             prim.Inventory.RestoreInventoryItems(inventory);
         }
 
+        public void Tainted ()
+        {
+        }
+
         /// <summary>
         /// Store a terrain revision in region storage
         /// </summary>

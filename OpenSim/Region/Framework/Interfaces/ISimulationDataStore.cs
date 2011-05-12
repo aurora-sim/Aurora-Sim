@@ -150,5 +150,10 @@ namespace OpenSim.Region.Framework.Interfaces
         /// Make a copy of the given data store
         /// </summary>
         ISimulationDataStore Copy ();
+
+        /// <summary>
+        /// Something has changed in the region, just alerting us to the change if we need to do anything
+        /// </summary>
+        void Tainted ();
     }
 }
