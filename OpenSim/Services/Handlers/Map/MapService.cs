@@ -131,11 +131,12 @@ namespace OpenSim.Services.Handlers.Map
                     //Find the offsets first
                     float x = (float)((regions[i].RegionLocX - (regionX * (float)Constants.RegionSize)) / (float)Constants.RegionSize);
                     float y = (float)((regions[i].RegionLocY - (regionY * (float)Constants.RegionSize)) / (float)Constants.RegionSize);
+                    y += (regions[i].RegionSizeX - Constants.RegionSize) / Constants.RegionSize;
                     float xx = (float)(x * (SizeOfImage / mapView));
                     float yy = SizeOfImage - (y * (SizeOfImage / mapView) + (SizeOfImage / (mapView)));
                     bitImages[i].RotateFlip (RotateFlipType.RotateNoneFlipX);
                     g.DrawImage (bitImages[i], xx, yy,
-                        (int)((float)SizeOfImage / (float)mapView), (int)((float)SizeOfImage / (float)mapView)); // y origin is top
+                        (int)((float)SizeOfImage / (float)mapView * ((float)regions[i].RegionSizeX / (float)Constants.RegionSize)), (int)((float)SizeOfImage / (float)mapView * ((float)regions[i].RegionSizeY / (float)Constants.RegionSize))); // y origin is top
                 }
 
                 EncoderParameters myEncoderParameters = new EncoderParameters ();
