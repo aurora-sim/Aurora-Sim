@@ -67,7 +67,7 @@ namespace OpenSim.Data.Null
         protected bool m_oldSaveHasBeenSaved = false;
         protected string m_oldSaveDirectory = "Backups";
         protected string m_loadDirectory = "";
-        protected bool m_requiresSave = false;
+        protected bool m_requiresSave = true;
 
         public string Name
         {
@@ -151,7 +151,7 @@ namespace OpenSim.Data.Null
             if (m_requiresSave)
             {
                 SaveBackup ("");
-                m_requiresSave = false;
+                //m_requiresSave = false;
             }
             else
                 m_log.Info ("[FileBasedSimulationData]: Not saving backup, not required");
