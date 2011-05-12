@@ -428,6 +428,7 @@ namespace Aurora.Modules
                 maxY = maxY,
                 minX = minX,
                 minY = minY,
+                mapBlocks = flag,
                 remoteClient = remoteClient
             });
             if (!blockRequesterIsRunning)
@@ -517,6 +518,8 @@ namespace Aurora.Modules
                             mapBlocks.Add(MapBlockFromGridRegion(region));
                         else if (item.mapBlocks == 1)
                             mapBlocks.Add(TerrainBlockFromGridRegion(region));
+                        else //if (item.mapBlocks == 2) //V2 viewer, we need to deal with it a bit
+                            mapBlocks.AddRange (Map2BlockFromGridRegion (region));
                     }
                     /*}
                     else
@@ -550,6 +553,44 @@ namespace Aurora.Modules
             block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
             block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
             return block;
+        }
+
+        protected List<MapBlockData> Map2BlockFromGridRegion (GridRegion r)
+        {
+            List<MapBlockData> blocks = new List<MapBlockData> ();
+            MapBlockData block = new MapBlockData ();
+            if (r == null)
+            {
+                block.Access = (byte)SimAccess.Down;
+                block.MapImageID = UUID.Zero;
+                blocks.Add (block);
+                return blocks;
+            }
+            block.Access = r.Access;
+            block.MapImageID = r.TerrainImage;
+            block.Name = r.RegionName;
+            block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
+            block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
+            blocks.Add(block);
+            if (r.RegionSizeX > Constants.RegionSize || r.RegionSizeY > Constants.RegionSize)
+            {
+                for (int x = 0; x < r.RegionSizeX / Constants.RegionSize; x++)
+                {
+                    for (int y = 0; y < r.RegionSizeY / Constants.RegionSize; y++)
+                    {
+                        if (x == 0 && y == 0)
+                            continue;
+                         block = new MapBlockData ();
+                        block.Access = r.Access;
+                        block.MapImageID = r.TerrainImage;
+                        block.Name = r.RegionName; //Child piece, so ignore it
+                        block.X = (ushort)((r.RegionLocX / Constants.RegionSize) + x);
+                        block.Y = (ushort)((r.RegionLocY / Constants.RegionSize) + y);
+                        blocks.Add (block);
+                    }
+                }
+            }
+            return blocks;
         }
 
         private void OnMapNameRequest(IClientAPI remoteClient, string mapName)
