@@ -91,14 +91,15 @@ namespace OpenSim.Services.Handlers.Map
             try
             {
                 int mapLayer = int.Parse (uri.Substring (4, 1));
+                int mapView = (int)Math.Pow(2, (mapLayer - 1));
                 int regionX = int.Parse (splitUri[2]);
                 int regionY = int.Parse (splitUri[3]);
 
                 List<GridRegion> regions = m_registry.RequestModuleInterface<IGridService> ().GetRegionRange (UUID.Zero,
-                        (int)((regionX * (int)Constants.RegionSize) - (mapLayer * (int)Constants.RegionSize)),
-                        (int)((regionX * (int)Constants.RegionSize) + (mapLayer * (int)Constants.RegionSize)),
-                        (int)((regionY * (int)Constants.RegionSize) - (mapLayer * (int)Constants.RegionSize)),
-                        (int)((regionY * (int)Constants.RegionSize) + (mapLayer * (int)Constants.RegionSize)));
+                        (int)((regionX * (int)Constants.RegionSize) - (mapView * (int)Constants.RegionSize)),
+                        (int)((regionX * (int)Constants.RegionSize) + (mapView * (int)Constants.RegionSize)),
+                        (int)((regionY * (int)Constants.RegionSize) - (mapView * (int)Constants.RegionSize)),
+                        (int)((regionY * (int)Constants.RegionSize) + (mapView * (int)Constants.RegionSize)));
                 List<AssetBase> textures = new List<AssetBase> ();
                 List<Image> bitImages = new List<Image> ();
 
@@ -118,32 +119,23 @@ namespace OpenSim.Services.Handlers.Map
                         bitImages.Add (image);
                 }
 
-                int SizeOfImage = Constants.RegionSize * mapLayer;
-                int RealSizeOfImage = 256;
-                int XRealSizeOfImage = 256;
-                int[] pwt = new int[4] { 256, 512, 1024, 2048 };
-                for (int i = 0; i < pwt.Length; i++)
-                {
-                    if (pwt[i] >= SizeOfImage && i > 0 && pwt[i - 1] < SizeOfImage)
-                        XRealSizeOfImage = pwt[i];
-                }
-                //Force to 512 only... the viewer can't seem to handle larger well
-                //RealSizeOfImage = SizeOfImage > pwt[1] ? pwt[1] : RealSizeOfImage;
-                SizeOfImage = (int)(RealSizeOfImage / ((float)XRealSizeOfImage / (float)SizeOfImage));
-                Bitmap mapTexture = new Bitmap (RealSizeOfImage, RealSizeOfImage);
+                int SizeOfImage = 256;
+
+                Bitmap mapTexture = new Bitmap (SizeOfImage, SizeOfImage);
                 Graphics g = Graphics.FromImage (mapTexture);
                 SolidBrush sea = new SolidBrush (Color.FromArgb (29, 71, 95));
-                g.FillRectangle (sea, 0, 0, RealSizeOfImage, RealSizeOfImage);
+                g.FillRectangle (sea, 0, 0, SizeOfImage, SizeOfImage);
 
                 for (int i = 0; i < regions.Count; i++)
                 {
+                    //Find the offsets first
                     float x = (float)((regions[i].RegionLocX - (regionX * (float)Constants.RegionSize)) / (float)Constants.RegionSize);
                     float y = (float)((regions[i].RegionLocY - (regionY * (float)Constants.RegionSize)) / (float)Constants.RegionSize);
-                    float xx = (float)(x * (SizeOfImage / mapLayer));
-                    float yy = RealSizeOfImage - (y * (SizeOfImage / mapLayer) + (SizeOfImage / (mapLayer)));
+                    float xx = (float)(x * (SizeOfImage / mapView));
+                    float yy = SizeOfImage - (y * (SizeOfImage / mapView) + (SizeOfImage / (mapView)));
                     bitImages[i].RotateFlip (RotateFlipType.RotateNoneFlipX);
                     g.DrawImage (bitImages[i], xx, yy,
-                        (int)((float)SizeOfImage / (float)mapLayer), (int)((float)SizeOfImage / (float)mapLayer)); // y origin is top
+                        (int)((float)SizeOfImage / (float)mapView), (int)((float)SizeOfImage / (float)mapView)); // y origin is top
                 }
 
                 EncoderParameters myEncoderParameters = new EncoderParameters ();

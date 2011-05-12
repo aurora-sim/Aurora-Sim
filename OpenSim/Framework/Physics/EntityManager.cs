@@ -56,32 +56,35 @@ namespace OpenSim.Framework
 
             try
             {
+                Util.GetWriterLock (m_child_2_parent_entitiesLock);
+                Util.GetWriterLock (m_objectEntitiesLock);
+                Util.GetWriterLock (m_presenceEntitiesLock);
                 if (entity is ISceneEntity)
                 {
-                    Util.GetWriterLock (m_child_2_parent_entitiesLock);
                     foreach (ISceneChildEntity part in (entity as ISceneEntity).ChildrenEntities ())
                     {
                         m_child_2_parent_entities.Remove (part.UUID);
                         m_child_2_parent_entities.Remove (part.LocalId);
                         m_child_2_parent_entities.Add (part.UUID, part.LocalId, entity.UUID);
                     }
-                    Util.ReleaseWriterLock (m_child_2_parent_entitiesLock);
-                    Util.GetWriterLock (m_objectEntitiesLock);
                     m_objectEntities.Add (entity.UUID, entity.LocalId, entity as ISceneEntity);
-                    Util.ReleaseWriterLock (m_objectEntitiesLock);
                 }
                 else
                 {
                     IScenePresence presence = (IScenePresence)entity;
 
-                    Util.GetWriterLock (m_presenceEntitiesLock);
                     m_presenceEntities.Add (presence.UUID, presence);
-                    Util.ReleaseWriterLock (m_presenceEntitiesLock);
                 }
             }
             catch (Exception e)
             {
                 m_log.ErrorFormat ("Add Entity failed: {0}", e.Message);
+            }
+            finally
+            {
+                Util.ReleaseWriterLock (m_child_2_parent_entitiesLock);
+                Util.ReleaseWriterLock (m_objectEntitiesLock);
+                Util.ReleaseWriterLock (m_presenceEntitiesLock);
             }
         }
 
@@ -105,26 +108,23 @@ namespace OpenSim.Framework
 
             try
             {
+                Util.GetWriterLock (m_child_2_parent_entitiesLock);
+                Util.GetWriterLock (m_objectEntitiesLock);
+                Util.GetWriterLock (m_presenceEntitiesLock);
                 if (entity is ISceneEntity)
                 {
-                    Util.GetWriterLock (m_child_2_parent_entitiesLock);
                     //Remove all child entities
                     foreach (ISceneChildEntity part in (entity as ISceneEntity).ChildrenEntities ())
                     {
                         m_child_2_parent_entities.Remove (part.UUID);
                         m_child_2_parent_entities.Remove (part.LocalId);
                     }
-                    Util.ReleaseWriterLock (m_child_2_parent_entitiesLock);
-                    Util.GetWriterLock(m_objectEntitiesLock);
                     m_objectEntities.Remove (entity.UUID);
                     m_objectEntities.Remove (entity.LocalId);
-                    Util.ReleaseWriterLock (m_objectEntitiesLock);
                 }
                 else
                 {
-                    Util.GetWriterLock (m_presenceEntitiesLock);
                     m_presenceEntities.Remove (entity.UUID);
-                    Util.ReleaseWriterLock (m_presenceEntitiesLock);
                 }
                 return true;
             }
@@ -132,6 +132,12 @@ namespace OpenSim.Framework
             {
                 m_log.ErrorFormat ("Remove Entity failed for {0}", entity.UUID, e);
                 return false;
+            }
+            finally
+            {
+                Util.ReleaseWriterLock (m_objectEntitiesLock);
+                Util.ReleaseWriterLock (m_child_2_parent_entitiesLock);
+                Util.ReleaseWriterLock (m_presenceEntitiesLock);
             }
         }
 
