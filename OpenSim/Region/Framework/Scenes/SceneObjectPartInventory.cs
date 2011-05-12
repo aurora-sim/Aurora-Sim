@@ -66,7 +66,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         protected TaskInventoryDictionary m_items = new TaskInventoryDictionary();
 
-        protected ReaderWriterLockSlim m_itemsLock = new ReaderWriterLockSlim ();
+        protected ReaderWriterLockSlim m_itemsLock = new ReaderWriterLockSlim (System.Threading.LockRecursionPolicy.SupportsRecursion);
 
         /// <summary>
         /// Tracks whether inventory has changed since the last persistent backup

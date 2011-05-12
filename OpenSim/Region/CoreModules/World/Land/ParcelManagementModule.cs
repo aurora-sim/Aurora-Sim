@@ -102,7 +102,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// Land objects keyed by local id
         /// </value>
         private readonly Dictionary<int, ILandObject> m_landList = new Dictionary<int, ILandObject>();
-        private System.Threading.ReaderWriterLockSlim m_landListLock = new System.Threading.ReaderWriterLockSlim ();
+        private System.Threading.ReaderWriterLockSlim m_landListLock = new System.Threading.ReaderWriterLockSlim (System.Threading.LockRecursionPolicy.SupportsRecursion);
 
         private int m_lastLandLocalID = ParcelManagementModule.START_LAND_LOCAL_ID;
 

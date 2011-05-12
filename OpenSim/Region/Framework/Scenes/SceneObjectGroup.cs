@@ -260,7 +260,7 @@ namespace OpenSim.Region.Framework.Scenes
         //Same as m_parts, but this is used for fast linear operations
         protected List<SceneObjectPart> m_partsList = new List<SceneObjectPart>();
         //This is the lock for m_parts and m_partsList
-        protected ReaderWriterLockSlim m_partsLock = new ReaderWriterLockSlim ();
+        protected ReaderWriterLockSlim m_partsLock = new ReaderWriterLockSlim (System.Threading.LockRecursionPolicy.SupportsRecursion);
 
         public ReaderWriterLockSlim ChildrenListLock
         {

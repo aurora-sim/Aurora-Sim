@@ -38,11 +38,11 @@ namespace OpenSim.Framework
     {
         private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
         private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, ISceneEntity> m_objectEntities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, ISceneEntity> ();
-        private System.Threading.ReaderWriterLockSlim m_objectEntitiesLock = new System.Threading.ReaderWriterLockSlim ();
+        private System.Threading.ReaderWriterLockSlim m_objectEntitiesLock = new System.Threading.ReaderWriterLockSlim (System.Threading.LockRecursionPolicy.SupportsRecursion);
         private readonly Dictionary<UUID, IScenePresence> m_presenceEntities = new Dictionary<UUID, IScenePresence> ();
-        private System.Threading.ReaderWriterLockSlim m_presenceEntitiesLock = new System.Threading.ReaderWriterLockSlim ();
+        private System.Threading.ReaderWriterLockSlim m_presenceEntitiesLock = new System.Threading.ReaderWriterLockSlim (System.Threading.LockRecursionPolicy.SupportsRecursion);
         private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID> m_child_2_parent_entities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID> ();
-        private System.Threading.ReaderWriterLockSlim m_child_2_parent_entitiesLock = new System.Threading.ReaderWriterLockSlim ();
+        private System.Threading.ReaderWriterLockSlim m_child_2_parent_entitiesLock = new System.Threading.ReaderWriterLockSlim (System.Threading.LockRecursionPolicy.SupportsRecursion);
 
         public int Count
         {
