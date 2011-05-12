@@ -189,7 +189,11 @@ namespace OpenSim.Region.Framework.Scenes
                 m_part.ParentGroup.HasGroupChanged = true;
             }
 
-            IList<TaskInventoryItem> items = new List<TaskInventoryItem> (Items.Values);
+            IList<TaskInventoryItem> items = new List<TaskInventoryItem> ();
+            foreach (TaskInventoryItem item in Items.Values)
+            {
+                items.Add (item);
+            }
             Items.Clear ();
 
             foreach (TaskInventoryItem item in items)
@@ -1128,7 +1132,10 @@ namespace OpenSim.Region.Framework.Scenes
             List<TaskInventoryItem> ret = new List<TaskInventoryItem>();
 
             Util.GetReaderLock (m_itemsLock);
-            ret = new List<TaskInventoryItem> (m_items.Values);
+            foreach (TaskInventoryItem item in m_items.Values)
+            {
+                ret.Add (item);
+            }
             Util.ReleaseReaderLock (m_itemsLock);
 
             return ret;
