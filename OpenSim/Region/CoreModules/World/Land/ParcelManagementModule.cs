@@ -805,11 +805,10 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_scene.EventManager.TriggerLandObjectAdded (new_land.LandData);
             return new_land;
         }
-
         /// <summary>
-        /// Resets the sim to the default land object (full sim piece of land owned by the default user)
+        /// Resets the sim to have no land objects
         /// </summary>
-        public void ResetSimLandObjects ()
+        public void ClearAllParcels ()
         {
             //Remove all the land objects in the sim and add a blank, full sim land object set to public
             Util.GetWriterLock (m_landListLock);
@@ -817,7 +816,14 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_lastLandLocalID = ParcelManagementModule.START_LAND_LOCAL_ID;
             m_landIDList.Initialize ();
             Util.ReleaseWriterLock (m_landListLock);
+        }
 
+        /// <summary>
+        /// Resets the sim to the default land object (full sim piece of land owned by the default user)
+        /// </summary>
+        public void ResetSimLandObjects ()
+        {
+            ClearAllParcels ();
             ILandObject fullSimParcel = new LandObject (UUID.Zero, false, m_scene);
 
             fullSimParcel.SetLandBitmap (fullSimParcel.GetSquareLandBitmap (0, 0, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY));

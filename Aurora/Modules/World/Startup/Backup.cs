@@ -953,7 +953,7 @@ namespace Aurora.Modules
                         backup.DeleteAllSceneObjects();
                         m_log.Info("[ARCHIVER]: Cleared all existing scene objects in " + (DateTime.Now - before).Minutes + ":" + (DateTime.Now - before).Seconds);
                         if (parcelModule != null)
-                            parcelModule.ResetSimLandObjects();
+                            parcelModule.ClearAllParcels ();
                     }
                 }
             }

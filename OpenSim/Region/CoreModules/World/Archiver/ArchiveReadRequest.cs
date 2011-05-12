@@ -366,9 +366,11 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     parcel.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
                 landData.Add(parcel);
             }
+            IParcelManagementModule parcelManagementModule = m_scene.RequestModuleInterface<IParcelManagementModule> ();
+            if (parcelManagementModule != null)
+                parcelManagementModule.ClearAllParcels ();
             m_scene.EventManager.TriggerIncomingLandDataFromStorage(landData);
             //Update the database as well!
-            IParcelManagementModule parcelManagementModule = m_scene.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagementModule != null)
             {
                 foreach (LandData parcel in landData)
