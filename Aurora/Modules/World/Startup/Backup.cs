@@ -339,6 +339,9 @@ namespace Aurora.Modules
             /// <param name="uuid"></param>
             public void DeleteFromStorage(UUID uuid)
             {
+                //Tell the database something changed
+                m_scene.SimulationDataService.Tainted ();
+
                 if (!SavePrims)
                     return;
 
