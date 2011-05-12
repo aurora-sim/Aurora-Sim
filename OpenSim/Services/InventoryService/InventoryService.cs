@@ -191,6 +191,37 @@ namespace OpenSim.Services.InventoryService
                     m_log.WarnFormat ("Fixing folder {0}", f.Name);
                 }
             }
+            //Make sure that all default folders exist
+            CreateUserInventory (account.PrincipalID, false);
+            //Refetch the skeleton now
+            skeleton = GetInventorySkeleton (account.PrincipalID);
+            Dictionary<int, UUID> defaultFolders = new Dictionary<int, UUID> ();
+            Dictionary<UUID, UUID> changedFolders = new Dictionary<UUID, UUID> ();
+            foreach (InventoryFolderBase folder in skeleton)
+            {
+                if (folder.Type != -1)
+                {
+                    if (!defaultFolders.ContainsKey (folder.Type))
+                        defaultFolders[folder.Type] = folder.ID;
+                    else
+                        changedFolders.Add (folder.ID, defaultFolders[folder.Type]);
+                }
+            }
+            foreach (InventoryFolderBase folder in skeleton)
+            {
+                if (folder.Type != -1 && defaultFolders[folder.Type] != folder.ID)
+                {
+                    //Delete the dup
+                    ForcePurgeFolder (folder);
+                    m_log.Warn ("Purging duplicate default inventory type folder " + folder.Name);
+                }
+                if (changedFolders.ContainsKey (folder.ParentID))
+                {
+                    folder.ParentID = changedFolders[folder.ParentID];
+                    m_log.Warn ("Merging child folder of default inventory type " + folder.Name);
+                    m_Database.StoreFolder (folder);
+                }
+            }
             m_log.Warn ("Completed the check");
         }
 
