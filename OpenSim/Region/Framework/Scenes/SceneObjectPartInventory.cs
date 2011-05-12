@@ -141,11 +141,11 @@ namespace OpenSim.Region.Framework.Scenes
             if (null == m_part || null == m_part.ParentGroup)
                 return;
 
-            Util.GetWriterLock (m_itemsLock);
             if (0 == m_items.Count)
                 return;
 
             IList<TaskInventoryItem> items = GetInventoryItems ();
+            Util.GetWriterLock (m_itemsLock);
             m_items.Clear ();
 
             foreach (TaskInventoryItem item in items)
@@ -170,19 +170,19 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                     }
                 }*/
-                HasInventoryChanged = true;
             }
+            HasInventoryChanged = true;
             Util.ReleaseWriterLock (m_itemsLock);
         }
 
         public void ResetObjectID ()
         {
-            Util.GetWriterLock (m_itemsLock);
             if (Items.Count == 0)
             {
                 return;
             }
 
+            Util.GetWriterLock (m_itemsLock);
             HasInventoryChanged = true;
             if (m_part.ParentGroup != null)
             {

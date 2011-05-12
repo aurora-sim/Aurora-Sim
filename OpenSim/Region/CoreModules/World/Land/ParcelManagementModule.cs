@@ -349,12 +349,11 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void RemoveRegion(Scene scene)
         {
-            Util.GetReaderLock (m_landListLock);
-            foreach (ILandObject land in m_landList.Values)
+            List<ILandObject> parcels = AllParcels ();
+            foreach (ILandObject land in parcels)
             {
                 UpdateLandObject(land.LandData.LocalID, land.LandData);
             }
-            Util.ReleaseReaderLock (m_landListLock);
 
             if (m_UpdateDirectoryOnTimer)
             {
@@ -750,13 +749,13 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (m_landList.ContainsKey (local_id))
             {
                 m_landList[local_id].LandData = newData;
-                AddLandObjectToSearch (GetLandObject (data.LocalID));
+                Util.ReleaseWriterLock (m_landListLock);
+                AddLandObjectToSearch (GetLandObject(local_id));
                 IParcelServiceConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IParcelServiceConnector> ();
                 if (conn != null)
                     conn.StoreLandObject (data);
-                m_scene.EventManager.TriggerLandObjectAdded (m_landList[local_id].LandData);
+                m_scene.EventManager.TriggerLandObjectAdded (data);
             }
-            Util.ReleaseWriterLock (m_landListLock);
         }
 
         /// <summary>
@@ -1109,14 +1108,15 @@ namespace OpenSim.Region.CoreModules.World.Land
                     }
                 }
             }
+            ILandObject land = m_landList[local_id];
+            Util.ReleaseWriterLock (m_landListLock);
             IParcelServiceConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IParcelServiceConnector> ();
             if (conn != null)
-                conn.RemoveLandObject (m_landList[local_id].LandData.RegionID, m_landList[local_id].LandData.GlobalID);
+                conn.RemoveLandObject (land.LandData.RegionID, land.LandData.GlobalID);
 
-            m_scene.EventManager.TriggerLandObjectRemoved (m_landList[local_id].LandData.RegionID, m_landList[local_id].LandData.GlobalID);
+            m_scene.EventManager.TriggerLandObjectRemoved (land.LandData.RegionID, land.LandData.GlobalID);
             m_landList.Remove (local_id);
-            RemoveLandObjectFromSearch (m_landList[local_id]);
-            Util.ReleaseWriterLock (m_landListLock);
+            RemoveLandObjectFromSearch (land);
         }
 
         public void ParcelBuyPass(IClientAPI client, UUID agentID, int ParcelLocalID)
@@ -1170,16 +1170,13 @@ namespace OpenSim.Region.CoreModules.World.Land
             UpdateLandObject(master.LandData.LocalID, master.LandData);
         }
 
-        public ILandObject GetLandObject(int parcelLocalID)
+        public ILandObject GetLandObject (int parcelLocalID)
         {
-            Util.GetReaderLock(m_landListLock);
-            if (m_landList.ContainsKey (parcelLocalID))
-            {
-                Util.ReleaseReaderLock (m_landListLock);
-                return m_landList[parcelLocalID];
-            }
+            Util.GetReaderLock (m_landListLock);
+            ILandObject land = null;
+            m_landList.TryGetValue (parcelLocalID, out land);
             Util.ReleaseReaderLock (m_landListLock);
-            return null;
+            return land;
         }
 
         public ILandObject GetLandObject(UUID GlobalID)
@@ -1296,10 +1293,11 @@ namespace OpenSim.Region.CoreModules.World.Land
             //Now, lets set the subdivision area of the original to false
             int startLandObjectIndex = startLandObject.LandData.LocalID;
             Util.GetReaderLock(m_landListLock);
-            m_landList[startLandObjectIndex].SetLandBitmap(
-                newLand.ModifyLandBitmapSquare(startLandObject.GetLandBitmap(), start_x, start_y, end_x, end_y, false));
-            m_landList[startLandObjectIndex].ForceUpdateLandInfo();
+            ILandObject startLandObjectParcel = m_landList[startLandObjectIndex];
             Util.ReleaseReaderLock (m_landListLock);
+            startLandObjectParcel.SetLandBitmap (
+                newLand.ModifyLandBitmapSquare(startLandObject.GetLandBitmap(), start_x, start_y, end_x, end_y, false));
+            startLandObjectParcel.ForceUpdateLandInfo();
 
             IPrimCountModule primCountsModule = m_scene.RequestModuleInterface<IPrimCountModule>();
             //Taint both land objects
@@ -1376,14 +1374,12 @@ namespace OpenSim.Region.CoreModules.World.Land
                 return;
             }
 
-            Util.GetWriterLock(m_landListLock);
             foreach (ILandObject slaveLandObject in selectedLandObjects)
             {
-                m_landList[masterLandObject.LandData.LocalID].SetLandBitmap (
+                masterLandObject.SetLandBitmap (
                     slaveLandObject.MergeLandBitmaps (masterLandObject.GetLandBitmap (), slaveLandObject.GetLandBitmap ()));
                 performFinalLandJoin (masterLandObject, slaveLandObject);
             }
-            Util.ReleaseWriterLock (m_landListLock);
             masterLandObject.LandData.OwnerID = attempting_user_id;
             IPrimCountModule primCountsModule = m_scene.RequestModuleInterface<IPrimCountModule>();
             //Taint both land objects

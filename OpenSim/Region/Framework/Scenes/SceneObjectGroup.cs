@@ -1932,6 +1932,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (part.LinkNum == linknum)
                     {
+                        Util.ReleaseReaderLock (m_partsLock);
                         return part;
                     }
                 }
