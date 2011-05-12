@@ -523,7 +523,7 @@ namespace OpenSim.Services.LLLoginService
 
                 // Get active gestures
                 List<InventoryItemBase> gestures = m_InventoryService.GetActiveGestures(account.PrincipalID);
-                m_log.DebugFormat("[LLOGIN SERVICE]: {0} active gestures", gestures.Count);
+                //m_log.DebugFormat("[LLOGIN SERVICE]: {0} active gestures", gestures.Count);
 
                 UserInfo guinfo = m_agentInfoService.GetUserInfo (account.PrincipalID.ToString ());
                 //Reset logged in to true if the user was crashed, but don't fire the logged in event yet
@@ -686,7 +686,7 @@ namespace OpenSim.Services.LLLoginService
                 if (m_FriendsService != null)
                 {
                     friendsList = m_FriendsService.GetFriends(account.PrincipalID);
-                    m_log.DebugFormat("[LLOGIN SERVICE]: Retrieved {0} friends", friendsList.Length);
+                    //m_log.DebugFormat("[LLOGIN SERVICE]: Retrieved {0} friends", friendsList.Length);
                 }
 
                 //Set them as logged in now, they are ready, and fire the logged in event now, as we're all done
@@ -768,8 +768,6 @@ namespace OpenSim.Services.LLLoginService
                 //Remove any previous users
                 string CapsBase = CapsUtil.GetRandomCapsObjectPath();
                 capsSeedPath = m_CapsService.CreateCAPS(AgentID, CapsUtil.GetCapsSeedPath(CapsBase), destination.RegionHandle, true, aCircuit);
-                m_log.Debug("[NewAgentConnection]: Adding Caps Url for grid" +
-                     " @" + capsSeedPath + " for agent " + aCircuit.AgentID);
             }
             else
             {

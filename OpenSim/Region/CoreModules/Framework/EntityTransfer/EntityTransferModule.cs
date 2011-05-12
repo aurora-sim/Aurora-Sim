@@ -970,7 +970,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             reason = String.Empty;
 
             // Don't disable this log message - it's too helpful
-            m_log.DebugFormat (
+            m_log.TraceFormat (
                 "[ConnectionBegin]: Region {0} told of incoming {1} agent {2} (circuit code {3}, teleportflags {4})",
                 scene.RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
                 agent.circuitcode, teleportFlags);

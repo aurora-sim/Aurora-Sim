@@ -109,7 +109,7 @@ namespace OpenSim.Services.AuthenticationService
                     string hashed = Util.Md5Hash (password + ":" +
                             data.PasswordSalt);
 
-                    m_log.DebugFormat ("[PASS AUTH]: got {0}; hashed = {1}; stored = {2}", password, hashed, data.PasswordHash);
+                    m_log.TraceFormat ("[PASS AUTH]: got {0}; hashed = {1}; stored = {2}", password, hashed, data.PasswordHash);
 
                     if (data.PasswordHash == hashed)
                     {
