@@ -148,13 +148,19 @@ namespace OpenSim.Services.InventoryService
             }
             //Check against multiple root folders
             List<InventoryFolderBase> rootFolders = GetRootFolders (account.PrincipalID);
+            List<UUID> badFolders = new List<UUID> ();
             if (rootFolders.Count != 1)
             {
+                //No duplicate folders!
+                foreach (InventoryFolderBase f in rootFolders)
+                {
+                    if(!badFolders.Contains(f.ID) && f.ID != rootFolder.ID)
+                        badFolders.Add (f.ID);
+                }
             }
             //Fix any root folders that shouldn't be root folders
             List<InventoryFolderBase> skeleton = GetInventorySkeleton (account.PrincipalID);
             List<UUID> foundFolders = new List<UUID> ();
-            List<UUID> badFolders = new List<UUID> ();
             foreach (InventoryFolderBase f in skeleton)
             {
                 if (!foundFolders.Contains (f.ID))
