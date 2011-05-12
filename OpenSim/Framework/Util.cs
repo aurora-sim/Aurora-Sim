@@ -49,6 +49,7 @@ using Nwc.XmlRpc;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Amib.Threading;
+using ReaderWriterLockSlim = System.Threading.ReaderWriterLockSlim;
 #if NET_4_0
 using System.Threading.Tasks;
 #endif
@@ -1750,6 +1751,54 @@ namespace OpenSim.Framework
             if (p == "")
                 return System.Windows.Forms.Application.StartupPath;
             return Path.Combine(System.Windows.Forms.Application.StartupPath, p);
+        }
+
+        public static void GetReaderLock (ReaderWriterLockSlim l)
+        {
+            int i = 0;
+            while (i < 10) //Only try 10 times... 10s is way too much
+            {
+                try
+                {
+                    l.TryEnterReadLock (100);
+                    //Got it
+                    return;
+                }
+                catch (ApplicationException)
+                {
+                    // The reader lock request timed out. Try again
+                }
+            }
+            throw new ApplicationException ("Could not retrieve read lock");
+        }
+
+        public static void ReleaseReaderLock (ReaderWriterLockSlim l)
+        {
+            l.ExitReadLock ();
+        }
+
+        public static void GetWriterLock (ReaderWriterLockSlim l)
+        {
+            int i = 0;
+            while (i < 10) //Only try 10 times... 10s is way too much
+            {
+                try
+                {
+                    l.TryEnterWriteLock (100);
+                    //Got it
+                    return;
+                }
+                catch (ApplicationException)
+                {
+                    // The reader lock request timed out. Try again
+                }
+            }
+            throw new ApplicationException ("Could not retrieve write lock");
+        }
+
+        public static void ReleaseWriterLock (ReaderWriterLockSlim l)
+        {
+            l.ExitWriteLock ();
         }
     }
 }
