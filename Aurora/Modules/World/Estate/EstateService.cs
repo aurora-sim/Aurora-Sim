@@ -384,13 +384,13 @@ namespace Aurora.Modules
                 if (Sp == null)
                 {
                     reason = "Banned from this parcel.";
-                    return true;
+                    return false;
                 }
 
                 if (!FindUnBannedParcel(Position, Sp, userID, out ILO, out newPosition, out reason))
                 {
-                    //We found a place for them, but we don't need to check any further
-                    return true;
+                    //We found a place for them, but we don't need to check any further on positions here
+                    //return true;
                 }
             }
             //Move them out of banned parcels
@@ -405,13 +405,15 @@ namespace Aurora.Modules
                     if (Sp == null)
                     {
                         reason = "Banned from this parcel.";
-                        return true;
+                        return false;
                     }
                     if (Sp.ControllingClient.ActiveGroupId != ILO.LandData.GroupID)
                     {
-                        if (!FindUnBannedParcel(Position, Sp, userID, out ILO, out newPosition, out reason))
-                            //We found a place for them, but we don't need to check any further
-                            return true;
+                        if (!FindUnBannedParcel (Position, Sp, userID, out ILO, out newPosition, out reason))
+                        {
+                            //We found a place for them, but we don't need to check any further on positions here
+                            //return true;
+                        }
                     }
                 }
                 else if ((parcelflags & ParcelFlags.UseAccessList) == ParcelFlags.UseAccessList)
@@ -419,26 +421,30 @@ namespace Aurora.Modules
                     if (Sp == null)
                     {
                         reason = "Banned from this parcel.";
-                        return true;
+                        return false;
                     }
                     //All but the people on the access list are banned
                     if (ILO.IsRestrictedFromLand(userID))
                         if (!FindUnBannedParcel(Position, Sp, userID, out ILO, out newPosition, out reason))
-                            //We found a place for them, but we don't need to check any further
-                            return true;
+                        {
+                            //We found a place for them, but we don't need to check any further on positions here
+                            //return true;
+                        }
                 }
                 else if ((parcelflags & ParcelFlags.UsePassList) == ParcelFlags.UsePassList)
                 {
                     if (Sp == null)
                     {
                         reason = "Banned from this parcel.";
-                        return true;
+                        return false;
                     }
                     //All but the people on the pass/access list are banned
                     if (ILO.IsRestrictedFromLand(Sp.UUID))
-                        if (!FindUnBannedParcel(Position, Sp, userID, out ILO, out newPosition, out reason))
-                            //We found a place for them, but we don't need to check any further
-                            return true;
+                        if (!FindUnBannedParcel (Position, Sp, userID, out ILO, out newPosition, out reason))
+                        {
+                            //We found a place for them, but we don't need to check any further on positions here
+                            //return true;
+                        }
                 }
             }
 
@@ -470,7 +476,7 @@ namespace Aurora.Modules
                     }
                 }
             }
-            if (!scene.Permissions.GenericParcelPermission(userID, ILO, (ulong)GroupPowers.None))
+            else if (!scene.Permissions.GenericParcelPermission(userID, ILO, (ulong)GroupPowers.None)) //Telehubs override parcels
             {
                 if (ILO.LandData.LandingType == (int)LandingType.None) //Blocked, force this person off this land
                 {
@@ -478,9 +484,7 @@ namespace Aurora.Modules
                     List<ILandObject> Parcels = parcelManagement.ParcelsNearPoint(Position);
                     if (Parcels.Count > 1)
                     {
-                        IScenePresence SP;
-                        scene.TryGetScenePresence(userID, out SP);
-                        newPosition = parcelManagement.GetNearestRegionEdgePosition(SP);
+                        newPosition = parcelManagement.GetNearestRegionEdgePosition(Sp);
                     }
                     else
                     {
@@ -507,7 +511,7 @@ namespace Aurora.Modules
                             else
                             {
                                 reason = "Banned from this parcel.";
-                                return true;
+                                return false;
                             }
                         }
                     }
