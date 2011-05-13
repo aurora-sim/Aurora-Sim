@@ -462,6 +462,19 @@ namespace OpenSim.Services.MessagingService
                 }
                 else
                 {
+                    clientCaps.RemoveCAPS (otherRegionService.RegionHandle);
+                    if (reason != "")
+                    {
+                        try
+                        {
+                            OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson (reason);
+                            if (responseMap != null && responseMap.ContainsKey ("Reason"))
+                                reason = responseMap["Reason"].AsString ();
+                        }
+                        catch
+                        {
+                        }
+                    }
                     m_log.Error("[AgentProcessing]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: " + reason);
                     return false;
                 }
