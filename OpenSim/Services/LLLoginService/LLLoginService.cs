@@ -361,8 +361,11 @@ namespace OpenSim.Services.LLLoginService
                     else
                         AcceptedNewTOS = bool.Parse(tosAccepted);
 
-                    agent.AcceptTOS = AcceptedNewTOS;
-                    agentData.UpdateAgent(agent);
+                    if (agent.AcceptTOS != AcceptedNewTOS)
+                    {
+                        agent.AcceptTOS = AcceptedNewTOS;
+                        agentData.UpdateAgent (agent);
+                    }
                 }
                 if (!AcceptedNewTOS && !agent.AcceptTOS && m_UseTOS)
                 {
@@ -525,11 +528,12 @@ namespace OpenSim.Services.LLLoginService
                 List<InventoryItemBase> gestures = m_InventoryService.GetActiveGestures(account.PrincipalID);
                 //m_log.DebugFormat("[LLOGIN SERVICE]: {0} active gestures", gestures.Count);
 
-                UserInfo guinfo = m_agentInfoService.GetUserInfo (account.PrincipalID.ToString ());
                 //Reset logged in to true if the user was crashed, but don't fire the logged in event yet
-                m_agentInfoService.SetLoggedIn (account.PrincipalID.ToString (), true, false);
+                m_agentInfoService.SetLoggedIn (account.PrincipalID.ToString (), true, false, UUID.Zero);
                 //Lock it as well
                 m_agentInfoService.LockLoggedInStatus (account.PrincipalID.ToString (), true);
+                //Now get the logged in status, then below make sure to kill the previous agent if we crashed before
+                UserInfo guinfo = m_agentInfoService.GetUserInfo (account.PrincipalID.ToString ());
                 //
                 // Clear out any existing CAPS the user may have
                 //
@@ -692,7 +696,7 @@ namespace OpenSim.Services.LLLoginService
                 //Set them as logged in now, they are ready, and fire the logged in event now, as we're all done
                 m_agentInfoService.SetLastPosition (account.PrincipalID.ToString (), destination.RegionID, position, lookAt);
                 m_agentInfoService.LockLoggedInStatus (account.PrincipalID.ToString (), false); //Unlock it now
-                m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true, true);
+                m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true, true, destination.RegionID);
                 
                 //
                 // Finally, fill out the response and return it
@@ -730,7 +734,7 @@ namespace OpenSim.Services.LLLoginService
                 {
                     //Revert their logged in status if we got that far
                     m_agentInfoService.LockLoggedInStatus (account.PrincipalID.ToString (), false); //Unlock it now
-                    m_agentInfoService.SetLoggedIn (account.PrincipalID.ToString (), false, false);
+                    m_agentInfoService.SetLoggedIn (account.PrincipalID.ToString (), false, false, UUID.Zero);
                 }
                 return LLFailedLoginResponse.InternalError;
             }

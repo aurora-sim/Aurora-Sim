@@ -110,13 +110,13 @@ namespace OpenSim.Services.RobustCompat
             }
             else if (FunctionName == "UserStatusChange")
             {
-                UserInfo info = (UserInfo)parameters;
-                if (!info.IsOnline) //Logging out
+                object[] info = (object[])parameters;
+                if (!bool.Parse(info[1].ToString())) //Logging out
                 {
                     ICapsService service = m_scene.RequestModuleInterface<ICapsService>();
                     if (service != null)
                     {
-                        service.RemoveCAPS(UUID.Parse(info.UserID));
+                        service.RemoveCAPS (UUID.Parse (info[0].ToString ()));
                     }
                 }
             }

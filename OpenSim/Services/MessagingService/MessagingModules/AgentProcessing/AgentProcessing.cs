@@ -242,7 +242,7 @@ namespace OpenSim.Services.MessagingService
 
             IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
             if (agentInfoService != null)
-                agentInfoService.SetLoggedIn(regionCaps.AgentID.ToString(), false, true);
+                agentInfoService.SetLoggedIn(regionCaps.AgentID.ToString(), false, true, UUID.Zero);
 
             ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
             if (capsService != null)

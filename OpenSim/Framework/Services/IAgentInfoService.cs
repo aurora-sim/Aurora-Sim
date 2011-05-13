@@ -153,7 +153,8 @@ namespace OpenSim.Services.Interfaces
         /// <param name="userID"></param>
         /// <param name="loggingIn">Whether the user is logging in or out</param>
         /// <param name="fireLoggedInEvent">Fire the event to log a user in</param>
-        void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent);
+        /// <param name="enteringRegion">The region the user is entering (if logging in)</param>
+        void SetLoggedIn (string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion);
 
         /// <summary>
         /// This is used in grid mode so that the sim cannot influence the login status
@@ -171,6 +172,7 @@ namespace OpenSim.Services.Interfaces
     public interface IAgentInfoConnector : IAuroraDataPlugin
     {
         bool Set(UserInfo info);
+        void Update (string userID, string[] keys, object[] values);
         void SetLastPosition(string userID, UUID regionID, Vector3 Position, Vector3 LookAt);
         void SetHomePosition(string userID, UUID regionID, Vector3 Position, Vector3 LookAt);
         UserInfo Get(string userID);

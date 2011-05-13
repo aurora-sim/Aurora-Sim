@@ -92,9 +92,9 @@ namespace Aurora.Modules
             m_localService.SetLastPosition(userID, regionID, lastPosition, lastLookAt);
         }
 
-        public void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent)
+        public void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion)
         {
-            m_localService.SetLoggedIn (userID, loggingIn, fireLoggedInEvent);
+            m_localService.SetLoggedIn (userID, loggingIn, fireLoggedInEvent, enteringRegion);
         }
 
         public void LockLoggedInStatus(string userID, bool locked)

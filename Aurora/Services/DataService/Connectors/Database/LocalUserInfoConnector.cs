@@ -59,24 +59,29 @@ namespace Aurora.Services.DataService
 
         #region IUserInfoConnector Members
 
-        public bool Set(UserInfo info)
+        public bool Set (UserInfo info)
         {
             object[] values = new object[13];
             values[0] = info.UserID;
             values[1] = info.CurrentRegionID;
-            values[2] = Util.ToUnixTime(DateTime.Now); //Convert to binary so that it can be converted easily
+            values[2] = Util.ToUnixTime (DateTime.Now); //Convert to binary so that it can be converted easily
             values[3] = info.IsOnline ? 1 : 0;
-            values[4] = Util.ToUnixTime(info.LastLogin);
-            values[5] = Util.ToUnixTime(info.LastLogout);
-            values[6] = OSDParser.SerializeJsonString(info.Info);
-            values[7] = info.CurrentRegionID.ToString();
-            values[8] = info.CurrentPosition.ToString();
-            values[9] = info.CurrentLookAt.ToString();
-            values[10] = info.HomeRegionID.ToString();
-            values[11] = info.HomePosition.ToString();
-            values[12] = info.HomeLookAt.ToString();
-            GD.Delete(m_realm, new string[1] { "UserID" }, new object[1] { info.UserID });
-            return GD.Insert(m_realm, values);
+            values[4] = Util.ToUnixTime (info.LastLogin);
+            values[5] = Util.ToUnixTime (info.LastLogout);
+            values[6] = OSDParser.SerializeJsonString (info.Info);
+            values[7] = info.CurrentRegionID.ToString ();
+            values[8] = info.CurrentPosition.ToString ();
+            values[9] = info.CurrentLookAt.ToString ();
+            values[10] = info.HomeRegionID.ToString ();
+            values[11] = info.HomePosition.ToString ();
+            values[12] = info.HomeLookAt.ToString ();
+            GD.Delete (m_realm, new string[1] { "UserID" }, new object[1] { info.UserID });
+            return GD.Insert (m_realm, values);
+        }
+
+        public void Update (string userID, string[] keys, object[] values)
+        {
+            GD.Update (m_realm, values, keys, new string[1] { "UserID" }, new object[1] { userID });
         }
 
         public void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)

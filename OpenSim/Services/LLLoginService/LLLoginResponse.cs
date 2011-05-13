@@ -153,9 +153,9 @@ namespace OpenSim.Services.LLLoginService
         private ArrayList inventoryRoot;
         private ArrayList initialOutfit;
         private ArrayList agentInventory;
-        private ArrayList inventoryLibraryOwner;
-        private ArrayList inventoryLibRoot;
-        private ArrayList inventoryLibrary;
+        private static ArrayList inventoryLibraryOwner;
+        private static ArrayList inventoryLibRoot;
+        private static ArrayList inventoryLibrary;
         private ArrayList activeGestures;
         private ArrayList tutorial = new ArrayList();
 
@@ -289,7 +289,7 @@ namespace OpenSim.Services.LLLoginService
             }
 
             // Inventory Library Section
-            if (libService != null)
+            if (libService != null && (InventoryLibraryOwner == null || InventoryLibRoot == null || InventoryLibRoot == null))
             {
                 InventoryLibraryOwner = GetLibraryOwner(libService);
                 InventoryLibrary = GetInventoryLibrary(libService, invService);

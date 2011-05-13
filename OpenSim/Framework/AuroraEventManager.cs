@@ -39,7 +39,7 @@ namespace Aurora.Framework
         /// RegionRegistered - New Region has been registered
         ///      param is a GridRegion
         /// UserStatusChange - User's status (logged in/out) has changed
-        ///      param is a UserInfo
+        ///      param is a object[], with o[0] the UUID of the user (as a string), o[1] whether they are logging in, o[2] the region they are entering (if logging in)
         /// PreRegisterRegion - A region is about to be registered
         ///      param is a GridRegion
         /// NewUserConnection - A new user has been added to the scene (child or root)

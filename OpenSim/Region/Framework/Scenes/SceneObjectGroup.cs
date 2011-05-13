@@ -809,7 +809,6 @@ namespace OpenSim.Region.Framework.Scenes
                             scale.Z = WSModule.MaximumPrimScale;
                     }
 
-//                    part.Shape.Scale = scale;
                     part.Scale = scale;
                 }
             }

@@ -134,27 +134,16 @@ namespace OpenSim.Services
                 m_lockedUsers.Remove(userID);
         }
 
-        public void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent)
+        public void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion)
         {
             if (m_lockedUsers.Contains (userID))
                 return; //User is locked, leave them alone
-            UserInfo userInfo = GetUserInfo(userID);
-            if (userInfo == null)
-            {
-                userInfo = new UserInfo();
-                userInfo.UserID = userID;
-            }
-            userInfo.IsOnline = loggingIn;
-            if (loggingIn)
-                userInfo.LastLogin = DateTime.Now;
-            else
-                userInfo.LastLogout = DateTime.Now;
-            Save(userInfo);
+            m_agentInfoConnector.Update (userID, new string[3] { "IsOnline", loggingIn ? "LastLogin" : "LastLogout", "CurrentRegionID" }, new object[3] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now), enteringRegion });
 
             if (fireLoggedInEvent)
             {
                 //Trigger an event so listeners know
-                m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("UserStatusChange", userInfo);
+                m_registry.RequestModuleInterface<ISimulationBase> ().EventManager.FireGenericEventHandler ("UserStatusChange", new object[3] { userID, loggingIn, enteringRegion });
             }
         }
 

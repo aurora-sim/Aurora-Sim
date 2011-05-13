@@ -885,12 +885,12 @@ namespace OpenSim.Region.Framework.Scenes
                     invString.AddNameValueLine ("asset_id", item.AssetID.ToString ());
                 else
                     invString.AddNameValueLine ("asset_id", UUID.Zero.ToString ());
-                invString.AddNameValueLine ("type", TaskInventoryItem.Types[item.Type]);
-                invString.AddNameValueLine ("inv_type", TaskInventoryItem.InvTypes[item.InvType]);
+                invString.AddNameValueLine ("type", TaskInventoryItemHelpers.Types[item.Type]);
+                invString.AddNameValueLine ("inv_type", TaskInventoryItemHelpers.InvTypes[item.InvType]);
                 invString.AddNameValueLine ("flags", Utils.UIntToHexString (item.Flags));
 
                 invString.AddSaleStart ();
-                invString.AddNameValueLine ("sale_type", TaskInventoryItem.SaleTypes[item.SaleType]);
+                invString.AddNameValueLine ("sale_type", TaskInventoryItemHelpers.SaleTypes[item.SaleType]);
                 invString.AddNameValueLine ("sale_price", item.SalePrice.ToString ());
                 invString.AddSectionEnd ();
 

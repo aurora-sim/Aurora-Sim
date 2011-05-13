@@ -30,16 +30,8 @@ using OpenMetaverse;
 
 namespace OpenSim.Framework
 {
-    /// <summary>
-    /// Represents an item in a task inventory
-    /// </summary>
-    public class TaskInventoryItem : ICloneable
+    public class TaskInventoryItemHelpers
     {
-        /// <summary>
-        /// XXX This should really be factored out into some constants class.
-        /// </summary>
-        private const uint FULL_MASK_PERMISSIONS_GENERAL = 2147483647;
-
         /// <summary>
         /// Inventory types
         /// </summary>
@@ -129,24 +121,35 @@ namespace OpenSim.Framework
                 "contents"
             };
 
+        /// <summary>
+        /// Full permissions
+        /// </summary>
+        public const uint FULL_MASK_PERMISSIONS_GENERAL = 2147483647;
+    }
+    /// <summary>
+    /// Represents an item in a task inventory
+    /// </summary>
+    public class TaskInventoryItem : ICloneable
+    {
+
         private UUID _assetID = UUID.Zero;
 
-        private uint _baseMask = FULL_MASK_PERMISSIONS_GENERAL;
+        private uint _baseMask = TaskInventoryItemHelpers.FULL_MASK_PERMISSIONS_GENERAL;
         private uint _creationDate = 0;
         private UUID _creatorID = UUID.Zero;
         private string _description = String.Empty;
-        private uint _everyoneMask = FULL_MASK_PERMISSIONS_GENERAL;
+        private uint _everyoneMask = TaskInventoryItemHelpers.FULL_MASK_PERMISSIONS_GENERAL;
         private uint _flags = 0;
         private UUID _groupID = UUID.Zero;
-        private uint _groupMask = FULL_MASK_PERMISSIONS_GENERAL;
+        private uint _groupMask = TaskInventoryItemHelpers.FULL_MASK_PERMISSIONS_GENERAL;
 
         private int _invType = 0;
         private UUID _itemID = UUID.Zero;
         private UUID _lastOwnerID = UUID.Zero;
         private string _name = String.Empty;
-        private uint _nextOwnerMask = FULL_MASK_PERMISSIONS_GENERAL;
+        private uint _nextOwnerMask = TaskInventoryItemHelpers.FULL_MASK_PERMISSIONS_GENERAL;
         private UUID _ownerID = UUID.Zero;
-        private uint _ownerMask = FULL_MASK_PERMISSIONS_GENERAL;
+        private uint _ownerMask = TaskInventoryItemHelpers.FULL_MASK_PERMISSIONS_GENERAL;
         private UUID _parentID = UUID.Zero; //parent folder id
         private UUID _parentPartID = UUID.Zero; // SceneObjectPart this is inside
         private UUID _permsGranter;

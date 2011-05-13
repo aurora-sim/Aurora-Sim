@@ -55,10 +55,11 @@ namespace OpenSim.Services.MessagingService
                 if (asyncPoster != null && friendsService != null && capsService != null && gridService != null)
                 {
                     //Get all friends
-                    UserInfo info = (UserInfo)parameters;
-                    FriendInfo[] friends = friendsService.GetFriends(UUID.Parse(info.UserID));
+                    object[] info = (object[])parameters;
+                    UUID us = UUID.Parse (info[0].ToString());
+                    FriendInfo[] friends = friendsService.GetFriends (us);
                     List<UUID> OnlineFriends = new List<UUID>();
-                    UUID us = UUID.Parse(info.UserID);
+                    bool isOnline = bool.Parse(info[1].ToString());
                     foreach (FriendInfo friend in friends)
                     {
                         UUID FriendToInform = UUID.Parse(friend.Friend);
@@ -72,19 +73,19 @@ namespace OpenSim.Services.MessagingService
                             if (regionClientCaps != null)
                             {
                                 //Post!
-                                asyncPoster.Post(regionClientCaps.RegionHandle, SyncMessageHelper.AgentStatusChange(us, FriendToInform, info.IsOnline));
+                                asyncPoster.Post(regionClientCaps.RegionHandle, SyncMessageHelper.AgentStatusChange(us, FriendToInform, isOnline));
                             }
                         }
                     }
                     //If they are online, send all friends online statuses to them
-                    if (info.IsOnline)
+                    if (isOnline)
                     {
-                        GridRegion ourRegion = gridService.GetRegionByUUID(UUID.Zero, info.CurrentRegionID);
+                        GridRegion ourRegion = gridService.GetRegionByUUID(UUID.Zero, UUID.Parse(info[2].ToString()));
                         if (ourRegion != null)
                         {
                             foreach (UUID onlineFriend in OnlineFriends)
                             {
-                                asyncPoster.Post(ourRegion.RegionHandle, SyncMessageHelper.AgentStatusChange(onlineFriend, us, info.IsOnline));
+                                asyncPoster.Post(ourRegion.RegionHandle, SyncMessageHelper.AgentStatusChange(onlineFriend, us, isOnline));
                             }
                         }
                     }
