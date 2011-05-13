@@ -301,12 +301,56 @@ namespace Aurora.Services.DataService
                 }
                 contents.WriteEndArray(/*"items"*/); //end array items
 
+                contents.WriteStartArray ("categories"); //We don't send any folders
                 int version = 0;
-                List<string> versionRetVal = GD.Query("folderID", folder_id, m_foldersrealm, "version");
-                if(versionRetVal.Count > 0)
-                    version = int.Parse(versionRetVal[0]);
+                List<string> versionRetVal = GD.Query ("folderID", folder_id, m_foldersrealm, "version, type");
+                List<InventoryFolderBase> foldersToAdd = new List<InventoryFolderBase> ();
+                if (versionRetVal.Count > 0)
+                {
+                    version = int.Parse (versionRetVal[0]);
+                    if(int.Parse(versionRetVal[1]) == (int)AssetType.TrashFolder)
+                    {
+                        //If it is the trash folder, we need to send its descendents, because the viewer wants it
+                        query = String.Format ("where {0} = '{1}' and {2} = '{3}'", "parentFolderID", folder_id, "agentID", AgentID);
+                        using (IDataReader retVal = GD.QueryData (query, m_foldersrealm, "*"))
+                        {
+                            try
+                            {
+                                while (retVal.Read ())
+                                {
+                                    contents.WriteStartMap ("folder"); //Start item kvp
+                                    contents["folder_id"] = UUID.Parse (retVal["folderID"].ToString ());
+                                    contents["parent_id"] = UUID.Parse (retVal["parentFolderID"].ToString ());
+                                    contents["name"] = retVal["folderName"].ToString ();
+                                    contents["type"] = int.Parse(retVal["type"].ToString ());
+                                    contents["preferred_type"] = -1;
+                                    
+                                    count++;
+                                    contents.WriteEndMap (/*"folder"*/); //end array items
+                                }
+                            }
+                            catch
+                            {
+                            }
+                            finally
+                            {
+                                try
+                                {
+                                    if (retVal != null)
+                                    {
+                                        retVal.Close ();
+                                        retVal.Dispose ();
+                                    }
+                                }
+                                catch
+                                {
+                                }
+                                GD.CloseDatabase ();
+                            }
+                        }
+                    }
+                }
 
-                contents.WriteStartArray("categories"); //We don't send any folders
                 contents.WriteEndArray(/*"categories"*/);
                 contents["descendents"] = count;
                 contents["version"] = version;

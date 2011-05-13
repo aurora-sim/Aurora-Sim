@@ -5295,8 +5295,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             AddLocalPacketHandler(PacketType.MoveInventoryFolder, HandleMoveInventoryFolder);
             AddLocalPacketHandler(PacketType.CreateInventoryItem, HandleCreateInventoryItem);
             AddLocalPacketHandler(PacketType.LinkInventoryItem, HandleLinkInventoryItem);
-            AddLocalPacketHandler(PacketType.FetchInventory, HandleFetchInventory);
-            AddLocalPacketHandler(PacketType.FetchInventoryDescendents, HandleFetchInventoryDescendents);
+            //AddLocalPacketHandler(PacketType.FetchInventory, HandleFetchInventory);
+            //AddLocalPacketHandler(PacketType.FetchInventoryDescendents, HandleFetchInventoryDescendents);
             AddLocalPacketHandler(PacketType.PurgeInventoryDescendents, HandlePurgeInventoryDescendents);
             AddLocalPacketHandler(PacketType.UpdateInventoryItem, HandleUpdateInventoryItem);
             AddLocalPacketHandler(PacketType.CopyInventoryItem, HandleCopyInventoryItem);
