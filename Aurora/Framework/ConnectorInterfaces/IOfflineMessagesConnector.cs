@@ -20,6 +20,7 @@ namespace Aurora.Framework
         /// Adds a new offline message for the user.
         /// </summary>
         /// <param name="message"></param>
-        void AddOfflineMessage(GridInstantMessage message);
+        /// <returns>Whether it was successfully added</returns>
+        bool AddOfflineMessage(GridInstantMessage message);
 	}
 }

@@ -76,7 +76,7 @@ namespace Aurora.Services.DataService
             return Messages.ToArray();
         }
 
-        public void AddOfflineMessage(GridInstantMessage message)
+        public bool AddOfflineMessage (GridInstantMessage message)
         {
             OSDMap sendData = message.ToOSD();
 
@@ -87,13 +87,15 @@ namespace Aurora.Services.DataService
                 List<string> urls = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (message.toAgentID.ToString (), "RemoteServerURI");
                 foreach (string url in urls)
                 {
-                    WebUtils.PostToService (url + "osd", sendData, false, false);
+                    OSDMap result = WebUtils.PostToService (url + "osd", sendData, true, false);
+                    return ((OSDMap)OSDParser.DeserializeJson (result["_RawResult"]))["Result"].AsBoolean();
                 }
             }
             catch (Exception e)
             {
                 m_log.DebugFormat("[AuroraRemoteOfflineMessagesConnector]: Exception when contacting server: {0}", e.ToString());
             }
+            return false;
         }
 
         #endregion

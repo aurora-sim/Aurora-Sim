@@ -52,9 +52,9 @@ namespace Aurora.Modules
             return messages.ToArray ();
         }
 
-        public void AddOfflineMessage (GridInstantMessage message)
+        public bool AddOfflineMessage (GridInstantMessage message)
         {
-            m_localService.AddOfflineMessage (message);
+            return m_localService.AddOfflineMessage (message);
         }
 
         #endregion

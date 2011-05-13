@@ -37,16 +37,51 @@ namespace Aurora.Services.DataService
         /// <param name="GD"></param>
         /// <param name="data">a default T to copy all data into</param>
         /// <returns></returns>
-        public static T GetGeneric<T>(UUID OwnerID, string Type, string Key, IGenericData GD, T data) where T : IDataTransferable
+        public static T GetGeneric<T> (UUID OwnerID, string Type, string Key, IGenericData GD, T data) where T : IDataTransferable
         {
-            List<string> retVal = GD.Query(new string[] { "OwnerID", "Type", "`Key`" }, new object[] { OwnerID, Type, Key }, "generics", "`value`");
-            
+            List<string> retVal = GD.Query (new string[] { "OwnerID", "Type", "`Key`" }, new object[] { OwnerID, Type, Key }, "generics", "`value`");
+
             if (retVal.Count == 0)
                 return null;
 
-            OSDMap map = (OSDMap)OSDParser.DeserializeJson(retVal[0]);
-            data.FromOSD(map);
+            OSDMap map = (OSDMap)OSDParser.DeserializeJson (retVal[0]);
+            data.FromOSD (map);
             return data;
+        }
+
+        /// <summary>
+        /// Gets the number of generic entries
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="OwnerID"></param>
+        /// <param name="Type"></param>
+        /// <param name="GD"></param>
+        /// <returns></returns>
+        public static int GetGenericCount (UUID OwnerID, string Type, IGenericData GD)
+        {
+            List<string> retVal = GD.Query (new string[] { "OwnerID", "Type" }, new object[] { OwnerID, Type }, "generics", "count()");
+
+            if (retVal.Count == 0)
+                return 0;
+
+            return int.Parse(retVal[0]);
+        }
+
+        /// <summary>
+        /// Gets the number of generic entries
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="OwnerID"></param>
+        /// <param name="GD"></param>
+        /// <returns></returns>
+        public static int GetGenericCount (UUID OwnerID, IGenericData GD)
+        {
+            List<string> retVal = GD.Query (new string[] { "OwnerID" }, new object[] { OwnerID }, "generics", "count()");
+
+            if (retVal.Count == 0)
+                return 0;
+
+            return int.Parse (retVal[0]);
         }
 
         /// <summary>

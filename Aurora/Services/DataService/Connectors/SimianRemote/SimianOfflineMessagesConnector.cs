@@ -60,12 +60,13 @@ namespace Aurora.Services.DataService
             return Messages.ToArray();
         }
 
-        public void AddOfflineMessage(GridInstantMessage message)
+        public bool AddOfflineMessage (GridInstantMessage message)
         {
             foreach (string m_ServerURI in m_ServerURIs)
             {
                 SimianUtils.AddGeneric(new UUID(message.toAgentID), "OfflineMessages", UUID.Random().ToString(), message.ToOSD(), m_ServerURI);
             }
+            return true;
         }
 
         #endregion

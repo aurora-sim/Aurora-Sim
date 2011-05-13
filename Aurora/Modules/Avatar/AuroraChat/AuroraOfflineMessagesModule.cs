@@ -204,6 +204,18 @@ namespace Aurora.Modules
 
         private void UndeliveredMessage(GridInstantMessage im)
         {
+            if (!OfflineMessagesConnector.AddOfflineMessage (im))
+            {
+                IClientAPI client = FindClient (new UUID (im.fromAgentID));
+                if (client != null)
+                    client.SendInstantMessage (new GridInstantMessage (
+                            null, new UUID (im.toAgentID),
+                            "System", new UUID (im.fromAgentID),
+                            (byte)InstantMessageDialog.MessageFromAgent,
+                            "User has too many IMs already, please try again later.",
+                            false, new Vector3 ()));
+                return;
+            }
             if ((im.offline != 0)
                 && (!im.fromGroup || (im.fromGroup && m_ForwardOfflineGroupMessages)))
             {
@@ -213,7 +225,6 @@ namespace Aurora.Modules
                     if (module != null)
                         im = module.BuildOfflineGroupNotice(im);
                 }
-                OfflineMessagesConnector.AddOfflineMessage(im);
 
                 IEmailModule emailModule = m_SceneList[0].RequestModuleInterface<IEmailModule> ();
                 if (emailModule != null && m_SendOfflineMessagesToEmail)
@@ -248,7 +259,6 @@ namespace Aurora.Modules
 
                 if (im.dialog == (byte)InstantMessageDialog.InventoryOffered)
                 {
-                    OfflineMessagesConnector.AddOfflineMessage(im);
                     IClientAPI client = FindClient(new UUID(im.fromAgentID));
                     if (client == null)
                         return;
@@ -258,8 +268,6 @@ namespace Aurora.Modules
             }
             else if (im.offline == 0)
             {
-                OfflineMessagesConnector.AddOfflineMessage(im);
-
                 if (im.dialog == (byte)InstantMessageDialog.MessageFromAgent)
                 {
                     IClientAPI client = FindClient(new UUID(im.fromAgentID));

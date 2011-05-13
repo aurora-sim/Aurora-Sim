@@ -15,6 +15,7 @@ namespace Aurora.Services.DataService
     public class LocalOfflineMessagesConnector : IOfflineMessagesConnector
 	{
         private IGenericData GD = null;
+        private int m_maxOfflineMessages = 20;
 
         public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
@@ -27,6 +28,7 @@ namespace Aurora.Services.DataService
 
             DataManager.DataManager.RegisterPlugin(Name+"Local", this);
 
+            m_maxOfflineMessages = source.Configs["AuroraConnectors"].GetInt ("MaxOfflineMessages", m_maxOfflineMessages);
             if (source.Configs["AuroraConnectors"].GetString("OfflineMessagesConnector", "LocalConnector") == "LocalConnector")
             {
                 DataManager.DataManager.RegisterPlugin(Name, this);
@@ -60,9 +62,14 @@ namespace Aurora.Services.DataService
         /// Adds a new offline message for the user.
         /// </summary>
         /// <param name="message"></param>
-        public void AddOfflineMessage(GridInstantMessage message)
+        public bool AddOfflineMessage(GridInstantMessage message)
 		{
-            GenericUtils.AddGeneric(new UUID(message.toAgentID), "OfflineMessages", UUID.Random().ToString(), message.ToOSD(), GD);
+            if(GenericUtils.GetGenericCount(new UUID(message.toAgentID), "OfflineMessages", GD) < m_maxOfflineMessages)
+            {
+                GenericUtils.AddGeneric(new UUID(message.toAgentID), "OfflineMessages", UUID.Random().ToString(), message.ToOSD(), GD);
+                return true;
+            }
+            return false;
 		}
 	}
 }

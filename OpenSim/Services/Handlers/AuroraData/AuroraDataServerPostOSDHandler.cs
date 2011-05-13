@@ -386,9 +386,12 @@ namespace OpenSim.Services
         {
             GridInstantMessage message = new GridInstantMessage ();
             message.FromOSD (request);
-            OfflineMessagesConnector.AddOfflineMessage (message);
+            OSDMap map = new OSDMap ();
+            map["Result"] = OfflineMessagesConnector.AddOfflineMessage (message);
 
-            return SuccessResult ();
+            string xmlString = OSDParser.SerializeJsonString (map);
+            UTF8Encoding encoding = new UTF8Encoding ();
+            return encoding.GetBytes (xmlString);
         }
 
         private byte[] SuccessResult ()
