@@ -258,6 +258,10 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_log.InfoFormat ("[SceneManager]: Startup is complete and took {0}m {1}.{2}s", timeTaken.Minutes, timeTaken.Seconds, timeTaken.Milliseconds);
             AuroraModuleLoader.ClearCache ();
+            // In 99.9% of cases it is a bad idea to manually force garbage collection. However,
+            // this is a rare case where we know we have just went through a long cycle of heap
+            // allocations, and there is no more work to be done until someone logs in
+            GC.Collect ();
         }
 
         #endregion

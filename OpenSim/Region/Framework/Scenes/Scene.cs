@@ -806,11 +806,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="data"></param>
         public void StartupComplete(IScene scene, List<string> data)
         {
-            // In 99.9% of cases it is a bad idea to manually force garbage collection. However,
-            // this is a rare case where we know we have just went through a long cycle of heap
-            // allocations, and there is no more work to be done until someone logs in
-            GC.Collect();
-
             m_log.Info("[Region]: Startup Complete in region " + RegionInfo.RegionName);
             
             //Tell the SceneManager about it

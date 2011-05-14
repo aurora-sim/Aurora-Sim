@@ -226,63 +226,6 @@ namespace OpenSim.CoreApplicationPlugins
 
             // Scan for, and load, nonshared modules
             List<INonSharedRegionModule> list = new List<INonSharedRegionModule>();
-            /*foreach (TypeExtensionNode node in m_nonSharedModules)
-            {
-                Object[] ctorArgs = new Object[] {0};
-
-                // Read the config
-                string moduleString =
-                        modulesConfig.GetString("Setup_" + node.Id, String.Empty);
-
-                // Get the port number, if there is one
-                if (moduleString != String.Empty)
-                {
-                    // Get the port number from the string
-                    string[] moduleParts = moduleString.Split(new char[] {'/'},
-                            2);
-                    if (moduleParts.Length > 1)
-                        ctorArgs[0] = Convert.ToUInt32(moduleParts[0]);
-                }
-
-                // Actually load it
-                INonSharedRegionModule module = null;
-
-                Type[] ctorParamTypes = new Type[ctorArgs.Length];
-                for (int i = 0; i < ctorParamTypes.Length; i++)
-                    ctorParamTypes[i] = ctorArgs[i].GetType();
-
-                if (node.Type.GetConstructor(ctorParamTypes) != null)
-                    module = (INonSharedRegionModule)Activator.CreateInstance(node.Type, ctorArgs);
-                else
-                    module = (INonSharedRegionModule)Activator.CreateInstance(node.Type);
-
-                // Check for replaceable interfaces
-                Type replaceableInterface = module.ReplaceableInterface;
-                if (replaceableInterface != null)
-                {
-                    MethodInfo mii = mi.MakeGenericMethod(replaceableInterface);
-
-                    if (mii.Invoke(scene, new object[0]) != null)
-                    {
-                        m_log.DebugFormat("[REGIONMODULE]: Not loading {0} because another module has registered {1}", module.Name, replaceableInterface.ToString());
-                        continue;
-                    }
-
-                    deferredNonSharedModules[replaceableInterface] = module;
-                    m_log.DebugFormat("[REGIONMODULE]: Deferred load of {0}", module.Name);
-                    continue;
-                }
-
-                //m_log.DebugFormat("[REGIONMODULE]: Adding scene {0} to non-shared module {1}",
-                //                  scene.RegionInfo.RegionName, module.Name);
-
-                // Initialise the module
-                module.Initialise(m_openSim.ConfigSource);
-
-                IRegionModuleBaseModules.Add(module);
-                list.Add(module);
-            }*/
-
             List<INonSharedRegionModule> m_nonSharedModules = Aurora.Framework.AuroraModuleLoader.PickupModules<INonSharedRegionModule>();
             foreach (INonSharedRegionModule module in m_nonSharedModules)
             {

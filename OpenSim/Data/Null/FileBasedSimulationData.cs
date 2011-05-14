@@ -258,10 +258,11 @@ namespace OpenSim.Data.Null
                         else
                             part.LocalId = 0; //Reset it! Only use it once!
                     }
-
                     m_groups.Add (sceneObject);
                 }
             }
+            m_loadStream.Close ();
+            foundLocalIDs.Clear ();
         }
 
         public List<SceneObjectGroup> LoadObjects (UUID regionUUID, Scene scene)

@@ -1006,10 +1006,7 @@ namespace Aurora.Modules
             {
                 Mapasset.Data = mapdata;
                 m_scene.AssetService.Store(Mapasset);
-                RegenerateMaptile(Mapasset.ID, Mapasset.Data);
             }
-            else if(Terrainasset != null)
-                RegenerateMaptile(Terrainasset.ID, Terrainasset.Data);
 
             if (Terrainasset != null)
             {
