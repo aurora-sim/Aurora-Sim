@@ -249,6 +249,8 @@ namespace OpenSim.Data.Null
                 {
                     MemoryStream ms = new MemoryStream (data);
                     SceneObjectGroup sceneObject = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromXml2Format (ms, (Scene)scene);
+                    ms.Close ();
+                    data = null;
                     foreach (ISceneChildEntity part in sceneObject.ChildrenEntities ())
                     {
                         if (!foundLocalIDs.Contains (part.LocalId))
@@ -291,11 +293,8 @@ namespace OpenSim.Data.Null
                 MemoryStream ms = new MemoryStream (m_revertTerrain);
                 if (terrainModule != null)
                     terrainModule.LoadRevertMapFromStream (".r32", ms, 0, 0);
-                ms.Close ();
                 m_revertTerrain = null;
-                if (terrainModule.TerrainRevertMap == null)
-                    return null;
-                return terrainModule.TerrainRevertMap.GetSerialised (scene);
+                return null;
             }
             else
             {
@@ -305,11 +304,8 @@ namespace OpenSim.Data.Null
                 MemoryStream ms = new MemoryStream (m_terrain);
                 if (terrainModule != null)
                     terrainModule.LoadFromStream (".r32", ms, 0, 0);
-                ms.Close ();
                 m_terrain = null;
-                if (terrainModule.TerrainMap == null)
-                    return null;
-                return terrainModule.TerrainMap.GetSerialised (scene);
+                return null;
             }
         }
 

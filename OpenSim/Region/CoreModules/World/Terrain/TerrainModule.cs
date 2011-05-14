@@ -482,13 +482,16 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 short[] map = m_scene.SimulationDataService.LoadTerrain(m_scene, true, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 if (map == null)
                 {
-                    m_revert = m_channel.MakeCopy();
+                    if (m_revert == null)
+                    {
+                        m_revert = m_channel.MakeCopy ();
 
-                    m_scene.SimulationDataService.StoreTerrain(m_revert.GetSerialised(m_scene), m_scene.RegionInfo.RegionID, true);
+                        m_scene.SimulationDataService.StoreTerrain (m_revert.GetSerialised (m_scene), m_scene.RegionInfo.RegionID, true);
+                    }
                 }
                 else
                 {
-                    m_revert = new TerrainChannel(map, m_scene);
+                    m_revert = new TerrainChannel (map, m_scene);
                 }
             }
             catch (IOException e)
@@ -585,14 +588,17 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 short[] map = m_scene.SimulationDataService.LoadTerrain(m_scene, false, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 if (map == null)
                 {
-                    m_log.Info("[TERRAIN]: No default terrain. Generating a new terrain.");
-                    m_channel = new TerrainChannel(m_scene);
+                    if (m_channel == null)
+                    {
+                        m_log.Info ("[TERRAIN]: No default terrain. Generating a new terrain.");
+                        m_channel = new TerrainChannel (m_scene);
 
-                    m_scene.SimulationDataService.StoreTerrain(m_channel.GetSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
+                        m_scene.SimulationDataService.StoreTerrain (m_channel.GetSerialised (m_scene), m_scene.RegionInfo.RegionID, false);
+                    }
                 }
                 else
                 {
-                    m_channel = new TerrainChannel(map, m_scene);
+                    m_channel = new TerrainChannel (map, m_scene);
                 }
             }
             catch (IOException e)

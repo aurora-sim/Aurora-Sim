@@ -201,17 +201,22 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             //m_log.DebugFormat("[SOG]: Starting deserialization of SOG");
             //int time = Util.EnvironmentTickCount();
 
+            XmlDocument doc = new XmlDocument ();
             try
             {
-                XmlDocument doc = new XmlDocument();
-                doc.LoadXml(xmlData);
+                doc.LoadXml (xmlData);
 
-                return InternalFromXml2Format(doc, scene);
+                return InternalFromXml2Format (doc, scene);
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat("[SERIALIZER]: Deserialization of xml failed with {0}.  xml was {1}", e, xmlData);
+                m_log.ErrorFormat ("[SERIALIZER]: Deserialization of xml failed with {0}.  xml was {1}", e, xmlData);
                 return null;
+            }
+            finally
+            {
+                doc.RemoveAll ();
+                doc = null;
             }
         }
 
@@ -220,9 +225,9 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             //m_log.DebugFormat("[SOG]: Starting deserialization of SOG");
             //int time = Util.EnvironmentTickCount();
 
+            XmlDocument doc = new XmlDocument ();
             try
             {
-                XmlDocument doc = new XmlDocument();
                 doc.Load(ms);
 
                 return InternalFromXml2Format(doc, scene);
@@ -231,6 +236,11 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             {
                 m_log.ErrorFormat("[SERIALIZER]: Deserialization of xml failed with {0}", e);
                 return null;
+            }
+            finally
+            {
+                doc.RemoveAll ();
+                doc = null;
             }
         }
 
@@ -242,7 +252,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             try
             {
                 XmlNodeList parts = doc.GetElementsByTagName("SceneObjectPart");
-
                 if (parts.Count == 0)
                 {
                     m_log.ErrorFormat("[SERIALIZER]: Deserialization of xml failed: No SceneObjectPart nodes. xml was " + doc.Value);
@@ -268,7 +277,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                     reader.Close();
                     sr.Close();
                 }
-
+                parts = null;
                 return sceneObject;
             }
             catch (Exception e)

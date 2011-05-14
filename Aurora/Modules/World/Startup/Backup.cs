@@ -249,6 +249,7 @@ namespace Aurora.Modules
                 }
                 LoadingPrims = false;
                 m_log.Info("[BackupModule]: Loaded " + PrimsFromDB.Count.ToString() + " SceneObject(s)");
+                PrimsFromDB.Clear ();
             }
 
             /// <summary>

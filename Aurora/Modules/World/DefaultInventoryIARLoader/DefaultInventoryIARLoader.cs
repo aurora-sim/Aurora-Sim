@@ -99,9 +99,9 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
             if (m_MockScene.InventoryService.GetRootFolder(m_service.LibraryOwner) == null)
                 m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID, false);
 
-            InventoryCollection col = m_MockScene.InventoryService.GetFolderContent(uinfo.PrincipalID, UUID.Zero);
+            List<InventoryFolderBase> rootFolders = m_MockScene.InventoryService.GetFolderFolders(uinfo.PrincipalID, UUID.Zero);
             bool alreadyExists = false;
-            foreach (InventoryFolderBase folder in col.Folders)
+            foreach (InventoryFolderBase folder in rootFolders)
             {
                 if (folder.Name == iarFileName)
                 {
