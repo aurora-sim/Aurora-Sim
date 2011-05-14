@@ -112,9 +112,9 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <summary>
         /// Load the latest water revision from region storage
         /// </summary>
-        /// <param name="regionID">the region UUID</param>
+        /// <param name="scene">the region</param>
         /// <returns>Heightfield data</returns>
-        short[] LoadWater(UUID regionID, bool RevertMap, int RegionSizeX, int RegionSizeY);
+        short[] LoadWater(IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY);
 
         /// <summary>
         /// Store the given parcel info in the database

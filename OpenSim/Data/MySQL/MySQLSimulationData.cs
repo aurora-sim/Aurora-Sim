@@ -855,7 +855,7 @@ namespace OpenSim.Data.MySQL
             return null;
         }
 
-        public short[] LoadWater(UUID regionID, bool Revert, int RegionSizeX, int RegionSizeY)
+        public short[] LoadWater (IScene scene, bool Revert, int RegionSizeX, int RegionSizeY)
         {
             lock (m_dbLock)
             {
@@ -871,7 +871,7 @@ namespace OpenSim.Data.MySQL
                             "from terrain where RegionUUID = ?RegionUUID and Revert = '" + r + "'" +
                             "order by Revision desc limit 1";
 
-                        cmd.Parameters.AddWithValue("RegionUUID", regionID.ToString());
+                        cmd.Parameters.AddWithValue ("RegionUUID", scene.RegionInfo.RegionID.ToString ());
 
                         using (IDataReader reader = ExecuteReader(cmd))
                         {
@@ -887,7 +887,7 @@ namespace OpenSim.Data.MySQL
                                         map[ii] = (short)(Utils.BytesToDouble(heightmap, i) * Constants.TerrainCompression);
                                         ii++;
                                     }
-                                    this.StoreTerrain(map, regionID, Revert);
+                                    this.StoreTerrain (map, scene.RegionInfo.RegionID, Revert);
                                     return map;
                                 }
                                 else

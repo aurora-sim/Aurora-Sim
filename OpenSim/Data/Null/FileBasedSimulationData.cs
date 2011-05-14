@@ -59,6 +59,8 @@ namespace OpenSim.Data.Null
         protected List<SceneObjectGroup> m_groups = new List<SceneObjectGroup> ();
         protected byte[] m_terrain;
         protected byte[] m_revertTerrain;
+        protected byte[] m_water;
+        protected byte[] m_revertWater;
         protected bool m_loaded = false;
         protected Timer m_saveTimer = null;
         protected Timer m_backupSaveTimer = null;
@@ -245,6 +247,14 @@ namespace OpenSim.Data.Null
                 {
                     m_revertTerrain = data;
                 }
+                else if (filePath.StartsWith ("water/"))
+                {
+                    m_water = data;
+                }
+                else if (filePath.StartsWith ("revertwater/"))
+                {
+                    m_revertWater = data;
+                }
                 else if (filePath.StartsWith ("entities/"))
                 {
                     MemoryStream ms = new MemoryStream (data);
@@ -310,9 +320,31 @@ namespace OpenSim.Data.Null
             }
         }
 
-        public short[] LoadWater (UUID regionID, bool RevertMap, int RegionSizeX, int RegionSizeY)
+        public short[] LoadWater (IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY)
         {
-            return null;
+            ITerrainModule terrainModule = scene.RequestModuleInterface<ITerrainModule> ();
+            if (RevertMap)
+            {
+                if (m_revertWater == null)
+                    return null;
+                ITerrainChannel channel = new TerrainChannel (false, scene);
+                MemoryStream ms = new MemoryStream (m_revertWater);
+                if (terrainModule != null)
+                    terrainModule.LoadWaterRevertMapFromStream (".r32", ms, 0, 0);
+                m_revertWater = null;
+                return null;
+            }
+            else
+            {
+                if (m_water == null)
+                    return null;
+                ITerrainChannel channel = new TerrainChannel (false, scene);
+                MemoryStream ms = new MemoryStream (m_water);
+                if (terrainModule != null)
+                    terrainModule.LoadWaterFromStream (".r32", ms, 0, 0);
+                m_water = null;
+                return null;
+            }
         }
 
         public void Shutdown ()

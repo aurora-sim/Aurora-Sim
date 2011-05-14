@@ -601,7 +601,7 @@ ELSE
         /// </summary>
         /// <param name="regionID">regionID.</param>
         /// <returns></returns>
-        public short[] LoadWater(UUID regionID, bool Revert, int RegionSizeX, int RegionSizeY)
+        public short[] LoadWater (IScene scene, bool Revert, int RegionSizeX, int RegionSizeY)
         {
             string sql = "select top 1 RegionUUID, Revision, Heightfield from terrain where RegionUUID = @RegionUUID and Revert = @Revert order by Revision desc";
 
@@ -611,7 +611,7 @@ ELSE
             using (SqlCommand cmd = new SqlCommand(sql, conn))
             {
                 // MySqlParameter param = new MySqlParameter();
-                cmd.Parameters.Add(_Database.CreateParameter("@RegionUUID", regionID));
+                cmd.Parameters.Add (_Database.CreateParameter ("@RegionUUID", scene.RegionInfo.RegionID));
                 cmd.Parameters.Add(_Database.CreateParameter("@Revert", r));
                 conn.Open();
                 using (SqlDataReader reader = cmd.ExecuteReader())

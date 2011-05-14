@@ -831,10 +831,13 @@ namespace Aurora.Modules
                 }
 
                 m_log.Info("[Archive]: Finished writing parcels to archive");
-                m_log.Info("[Archive]: Writing terrain to archive");
+                m_log.Info ("[Archive]: Writing terrain to archive");
 
                 writer.WriteDir ("terrain");
                 writer.WriteDir ("revertterrain");
+
+                writer.WriteDir ("water");
+                writer.WriteDir ("revertwater");
 
                 ITerrainModule tModule = scene.RequestModuleInterface<ITerrainModule> ();
                 if (tModule != null)
@@ -846,6 +849,14 @@ namespace Aurora.Modules
                     s = new MemoryStream ();
                     tModule.SaveToStream (tModule.TerrainRevertMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
                     writer.WriteFile ("revertterrain/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
+                    s.Close ();
+                    s = new MemoryStream ();
+                    tModule.SaveToStream (tModule.TerrainWaterMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
+                    writer.WriteFile ("water/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
+                    s.Close ();
+                    s = new MemoryStream ();
+                    tModule.SaveToStream (tModule.TerrainWaterRevertMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
+                    writer.WriteFile ("revertwater/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
                     s.Close ();
                 }
 
@@ -1013,6 +1024,22 @@ namespace Aurora.Modules
 
                     MemoryStream ms = new MemoryStream (data);
                     terrainModule.LoadRevertMapFromStream (filePath, ms, 0, 0);
+                    ms.Close ();
+                }
+                else if (filePath.StartsWith ("water/"))
+                {
+                    ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule> ();
+
+                    MemoryStream ms = new MemoryStream (data);
+                    terrainModule.LoadWaterFromStream (filePath, ms, 0, 0);
+                    ms.Close ();
+                }
+                else if (filePath.StartsWith ("revertwater/"))
+                {
+                    ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule> ();
+
+                    MemoryStream ms = new MemoryStream (data);
+                    terrainModule.LoadWaterRevertMapFromStream (filePath, ms, 0, 0);
                     ms.Close ();
                 }
                 else if (filePath.StartsWith("entities/"))

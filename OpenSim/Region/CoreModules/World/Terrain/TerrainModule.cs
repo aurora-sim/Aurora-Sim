@@ -98,6 +98,16 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             get { return m_revert; }
         }
 
+        public ITerrainChannel TerrainWaterMap
+        {
+            get { return m_waterChannel; }
+        }
+
+        public ITerrainChannel TerrainWaterRevertMap
+        {
+            get { return m_waterRevert; }
+        }
+
         private long m_queueNextSave = 0;
         private int m_savetime = 2; // seconds to wait before saving terrain
         private Timer m_queueTimer = new Timer();
@@ -347,8 +357,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 fillLater = true;
             }
 
-            List<int> xs = new List<int>();
+            List<int> xs = new List<int> ();
             List<int> ys = new List<int> ();
+            List<int> waterxs = new List<int> ();
+            List<int> waterys = new List<int> ();
             int startX = (((int)(presence.AbsolutePosition.X - presence.DrawDistance)) / Constants.TerrainPatchSize) - 1;
             startX = Math.Max (startX, 0);
             startX = Math.Min (startX, m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize);
@@ -390,7 +402,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             if (xs.Count != 0)
             {
                 //Send all the terrain patches at once
-                presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), m_channel.GetSerialised(m_scene), TerrainPatch.LayerType.Land);
+                //presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), m_channel.GetSerialised(m_scene), TerrainPatch.LayerType.Land);
                 if (m_use3DWater)
                 {
                     //Send all the water patches at once
@@ -532,16 +544,19 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             try
             {
-                short[] map = m_scene.SimulationDataService.LoadWater(m_scene.RegionInfo.RegionID, true, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+                short[] map = m_scene.SimulationDataService.LoadWater(m_scene, true, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 if (map == null)
                 {
-                    m_waterRevert = m_waterChannel.MakeCopy();
+                    if (m_waterRevert == null)
+                    {
+                        m_waterRevert = m_waterChannel.MakeCopy ();
 
-                    m_scene.SimulationDataService.StoreWater(m_waterRevert.GetSerialised(m_scene), m_scene.RegionInfo.RegionID, true);
+                        m_scene.SimulationDataService.StoreWater (m_waterRevert.GetSerialised (m_scene), m_scene.RegionInfo.RegionID, true);
+                    }
                 }
                 else
                 {
-                    m_waterRevert = new TerrainChannel(map, m_scene);
+                    m_waterRevert = new TerrainChannel (map, m_scene);
                 }
             }
             catch (IOException e)
@@ -646,17 +661,26 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 return;
             try
             {
-                short[] map = m_scene.SimulationDataService.LoadWater(m_scene.RegionInfo.RegionID, false, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+                short[] map = m_scene.SimulationDataService.LoadWater(m_scene, false, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 if (map == null)
                 {
-                    m_log.Info("[TERRAIN]: No default water. Generating a new water.");
-                    m_waterChannel = new TerrainChannel(m_scene);
-
-                    m_scene.SimulationDataService.StoreWater(m_waterChannel.GetSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
+                    if (m_waterChannel == null)
+                    {
+                        m_log.Info ("[TERRAIN]: No default water. Generating a new water.");
+                        m_waterChannel = new TerrainChannel (m_scene);
+                        for (int x = 0; x < m_waterChannel.Height; x++)
+                        {
+                            for (int y = 0; y < m_waterChannel.Height; y++)
+                            {
+                                m_waterChannel[x, y] = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
+                            }
+                        }
+                        m_scene.SimulationDataService.StoreWater (m_waterChannel.GetSerialised (m_scene), m_scene.RegionInfo.RegionID, false);
+                    }
                 }
                 else
                 {
-                    m_channel = new TerrainChannel(map, m_scene);
+                    m_waterChannel = new TerrainChannel (map, m_scene);
                 }
             }
             catch (IOException e)
@@ -666,7 +690,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 if (m_scene.RegionInfo.RegionSizeX != Constants.RegionSize || m_scene.RegionInfo.RegionSizeY != Constants.RegionSize)
                 {
                     m_waterChannel = new TerrainChannel(m_scene);
-
+                    for (int x = 0; x < m_waterChannel.Height; x++)
+                    {
+                        for (int y = 0; y < m_waterChannel.Height; y++)
+                        {
+                            m_waterChannel[x, y] = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
+                        }
+                    }
                     m_scene.SimulationDataService.StoreWater(m_waterChannel.GetSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
                 }
             }
@@ -674,21 +704,39 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 m_log.Warn("[TERRAIN]: LoadWorldWaterMap() - Failed with exception " + e.ToString() + " Regenerating");
                 m_waterChannel = new TerrainChannel(m_scene);
-
+                for (int x = 0; x < m_waterChannel.Height; x++)
+                {
+                    for (int y = 0; y < m_waterChannel.Height; y++)
+                    {
+                        m_waterChannel[x, y] = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
+                    }
+                }
                 m_scene.SimulationDataService.StoreWater(m_waterChannel.GetSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
             }
             catch (ArgumentOutOfRangeException e)
             {
                 m_log.Warn("[TERRAIN]: LoadWorldWaterMap() - Failed with exception " + e.ToString() + " Regenerating");
                 m_waterChannel = new TerrainChannel(m_scene);
-
+                for (int x = 0; x < m_waterChannel.Height; x++)
+                {
+                    for (int y = 0; y < m_waterChannel.Height; y++)
+                    {
+                        m_waterChannel[x, y] = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
+                    }
+                }
                 m_scene.SimulationDataService.StoreWater(m_waterChannel.GetSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
             }
             catch (Exception e)
             {
                 m_log.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e.ToString());
                 m_waterChannel = new TerrainChannel(m_scene);
-
+                for (int x = 0; x < m_waterChannel.Height; x++)
+                {
+                    for (int y = 0; y < m_waterChannel.Height; y++)
+                    {
+                        m_waterChannel[x, y] = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
+                    }
+                }
                 m_scene.SimulationDataService.StoreWater(m_waterChannel.GetSerialised(m_scene), m_scene.RegionInfo.RegionID, false);
             }
             LoadRevertWaterMap();
@@ -887,68 +935,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         /// <param name="filename">Filename to terrain file. Type is determined by extension.</param>
         /// <param name="stream"></param>
-        public void LoadFromStream(string filename, Stream stream, int offsetX, int offsetY)
+        public void LoadFromStream (string filename, Stream stream, int offsetX, int offsetY)
         {
-            foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
-            {
-                if (filename.EndsWith(loader.Key))
-                {
-                    lock (m_scene)
-                    {
-                        try
-                        {
-                            ITerrainChannel channel = loader.Value.LoadStream (stream, m_scene);
-                            if (channel != null)
-                            {
-                                channel.Scene = m_scene;
-                                if (m_channel == null || (m_channel.Height == channel.Height &&
-                                    m_channel.Width == channel.Width))
-                                {
-                                    if (m_scene.RegionInfo.RegionSizeX != channel.Width ||
-                                        m_scene.RegionInfo.RegionSizeY != channel.Height)
-                                        return;
-                                    m_channel = channel;
-                                    m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
-                                }
-                                else
-                                {
-                                    //Make sure it is in bounds
-                                    if ((offsetX + channel.Width) > m_channel.Width ||
-                                            (offsetY + channel.Height) > m_channel.Height)
-                                    {
-                                        m_log.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        //Merge the terrains together at the specified offset
-                                        for (int x = offsetX; x < offsetX + channel.Width; x++)
-                                        {
-                                            for (int y = offsetY; y < offsetY + channel.Height; y++)
-                                            {
-                                                m_channel[x, y] = channel[x - offsetX, y - offsetY];
-                                            }
-                                        }
-                                    }
-                                }
-                                UpdateRevertMap();
-                            }
-                        }
-                        catch (NotImplementedException)
-                        {
-                            m_log.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value +
-                                        " parser does not support file loading. (May be save only)");
-                            throw new TerrainException(String.Format("unable to load heightmap: parser {0} does not support loading", loader.Value));
-                        }
-                    }
-
-                    CheckForTerrainUpdates();
-                    m_log.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
-                    return;
-                }
-            }
-            m_log.Error("[TERRAIN]: Unable to load heightmap, no file loader available for that format.");
-            throw new TerrainException(String.Format("unable to load heightmap from file {0}: no loader available for that format", filename));
+            m_channel = InternalLoadFromStream (filename, stream, offsetX, offsetY, m_channel);
+            CheckForTerrainUpdates ();
+            m_scene.RegisterModuleInterface<ITerrainChannel> (m_channel);
         }
 
         /// <summary>
@@ -956,8 +947,20 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         /// <param name="filename">Filename to terrain file. Type is determined by extension.</param>
         /// <param name="stream"></param>
-        public void LoadRevertMapFromStream (string filename, Stream stream, int offsetX, int offsetY)
+        public void LoadWaterFromStream (string filename, Stream stream, int offsetX, int offsetY)
         {
+            m_waterChannel = InternalLoadFromStream (filename, stream, offsetX, offsetY, m_waterChannel);
+            CheckForTerrainUpdates (false, false, true);
+        }
+
+        /// <summary>
+        /// Loads a terrain file from a stream and installs it in the scene.
+        /// </summary>
+        /// <param name="filename">Filename to terrain file. Type is determined by extension.</param>
+        /// <param name="stream"></param>
+        public ITerrainChannel InternalLoadFromStream (string filename, Stream stream, int offsetX, int offsetY, ITerrainChannel update)
+        {
+            ITerrainChannel channel = null;
             foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
             {
                 if (filename.EndsWith (loader.Key))
@@ -966,26 +969,25 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     {
                         try
                         {
-                            ITerrainChannel channel = loader.Value.LoadStream (stream, m_scene);
+                            channel = loader.Value.LoadStream (stream, m_scene);
                             if (channel != null)
                             {
                                 channel.Scene = m_scene;
-                                if (m_revert == null || (m_revert.Height == channel.Height &&
-                                    m_revert.Width == channel.Width))
+                                if (update == null || (update.Height == channel.Height &&
+                                    update.Width == channel.Width))
                                 {
                                     if (m_scene.RegionInfo.RegionSizeX != channel.Width ||
                                         m_scene.RegionInfo.RegionSizeY != channel.Height)
-                                        return;
-                                    m_revert = channel;
+                                        return null;
                                 }
                                 else
                                 {
                                     //Make sure it is in bounds
-                                    if ((offsetX + channel.Width) > m_revert.Width ||
-                                            (offsetY + channel.Height) > m_revert.Height)
+                                    if ((offsetX + channel.Width) > update.Width ||
+                                            (offsetY + channel.Height) > update.Height)
                                     {
                                         m_log.Error ("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
-                                        return;
+                                        return null;
                                     }
                                     else
                                     {
@@ -994,9 +996,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                         {
                                             for (int y = offsetY; y < offsetY + channel.Height; y++)
                                             {
-                                                m_revert[x, y] = channel[x - offsetX, y - offsetY];
+                                                update[x, y] = channel[x - offsetX, y - offsetY];
                                             }
                                         }
+                                        return update;
                                     }
                                 }
                             }
@@ -1007,18 +1010,34 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                         " parser does not support file loading. (May be save only)");
                             throw new TerrainException (String.Format ("unable to load heightmap: parser {0} does not support loading", loader.Value));
                         }
-                        catch
-                        {
-                            m_log.Error ("[TERRAIN]: Unable to load heightmap");
-                        }
                     }
 
                     m_log.Info ("[TERRAIN]: File (" + filename + ") loaded successfully");
-                    return;
+                    return channel;
                 }
             }
             m_log.Error ("[TERRAIN]: Unable to load heightmap, no file loader available for that format.");
             throw new TerrainException (String.Format ("unable to load heightmap from file {0}: no loader available for that format", filename));
+        }
+
+        /// <summary>
+        /// Loads a terrain file from a stream and installs it in the scene.
+        /// </summary>
+        /// <param name="filename">Filename to terrain file. Type is determined by extension.</param>
+        /// <param name="stream"></param>
+        public void LoadRevertMapFromStream (string filename, Stream stream, int offsetX, int offsetY)
+        {
+            m_revert = InternalLoadFromStream (filename, stream, offsetX, offsetY, m_revert);
+        }
+
+        /// <summary>
+        /// Loads a terrain file from a stream and installs it in the scene.
+        /// </summary>
+        /// <param name="filename">Filename to terrain file. Type is determined by extension.</param>
+        /// <param name="stream"></param>
+        public void LoadWaterRevertMapFromStream (string filename, Stream stream, int offsetX, int offsetY)
+        {
+            m_waterRevert = InternalLoadFromStream (filename, stream, offsetX, offsetY, m_waterRevert);
         }
 
         private static Stream URIFetch(Uri uri)
@@ -1305,9 +1324,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             // if we should respect the estate settings then
             // fixup and height deltas that don't respect them
             if(respectEstateSettings)
-                LimitChannelChanges();
+                LimitChannelChanges (channel, isWater ? m_waterRevert : m_revert);
             else if (!forceSendOfTerrainInfo)
-                LimitMaxTerrain();
+                LimitMaxTerrain (channel);
 
             List<int> xs = new List<int>();
             List<int> ys = new List<int>();
@@ -1330,7 +1349,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 if (!m_sendTerrainUpdatesByViewDistance)
                 {
-                    presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), channel.GetSerialised(m_scene), TerrainPatch.LayerType.Land);
+                    presence.ControllingClient.SendLayerData (xs.ToArray (), ys.ToArray (), channel.GetSerialised (m_scene), isWater ? TerrainPatch.LayerType.Land : TerrainPatch.LayerType.Water);
                 }
                 else
                 {
@@ -1343,7 +1362,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        private bool LimitMaxTerrain()
+        private bool LimitMaxTerrain (ITerrainChannel channel)
         {
             bool changesLimited = false;
 
@@ -1353,16 +1372,16 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / +Constants.TerrainPatchSize; y++)
                 {
-                    float requestedHeight = m_channel[x, y];
+                    float requestedHeight = channel[x, y];
 
                     if (requestedHeight > MAX_HEIGHT)
                     {
-                        m_channel[x, y] = MAX_HEIGHT;
+                        channel[x, y] = MAX_HEIGHT;
                         changesLimited = true;
                     }
                     else if (requestedHeight < MIN_HEIGHT)
                     {
-                        m_channel[x, y] = MIN_HEIGHT; //as lower is a -ve delta
+                        channel[x, y] = MIN_HEIGHT; //as lower is a -ve delta
                         changesLimited = true;
                     }
                 }
@@ -1376,7 +1395,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// are all within the current estate limits
         /// <returns>true if changes were limited, false otherwise</returns>
         /// </summary>
-        private bool LimitChannelChanges()
+        private bool LimitChannelChanges (ITerrainChannel channel, ITerrainChannel revert)
         {
             bool changesLimited = false;
             float minDelta = (float)m_scene.RegionInfo.RegionSettings.TerrainLowerLimit;
@@ -1388,19 +1407,18 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize; y++)
                 {
-
-                    float requestedHeight = m_channel[x, y];
-                    float bakedHeight = m_revert[x, y];
+                    float requestedHeight = channel[x, y];
+                    float bakedHeight = revert[x, y];
                     float requestedDelta = requestedHeight - bakedHeight;
 
                     if (requestedDelta > maxDelta)
                     {
-                        m_channel[x, y] = bakedHeight + maxDelta;
+                        channel[x, y] = bakedHeight + maxDelta;
                         changesLimited = true;
                     }
                     else if (requestedDelta < minDelta)
                     {
-                        m_channel[x, y] = bakedHeight + minDelta; //as lower is a -ve delta
+                        channel[x, y] = bakedHeight + minDelta; //as lower is a -ve delta
                         changesLimited = true;
                     }
                 }
@@ -1443,6 +1461,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             bool god = m_scene.Permissions.IsGod(user);
             bool isWater = ((action & 512) == 512); //512 means its modifying water
+            isWater = true;
             ITerrainChannel channel = isWater ? m_waterChannel : m_channel;
             if (north == south && east == west)
             {
@@ -1453,7 +1472,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                             channel, user, west, south, height, size, seconds, BrushSize, m_scenes);
                         
                         //revert changes outside estate limits
-                        CheckForTerrainUpdates(!god, false, false);
+                        CheckForTerrainUpdates (!god, false, isWater);
                 }
                 else
                 {
@@ -1469,7 +1488,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         channel, user, north, west, south, east, size);
 
                     //revert changes outside estate limits
-                    CheckForTerrainUpdates(!god, false, false);
+                    CheckForTerrainUpdates (!god, false, isWater);
                 }
                 else
                 {

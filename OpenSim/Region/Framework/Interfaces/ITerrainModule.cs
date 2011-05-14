@@ -54,6 +54,8 @@ namespace OpenSim.Region.Framework.Interfaces
         void LoadFromStream(string filename, System.Uri pathToTerrainHeightmap);
         void LoadFromStream(string filename, Stream stream, int offsetX, int offsetY);
         void LoadRevertMapFromStream (string filename, Stream stream, int offsetX, int offsetY);
+        void LoadWaterFromStream (string filename, Stream stream, int offsetX, int offsetY);
+        void LoadWaterRevertMapFromStream (string filename, Stream stream, int offsetX, int offsetY);
         /// <summary>
         /// Save a terrain to a stream.
         /// </summary>
@@ -76,5 +78,8 @@ namespace OpenSim.Region.Framework.Interfaces
 
         ITerrainChannel TerrainMap { get; }
         ITerrainChannel TerrainRevertMap { get; }
+
+        ITerrainChannel TerrainWaterMap { get; }
+        ITerrainChannel TerrainWaterRevertMap { get; }
     }
 }

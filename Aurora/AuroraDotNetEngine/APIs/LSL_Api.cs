@@ -11408,31 +11408,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
-            // Alondria: This currently just is utilizing the normal grid's 0.22 prims/m2 calculation
-            // Which probably will be irrelevent in OpenSim....
             IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
             {
-                LandData land = parcelManagement.GetLandObject((float)pos.x, (float)pos.y).LandData;
-
-                float bonusfactor = (float)World.RegionInfo.RegionSettings.ObjectBonus;
-
-                if (land == null)
-                {
-                    return 0;
-                }
-                else if (sim_wide != 0)
-                {
-                    decimal v = land.SimwideArea * (decimal)(0.22) * (decimal)bonusfactor;
-
-                    return (int)v;
-                }
-                else
-                {
-                    decimal v = land.Area * (decimal)(0.22) * (decimal)bonusfactor;
-
-                    return (int)v;
-                }
+                IPrimCountModule primCount = World.RequestModuleInterface<IPrimCountModule> ();
+                ILandObject land = parcelManagement.GetLandObject((float)pos.x, (float)pos.y);
+                return primCount.GetParcelMaxPrimCount (land);
             }
             return 0;
         }
