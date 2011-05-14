@@ -71,6 +71,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         private bool m_RegionManagerIsGod = false;
         private bool m_ParcelOwnerIsGod = false;
         private bool m_allowAdminFriendEditRights = true;
+        private bool m_adminHasToBeInGodMode = true;
         
         /// <value>
         /// The set of users that are allowed to create scripts.  This is only active if permissions are not being
@@ -121,6 +122,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             m_RegionManagerIsGod = PermissionsConfig.GetBoolean("region_manager_is_god", m_RegionManagerIsGod);
             m_ParcelOwnerIsGod = PermissionsConfig.GetBoolean("parcel_owner_is_god", m_ParcelOwnerIsGod);
             m_allowAdminFriendEditRights = PermissionsConfig.GetBoolean("allow_god_friends_edit_with_rights", m_allowAdminFriendEditRights);
+            m_adminHasToBeInGodMode = PermissionsConfig.GetBoolean ("admin_has_to_be_in_god_mode", m_adminHasToBeInGodMode);
 
             m_allowedScriptCreators
                 = UserSetHelpers.ParseUserSetConfigSetting (PermissionsConfig, "allowed_script_creators", m_allowedScriptCreators);
@@ -460,25 +462,35 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        protected bool IsAdministrator(UUID user)
+        protected bool IsAdministrator (UUID user)
+        {
+            return InternalIsAdministrator (user, true);
+        }
+
+        /// <summary>
+        /// Is the given user an administrator (in other words, a god)?
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        private bool InternalIsAdministrator(UUID user, bool checkGodStatus)
         {
             if (user == UUID.Zero) return false;
 
             if (m_allowedAdministrators.Contains (user))
-                return true;
+                return !checkGodStatus ? true : CheckIsInGodMode (user);
 
             if (m_RegionOwnerIsGod && m_scene.RegionInfo.EstateSettings.EstateOwner == user)
-                return true;
+                return !checkGodStatus ? true : CheckIsInGodMode (user);
 
             if (m_RegionManagerIsGod && IsEstateManager(user))
-                return true;
+                return !checkGodStatus ? true : CheckIsInGodMode (user);
 
             IScenePresence sp = m_scene.GetScenePresence (user);
             if (m_ParcelOwnerIsGod && m_parcelManagement != null && sp != null)
             {
                 ILandObject landObject = m_parcelManagement.GetLandObject(sp.AbsolutePosition.X, sp.AbsolutePosition.Y);
                 if (landObject != null && landObject.LandData.OwnerID == user)
-                    return true;
+                    return !checkGodStatus ? true : CheckIsInGodMode (user);
             }
 
             if (m_allowGridGods)
@@ -486,17 +498,28 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 if (sp != null)
                 {
                     if (sp.UserLevel > 0)
-                        return true;
+                        return !checkGodStatus ? true : CheckIsInGodMode (user);
                 }
                 UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, user);
                 if (account != null)
                 {
                     if (account.UserLevel > 0)
-                        return true;
+                        return !checkGodStatus ? true : CheckIsInGodMode (user);
                 }
             }
 
             return false;
+        }
+
+        protected bool CheckIsInGodMode (UUID userID)
+        {
+            if (m_adminHasToBeInGodMode)
+            {
+                IScenePresence sp = m_scene.GetScenePresence (userID);
+                if (sp != null && sp.GodLevel == 0) //Allow null presences to be god always, as they are just gods
+                    return false;
+            }
+            return true;
         }
 
         protected bool IsFriendWithPerms(UUID user,UUID objectOwner)
@@ -941,7 +964,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            return IsAdministrator(user);
+            return InternalIsAdministrator (user, false);
         }
 
         private bool CanDuplicateObject (int objectCount, UUID objectID, UUID owner, IScene scene, Vector3 objectPosition)
