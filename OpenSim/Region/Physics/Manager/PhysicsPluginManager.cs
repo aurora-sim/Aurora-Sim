@@ -51,13 +51,6 @@ namespace OpenSim.Region.Physics.Manager
         /// </summary>
         public PhysicsPluginManager()
         {
-            // Load "plugins", that are hard coded and not existing in form of an external lib, and hence always 
-            // available
-            IMeshingPlugin plugHard;
-            plugHard = new ZeroMesherPlugin();
-            _MeshPlugins.Add(plugHard.GetName(), plugHard);
-            
-           // m_log.Info("[PHYSICS]: Added meshing engine: " + plugHard.GetName());
         }
 
         /// <summary>
@@ -112,8 +105,9 @@ namespace OpenSim.Region.Physics.Manager
         /// <param name="pluginsPath"></param>
         public void LoadPluginsFromAssemblies(string assembliesPath)
         {
-            List<IPhysicsPlugin> physicsPlugins = AuroraModuleLoader.LoadModules<IPhysicsPlugin>(assembliesPath);
-            List<IMeshingPlugin> meshingPlugins = AuroraModuleLoader.LoadModules<IMeshingPlugin>(assembliesPath);
+            List<IPhysicsPlugin> physicsPlugins = AuroraModuleLoader.LoadModules<IPhysicsPlugin> (assembliesPath);
+            List<IMeshingPlugin> meshingPlugins = AuroraModuleLoader.LoadModules<IMeshingPlugin> (assembliesPath);
+            meshingPlugins.AddRange(AuroraModuleLoader.LoadModules<IMeshingPlugin> (""));
 
             foreach (IPhysicsPlugin plug in physicsPlugins)
             {
@@ -123,31 +117,7 @@ namespace OpenSim.Region.Physics.Manager
             {
                 _MeshPlugins.Add(plug.GetName(), plug);
             }
-            
-            /*// Walk all assemblies (DLLs effectively) and see if they are home
-            // of a plugin that is of interest for us
-            string[] pluginFiles = Directory.GetFiles(assembliesPath, "*.dll");
-
-            for (int i = 0; i < pluginFiles.Length; i++)
-            {
-                LoadPluginsFromAssembly(pluginFiles[i]);
-            }*/
         }
-
-        //---
-        public static void PhysicsPluginMessage(string message, bool isWarning)
-        {
-            if (isWarning)
-            {
-                m_log.Warn("[PHYSICS]: " + message);
-            }
-            else
-            {
-                m_log.Info("[PHYSICS]: " + message);
-            }
-        }
-
-        //---
     }
 
     public interface IPhysicsPlugin

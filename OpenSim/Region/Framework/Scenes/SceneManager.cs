@@ -256,7 +256,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             TimeSpan timeTaken = DateTime.Now - m_OpenSimBase.StartupTime;
 
-            m_log.InfoFormat("[SceneManager]: Startup is complete and took {0}m {1}s", timeTaken.Minutes, timeTaken.Seconds);
+            m_log.InfoFormat ("[SceneManager]: Startup is complete and took {0}m {1}.{2}s", timeTaken.Minutes, timeTaken.Seconds, timeTaken.Milliseconds);
+            AuroraModuleLoader.ClearCache ();
         }
 
         #endregion

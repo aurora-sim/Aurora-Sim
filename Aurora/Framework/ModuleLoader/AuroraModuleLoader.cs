@@ -12,8 +12,9 @@ namespace Aurora.Framework
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static List<string> dllBlackList;
-        private static bool firstLoad = true;
-        private static List<Type> LoadedDlls = new List<Type>();
+        private static List<string> firstLoad = new List<string>();
+        private static Dictionary<string, List<Type>> LoadedDlls = new Dictionary<string, List<Type>> ();
+        private const bool ALLOW_CACHE = true;
         private static Dictionary<string, Assembly> LoadedAssemblys = new Dictionary<string, Assembly>();
 
         #region Module Loaders
@@ -39,105 +40,125 @@ namespace Aurora.Framework
         /// <returns></returns>
         public static List<T> LoadModules<T>(string moduleDir)
         {
+            if (moduleDir == "")
+                moduleDir = Util.BasePathCombine ("");
             List<T> modules = new List<T>();
-            if (firstLoad)
+            if (!firstLoad.Contains(moduleDir))
             {
                 DirectoryInfo dir = new DirectoryInfo(moduleDir);
                 if (dllBlackList == null || dllBlackList.Count == 0)
                 {
-                    dllBlackList = new List<string>();
-                    dllBlackList.Add(Path.Combine(dir.FullName, "NHibernate.ByteCode.Castle.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Antlr3.Runtime.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "AprSharp.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Axiom.MathLib.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "BclExtras35.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "BulletDotNET.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "C5.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Castle.Core.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Castle.DynamicProxy.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Castle.DynamicProxy2.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Community.CsharpSqlite.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Community.CsharpSqlite.Sqlite.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "CSJ2K.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "DotNetOpenId.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "DotNetOpenMail.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "DotSets.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Fadd.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Fadd.Globalization.Yaml.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "FluentNHibernate.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "GlynnTucker.Cache.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Google.ProtocolBuffers.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "GoogleTranslateAPI.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "HttpServer.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Iesi.Collections.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "intl3_svn.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Kds.Serialization.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "libapr.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "libapriconv.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "libaprutil.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "libbulletnet.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "libdb44d.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "libdb_dotNET43.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "libeay32.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "log4net.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Modified.XnaDevRu.BulletX.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Mono.Addins.CecilReflector.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Mono.Addins.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Mono.Addins.Setup.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Mono.Data.Sqlite.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Mono.Data.SqliteClient.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Mono.GetOptions.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Mono.PEToolkit.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Mono.Security.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "MonoXnaCompactMaths.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "MXP.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "MySql.Data.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "NDesk.Options.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Newtonsoft.Json.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Newtonsoft.Json.Net20.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "NHibernate.ByteCode.Castle.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "NHibernate.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "HttpServer_OpenSim.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Nini.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Npgsql.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "nunit.framework.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "ode.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Ode.NET.Single.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Ode.NET.Double.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "openjpeg-dotnet-x86_64.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "openjpeg-dotnet.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "OpenMetaverse.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "OpenMetaverse.Rendering.Meshmerizer.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "OpenMetaverse.Http.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "OpenMetaverse.StructuredData.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "OpenMetaverse.Utilities.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "OpenMetaverseTypes.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "PhysX-wrapper.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "PhysX_Wrapper_Dotnet.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "protobuf-net.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "PumaCode.SvnDotNet.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "RAIL.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "SmartThreadPool.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "sqlite3.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "ssleay32.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "SubversionSharp.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "svn_client-1.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "System.Data.SQLite.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "Tools.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "XMLRPC.dll"));
-                    dllBlackList.Add(Path.Combine(dir.FullName, "xunit.dll"));
+                    dllBlackList = new List<string> ();
+                    dllBlackList.Add (Path.Combine (dir.FullName, "AsyncCtpLibrary.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "NHibernate.ByteCode.Castle.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Antlr3.Runtime.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "AprSharp.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Axiom.MathLib.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "BclExtras35.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "BulletDotNET.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "C5.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Castle.Core.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Castle.DynamicProxy.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Castle.DynamicProxy2.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Community.CsharpSqlite.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Community.CsharpSqlite.Sqlite.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "CookComputing.XmlRpcV2.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "CSJ2K.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "DotNetOpenId.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "DotNetOpenMail.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "DotSets.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Fadd.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Fadd.Globalization.Yaml.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "FluentNHibernate.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Glacier2.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "GlynnTucker.Cache.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Google.ProtocolBuffers.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "GoogleTranslateAPI.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "HttpServer.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "HttpServer_OpenSim.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Ice.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Iesi.Collections.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "intl3_svn.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Kds.Serialization.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "libapr.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "libapriconv.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "libaprutil.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "libbulletnet.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "libdb44d.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "libdb_dotNET43.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "libeay32.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "log4net.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Modified.XnaDevRu.BulletX.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Mono.Addins.CecilReflector.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Mono.Addins.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Mono.Addins.Setup.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Mono.Data.Sqlite.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Mono.Data.SqliteClient.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Mono.GetOptions.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Mono.PEToolkit.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Mono.Security.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "MonoXnaCompactMaths.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "MXP.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "MySql.Data.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "NDesk.Options.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Newtonsoft.Json.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Newtonsoft.Json.Net20.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "NHibernate.ByteCode.Castle.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "NHibernate.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "HttpServer_OpenSim.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Nini.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Npgsql.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "nunit.framework.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "ode.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Ode.NET.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Ode.NET.Single.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Ode.NET.Double.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "openjpeg-dotnet-x86_64.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "openjpeg-dotnet.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "openjpeg.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "OpenMetaverse.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "OpenMetaverse.GUI.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "OpenMetaverse.Rendering.Simple.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "OpenMetaverse.Rendering.Meshmerizer.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "OpenMetaverse.Http.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "OpenMetaverse.StructuredData.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "OpenMetaverse.Utilities.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "OpenMetaverseTypes.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "OpenMetaverse.Tests.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "PhysX-wrapper.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "PhysX_Wrapper_Dotnet.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "PrimMesher.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "protobuf-net.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "PumaCode.SvnDotNet.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "RAIL.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "SmartThreadPool.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "sqlite3.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "ssleay32.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "SubversionSharp.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "svn_client-1.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "System.Data.SQLite.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Tools.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "xunit.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "XMLRPC.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "Warp3D.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "zlib.net.dll"));
                 }
+                if (ALLOW_CACHE)
+                    LoadedDlls.Add (moduleDir, new List<Type> ());
                 foreach (FileInfo fileInfo in dir.GetFiles("*.dll"))
                 {
-                    modules.AddRange(LoadModulesFromDLL<T>(fileInfo.FullName));
+                    modules.AddRange (LoadModulesFromDLL<T> (moduleDir, fileInfo.FullName));
                 }
-                //firstLoad = false;
+                if (ALLOW_CACHE)
+                    firstLoad.Add (moduleDir);
             }
             else
             {
                 try
                 {
-                    foreach (Type pluginType in LoadedDlls)
+                    List<Type> loadedDllModules;
+                    LoadedDlls.TryGetValue (moduleDir, out loadedDllModules);
+                    foreach (Type pluginType in loadedDllModules)
                     {
                         try
                         {
@@ -163,6 +184,12 @@ namespace Aurora.Framework
             }
             return modules;
         }
+
+        public static void ClearCache ()
+        {
+            LoadedDlls.Clear ();
+            firstLoad.Clear ();
+        }
         
         /// <summary>
         /// Load all T modules from dllname
@@ -170,11 +197,13 @@ namespace Aurora.Framework
         /// <typeparam name="T"></typeparam>
         /// <param name="dllName"></param>
         /// <returns></returns>
-        private static List<T> LoadModulesFromDLL<T>(string dllName)
+        private static List<T> LoadModulesFromDLL<T>(string moduleDir, string dllName)
         {
             List<T> modules = new List<T>();
             if (dllBlackList.Contains(dllName))
                 return modules;
+            //m_log.Info ("[ModuleLoader]: Loading " + dllName);
+
             Assembly pluginAssembly;
             if (!LoadedAssemblys.TryGetValue(dllName, out pluginAssembly))
             {
@@ -192,6 +221,10 @@ namespace Aurora.Framework
             {
                 try
                 {
+                    List<Type> loadedTypes = new List<Type> ();
+                    if (ALLOW_CACHE)
+                        loadedTypes = LoadedDlls[moduleDir];
+
                     foreach (Type pluginType in pluginAssembly.GetTypes())
                     {
                         try
@@ -200,11 +233,14 @@ namespace Aurora.Framework
                             {
                                 if (!pluginType.IsAbstract)
                                 {
-                                    if (firstLoad)
+                                    if (!firstLoad.Contains(moduleDir))
                                     {
                                         //Only add on the first load
-                                        //if (!LoadedDlls.Contains(pluginType))
-                                        //    LoadedDlls.Add(pluginType);
+                                        if (ALLOW_CACHE)
+                                        {
+                                            if (!loadedTypes.Contains (pluginType))
+                                                loadedTypes.Add (pluginType);
+                                        }
                                     }
                                     if (pluginType.GetInterface(typeof(T).Name, true) != null)
                                     {
