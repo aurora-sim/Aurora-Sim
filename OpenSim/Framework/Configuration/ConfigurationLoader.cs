@@ -194,11 +194,12 @@ namespace OpenSim.Framework
                 throw new NotSupportedException();
             }
 
+            List<string> triedPaths = new List<string> ();
             for (int i = 0 ; i < sources.Count ; i++)
             {
                 if (ReadConfig(sources[i], i))
                     iniFileExists = true;
-                AddIncludes(sources, ref i);
+                AddIncludes (sources, ref i, ref triedPaths);
             }
 
             FixDefines (ref m_config);
@@ -243,7 +244,7 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="sources">List of URL strings or filename strings</param>
         /// <param name="cntr">Where should we start inserting sources into the list?</param>
-        private void AddIncludes(List<string> sources, ref int cntr)
+        private void AddIncludes (List<string> sources, ref int cntr, ref List<string> triedPaths)
         {
             int cn = cntr;
             //Where should we insert the sources into the list?
@@ -263,6 +264,9 @@ namespace OpenSim.Framework
                     {
                         // read the config file to be included.
                         string file = config.GetString(k);
+                        if (triedPaths.Contains (file))
+                            continue;
+                        triedPaths.Add (file);
                         if (IsUri(file))
                         {
                             if (!sources.Contains(file))
@@ -284,7 +288,9 @@ namespace OpenSim.Framework
                                 chunkWithWildcards = file.Substring(wildcardIndex);
                             }
                             string path = Path.Combine(basepath, chunkWithoutWildcards + chunkWithWildcards);
-                            string[] paths = Util.Glob(path);
+                            string[] paths = new string[1] { path };
+                            if(path.Contains("*"))
+                                paths = Util.Glob(path);
                             foreach (string p in paths)
                             {
                                 if (!sources.Contains(p))
