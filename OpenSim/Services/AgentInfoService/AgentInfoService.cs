@@ -138,7 +138,13 @@ namespace OpenSim.Services
         {
             if (m_lockedUsers.Contains (userID))
                 return; //User is locked, leave them alone
-            m_agentInfoConnector.Update (userID, new string[3] { "IsOnline", loggingIn ? "LastLogin" : "LastLogout", "CurrentRegionID" }, new object[3] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now), enteringRegion });
+            if(loggingIn)
+                if(enteringRegion == UUID.Zero)
+                    m_agentInfoConnector.Update (userID, new string[2] { "IsOnline", "LastLogin" }, new object[2] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now) });
+                else
+                    m_agentInfoConnector.Update (userID, new string[3] { "IsOnline", "LastLogin", "CurrentRegionID" }, new object[3] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now), enteringRegion });
+            else
+                m_agentInfoConnector.Update (userID, new string[2] { "IsOnline", "LastLogout" }, new object[2] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now) });
 
             if (fireLoggedInEvent)
             {
