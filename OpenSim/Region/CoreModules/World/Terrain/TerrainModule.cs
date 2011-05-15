@@ -1460,23 +1460,31 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                             float north, float west, float south, float east, UUID agentId, float BrushSize)
         {
             bool god = m_scene.Permissions.IsGod(user);
-            bool isWater = ((action & 512) == 512); //512 means its modifying water
-            //isWater = true;
-            ITerrainChannel channel = isWater ? m_waterChannel : m_channel;
+            const byte WATER_CONST = 128;
             if (north == south && east == west)
             {
                 if (m_painteffects.ContainsKey((StandardTerrainEffects) action))
                 {
                     StoreUndoState();
                         m_painteffects[(StandardTerrainEffects) action].PaintEffect(
-                            channel, user, west, south, height, size, seconds, BrushSize, m_scenes);
+                            m_channel, user, west, south, height, size, seconds, BrushSize, m_scenes);
                         
                         //revert changes outside estate limits
-                        CheckForTerrainUpdates (!god, false, isWater);
+                        CheckForTerrainUpdates (!god, false, false);
                 }
                 else
                 {
-                    m_log.Warn("Unknown terrain brush type " + action);
+                    if (m_painteffects.ContainsKey ((StandardTerrainEffects)(action - WATER_CONST)))
+                    {
+                        StoreUndoState ();
+                        m_painteffects[(StandardTerrainEffects)action - WATER_CONST].PaintEffect (
+                            m_waterChannel, user, west, south, height, size, seconds, BrushSize, m_scenes);
+
+                        //revert changes outside estate limits
+                        CheckForTerrainUpdates (!god, false, true);
+                    }
+                    else
+                        m_log.Warn("Unknown terrain brush type " + action);
                 }
             }
             else
@@ -1485,14 +1493,24 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 {
                     StoreUndoState();
                     m_floodeffects[(StandardTerrainEffects)action].FloodEffect(
-                        channel, user, north, west, south, east, size);
+                        m_channel, user, north, west, south, east, size);
 
                     //revert changes outside estate limits
-                    CheckForTerrainUpdates (!god, false, isWater);
+                    CheckForTerrainUpdates (!god, false, false);
                 }
                 else
                 {
-                    m_log.Warn("Unknown terrain flood type " + action);
+                    if (m_floodeffects.ContainsKey ((StandardTerrainEffects)(action - WATER_CONST)))
+                    {
+                        StoreUndoState ();
+                        m_floodeffects[(StandardTerrainEffects)action - WATER_CONST].FloodEffect (
+                            m_waterChannel, user, north, west, south, east, size);
+
+                        //revert changes outside estate limits
+                        CheckForTerrainUpdates (!god, false, true);
+                    }
+                    else
+                        m_log.Warn("Unknown terrain flood type " + action);
                 }
             }
         }
