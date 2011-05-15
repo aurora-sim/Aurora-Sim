@@ -3488,43 +3488,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         group.AbsolutePosition = pos;
                     else
                     {
-                        //TODO: Make sure this still works
-                    /*
-                    //Find the 'center' of the group
-                    //  Note: In SL, this is based on max - min
-                    Vector3 MinPos = new Vector3(100000, 100000, 100000);
-                    Vector3 MaxPos = Vector3.Zero;
-                    foreach (SceneObjectPart child in partList)
-                    {
-                        if (child.AbsolutePosition.X < MinPos.X)
-                            MinPos.X = child.AbsolutePosition.X;
-                        if (child.AbsolutePosition.Y < MinPos.Y)
-                            MinPos.Y = child.AbsolutePosition.Y;
-                        if (child.AbsolutePosition.Z < MinPos.Z)
-                            MinPos.Z = child.AbsolutePosition.Z;
-
-                        if (child.AbsolutePosition.X > MaxPos.X)
-                            MaxPos.X = child.AbsolutePosition.X;
-                        if (child.AbsolutePosition.Y > MaxPos.Y)
-                            MaxPos.Y = child.AbsolutePosition.Y;
-                        if (child.AbsolutePosition.Z > MaxPos.Z)
-                            MaxPos.Z = child.AbsolutePosition.Z;
-                    }
-                    Vector3 GroupAvg = ((MaxPos + MinPos) / 2);
-                     * 
-                         
-                    Vector3 GroupAvg = group.GroupScale();
-                    Vector3 offset = group.AbsolutePosition - GroupAvg;
-*/
-                    
                         // center is on average of all positions
                         // less root prim position
 
                         Vector3 offset = Vector3.Zero;
                         foreach (SceneObjectPart child in partList)
-                            {
+                        {
                             offset += child.AbsolutePosition;
-                            }
+                        }
                         offset /= partList.Count;
                         offset -= group.AbsolutePosition;
                         offset += pos;

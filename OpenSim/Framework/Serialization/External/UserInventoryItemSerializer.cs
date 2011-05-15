@@ -50,11 +50,12 @@ namespace OpenSim.Framework.Serialization.External
         {
             InventoryItemBase item = new InventoryItemBase();
 
-            //StringReader reader = new StringReader (Encoding.ASCII.GetString (serialization, 0, serialization.Length));
-            MemoryStream mr = new MemoryStream (serialization);
-            StreamReader sr = new StreamReader (mr, Encoding.ASCII);
-            //XmlReader xtr = XmlTextReader.Create (reader);
-            XmlReader xtr = XmlTextReader.Create (sr);
+            StringReader reader = new StringReader (Encoding.ASCII.GetString (serialization, 0, serialization.Length));
+            XmlReader xtr = XmlTextReader.Create (reader);
+            //Uses byte[] directly... should be used once issues with it are fixed
+            //MemoryStream mr = new MemoryStream (serialization);
+            //StreamReader sr = new StreamReader (mr, Encoding.ASCII);
+            //XmlReader xtr = XmlTextReader.Create (sr);
             xtr.ReadStartElement ("InventoryItem");
             
             item.Name = xtr.ReadElementString("Name");
