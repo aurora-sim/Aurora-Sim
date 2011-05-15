@@ -402,7 +402,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             if (xs.Count != 0)
             {
                 //Send all the terrain patches at once
-                //presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), m_channel.GetSerialised(m_scene), TerrainPatch.LayerType.Land);
+                presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), m_channel.GetSerialised(m_scene), TerrainPatch.LayerType.Land);
                 if (m_use3DWater)
                 {
                     //Send all the water patches at once
@@ -1461,7 +1461,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             bool god = m_scene.Permissions.IsGod(user);
             bool isWater = ((action & 512) == 512); //512 means its modifying water
-            isWater = true;
+            //isWater = true;
             ITerrainChannel channel = isWater ? m_waterChannel : m_channel;
             if (north == south && east == west)
             {
