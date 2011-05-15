@@ -731,6 +731,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_partsList.Count == 1)
             {
                 m_partsList[0].LinkNum = 0;
+                Util.ReleaseWriterLock (m_partsLock);
                 return;
             }
 

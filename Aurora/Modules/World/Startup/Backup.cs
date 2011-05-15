@@ -850,14 +850,17 @@ namespace Aurora.Modules
                     tModule.SaveToStream (tModule.TerrainRevertMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
                     writer.WriteFile ("revertterrain/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
                     s.Close ();
-                    s = new MemoryStream ();
-                    tModule.SaveToStream (tModule.TerrainWaterMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
-                    writer.WriteFile ("water/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
-                    s.Close ();
-                    s = new MemoryStream ();
-                    tModule.SaveToStream (tModule.TerrainWaterRevertMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
-                    writer.WriteFile ("revertwater/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
-                    s.Close ();
+                    if (tModule.TerrainWaterMap != null)
+                    {
+                        s = new MemoryStream ();
+                        tModule.SaveToStream (tModule.TerrainWaterMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
+                        writer.WriteFile ("water/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
+                        s.Close ();
+                        s = new MemoryStream ();
+                        tModule.SaveToStream (tModule.TerrainWaterRevertMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
+                        writer.WriteFile ("revertwater/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
+                        s.Close ();
+                    }
                 }
 
                 m_log.Info("[Archive]: Finished writing terrain to archive");

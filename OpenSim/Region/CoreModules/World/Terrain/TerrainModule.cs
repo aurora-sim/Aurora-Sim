@@ -315,11 +315,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
+        private Vector3 m_previousCheckedPosition = Vector3.Zero;
         object AuroraEventManager_OnGenericEvent(string FunctionName, object parameters)
         {
             if (FunctionName == "DrawDistanceChanged" || FunctionName == "SignficantCameraMovement")
             {
-                SendTerrainUpdatesForClient ((IScenePresence)parameters);
+                 SendTerrainUpdatesForClient ((IScenePresence)parameters);
             }
             return null;
         }
@@ -327,7 +328,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         void EventManager_OnSignificantClientMovement(IClientAPI remote_client)
         {
             IScenePresence presence = m_scene.GetScenePresence (remote_client.AgentId);
-            SendTerrainUpdatesForClient(presence);
+            if (Vector3.DistanceSquared (presence.AbsolutePosition, m_previousCheckedPosition) > 16 * 16)
+            {
+                m_previousCheckedPosition = presence.AbsolutePosition;
+                SendTerrainUpdatesForClient (presence);
+            }
         }
 
         void OnNewPresence (IScenePresence presence)
@@ -361,16 +366,16 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             List<int> ys = new List<int> ();
             List<int> waterxs = new List<int> ();
             List<int> waterys = new List<int> ();
-            int startX = (((int)(presence.AbsolutePosition.X - presence.DrawDistance)) / Constants.TerrainPatchSize) - 1;
+            int startX = (((int)(presence.AbsolutePosition.X - presence.DrawDistance)) / Constants.TerrainPatchSize) - 2;
             startX = Math.Max (startX, 0);
             startX = Math.Min (startX, m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize);
-            int startY = (((int)(presence.AbsolutePosition.Y - presence.DrawDistance)) / Constants.TerrainPatchSize) - 1;
+            int startY = (((int)(presence.AbsolutePosition.Y - presence.DrawDistance)) / Constants.TerrainPatchSize) - 2;
             startY = Math.Max (startY, 0);
             startY = Math.Min (startY, m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize);
-            int endX = (((int)(presence.AbsolutePosition.X + presence.DrawDistance)) / Constants.TerrainPatchSize) + 1;
+            int endX = (((int)(presence.AbsolutePosition.X + presence.DrawDistance)) / Constants.TerrainPatchSize) + 2;
             endX = Math.Max (endX, 0);
             endX = Math.Min (endX, m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize);
-            int endY = (((int)(presence.AbsolutePosition.Y + presence.DrawDistance)) / Constants.TerrainPatchSize) + 1;
+            int endY = (((int)(presence.AbsolutePosition.Y + presence.DrawDistance)) / Constants.TerrainPatchSize) + 2;
             endY = Math.Max (endY, 0);
             endY = Math.Min (endY, m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize);
             for (int x = startX; x < endX; x++) 
@@ -385,11 +390,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     {
                         //Check which has less distance, camera or avatar position, both have to be done
                         if (Util.DistanceLessThan(presence.AbsolutePosition,
-                            new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0), presence.DrawDistance + 35) ||
+                            new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0), presence.DrawDistance + 50) ||
                         Util.DistanceLessThan(presence.CameraPosition,
-                            new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0), presence.DrawDistance + 35)) //Its not a radius, its a diameter and we add 35 so that it doesn't look like it cuts off
+                            new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0), presence.DrawDistance + 50)) //Its not a radius, its a diameter and we add 35 so that it doesn't look like it cuts off
                         {
-                            //They can see it, send it ot them
+                            //They can see it, send it to them
                             terrainarray[x, y] = true;
                             xs.Add(x);
                             ys.Add(y);
@@ -462,10 +467,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         public void ResetWater()
         {
-            TerrainChannel channel = new TerrainChannel(m_scene);
-            m_waterChannel = channel;
-            SaveRevertWater(m_waterChannel);
-            CheckForTerrainUpdates(false, true, true);
+            if (!m_noTerrain)
+            {
+                TerrainChannel channel = new TerrainChannel (m_scene);
+                m_waterChannel = channel;
+                SaveRevertWater (m_waterChannel);
+                CheckForTerrainUpdates (false, true, true);
+            }
         }
 
         /// <summary>
@@ -1438,22 +1446,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         goback.PlaybackState();
                 }
             }
-        }
-
-        /// <summary>
-        /// Sends a copy of the current terrain to the scenes clients
-        /// </summary>
-        /// <param name="serialised">A copy of the terrain as a 1D float array of size w*h</param>
-        /// <param name="x">The patch corner to send</param>
-        /// <param name="y">The patch corner to send</param>
-        private void SendToClients(short[] serialised, int x, int y)
-        {
-            m_scene.ForEachClient(
-                delegate(IClientAPI controller)
-                {
-                    controller.SendLayerData(x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize, serialised);
-                }
-            );
         }
 
         private void client_OnModifyTerrain(UUID user, float height, float seconds, byte size, byte action,

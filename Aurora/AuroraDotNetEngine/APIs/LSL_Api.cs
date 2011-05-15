@@ -3350,7 +3350,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <returns></returns>
         public DateTime llRezPrim(string inventory, LSL_Types.Vector3 pos, LSL_Types.Vector3 vel, LSL_Types.Quaternion rot, int param, bool isRezAtRoot, bool doRecoil, bool SetDieAtEdge, bool CheckPos)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "LSL", m_host, "LSL");
+            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "llRezPrim", m_host, "LSL");
 
             if (m_ScriptEngine.Config.GetBoolean("AllowllRezObject", true))
             {
