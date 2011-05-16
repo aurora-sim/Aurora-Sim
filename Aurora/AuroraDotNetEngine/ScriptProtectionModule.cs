@@ -178,11 +178,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 //
                 if (FunctionPerms == null) // No list = true
                 {
-                    if (m_threatLevel > m_scriptProtectionModule.m_MaxThreatLevel)
+                    if (m_threatLevel > m_scriptProtectionModule.GetThreatLevel ())
                         m_scriptProtectionModule.Error ("Runtime Error: ",
                             String.Format (
                                 "{0} permission denied.  Allowed threat level is {1} but function threat level is {2}.",
-                                function, m_scriptProtectionModule.m_MaxThreatLevel, m_threatLevel));
+                                function, m_scriptProtectionModule.GetThreatLevel (), m_threatLevel));
                 }
                 else
                 {
