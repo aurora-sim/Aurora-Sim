@@ -61,7 +61,7 @@ namespace Aurora.Services.DataService
         {
             List<string> retVal = GD.Query (new string[] { "OwnerID", "Type" }, new object[] { OwnerID, Type }, "generics", "count()");
 
-            if (retVal.Count == 0)
+            if (retVal == null || retVal.Count == 0)
                 return 0;
 
             return int.Parse(retVal[0]);
