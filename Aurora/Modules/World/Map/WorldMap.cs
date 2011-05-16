@@ -514,11 +514,11 @@ namespace Aurora.Modules
                     foreach (GridRegion region in regions)
                     {
                         //mapBlockCache[region.RegionLocX / 256, region.RegionLocY / 256] = MapBlockFromGridRegion(region);
-                        if(item.mapBlocks == 0)
+                        if (item.mapBlocks == 0 || (item.mapBlocks & 0x10000) != 0)
                             mapBlocks.Add(MapBlockFromGridRegion(region));
                         else if (item.mapBlocks == 1)
                             mapBlocks.Add(TerrainBlockFromGridRegion(region));
-                        else //if (item.mapBlocks == 2) //V2 viewer, we need to deal with it a bit
+                        else if (item.mapBlocks == 2) //V2 viewer, we need to deal with it a bit
                             mapBlocks.AddRange (Map2BlockFromGridRegion (region));
                     }
                     /*}
@@ -944,6 +944,8 @@ namespace Aurora.Modules
                 CreateMapTile d = CreateMapTileAsync;
                 d.BeginInvoke(Mapasset, Terrainasset, lastMapRegionUUID, lastTerrainRegionUUID, CreateMapTileAsyncCompleted, d);
             }
+            Mapasset = null;
+            Terrainasset = null;
         }
 
         private void FillInMap(List<MapBlockData> mapBlocks, int minX, int minY, int maxX, int maxY)
@@ -999,24 +1001,17 @@ namespace Aurora.Modules
             if (terraindata != null)
             {
                 Terrainasset.Data = terraindata;
-                m_scene.AssetService.Store(Terrainasset);
+                m_scene.AssetService.Store (Terrainasset);
+                Terrainasset.Data = null;
+                Terrainasset = null;
             }
 
             if (mapdata != null)
             {
                 Mapasset.Data = mapdata;
-                m_scene.AssetService.Store(Mapasset);
-            }
-
-            if (Terrainasset != null)
-            {
-                 Terrainasset.Data = null;
-                 Terrainasset = null;
-            }
-            if (Mapasset != null)
-            {
-                 Mapasset.Data = null;
-                 Mapasset = null;
+                m_scene.AssetService.Store (Mapasset);
+                Mapasset.Data = null;
+                Mapasset = null;
             }
 
             //Update the grid map
@@ -1072,7 +1067,6 @@ namespace Aurora.Modules
                 if (imgstream != null)
                 {
                     imgstream.Close();
-                    imgstream.Dispose();
                 }
             }
         }
