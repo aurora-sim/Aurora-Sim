@@ -131,7 +131,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 
                 while ((data = archive.ReadEntry(out filePath, out entryType)) != null)
                 {
-                    /*if (filePath.StartsWith(ArchiveConstants.ASSETS_PATH))
+                    if (filePath.StartsWith(ArchiveConstants.ASSETS_PATH))
                     {
                         if (LoadAsset(filePath, data))
                             successfulAssetRestores++;
@@ -143,7 +143,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                                 "[INVENTORY ARCHIVER]: Loaded {0} assets...", 
                                 successfulAssetRestores);
                     }
-                    else */if (filePath.StartsWith(ArchiveConstants.INVENTORY_PATH))
+                    else if (filePath.StartsWith(ArchiveConstants.INVENTORY_PATH))
                     {
                         filePath = filePath.Substring(ArchiveConstants.INVENTORY_PATH.Length);
                         
