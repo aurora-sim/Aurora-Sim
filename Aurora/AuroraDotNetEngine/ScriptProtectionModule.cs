@@ -77,12 +77,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             /// </summary>
             private Dictionary<string, List<UUID>> m_FunctionPerms = new Dictionary<string, List<UUID>> ();
             private List<UUID> m_allowedUsers = new List<UUID> ();
+            private Dictionary<UUID, Dictionary<string, bool>> m_knownAllowedGroupFunctionsForAvatars = new Dictionary<UUID, Dictionary<string, bool>> ();
+            private bool m_allowGroupPermissions = false;
 
             public ThreatLevelDefinition (ThreatLevel threatLevel, UserSet userSet, ScriptProtectionModule module)
             {
                 m_threatLevel = threatLevel;
                 m_userSet = userSet;
                 m_scriptProtectionModule = module;
+                m_allowGroupPermissions = m_scriptProtectionModule.m_config.GetBoolean ("AllowGroupThreatPermissionCheck", m_allowGroupPermissions);
 
                 string perm = m_scriptProtectionModule.m_config.GetString ("Allow_" + m_threatLevel.ToString(), "");
                 if (perm != "")
@@ -189,9 +192,51 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (!FunctionPerms.Contains (UUID.Zero))
                     {
                         if (!FunctionPerms.Contains (m_host.OwnerID))
+                        {
+                            if (m_allowGroupPermissions)
+                            {
+                                Dictionary<string, bool> cachedFunctions;
+                                //Check to see whether we have already evaluated this function for this user
+                                if(m_knownAllowedGroupFunctionsForAvatars.TryGetValue(m_host.OwnerID, out cachedFunctions))
+                                {
+                                    if(cachedFunctions.ContainsKey(function))
+                                    {
+                                        if(cachedFunctions[function])
+                                            return;
+                                        else
+                                            m_scriptProtectionModule.Error ("Runtime Error: ",
+                                                String.Format ("{0} permission denied.  Prim owner is not in the list of users allowed to execute this function.",
+                                                function));
+                                    }
+                                }
+                                else
+                                    cachedFunctions = new Dictionary<string,bool>();
+                                IGroupsModule groupsModule = m_host.ParentEntity.Scene.RequestModuleInterface<IGroupsModule> ();
+                                if (groupsModule != null)
+                                {
+                                    bool success = false;
+                                    foreach (UUID id in FunctionPerms)
+                                    {
+                                        if (groupsModule.GroupPermissionCheck (m_host.OwnerID, id, GroupPowers.None))
+                                        {
+                                            success = true;
+                                            break;
+                                        }
+                                    }
+                                    //Cache the success
+                                    cachedFunctions[function] = success;
+                                    if (!m_knownAllowedGroupFunctionsForAvatars.ContainsKey (m_host.OwnerID))
+                                        m_knownAllowedGroupFunctionsForAvatars.Add (m_host.OwnerID, new Dictionary<string, bool> ());
+                                    m_knownAllowedGroupFunctionsForAvatars[m_host.OwnerID] = cachedFunctions;
+
+                                    if (success)
+                                        return; //All is good
+                                }
+                            }
                             m_scriptProtectionModule.Error ("Runtime Error: ",
                                 String.Format ("{0} permission denied.  Prim owner is not in the list of users allowed to execute this function.",
                                 function));
+                        }
                     }
                 }
             }
