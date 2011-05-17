@@ -27,6 +27,7 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -65,7 +66,7 @@ namespace Aurora.Simulation.Base
         /// <summary>
         /// Where to post errors
         /// </summary>
-        public static string m_urlToPostErrors = "http://auroraserver.ath.cx/posterror.php";
+        public static string m_urlToPostErrors = "http://aurora-sim.org/CrashReports/crashreports.php";
 
         /// <summary>
         /// Directory to save crash reports to.  Relative to bin/
@@ -191,10 +192,7 @@ namespace Aurora.Simulation.Base
             {
                 if (ex.Message != "Restart") //Internal needs a restart message
                 {
-                    string mes = "[AURORA]: Aurora has crashed! Error: " + ex + ", Stack trace: " + ex.StackTrace;
-
-                    m_log.Error(mes);
-                    handleException(mes, ex);
+                    UnhandledException (false, ex);
                     //Just clean it out as good as we can
                     simBase.Shutdown(false);
                 }
@@ -232,27 +230,32 @@ namespace Aurora.Simulation.Base
                 return;
 
             _IsHandlingException = true;
+            Exception ex = (Exception)e.ExceptionObject;
 
+            UnhandledException (e.IsTerminating, ex);
+
+            _IsHandlingException = false;
+        }
+
+        private static void UnhandledException (bool isTerminating, Exception ex)
+        {
             string msg = String.Empty;
             msg += "\r\n";
-            msg += "APPLICATION EXCEPTION DETECTED: " + e.ToString() + "\r\n";
+            msg += "APPLICATION EXCEPTION DETECTED" + "\r\n";
             msg += "\r\n";
 
-            msg += "Exception: " + e.ExceptionObject.ToString() + "\r\n";
-            Exception ex = (Exception)e.ExceptionObject;
+            msg += "Exception: " + ex.ToString () + "\r\n";
             if (ex.InnerException != null)
             {
-                msg += "InnerException: " + ex.InnerException.ToString() + "\r\n";
+                msg += "InnerException: " + ex.InnerException.ToString () + "\r\n";
             }
 
             msg += "\r\n";
-            msg += "Application is terminating: " + e.IsTerminating.ToString() + "\r\n";
+            msg += "Application is terminating: " + isTerminating.ToString () + "\r\n";
 
-            m_log.ErrorFormat("[APPLICATION]: {0}", msg);
+            m_log.ErrorFormat ("[APPLICATION]: {0}", msg);
 
-            handleException(msg, ex);
-
-            _IsHandlingException = false;
+            handleException (msg, ex);
         }
 
         /// <summary>
@@ -285,11 +288,13 @@ namespace Aurora.Simulation.Base
 
             if (m_sendErrorReport)
             {
-                List<string> parameters = new List<string>();
-                parameters.Add(VersionInfo.Version); //Aurora version
-                parameters.Add(msg); //The error
-                parameters.Add(Environment.OSVersion.Platform.ToString()); //The operating system
+                Hashtable param = new Hashtable ();
+                param.Add ("Version", VersionInfo.Version); //Aurora version
+                param.Add ("Message", msg); //The error
+                param.Add ("Platform", Environment.OSVersion.Platform.ToString ()); //The operating system
                 ConfigurableKeepAliveXmlRpcRequest req;
+                IList parameters = new ArrayList ();
+                parameters.Add (param);
                 req = new ConfigurableKeepAliveXmlRpcRequest("SendErrorReport", parameters, true);
                 try
                 {
