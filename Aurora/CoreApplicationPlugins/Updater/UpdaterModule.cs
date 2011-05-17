@@ -68,6 +68,8 @@ namespace OpenSim.CoreApplicationPlugins
                     {
                         Utilities.DownloadFile(UpdaterNode.ChildNodes[5].InnerText,
                             "AuroraVersion" + UpdaterNode.ChildNodes[2].InnerText + ".zip");
+                        MessageBox.Show (string.Format("Downloaded to {0}, exiting for user to upgrade.", "AuroraVersion" + UpdaterNode.ChildNodes[2].InnerText + ".zip"), "Aurora Update");
+                        Environment.Exit (0);
                     }
                     //Update the config so that we do not ask again
                     updateConfig.Set("LatestRelease", UpdaterNode.ChildNodes[2].InnerText);
