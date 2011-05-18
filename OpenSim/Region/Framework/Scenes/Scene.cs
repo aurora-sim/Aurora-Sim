@@ -617,6 +617,10 @@ namespace OpenSim.Region.Framework.Scenes
                     catch (NullReferenceException) { }
                 });
 
+            // Remove the avatar from the scene
+            m_sceneGraph.RemoveScenePresence (presence);
+            m_clientManager.Remove (presence.UUID);
+
             try
             {
                 presence.Close ();
@@ -628,10 +632,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             //Remove any interfaces it might have stored
             presence.RemoveAllInterfaces ();
-
-            // Remove the avatar from the scene
-            m_sceneGraph.RemoveScenePresence (presence);
-            m_clientManager.Remove (presence.UUID);
 
             AuthenticateHandler.RemoveCircuit (presence.ControllingClient.CircuitCode);
             //m_log.InfoFormat("[SCENE] Memory pre  GC {0}", System.GC.GetTotalMemory(false));
