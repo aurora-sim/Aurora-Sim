@@ -88,7 +88,7 @@ namespace OpenSim.Services
 
         public UserInfo GetUserInfo(string userID)
         {
-            return m_agentInfoConnector.Get(userID);
+            return m_agentInfoConnector.Get(userID, true);
         }
 
         public UserInfo[] GetUserInfos(string[] userIDs)
@@ -140,11 +140,11 @@ namespace OpenSim.Services
                 return; //User is locked, leave them alone
             if(loggingIn)
                 if(enteringRegion == UUID.Zero)
-                    m_agentInfoConnector.Update (userID, new string[2] { "IsOnline", "LastLogin" }, new object[2] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now) });
+                    m_agentInfoConnector.Update (userID, new string[3] { "IsOnline", "LastLogin", "LastSeen" }, new object[3] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now), Util.ToUnixTime (DateTime.Now) });
                 else
-                    m_agentInfoConnector.Update (userID, new string[3] { "IsOnline", "LastLogin", "CurrentRegionID" }, new object[3] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now), enteringRegion });
+                    m_agentInfoConnector.Update (userID, new string[4] { "IsOnline", "LastLogin", "LastSeen", "CurrentRegionID" }, new object[4] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now), enteringRegion, Util.ToUnixTime (DateTime.Now) });
             else
-                m_agentInfoConnector.Update (userID, new string[2] { "IsOnline", "LastLogout" }, new object[2] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now) });
+                m_agentInfoConnector.Update (userID, new string[3] { "IsOnline", "LastLogout", "LastSeen" }, new object[3] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now), Util.ToUnixTime (DateTime.Now) });
 
             if (fireLoggedInEvent)
             {

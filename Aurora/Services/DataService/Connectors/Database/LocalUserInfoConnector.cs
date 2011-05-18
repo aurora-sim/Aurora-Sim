@@ -116,7 +116,7 @@ namespace Aurora.Services.DataService
             GD.Update(m_realm, values, keys, new string[1] { "UserID" }, new object[1] { userID });
         }
 
-        public UserInfo Get(string userID)
+        public UserInfo Get (string userID, bool checkOnlineStatus)
         {
             List<string> query = GD.Query("UserID", userID, m_realm, "*");
             if (query.Count == 0)
@@ -146,9 +146,12 @@ namespace Aurora.Services.DataService
             }
 
             //Check LastSeen
-            if (m_checkLastSeen && user.IsOnline && (Util.ToDateTime(int.Parse(query[2])).AddHours(1) < DateTime.Now))
+            DateTime timeLastSeen = Util.ToDateTime (int.Parse (query[2]));
+            DateTime timeNow = DateTime.Now.ToUniversalTime ();
+            if (checkOnlineStatus && m_checkLastSeen && user.IsOnline && (timeLastSeen.AddHours (1) < timeNow))
             {
-                m_log.Warn("[UserInfoService]: Found a user (" + user.UserID + ") that was not seen within the last hour! Logging them out.");
+                m_log.Warn("[UserInfoService]: Found a user (" + user.UserID + ") that was not seen within the last hour " +
+                    "(since " + timeLastSeen.ToLocalTime ().ToString () + ", time elapsed " + (timeNow - timeLastSeen).Days + " days, " + (timeNow - timeLastSeen).Hours + " hours)! Logging them out.");
                 user.IsOnline = false;
                 Set(user);
             }
