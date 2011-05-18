@@ -134,7 +134,6 @@ namespace OpenSim.Services.Handlers.Map
                     y += (regions[i].RegionSizeX - Constants.RegionSize) / Constants.RegionSize;
                     float xx = (float)(x * (SizeOfImage / mapView));
                     float yy = SizeOfImage - (y * (SizeOfImage / mapView) + (SizeOfImage / (mapView)));
-                    bitImages[i].RotateFlip (RotateFlipType.RotateNoneFlipX);
                     g.DrawImage (bitImages[i], xx, yy,
                         (int)((float)SizeOfImage / (float)mapView * ((float)regions[i].RegionSizeX / (float)Constants.RegionSize)), (int)((float)SizeOfImage / (float)mapView * ((float)regions[i].RegionSizeY / (float)Constants.RegionSize))); // y origin is top
                 }
