@@ -498,9 +498,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 
                 m_registry.RequestModuleInterface<IAssetService>().Store(asset);
 
-                asset.Data = null;
-                asset = null;
-
                 return true;
             }
             else
