@@ -1457,7 +1457,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 m_moveToPositionInProgress = true;
                 m_moveToPositionTarget = new Vector3(locx, locy, locz);
-                m_log.Warn("Moving to " + m_moveToPositionTarget);
+                //m_log.Warn("Moving to " + m_moveToPositionTarget);
             }
             catch (Exception ex)
             {
