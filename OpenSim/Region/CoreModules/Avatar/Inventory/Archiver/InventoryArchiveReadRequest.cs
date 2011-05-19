@@ -176,10 +176,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                             item = null;
                         }
                     }
+                    data = null;
                 }
-                
-                archive.Close();
-                m_loadStream.Close ();
 
                 m_log.InfoFormat (
                     "[INVENTORY ARCHIVER]: Successfully loaded {0} assets with {1} failures", 

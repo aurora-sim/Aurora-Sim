@@ -143,11 +143,6 @@ namespace OpenSim.Services
                             m_registry.RequestModuleInterface<IGridRegistrationService>();
                 switch (method)
                 {
-                    case "GETINVENTORYSKELETON":
-                        if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
-                                return FailureResult();
-                        return HandleGetInventorySkeleton(request);
                     case "GETROOTFOLDER":
                         if (urlModule != null)
                             if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
@@ -275,34 +270,6 @@ namespace OpenSim.Services
             xw.Flush();
 
             return ms.ToArray();
-        }
-
-        byte[] HandleGetInventorySkeleton(Dictionary<string,object> request)
-        {
-            Dictionary<string,object> result = new Dictionary<string,object>();
-
-            if (!request.ContainsKey("PRINCIPAL"))
-                return FailureResult();
-
-
-            List<InventoryFolderBase> folders = m_InventoryService.GetInventorySkeleton(new UUID(request["PRINCIPAL"].ToString()));
-
-            Dictionary<string, object> sfolders = new Dictionary<string, object>();
-            if (folders != null)
-            {
-                int i = 0;
-                foreach (InventoryFolderBase f in folders)
-                {
-                    sfolders["folder_" + i.ToString()] = EncodeFolder(f);
-                    i++;
-                }
-            }
-            result["FOLDERS"] = sfolders;
-
-            string xmlString = WebUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[XXX]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding();
-            return encoding.GetBytes(xmlString);
         }
 
         byte[] HandleGetRootFolder(Dictionary<string,object> request)

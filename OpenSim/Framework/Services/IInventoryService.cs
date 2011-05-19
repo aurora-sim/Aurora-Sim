@@ -43,21 +43,21 @@ namespace OpenSim.Services.Interfaces
     public interface IInventoryService
     {
         /// <summary>
-        /// Create the entire inventory for a given user
+        /// Create the entire inventory for a given user (local only)
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
         bool CreateUserInventory (UUID user, bool createDefaultItems);
 
         /// <summary>
-        /// Create the root folder for a given user
+        /// Create the root folder for a given user (local only)
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
         bool CreateUserRootFolder (UUID principalID);
 
         /// <summary>
-        /// Gets the skeleton of the inventory -- folders only
+        /// Gets the skeleton of the inventory -- folders only (local only)
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>
@@ -94,7 +94,7 @@ namespace OpenSim.Services.Interfaces
         InventoryCollection GetFolderContent(UUID userID, UUID folderID);
 
         /// <summary>
-        /// Gets the folders inside a folder
+        /// Gets the folders inside a folder (local only)
         /// </summary>
         /// <param name="userID"></param>
         /// <param name="folderID"></param>

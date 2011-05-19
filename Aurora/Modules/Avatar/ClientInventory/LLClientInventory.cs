@@ -1508,15 +1508,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         itemCopy.Folder = folder.ID;
                     }
-                    else
-                    {
-                        InventoryFolderBase root = m_scene.InventoryService.GetRootFolder(recipient);
-
-                        if (root != null)
-                            itemCopy.Folder = root.ID;
-                        else
-                            return null; // No destination
-                    }
                 }
 
                 itemCopy.GroupID = UUID.Zero;
@@ -1525,12 +1516,14 @@ namespace OpenSim.Region.Framework.Scenes
                 itemCopy.SalePrice = item.SalePrice;
                 itemCopy.SaleType = item.SaleType;
 
-                if (AddInventoryItem(itemCopy))
+                if (AddInventoryItem (itemCopy))
                 {
-                    IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
+                    IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule> ();
                     if (invAccess != null)
-                        invAccess.TransferInventoryAssets(itemCopy, senderId, recipient);
+                        invAccess.TransferInventoryAssets (itemCopy, senderId, recipient);
                 }
+                else
+                    return null;
 
                 if (!m_scene.Permissions.BypassPermissions())
                 {

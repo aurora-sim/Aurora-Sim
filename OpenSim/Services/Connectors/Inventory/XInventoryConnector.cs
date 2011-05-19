@@ -60,29 +60,7 @@ namespace OpenSim.Services.Connectors
 
         public virtual List<InventoryFolderBase> GetInventorySkeleton(UUID principalID)
         {
-            Dictionary<string,object> ret = MakeRequest("GETINVENTORYSKELETON",
-                    new Dictionary<string,object> {
-                        { "PRINCIPAL", principalID.ToString() }
-                    });
-
-            if (ret == null)
-                return null;
-            if (ret.Count == 0)
-                return null;
-
-            List<InventoryFolderBase> folders = new List<InventoryFolderBase>();
-
-            try
-            {
-                foreach (Object o in ret.Values)
-                    folders.Add(BuildFolder((Dictionary<string, object>)o));
-            }
-            catch (Exception e)
-            {
-                m_log.DebugFormat("[XINVENTORY CONNECTOR STUB]: Exception unwrapping folder list: {0}", e.Message);
-            }
-
-            return folders;
+            return null;
         }
 
         public virtual List<InventoryFolderBase> GetRootFolders(UUID principalID)

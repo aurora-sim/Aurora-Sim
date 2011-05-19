@@ -119,7 +119,7 @@ namespace Aurora.DataManager.SQLite
         {
             cmd.Connection.Close();
             cmd.Parameters.Clear ();
-            cmd.Dispose ();
+            //cmd.Dispose ();
         }
 
         public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue)
