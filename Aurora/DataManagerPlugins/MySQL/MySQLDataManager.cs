@@ -128,7 +128,7 @@ namespace Aurora.DataManager.MySQL
                     if (reader != null)
                     {
                         reader.Close ();
-                        reader.Dispose ();
+                        //reader.Dispose ();
                     }
                 }
                 catch (Exception e) { m_log.Debug("[MySQLDataLoader] Query", e); }
@@ -163,7 +163,7 @@ namespace Aurora.DataManager.MySQL
                     if (reader != null)
                     {
                         reader.Close ();
-                        reader.Dispose ();
+                        //reader.Dispose ();
                     }
                 }
                 catch (Exception e) { m_log.Debug("[MySQLDataLoader] Query", e); }
@@ -198,7 +198,7 @@ namespace Aurora.DataManager.MySQL
                     if (reader != null)
                     {
                         reader.Close ();
-                        reader.Dispose ();
+                        //reader.Dispose ();
                     }
                 }
                 catch (Exception e) { m_log.Debug("[MySQLDataLoader] QueryFullData", e); }
@@ -254,7 +254,7 @@ namespace Aurora.DataManager.MySQL
                     if (reader != null)
                     {
                         reader.Close ();
-                        reader.Dispose ();
+                        //reader.Dispose ();
                     }
                 }
                 catch (Exception e) { m_log.Debug("[MySQLDataLoader] Query", e); }
@@ -302,7 +302,7 @@ namespace Aurora.DataManager.MySQL
                     if (reader != null)
                     {
                         reader.Close ();
-                        reader.Dispose ();
+                        //reader.Dispose ();
                     }
                 }
                 catch (Exception e) { m_log.Debug("[MySQLDataLoader] Query", e); }
@@ -351,7 +351,7 @@ namespace Aurora.DataManager.MySQL
                     if (reader != null)
                     {
                         reader.Close ();
-                        reader.Dispose ();
+                        //reader.Dispose ();
                     }
                 }
                 catch (Exception e) { m_log.Debug("[MySQLDataLoader] QueryNames", e); }
@@ -843,7 +843,7 @@ namespace Aurora.DataManager.MySQL
                     if (reader != null)
                     {
                         reader.Close ();
-                        reader.Dispose ();
+                        //reader.Dispose ();
                     }
                 }
                 catch (Exception e) { m_log.Debug("[MySQLDataLoader] TableExists", e); }
@@ -882,7 +882,7 @@ namespace Aurora.DataManager.MySQL
                     if (rdr != null)
                     {
                         rdr.Close ();
-                        rdr.Dispose ();
+                        //rdr.Dispose ();
                     }
                 }
                 catch (Exception e) { m_log.Debug("[MySQLDataLoader] ExtractColumnsFromTable", e); }
