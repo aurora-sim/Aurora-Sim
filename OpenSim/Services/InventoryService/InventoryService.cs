@@ -586,6 +586,10 @@ namespace OpenSim.Services.InventoryService
 
         public virtual bool UpdateFolder(InventoryFolderBase folder)
         {
+            if (!m_AllowDelete) //Initial item MUST be created as a link folder
+                if (folder.Type == (sbyte)AssetType.LinkFolder)
+                    return false;
+
             InventoryFolderBase check = GetFolder(folder);
             if (check == null)
                 return AddFolder(folder);
@@ -625,7 +629,18 @@ namespace OpenSim.Services.InventoryService
         public virtual bool DeleteFolders(UUID principalID, List<UUID> folderIDs)
         {
             if (!m_AllowDelete)
-                return false;
+            {
+                foreach (UUID id in folderIDs)
+                {
+                    if (!ParentIsLinkFolder (id))
+                        continue;
+                    InventoryFolderBase f = new InventoryFolderBase ();
+                    f.ID = id;
+                    PurgeFolder (f);
+                    m_Database.DeleteFolders ("folderID", id.ToString ());
+                }
+                return true;
+            }
 
             // Ignore principal ID, it's bogus at connector level
             //
@@ -644,7 +659,7 @@ namespace OpenSim.Services.InventoryService
 
         public virtual bool PurgeFolder(InventoryFolderBase folder)
         {
-            if (!m_AllowDelete)
+            if (!m_AllowDelete && !ParentIsLinkFolder(folder.ID))
                 return false;
 
             if (!ParentIsTrash(folder.ID))
@@ -693,6 +708,9 @@ namespace OpenSim.Services.InventoryService
 
         public virtual bool UpdateItem(InventoryItemBase item)
         {
+            if (!m_AllowDelete) //Initial item MUST be created as a link or link folder
+                if (item.AssetType == (sbyte)AssetType.Link || item.AssetType == (sbyte)AssetType.LinkFolder)
+                    return false;
             return m_Database.StoreItem(item);
         }
 
@@ -711,7 +729,17 @@ namespace OpenSim.Services.InventoryService
         public virtual bool DeleteItems(UUID principalID, List<UUID> itemIDs)
         {
             if (!m_AllowDelete)
+            {
+                foreach (UUID id in itemIDs)
+                {
+                    InventoryItemBase item = new InventoryItemBase (id);
+                    item = GetItem (item);
+                    if (!ParentIsLinkFolder (item.Folder))
+                        continue;
+                    m_Database.DeleteItems ("inventoryID", id.ToString ());
+                }
                 return false;
+            }
 
             // Just use the ID... *facepalms*
             //
@@ -793,9 +821,9 @@ namespace OpenSim.Services.InventoryService
             return new List<InventoryItemBase> (m_Database.GetActiveGestures (principalID));
         }
 
-        private bool ParentIsTrash(UUID folderID)
+        private bool ParentIsTrash (UUID folderID)
         {
-            List<InventoryFolderBase> folder = m_Database.GetFolders(new string[] { "folderID" }, new string[] { folderID.ToString() });
+            List<InventoryFolderBase> folder = m_Database.GetFolders (new string[] { "folderID" }, new string[] { folderID.ToString () });
             if (folder.Count < 1)
                 return false;
 
@@ -806,11 +834,38 @@ namespace OpenSim.Services.InventoryService
 
             while (parentFolder != UUID.Zero)
             {
-                List<InventoryFolderBase> parent = m_Database.GetFolders(new string[] { "folderID" }, new string[] { parentFolder.ToString() });
+                List<InventoryFolderBase> parent = m_Database.GetFolders (new string[] { "folderID" }, new string[] { parentFolder.ToString () });
                 if (parent.Count < 1)
                     return false;
 
                 if (parent[0].Type == (int)AssetType.TrashFolder)
+                    return true;
+                if (parent[0].Type == (int)AssetType.RootFolder)
+                    return false;
+
+                parentFolder = parent[0].ParentID;
+            }
+            return false;
+        }
+
+        private bool ParentIsLinkFolder (UUID folderID)
+        {
+            List<InventoryFolderBase> folder = m_Database.GetFolders (new string[] { "folderID" }, new string[] { folderID.ToString () });
+            if (folder.Count < 1)
+                return false;
+
+            if (folder[0].Type == (int)AssetType.LinkFolder)
+                return true;
+
+            UUID parentFolder = folder[0].ParentID;
+
+            while (parentFolder != UUID.Zero)
+            {
+                List<InventoryFolderBase> parent = m_Database.GetFolders (new string[] { "folderID" }, new string[] { parentFolder.ToString () });
+                if (parent.Count < 1)
+                    return false;
+
+                if (parent[0].Type == (int)AssetType.LinkFolder)
                     return true;
                 if (parent[0].Type == (int)AssetType.RootFolder)
                     return false;
