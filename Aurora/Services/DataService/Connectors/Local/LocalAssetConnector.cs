@@ -44,20 +44,20 @@ namespace Aurora.Services.DataService
 
 		public void UpdateLSLData(string token, string key, string value)
         {
-            List<string> Test = GD.Query(new string[] { "Token", "Key" }, new string[] { token, key }, "lslgenericdata", "*");
+            List<string> Test = GD.Query (new string[] { "Token", "KeySetting" }, new string[] { token, key }, "lslgenericdata", "*");
             if (Test.Count == 0)
             {
                 GD.Insert("lslgenericdata", new string[] { token, key, value });
             }
             else
             {
-                GD.Update("lslgenericdata", new string[] { "Value" }, new string[] { value }, new string[] { "key" }, new string[] { key });
+                GD.Update ("lslgenericdata", new object[] { value }, new string[] { "ValueSetting" }, new string[] { "KeySetting" }, new object[] { key });
             }
         }
 
         public List<string> FindLSLData(string token, string key)
         {
-            return GD.Query(new string[] { "Token", "Key" }, new string[] { token, key }, "lslgenericdata", "*");
+            return GD.Query (new string[] { "Token", "KeySetting" }, new string[] { token, key }, "lslgenericdata", "*");
         }
     }
 }
