@@ -1002,16 +1002,12 @@ namespace Aurora.Modules
             {
                 Terrainasset.Data = terraindata;
                 m_scene.AssetService.Store (Terrainasset);
-                Terrainasset.Data = null;
-                Terrainasset = null;
             }
 
             if (mapdata != null)
             {
                 Mapasset.Data = mapdata;
                 m_scene.AssetService.Store (Mapasset);
-                Mapasset.Data = null;
-                Mapasset = null;
             }
 
             //Update the grid map
