@@ -15,14 +15,15 @@ default
         //First, change the lists into an xml string so that it can go into the database easily
         string xmlDataToPutIntoTheDatabase = aaSerializeXML(dataKeys, dataValues);
         //Put the info in the database now
-        aaUpdateDatabase(Key, Token, xmlDataToPutIntoTheDatabase);
+        aaUpdateDatabase(Key, xmlDataToPutIntoTheDatabase, Token);
     } 
     touch_start(integer number)
     { 
         //Now we need to retrieve the info from the database
         list queryData = aaQueryDatabase(Key, Token);
-        //Now that we have the info, we need to pull the keys and values back out of the first value in the database.
-        string retrievedXML = llList2String(queryData,0);
+        //Now that we have the info, we need to pull the keys and values back out of the third value in the database.
+        //The first value is the token, the second the Key, and the third, the value
+        string retrievedXML = llList2String(queryData,2);
         //Pull the keys out of the xml
         list retrievedKeys = aaDeserializeXMLKeys(retrievedXML);
         //Pull the values out of the xml
