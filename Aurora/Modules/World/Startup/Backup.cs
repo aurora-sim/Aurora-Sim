@@ -153,12 +153,83 @@ namespace Aurora.Modules
 
             #region Constructor
 
-            public InternalSceneBackup(Scene scene)
+            public InternalSceneBackup (Scene scene)
             {
                 m_scene = scene;
-                m_scene.StackModuleInterface<IAuroraBackupModule>(this);
-                m_scene.RegisterModuleInterface<IBackupModule>(this);
+                m_scene.StackModuleInterface<IAuroraBackupModule> (this);
+                m_scene.RegisterModuleInterface<IBackupModule> (this);
                 m_scene.EventManager.OnFrame += UpdateStorageBackup;
+
+                MainConsole.Instance.Commands.AddCommand ("region", false, "delete object owner",
+                    "delete object owner <UUID>",
+                    "Delete object by owner", HandleDeleteObject);
+                MainConsole.Instance.Commands.AddCommand ("region", false, "delete object creator",
+                    "delete object creator <UUID>",
+                    "Delete object by creator", HandleDeleteObject);
+                MainConsole.Instance.Commands.AddCommand ("region", false, "delete object uuid",
+                    "delete object uuid <UUID>",
+                    "Delete object by uuid", HandleDeleteObject);
+                MainConsole.Instance.Commands.AddCommand ("region", false, "delete object name",
+                    "delete object name <name>",
+                    "Delete object by name", HandleDeleteObject);
+            }
+
+            #endregion
+
+            #region Console Commands
+
+            private void HandleDeleteObject (string module, string[] cmd)
+            {
+                if (cmd.Length < 4)
+                    return;
+
+                string mode = cmd[2];
+                string o = cmd[3];
+
+                List<SceneObjectGroup> deletes = new List<SceneObjectGroup> ();
+
+                UUID match;
+
+                switch (mode)
+                {
+                    case "owner":
+                        if (!UUID.TryParse (o, out match))
+                            return;
+                        m_scene.ForEachSOG (delegate (SceneObjectGroup g)
+                                {
+                                    if (g.OwnerID == match && !g.IsAttachment)
+                                        deletes.Add (g);
+                                });
+                        break;
+                    case "creator":
+                        if (!UUID.TryParse (o, out match))
+                            return;
+                        m_scene.ForEachSOG (delegate (SceneObjectGroup g)
+                                {
+                                    if (g.RootPart.CreatorID == match && !g.IsAttachment)
+                                        deletes.Add (g);
+                                });
+                        break;
+                    case "uuid":
+                        if (!UUID.TryParse (o, out match))
+                            return;
+                        m_scene.ForEachSOG (delegate (SceneObjectGroup g)
+                                {
+                                    if (g.UUID == match && !g.IsAttachment)
+                                        deletes.Add (g);
+                                });
+                        break;
+                    case "name":
+                        m_scene.ForEachSOG (delegate (SceneObjectGroup g)
+                                {
+                                    if (g.RootPart.Name == o && !g.IsAttachment)
+                                        deletes.Add (g);
+                                });
+                        break;
+                }
+
+                foreach (SceneObjectGroup g in deletes)
+                    DeleteSceneObject (g, true, true);
             }
 
             #endregion
