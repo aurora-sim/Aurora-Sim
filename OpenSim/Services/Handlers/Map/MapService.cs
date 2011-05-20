@@ -35,6 +35,7 @@ namespace OpenSim.Services.Handlers.Map
             if (mapConfig != null)
             {
                 m_enabled = mapConfig.GetBoolean ("Enabled", m_enabled);
+                m_port = mapConfig.GetUInt ("Port", m_port);
                 m_cacheEnabled = mapConfig.GetBoolean ("CacheEnabled", m_cacheEnabled);
                 m_cacheExpires = mapConfig.GetFloat ("CacheExpires", m_cacheExpires);
             }
