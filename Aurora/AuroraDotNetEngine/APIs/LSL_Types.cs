@@ -1578,6 +1578,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public struct LSLInteger
         {
             public int value;
+            private static readonly Regex castRegex = new Regex (@"(^[ ]*0[xX][0-9A-Fa-f][0-9A-Fa-f]*)|(^[ ]*(-?|\+?)[0-9][0-9]*)");
 
             #region Constructors
             public LSLInteger(int i)
@@ -1599,9 +1600,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 if (int.TryParse(s, out value))
                     return;
-                Regex r = new Regex("(^[ ]*0[xX][0-9A-Fa-f][0-9A-Fa-f]*)|(^[ ]*-?[0-9][0-9]*)");
-                Match m = r.Match(s);
+                Match m = castRegex.Match (s);
                 string v = m.Groups[0].Value;
+                // Leading plus sign is allowed, but ignored
+                v = v.Replace ("+", "");
                 if (s == "TRUE")
                     value = 1;
                 else if (s == "FALSE")
