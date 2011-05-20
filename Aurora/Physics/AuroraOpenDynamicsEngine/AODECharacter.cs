@@ -853,6 +853,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #endregion
 
+            #region Movement Multiplier
+
+            float movementmult = 1f;
+            if (!m_alwaysRun)
+                movementmult /= _parent_scene.avMovementDivisorWalk;
+            else
+                movementmult /= _parent_scene.avMovementDivisorRun;
+
+            movementmult *= 10;
+            movementmult *= SpeedModifier;
+            if (flying)
+                movementmult *= _parent_scene.m_AvFlySpeed;
+
+            #endregion
+
             #region Check for underground
 
             if (!(Position.X < 0.25f || Position.Y < 0.25f ||
@@ -894,17 +909,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             #endregion
 
             #region Movement
-
-            float movementmult = 1f;
-            if (!m_alwaysRun)
-                movementmult /= _parent_scene.avMovementDivisorWalk;
-            else
-                movementmult /= _parent_scene.avMovementDivisorRun;
-
-            movementmult *= 10;
-            movementmult *= SpeedModifier;
-            if (flying)
-                movementmult *= _parent_scene.m_AvFlySpeed;
 
             #region Jump code
 

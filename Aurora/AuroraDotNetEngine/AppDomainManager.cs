@@ -326,14 +326,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     if (currentAD.ScriptsLoaded <= currentAD.ScriptsWaitingUnload)
                     {
-                        try
+                        if (currentAD.CurrentAppDomain.Id != AppDomain.CurrentDomain.Id)//Don't kill the current app domain!
                         {
-                            // Unload
-                            AppDomain.Unload(currentAD.CurrentAppDomain);
+                            try
+                            {
+                                // Unload
+                                AppDomain.Unload (currentAD.CurrentAppDomain);
+                            }
+                            catch
+                            {
+                            }
+                            currentAD.CurrentAppDomain = null;
+                            currentAD = null;
                         }
-                        catch { }
-                        currentAD.CurrentAppDomain = null;
-                        currentAD = null;
                     }
                 }
             }
