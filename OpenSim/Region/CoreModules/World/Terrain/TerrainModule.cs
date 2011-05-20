@@ -946,8 +946,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         public void LoadFromStream (string filename, Stream stream, int offsetX, int offsetY)
         {
             m_channel = InternalLoadFromStream (filename, stream, offsetX, offsetY, m_channel);
-            CheckForTerrainUpdates ();
-            m_scene.RegisterModuleInterface<ITerrainChannel> (m_channel);
+            if (m_channel != null)
+            {
+                CheckForTerrainUpdates ();
+                m_scene.RegisterModuleInterface<ITerrainChannel> (m_channel);
+            }
         }
 
         /// <summary>
@@ -958,7 +961,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         public void LoadWaterFromStream (string filename, Stream stream, int offsetX, int offsetY)
         {
             m_waterChannel = InternalLoadFromStream (filename, stream, offsetX, offsetY, m_waterChannel);
-            CheckForTerrainUpdates (false, false, true);
+            if (m_waterChannel != null)
+            {
+                CheckForTerrainUpdates (false, false, true);
+            }
         }
 
         /// <summary>
