@@ -1525,7 +1525,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                         }
                     }
                 }
-            });
+            }
+            );
         }
 
         public void ClientOnParcelPropertiesRequest(int start_x, int start_y, int end_x, int end_y, int sequence_id,

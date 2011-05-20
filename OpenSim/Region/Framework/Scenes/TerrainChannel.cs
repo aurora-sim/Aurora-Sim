@@ -67,13 +67,7 @@ namespace OpenSim.Region.Framework.Scenes
                 int y;
                 for (y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
                 {
-                    this[x,y] = TerrainUtil.PerlinNoise2D(x, y, 2, 0.125f) * 10;
-                    float spherFacA = TerrainUtil.SphericalFactor(x, y, m_scene.RegionInfo.RegionSizeX / 2, m_scene.RegionInfo.RegionSizeY / 2, 50) * 0.01f;
-                    float spherFacB = TerrainUtil.SphericalFactor(x, y, m_scene.RegionInfo.RegionSizeX / 2, m_scene.RegionInfo.RegionSizeY / 2, 100) * 0.001f;
-                    if (m_map[y * m_scene.RegionInfo.RegionSizeX + x] < spherFacA)
-                        this[x, y] = spherFacA;
-                    if (m_map[y * m_scene.RegionInfo.RegionSizeX + x] < spherFacB)
-                        this[x, y] = spherFacB;
+                    this[x, y] = (float)m_scene.RegionInfo.RegionSettings.WaterHeight + 1;
                 }
             }
         }
