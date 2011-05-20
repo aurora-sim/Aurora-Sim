@@ -830,16 +830,18 @@ namespace OpenSim.Region.Framework.Scenes
             //If update == true, we need to recreate the file for the client
             bool Update = GetInventoryFileName();
 
-            client.SendTaskInventory(m_part.UUID, (short)m_inventorySerial,
-                                     Utils.StringToBytes(m_inventoryFileName));
-
             if (!Update)
             {
                 //We don't need to update the fileData, so just send the cached info and exit out of this method
                 if (m_fileData.Length > 2)
                 {
+                    client.SendTaskInventory (m_part.UUID, (short)m_inventorySerial,
+                                             Utils.StringToBytes (m_inventoryFileName));
+
                     xferManager.AddNewFile(m_inventoryFileName, m_fileData);
                 }
+                else
+                    client.SendTaskInventory (m_part.UUID, 0, new byte[0]);
                 return;
             }
 
@@ -907,8 +909,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (m_fileData.Length > 2)
             {
+                client.SendTaskInventory (m_part.UUID, (short)m_inventorySerial,
+                                         Utils.StringToBytes (m_inventoryFileName));
                 xferManager.AddNewFile(m_inventoryFileName, m_fileData);
             }
+            else
+                client.SendTaskInventory (m_part.UUID, 0, new byte[0]);
         }
 
         /// <summary>
