@@ -142,7 +142,7 @@ namespace OpenSim.Services
                 if(enteringRegion == UUID.Zero)
                     m_agentInfoConnector.Update (userID, new string[3] { "IsOnline", "LastLogin", "LastSeen" }, new object[3] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now), Util.ToUnixTime (DateTime.Now) });
                 else
-                    m_agentInfoConnector.Update (userID, new string[4] { "IsOnline", "LastLogin", "LastSeen", "CurrentRegionID" }, new object[4] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now), enteringRegion, Util.ToUnixTime (DateTime.Now) });
+                    m_agentInfoConnector.Update (userID, new string[4] { "IsOnline", "LastLogin", "CurrentRegionID", "LastSeen" }, new object[4] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now), enteringRegion, Util.ToUnixTime (DateTime.Now) });
             else
                 m_agentInfoConnector.Update (userID, new string[3] { "IsOnline", "LastLogout", "LastSeen" }, new object[3] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now), Util.ToUnixTime (DateTime.Now) });
 
