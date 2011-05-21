@@ -138,25 +138,21 @@ namespace Aurora.Modules
 
 		public void OnStartLure(byte lureType, string message, UUID targetid, IClientAPI client)
 		{
-			if (!(client.Scene is Scene))
-				return;
-			Scene scene = (Scene)(client.Scene);
-
-            IScenePresence presence = scene.GetScenePresence (client.AgentId);
+            IScenePresence presence = client.Scene.GetScenePresence (client.AgentId);
             UUID dest = Util.BuildFakeParcelID(
-				scene.RegionInfo.RegionHandle,
+                client.Scene.RegionInfo.RegionHandle,
 				(uint)presence.AbsolutePosition.X,
 				(uint)presence.AbsolutePosition.Y,
 				(uint)presence.AbsolutePosition.Z);
 
 			GridInstantMessage m;
 
-            if (m_allowGodTeleports && scene.Permissions.IsAdministrator (client.AgentId) && presence.GodLevel > 0)//if we are an admin and are in god mode
+            if (m_allowGodTeleports && client.Scene.Permissions.IsAdministrator (client.AgentId) && presence.GodLevel > 0)//if we are an admin and are in god mode
 			{
-                if (scene.Permissions.IsAdministrator(targetid)) //if they are an admin
+                if (client.Scene.Permissions.IsAdministrator (targetid)) //if they are an admin
 				{
                     //Gods do not tp other gods
-					m = new GridInstantMessage(scene, client.AgentId,
+                    m = new GridInstantMessage (client.Scene, client.AgentId,
 					                           client.FirstName+" "+client.LastName, targetid,
 					                           (byte)InstantMessageDialog.RequestTeleport, false,
 					                           message, dest, false, presence.AbsolutePosition,
@@ -165,7 +161,7 @@ namespace Aurora.Modules
 				else
 				{
                     //God tp them
-					m = new GridInstantMessage(scene, client.AgentId,
+                    m = new GridInstantMessage (client.Scene, client.AgentId,
 					                           client.FirstName+" "+client.LastName, targetid,
 					                           (byte)InstantMessageDialog.GodLikeRequestTeleport, false,
 					                           "", dest, false, presence.AbsolutePosition,
@@ -175,7 +171,7 @@ namespace Aurora.Modules
 			else
 			{
                 //Not a god, so no god tp
-				m = new GridInstantMessage(scene, client.AgentId,
+                m = new GridInstantMessage (client.Scene, client.AgentId,
 				                           client.FirstName+" "+client.LastName, targetid,
 				                           (byte)InstantMessageDialog.RequestTeleport, false,
 				                           message, dest, false, presence.AbsolutePosition,
@@ -190,10 +186,6 @@ namespace Aurora.Modules
 
         public void OnTeleportLureRequest(UUID lureID, uint teleportFlags, IClientAPI client)
         {
-            if (!(client.Scene is Scene))
-                return;
-            Scene scene = (Scene)(client.Scene);
-
             ulong handle = 0;
             uint x = 128;
             uint y = 128;
@@ -205,7 +197,7 @@ namespace Aurora.Modules
             position.X = (float)x;
             position.Y = (float)y;
             position.Z = (float)z;
-            IEntityTransferModule entityTransfer = scene.RequestModuleInterface<IEntityTransferModule>();
+            IEntityTransferModule entityTransfer = client.Scene.RequestModuleInterface<IEntityTransferModule> ();
             if (entityTransfer != null)
             {
                 entityTransfer.RequestTeleportLocation(client, handle, position,
