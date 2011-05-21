@@ -465,7 +465,7 @@ namespace OpenSim.Services.LLLoginService
                 foreach (ILoginModule module in LoginModules)
                 {
                     string message;
-                    if (module.Login(requestData, account.PrincipalID, out message) == false)
+                    if (!module.Login(requestData, account.PrincipalID, out message))
                     {
                         LLFailedLoginResponse resp = new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect,
                             message, false);
@@ -582,7 +582,7 @@ namespace OpenSim.Services.LLLoginService
                 if (destination == null)
                 {
                     m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: destination not found");
-                    return LLFailedLoginResponse.GridProblem;
+                    return LLFailedLoginResponse.DeadRegionProblem;
                 }
 
                 if (!GridUserInfoFound || guinfo.HomeRegionID == UUID.Zero) //Give them a default home and last
@@ -682,7 +682,7 @@ namespace OpenSim.Services.LLLoginService
                 if (aCircuit == null)
                 {
                     m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: {0}", reason);
-                    return new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect, reason, false);
+                    return new LLFailedLoginResponse (LoginResponseEnum.InternalError, reason, false);
                 }
 
                 // Get Friends list 
