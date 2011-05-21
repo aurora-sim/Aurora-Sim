@@ -1072,6 +1072,8 @@ namespace OpenSim.Services.LLLoginService
                             success = TryFindGridRegionForAgentLogin(safeRegions, account,
                                 appearance, session, secureSession, circuitCode, position,
                                 clientIP, aCircuit, out dest);
+                            if (!success)
+                                reason = "No Region Found";
                         }
                     }
                 }
