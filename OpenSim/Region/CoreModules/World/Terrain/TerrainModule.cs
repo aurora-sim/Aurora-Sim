@@ -83,7 +83,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         private ITerrainChannel m_channel;
         private ITerrainChannel m_waterChannel;
-        private Dictionary<string, ITerrainEffect> m_plugineffects;
         private ITerrainChannel m_revert;
         private ITerrainChannel m_waterRevert;
         private Scene m_scene;
@@ -1122,67 +1121,16 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         private void LoadPlugins()
         {
-            m_plugineffects = new Dictionary<string, ITerrainEffect>();
             string plugineffectsPath = "Terrain";
             
             // Load the files in the Terrain/ dir
             if (!Directory.Exists(plugineffectsPath))
                 return;
-            
-            string[] files = Directory.GetFiles(plugineffectsPath);
-            foreach (string file in files)
+
+            ITerrainLoader[] loaders = Aurora.Framework.AuroraModuleLoader.PickupModules<ITerrainLoader> ().ToArray ();
+            foreach (ITerrainLoader terLoader in loaders)
             {
-                //m_log.Info("Loading effects in " + file);
-                try
-                {
-                    Assembly library = Assembly.LoadFrom(file);
-                    foreach (Type pluginType in library.GetTypes())
-                    {
-                        try
-                        {
-                            if (pluginType.IsAbstract || pluginType.IsNotPublic)
-                                continue;
-
-                            string typeName = pluginType.Name;
-
-                            if (pluginType.GetInterface("ITerrainEffect", false) != null)
-                            {
-                                ITerrainEffect terEffect = (ITerrainEffect) Activator.CreateInstance(library.GetType(pluginType.ToString()));
-
-                                InstallPlugin(typeName, terEffect);
-                            }
-                            else if (pluginType.GetInterface("ITerrainLoader", false) != null)
-                            {
-                                ITerrainLoader terLoader = (ITerrainLoader) Activator.CreateInstance(library.GetType(pluginType.ToString()));
-                                m_loaders[terLoader.FileExtension] = terLoader;
-                                //m_log.Info("L ... " + typeName);
-                            }
-                        }
-                        catch (AmbiguousMatchException)
-                        {
-                        }
-                    }
-                }
-                catch (BadImageFormatException)
-                {
-                }
-            }
-        }
-
-        public void InstallPlugin(string pluginName, ITerrainEffect effect)
-        {
-            lock (m_plugineffects)
-            {
-                if (!m_plugineffects.ContainsKey(pluginName))
-                {
-                    m_plugineffects.Add(pluginName, effect);
-                    //m_log.Info("E ... " + pluginName);
-                }
-                else
-                {
-                    m_plugineffects[pluginName] = effect;
-                    //m_log.Warn("E ... " + pluginName + " (Replaced)");
-                }
+                m_loaders[terLoader.FileExtension] = terLoader;
             }
         }
 
@@ -1878,38 +1826,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        private void InterfaceRunPluginEffect(string module, string[] cmd)
-        {
-            List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
-
-            foreach (TerrainModule tmodule in m)
-            {
-                if (cmd[2] == "list")
-                {
-                    m_log.Info("List of loaded plugins");
-                    foreach (KeyValuePair<string, ITerrainEffect> kvp in tmodule.m_plugineffects)
-                    {
-                        m_log.Info(kvp.Key);
-                    }
-                    return;
-                }
-                if (cmd[2] == "reload")
-                {
-                    tmodule.LoadPlugins();
-                    return;
-                }
-                if (tmodule.m_plugineffects.ContainsKey(cmd[2]))
-                {
-                    tmodule.m_plugineffects[cmd[2]].RunEffect(tmodule.m_channel);
-                    tmodule.CheckForTerrainUpdates();
-                }
-                else
-                {
-                    m_log.Warn("No such plugin effect loaded.");
-                }
-            }
-        }
-
         private void InterfaceHelp(string module, string[] cmd)
         {
             if (MainConsole.Instance.ConsoleScene != m_scene)
@@ -1940,8 +1856,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_log.Info("terrain stats - Shows some information about the regions heightmap for debugging purposes.");
             m_log.Info("terrain newbrushes <enabled> - Enables experimental brushes which replace the standard terrain brushes." +
                                             "\n enabled: true / false - Enable new brushes");
-            m_log.Info("terrain effect <name> - Runs a specified plugin effect" +
-                                            "\n name: The plugin effect you wish to run, or 'list' to see all plugins");
             m_log.Info("terrain flip <direction> - Flips the current terrain about the X or Y axis" +
                                             "\n direction: [x|y] the direction to flip the terrain in");
             m_log.Info("terrain rescale <min> <max> - Rescales the current terrain to fit between the given min and max heights" +
@@ -1996,9 +1910,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain newbrushes",
                 "terrain newbrushes <enabled> ", "Enables experimental brushes which replace the standard terrain brushes." +
                                             "\n enabled: true / false - Enable new brushes", InterfaceEnableExperimentalBrushes);
-            MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain effect",
-                "terrain effect <name> ", "Runs a specified plugin effect" +
-                                            "\n name: The plugin effect you wish to run, or 'list' to see all plugins", InterfaceRunPluginEffect);
             MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain flip",
                 "terrain flip <direction> ", "Flips the current terrain about the X or Y axis" +
                                             "\n direction: [x|y] the direction to flip the terrain in", InterfaceFlipTerrain);
