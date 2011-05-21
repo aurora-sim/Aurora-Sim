@@ -1187,7 +1187,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                SetComponentState("Rezzed", value);
+                SetComponentState("Rezzed", value, false);
             }
         }
 
@@ -1499,26 +1499,26 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_shape.Scale; }
             set
             {
-                if (ParentGroup != null)
-                    ParentGroup.HasGroupChanged = true;
                 if (m_shape != null)
                 {
-                // use basic box dimensions for oobb for now  this should be below: hack to make this work on load from databases
-                m_partOOBsize.X = value.X * 0.5f;
-                m_partOOBsize.Y = value.Y * 0.5f;
-                m_partOOBsize.Z = value.Z * 0.5f;
+                    // use basic box dimensions for oobb for now  this should be below: hack to make this work on load from databases
+                    m_partOOBsize.X = value.X * 0.5f;
+                    m_partOOBsize.Y = value.Y * 0.5f;
+                    m_partOOBsize.Z = value.Z * 0.5f;
 
-                m_partBSphereRadiusSQ = m_partOOBsize.X;
-                if (m_partBSphereRadiusSQ < m_partOOBsize.Y)
-                    m_partBSphereRadiusSQ = m_partOOBsize.Y;
-                if (m_partBSphereRadiusSQ < m_partOOBsize.Z)
-                    m_partBSphereRadiusSQ = m_partOOBsize.Z;
+                    m_partBSphereRadiusSQ = m_partOOBsize.X;
+                    if (m_partBSphereRadiusSQ < m_partOOBsize.Y)
+                        m_partBSphereRadiusSQ = m_partOOBsize.Y;
+                    if (m_partBSphereRadiusSQ < m_partOOBsize.Z)
+                        m_partBSphereRadiusSQ = m_partOOBsize.Z;
 
-                m_partBSphereRadiusSQ *= m_partBSphereRadiusSQ; // square it for faster compare with squared distances
+                    m_partBSphereRadiusSQ *= m_partBSphereRadiusSQ; // square it for faster compare with squared distances
 
                     if (m_shape.Scale != value)
                     {
-                        StoreUndoState();
+                        StoreUndoState ();
+                        if (ParentGroup != null)
+                            ParentGroup.HasGroupChanged = true;
 
                         m_shape.Scale = value;
                         /*
@@ -1543,13 +1543,13 @@ namespace OpenSim.Region.Framework.Scenes
                                 if (m_parentGroup.Scene.PhysicsScene != null)
                                 {
                                     actor.Size = m_shape.Scale;
-                                    m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
+                                    m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint (actor);
                                     // here whould be a nice spot to ask physics about OOB
                                     // nahh better on the get
                                 }
                             }
                         }
-                        TriggerScriptChangedEvent(Changed.SCALE);
+                        TriggerScriptChangedEvent (Changed.SCALE);
                     }
                 }
             }
@@ -2011,11 +2011,11 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void FixGroupPositionComum(bool UpdatePrimActor, Vector3 value, bool single)
         {
-            if (ParentGroup != null)
-                ParentGroup.HasGroupChanged = true;
             bool TriggerMoving_End = false;
             if (m_groupPosition != value)
             {
+                if (ParentGroup != null)
+                    ParentGroup.HasGroupChanged = true;
                 TriggerMoving_End = true;
                 TriggerScriptMovingStartEvent();
             }

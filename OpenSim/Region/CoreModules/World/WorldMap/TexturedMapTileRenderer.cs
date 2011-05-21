@@ -300,7 +300,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 return defaultColor; // not set
 
             if (m_mapping.ContainsKey(textureID)) 
-                return m_mapping[textureID]; // one of the predefined textures
+               return m_mapping[textureID]; // one of the predefined textures
 
             Bitmap bmp = fetchTexture(textureID);
             Color color = bmp == null ? defaultColor : computeAverageColor(bmp);
