@@ -97,19 +97,9 @@ namespace Aurora.Services.DataService
 
                         if (replyData != null)
                         {
-                            if (!replyData.ContainsKey("result"))
-                                return data;
                             foreach (object obj in replyData.Values)
                             {
-                                if (obj is Dictionary<string, object>)
-                                {
-                                    Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
-                                    foreach (object value in dictionary)
-                                    {
-                                        KeyValuePair<string, object> valuevalue = (KeyValuePair<string, object>)value;
-                                        data.Add(valuevalue.Value.ToString());
-                                    }
-                                }
+                                data.Add (obj.ToString ());
                             }
                         }
                     }
