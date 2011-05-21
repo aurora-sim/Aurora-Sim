@@ -812,17 +812,21 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             //Remove all the land objects in the sim and add a blank, full sim land object set to public
             List<ILandObject> parcels = new List<ILandObject> (m_landList.Values);
+            IParcelServiceConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IParcelServiceConnector> ();
+            if (conn != null)
+                conn.RemoveAllLandObjects (m_scene.RegionInfo.RegionID);
+            List<LandData> l = conn.LoadLandObjects (m_scene.RegionInfo.RegionID);
             foreach (ILandObject land in parcels)
             {
-                IParcelServiceConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IParcelServiceConnector> ();
-                if (conn != null)
-                    conn.RemoveLandObject (land.LandData.RegionID, land.LandData.GlobalID);
-
                 m_scene.EventManager.TriggerLandObjectRemoved (land.LandData.RegionID, land.LandData.GlobalID);
-                Util.GetWriterLock (m_landListLock);
-                m_landList.Remove (land.LandData.LocalID);
-                Util.ReleaseWriterLock (m_landListLock);
                 RemoveLandObjectFromSearch (land);
+            }
+            foreach (LandData land in l)
+            {
+                if (conn != null)
+                    conn.RemoveLandObject (m_scene.RegionInfo.RegionID, land.GlobalID);
+                m_scene.EventManager.TriggerLandObjectRemoved (land.RegionID, land.GlobalID);
+                //RemoveLandObjectFromSearch (land);
             }
             Util.GetWriterLock (m_landListLock);
             m_landList.Clear ();

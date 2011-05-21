@@ -27,13 +27,19 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="regionUUID"></param>
         /// <returns></returns>
-        List<LandData> LoadLandObjects(UUID regionUUID);
+        List<LandData> LoadLandObjects (UUID regionUUID);
 
         /// <summary>
         /// Removes a parcel
         /// </summary>
         /// <param name="ParcelID"></param>
-        void RemoveLandObject(UUID RegionID, UUID ParcelID);
+        void RemoveLandObject (UUID RegionID, UUID ParcelID);
+
+        /// <summary>
+        /// Removes all parcels
+        /// </summary>
+        /// <param name="ParcelID"></param>
+        void RemoveAllLandObjects (UUID RegionID);
 
         /// <summary>
         /// Removes a region

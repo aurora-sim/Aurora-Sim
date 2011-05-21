@@ -1061,11 +1061,20 @@ namespace Aurora.Modules
                 IParcelManagementModule parcelManagementModule = m_scene.RequestModuleInterface<IParcelManagementModule>();
                 if (parcelManagementModule != null && !m_merge) //Only if we are not merging
                 {
-                    m_scene.EventManager.TriggerIncomingLandDataFromStorage(m_parcels);
-                    foreach (LandData parcel in m_parcels)
+                    if (m_parcels.Count > 0)
                     {
-                        parcelManagementModule.UpdateLandObject(parcel.LocalID, parcel);
+                        m_scene.EventManager.TriggerIncomingLandDataFromStorage (m_parcels);
+                        //Update the database as well!
+                        if (parcelManagementModule != null)
+                        {
+                            foreach (LandData parcel in m_parcels)
+                            {
+                                parcelManagementModule.UpdateLandObject (parcel.LocalID, parcel);
+                            }
+                        }
                     }
+                    else if (parcelManagementModule != null)
+                        parcelManagementModule.ResetSimLandObjects ();
                     m_parcels.Clear();
                 }
                 m_validUserUuids.Clear();
