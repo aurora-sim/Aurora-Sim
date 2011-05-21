@@ -29,11 +29,13 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Reflection;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -155,6 +157,73 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             m_mapping.Add(defaultTerrainTexture3, defaultColor3);
             m_mapping.Add(defaultTerrainTexture4, defaultColor4);
             m_mapping.Add(Util.BLANK_TEXTURE_UUID, Color.White);
+
+            ReadCacheMap ();
+        }
+
+        private void ReadCacheMap ()
+        {
+            if (!Directory.Exists ("assetcache"))
+                Directory.CreateDirectory ("assetcache");
+            if (!Directory.Exists (Path.Combine ("assetcache", "mapTileTextureCache")))
+                Directory.CreateDirectory (Path.Combine ("assetcache", "mapTileTextureCache"));
+            
+            FileStream stream = new FileStream (Path.Combine (Path.Combine("assetcache", "mapTileTextureCache"), m_scene.RegionInfo.RegionName + ".tc"), FileMode.OpenOrCreate);
+            StreamReader m_streamReader = new StreamReader (stream);
+            string file = m_streamReader.ReadToEnd ();
+            m_streamReader.Close ();
+            //Read file here
+            if (file != "") //New file
+            {
+                bool loaded = DeserializeCache (file);
+                if (!loaded)
+                {
+                    //Something went wrong, delete the file
+                    try
+                    {
+                        File.Delete (Path.Combine (Path.Combine ("assetcache", "mapTileTextureCache"), m_scene.RegionInfo.RegionName + ".tc"));
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+        }
+
+        private bool DeserializeCache (string file)
+        {
+            OSDMap map = OSDParser.DeserializeJson (file) as OSDMap;
+            if(map == null)
+                return false;
+
+            foreach (KeyValuePair<string, OSD> kvp in map)
+            {
+                Color4 c = kvp.Value.AsColor4();
+                UUID key = UUID.Parse (kvp.Key);
+                if(!m_mapping.ContainsKey(key))
+                    m_mapping.Add (key, Color.FromArgb ((int)(c.A * 255), (int)(c.R * 255), (int)(c.G * 255), (int)(c.B * 255)));
+            }
+
+            return true;
+        }
+
+        private void SaveCache ()
+        {
+            OSDMap map = SerializeCache ();
+            FileStream stream = new FileStream (Path.Combine (Path.Combine ("assetcache", "mapTileTextureCache"), m_scene.RegionInfo.RegionName + ".tc"), FileMode.Create);
+            StreamWriter writer = new StreamWriter (stream);
+            writer.WriteLine (OSDParser.SerializeJsonString (map));
+            writer.Close ();
+        }
+
+        private OSDMap SerializeCache ()
+        {
+            OSDMap map = new OSDMap ();
+            foreach (KeyValuePair<UUID, Color> kvp in m_mapping)
+            {
+                map.Add (kvp.Key.ToString (), new Color4 (kvp.Value.R, kvp.Value.G, kvp.Value.B, kvp.Value.A));
+            }
+            return map;
         }
 
         #region Helpers
@@ -375,7 +444,10 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 }
             }
             if (m_mapping != null)
-                m_mapping.Clear();
+            {
+                SaveCache ();
+                m_mapping.Clear ();
+            }
             unsafeBMP.UnlockBitmap();
             //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Done in " + (DateTime.Now - start).TotalSeconds + " ms");
             return unsafeBMP.Bitmap();

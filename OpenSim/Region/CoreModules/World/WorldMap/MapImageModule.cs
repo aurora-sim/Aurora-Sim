@@ -29,11 +29,13 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Reflection;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -108,7 +110,10 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     DrawObjectVolume(m_scene, mapbmp);
             }
             if (m_mapping != null)
-                m_mapping.Clear();
+            {
+                SaveCache ();
+                m_mapping.Clear ();
+            }
             return mapbmp;
         }
 
@@ -155,8 +160,11 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 mapBMP = new Bitmap (terrainBMP);
             }
 
-            if(m_mapping != null)
-                m_mapping.Clear();
+            if (m_mapping != null)
+            {
+                SaveCache ();
+                m_mapping.Clear ();
+            }
         }
 
         public void CreateMapTile(out byte[] terrain, out byte[] map)
@@ -549,11 +557,79 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             return mapbmp;
         }
 
+        private void ReadCacheMap ()
+        {
+            if (!Directory.Exists ("assetcache"))
+                Directory.CreateDirectory ("assetcache");
+            if (!Directory.Exists (Path.Combine ("assetcache", "mapTileTextureCache")))
+                Directory.CreateDirectory (Path.Combine ("assetcache", "mapTileTextureCache"));
+
+            FileStream stream = new FileStream (Path.Combine (Path.Combine ("assetcache", "mapTileTextureCache"), m_scene.RegionInfo.RegionName + ".tc"), FileMode.OpenOrCreate);
+            StreamReader m_streamReader = new StreamReader (stream);
+            string file = m_streamReader.ReadToEnd ();
+            m_streamReader.Close ();
+            //Read file here
+            if (file != "") //New file
+            {
+                bool loaded = DeserializeCache (file);
+                if (!loaded)
+                {
+                    //Something went wrong, delete the file
+                    try
+                    {
+                        File.Delete (Path.Combine (Path.Combine ("assetcache", "mapTileTextureCache"), m_scene.RegionInfo.RegionName + ".tc"));
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+        }
+
+        private bool DeserializeCache (string file)
+        {
+            OSDMap map = OSDParser.DeserializeJson (file) as OSDMap;
+            if (map == null)
+                return false;
+
+            foreach (KeyValuePair<string, OSD> kvp in map)
+            {
+                Color4 c = kvp.Value.AsColor4 ();
+                UUID key = UUID.Parse (kvp.Key);
+                if (!m_mapping.ContainsKey (key))
+                    m_mapping.Add (key, Color.FromArgb ((int)(c.A * 255), (int)(c.R * 255), (int)(c.G * 255), (int)(c.B * 255)));
+            }
+
+            return true;
+        }
+
+        private void SaveCache ()
+        {
+            OSDMap map = SerializeCache ();
+            FileStream stream = new FileStream (Path.Combine (Path.Combine ("assetcache", "mapTileTextureCache"), m_scene.RegionInfo.RegionName + ".tc"), FileMode.Create);
+            StreamWriter writer = new StreamWriter (stream);
+            writer.WriteLine (OSDParser.SerializeJsonString (map));
+            writer.Close ();
+        }
+
+        private OSDMap SerializeCache ()
+        {
+            OSDMap map = new OSDMap ();
+            foreach (KeyValuePair<UUID, Color> kvp in m_mapping)
+            {
+                map.Add (kvp.Key.ToString (), new Color4 (kvp.Value.R, kvp.Value.G, kvp.Value.B, kvp.Value.A));
+            }
+            return map;
+        }
+
         private Dictionary<UUID, Color> m_mapping;
         private Color computeAverageColor(UUID textureID, Color defaultColor)
         {
             if (m_mapping == null)
-                m_mapping = new Dictionary<UUID, Color>();
+            {
+                m_mapping = new Dictionary<UUID, Color> ();
+                this.ReadCacheMap ();
+            }
             if (textureID == UUID.Zero) return defaultColor; // not set
             if (m_mapping.ContainsKey(textureID)) return m_mapping[textureID]; // one of the predefined textures
 

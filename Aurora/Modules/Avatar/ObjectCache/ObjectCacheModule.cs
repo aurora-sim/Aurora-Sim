@@ -195,7 +195,7 @@ namespace Aurora.Modules
                     //Something went wrong, delete the file
                     try
                     {
-                        File.Delete (m_filePath + AgentID + ".oc");
+                        File.Delete (m_filePath + AgentID + m_scene.RegionInfo.RegionName + ".oc");
                     }
                     catch
                     {

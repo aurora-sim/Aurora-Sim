@@ -1453,6 +1453,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_linkNum; }
             set
             {
+                if (m_linkNum == value)
+                    return;
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
                 m_linkNum = value;

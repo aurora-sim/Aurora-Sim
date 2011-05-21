@@ -205,8 +205,10 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             try
             {
                 doc.LoadXml (xmlData);
-
-                return InternalFromXml2Format (doc, scene);
+                
+                SceneObjectGroup grp = InternalFromXml2Format (doc, scene);
+                grp.XMLRepresentation = doc.OuterXml;
+                return grp;
             }
             catch (Exception e)
             {
@@ -226,16 +228,19 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             //int time = Util.EnvironmentTickCount();
 
             XmlDocument doc = new XmlDocument ();
+            SceneObjectGroup grp = null;
             try
             {
                 doc.Load(ms);
 
-                return InternalFromXml2Format(doc, scene);
+                grp = InternalFromXml2Format (doc, scene);
+                grp.XMLRepresentation = doc.OuterXml;
+                return grp;
             }
             catch (Exception e)
             {
                 m_log.ErrorFormat("[SERIALIZER]: Deserialization of xml failed with {0}", e);
-                return null;
+                return grp;
             }
             finally
             {
