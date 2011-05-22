@@ -136,6 +136,24 @@ namespace OpenSim.Services
 
         public void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion)
         {
+            UserInfo userInfo = GetUserInfo (userID);
+            if (userInfo == null)
+            {
+                Save (new UserInfo ()
+                {
+                    IsOnline = loggingIn,
+                    UserID = userID,
+                    CurrentLookAt = Vector3.Zero,
+                    CurrentPosition = Vector3.Zero,
+                    CurrentRegionID = enteringRegion,
+                    HomeLookAt = Vector3.Zero,
+                    HomePosition = Vector3.Zero,
+                    HomeRegionID = UUID.Zero,
+                    Info = new OpenMetaverse.StructuredData.OSDMap (),
+                    LastLogin = DateTime.Now,
+                    LastLogout = DateTime.Now
+                });
+            }
             if (m_lockedUsers.Contains (userID))
                 return; //User is locked, leave them alone
             if(loggingIn)
