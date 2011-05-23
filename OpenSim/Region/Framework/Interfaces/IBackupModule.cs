@@ -16,21 +16,6 @@ namespace OpenSim.Region.Framework.Interfaces
         bool LoadingPrims { get; set; }
 
         /// <summary>
-        /// Should we load prims for this region?
-        /// </summary>
-        bool LoadPrims { get; set; }
-
-        /// <summary>
-        /// Should we save prims for this region?
-        /// </summary>
-        bool SavePrims { get; set; }
-
-        /// <summary>
-        /// Should we load parcels for this region?
-        /// </summary>
-        bool LoadParcels { get; set; }
-
-        /// <summary>
         /// Loads all parcels from storage (database)
         /// Sets up the parcel interfaces and modules
         /// </summary>
@@ -53,19 +38,6 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="sceneObjectGroup"></param>
         void AddPrimBackupTaint (ISceneEntity sceneObjectGroup);
-
-        /// <summary>
-        /// This is the new backup processor, it only deals with prims that 
-        /// have been 'tainted' so that it does not waste time
-        /// running through as large of a backup loop.
-        /// </summary>
-        void ProcessPrimBackupTaints(bool forced, bool backupAll);
-
-        /// <summary>
-        /// Queue the prim to be deleted from the simulation service.
-        /// </summary>
-        /// <param name="uuid"></param>
-        void DeleteFromStorage(UUID uuid);
 
         /// <summary>
         /// Remove all objects from the given region.

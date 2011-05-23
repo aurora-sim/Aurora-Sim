@@ -57,14 +57,6 @@ namespace Aurora.Modules.World.On_Demand
 
                 scene.EventManager.OnRemovePresence += OnRemovePresence;
                 scene.AuroraEventManager.OnGenericEvent += OnGenericEvent;
-
-                if (scene.RegionInfo.Startup == StartupType.Soft)
-                {
-                    //If the region startup is soft, we arn't to load prims until they are needed, so kill it
-                    IBackupModule backup = scene.RequestModuleInterface<IBackupModule> ();
-                    if (backup != null)
-                        backup.LoadPrims = false;
-                }
             }
         }
 
@@ -110,11 +102,6 @@ namespace Aurora.Modules.World.On_Demand
                         m_scene.AuroraEventManager.FireGenericEventHandler ("MediumStartup", m_scene);
                         MediumStartup ();
                     }
-                    else if (m_scene.RegionInfo.Startup == StartupType.Soft)
-                    {
-                        m_scene.AuroraEventManager.FireGenericEventHandler ("SoftStartup", m_scene);
-                        SoftStartup ();
-                    }
                 }
             }
             return null;
@@ -135,11 +122,6 @@ namespace Aurora.Modules.World.On_Demand
                     m_scene.AuroraEventManager.FireGenericEventHandler ("MediumShutdown", m_scene);
                     MediumShutdown ();
                 }
-                else if (m_scene.RegionInfo.Startup == StartupType.Soft)
-                {
-                    m_scene.AuroraEventManager.FireGenericEventHandler ("SoftShutdown", m_scene);
-                    SoftShutdown ();
-                }
                 m_isRunning = false;
             }
         }
@@ -147,27 +129,6 @@ namespace Aurora.Modules.World.On_Demand
         #endregion
 
         #region Private Shutdown Methods
-
-        private void SoftShutdown ()
-        {
-            //Only shut down one at a time
-            if (m_isShuttingDown)
-                return;
-            m_isShuttingDown = true;
-
-            //We need to remove all the prims from the region, but not from the database
-            IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule> ();
-            if (backup != null)
-            {
-                //This removes all the prims from the script engine 
-                // and the in memory caches and turns off backup for the region
-                backup.ResetRegionToStartupDefault ();
-            }
-
-            GenericShutdown ();
-
-            m_isShuttingDown = false;
-        }
 
         private void MediumShutdown ()
         {
@@ -191,27 +152,6 @@ namespace Aurora.Modules.World.On_Demand
         #endregion
 
         #region Private Startup Methods
-
-        /// <summary>
-        /// We havn't loaded prims, we need to do this now!
-        /// We also need to kick start the heartbeat, so run it as well
-        /// </summary>
-        private void SoftStartup ()
-        {
-            //Only start up one at a time
-            if (m_isStartingUp)
-                return;
-            m_isStartingUp = true;
-            IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule> ();
-            if (backup != null)
-            {
-                backup.LoadPrims = true;
-                backup.LoadPrimsFromStorage ();
-                backup.CreateScriptInstances ();
-            }
-            GenericStartup ();
-            m_isStartingUp = false;
-        }
 
         /// <summary>
         /// We've already loaded prims/parcels/land earlier, 

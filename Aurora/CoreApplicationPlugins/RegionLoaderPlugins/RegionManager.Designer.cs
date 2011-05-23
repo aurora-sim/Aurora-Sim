@@ -875,8 +875,7 @@
             this.startupType.FormattingEnabled = true;
             this.startupType.Items.AddRange (new object[] {
             "Normal",
-            "Medium",
-            "Soft"});
+            "Medium"});
             this.startupType.Location = new System.Drawing.Point (247, 367);
             this.startupType.Name = "startupType";
             this.startupType.Size = new System.Drawing.Size (157, 30);

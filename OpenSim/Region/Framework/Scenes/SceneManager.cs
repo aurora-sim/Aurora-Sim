@@ -130,22 +130,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_config = openSim.ConfigSource;
 
-            string StorageDLL = "";
-
             string name = String.Empty;
-            string connString = String.Empty;
-
-            // Try reading the [DatabaseService] section, if it exists
-            IConfig dbConfig = openSim.ConfigSource.Configs["DatabaseService"];
-            if (dbConfig != null)
-                connString = dbConfig.GetString("ConnectionString", String.Empty);
-
             // Try reading the [SimulationDataStore] section
             IConfig simConfig = openSim.ConfigSource.Configs["SimulationDataStore"];
             if (simConfig != null)
             {
                 name = simConfig.GetString("DatabaseLoaderName", "FileBasedDatabase");
-                connString = simConfig.GetString("ConnectionString", connString);
             }
 
             ISimulationDataStore[] stores = AuroraModuleLoader.PickupModules<ISimulationDataStore> ().ToArray ();
@@ -160,11 +150,11 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (m_simulationDataService == null)
             {
-                m_log.ErrorFormat("[SceneManager]: FAILED TO LOAD THE SIMULATION SERVICE AT '{0}', QUITING...", StorageDLL);
+                m_log.ErrorFormat("[SceneManager]: FAILED TO LOAD THE SIMULATION SERVICE AT '{0}', QUITING...", name);
                 System.Threading.Thread.Sleep(10000);
                 Environment.Exit(0);
             }
-            m_simulationDataService.Initialise(connString);
+            m_simulationDataService.Initialise();
 
             AddConsoleCommands();
 

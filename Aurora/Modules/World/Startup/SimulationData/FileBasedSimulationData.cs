@@ -38,6 +38,7 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Nini.Config;
 using log4net;
+using Aurora.Framework;
 
 namespace Aurora.Modules.FileBasedSimulationData
 {
@@ -59,6 +60,12 @@ namespace Aurora.Modules.FileBasedSimulationData
         protected List<SceneObjectGroup> m_groups = new List<SceneObjectGroup> ();
         protected byte[] m_terrain;
         protected byte[] m_revertTerrain;
+        //For backwards compat
+        protected short[] m_shortterrain;
+        //For backwards compat
+        protected short[] m_shortrevertTerrain;
+        //For backwards compat
+        protected List<LandData> m_parcels = new List<LandData> ();
         protected byte[] m_water;
         protected byte[] m_revertWater;
         protected bool m_loaded = false;
@@ -84,7 +91,7 @@ namespace Aurora.Modules.FileBasedSimulationData
             return new FileBasedSimulationData ();
         }
 
-        public void Initialise(string dbfile)
+        public void Initialise()
         {
         }
 
@@ -226,6 +233,7 @@ namespace Aurora.Modules.FileBasedSimulationData
             }
             catch
             {
+                CheckForOldDataBase ();
                 return;
             }
             TarArchiveReader reader = new TarArchiveReader (m_loadStream);
@@ -275,6 +283,44 @@ namespace Aurora.Modules.FileBasedSimulationData
             foundLocalIDs.Clear ();
         }
 
+        private void CheckForOldDataBase ()
+        {
+            string connString = "";
+            string name = "";
+            // Try reading the [DatabaseService] section, if it exists
+            IConfig dbConfig = m_scene.Config.Configs["DatabaseService"];
+            if (dbConfig != null)
+                connString = dbConfig.GetString ("ConnectionString", String.Empty);
+
+            // Try reading the [SimulationDataStore] section
+            IConfig simConfig = m_scene.Config.Configs["SimulationDataStore"];
+            if (simConfig != null)
+            {
+                name = simConfig.GetString ("DatabaseLoaderName", "FileBasedDatabase");
+                connString = simConfig.GetString ("ConnectionString", connString);
+            }
+
+            ILegacySimulationDataStore simStore = null;
+            ILegacySimulationDataStore[] stores = AuroraModuleLoader.PickupModules<ILegacySimulationDataStore> ().ToArray ();
+            foreach (ILegacySimulationDataStore store in stores)
+            {
+                if (store.Name == name)
+                {
+                    simStore = store;
+                    break;
+                }
+            }
+            if (simStore == null)
+                return;
+
+            simStore.Initialise (connString);
+
+            m_parcels = simStore.LoadLandObjects (m_scene.RegionInfo.RegionID);
+            m_groups = simStore.LoadObjects (m_scene.RegionInfo.RegionID, (Scene)m_scene);
+            m_shortterrain = simStore.LoadTerrain (m_scene, false, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+            m_shortrevertTerrain = simStore.LoadTerrain (m_scene, true, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+        }
+
         public List<SceneObjectGroup> LoadObjects (UUID regionUUID, Scene scene)
         {
             return m_groups;
@@ -287,20 +333,17 @@ namespace Aurora.Modules.FileBasedSimulationData
                 m_loaded = true;
                 ReadConfig (scene, scene.Config.Configs["FileBasedSimulationData"]);
                 ReadBackup (scene);
-                //Disable the backup module so that it doesn't run at all
-                IBackupModule backupModule = scene.RequestModuleInterface<IBackupModule> ();
-                if (backupModule != null)
-                {
-                    //No saving of prims as we do that, and we don't need any of the other threads running
-                    backupModule.SavePrims = false;
-                }
             }
             ITerrainModule terrainModule = scene.RequestModuleInterface<ITerrainModule> ();
             if (RevertMap)
             {
-                if (m_revertTerrain == null)
-                    return null;
                 ITerrainChannel channel = new TerrainChannel (false, scene);
+                if (m_revertTerrain == null)
+                {
+                    if (m_shortrevertTerrain != null)
+                        terrainModule.TerrainRevertMap = new TerrainChannel (m_shortterrain, scene);
+                    return null;
+                }
                 MemoryStream ms = new MemoryStream (m_revertTerrain);
                 if (terrainModule != null)
                     terrainModule.LoadRevertMapFromStream (".r32", ms, 0, 0);
@@ -310,7 +353,11 @@ namespace Aurora.Modules.FileBasedSimulationData
             else
             {
                 if (m_terrain == null)
+                {
+                    if (m_shortterrain != null)
+                        terrainModule.TerrainMap = new TerrainChannel (m_shortterrain, scene);
                     return null;
+                }
                 ITerrainChannel channel = new TerrainChannel (false, scene);
                 MemoryStream ms = new MemoryStream (m_terrain);
                 if (terrainModule != null)
@@ -353,81 +400,20 @@ namespace Aurora.Modules.FileBasedSimulationData
             SaveBackup ("");
         }
 
-
-        //
-        // We don't implement any of these, as they arn't needed by our implementation
-        // We do all the saving at once, so we don't need to save the objects every few mins
-        //
-
-
-        public void Dispose()
-        {
-        }
-
         public void Tainted ()
-        {
-            m_requiresSave = true;
-        }
-
-        public void StoreObject(SceneObjectGroup obj, UUID regionUUID)
-        {
-            m_requiresSave = true;
-        }
-
-        public void RemoveObject(UUID obj, UUID regionUUID)
-        {
-            m_requiresSave = true;
-        }
-
-        public void StorePrimInventory(UUID primID, ICollection<TaskInventoryItem> items)
-        {
-            m_requiresSave = true;
-        }
-
-        public void StoreTerrain(double[,] ter, UUID regionID)
-        {
-            m_requiresSave = true;
-        }
-
-        public void RemoveObjects(List<UUID> objGroups)
-        {
-            m_requiresSave = true;
-        }
-
-        public void StoreTerrain(short[] terrain, UUID regionID, bool Revert)
-        {
-            m_requiresSave = true;
-        }
-
-        public void StoreWater(short[] water, UUID regionID, bool Revert)
         {
             m_requiresSave = true;
         }
 
         public void RemoveRegion(UUID regionUUID)
         {
-            m_requiresSave = true;
-        }
-
-        public void StoreLandObject (ILandObject land)
-        {
-        }
-
-        public void StoreLandObject (LandData args)
-        {
-        }
-
-        public void RemoveLandObject (UUID RegionID, UUID ParcelID)
-        {
-        }
-
-        public void RemoveLandObject (UUID globalID)
-        {
+            //Remove the file so that the region is gone
+            File.Delete (m_loadDirectory + m_fileName);
         }
 
         public List<LandData> LoadLandObjects (UUID regionUUID)
         {
-            return new List<LandData> ();
+            return m_parcels;
         }
     }
 }

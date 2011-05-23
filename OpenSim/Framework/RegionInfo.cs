@@ -41,7 +41,6 @@ namespace OpenSim.Framework
 {
     public enum StartupType
     {
-        Soft = 1,
         Medium = 2,
         Normal = 3
     }

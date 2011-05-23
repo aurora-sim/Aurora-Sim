@@ -253,17 +253,13 @@ namespace Aurora.Modules.RegionLoader
         {
             if (startupType == StartupType.Normal)
                 return 0;
-            else if (startupType == StartupType.Medium)
+            else 
                 return 1;
-            else
-                return 2;
         }
 
         private StartupType ConvertIntToStartupType (int i)
         {
-            if (i == 2)
-                return StartupType.Soft;
-            else if (i == 1)
+            if (i == 1)
                 return StartupType.Medium;
             else
                 return StartupType.Normal;

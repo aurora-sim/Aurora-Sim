@@ -37,49 +37,20 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <summary>
         /// Initialises the data storage engine
         /// </summary>
-        /// <param name="filename">The file to save the database to (may not be applicable).  Alternatively,
-        /// a connection string for the database</param>
-        void Initialise(string filename);
+        void Initialise();
 
         /// <summary>
-        /// Dispose the database
-        /// </summary>
-        void Dispose();
-        
-        /// <summary>
-        /// Stores all object's details apart from inventory
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="regionUUID"></param>
-        void StoreObject(SceneObjectGroup obj, UUID regionUUID);
-
-        /// <summary>
-        /// Entirely removes the object, including inventory
+        /// Entirely removes the region, this includes everything about the region
         /// </summary>
         /// <param name="uuid"></param>
         /// <param name="regionUUID"></param>
         /// <returns></returns>
-        void RemoveObject(UUID uuid, UUID regionUUID);
+        void RemoveRegion (UUID regionUUID);
 
         /// <summary>
-        /// Removes multiple objects from the database
+        /// Something has changed in the region, just alerting us to the change if we need to do anything
         /// </summary>
-        /// <param name="objGroups"></param>
-        void RemoveObjects(List<UUID> objGroups);
-
-        /// <summary>
-        /// Entirely removes the region, including prims and prim inventory
-        /// </summary>
-        /// <param name="uuid"></param>
-        /// <param name="regionUUID"></param>
-        /// <returns></returns>
-        void RemoveRegion(UUID regionUUID);
-
-        /// <summary>
-        /// Store a prim's inventory
-        /// </summary>
-        /// <returns></returns>
-        void StorePrimInventory(UUID primID, ICollection<TaskInventoryItem> items);
+        void Tainted ();
 
         /// <summary>
         /// Load persisted objects from region storage.
@@ -89,13 +60,6 @@ namespace OpenSim.Region.Framework.Interfaces
         List<SceneObjectGroup> LoadObjects(UUID regionUUID, Scene scene);
 
         /// <summary>
-        /// Store a terrain revision in region storage
-        /// </summary>
-        /// <param name="ter">HeightField data</param>
-        /// <param name="regionID">region UUID</param>
-        void StoreTerrain(short[] terrain, UUID regionID, bool Revert);
-
-        /// <summary>
         /// Load the latest terrain revision from region storage
         /// </summary>
         /// <param name="regionID">the region UUID</param>
@@ -103,31 +67,11 @@ namespace OpenSim.Region.Framework.Interfaces
         short[] LoadTerrain(IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY);
 
         /// <summary>
-        /// Store a water revision in region storage
-        /// </summary>
-        /// <param name="ter">HeightField data</param>
-        /// <param name="regionID">region UUID</param>
-        void StoreWater(short[] terrain, UUID regionID, bool Revert);
-
-        /// <summary>
         /// Load the latest water revision from region storage
         /// </summary>
         /// <param name="scene">the region</param>
         /// <returns>Heightfield data</returns>
         short[] LoadWater(IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY);
-
-        /// <summary>
-        /// Store the given parcel info in the database
-        /// </summary>
-        /// <param name="args"></param>
-        void StoreLandObject(LandData args);
-
-        /// <summary>
-        /// Remove the given parcel from the database
-        /// </summary>
-        /// <param name="RegionID"></param>
-        /// <param name="ParcelID"></param>
-        void RemoveLandObject(UUID RegionID, UUID ParcelID);
 
         /// <summary>
         /// Load all parcels from the database
@@ -150,11 +94,6 @@ namespace OpenSim.Region.Framework.Interfaces
         /// Make a copy of the given data store
         /// </summary>
         ISimulationDataStore Copy ();
-
-        /// <summary>
-        /// Something has changed in the region, just alerting us to the change if we need to do anything
-        /// </summary>
-        void Tainted ();
     }
     
     /// <summary>
@@ -198,9 +137,6 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <summary>
         /// The name of the plugin
         /// </summary>
-        string Name
-        {
-            get;
-        }
+        string Name { get; }
     }
 }
