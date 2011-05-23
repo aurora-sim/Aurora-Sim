@@ -106,7 +106,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             header.Stride = STRIDE;
             header.PatchSize = Constants.TerrainPatchSize;
 
-            byte[] data = new byte[2112];
+            byte[] data = new byte[x.Length * Constants.TerrainPatchSize * Constants.TerrainPatchSize * 2];
             BitPack bitpack = new BitPack(data, 0);
             bitpack.PackBits(header.Stride, 16);
             bitpack.PackBits(header.PatchSize, 8);
