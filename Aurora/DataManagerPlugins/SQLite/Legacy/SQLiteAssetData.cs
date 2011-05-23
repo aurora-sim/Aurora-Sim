@@ -33,13 +33,16 @@ using log4net;
 using Mono.Data.Sqlite;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Services.Interfaces;
+using OpenSim.Data;
+using Aurora.DataManager;
 
 namespace OpenSim.Data.SQLite
 {
     /// <summary>
     /// An asset storage interface for the SQLite database system
     /// </summary>
-    public class SQLiteAssetData : AssetDataBase
+    public class SQLiteAssetData : IAssetDataPlugin
     {
 //        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 

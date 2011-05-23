@@ -25,41 +25,47 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Data;
+using System.Data.Common;
 using System.Reflection;
-using System.Runtime.InteropServices;
+using Aurora.DataManager;
 
-// General information about an assembly is controlled through the following
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
+namespace OpenSim.Data.MSSQL
+{
+    public class MSSQLMigration : Migration
+    {
+        public MSSQLMigration(DbConnection conn, Assembly assem, string type) : base(conn, assem, type)
+        {
+        }
 
-[assembly : AssemblyTitle("OpenSim.Data.Null")]
-[assembly : AssemblyDescription("")]
-[assembly : AssemblyConfiguration("")]
-[assembly : AssemblyCompany("http://opensimulator.org")]
-[assembly : AssemblyProduct("OpenSim.Data.Null")]
-[assembly : AssemblyCopyright("Copyright (c) OpenSimulator.org Developers 2007-2009")]
-[assembly : AssemblyTrademark("")]
-[assembly : AssemblyCulture("")]
+        public MSSQLMigration(DbConnection conn, Assembly assem, string subtype, string type) : base(conn, assem, subtype, type)
+        {
+        }
 
-// Setting ComVisible to false makes the types in this assembly not visible
-// to COM components.  If you need to access a type in this assembly from
-// COM, set the ComVisible attribute to true on that type.
-
-[assembly : ComVisible(false)]
-
-// The following GUID is for the ID of the typelib if this project is exposed to COM
-
-[assembly : Guid("b4a1656d-de22-4080-a970-fd8166acbf16")]
-
-// Version information for an assembly consists of the following four values:
-//
-//      Major Version
-//      Minor Version
-//      Build Number
-//      Revision
-//
-// You can specify all the values or you can default the Revision and Build Numbers
-// by using the '*' as shown below:
-
-[assembly : AssemblyVersion("0.6.5.*")]
-[assembly : AssemblyFileVersion("0.6.5.0")]
+        protected override int FindVersion(DbConnection conn, string type)
+        {
+            int version = 0;
+            using (DbCommand cmd = conn.CreateCommand())
+            {
+                try
+                {
+                    cmd.CommandText = "select top 1 version from migrations where name = '" + type + "' order by version desc"; //Must be 
+                    using (IDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            version = Convert.ToInt32(reader["version"]);
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    // Something went wrong, so we're version 0
+                }
+            }
+            return version;
+        }
+    }
+}

@@ -38,13 +38,14 @@ using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Aurora.DataManager;
 
 namespace OpenSim.Data.SQLite
 {
     /// <summary>
     /// A Region Data Interface to the SQLite database
     /// </summary>
-    public class SQLiteSimulationData : ISimulationDataStore
+    public class SQLiteSimulationData : ILegacySimulationDataStore
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -2553,11 +2554,6 @@ namespace OpenSim.Data.SQLite
             {
                 return DbType.String;
             }
-        }
-
-        public ISimulationDataStore Copy ()
-        {
-            return this;
         }
     }
 }

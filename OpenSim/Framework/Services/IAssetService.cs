@@ -103,4 +103,14 @@ namespace OpenSim.Services.Interfaces
         /// <returns></returns>
         bool Delete(string id);
     }
+
+    public interface IAssetDataPlugin
+    {
+        AssetBase GetAsset (UUID uuid);
+        void StoreAsset (AssetBase asset);
+        bool ExistsAsset (UUID uuid);
+        List<AssetMetadata> FetchAssetMetadataSet (int start, int count);
+        void Initialise (string connect);
+        bool Delete (string id);
+    }
 }

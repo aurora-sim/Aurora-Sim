@@ -31,7 +31,6 @@ using System.Data;
 using System.Data.SqlClient;
 using System.IO;
 using System.Reflection;
-using log4net;
 using OpenMetaverse;
 
 namespace OpenSim.Data.MSSQL

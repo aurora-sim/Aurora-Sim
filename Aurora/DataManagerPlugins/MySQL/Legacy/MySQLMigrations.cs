@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -25,41 +25,60 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
+using System.IO;
 using System.Reflection;
-using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
+using log4net;
+using MySql.Data.MySqlClient;
+using Aurora.DataManager;
 
-// General information about an assembly is controlled through the following
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
+namespace OpenSim.Data.MySQL
+{
+    /// <summary>This is a MySQL-customized migration processor.  The only difference is in how
+    /// it executes SQL scripts (using MySqlScript instead of MyCommand)
+    /// 
+    /// </summary>
+    public class MySqlMigration : Migration
+    {
+        public MySqlMigration()
+            : base()
+        { 
+        }
 
-[assembly : AssemblyTitle("OpenSim.Data")]
-[assembly : AssemblyDescription("")]
-[assembly : AssemblyConfiguration("")]
-[assembly : AssemblyCompany("http://opensimulator.org")]
-[assembly : AssemblyProduct("OpenSim.Data")]
-[assembly : AssemblyCopyright("Copyright (c) OpenSimulator.org Developers 2007-2009")]
-[assembly : AssemblyTrademark("")]
-[assembly : AssemblyCulture("")]
+        public MySqlMigration(DbConnection conn, Assembly assem, string subtype, string type) : 
+            base(conn, assem, subtype, type)
+        {
+        }
 
-// Setting ComVisible to false makes the types in this assembly not visible
-// to COM components.  If you need to access a type in this assembly from
-// COM, set the ComVisible attribute to true on that type.
+        public MySqlMigration(DbConnection conn, Assembly assem, string type) :
+            base(conn, assem, type)
+        {
+        }
 
-[assembly : ComVisible(false)]
+        protected override void ExecuteScript(DbConnection conn, string[] script)
+        {
+            if (!(conn is MySqlConnection))
+            {
+                base.ExecuteScript(conn, script);
+                return;
+            }
 
-// The following GUID is for the ID of the typelib if this project is exposed to COM
-
-[assembly : Guid("3a711c34-b0c0-4264-b0fe-f366eabf9d7b")]
-
-// Version information for an assembly consists of the following four values:
-//
-//      Major Version
-//      Minor Version
-//      Build Number
-//      Revision
-//
-// You can specify all the values or you can default the Revision and Build Numbers
-// by using the '*' as shown below:
-
-[assembly : AssemblyVersion("0.6.5.*")]
-[assembly : AssemblyFileVersion("0.6.5.0")]
+            MySqlScript scr = new MySqlScript((MySqlConnection)conn);
+            {
+                foreach (string sql in script)
+                {
+                    scr.Query = sql;
+                    scr.Error += delegate(object sender, MySqlScriptErrorEventArgs args)
+                    {
+                        throw new Exception(sql);
+                    };
+                    scr.Execute();
+                }
+            }
+        }
+    }
+}

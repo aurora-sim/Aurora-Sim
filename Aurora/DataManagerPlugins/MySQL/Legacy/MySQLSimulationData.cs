@@ -28,7 +28,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Threading;
@@ -40,13 +39,14 @@ using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Data;
+using Aurora.DataManager;
 
 namespace OpenSim.Data.MySQL
 {
     /// <summary>
     /// A MySQL Interface for the Region Server
     /// </summary>
-    public class MySQLSimulationData : ISimulationDataStore
+    public class MySQLSimulationData : ILegacySimulationDataStore
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -1998,11 +1998,6 @@ namespace OpenSim.Data.MySQL
             cmd.Parameters.AddWithValue("ExtraParams", s.ExtraParams);
             cmd.Parameters.AddWithValue("State", s.State);
             cmd.Parameters.AddWithValue("Media", null == s.Media ? null : s.Media.ToXml());
-        }
-
-        public ISimulationDataStore Copy ()
-        {
-            return this;
         }
     }
 }

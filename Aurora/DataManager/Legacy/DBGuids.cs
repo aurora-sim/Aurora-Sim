@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -27,57 +27,45 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
-using System.IO;
-using System.Reflection;
-using System.Text.RegularExpressions;
-using log4net;
-using MySql.Data.MySqlClient;
+using System.Text;
+using OpenMetaverse;
 
-namespace OpenSim.Data.MySQL
+namespace Aurora.DataManager
 {
-    /// <summary>This is a MySQL-customized migration processor.  The only difference is in how
-    /// it executes SQL scripts (using MySqlScript instead of MyCommand)
-    /// 
-    /// </summary>
-    public class MySqlMigration : Migration
+
+    public static class DBGuid
     {
-        public MySqlMigration()
-            : base()
-        { 
-        }
-
-        public MySqlMigration(DbConnection conn, Assembly assem, string subtype, string type) : 
-            base(conn, assem, subtype, type)
+        /// <summary>This function converts a value returned from the database in one of the
+        /// supported formats into a UUID.  This function is not actually DBMS-specific right
+        /// now
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public static UUID FromDB(object id)
         {
-        }
+            if ((id == null) || (id == DBNull.Value))
+                return UUID.Zero;
 
-        public MySqlMigration(DbConnection conn, Assembly assem, string type) :
-            base(conn, assem, type)
-        {
-        }
+            if (id.GetType() == typeof(Guid))
+                return new UUID((Guid)id);
 
-        protected override void ExecuteScript(DbConnection conn, string[] script)
-        {
-            if (!(conn is MySqlConnection))
+            if (id.GetType() == typeof(byte[]))
             {
-                base.ExecuteScript(conn, script);
-                return;
+                if (((byte[])id).Length == 0)
+                    return UUID.Zero;
+                else if (((byte[])id).Length == 16)
+                    return new UUID((byte[])id, 0);
+            }
+            else if (id.GetType() == typeof(string))
+            {
+                if (((string)id).Length == 0)
+                    return UUID.Zero;
+                else if (((string)id).Length == 36)
+                    return new UUID((string)id);
             }
 
-            MySqlScript scr = new MySqlScript((MySqlConnection)conn);
-            {
-                foreach (string sql in script)
-                {
-                    scr.Query = sql;
-                    scr.Error += delegate(object sender, MySqlScriptErrorEventArgs args)
-                    {
-                        throw new Exception(sql);
-                    };
-                    scr.Execute();
-                }
-            }
+            throw new Exception("Failed to convert db value to UUID: " + id.ToString());
         }
     }
 }

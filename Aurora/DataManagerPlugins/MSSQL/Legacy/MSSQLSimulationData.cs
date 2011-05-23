@@ -29,10 +29,8 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Drawing;
 using System.IO;
 using System.Reflection;
-using log4net;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
@@ -44,12 +42,12 @@ namespace OpenSim.Data.MSSQL
     /// <summary>
     /// A MSSQL Interface for the Region Server.
     /// </summary>
-    public class MSSQLSimulationData : ISimulationDataStore
+    public class MSSQLSimulationData : ILegacySimulationDataStore
     {
         private const string _migrationStore = "RegionStore";
 
         // private static FileSystemDataStore Instance = new FileSystemDataStore();
-        private static readonly ILog _Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog _Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// The database manager
@@ -284,16 +282,12 @@ namespace OpenSim.Data.MSSQL
                 }
                 catch (Exception ex)
                 {
-                    _Log.ErrorFormat("[REGION DB]: Store SceneObjectGroup error: {0}, Rolling back...", ex.Message);
                     try
                     {
                         transaction.Rollback();
                     }
                     catch (Exception ex2)
                     {
-                        //Show error
-                        _Log.InfoFormat("[REGION DB]: Rollback of SceneObjectGroup store transaction failed with error: {0}", ex2.Message);
-
                     }
                 }
             }
@@ -426,8 +420,6 @@ ELSE
         /// <param name="regionUUID">regionUUID (is this used anyway</param>
         public void RemoveObject(UUID objectID, UUID regionUUID)
         {
-            _Log.InfoFormat("[MSSQL]: Removing obj: {0} from region: {1}", objectID, regionUUID);
-
             //Remove from prims and primsitem table
             string sqlPrims = "DELETE FROM PRIMS WHERE SceneGroupID = @objectID";
             string sqlPrimItems = "DELETE FROM PRIMITEMS WHERE primID in (SELECT UUID FROM PRIMS WHERE SceneGroupID = @objectID)";
@@ -495,8 +487,6 @@ ELSE
         /// <param name="regionUUID">regionUUID (is this used anyway</param>
         public void RemoveRegion(UUID regionUUID)
         {
-            _Log.InfoFormat("[MSSQL]: Removing region: {0}", regionUUID);
-
             //TODO: Remove from prims and primsitem table
             string sqlPrims = "DELETE FROM PRIMS WHERE RegionUUID = @regionID";
             
@@ -588,7 +578,6 @@ ELSE
                     }
                     else
                     {
-                        _Log.Info("[REGION DB]: No terrain found for region");
                         return null;
                     }
                     //_Log.Info("[REGION DB]: Loaded terrain revision r" + rev);
@@ -622,7 +611,6 @@ ELSE
                     }
                     else
                     {
-                        _Log.Info("[REGION DB]: No terrain found for region");
                         return null;
                     }
                     //_Log.Info("[REGION DB]: Loaded terrain revision r" + rev);
@@ -662,8 +650,6 @@ ELSE
                 conn.Open();
                 cmd.ExecuteNonQuery();
             }
-
-            _Log.Info("[REGION DB]: Stored terrain revision r " + revision);
         }
 
         /// <summary>
@@ -700,8 +686,6 @@ ELSE
                 conn.Open();
                 cmd.ExecuteNonQuery();
             }
-
-            _Log.Info("[REGION DB]: Stored terrain revision r " + revision);
         }
 
         /// <summary>
@@ -1590,10 +1574,5 @@ VALUES
         #endregion
 
         #endregion
-
-        public ISimulationDataStore Copy ()
-        {
-            return this;
-        }
     }
 }

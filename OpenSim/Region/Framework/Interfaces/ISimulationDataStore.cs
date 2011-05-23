@@ -156,4 +156,51 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         void Tainted ();
     }
+    
+    /// <summary>
+    /// Legacy component so that we can load from OpenSim and older Aurora databases
+    /// </summary>
+    public interface ILegacySimulationDataStore
+    {
+        /// <summary>
+        /// Initialises the data storage engine
+        /// </summary>
+        /// <param name="filename">The file to save the database to (may not be applicable).  Alternatively,
+        /// a connection string for the database</param>
+        void Initialise (string filename);
+
+        /// <summary>
+        /// Dispose the database
+        /// </summary>
+        void Dispose ();
+
+        /// <summary>
+        /// Load persisted objects from region storage.
+        /// </summary>
+        /// <param name="regionUUID">the Region UUID</param>
+        /// <returns>List of loaded groups</returns>
+        List<SceneObjectGroup> LoadObjects (UUID regionUUID, Scene scene);
+
+        /// <summary>
+        /// Load the latest terrain revision from region storage
+        /// </summary>
+        /// <param name="regionID">the region UUID</param>
+        /// <returns>Heightfield data</returns>
+        short[] LoadTerrain (IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY);
+
+        /// <summary>
+        /// Load all parcels from the database
+        /// </summary>
+        /// <param name="regionUUID"></param>
+        /// <returns></returns>
+        List<LandData> LoadLandObjects (UUID regionUUID);
+
+        /// <summary>
+        /// The name of the plugin
+        /// </summary>
+        string Name
+        {
+            get;
+        }
+    }
 }
