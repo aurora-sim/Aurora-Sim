@@ -17,6 +17,9 @@
     </Configuration>
     <Configuration name="Debug" platform="AnyCPU">
       <Options>
+		<target name="net-1.1" description="Sets framework to .NET 1.1">
+			<property name="nant.settings.currentframework" value="net-1.1" />
+		</target>
         <CompilerDefines>TRACE;DEBUG</CompilerDefines>
         <OptimizeCode>false</OptimizeCode>
         <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
@@ -970,56 +973,7 @@
         <Match pattern="*.cs" recurse="false"/>
       </Files>
     </Project>
-
-    <Project frameworkVersion="v3_5" name="OpenSim.Data.Null" path="OpenSim/Data/Null" type="Library">
-      <Configuration name="Debug" platform="x86">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="x86">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Debug" platform="x64">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="x64">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Debug" platform="AnyCPU">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="AnyCPU">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Xml"/>
-      
-      <Reference name="OpenSim.Data"/>
-      <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Region.Framework"/>
-
-	  <Reference name="Nini" path="../../../bin/"/>
-	  <Reference name="log4net" path="../../../bin/"/>
-      <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
-
-      <Files>
-        <Match pattern="*.cs" recurse="true"/>
-      </Files>
-    </Project>
-
+	  
     <!-- Aurora app -->
     <Project frameworkVersion="v3_5" name="Aurora" path="OpenSim/Region/Application" type="Exe">
       <Configuration name="Debug" platform="x86">
