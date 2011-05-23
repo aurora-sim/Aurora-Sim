@@ -2436,10 +2436,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (IsTemporary)
             {
                 // Remove from database and parcel prim count
-                //
-                //IBackupModule backup = Scene.RequestModuleInterface<IBackupModule>();
-                //if (backup != null)
-                //    backup.DeleteFromStorage(UUID);
+                //Temporary objects arn't saved to the database ever, so we don't need to do anything
             }
 
             if (selectionPart != null)

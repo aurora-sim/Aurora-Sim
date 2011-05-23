@@ -425,6 +425,11 @@ namespace Aurora.Modules.FileBasedSimulationData
             File.Delete (m_loadDirectory + m_fileName);
         }
 
+        /// <summary>
+        /// Around for legacy things
+        /// </summary>
+        /// <param name="regionUUID"></param>
+        /// <returns></returns>
         public List<LandData> LoadLandObjects (UUID regionUUID)
         {
             return m_parcels;

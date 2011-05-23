@@ -565,7 +565,8 @@ namespace Aurora.Modules
                         
                 foreach (ISceneEntity entity in entities)
                 {
-                    if (entity.IsAttachment)
+                    if (entity.IsAttachment && !((entity.RootChild.Flags & PrimFlags.Temporary) == PrimFlags.Temporary)
+                         && !((entity.RootChild.Flags & PrimFlags.TemporaryOnRez) == PrimFlags.TemporaryOnRez))
                         continue;
                     //Write all entities
                     writer.WriteFile("entities/" + entity.UUID.ToString(), ((ISceneObject)entity).ToXml2());
