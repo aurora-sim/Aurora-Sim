@@ -218,11 +218,11 @@ namespace Aurora.BotManager
                 manager.FollowAvatar (UUID.Parse (bot), avatarName, (float)followDistance);
         }
 
-        public void botStopFollowAvatar (string bot, string avatarName)
+        public void botStopFollowAvatar (string bot)
         {
             IBotManager manager = World.RequestModuleInterface<IBotManager> ();
             if (manager != null)
-                manager.StopFollowAvatar (UUID.Parse (bot), avatarName);
+                manager.StopFollowAvatar (UUID.Parse (bot));
         }
 
         public void botSetPathMap (string bot, string pathMap, int x, int y, int cornerstoneX, int cornerstoneY)
@@ -240,11 +240,11 @@ namespace Aurora.BotManager
                     new Vector3 ((float)endPos.x, (float)endPos.y, (float)endPos.z));
         }
 
-        public void botSendChatMessage (string bot, string message, int sayType)
+        public void botSendChatMessage (string bot, string message, int channel, int sayType)
         {
             IBotManager manager = World.RequestModuleInterface<IBotManager> ();
             if (manager != null)
-                manager.SendChatMessage (UUID.Parse (bot), message, sayType);
+                manager.SendChatMessage (UUID.Parse (bot), message, sayType, channel);
         }
     }
 }

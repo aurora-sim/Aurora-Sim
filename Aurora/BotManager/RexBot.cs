@@ -430,11 +430,11 @@ namespace Aurora.BotManager
 
         #region Chat interface
 
-        public void SendChatMessage (int sayType, string message)
+        public void SendChatMessage (int sayType, string message, int channel)
         {
             OSChatMessage args = new OSChatMessage ();
             args.Message = message;
-            args.Channel = 0;
+            args.Channel = channel;
             args.From = FirstName + " " + LastName;
             args.Position = m_scenePresence.AbsolutePosition;
             args.Sender = this;
@@ -579,7 +579,7 @@ namespace Aurora.BotManager
             m_autoMove = false;
         }
 
-        public void StopFollowAvatar (string avatarName)
+        public void StopFollowAvatar ()
         {
             FollowSP = null; //null out everything
             IsFollowing = false;

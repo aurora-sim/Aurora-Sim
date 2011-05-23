@@ -312,12 +312,12 @@ namespace Aurora.BotManager
         /// </summary>
         /// <param name="Bot"></param>
         /// <param name="modifier"></param>
-        public void StopFollowAvatar (UUID botID, string avatarName)
+        public void StopFollowAvatar (UUID botID)
         {
             IRexBot bot;
             if (m_bots.TryGetValue (botID, out bot))
             {
-                bot.StopFollowAvatar (avatarName);
+                bot.StopFollowAvatar ();
             }
         }
 
@@ -326,12 +326,12 @@ namespace Aurora.BotManager
         /// </summary>
         /// <param name="Bot"></param>
         /// <param name="modifier"></param>
-        public void SendChatMessage (UUID botID, string message, int sayType)
+        public void SendChatMessage (UUID botID, string message, int sayType, int channel)
         {
             IRexBot bot;
             if (m_bots.TryGetValue (botID, out bot))
             {
-                bot.SendChatMessage (sayType, message);
+                bot.SendChatMessage (sayType, message, channel);
             }
         }
 
