@@ -77,6 +77,7 @@ namespace Aurora.Modules.FileBasedSimulationData
         protected string m_oldSaveDirectory = "Backups";
         protected string m_loadDirectory = "";
         protected bool m_requiresSave = true;
+        protected bool m_hasShownFileBasedWarning = false;
 
         public virtual string Name
         {
@@ -310,7 +311,7 @@ namespace Aurora.Modules.FileBasedSimulationData
             IConfig simConfig = m_scene.Config.Configs["SimulationDataStore"];
             if (simConfig != null)
             {
-                name = simConfig.GetString ("DatabaseLoaderName", "FileBasedDatabase");
+                name = simConfig.GetString ("LegacyDatabaseLoaderName", "FileBasedDatabase");
                 connString = simConfig.GetString ("ConnectionString", connString);
             }
 
@@ -326,6 +327,34 @@ namespace Aurora.Modules.FileBasedSimulationData
             }
             if (simStore == null)
                 return;
+
+            try
+            {
+                if (!m_hasShownFileBasedWarning)
+                {
+                    m_hasShownFileBasedWarning = true;
+                    System.Windows.Forms.MessageBox.Show (@"Your sim has been updated to use the FileBased Simulation Service.
+Your sim is now saved in a .abackup file in the bin/ directory with the same name as your region.
+More configuration options and info can be found in the Configuration/Data/FileBased.ini file.", "WARNING");
+                }
+            }
+            catch
+            {
+                //Some people don't have winforms, which is fine
+                m_log.Error ("---------------------");
+                m_log.Error ("---------------------");
+                m_log.Error ("---------------------");
+                m_log.Error ("---------------------");
+                m_log.Error ("---------------------");
+                m_log.Error ("Your sim has been updated to use the FileBased Simulation Service.");
+                m_log.Error ("Your sim is now saved in a .abackup file in the bin/ directory with the same name as your region.");
+                m_log.Error ("More configuration options and info can be found in the Configuration/Data/FileBased.ini file.");
+                m_log.Error ("---------------------");
+                m_log.Error ("---------------------");
+                m_log.Error ("---------------------");
+                m_log.Error ("---------------------");
+                m_log.Error ("---------------------");
+            }
 
             simStore.Initialise (connString);
 
