@@ -2,6 +2,15 @@ string first = "Test";
 string last = "Bot";
 key userToDuplicate;
 string botID;
+string message = "Hi avatar!";
+
+// sayType 0 = Whisper
+// sayType 1 = Say
+// sayType 2 = Shout
+integer sayType = 1;
+
+//Channel to talk on
+integer channel = 0;
 default
 {
     state_entry()
@@ -10,12 +19,10 @@ default
         //Create the bot with the given first/last name and the user whose appearance it will duplicate
         userToDuplicate = llGetOwner();
         botID = botCreateBot(first, last, userToDuplicate);
-        //You can either put an avatar's name or UUID as the second parameter, and then the last parameter is how close it should get to the avatar
-        botFollowAvatar(botID, llGetOwner(), 1);
     }
-    touch_start(integer a)
-    {
-	    //Stop following the avatar now
-        botStopFollowAvatar (botID);
+    touch_start(integer number)
+	{
+	    //Say the message to users
+        botSendChatMessage (bot, message, sayType, channel);
     }
 }
