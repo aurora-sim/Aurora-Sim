@@ -211,11 +211,11 @@ namespace Aurora.BotManager
                 manager.RemoveAvatar (UUID.Parse (bot), m_host.ParentEntity.Scene);
         }
 
-        public void botFollowAvatar (string bot, string avatarName)
+        public void botFollowAvatar (string bot, string avatarName, LSL_Float followDistance)
         {
             IBotManager manager = World.RequestModuleInterface<IBotManager> ();
             if (manager != null)
-                manager.FollowAvatar (UUID.Parse (bot), avatarName);
+                manager.FollowAvatar (UUID.Parse (bot), avatarName, (float)followDistance);
         }
 
         public void botStopFollowAvatar (string bot, string avatarName)

@@ -27,7 +27,7 @@ namespace Aurora.BotManager
 
         #region FollowAvatar
 
-        void FollowAvatar (UUID botID, string avatarName);
+        void FollowAvatar (UUID botID, string avatarName, float followDistance);
         void StopFollowAvatar (UUID botID, string avatarName);
 
         #endregion
@@ -56,7 +56,7 @@ namespace Aurora.BotManager
         void EnableWalk ();
         void ReadMap (string filename, int X, int Y, int CornerStoneX, int CornerStoneY);
         void FindPath (Vector3 currentPos, Vector3 finishVector);
-        void FollowAvatar (string avatarName);
+        void FollowAvatar (string avatarName, float followDistance);
         void StopFollowAvatar (string avatarName);
         void SendChatMessage (int sayType, string message);
     }

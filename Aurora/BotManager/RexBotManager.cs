@@ -298,12 +298,12 @@ namespace Aurora.BotManager
         /// </summary>
         /// <param name="Bot"></param>
         /// <param name="modifier"></param>
-        public void FollowAvatar (UUID botID, string avatarName)
+        public void FollowAvatar (UUID botID, string avatarName, float followDistance)
         {
             IRexBot bot;
             if (m_bots.TryGetValue (botID, out bot))
             {
-                bot.FollowAvatar (avatarName);
+                bot.FollowAvatar (avatarName, followDistance);
             }
         }
 

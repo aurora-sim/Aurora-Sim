@@ -81,7 +81,6 @@ namespace Aurora.BotManager
 
         #region Following declares
 
-        private const float followDistance = 2.5f;
         public bool IsFollowing = false;
         public IScenePresence FollowSP = null;
         public string FollowName = "";
@@ -320,7 +319,8 @@ namespace Aurora.BotManager
         {
             ShouldFly = true;
             m_scenePresence.ForceFly = true;
-            m_closeToPoint = 1.5f;
+            if(!IsFollowing)
+                m_closeToPoint = 1.5f;
         }
 
         /// <summary>
@@ -331,7 +331,8 @@ namespace Aurora.BotManager
         {
             ShouldFly = false;
             m_scenePresence.ForceFly = false;
-            m_closeToPoint = 1;
+            if (!IsFollowing)
+                m_closeToPoint = 1;
         }
 
         #endregion
@@ -569,11 +570,12 @@ namespace Aurora.BotManager
             }
         }
 
-        public void FollowAvatar (string avatarName)
+        public void FollowAvatar (string avatarName, float followDistance)
         {
             m_scenePresence.StandUp (); //Can't follow if sitting
             IsFollowing = true;
             FollowName = avatarName;
+            m_closeToPoint = followDistance;
             m_autoMove = false;
         }
 
