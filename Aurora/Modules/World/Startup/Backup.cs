@@ -325,6 +325,7 @@ namespace Aurora.Modules
             {
                 try
                 {
+                    LoadingPrims = true;
                     List<SceneObjectGroup> groups = new List<SceneObjectGroup>();
                     lock (m_scene.Entities)
                     {
@@ -340,6 +341,7 @@ namespace Aurora.Modules
 
                     //Now remove the entire region at once
                     m_scene.SimulationDataService.RemoveRegion(m_scene.RegionInfo.RegionID);
+                    LoadingPrims = false;
                 }
                 catch
                 {
@@ -628,7 +630,7 @@ namespace Aurora.Modules
             private void WriteAsset(string id, AssetBase asset, TarArchiveWriter writer)
             {
                 if (asset != null)
-                    writer.WriteFile ("assets", asset.Data);
+                    writer.WriteFile ("assets/" + asset.ID, asset.Data);
                 else
                     m_log.WarnFormat ("Could not find asset {0}", id);
             }
@@ -756,10 +758,6 @@ namespace Aurora.Modules
 
                         if (!ResolveUserUuid(part.LastOwnerID))
                             part.LastOwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
-
-                        // And zap any troublesome sit target information
-                        part.SitTargetOrientation = new Quaternion(0, 0, 0, 1);
-                        part.SitTargetPosition = new Vector3(0, 0, 0);
 
                         // Fix ownership/creator of inventory items
                         // Not doing so results in inventory items
