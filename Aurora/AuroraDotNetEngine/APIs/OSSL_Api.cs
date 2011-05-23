@@ -2139,15 +2139,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_List osGetPrimitiveParams(LSL_Key prim, LSL_List rules)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetPrimitiveParams", m_host, "OSSL");
-            
-            
+
+            InitLSL ();
             return m_LSL_Api.GetLinkPrimitiveParamsEx(prim, rules);
         }
 
         public void osSetPrimitiveParams(LSL_Key prim, LSL_List rules)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetPrimitiveParams", m_host, "OSSL");
-            
+
+            InitLSL ();
             m_LSL_Api.SetPrimitiveParamsEx(prim, rules);
         }
         
@@ -2251,6 +2252,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public DateTime osRezObject(string inventory, LSL_Types.Vector3 pos, LSL_Types.Vector3 vel, LSL_Types.Quaternion rot, int param, LSL_Integer isRezAtRoot, LSL_Integer doRecoil, LSL_Integer SetDieAtEdge, LSL_Integer CheckPos)
         {
+            InitLSL ();
             return m_LSL_Api.llRezPrim(inventory, pos, vel, rot, param, isRezAtRoot == 1, doRecoil == 1, SetDieAtEdge == 1, CheckPos == 1);
         }
 
