@@ -1,0 +1,36 @@
+K 10
+svn:ignore
+V 393
+Makefile
+*.mdp
+*.mds
+*.usertasks
+*.userprefs
+*.pidb
+aclocal.m4
+autom4te.cache
+config.guess
+config.log
+config.status
+config.sub
+configure.ac
+install-sh
+Makefile.am
+missing
+prebuild-1.7.xsd
+prebuild-1.7.xsx
+Prebuild.build
+Prebuild.cmbx
+Prebuild.sln
+Prebuild.suo
+Prebuild.make
+Prebuild.pbxproj
+Prebuild.xcodeproj
+..PrebuildsrcbinDebug
+makefile
+_ReSharper.Prebuild
+*.user
+prebuild.pdb
+*.resharper
+
+END
