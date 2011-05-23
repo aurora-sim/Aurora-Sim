@@ -75,6 +75,7 @@ namespace OpenSim.Region.Framework.Scenes
         public ISimulationDataStore SimulationDataService
         {
             get { return m_simulationDataService; }
+            set { m_simulationDataService = value; }
         }
 
         public List<IClientNetworkServer> ClientServers

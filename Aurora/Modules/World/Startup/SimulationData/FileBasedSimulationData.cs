@@ -78,7 +78,7 @@ namespace Aurora.Modules.FileBasedSimulationData
         protected string m_loadDirectory = "";
         protected bool m_requiresSave = true;
 
-        public string Name
+        public virtual string Name
         {
             get
             {
@@ -86,12 +86,12 @@ namespace Aurora.Modules.FileBasedSimulationData
             }
         }
 
-        public ISimulationDataStore Copy ()
+        public virtual ISimulationDataStore Copy ()
         {
             return new FileBasedSimulationData ();
         }
 
-        public void Initialise()
+        public virtual void Initialise ()
         {
         }
 
@@ -100,7 +100,7 @@ namespace Aurora.Modules.FileBasedSimulationData
         /// </summary>
         /// <param name="scene"></param>
         /// <param name="config"></param>
-        protected void ReadConfig (IScene scene, IConfig config)
+        protected virtual void ReadConfig (IScene scene, IConfig config)
         {
             if (config != null)
             {
@@ -180,7 +180,7 @@ namespace Aurora.Modules.FileBasedSimulationData
         /// Save a backup of the sim
         /// </summary>
         /// <param name="appendedFilePath">The file path where the backup will be saved</param>
-        protected void SaveBackup (string appendedFilePath)
+        protected virtual void SaveBackup (string appendedFilePath)
         {
             if (!m_saveChanges)
                 return;
@@ -232,12 +232,12 @@ namespace Aurora.Modules.FileBasedSimulationData
             File.Move (fileName + ".tmp", fileName);
         }
 
-        private string SerializeDateTime ()
+        protected virtual string SerializeDateTime ()
         {
             return "--" + DateTime.Now.Month + "-" + DateTime.Now.Day + "-" + DateTime.Now.Hour + "-" + DateTime.Now.Minute;
         }
 
-        protected void ReadBackup (IScene scene)
+        protected virtual void ReadBackup (IScene scene)
         {
             List<uint> foundLocalIDs = new List<uint> ();
             GZipStream m_loadStream;
@@ -297,7 +297,7 @@ namespace Aurora.Modules.FileBasedSimulationData
             foundLocalIDs.Clear ();
         }
 
-        private void CheckForOldDataBase ()
+        protected virtual void CheckForOldDataBase ()
         {
             string connString = "";
             string name = "";
@@ -335,12 +335,12 @@ namespace Aurora.Modules.FileBasedSimulationData
             m_shortrevertTerrain = simStore.LoadTerrain (m_scene, true, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
         }
 
-        public List<SceneObjectGroup> LoadObjects (UUID regionUUID, Scene scene)
+        public virtual List<SceneObjectGroup> LoadObjects (UUID regionUUID, Scene scene)
         {
             return m_groups;
         }
 
-        public short[] LoadTerrain (IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY)
+        public virtual short[] LoadTerrain (IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY)
         {
             if (!m_loaded)
             {
@@ -381,7 +381,7 @@ namespace Aurora.Modules.FileBasedSimulationData
             }
         }
 
-        public short[] LoadWater (IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY)
+        public virtual short[] LoadWater (IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY)
         {
             ITerrainModule terrainModule = scene.RequestModuleInterface<ITerrainModule> ();
             if (RevertMap)
@@ -408,18 +408,18 @@ namespace Aurora.Modules.FileBasedSimulationData
             }
         }
 
-        public void Shutdown ()
+        public virtual void Shutdown ()
         {
             //The sim is shutting down, we need to save one last backup
             SaveBackup ("");
         }
 
-        public void Tainted ()
+        public virtual void Tainted ()
         {
             m_requiresSave = true;
         }
 
-        public void RemoveRegion(UUID regionUUID)
+        public virtual void RemoveRegion (UUID regionUUID)
         {
             //Remove the file so that the region is gone
             File.Delete (m_loadDirectory + m_fileName);
@@ -430,7 +430,7 @@ namespace Aurora.Modules.FileBasedSimulationData
         /// </summary>
         /// <param name="regionUUID"></param>
         /// <returns></returns>
-        public List<LandData> LoadLandObjects (UUID regionUUID)
+        public virtual List<LandData> LoadLandObjects (UUID regionUUID)
         {
             return m_parcels;
         }
