@@ -56,7 +56,7 @@ namespace OpenSim.Data.SQLite
 
         private SqliteConnection m_conn;
 
-        override public void Dispose()
+        public void Dispose()
         {
             if (m_conn != null)
             {
@@ -73,7 +73,7 @@ namespace OpenSim.Data.SQLite
         /// </list>
         /// </summary>
         /// <param name="dbconnect">connect string</param>
-        override public void Initialise(string dbconnect)
+        public void Initialise(string dbconnect)
         {
             if (dbconnect == string.Empty)
             {
@@ -84,7 +84,7 @@ namespace OpenSim.Data.SQLite
             m_conn.Open();
 
             Assembly assem = GetType().Assembly;
-            Migration m = new Migration(m_conn, assem, "AssetStore");
+            LegacyMigration m = new LegacyMigration (m_conn, assem, "AssetStore");
             m.Update();
 
             return;
@@ -95,13 +95,13 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="uuid">UUID of ... ?</param>
         /// <returns>Asset base</returns>
-        override public AssetBase GetAsset(UUID uuid)
+        public AssetBase GetAsset (string uuid)
         {
             lock (this)
             {
                 using (SqliteCommand cmd = new SqliteCommand(SelectAssetSQL, m_conn))
                 {
-                    cmd.Parameters.Add(new SqliteParameter(":UUID", uuid.ToString()));
+                    cmd.Parameters.Add(new SqliteParameter(":UUID", uuid));
                     using (IDataReader reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
@@ -124,10 +124,10 @@ namespace OpenSim.Data.SQLite
         /// Create an asset
         /// </summary>
         /// <param name="asset">Asset Base</param>
-        override public void StoreAsset(AssetBase asset)
+        public void StoreAsset(AssetBase asset)
         {
             //m_log.Info("[ASSET DB]: Creating Asset " + asset.FullID.ToString());
-            if (ExistsAsset(asset.FullID))
+            if (ExistsAsset(asset.FullID.ToString()))
             {
                 //LogAssetLoad(asset);
 
@@ -193,7 +193,7 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="uuid">The asset UUID</param>
         /// <returns>True if exist, or false.</returns>
-        override public bool ExistsAsset(UUID uuid)
+        public bool ExistsAsset (string uuid)
         {
             lock (this) {
                 using (SqliteCommand cmd = new SqliteCommand(SelectAssetSQL, m_conn))
@@ -270,7 +270,7 @@ namespace OpenSim.Data.SQLite
         /// <param name="start">The number of results to discard from the total data set.</param>
         /// <param name="count">The number of rows the returned list should contain.</param>
         /// <returns>A list of AssetMetadata objects.</returns>
-        public override List<AssetMetadata> FetchAssetMetadataSet(int start, int count)
+        public List<AssetMetadata> FetchAssetMetadataSet(int start, int count)
         {
             List<AssetMetadata> retList = new List<AssetMetadata>(count);
 
@@ -309,7 +309,7 @@ namespace OpenSim.Data.SQLite
         /// <summary>
         ///
         /// </summary>
-        override public string Version
+        public string Version
         {
             get
             {
@@ -326,7 +326,7 @@ namespace OpenSim.Data.SQLite
         /// <summary>
         /// Initialise the AssetData interface using default URI
         /// </summary>
-        override public void Initialise()
+        public void Initialise()
         {
             Initialise("URI=file:Asset.db,version=3");
         }
@@ -334,7 +334,7 @@ namespace OpenSim.Data.SQLite
         /// <summary>
         /// Name of this DB provider
         /// </summary>
-        override public string Name
+        public string Name
         {
             get { return "SQLite Asset storage engine"; }
         }
@@ -343,7 +343,7 @@ namespace OpenSim.Data.SQLite
         /// Delete an asset from database
         /// </summary>
         /// <param name="uuid"></param>
-        public override bool Delete(string id)
+        public bool Delete(string id)
         {
             lock (this)
             {

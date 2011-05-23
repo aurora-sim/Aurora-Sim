@@ -30,7 +30,6 @@ using OpenSim.Framework;
 using System;
 using System.Collections.Generic;
 using OpenSim.Services.Interfaces;
-using OpenSim.Data;
 using Nini.Config;
 using log4net;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;

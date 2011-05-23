@@ -31,7 +31,6 @@ using System.Reflection;
 using Nini.Config;
 using log4net;
 using OpenSim.Framework;
-using OpenSim.Data;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using Aurora.Framework;
@@ -123,15 +122,7 @@ namespace OpenSim.Services.AssetService
 
         public AssetBase Get(string id)
         {
-            UUID assetID;
-
-            if (!UUID.TryParse(id, out assetID))
-            {
-                m_log.WarnFormat("[ASSET SERVICE]: Could not parse requested sset id {0}", id);
-                return null;
-            }
-
-            return m_Database.GetAsset(assetID);
+            return m_Database.GetAsset (id);
         }
 
         public AssetBase GetCached(string id)
@@ -141,12 +132,7 @@ namespace OpenSim.Services.AssetService
 
         public AssetMetadata GetMetadata(string id)
         {
-            UUID assetID;
-
-            if (!UUID.TryParse(id, out assetID))
-                return null;
-
-            AssetBase asset = m_Database.GetAsset(assetID);
+            AssetBase asset = m_Database.GetAsset (id);
             if (asset != null)
                 return asset.Metadata;
 
@@ -155,35 +141,20 @@ namespace OpenSim.Services.AssetService
 
         public byte[] GetData(string id)
         {
-            UUID assetID;
-
-            if (!UUID.TryParse(id, out assetID))
-                return null;
-
-            AssetBase asset = m_Database.GetAsset(assetID);
+            AssetBase asset = m_Database.GetAsset (id);
             return asset.Data;
         }
 
         public bool GetExists(string id)
         {
-            UUID assetID;
-
-            if (!UUID.TryParse(id, out assetID))
-                return false;
-
-            return m_Database.ExistsAsset(assetID);
+            return m_Database.ExistsAsset (id);
         }
 
         public bool Get(string id, Object sender, AssetRetrieved handler)
         {
             //m_log.DebugFormat("[AssetService]: Get asset async {0}", id);
             
-            UUID assetID;
-
-            if (!UUID.TryParse(id, out assetID))
-                return false;
-
-            AssetBase asset = m_Database.GetAsset(assetID);
+            AssetBase asset = m_Database.GetAsset (id);
 
             //m_log.DebugFormat("[AssetService]: Got asset {0}", asset);
             
@@ -208,14 +179,7 @@ namespace OpenSim.Services.AssetService
         public bool Delete(string id)
         {
             m_log.DebugFormat("[ASSET SERVICE]: Deleting asset {0}", id);
-            UUID assetID;
-            if (!UUID.TryParse(id, out assetID))
-                return false;
-
-            if (assetID == UUID.Zero)
-                return false;
-
-            AssetBase asset = m_Database.GetAsset(assetID);
+            AssetBase asset = m_Database.GetAsset (id);
             if (asset == null)
                 return false;
 

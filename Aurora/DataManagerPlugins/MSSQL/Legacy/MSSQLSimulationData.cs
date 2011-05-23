@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
@@ -137,10 +138,6 @@ namespace OpenSim.Data.MSSQL
                             // deleted).
                             if (sceneObjectPart.UUID != groupID && groupID != UUID.Zero)
                             {
-                                _Log.WarnFormat(
-                                    "[REGION DB]: Found root prim {0} {1} at {2} where group was actually {3}.  Forcing UUID to group UUID",
-                                    sceneObjectPart.Name, sceneObjectPart.UUID, sceneObjectPart.GroupPosition, groupID);
-
                                 sceneObjectPart.UUID = groupID;
                             }
 
@@ -184,8 +181,6 @@ namespace OpenSim.Data.MSSQL
             }
 
             LoadItems(primsWithInventory);
-
-            _Log.DebugFormat("[REGION DB]: Loaded {0} objects using {1} prims", objects.Count, prims.Count);
 
             return new List<SceneObjectGroup>(objects.Values);
         }
@@ -236,8 +231,6 @@ namespace OpenSim.Data.MSSQL
         /// <param name="regionUUID"></param>
         public void StoreObject(SceneObjectGroup obj, UUID regionUUID)
         {
-            _Log.InfoFormat("[MSSQL]: Adding/Changing SceneObjectGroup: {0} to region: {1}, object has {2} prims.", obj.UUID, regionUUID, obj.ChildrenList.Count);
-
             using (SqlConnection conn = new SqlConnection(m_connectionString))
             {
                 conn.Open();
@@ -257,7 +250,6 @@ namespace OpenSim.Data.MSSQL
                             }
                             catch (SqlException sqlEx)
                             {
-                                _Log.ErrorFormat("[REGION DB]: Store SceneObjectPrim SQL error: {0} at line {1}", sqlEx.Message, sqlEx.LineNumber);
                                 throw;
                             }
                         }
@@ -272,7 +264,6 @@ namespace OpenSim.Data.MSSQL
                             }
                             catch (SqlException sqlEx)
                             {
-                                _Log.ErrorFormat("[REGION DB]: Store SceneObjectPrimShapes SQL error: {0} at line {1}", sqlEx.Message, sqlEx.LineNumber);
                                 throw;
                             }
                         }
@@ -970,7 +961,6 @@ VALUES
             {
                 newData.UserLocation = Vector3.Zero;
                 newData.UserLookAt = Vector3.Zero;
-                _Log.ErrorFormat("[PARCEL]: unable to get parcel telehub settings for {1}", newData.Name);
             }
 
             newData.ParcelAccessList = new List<ParcelManager.ParcelAccessEntry>();

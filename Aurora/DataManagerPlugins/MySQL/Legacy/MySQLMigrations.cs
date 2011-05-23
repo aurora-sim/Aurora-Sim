@@ -42,7 +42,7 @@ namespace OpenSim.Data.MySQL
     /// it executes SQL scripts (using MySqlScript instead of MyCommand)
     /// 
     /// </summary>
-    public class MySqlMigration : Migration
+    public class MySqlMigration : LegacyMigration
     {
         public MySqlMigration()
             : base()

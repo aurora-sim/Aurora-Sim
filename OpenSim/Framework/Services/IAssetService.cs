@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using OpenSim.Framework;
 
 namespace OpenSim.Services.Interfaces
@@ -106,9 +107,9 @@ namespace OpenSim.Services.Interfaces
 
     public interface IAssetDataPlugin
     {
-        AssetBase GetAsset (UUID uuid);
+        AssetBase GetAsset (string uuid);
         void StoreAsset (AssetBase asset);
-        bool ExistsAsset (UUID uuid);
+        bool ExistsAsset (string uuid);
         List<AssetMetadata> FetchAssetMetadataSet (int start, int count);
         void Initialise (string connect);
         bool Delete (string id);

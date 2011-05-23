@@ -53,13 +53,13 @@ namespace OpenSim.Data.MSSQL
 
         #region IPlugin Members
 
-        override public void Dispose() { }
+        public void Dispose() { }
 
         /// <summary>
         /// <para>Initialises asset interface</para>
         /// </summary>
         // [Obsolete("Cannot be default-initialized!")]
-        override public void Initialise()
+        public void Initialise()
         {
         }
 
@@ -70,7 +70,7 @@ namespace OpenSim.Data.MSSQL
         /// a string instead of file, if someone writes the support
         /// </para>
         /// <param name="connectionString">connect string</param>
-        override public void Initialise(string connectionString)
+        public void Initialise(string connectionString)
         {
             m_ticksToEpoch = new System.DateTime(1970, 1, 1).Ticks;
 
@@ -84,7 +84,7 @@ namespace OpenSim.Data.MSSQL
         /// <summary>
         /// Database provider version.
         /// </summary>
-        override public string Version
+        public string Version
         {
             get { return m_database.getVersion(); }
         }
@@ -92,7 +92,7 @@ namespace OpenSim.Data.MSSQL
         /// <summary>
         /// The name of this DB provider.
         /// </summary>
-        override public string Name
+        public string Name
         {
             get { return "MSSQL Asset storage engine"; }
         }
@@ -106,7 +106,7 @@ namespace OpenSim.Data.MSSQL
         /// </summary>
         /// <param name="assetID">the asset UUID</param>
         /// <returns></returns>
-        override public AssetBase GetAsset(UUID assetID)
+        public AssetBase GetAsset(string assetID)
         {
             string sql = "SELECT * FROM assets WHERE id = @id";
             using (SqlConnection conn = new SqlConnection(m_connectionString))
@@ -141,7 +141,7 @@ namespace OpenSim.Data.MSSQL
         /// Create asset in m_database
         /// </summary>
         /// <param name="asset">the asset</param>
-        override public void StoreAsset(AssetBase asset)
+        public void StoreAsset(AssetBase asset)
         {
            
             string sql =
@@ -220,7 +220,7 @@ namespace OpenSim.Data.MSSQL
         /// </summary>
         /// <param name="uuid"></param>
         /// <returns>true if exist.</returns>
-        override public bool ExistsAsset(UUID uuid)
+        public bool ExistsAsset (string uuid)
         {
             if (GetAsset(uuid) != null)
             {
@@ -237,7 +237,7 @@ namespace OpenSim.Data.MSSQL
         /// <param name="start">The number of results to discard from the total data set.</param>
         /// <param name="count">The number of rows the returned list should contain.</param>
         /// <returns>A list of AssetMetadata objects.</returns>
-        public override List<AssetMetadata> FetchAssetMetadataSet(int start, int count)
+        public List<AssetMetadata> FetchAssetMetadataSet(int start, int count)
         {
             List<AssetMetadata> retList = new List<AssetMetadata>(count);
             string sql = @"WITH OrderedAssets AS
@@ -275,7 +275,7 @@ namespace OpenSim.Data.MSSQL
             return retList;
         }
 
-        public override bool Delete(string id)
+        public bool Delete(string id)
         {
             return false;
         }

@@ -33,7 +33,7 @@ using Aurora.DataManager;
 
 namespace OpenSim.Data.MSSQL
 {
-    public class MSSQLMigration : Migration
+    public class MSSQLMigration : LegacyMigration
     {
         public MSSQLMigration(DbConnection conn, Assembly assem, string type) : base(conn, assem, type)
         {

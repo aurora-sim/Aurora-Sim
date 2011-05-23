@@ -110,7 +110,7 @@ namespace OpenSim.Data.SQLite
                 regionSettingsDa = new SqliteDataAdapter(regionSettingsSelectCmd);
 
                 // This actually does the roll forward assembly stuff
-                Migration m = new Migration(m_conn, GetType().Assembly, "RegionStore");
+                LegacyMigration m = new LegacyMigration (m_conn, GetType ().Assembly, "RegionStore");
                 m.Update();
 
                 lock (ds)

@@ -32,7 +32,6 @@ using System.Reflection;
 using Nini.Config;
 using log4net;
 using OpenSim.Framework;
-using OpenSim.Data;
 using Aurora.Framework;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;

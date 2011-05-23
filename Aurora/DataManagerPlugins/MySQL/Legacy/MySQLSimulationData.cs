@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Threading;
@@ -72,7 +73,7 @@ namespace OpenSim.Data.MySQL
                 // Apply new Migrations
                 //
                 Assembly assem = GetType().Assembly;
-                Migration m = new Migration(dbcon, assem, "RegionStore");
+                LegacyMigration m = new LegacyMigration (dbcon, assem, "RegionStore");
                 m.Update();
             }
         }

@@ -51,7 +51,7 @@ namespace OpenSim.Data.MySQL
 
         #region IPlugin Members
 
-        public override string Version { get { return "1.0.0.0"; } }
+        public string Version { get { return "1.0.0.0"; } }
 
         /// <summary>
         /// <para>Initialises Asset interface</para>
@@ -64,7 +64,7 @@ namespace OpenSim.Data.MySQL
         /// </para>
         /// </summary>
         /// <param name="connect">connect string</param>
-        public override void Initialise(string connect)
+        public void Initialise(string connect)
         {
             m_connectionString = connect;
 
@@ -74,22 +74,22 @@ namespace OpenSim.Data.MySQL
             using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
             {
                 dbcon.Open();
-                Migration m = new Migration(dbcon, assem, "AssetStore");
+                LegacyMigration m = new LegacyMigration (dbcon, assem, "AssetStore");
                 m.Update();
             }
         }
 
-        public override void Initialise()
+        public void Initialise()
         {
             throw new NotImplementedException();
         }
 
-        public override void Dispose() { }
+        public void Dispose() { }
 
         /// <summary>
         /// The name of this DB provider
         /// </summary>
-        override public string Name
+        public string Name
         {
             get { return "MySQL Asset storage engine"; }
         }
@@ -104,7 +104,7 @@ namespace OpenSim.Data.MySQL
         /// <param name="assetID">Asset UUID to fetch</param>
         /// <returns>Return the asset</returns>
         /// <remarks>On failure : throw an exception and attempt to reconnect to database</remarks>
-        override public AssetBase GetAsset(UUID assetID)
+        public AssetBase GetAsset (string assetID)
         {
             AssetBase asset = null;
             lock (m_dbLock)
@@ -117,7 +117,7 @@ namespace OpenSim.Data.MySQL
                         "SELECT name, description, assetType, local, temporary, asset_flags, CreatorID, data FROM assets WHERE id=?id",
                         dbcon))
                     {
-                        cmd.Parameters.AddWithValue("?id", assetID.ToString());
+                        cmd.Parameters.AddWithValue("?id", assetID);
 
                         try
                         {
@@ -160,7 +160,7 @@ namespace OpenSim.Data.MySQL
         /// </summary>
         /// <param name="asset">Asset UUID to create</param>
         /// <remarks>On failure : Throw an exception and attempt to reconnect to database</remarks>
-        override public void StoreAsset(AssetBase asset)
+        public void StoreAsset(AssetBase asset)
         {
             lock (m_dbLock)
             {
@@ -260,7 +260,7 @@ namespace OpenSim.Data.MySQL
         /// </summary>
         /// <param name="uuid">The asset UUID</param>
         /// <returns>true if exist.</returns>
-        override public bool ExistsAsset(UUID uuid)
+        public bool ExistsAsset (string uuid)
         {
             bool assetExists = false;
 
@@ -301,7 +301,7 @@ namespace OpenSim.Data.MySQL
         /// <param name="start">The number of results to discard from the total data set.</param>
         /// <param name="count">The number of rows the returned list should contain.</param>
         /// <returns>A list of AssetMetadata objects.</returns>
-        public override List<AssetMetadata> FetchAssetMetadataSet(int start, int count)
+        public List<AssetMetadata> FetchAssetMetadataSet(int start, int count)
         {
             List<AssetMetadata> retList = new List<AssetMetadata>(count);
 
@@ -346,7 +346,7 @@ namespace OpenSim.Data.MySQL
             return retList;
         }
 
-        public override bool Delete(string id)
+        public bool Delete(string id)
         {
             lock (m_dbLock)
             {

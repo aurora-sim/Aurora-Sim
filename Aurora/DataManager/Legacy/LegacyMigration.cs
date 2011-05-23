@@ -67,7 +67,7 @@ namespace Aurora.DataManager
     /// really want is the assembly of your database class.
     ///
     /// </summary>
-    public class Migration
+    public class LegacyMigration
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -82,16 +82,16 @@ namespace Aurora.DataManager
         /// Currently this is only used in the tests. A Migration instance created this way must be then
         /// initialized with Initialize(). Regular creation should be through the parameterized constructors. 
         /// </summary>
-        public Migration()
+        public LegacyMigration()
         { 
         }
 
-        public Migration(DbConnection conn, Assembly assem, string subtype, string type)
+        public LegacyMigration(DbConnection conn, Assembly assem, string subtype, string type)
         {
             Initialize(conn, assem, type, subtype);
         }
 
-        public Migration(DbConnection conn, Assembly assem, string type) 
+        public LegacyMigration (DbConnection conn, Assembly assem, string type) 
         {
             Initialize(conn, assem, type, "");
         }
