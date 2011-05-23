@@ -39,10 +39,10 @@ using OpenSim.Region.Framework.Scenes;
 using Nini.Config;
 using log4net;
 
-namespace OpenSim.Data.Null
+namespace Aurora.Modules.FileBasedSimulationData
 {
     /// <summary>
-    /// NULL DataStore, do not store anything
+    /// FileBased DataStore, do not store anything in any databases, instead save .abackup files for it
     /// </summary>
     public class FileBasedSimulationData : ISimulationDataStore
     {
