@@ -644,10 +644,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     KillEntities(agent.Scene, grp.ChildrenEntities().ToArray());
                     //Now remove it from the Scene so that it will not come back
                     agent.Scene.SceneGraph.DeleteEntity(grp);
-                    //And from storage as well
-                    IBackupModule backup = agent.Scene.RequestModuleInterface<IBackupModule>();
-                    if (backup != null)
-                        backup.DeleteFromStorage(grp.UUID);
                 }
             }
         }

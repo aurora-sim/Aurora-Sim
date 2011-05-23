@@ -90,21 +90,25 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         public ITerrainChannel TerrainMap
         {
             get { return m_channel; }
+            set { m_channel = value; }
         }
 
         public ITerrainChannel TerrainRevertMap
         {
             get { return m_revert; }
+            set { m_revert = value; }
         }
 
         public ITerrainChannel TerrainWaterMap
         {
             get { return m_waterChannel; }
+            set { m_waterChannel = value; }
         }
 
         public ITerrainChannel TerrainWaterRevertMap
         {
             get { return m_waterRevert; }
+            set { m_waterRevert = value; }
         }
 
         private const int MAX_HEIGHT = 250;

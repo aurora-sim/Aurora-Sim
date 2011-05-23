@@ -2437,9 +2437,9 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 // Remove from database and parcel prim count
                 //
-                IBackupModule backup = Scene.RequestModuleInterface<IBackupModule>();
-                if (backup != null)
-                    backup.DeleteFromStorage(UUID);
+                //IBackupModule backup = Scene.RequestModuleInterface<IBackupModule>();
+                //if (backup != null)
+                //    backup.DeleteFromStorage(UUID);
             }
 
             if (selectionPart != null)

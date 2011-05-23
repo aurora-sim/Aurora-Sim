@@ -213,12 +213,6 @@ namespace OpenSim.Framework
         /// <param name="client"></param>
         void RequestInventoryFile(IClientAPI client);
 
-        /// <summary>
-        /// Backup the inventory to the given data store
-        /// </summary>
-        /// <param name="datastore"></param>
-        void ProcessInventoryBackup();
-
         uint MaskEffectivePermissions();
 
         /// <summary>

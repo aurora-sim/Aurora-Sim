@@ -917,39 +917,6 @@ namespace OpenSim.Region.Framework.Scenes
                 client.SendTaskInventory (m_part.UUID, 0, new byte[0]);
         }
 
-        /// <summary>
-        /// Process inventory backup
-        /// </summary>
-        /// <param name="datastore"></param>
-        public void ProcessInventoryBackup()
-        {
-            if (HasInventoryChanged)
-            {
-                ISimulationDataStore datastore = ((Scene)m_part.ParentGroup.Scene).SimulationDataService;
-                HasInventoryChanged = false;
-                List<TaskInventoryItem> items = GetInventoryItems ();
-                datastore.StorePrimInventory (m_part.UUID, items);
-                IScriptModule[] engines = m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule> ();
-                if (engines != null)
-                {
-                    foreach (TaskInventoryItem item in items)
-                    {
-                        if (item.Type == (int)InventoryType.LSL)
-                        {
-                            foreach (IScriptModule engine in engines)
-                            {
-                                if (engine != null)
-                                {
-                                    //NOTE: We will need to save the prim if we do this
-                                    engine.SaveStateSave (item.ItemID, m_part.UUID);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         public void SaveScriptStateSaves()
         {
             IScriptModule[] engines = m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>();

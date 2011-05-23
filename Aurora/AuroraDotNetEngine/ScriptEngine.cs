@@ -988,6 +988,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             StateSave.SaveStateTo (id);
         }
 
+        public void SaveStateSaves ()
+        {
+            foreach (ScriptData id in ScriptProtection.GetAllScripts ())
+            {
+                if (id == null)
+                    return;
+                StateSave.SaveStateTo (id);
+            }
+        }
+
         /// <summary>
         /// Disables and unloads a script
         /// </summary>

@@ -248,7 +248,7 @@ namespace OpenSim.Data.MSSQL
                             {
                                 StoreSceneObjectPrim(sceneObjectPart, sqlCommand, obj.UUID, regionUUID);
                             }
-                            catch (SqlException sqlEx)
+                            catch (SqlException)
                             {
                                 throw;
                             }
@@ -262,7 +262,7 @@ namespace OpenSim.Data.MSSQL
                             {
                                 StoreSceneObjectPrimShapes(sceneObjectPart, sqlCommand, obj.UUID, regionUUID);
                             }
-                            catch (SqlException sqlEx)
+                            catch (SqlException)
                             {
                                 throw;
                             }
@@ -271,13 +271,13 @@ namespace OpenSim.Data.MSSQL
 
                     transaction.Commit();
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     try
                     {
                         transaction.Rollback();
                     }
-                    catch (Exception ex2)
+                    catch (Exception)
                     {
                     }
                 }

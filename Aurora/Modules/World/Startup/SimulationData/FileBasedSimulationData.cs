@@ -187,6 +187,20 @@ namespace Aurora.Modules.FileBasedSimulationData
             IBackupModule backupModule = m_scene.RequestModuleInterface<IBackupModule> ();
             if (backupModule != null && backupModule.LoadingPrims) //Something is changing lots of prims
                 return;
+
+            //Save any script state saves that might be around
+            IScriptModule[] engines = m_scene.RequestModuleInterfaces<IScriptModule> ();
+            if (engines != null)
+            {
+                foreach (IScriptModule engine in engines)
+                {
+                    if (engine != null)
+                    {
+                        engine.SaveStateSaves ();
+                    }
+                }
+            }
+
             m_log.Info ("[FileBasedSimulationData]: Saving Backup for region " + m_scene.RegionInfo.RegionName);
             string fileName = appendedFilePath + m_scene.RegionInfo.RegionName + m_saveAppenedFileName + ".abackup";
             //Add the .temp since we might need to make a backup and so that if something goes wrong, we don't corrupt the main backup
