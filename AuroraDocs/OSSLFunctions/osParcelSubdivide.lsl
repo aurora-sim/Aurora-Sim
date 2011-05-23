@@ -23,7 +23,7 @@ default
     {
         llSay(0,"Touch to subdivide adjacent Parcels using osParcelSubdivide");
     }
-    touch_start()
+    touch_start(integer test)
     {
         vector start = <0.0, 0.0, 0.0>; //top corner
         vector end = <100.0, 100.0, 0.0>;
