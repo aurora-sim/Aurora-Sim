@@ -5229,10 +5229,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 pusheeIsAvatar = true;
 
-                // Pushee doesn't have a physics actor
-                if (avatar.PhysicsActor == null)
-                    return;
-
                 // Pushee is in GodMode this pushing object isn't owned by them
                 if (avatar.GodLevel > 0 && m_host.OwnerID != targetID)
                     return;
@@ -5262,7 +5258,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!pusheeIsAvatar)
             {
                 // not an avatar so push is not affected by parcel flags
-                pusheeob = World.GetSceneObjectPart((UUID)target);
+                pusheeob = World.GetSceneObjectPart(UUID.Parse(target));
 
                 // We can't find object
                 if (pusheeob == null)
@@ -5282,19 +5278,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if (parcelManagement != null)
                     {
-                        ILandObject targetlandObj = parcelManagement.GetLandObject(PusheePos.X, PusheePos.Y);
+                        ILandObject targetlandObj = parcelManagement.GetLandObject (PusheePos.X, PusheePos.Y);
 
                         // We didn't find the parcel but region is push restricted so assume it is NOT ok
                         if (targetlandObj == null)
                             return;
 
-                        // Need provisions for Group Owned here
-                        if (m_host.OwnerID == targetlandObj.LandData.OwnerID ||
-                            targetlandObj.LandData.IsGroupOwned || m_host.OwnerID == targetID)
-                        {
+                        if (m_host.OwnerID == targetID)
                             pushAllowed = true;
-                        }
+                        else
+                            pushAllowed = m_host.ParentEntity.Scene.Permissions.CanPushObject (m_host.OwnerID, targetlandObj);
                     }
+                    else
+                        return;
                 }
                 else
                 {
@@ -5302,10 +5298,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     {
                         ILandObject targetlandObj = parcelManagement.GetLandObject(PusheePos.X, PusheePos.Y);
                         if (targetlandObj == null)
-                        {
                             // We didn't find the parcel but region isn't push restricted so assume it's ok
                             pushAllowed = true;
-                        }
                         else
                         {
                             // Parcel push restriction
@@ -5313,16 +5307,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             {
                                 //This takes care of everything
                                 pushAllowed = m_host.ParentEntity.Scene.Permissions.CanPushObject (m_host.OwnerID, targetlandObj);
-                                // Need provisions for Group Owned here
-                                /*if (m_host.OwnerID == targetlandObj.LandData.OwnerID || 
-                                    targetlandObj.LandData.IsGroupOwned || 
-                                    m_host.OwnerID == targetID)
-                                {
-                                    pushAllowed = true;
-                                }*/
-
-                                //ParcelFlags.RestrictPushObject
-                                //pushAllowed = true;
                             }
                             else
                             {
