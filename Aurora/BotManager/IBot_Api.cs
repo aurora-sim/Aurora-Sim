@@ -47,11 +47,11 @@ namespace Aurora.BotManager
         void botSetMap(string keyOfBot, LSL_List positions, LSL_List movementType);
         string botCreateBot(string FirstName, string LastName, string appearanceToClone);
         void botRemoveBot (string bot);
-        void botFollowAvatar (string bot, string avatarName);
-        void botStopFollowAvatar (string bot, string avatarName);
+        void botFollowAvatar (string bot, string avatarName, LSL_Float followDistance);
+        void botStopFollowAvatar (string bot);
         void botSetPathMap (string bot, string pathMap, int x, int y, int cornerstoneX, int cornerstoneY);
         void botFindPath (string bot, LSL_Vector startPos, LSL_Vector endPos);
-        void botSendChatMessage (string bot, string message, int sayType);
+        void botSendChatMessage (string bot, string message, int sayType, int channel);
         void botSetShouldFly (string keyOfBot, int ShouldFly);
     }
 }
