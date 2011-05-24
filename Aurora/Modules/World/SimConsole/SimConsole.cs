@@ -56,13 +56,15 @@ namespace Aurora.Modules.World.SimConsole
                 if(!m_enabled)
                     return;
                 string User = config.GetString("Users", "");
-                string[] Users = User.Split('|');
+                string[] Users = User.Split(new string[1] { "|" }, StringSplitOptions.RemoveEmptyEntries);
                 for (int i = 0; i < Users.Length; i += 2)
                 {
-                    if (!m_userKeys.ContainsKey(Users[i]))
+                    if (!m_userKeys.ContainsKey(Users[i]) && (i + 1) < Users.Length)
                     {
                         m_userKeys.Add(Users[i], (Access)Enum.Parse(typeof(Access), Users[i + 1]));
                     }
+                    else
+                        MainConsole.Instance.Output("No second configuration option given for SimConsole Users, ignoring", Level.Warn);
                 }
             }
         }
