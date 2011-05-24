@@ -199,8 +199,10 @@ namespace Aurora.Services.DataService
                     settings.LoadedCreationDateTime = int.Parse (query["loaded_creation_datetime"][i]);
                     settings.TerrainMapImageID = UUID.Parse (query["map_tile_ID"][i]);
                     settings.TerrainImageID = UUID.Parse (query["terrain_tile_ID"][i]);
-                    settings.MinimumAge = int.Parse (query["minimum_age"][i]);
-                    settings.CovenantLastUpdated = int.Parse (query["covenantlastupdated"][i]);
+                    if (query["minimum_age"][i] != null)
+                        settings.MinimumAge = int.Parse (query["minimum_age"][i]);
+                    if(query["covenantlastupdated"][i] != null)
+                        settings.CovenantLastUpdated = int.Parse (query["covenantlastupdated"][i]);
                     if (query.ContainsKey ("generic") && query["generic"].Count > i && query["generic"][i] != null)
                     {
                         OSD o = OSDParser.DeserializeJson (query["generic"][i]);
