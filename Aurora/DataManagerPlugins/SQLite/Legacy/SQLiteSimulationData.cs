@@ -555,11 +555,11 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="regionUUID">The region UUID</param>
         /// <returns>List of loaded groups</returns>
-        public List<SceneObjectGroup> LoadObjects(UUID regionUUID, Scene scene)
+        public List<ISceneEntity> LoadObjects (UUID regionUUID, Scene scene)
         {
-            Dictionary<UUID, SceneObjectGroup> createdObjects = new Dictionary<UUID, SceneObjectGroup>();
+            Dictionary<UUID, ISceneEntity> createdObjects = new Dictionary<UUID, ISceneEntity> ();
 
-            List<SceneObjectGroup> retvals = new List<SceneObjectGroup>();
+            List<ISceneEntity> retvals = new List<ISceneEntity> ();
 
             using (SqliteCommand cmd = new SqliteCommand())
             {

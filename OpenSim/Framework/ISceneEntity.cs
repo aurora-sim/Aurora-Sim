@@ -340,6 +340,8 @@ namespace OpenSim.Framework
         /// Prepares the object to be serialized
         /// </summary>
         void BackupPreparation();
+
+        void CheckSculptAndLoad ();
     }
 
     public interface IEntity
@@ -656,6 +658,8 @@ namespace OpenSim.Framework
         Vector3 GroupPosition { get; }
 
         Color Color { get; set; }
+
+        void TrimPermissions ();
     }
 
     public interface ISceneGraph

@@ -490,12 +490,12 @@ namespace OpenSim.Data.MySQL
             }
         }
 
-        public List<SceneObjectGroup> LoadObjects(UUID regionID, Scene scene)
+        public List<ISceneEntity> LoadObjects (UUID regionID, Scene scene)
         {
             const int ROWS_PER_QUERY = 5000;
 
             Dictionary<UUID, SceneObjectPart> prims = new Dictionary<UUID, SceneObjectPart>(ROWS_PER_QUERY);
-            Dictionary<UUID, SceneObjectGroup> objects = new Dictionary<UUID, SceneObjectGroup>();
+            Dictionary<UUID, ISceneEntity> objects = new Dictionary<UUID, ISceneEntity> ();
             int count = 0;
 
             #region Prim Loading
@@ -552,7 +552,7 @@ namespace OpenSim.Data.MySQL
                     foundLocalIDs.Add(prim.LocalId);
                 else
                     prim.LocalId = 0; //Reset it! Only use it once!
-                SceneObjectGroup sog;
+                ISceneEntity sog;
                 if (prim.UUID != prim.ParentUUID)
                 {
                     if (objects.TryGetValue(prim.ParentUUID, out sog))
@@ -613,7 +613,7 @@ namespace OpenSim.Data.MySQL
 
             m_log.DebugFormat("[REGION DB]: Loaded inventory from {0} objects", primsWithInventory.Count);
 
-            return new List<SceneObjectGroup>(objects.Values);
+            return new List<ISceneEntity> (objects.Values);
         }
 
         /// <summary>

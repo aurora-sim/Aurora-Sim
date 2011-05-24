@@ -206,37 +206,46 @@ namespace Aurora.Modules
                 LoadingPrims = true;
                 m_log.Info("[BackupModule]: Loading objects from datastore");
 
-                List<SceneObjectGroup> PrimsFromDB = m_scene.SimulationDataService.LoadObjects(m_scene.RegionInfo.RegionID, m_scene);
-                foreach (SceneObjectGroup group in PrimsFromDB)
+                List<ISceneEntity> PrimsFromDB = m_scene.SimulationDataService.LoadObjects(m_scene);
+                foreach (ISceneEntity group in PrimsFromDB)
                 {
                     try
                     {
                         m_scene.SceneGraph.CheckAllocationOfLocalIds(group);
-                        if (group.IsAttachment || (group.RootPart.Shape != null && (group.RootPart.Shape.State != 0 &&
-                            (group.RootPart.Shape.PCode == (byte)PCode.None ||
-                            group.RootPart.Shape.PCode == (byte)PCode.Prim ||
-                            group.RootPart.Shape.PCode == (byte)PCode.Avatar))))
+                        if (group.IsAttachment || (group.RootChild.Shape != null && (group.RootChild.Shape.State != 0 &&
+                            (group.RootChild.Shape.PCode == (byte)PCode.None ||
+                            group.RootChild.Shape.PCode == (byte)PCode.Prim ||
+                            group.RootChild.Shape.PCode == (byte)PCode.Avatar))))
                         {
                             m_log.Warn("[BackupModule]: Broken state for object " + group.Name + " while loading objects, removing it from the database.");
                             //WTF went wrong here? Remove by passing it by on loading
                             continue;
                         }
-                        else if (group.RootPart.Shape == null)
+                        else if (group.RootChild.Shape == null)
                         {
                             m_log.Warn("[BackupModule]: Broken object (" + group.Name + ") found while loading objects, removing it from the database.");
                             //WTF went wrong here? Remove by passing it by on loading
                             continue;
                         }
+                        else if (group.AbsolutePosition.X > m_scene.RegionInfo.RegionSizeX + 10 ||
+                            group.AbsolutePosition.X < -10 ||
+                            group.AbsolutePosition.Y > m_scene.RegionInfo.RegionSizeY + 10 ||
+                            group.AbsolutePosition.Y < -10)
+                        {
+                            m_log.Warn ("[BackupModule]: Object outside the region (" + group.Name + ", " + group.AbsolutePosition + ") found while loading objects, removing it from the database.");
+                            //WTF went wrong here? Remove by passing it by on loading
+                            continue;
+                        }
                         group.Scene = m_scene;
 
-                        if (group.RootPart == null)
+                        if (group.RootChild == null)
                         {
                             m_log.ErrorFormat("[BackupModule] Found a SceneObjectGroup with m_rootPart == null and {0} children",
-                                              group.ChildrenList.Count);
+                                              group.ChildrenEntities().Count);
                             continue;
                         }
                         m_scene.SceneGraph.RestorePrimToScene(group);
-                        SceneObjectPart rootPart = (SceneObjectPart)group.GetChildPart(group.UUID);
+                        ISceneChildEntity rootPart = group.GetChildPart(group.UUID);
                         rootPart.Flags &= ~PrimFlags.Scripted;
                         rootPart.TrimPermissions();
                         group.CheckSculptAndLoad();

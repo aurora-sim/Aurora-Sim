@@ -90,12 +90,12 @@ namespace OpenSim.Data.MSSQL
         /// </summary>
         /// <param name="regionUUID">The region UUID.</param>
         /// <returns></returns>
-        public List<SceneObjectGroup> LoadObjects(UUID regionUUID, Scene scene)
+        public List<ISceneEntity> LoadObjects (UUID regionUUID, Scene scene)
         {
             UUID lastGroupID = UUID.Zero;
 
             Dictionary<UUID, SceneObjectPart> prims = new Dictionary<UUID, SceneObjectPart>();
-            Dictionary<UUID, SceneObjectGroup> objects = new Dictionary<UUID, SceneObjectGroup>();
+            Dictionary<UUID, ISceneEntity> objects = new Dictionary<UUID, ISceneEntity> ();
             SceneObjectGroup grp = null;
 
             string sql = "SELECT *, " +
@@ -182,7 +182,7 @@ namespace OpenSim.Data.MSSQL
 
             LoadItems(primsWithInventory);
 
-            return new List<SceneObjectGroup>(objects.Values);
+            return new List<ISceneEntity> (objects.Values);
         }
 
         /// <summary>

@@ -57,7 +57,7 @@ namespace Aurora.Modules.FileBasedSimulationData
         protected int m_timeBetweenBackupSaves = 1440;//One day
         protected bool m_saveChanges = true;
         protected bool m_saveBackupChanges = true;
-        protected List<SceneObjectGroup> m_groups = new List<SceneObjectGroup> ();
+        protected List<ISceneEntity> m_groups = new List<ISceneEntity> ();
         protected byte[] m_terrain;
         protected byte[] m_revertTerrain;
         //For backwards compat
@@ -364,7 +364,7 @@ More configuration options and info can be found in the Configuration/Data/FileB
             m_shortrevertTerrain = simStore.LoadTerrain (m_scene, true, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
         }
 
-        public virtual List<SceneObjectGroup> LoadObjects (UUID regionUUID, Scene scene)
+        public virtual List<ISceneEntity> LoadObjects (IScene scene)
         {
             return m_groups;
         }
