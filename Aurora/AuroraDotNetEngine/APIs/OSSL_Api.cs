@@ -151,7 +151,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (m_LSL_Api != null)
                 return;
 
-            m_LSL_Api = (ILSL_Api)m_ScriptEngine.GetApi(m_itemID, "LSL");
+            m_LSL_Api = (ILSL_Api)m_ScriptEngine.GetApi(m_itemID, "ll");
         }
 
         //
