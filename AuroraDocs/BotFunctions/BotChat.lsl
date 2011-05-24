@@ -23,6 +23,6 @@ default
     touch_start(integer number)
 	{
 	    //Say the message to users
-        botSendChatMessage (bot, message, sayType, channel);
+        botSendChatMessage (bot, message, channel, sayType);
     }
 }
