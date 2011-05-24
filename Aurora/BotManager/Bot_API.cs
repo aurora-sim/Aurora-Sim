@@ -49,7 +49,6 @@ using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
-using OpenSim.Services.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine;
 
 namespace Aurora.BotManager
@@ -143,6 +142,7 @@ namespace Aurora.BotManager
 
         public string botCreateBot(string FirstName, string LastName, string appearanceToClone)
         {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botCreateBot", m_host, "bot");
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
             if (manager != null)
                 return manager.CreateAvatar(FirstName, LastName, m_host.ParentEntity.Scene, UUID.Parse(appearanceToClone)).ToString();
@@ -151,6 +151,7 @@ namespace Aurora.BotManager
 
         public void botSetShouldFly (string keyOfBot, int ShouldFly)
         {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botSetShouldFly", m_host, "bot");
             IBotManager manager = World.RequestModuleInterface<IBotManager> ();
             if (manager != null)
                manager.SetBotShouldFly (UUID.Parse(keyOfBot), ShouldFly == 1);
@@ -158,6 +159,7 @@ namespace Aurora.BotManager
 
         public void botSetMap(string keyOfBot, LSL_List positions, LSL_List movementType)
         {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botSetMap", m_host, "bot");
             List<Vector3> PositionsMap = new List<Vector3>();
             for(int i = 0; i < positions.Length; i++)
             {
@@ -178,6 +180,7 @@ namespace Aurora.BotManager
 
         public void botPause(string bot)
         {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botPause", m_host, "bot");
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
             if (manager != null)
                 manager.PauseAutoMove(UUID.Parse(bot));
@@ -185,6 +188,7 @@ namespace Aurora.BotManager
 
         public void botResume(string bot)
         {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botResume", m_host, "bot");
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
             if (manager != null)
                 manager.UnpauseAutoMove(UUID.Parse(bot));
@@ -192,6 +196,7 @@ namespace Aurora.BotManager
 
         public void botStop(string bot)
         {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botStop", m_host, "bot");
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
             if (manager != null)
                 manager.StopAutoMove(UUID.Parse(bot));
@@ -199,6 +204,7 @@ namespace Aurora.BotManager
 
         public void botStart(string bot)
         {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botStart", m_host, "bot");
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
             if (manager != null)
                 manager.EnableAutoMove(UUID.Parse(bot));
@@ -206,6 +212,7 @@ namespace Aurora.BotManager
 
         public void botRemoveBot (string bot)
         {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botRemoveBot", m_host, "bot");
             IBotManager manager = World.RequestModuleInterface<IBotManager> ();
             if (manager != null)
                 manager.RemoveAvatar (UUID.Parse (bot), m_host.ParentEntity.Scene);
@@ -213,6 +220,7 @@ namespace Aurora.BotManager
 
         public void botFollowAvatar (string bot, string avatarName, LSL_Float followDistance)
         {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botFollowAvatar", m_host, "bot");
             IBotManager manager = World.RequestModuleInterface<IBotManager> ();
             if (manager != null)
                 manager.FollowAvatar (UUID.Parse (bot), avatarName, (float)followDistance);
@@ -220,6 +228,7 @@ namespace Aurora.BotManager
 
         public void botStopFollowAvatar (string bot)
         {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botStopFollowAvatar", m_host, "bot");
             IBotManager manager = World.RequestModuleInterface<IBotManager> ();
             if (manager != null)
                 manager.StopFollowAvatar (UUID.Parse (bot));
@@ -227,6 +236,7 @@ namespace Aurora.BotManager
 
         public void botSetPathMap (string bot, string pathMap, int x, int y, int cornerstoneX, int cornerstoneY)
         {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botSetPathMap", m_host, "bot");
             IBotManager manager = World.RequestModuleInterface<IBotManager> ();
             if (manager != null)
                 manager.ReadMap (UUID.Parse (bot), pathMap, x, y, cornerstoneX, cornerstoneY);
@@ -234,6 +244,7 @@ namespace Aurora.BotManager
 
         public void botFindPath (string bot, LSL_Vector startPos, LSL_Vector endPos)
         {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botFindPath", m_host, "bot");
             IBotManager manager = World.RequestModuleInterface<IBotManager> ();
             if (manager != null)
                 manager.FindPath (UUID.Parse (bot), new Vector3 ((float)startPos.x, (float)startPos.y, (float)startPos.z),
@@ -242,6 +253,7 @@ namespace Aurora.BotManager
 
         public void botSendChatMessage (string bot, string message, int channel, int sayType)
         {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botSendChatMessage", m_host, "bot");
             IBotManager manager = World.RequestModuleInterface<IBotManager> ();
             if (manager != null)
                 manager.SendChatMessage (UUID.Parse (bot), message, sayType, channel);
