@@ -13,7 +13,7 @@ GOTO ParamLoop
 :ParamContinue
 
 rem use .NET 3.5 to build
-bin\Prebuild.exe /target vs2008
+bin\Prebuild.exe /target vs2008 /targetframework v3_5
 IF NOT ERRORLEVEL 0 GOTO FAIL
 
 %WINDIR%\Microsoft.NET\Framework\v3.5\msbuild /t:Rebuild Aurora.sln

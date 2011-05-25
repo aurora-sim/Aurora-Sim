@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mono bin/Prebuild.exe /target vs2008
+mono bin/Prebuild.exe /target vs2008 /targetframework v3_5
 
 unset makebuild
 unset makedist
