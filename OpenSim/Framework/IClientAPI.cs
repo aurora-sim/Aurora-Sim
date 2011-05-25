@@ -38,7 +38,7 @@ namespace OpenSim.Framework
 
     public delegate void ViewerEffectEventHandler(IClientAPI sender, List<ViewerEffectEventHandlerArg> args);
 
-    public delegate void ChatMessage(Object sender, OSChatMessage e);
+    public delegate void ChatMessage(IClientAPI sender, OSChatMessage e);
 
     public delegate void GenericMessage(Object sender, string method, List<String> args);
 

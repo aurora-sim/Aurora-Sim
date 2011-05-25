@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using OpenSim.Framework;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Framework
 {
@@ -26,5 +27,12 @@ namespace OpenSim.Framework
         /// <param name="p"></param>
         /// <param name="path"></param>
         void AddGenericInfo(string key, string value);
+
+        /// <summary>
+        /// Get the neighbors of the given region
+        /// </summary>
+        /// <param name="scene"></param>
+        /// <returns></returns>
+        List<GridRegion> GetNeighbors (IScene scene);
     }
 }

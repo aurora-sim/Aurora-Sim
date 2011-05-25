@@ -69,14 +69,25 @@ namespace OpenSim.Framework
             return buildEvent("AgentStatusChange", llsdBody, AgentID, 0);
         }
 
-        public static OSDMap UpdateEstateInfo(uint EstateID, UUID RegionID)
+        public static OSDMap UpdateEstateInfo (uint EstateID, UUID RegionID)
         {
-            OSDMap llsdBody = new OSDMap();
+            OSDMap llsdBody = new OSDMap ();
 
-            llsdBody.Add("EstateID", EstateID);
-            llsdBody.Add("RegionID", RegionID);
+            llsdBody.Add ("EstateID", EstateID);
+            llsdBody.Add ("RegionID", RegionID);
 
-            return buildEvent("UpdateEstateInfo", llsdBody, UUID.Zero, 0);
+            return buildEvent ("UpdateEstateInfo", llsdBody, UUID.Zero, 0);
+        }
+
+        public static OSDMap NeighborChange (UUID TargetRegionID, UUID RegionID, bool down)
+        {
+            OSDMap llsdBody = new OSDMap ();
+
+            llsdBody["TargetRegion"] = TargetRegionID;
+            llsdBody["Region"] = RegionID;
+            llsdBody["Down"] = down;
+
+            return buildEvent ("NeighborChange", llsdBody, UUID.Zero, 0);
         }
 
         public static OSDMap CrossAgent(GridRegion crossingRegion, Vector3 pos,

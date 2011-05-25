@@ -160,7 +160,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             return c;
         }
 
-        public virtual void OnChatFromClient(Object sender, OSChatMessage c)
+        public virtual void OnChatFromClient (IClientAPI sender, OSChatMessage c)
         {
             c = FixPositionOfChatMessage(c);
 

@@ -2704,11 +2704,11 @@ namespace OpenSim.Region.Framework.Scenes
                     && !IsAttachmentCheckFull () && (backup == null || (backup != null && !backup.LoadingPrims))) //Don't do it when backup is loading prims, otherwise it lags the region out
                 {
                     //If we are headed out of the region, make sure we have a region there
-                    INeighborService neighborService = Scene.RequestModuleInterface<INeighborService> ();
+                    IGridRegisterModule neighborService = Scene.RequestModuleInterface<IGridRegisterModule> ();
                     if (neighborService != null && !m_inTransit)
                     {
                         m_inTransit = true;
-                        List<GridRegion> neighbors = neighborService.GetNeighbors (Scene.RegionInfo);
+                        List<GridRegion> neighbors = neighborService.GetNeighbors (Scene);
 
                         int RegionCrossX = Scene.RegionInfo.RegionLocX;
                         int RegionCrossY = Scene.RegionInfo.RegionLocY;

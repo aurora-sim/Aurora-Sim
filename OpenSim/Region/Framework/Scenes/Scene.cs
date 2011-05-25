@@ -387,11 +387,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             SimulationDataService.Shutdown ();
 
-            //Tell the neighbors that this region is now down
-            INeighborService service = RequestModuleInterface<INeighborService>();
-            if (service != null)
-                service.InformNeighborsThatRegionIsDown(RegionInfo);
-
             // Stop updating the scene objects and agents.
             shuttingdown = true;
 

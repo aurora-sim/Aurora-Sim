@@ -1946,12 +1946,16 @@ namespace OpenSim.Region.Framework.Scenes
                 Util.FireAndForget(delegate(object o)
                 {
                     //Send the child agent data update
-                    INeighborService neighborService = m_scene.RequestModuleInterface<INeighborService>();
-                    if (neighborService != null)
+                    ISimulationService simService = m_scene.RequestModuleInterface<ISimulationService> ();
+                    IGridRegisterModule gridRegService = m_scene.RequestModuleInterface<IGridRegisterModule> ();
+                    if (simService != null && gridRegService != null)
                     {
                         AgentData data = new AgentData();
                         CopyTo(data);
-                        neighborService.SendChildAgentUpdate(data, m_scene.RegionInfo.RegionID);
+                        foreach (GridRegion region in gridRegService.GetNeighbors (Scene))
+                        {
+                            simService.UpdateAgent (region, data);
+                        }
                     }
                 });
             }
@@ -2111,10 +2115,10 @@ namespace OpenSim.Region.Framework.Scenes
                     pos2.X > Scene.RegionInfo.RegionSizeX || pos2.Y > Scene.RegionInfo.RegionSizeY)
                 {
                     //If we are headed out of the region, make sure we have a region there
-                    INeighborService neighborService = Scene.RequestModuleInterface<INeighborService>();
+                    IGridRegisterModule neighborService = Scene.RequestModuleInterface<IGridRegisterModule> ();
                     if (neighborService != null)
                     {
-                        List<GridRegion> neighbors = neighborService.GetNeighbors(Scene.RegionInfo);
+                        List<GridRegion> neighbors = neighborService.GetNeighbors(Scene);
 
                         double TargetX = (double)Scene.RegionInfo.RegionLocX + (double)pos2.X;
                         double TargetY = (double)Scene.RegionInfo.RegionLocY + (double)pos2.Y;
@@ -2263,7 +2267,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Throttles 
             float multiplier = 1;
-            int innacurateNeighbors = m_scene.RequestModuleInterface<INeighborService>().GetNeighbors(m_scene.RegionInfo).Count;
+            int innacurateNeighbors = m_scene.RequestModuleInterface<IGridRegisterModule> ().GetNeighbors (m_scene).Count;
             if (innacurateNeighbors != 0)
             {
                 multiplier = 1f / innacurateNeighbors;

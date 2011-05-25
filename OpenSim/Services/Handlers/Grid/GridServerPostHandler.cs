@@ -256,8 +256,9 @@ namespace OpenSim.Services
             string result = "Error communicating with grid service";
 
             UUID SessionID = UUID.Zero;
+            List<GridRegion> neighbors;
             if (rinfo != null)
-                result = m_GridService.RegisterRegion(rinfo, sessionIDIn, out SessionID);
+                result = m_GridService.RegisterRegion (rinfo, sessionIDIn, out SessionID, out neighbors);
 
             if (result == String.Empty)
                 return SuccessResult(SessionID.ToString());
@@ -271,16 +272,26 @@ namespace OpenSim.Services
             rinfo.FromOSD((OSDMap)request["Region"]);
             UUID SecureSessionID = request["SecureSessionID"].AsUUID();
             string result = "";
+            List<GridRegion> neighbors = new List<GridRegion>();
             if (rinfo != null)
-                result = m_GridService.RegisterRegion(rinfo, SecureSessionID, out SecureSessionID);
+                result = m_GridService.RegisterRegion (rinfo, SecureSessionID, out SecureSessionID, out neighbors);
 
             OSDMap resultMap = new OSDMap();
             resultMap["SecureSessionID"] = SecureSessionID;
             resultMap["Result"] = result;
+
             if (result == "")
             {
                 object[] o = new object[3] { resultMap, SecureSessionID, rinfo };
                 m_registry.RequestModuleInterface<ISimulationBase> ().EventManager.FireGenericEventHandler ("GridRegionSuccessfullyRegistered", o);
+
+                //Send the neighbors as well
+                OSDArray array = new OSDArray ();
+                foreach (GridRegion r in neighbors)
+                {
+                    array.Add (r.ToOSD ());
+                }
+                resultMap["Neighbors"] = array;
             }
 
             return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(resultMap));

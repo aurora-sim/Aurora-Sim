@@ -31,6 +31,7 @@ namespace Aurora.Modules
         private List<Scene> m_scenes = new List<Scene>();
         private Dictionary<string, string> genericInfo = new Dictionary<string, string>();
         private Timer m_timer;
+        private Dictionary<UUID, List<GridRegion>> m_knownNeighbors = new Dictionary<UUID, List<GridRegion>> ();
 
         #endregion
 
@@ -65,6 +66,40 @@ namespace Aurora.Modules
             return null;
         }
 
+        OSDMap RegisterRegionWithGridModule_OnMessageReceived (OSDMap message)
+        {
+            if (!message.ContainsKey ("Method"))
+                return null;
+            
+            if (message["Method"] == "NeighborChange")
+            {
+                OSDMap innerMessage = (OSDMap)message["Message"];
+                bool down = innerMessage["Down"].AsBoolean ();
+                UUID regionID = innerMessage["Region"].AsUUID ();
+                UUID targetregionID = innerMessage["TargetRegion"].AsUUID ();
+
+                if (m_knownNeighbors.ContainsKey (targetregionID))
+                {
+                    if (down)
+                    {
+                        //Remove it
+                        m_knownNeighbors[targetregionID].RemoveAll (delegate (GridRegion r)
+                        {
+                            if (r.RegionID == regionID)
+                                return true;
+                            return false;
+                        });
+                    }
+                    else
+                    {
+                        //Add it
+                        m_knownNeighbors[targetregionID].Add(m_scenes[0].GridService.GetRegionByUUID(UUID.Zero, regionID));
+                    }
+                }
+            }
+            return null;
+        }
+
         void m_timer_Elapsed(object sender, ElapsedEventArgs e)
         {
             ISyncMessagePosterService syncMessagePoster = m_scenes[0].RequestModuleInterface<ISyncMessagePosterService>();
@@ -93,14 +128,11 @@ namespace Aurora.Modules
 
         public void PostFinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
+            scene.RequestModuleInterface<IAsyncMessageRecievedService> ().OnMessageReceived += new MessageReceived (RegisterRegionWithGridModule_OnMessageReceived);
         }
 
         public void StartupComplete()
         {
-            foreach (Scene scene in m_scenes)
-            {
-                InformNeighborsAboutUs(scene);
-            }
         }
 
         public void Close(Scene scene)
@@ -128,18 +160,6 @@ namespace Aurora.Modules
         {
             IGridService GridService = scene.RequestModuleInterface<IGridService>();
             GridService.UpdateMap(BuildGridRegion(scene.RegionInfo), scene.RegionInfo.GridSecureSessionID);
-        }
-
-        /// <summary>
-        /// Now that we are fully done, add the child agents from other regions
-        /// </summary>
-        /// <param name="data"></param>
-        private void InformNeighborsAboutUs(IScene scene)
-        {
-            //Tell the neighbor service about it
-            INeighborService service = scene.RequestModuleInterface<INeighborService>();
-            if (service != null)
-                service.InformRegionsNeighborsThatRegionIsUp(scene.RegionInfo);
         }
 
         private GridRegion BuildGridRegion(RegionInfo regionInfo)
@@ -177,8 +197,9 @@ namespace Aurora.Modules
 
             scene.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("PreRegisterRegion", region);
 
+            List<GridRegion> neighbors = new List<GridRegion> ();
             //Tell the grid service about us
-            string error = GridService.RegisterRegion(region, s.SessionID, out s.SessionID);
+            string error = GridService.RegisterRegion (region, s.SessionID, out s.SessionID, out neighbors);
             if (error == String.Empty)
             {
                 //If it registered ok, we save the sessionID to the database and tlel the neighbor service about it
@@ -186,6 +207,8 @@ namespace Aurora.Modules
 
                 //Save the new SessionID to the database
                 g.AddGeneric(scene.RegionInfo.RegionID, "GridSessionID", "GridSessionID", s.ToOSD());
+
+                m_knownNeighbors[scene.RegionInfo.RegionID] = neighbors;
             }
             else
             {
@@ -292,6 +315,14 @@ namespace Aurora.Modules
                 }
                 RegisterRegionWithGrid(scene);
             }
+        }
+
+        public List<GridRegion> GetNeighbors(IScene scene)
+        {
+            if (!m_knownNeighbors.ContainsKey (scene.RegionInfo.RegionID))
+                return new List<GridRegion> ();
+            else
+                return m_knownNeighbors[scene.RegionInfo.RegionID];
         }
 
         #region GridSessionID class

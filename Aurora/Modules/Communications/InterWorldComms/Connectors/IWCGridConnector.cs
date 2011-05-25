@@ -65,9 +65,14 @@ namespace Aurora.Modules
             get { return m_localService.MaxRegionSize; }
         }
 
-        public string RegisterRegion(GridRegion regionInfos, UUID oldSessionID, out UUID SessionID)
+        public int RegionViewSize
         {
-            return m_localService.RegisterRegion(regionInfos, oldSessionID, out SessionID);
+            get { return m_localService.RegionViewSize; }
+        }
+
+        public string RegisterRegion (GridRegion regionInfos, UUID oldSessionID, out UUID SessionID, out List<GridRegion> neighbors)
+        {
+            return m_localService.RegisterRegion(regionInfos, oldSessionID, out SessionID, out neighbors);
         }
 
         public bool DeregisterRegion (ulong regionHandle, UUID regionID, UUID SessionID)
@@ -197,6 +202,11 @@ namespace Aurora.Modules
         public bool VerifyRegionSessionID(GridRegion r, UUID SessionID)
         {
             return m_localService.VerifyRegionSessionID(r, SessionID);
+        }
+
+        public List<GridRegion> GetNeighbors (GridRegion r)
+        {
+            return new List<GridRegion> ();
         }
 
         #endregion

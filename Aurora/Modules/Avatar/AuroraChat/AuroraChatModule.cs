@@ -279,7 +279,7 @@ namespace Aurora.Modules
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="c"></param>
-        protected virtual void OnChatFromClient(Object sender, OSChatMessage c)
+        protected virtual void OnChatFromClient (IClientAPI sender, OSChatMessage c)
         {
             c = FixPositionOfChatMessage(c);
 
@@ -312,20 +312,14 @@ namespace Aurora.Modules
                     }
                 }
             }
-            bool Sent = false;
-            OpenSim.Services.Interfaces.INeighborService neighborService = c.Scene.RequestModuleInterface<OpenSim.Services.Interfaces.INeighborService>();
-            if (neighborService != null)
+            string Name = "";
+            if(sender is IClientAPI)
             {
-                string Name = "";
-                if(sender is IClientAPI)
-                {
-                    Name = ((IClientAPI)sender).Name;
-                }
-                c.From = Name;
-                Sent = neighborService.SendChatMessageToNeighbors(c, ChatSourceType.Agent, c.Scene.RegionInfo);
+                Name = ((IClientAPI)sender).Name;
             }
-            if (!Sent)
-                DeliverChatToAvatars(ChatSourceType.Agent, c);
+            c.From = Name;
+            
+            DeliverChatToAvatars(ChatSourceType.Agent, c);
         }
 
         /// <summary>
@@ -338,19 +332,10 @@ namespace Aurora.Modules
             // early return if not on public or debug channel
             if (c.Channel != DEFAULT_CHANNEL && c.Channel != DEBUG_CHANNEL) return;
 
-            bool Sent = false;
-
             if(c.Range > m_maxChatDistance) //Check for max distance
                 c.Range = m_maxChatDistance;
 
-            OpenSim.Services.Interfaces.INeighborService neighborService = c.Scene.RequestModuleInterface<OpenSim.Services.Interfaces.INeighborService>();
-            if (neighborService != null && c.Message != "")
-            {
-                Sent = neighborService.SendChatMessageToNeighbors(c, ChatSourceType.Object, c.Scene.RegionInfo);
-            }
-
-            if (!Sent)
-                DeliverChatToAvatars(ChatSourceType.Object, c);
+            DeliverChatToAvatars(ChatSourceType.Object, c);
         }
 
         public void SimChat(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
@@ -436,7 +421,7 @@ namespace Aurora.Modules
                                              scene.RegionInfo.RegionName, c.Sender.AgentId);
                             return;
                         }
-                        IScenePresence avatar = (scene as Scene).GetScenePresence (c.Sender.AgentId);
+                        IScenePresence avatar = scene.GetScenePresence (c.Sender.AgentId);
                         if (avatar != null && message == "")
                         {
                             fromPos = avatar.AbsolutePosition;

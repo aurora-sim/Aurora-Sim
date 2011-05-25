@@ -187,7 +187,8 @@ namespace Aurora.Modules
                         r.RegionType = "Link";
 
                         UUID SessionID;
-                        gridService.RegisterRegion(r, UUID.Zero, out SessionID);
+                        List<GridRegion> neighbors;
+                        gridService.RegisterRegion(r, UUID.Zero, out SessionID, out neighbors);
                     }
                     //Give the basic Urls that we have
                     c.Connection.SecureUrls = gridRegistration.GetUrlForRegisteringClient(c.Connection.UserName, r.RegionHandle);

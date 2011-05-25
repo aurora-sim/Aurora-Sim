@@ -167,7 +167,7 @@ namespace Aurora.Modules
         public void GodUpdateRegionInfoUpdate(IClientAPI client, float BillableFactor, int PricePerMeter, ulong EstateID, ulong RegionFlags, byte[] SimName, int RedirectX, int RedirectY)
         {
             //Check god perms
-            if (!((Scene)client.Scene).Permissions.IsGod(client.AgentId))
+            if (!client.Scene.Permissions.IsGod(client.AgentId))
                 return;
 
             //Update their current region with new information
@@ -195,7 +195,7 @@ namespace Aurora.Modules
                     comm.AddBlockedChannel(Channel);
                     ChannelDirectory.Add(client.AgentId, new EstateChange() { Channel = Channel, EstateID = (uint)EstateID, OldEstateID = ((Scene)client.Scene).RegionInfo.EstateSettings.EstateID });
                     //Set the ID temperarily, if it doesn't work, we will revert it later
-                    ((Scene)client.Scene).RegionInfo.EstateSettings.EstateID = (uint)EstateID;
+                    client.Scene.RegionInfo.EstateSettings.EstateID = (uint)EstateID;
                     client.OnChatFromClient += OnChatFromClient;
                     dialog.SendTextBoxToUser(client.AgentId, "Please type the password for the estate you wish to join. (Note: this channel is secured and will not be able to be listened in on)", Channel, "Server", UUID.Zero, UUID.Zero);
                 }

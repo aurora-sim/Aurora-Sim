@@ -59,10 +59,16 @@ namespace OpenSim.Services.Connectors
             get { return 0; }
         }
 
+        public int RegionViewSize
+        {
+            get { return 256; }
+        }
+
         #region IGridService
 
-        public virtual string RegisterRegion(GridRegion regionInfo, UUID SecureSessionID, out UUID SessionID)
+        public virtual string RegisterRegion (GridRegion regionInfo, UUID SecureSessionID, out UUID SessionID, out List<GridRegion> neighbors)
         {
+            neighbors = new List<GridRegion> ();
             OSDMap map = new OSDMap();
             map["Region"] = regionInfo.ToOSD();
             map["SecureSessionID"] = SecureSessionID;
@@ -88,6 +94,14 @@ namespace OpenSim.Services.Connectors
                                 m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("GridRegionRegistered", o);
                                 SessionID = innerresult["SecureSessionID"].AsUUID();
                                 m_registry.RequestModuleInterface<IConfigurationService>().AddNewUrls(regionInfo.RegionHandle.ToString(), (OSDMap)innerresult["URLs"]);
+
+                                OSDArray array = (OSDArray)innerresult["Neighbors"];
+                                foreach (OSD ar in array)
+                                {
+                                    GridRegion n = new GridRegion();
+                                    n.FromOSD((OSDMap)ar);
+                                    neighbors.Add (n);
+                                }
                                 return "";
                             }
                             else
@@ -377,6 +391,11 @@ namespace OpenSim.Services.Connectors
             }
 
             return rinfo;
+        }
+
+        public virtual List<GridRegion> GetNeighbors (GridRegion r)
+        {
+            return new List<GridRegion> ();
         }
 
         public virtual List<GridRegion> GetRegionsByName(UUID scopeID, string name, int maxNumber)

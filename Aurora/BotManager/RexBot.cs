@@ -771,7 +771,7 @@ namespace Aurora.BotManager
 
         #endregion
 
-        protected virtual void OnBotChatFromViewer (object sender, OSChatMessage e)
+        protected virtual void OnBotChatFromViewer (IClientAPI sender, OSChatMessage e)
         {
             OnChatFromClient (sender, e);
         }

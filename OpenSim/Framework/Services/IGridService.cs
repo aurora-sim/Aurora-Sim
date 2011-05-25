@@ -45,12 +45,17 @@ namespace OpenSim.Services.Interfaces
         int MaxRegionSize { get; }
 
         /// <summary>
+        /// The size (in meters) of how far neighbors will be found
+        /// </summary>
+        int RegionViewSize { get; }
+
+        /// <summary>
         /// Register a region with the grid service.
         /// </summary>
         /// <param name="regionInfos"> </param>
         /// <returns></returns>
         /// <exception cref="System.Exception">Thrown if region registration failed</exception>
-        string RegisterRegion(GridRegion regionInfos, UUID oldSessionID, out UUID SessionID);
+        string RegisterRegion(GridRegion regionInfos, UUID oldSessionID, out UUID SessionID, out List<GridRegion> neighbors);
 
         /// <summary>
         /// Deregister a region with the grid service.
@@ -109,7 +114,14 @@ namespace OpenSim.Services.Interfaces
         /// <param name="ymin"></param>
         /// <param name="ymax"></param>
         /// <returns></returns>
-        List<GridRegion> GetRegionRange(UUID scopeID, int xmin, int xmax, int ymin, int ymax);
+        List<GridRegion> GetRegionRange (UUID scopeID, int xmin, int xmax, int ymin, int ymax);
+
+        /// <summary>
+        /// Get the neighbors of the given region
+        /// </summary>
+        /// <param name="region"></param>
+        /// <returns></returns>
+        List<GridRegion> GetNeighbors (GridRegion region);
 
         /// <summary>
         /// Get any default regions that have been set for users that are logging in that don't have a region to log into

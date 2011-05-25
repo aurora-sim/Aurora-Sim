@@ -65,6 +65,11 @@ namespace OpenSim.Services.Connectors.SimianGrid
             get { return 0; }
         }
 
+        public int RegionViewSize
+        {
+            get { return 256; }
+        }
+
         #region IService Members
 
         public virtual IGridService InnerService
@@ -135,8 +140,9 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         #region IGridService
 
-        public string RegisterRegion(GridRegion regionInfo, UUID oldSessionID, out UUID SessionID)
+        public string RegisterRegion (GridRegion regionInfo, UUID oldSessionID, out UUID SessionID, out List<GridRegion> neighbors)
         {
+            neighbors = new List<GridRegion> ();
             SessionID = UUID.Zero;
             // Generate and upload our map tile in PNG format to the SimianGrid AddMapTile service
             Scene scene;
@@ -515,7 +521,13 @@ namespace OpenSim.Services.Connectors.SimianGrid
         public string UpdateMap(GridRegion region, UUID sessionID)
         {
             UUID SessionID;
-            return RegisterRegion(region, UUID.Zero, out SessionID);
+            List<GridRegion> neighbors;
+            return RegisterRegion(region, UUID.Zero, out SessionID, out neighbors);
+        }
+
+        public List<GridRegion> GetNeighbors (GridRegion r)
+        {
+            return new List<GridRegion> ();
         }
 
         public multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType)

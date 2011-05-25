@@ -24,7 +24,8 @@ namespace OpenSim.Services.MessagingService
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected IRegistryCore m_registry;
         protected bool m_useCallbacks = true;
-        protected int RegionViewSize = 256;
+        protected bool VariableRegionSight = false;
+        protected int MaxVariableRegionSight = 512;
 
         #endregion
 
@@ -268,71 +269,63 @@ namespace OpenSim.Services.MessagingService
         {
             int count = 0;
             bool informed = true;
-            INeighborService neighborService = m_registry.RequestModuleInterface<INeighborService>();
-            if (neighborService != null)
+            List<GridRegion> neighbors = GetNeighbors(requestingRegion, 0);
+
+            foreach (GridRegion neighbor in neighbors)
             {
-                List<GridRegion> neighbors = neighborService.GetNeighbors(requestingRegion, 0);
+                //m_log.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
 
-                foreach (GridRegion neighbor in neighbors)
+                IRegionCapsService regionCaps = m_registry.RequestModuleInterface<ICapsService> ().GetCapsForRegion (neighbor.RegionHandle);
+                if (regionCaps == null) //If there isn't a region caps, there isn't an agent in this sim
+                    continue;
+                List<UUID> usersInformed = new List<UUID> ();
+                foreach (IRegionClientCapsService regionClientCaps in regionCaps.GetClients ())
                 {
-                    //m_log.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
-
-                    IRegionCapsService regionCaps = m_registry.RequestModuleInterface<ICapsService> ().GetCapsForRegion (neighbor.RegionHandle);
-                    if (regionCaps == null) //If there isn't a region caps, there isn't an agent in this sim
+                    if (usersInformed.Contains (regionClientCaps.AgentID) || !regionClientCaps.RootAgent) //Only inform agents once
                         continue;
-                    List<UUID> usersInformed = new List<UUID>();
-                    foreach (IRegionClientCapsService regionClientCaps in regionCaps.GetClients())
-                    {
-                        if (usersInformed.Contains (regionClientCaps.AgentID) || !regionClientCaps.RootAgent) //Only inform agents once
-                            continue;
 
-                        AgentCircuitData regionCircuitData = regionClientCaps.CircuitData.Copy();
-                        regionCircuitData.child = true; //Fix child agent status
-                        string reason; //Tell the region about it
-                        if (!InformClientOfNeighbor (regionClientCaps.AgentID, regionClientCaps.RegionHandle,
-                            regionCircuitData, requestingRegion, (uint)TeleportFlags.Default, null, out reason))
-                            informed = false;
-                        else
-                            usersInformed.Add(regionClientCaps.AgentID);
-                    }
-                    count++;
+                    AgentCircuitData regionCircuitData = regionClientCaps.CircuitData.Copy ();
+                    regionCircuitData.child = true; //Fix child agent status
+                    string reason; //Tell the region about it
+                    if (!InformClientOfNeighbor (regionClientCaps.AgentID, regionClientCaps.RegionHandle,
+                        regionCircuitData, requestingRegion, (uint)TeleportFlags.Default, null, out reason))
+                        informed = false;
+                    else
+                        usersInformed.Add (regionClientCaps.AgentID);
                 }
+                count++;
             }
             return informed;
         }
 
-        public bool EnableChildAgents(UUID AgentID, ulong requestingRegion, int DrawDistance, AgentCircuitData circuit)
+        public bool EnableChildAgents (UUID AgentID, ulong requestingRegion, int DrawDistance, AgentCircuitData circuit)
         {
             int count = 0;
             bool informed = true;
-            INeighborService neighborService = m_registry.RequestModuleInterface<INeighborService>();
-            if (neighborService != null)
+            int x, y;
+            Util.UlongToInts (requestingRegion, out x, out y);
+            GridRegion ourRegion = m_registry.RequestModuleInterface<IGridService> ().GetRegionByPosition (UUID.Zero, x, y);
+            if (ourRegion == null)
             {
-                int x, y;
-                Util.UlongToInts(requestingRegion, out x, out y);
-                GridRegion ourRegion = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, x, y);
-                if (ourRegion == null)
-                {
-                    m_log.Info("[AgentProcessing]: Failed to inform neighbors about new agent, could not find our region.");
-                    return false;
-                }
-                List<GridRegion> neighbors = neighborService.GetNeighbors(ourRegion, DrawDistance);
+                m_log.Info ("[AgentProcessing]: Failed to inform neighbors about new agent, could not find our region.");
+                return false;
+            }
+            List<GridRegion> neighbors = GetNeighbors (ourRegion, DrawDistance);
 
-                foreach (GridRegion neighbor in neighbors)
-                {
-                    //m_log.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
+            foreach (GridRegion neighbor in neighbors)
+            {
+                //m_log.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
 
-                    if (neighbor.RegionHandle != requestingRegion)
-                    {
-                        string reason;
-                        AgentCircuitData regionCircuitData = circuit.Copy();
-                        regionCircuitData.child = true; //Fix child agent status
-                        if (!InformClientOfNeighbor(AgentID, requestingRegion, regionCircuitData, neighbor,
-                            (uint)TeleportFlags.Default, null, out reason))
-                            informed = false;
-                    }
-                    count++;
+                if (neighbor.RegionHandle != requestingRegion)
+                {
+                    string reason;
+                    AgentCircuitData regionCircuitData = circuit.Copy ();
+                    regionCircuitData.child = true; //Fix child agent status
+                    if (!InformClientOfNeighbor (AgentID, requestingRegion, regionCircuitData, neighbor,
+                        (uint)TeleportFlags.Default, null, out reason))
+                        informed = false;
                 }
+                count++;
             }
             return informed;
         }
@@ -623,11 +616,11 @@ namespace OpenSim.Services.MessagingService
                 if (rootRegionCaps.RegionHandle != ourRegionCaps.RegionHandle)
                     return;
 
-                INeighborService service = m_registry.RequestModuleInterface<INeighborService>();
+                IGridService service = m_registry.RequestModuleInterface<IGridService> ();
                 if (service != null)
                 {
-                    List<GridRegion> NeighborsOfOldRegion = service.GetNeighbors(oldRegion);
-                    List<GridRegion> NeighborsOfDestinationRegion = service.GetNeighbors(destination);
+                    List<GridRegion> NeighborsOfOldRegion = service.GetNeighbors (oldRegion);
+                    List<GridRegion> NeighborsOfDestinationRegion = service.GetNeighbors (destination);
 
                     List<GridRegion> byebyeRegions = new List<GridRegion>(NeighborsOfOldRegion);
                     byebyeRegions.Add(oldRegion); //Add the old region, because it might need closed too
@@ -767,15 +760,40 @@ namespace OpenSim.Services.MessagingService
         {
             if (oldr - newr < 0)
             {
-                if (!(Math.Abs (oldr - newr + newSize) <= RegionViewSize))
+                if (!(Math.Abs (oldr - newr + newSize) <= m_registry.RequestModuleInterface<IGridService>().RegionViewSize))
                     return false;
             }
             else
             {
-                if (!(Math.Abs (newr - oldr + oldSize) <= RegionViewSize))
+                if (!(Math.Abs (newr - oldr + oldSize) <= m_registry.RequestModuleInterface<IGridService> ().RegionViewSize))
                     return false;
             }
             return true;
+        }
+
+        public List<GridRegion> GetNeighbors (GridRegion region, int userDrawDistance)
+        {
+            List<GridRegion> neighbors = new List<GridRegion> ();
+            if (VariableRegionSight && userDrawDistance != 0)
+            {
+                //Enforce the max draw distance
+                if (userDrawDistance > MaxVariableRegionSight)
+                    userDrawDistance = MaxVariableRegionSight;
+
+                //Query how many regions fit in this size
+                int xMin = (int)(region.RegionLocX) - (int)(userDrawDistance);
+                int xMax = (int)(region.RegionLocX) + (int)(userDrawDistance);
+                int yMin = (int)(region.RegionLocX) - (int)(userDrawDistance);
+                int yMax = (int)(region.RegionLocX) + (int)(userDrawDistance);
+
+                //Ask the grid service about the range
+                neighbors = m_registry.RequestModuleInterface<IGridService>().GetRegionRange (region.ScopeID,
+                    xMin, xMax, yMin, yMax);
+            }
+            else
+                neighbors = m_registry.RequestModuleInterface<IGridService>().GetNeighbors (region);
+
+            return neighbors;
         }
 
         #endregion
@@ -838,15 +856,11 @@ namespace OpenSim.Services.MessagingService
                             else
                             {
                                 // Next, let's close the child agent connections that are too far away.
-                                INeighborService service = m_registry.RequestModuleInterface<INeighborService>();
-                                if (service != null)
-                                {
-                                    //Fix the root agent status
-                                    otherRegion.RootAgent = true;
-                                    requestingRegionCaps.RootAgent = false;
+                                //Fix the root agent status
+                                otherRegion.RootAgent = true;
+                                requestingRegionCaps.RootAgent = false;
 
-                                    CloseNeighborAgents(requestingRegionCaps.Region, crossingRegion, AgentID);
-                                }
+                                CloseNeighborAgents(requestingRegionCaps.Region, crossingRegion, AgentID);
                                 reason = "";
                             }
                         }
@@ -885,7 +899,7 @@ namespace OpenSim.Services.MessagingService
         protected void SendChildAgentUpdateAsync(AgentPosition agentpos, IRegionClientCapsService regionCaps)
         {
             //We need to send this update out to all the child agents this region has
-            INeighborService service = m_registry.RequestModuleInterface<INeighborService>();
+            IGridService service = m_registry.RequestModuleInterface<IGridService> ();
             if (service != null)
             {
                 ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
@@ -909,7 +923,7 @@ namespace OpenSim.Services.MessagingService
                     regionCaps.LastPosition = agentpos.Position;
 
                     //Tell all neighbor regions about the new position as well
-                    List<GridRegion> ourNeighbors = service.GetNeighbors(regionCaps.Region);
+                    List<GridRegion> ourNeighbors = service.GetNeighbors (regionCaps.Region);
                     foreach (GridRegion region in ourNeighbors)
                     {
                         //Update all the neighbors that we have

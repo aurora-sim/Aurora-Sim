@@ -6396,10 +6396,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     edge.x = dir.x / Math.Abs(dir.x);
                 }
             }
-            INeighborService service = World.RequestModuleInterface<INeighborService>();
+            IGridRegisterModule service = World.RequestModuleInterface<IGridRegisterModule> ();
             List<GridRegion> neighbors = new List<GridRegion>();
             if (service != null)
-                neighbors = service.GetNeighbors(World.RegionInfo);
+                neighbors = service.GetNeighbors(World);
 
             int neighborX = World.RegionInfo.RegionLocX + (int)dir.x;
             int neighborY = World.RegionInfo.RegionLocY + (int)dir.y;
