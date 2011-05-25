@@ -70,7 +70,7 @@ namespace Aurora.Modules
         {
             if (!message.ContainsKey ("Method"))
                 return null;
-            
+
             if (message["Method"] == "NeighborChange")
             {
                 OSDMap innerMessage = (OSDMap)message["Message"];
@@ -92,8 +92,14 @@ namespace Aurora.Modules
                     }
                     else
                     {
-                        //Add it
-                        m_knownNeighbors[targetregionID].Add(m_scenes[0].GridService.GetRegionByUUID(UUID.Zero, regionID));
+                        //Add it if it doesn't already exist
+                        if (m_knownNeighbors[targetregionID].Find (delegate (GridRegion rr)
+                        {
+                            if (rr.RegionID == regionID)
+                                return true;
+                            return false;
+                        }) == null)
+                            m_knownNeighbors[targetregionID].Add (m_scenes[0].GridService.GetRegionByUUID (UUID.Zero, regionID));
                     }
                 }
             }

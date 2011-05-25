@@ -37,7 +37,11 @@ namespace OpenSim.Services.MessagingService
             m_registry.RegisterModuleInterface<IAgentProcessing>(this);
             IConfig agentConfig = config.Configs["AgentProcessing"];
             if (agentConfig != null)
+            {
                 m_useCallbacks = agentConfig.GetBoolean ("UseCallbacks", m_useCallbacks);
+                VariableRegionSight = agentConfig.GetBoolean ("UseVariableRegionSightDistance", VariableRegionSight);
+                MaxVariableRegionSight = agentConfig.GetInt ("MaxDistanceVariableRegionSightDistance", MaxVariableRegionSight);
+            }
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)

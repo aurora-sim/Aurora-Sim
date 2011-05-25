@@ -102,6 +102,7 @@ namespace OpenSim.Services.GridService
                 m_AllowNewRegistrations = gridConfig.GetBoolean("AllowNewRegistrations", m_AllowNewRegistrations);
                 m_DeleteOnUnregister = gridConfig.GetBoolean("DeleteOnUnregister", m_DeleteOnUnregister);
                 m_maxRegionSize = gridConfig.GetInt("MaxRegionSize", m_maxRegionSize);
+                m_RegionViewSize = gridConfig.GetInt ("RegionViewSize", m_RegionViewSize / Constants.RegionSize) * Constants.RegionSize;
                 m_DeleteOnUnregister = gridConfig.GetBoolean("DeleteOnUnregister", m_DeleteOnUnregister);
                 m_UseSessionID = !gridConfig.GetBoolean("DisableSessionID", !m_UseSessionID);
                 m_AllowDuplicateNames = gridConfig.GetBoolean("AllowDuplicateNames", m_AllowDuplicateNames);
