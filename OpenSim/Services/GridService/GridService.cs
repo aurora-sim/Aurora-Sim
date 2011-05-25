@@ -468,6 +468,8 @@ namespace OpenSim.Services.GridService
 
             }
 
+            FixNeighbors (region, GetNeighbors (region), true);
+
             return m_Database.Delete(regionID);
         }
 
@@ -578,13 +580,21 @@ namespace OpenSim.Services.GridService
                     if (down)
                         m_KnownNeighbors[r.RegionID].Remove (regionInfos);
                     else
-                        if (!m_KnownNeighbors[r.RegionID].Contains (regionInfos))
+                        if (m_KnownNeighbors[r.RegionID].Find (delegate (GridRegion rr)
+                        {
+                            if (rr.RegionID == regionInfos.RegionID)
+                                return true;
+                            return false;
+                        }) == null)
                             m_KnownNeighbors[r.RegionID].Add (regionInfos);
                 }
 
                 if(postService != null)
                     postService.Post (r.RegionHandle, SyncMessageHelper.NeighborChange (r.RegionID, regionInfos.RegionID, down));
             }
+
+            if (down)
+                m_KnownNeighbors.Remove (regionInfos.RegionID);
         }
 
         /// <summary>

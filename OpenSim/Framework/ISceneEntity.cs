@@ -1215,7 +1215,7 @@ namespace OpenSim.Framework
         /// substitutes thereof) when a chat message
         /// from the client  comes in.
         /// </summary>
-        public delegate void ChatFromClientEvent (Object sender, OSChatMessage chat);
+        public delegate void ChatFromClientEvent (IClientAPI sender, OSChatMessage chat);
         public event ChatFromClientEvent OnChatFromClient;
 
         /// <summary>
@@ -2210,7 +2210,7 @@ namespace OpenSim.Framework
             }
         }
 
-        public void TriggerOnChatFromClient (Object sender, OSChatMessage chat)
+        public void TriggerOnChatFromClient (IClientAPI sender, OSChatMessage chat)
         {
             ChatFromClientEvent handlerChatFromClient = OnChatFromClient;
             if (handlerChatFromClient != null)
