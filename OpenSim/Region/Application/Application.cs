@@ -28,7 +28,7 @@
 using System;
 using Aurora.Simulation.Base;
 
-namespace OpenSim
+namespace Aurora
 {
     /// <summary>
     /// Starting class for the OpenSimulator Region

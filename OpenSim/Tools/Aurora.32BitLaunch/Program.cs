@@ -41,11 +41,11 @@ namespace OpenSim._32BitLaunch
             System.Console.WriteLine("");
             try
             {
-                global::OpenSim.Application.Main(args);
+                global::Aurora.Application.Main (args);
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine("OpenSim threw an exception:");
+                System.Console.WriteLine ("Aurora threw an exception:");
                 System.Console.WriteLine(ex.ToString());
                 System.Console.WriteLine("");
                 System.Console.WriteLine("Application will now terminate!");

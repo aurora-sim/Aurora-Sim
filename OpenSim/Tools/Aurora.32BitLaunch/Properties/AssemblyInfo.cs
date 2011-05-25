@@ -32,12 +32,12 @@ using System.Runtime.InteropServices;
 // General information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("OpenSim.32BitLaunch")]
+[assembly: AssemblyTitle("Aurora.32BitLaunch")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("http://opensimulator.org")]
-[assembly: AssemblyProduct("OpenSim.32BitLaunch")]
-[assembly: AssemblyCopyright("Copyright (c) 2008")]
+[assembly: AssemblyCompany("http://aurora-sim.org")]
+[assembly: AssemblyProduct ("Aurora.32BitLaunch")]
+[assembly: AssemblyCopyright("Copyright (c) 2011")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -58,6 +58,5 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
-// [assembly: AssemblyVersion("0.6.3.*")]
-[assembly: AssemblyVersion("0.6.3.*")]
+[assembly: AssemblyVersion("0.3.*")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
