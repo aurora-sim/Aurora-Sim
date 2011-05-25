@@ -6399,9 +6399,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             INeighborService service = World.RequestModuleInterface<INeighborService>();
             List<GridRegion> neighbors = new List<GridRegion>();
             if (service != null)
-            {
                 neighbors = service.GetNeighbors(World.RegionInfo);
-            }
 
             int neighborX = World.RegionInfo.RegionLocX + (int)dir.x;
             int neighborY = World.RegionInfo.RegionLocY + (int)dir.y;

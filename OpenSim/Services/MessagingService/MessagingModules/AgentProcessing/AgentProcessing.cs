@@ -24,6 +24,7 @@ namespace OpenSim.Services.MessagingService
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected IRegistryCore m_registry;
         protected bool m_useCallbacks = true;
+        protected int RegionViewSize = 256;
 
         #endregion
 
@@ -563,18 +564,14 @@ namespace OpenSim.Services.MessagingService
                     {
                         if (!callWasCanceled)
                         {
-                            m_log.Warn("[AgentProcessing]: Callback never came for teleporting agent " +
+                            m_log.Warn ("[AgentProcessing]: Callback never came for teleporting agent " +
                                 AgentID + ". Resetting.");
                         }
-                        INeighborService service = m_registry.RequestModuleInterface<INeighborService>();
-                        if (service != null)
-                        {
-                            //Close the agent at the place we just created if it isn't a neighbor
-                            if (service.IsOutsideView(regionCaps.RegionX, destination.RegionLocX, regionCaps.Region.RegionSizeX, destination.RegionSizeX,
-                                regionCaps.RegionY, destination.RegionLocY, regionCaps.Region.RegionSizeY, destination.RegionSizeY))
-                                SimulationService.CloseAgent(destination, AgentID);
-                        }
-                        clientCaps.RemoveCAPS(destination.RegionHandle);
+                        //Close the agent at the place we just created if it isn't a neighbor
+                        if (IsOutsideView (regionCaps.RegionX, destination.RegionLocX, regionCaps.Region.RegionSizeX, destination.RegionSizeX,
+                            regionCaps.RegionY, destination.RegionLocY, regionCaps.Region.RegionSizeY, destination.RegionSizeY))
+                            SimulationService.CloseAgent (destination, AgentID);
+                        clientCaps.RemoveCAPS (destination.RegionHandle);
                         if (!callWasCanceled)
                             reason = "The teleport timed out";
                         else
@@ -587,7 +584,7 @@ namespace OpenSim.Services.MessagingService
                         regionCaps.RootAgent = false;
 
                         // Next, let's close the child agent connections that are too far away.
-                        CloseNeighborAgents(regionCaps.Region, destination, AgentID);
+                        CloseNeighborAgents (regionCaps.Region, destination, AgentID);
                         reason = "";
                     }
                 }
@@ -743,6 +740,43 @@ namespace OpenSim.Services.MessagingService
         }
 
         #endregion
+
+        #endregion
+
+        #region View Size
+
+        /// <summary>
+        /// Check if the new position is outside of the range for the old position
+        /// </summary>
+        /// <param name="x">old X pos (in meters)</param>
+        /// <param name="newRegionX">new X pos (in meters)</param>
+        /// <param name="y">old Y pos (in meters)</param>
+        /// <param name="newRegionY">new Y pos (in meters)</param>
+        /// <returns></returns>
+        public bool IsOutsideView (int oldRegionX, int newRegionX, int oldRegionSizeX, int newRegionSizeX, int oldRegionY, int newRegionY, int oldRegionSizeY, int newRegionSizeY)
+        {
+            if (!CheckViewSize (oldRegionX, newRegionX, oldRegionSizeX, newRegionSizeX))
+                return true;
+            if (!CheckViewSize (oldRegionY, newRegionY, oldRegionSizeY, newRegionSizeY))
+                return true;
+
+            return false;
+        }
+
+        private bool CheckViewSize (int oldr, int newr, int oldSize, int newSize)
+        {
+            if (oldr - newr < 0)
+            {
+                if (!(Math.Abs (oldr - newr + newSize) <= RegionViewSize))
+                    return false;
+            }
+            else
+            {
+                if (!(Math.Abs (newr - oldr + oldSize) <= RegionViewSize))
+                    return false;
+            }
+            return true;
+        }
 
         #endregion
 

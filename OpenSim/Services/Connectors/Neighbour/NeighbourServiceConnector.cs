@@ -410,11 +410,6 @@ namespace OpenSim.Services.Connectors
             SynchronousRestFormsRequester.MakeRequest("POST", uri, queryString);
         }
 
-        public virtual bool IsOutsideView(int x, int newRegionX, int oldRegionSizeX, int newRegionSizeX, int y, int newRegionY, int oldRegionSizeY, int newRegionSizeY)
-        {
-            return m_LocalService.IsOutsideView(x, newRegionX, oldRegionSizeX, newRegionSizeX, y, newRegionY, oldRegionSizeY, newRegionSizeY);
-        }
-
         private Dictionary<string, object> PackRegionInfo(RegionInfo thisRegion, UUID uUID)
         {
             if (m_KnownNeighborsPass.ContainsKey(uUID))

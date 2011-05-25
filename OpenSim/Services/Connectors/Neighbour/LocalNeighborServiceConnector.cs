@@ -67,8 +67,6 @@ namespace OpenSim.Services.Connectors
                 MaxVariableRegionSight = neighborService.GetInt("MaxDistanceForVariableRegionSightDistance", MaxVariableRegionSight);
                 RegionViewSize = neighborService.GetInt("RegionSightSize", 1);
                 RegionViewSize *= Constants.RegionSize;
-                //This option is the opposite of the config to make it easier on the user
-                CloseLocalRegions = !neighborService.GetBoolean("SeeIntoAllLocalRegions", CloseLocalRegions);
             }
         }
 
@@ -241,16 +239,7 @@ namespace OpenSim.Services.Connectors
             int endY = (region.RegionLocY + RegionViewSize + region.RegionSizeY - 1);
 
             List<GridRegion> neighbors = m_gridService.GetRegionRange(region.ScopeID, startX, endX, startY, endY);
-            //If we arn't supposed to close local regions, add all of the scene ones if they are not already there
-            if (!CloseLocalRegions)
-            {
-                foreach (Scene scene in m_Scenes)
-                {
-                    GridRegion gregion = m_gridService.GetRegionByUUID(scene.RegionInfo.ScopeID, scene.RegionInfo.RegionID);
-                    if (!neighbors.Contains(gregion))
-                        neighbors.Add(gregion);
-                }
-            }
+
             neighbors.RemoveAll(delegate(GridRegion r)
             {
                 if (r.RegionID == region.RegionID)
@@ -401,44 +390,6 @@ namespace OpenSim.Services.Connectors
                         m_simService.UpdateAgent(region, (AgentPosition)childAgentUpdate);
                 }
             });
-        }
-
-        /// <summary>
-        /// Check if the new position is outside of the range for the old position
-        /// </summary>
-        /// <param name="x">old X pos (in meters)</param>
-        /// <param name="newRegionX">new X pos (in meters)</param>
-        /// <param name="y">old Y pos (in meters)</param>
-        /// <param name="newRegionY">new Y pos (in meters)</param>
-        /// <returns></returns>
-        public bool IsOutsideView(int oldRegionX, int newRegionX, int oldRegionSizeX, int newRegionSizeX, int oldRegionY, int newRegionY, int oldRegionSizeY, int newRegionSizeY)
-        {
-            Scene scene = FindSceneByPosition(newRegionX, newRegionY);
-            //Check whether it is a local region
-            if (!CloseLocalRegions && scene != null)
-                return false;
-
-            if (!CheckViewSize(oldRegionX, newRegionX, oldRegionSizeX, newRegionSizeX))
-                return true;
-            if (!CheckViewSize(oldRegionY, newRegionY, oldRegionSizeY, newRegionSizeY))
-                return true;
-
-            return false;
-        }
-
-        private bool CheckViewSize(int oldr, int newr, int oldSize, int newSize)
-        {
-            if (oldr - newr < 0)
-            {
-                if (!(Math.Abs(oldr - newr + newSize) <= RegionViewSize))
-                    return false;
-            }
-            else
-            {
-                if (!(Math.Abs(newr - oldr + oldSize) <= RegionViewSize))
-                    return false;
-            }
-            return true;
         }
 
         public bool SendChatMessageToNeighbors(OSChatMessage message, ChatSourceType type, RegionInfo region)

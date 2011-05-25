@@ -107,16 +107,6 @@ namespace OpenSim.Services.Interfaces
         List<GridRegion> GetNeighbors(GridRegion region, int userDrawDistance);
 
         /// <summary>
-        /// Check if the new position is outside of the range for the old position
-        /// </summary>
-        /// <param name="x">old X pos (in meters)</param>
-        /// <param name="newRegionX">new X pos (in meters)</param>
-        /// <param name="y">old Y pos (in meters)</param>
-        /// <param name="newRegionY">new Y pos (in meters)</param>
-        /// <returns></returns>
-        bool IsOutsideView(int x, int newRegionX, int oldRegionSizeX, int newRegionSizeX, int y, int newRegionY, int oldRegionSizeY, int newRegionSizeY);
-
-        /// <summary>
         /// Remove the local region from the Neighbor service
         /// </summary>
         /// <param name="scene"></param>
