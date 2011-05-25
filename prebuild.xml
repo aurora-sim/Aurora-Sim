@@ -133,14 +133,13 @@
       <Reference name="System.Web"/>
  	  <Reference name="System.Xml"/>
 
-      <Reference name="SmartThreadPool"/>
-
       <Reference name="HttpServer_OpenSim" path="../../bin/"/>
       <Reference name="log4net" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
+      <Reference name="SmartThreadPool.dll"/>
       <Reference name="XMLRPC" path="../../bin/"/>
       
       <Files>
@@ -393,7 +392,6 @@
       <Reference name="Aurora.Simulation.Base"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
-      <Reference name="SmartThreadPool"/>
 
       <Reference name="DotNetOpenMail" path="../../../bin/"/>
       <Reference name="log4net" path="../../../bin/"/>
@@ -401,6 +399,7 @@
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
+      <Reference name="SmartThreadPool.dll"/>
       <Reference name="XMLRPC" path="../../../bin/"/>
 
       <Files>
@@ -1302,13 +1301,13 @@
       <Reference name="OpenSim.Region.CoreModules" />
       <Reference name="OpenSim.Region.Framework" />
       <Reference name="OpenSim.Region.Physics.Manager"/>
-      <Reference name="SmartThreadPool"/>
       
       <Reference name="log4net" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
+      <Reference name="SmartThreadPool.dll"/>
       <Reference name="Tools" path="../../bin/"/>
 
       <Files>
@@ -1362,7 +1361,6 @@
       <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
-      <Reference name="SmartThreadPool"/>
       
       <Reference name="log4net" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
