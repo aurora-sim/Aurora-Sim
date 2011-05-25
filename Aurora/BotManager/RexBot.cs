@@ -31,14 +31,13 @@ using System.Net;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Framework.Client;
 using System.Diagnostics;
 using Aurora.Framework;
 using System.IO;
 
 namespace Aurora.BotManager
 {
-    public class RexBot : IRexBot, IClientAPI, IClientCore
+    public class RexBot : IRexBot, IClientAPI
     {
         #region Declares
         public enum RexBotState { Idle, Walking, Flying, Unknown }

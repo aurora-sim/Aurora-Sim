@@ -287,7 +287,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
                     // non-owner agents
                     if ((c.Type == ChatTypeEnum.Owner) &&
                         (null != c.SenderObject) &&
-                        (((SceneObjectPart)c.SenderObject).OwnerID != client.AgentId))
+                        (c.SenderObject.OwnerID != client.AgentId))
                         return;
                     
                     client.SendChatMessage(c.Message, (byte)cType, CenterOfRegion, fromName, fromID, 

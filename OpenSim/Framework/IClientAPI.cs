@@ -802,6 +802,9 @@ namespace OpenSim.Framework
 
         IPAddress EndPoint { get; }
 
+        bool TryGet<T> (out T iface);
+        T Get<T> ();
+
         // [Obsolete("LLClientView Specific - Replace with ???")]
         int NextAnimationSequenceNumber { get; }
 

@@ -33,7 +33,6 @@ using OpenMetaverse;
 using OpenMetaverse.Messages;
 using OpenSim.Framework;
 using OpenSim.Framework.Capabilities;
-using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using log4net;
@@ -376,8 +375,7 @@ namespace Aurora.Modules
             }
             else
             {
-                ISceneChildEntity obj = scene.GetSceneObjectPart(fromID);
-                args.SenderObject = obj;
+                args.SenderObject = scene.GetSceneObjectPart(fromID);
             }
 
             args.From = fromName;
@@ -547,7 +545,7 @@ namespace Aurora.Modules
                     // non-owner agents
                     if ((c.Type == ChatTypeEnum.Owner) &&
                         (null != c.SenderObject) &&
-                        (((SceneObjectPart)c.SenderObject).OwnerID != client.AgentId))
+                        (c.SenderObject.OwnerID != client.AgentId))
                         return;
 
                     // don't forward SayTo chat from objects to

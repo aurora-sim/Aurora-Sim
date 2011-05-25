@@ -34,7 +34,6 @@ using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Framework.Client;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using OpenMetaverse.StructuredData;
@@ -1040,10 +1039,6 @@ namespace OpenSim.Framework
 
         public event OnFrameDelegate OnFrame;
 
-        public delegate void OnClientConnectCoreDelegate (IClientCore client);
-
-        public event OnClientConnectCoreDelegate OnClientConnect;
-
         public delegate void OnNewClientDelegate (IClientAPI client);
 
         /// <summary>
@@ -1490,27 +1485,6 @@ namespace OpenSim.Framework
                         m_log.ErrorFormat (
                             "[EVENT MANAGER]: Delegate for TriggerOnNewClient failed - continuing.  {0} {1}",
                             e.ToString (), e.StackTrace);
-                    }
-                }
-            }
-
-            if (client is IClientCore)
-            {
-                OnClientConnectCoreDelegate handlerClientConnect = OnClientConnect;
-                if (handlerClientConnect != null)
-                {
-                    foreach (OnClientConnectCoreDelegate d in handlerClientConnect.GetInvocationList ())
-                    {
-                        try
-                        {
-                            d ((IClientCore)client);
-                        }
-                        catch (Exception e)
-                        {
-                            m_log.ErrorFormat (
-                                "[EVENT MANAGER]: Delegate for TriggerOnNewClient (IClientCore) failed - continuing.  {0} {1}",
-                                e.ToString (), e.StackTrace);
-                        }
                     }
                 }
             }

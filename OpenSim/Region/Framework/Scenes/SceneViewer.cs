@@ -35,7 +35,6 @@ using System.Threading;
 using OpenMetaverse;
 using log4net;
 using OpenSim.Framework;
-using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using Mischel.Collections;
 using Nini.Config;

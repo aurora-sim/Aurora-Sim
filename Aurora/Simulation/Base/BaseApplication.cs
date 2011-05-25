@@ -69,6 +69,11 @@ namespace Aurora.Simulation.Base
         public static string m_urlToPostErrors = "http://aurora-sim.org/CrashReports/crashreports.php";
 
         /// <summary>
+        /// Loader of configuration files
+        /// </summary>
+        private static ConfigurationLoader m_configLoader = new ConfigurationLoader ();
+
+        /// <summary>
         /// Directory to save crash reports to.  Relative to bin/
         /// </summary>
         public static string m_crashDir = "crashes";
@@ -180,7 +185,7 @@ namespace Aurora.Simulation.Base
         public static void Startup(ArgvConfigSource originalConfigSource, IConfigSource configSource, ISimulationBase simBase, string[] cmdParameters)
         {
             //Get it ready to run
-            simBase.Initialize(originalConfigSource, configSource, cmdParameters);
+            simBase.Initialize (originalConfigSource, configSource, cmdParameters, m_configLoader);
             try
             {
                 //Start it. This starts ALL modules and completes the startup of the application
@@ -211,7 +216,6 @@ namespace Aurora.Simulation.Base
         /// <returns></returns>
         private static IConfigSource Configuration(IConfigSource configSource, string defaultIniFile)
         {
-            ConfigurationLoader m_configLoader = new ConfigurationLoader();
             if(defaultIniFile != "")
                 m_configLoader.defaultIniFile = defaultIniFile;
             return m_configLoader.LoadConfigSettings(configSource);

@@ -146,7 +146,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             if (chat.Sender == null && chat.SenderObject != null)
             {
                 ChatEventArgs e = new ChatEventArgs();
-                e.Sender = new SOPObject(m_internalScene, ((SceneObjectPart) chat.SenderObject).LocalId, m_security);
+                e.Sender = new SOPObject(m_internalScene, chat.SenderObject.LocalId, m_security);
                 e.Text = chat.Message;
                 e.Channel = chat.Channel;
                 

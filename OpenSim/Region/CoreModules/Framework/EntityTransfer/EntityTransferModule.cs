@@ -33,7 +33,6 @@ using System.Threading;
 
 using OpenSim.Framework;
 using OpenSim.Framework.Capabilities;
-using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;

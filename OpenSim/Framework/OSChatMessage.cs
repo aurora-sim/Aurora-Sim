@@ -49,7 +49,7 @@ namespace OpenSim.Framework
 
         protected IScene m_scene;
         protected IClientAPI m_sender;
-        protected object m_senderObject;
+        protected ISceneChildEntity m_senderObject;
         protected ChatTypeEnum m_type;
         protected UUID m_fromID;
         protected float m_range;
@@ -148,7 +148,7 @@ namespace OpenSim.Framework
         /// <summary>
         /// The object responsible for sending the message, or null.
         /// </summary>
-        public object SenderObject
+        public ISceneChildEntity SenderObject
         {
             get { return m_senderObject; }
             set { m_senderObject = value; }

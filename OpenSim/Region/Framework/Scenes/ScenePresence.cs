@@ -33,7 +33,6 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using log4net;
 using OpenSim.Framework;
-using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes.Animation;
 using OpenSim.Region.Physics.Manager;
@@ -461,11 +460,6 @@ namespace OpenSim.Region.Framework.Scenes
         public IClientAPI ControllingClient
         {
             get { return m_controllingClient; }
-        }
-
-        public IClientCore ClientView
-        {
-            get { return (IClientCore) m_controllingClient; }
         }
 
         protected Vector3 m_parentPosition;

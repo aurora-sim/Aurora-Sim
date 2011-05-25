@@ -30,15 +30,15 @@ namespace Aurora.Simulation.Base
         protected string m_shutdownCommandsFile;
         protected string m_TimerScriptFileName = "disabled";
         protected int m_TimerScriptTime = 20;
-        protected ConfigurationLoader m_configLoader;
         protected ICommandConsole m_console;
         protected OpenSimAppender m_consoleAppender;
         protected IAppender m_logFileAppender = null;
         protected IHttpServer m_BaseHTTPServer;
         protected Timer m_TimerScriptTimer;
+        protected ConfigurationLoader m_configurationLoader;
 
         /// <value>
-        /// The config information passed into the OpenSimulator region server.
+        /// The config information passed into the Aurora server.
         /// </value>
         protected IConfigSource m_config;
         protected IConfigSource m_original_config;
@@ -107,13 +107,14 @@ namespace Aurora.Simulation.Base
         /// </summary>
         /// <param name="originalConfig"></param>
         /// <param name="configSource"></param>
-        public virtual void Initialize(IConfigSource originalConfig, IConfigSource configSource, string[] cmdParams)
+        public virtual void Initialize(IConfigSource originalConfig, IConfigSource configSource, string[] cmdParams, ConfigurationLoader configLoader)
         {
             m_commandLineParameters = cmdParams;
             m_StartupTime = DateTime.Now;
             m_version = VersionInfo.Version + " (" + Util.GetRuntimeInformation() + ")";
             m_original_config = originalConfig;
             m_config = configSource;
+            m_configurationLoader = configLoader;
 
             // This thread will go on to become the console listening thread
             if (System.Threading.Thread.CurrentThread.Name != "ConsoleThread")
@@ -558,8 +559,7 @@ namespace Aurora.Simulation.Base
         public virtual void HandleConfigRefresh(string mod, string[] cmd)
         {
             //Rebuild the configs
-            ConfigurationLoader loader = new ConfigurationLoader();
-            m_config = loader.LoadConfigSettings(m_original_config);
+            m_config = m_configurationLoader.LoadConfigSettings (m_original_config);
             foreach (IApplicationPlugin plugin in m_applicationPlugins)
             {
                 plugin.ReloadConfiguration(m_config);
