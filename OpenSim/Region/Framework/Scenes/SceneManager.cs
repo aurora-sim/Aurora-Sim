@@ -512,6 +512,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Add a region
 
+        public void CreateRegion (RegionInfo regionInfo)
+        {
+            IScene scene;
+            CreateRegion (regionInfo, out scene);
+        }
+
         /// <summary>
         /// Execute the region creation process.  This includes setting up scene infrastructure.
         /// </summary>

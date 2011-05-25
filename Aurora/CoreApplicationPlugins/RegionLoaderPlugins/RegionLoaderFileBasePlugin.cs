@@ -400,10 +400,9 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 if (cmd[3].StartsWith("/") || cmd[3].StartsWith("\\") || cmd[3].StartsWith(".."))
                     regionFile = cmd[3];
 
-                IScene scene;
                 m_log.Debug("[LOADREGIONS]: Creating Region: " + cmd[2]);
                 SceneManager manager = m_openSim.ApplicationRegistry.RequestModuleInterface<SceneManager>();
-                manager.CreateRegion(LoadRegionFromFile(cmd[2], regionFile, false, m_configSource, cmd[2]), out scene);
+                manager.CreateRegion(LoadRegionFromFile(cmd[2], regionFile, false, m_configSource, cmd[2]));
             }
             else
             {

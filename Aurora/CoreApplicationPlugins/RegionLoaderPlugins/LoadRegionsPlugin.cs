@@ -117,9 +117,8 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 for (int i = 0; i < regionsToLoad.Length; i++)
                 {
-                    IScene scene = null;
                     m_log.Info("[LoadRegionsPlugin]: Creating Region: " + regionsToLoad[i].RegionName);
-                    manager.CreateRegion(regionsToLoad[i], out scene);
+                    manager.CreateRegion(regionsToLoad[i]);
                 }
             }
         }

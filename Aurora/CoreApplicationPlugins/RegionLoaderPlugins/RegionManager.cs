@@ -112,10 +112,9 @@ namespace Aurora.Modules.RegionLoader
             }
             else
             {
-                IScene scene;
                 m_log.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
                 SceneManager manager = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
-                manager.CreateRegion(region, out scene);
+                manager.CreateRegion(region);
             }
             RefreshCurrentRegions();
         }
