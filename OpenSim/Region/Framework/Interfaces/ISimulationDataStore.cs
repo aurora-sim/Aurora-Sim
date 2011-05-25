@@ -118,7 +118,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="regionUUID">the Region UUID</param>
         /// <returns>List of loaded groups</returns>
-        List<ISceneEntity> LoadObjects (UUID regionUUID, Scene scene);
+        List<ISceneEntity> LoadObjects (UUID regionUUID, IScene scene);
 
         /// <summary>
         /// Load the latest terrain revision from region storage

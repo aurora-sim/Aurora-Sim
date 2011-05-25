@@ -555,7 +555,7 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="regionUUID">The region UUID</param>
         /// <returns>List of loaded groups</returns>
-        public List<ISceneEntity> LoadObjects (UUID regionUUID, Scene scene)
+        public List<ISceneEntity> LoadObjects (UUID regionUUID, IScene scene)
         {
             Dictionary<UUID, ISceneEntity> createdObjects = new Dictionary<UUID, ISceneEntity> ();
 
@@ -1312,7 +1312,7 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="row"></param>
         /// <returns></returns>
-        private SceneObjectPart buildPrim(IDataReader row, Scene scene)
+        private SceneObjectPart buildPrim(IDataReader row, IScene scene)
         {
             // Code commented.  Uncomment to test the unit test inline.
             

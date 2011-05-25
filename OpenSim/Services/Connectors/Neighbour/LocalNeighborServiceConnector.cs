@@ -28,7 +28,6 @@ namespace OpenSim.Services.Connectors
         private IGridService m_gridService = null;
         private ISimulationService m_simService = null;
         private Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
-        private bool CloseLocalRegions = true;
         private int RegionViewSize = 256;
         private bool VariableRegionSight = false;
         private int MaxVariableRegionSight = 512;

@@ -36,6 +36,7 @@ using OpenSim.Framework;
 using OpenSim.Framework.Serialization;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Region.Framework.Scenes.Serialization;
 using Nini.Config;
 using log4net;
 using Aurora.Framework;
@@ -281,7 +282,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                 else if (filePath.StartsWith ("entities/"))
                 {
                     MemoryStream ms = new MemoryStream (data);
-                    SceneObjectGroup sceneObject = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromXml2Format (ms, (Scene)scene);
+                    SceneObjectGroup sceneObject = SceneObjectSerializer.FromXml2Format (ms, scene);
                     ms.Close ();
                     data = null;
                     foreach (ISceneChildEntity part in sceneObject.ChildrenEntities ())
@@ -359,7 +360,7 @@ More configuration options and info can be found in the Configuration/Data/FileB
             simStore.Initialise (connString);
 
             m_parcels = simStore.LoadLandObjects (m_scene.RegionInfo.RegionID);
-            m_groups = simStore.LoadObjects (m_scene.RegionInfo.RegionID, (Scene)m_scene);
+            m_groups = simStore.LoadObjects (m_scene.RegionInfo.RegionID, m_scene);
             m_shortterrain = simStore.LoadTerrain (m_scene, false, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
             m_shortrevertTerrain = simStore.LoadTerrain (m_scene, true, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
         }

@@ -196,7 +196,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             SOPToXml2(writer, part, new Dictionary<string, object>());
         }
 
-        public static SceneObjectGroup FromXml2Format(string xmlData, Scene scene)
+        public static SceneObjectGroup FromXml2Format(string xmlData, IScene scene)
         {
             //m_log.DebugFormat("[SOG]: Starting deserialization of SOG");
             //int time = Util.EnvironmentTickCount();
@@ -222,7 +222,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             }
         }
 
-        public static SceneObjectGroup FromXml2Format(MemoryStream ms, Scene scene)
+        public static SceneObjectGroup FromXml2Format(MemoryStream ms, IScene scene)
         {
             //m_log.DebugFormat("[SOG]: Starting deserialization of SOG");
             //int time = Util.EnvironmentTickCount();
@@ -249,7 +249,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             }
         }
 
-        private static SceneObjectGroup InternalFromXml2Format(XmlDocument doc, Scene scene)
+        private static SceneObjectGroup InternalFromXml2Format(XmlDocument doc, IScene scene)
         {
             //m_log.DebugFormat("[SOG]: Starting deserialization of SOG");
             //int time = Util.EnvironmentTickCount();

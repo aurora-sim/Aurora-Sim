@@ -490,7 +490,7 @@ namespace OpenSim.Data.MySQL
             }
         }
 
-        public List<ISceneEntity> LoadObjects (UUID regionID, Scene scene)
+        public List<ISceneEntity> LoadObjects (UUID regionID, IScene scene)
         {
             const int ROWS_PER_QUERY = 5000;
 
@@ -1046,7 +1046,7 @@ namespace OpenSim.Data.MySQL
         {
         }
 
-        private SceneObjectPart BuildPrim(IDataReader row, Scene scene)
+        private SceneObjectPart BuildPrim(IDataReader row, IScene scene)
         {
             object[] o = new object[row.FieldCount];
             row.GetValues(o);

@@ -90,7 +90,7 @@ namespace OpenSim.Data.MSSQL
         /// </summary>
         /// <param name="regionUUID">The region UUID.</param>
         /// <returns></returns>
-        public List<ISceneEntity> LoadObjects (UUID regionUUID, Scene scene)
+        public List<ISceneEntity> LoadObjects (UUID regionUUID, IScene scene)
         {
             UUID lastGroupID = UUID.Zero;
 
@@ -987,7 +987,7 @@ VALUES
         /// </summary>
         /// <param name="primRow">datarecord</param>
         /// <returns></returns>
-        private static SceneObjectPart BuildPrim(IDataRecord primRow, Scene scene)
+        private static SceneObjectPart BuildPrim(IDataRecord primRow, IScene scene)
         {
             SceneObjectPart prim = new SceneObjectPart(scene);
 
