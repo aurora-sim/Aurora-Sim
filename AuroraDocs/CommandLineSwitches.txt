@@ -1,22 +1,50 @@
-Startup CommandLine Switches fo Aurora
+Startup CommandLine Switches for Aurora
+You can use these switches with either Aurora.exe or Aurora.32BitLaunch.exe
 
-You can use these switches with either OpenSim.exe or OpenSim.32BitLaunche.exe
-
-Aurora.exe -inifile MyIniOveride.ini
-Aurora.exe -inimaster MyIniMaster.ini
-Aurora.exe -inidirectory c:\MyConfigs
-Aurora.exe -Console basic
+;; Saves all merged .ini files into the bin directory for viewing
+;; This creates a file in the BIN directory for each ini file loaded in Sequence
+;; Examples
+;;    Aurora.ini = ConfigFileDump1.ini
+;;    Main.ini = ConfigFileDump2.ini
+;; These are incremented according to to order of load and contain the parsed ini file contents.
+;; !! Used only for Debugging and tracing ini flow path.  Do Not Use as a Normal Setting. !!
 Aurora.exe -inidbg true or false
 
+;; Shows all .ini files as they are loaded on the console
+Aurora.exe -inishowfileloading true or false
+
+;; New Style Command Line Functions for .ini configuration
+;; Note: All .ini options also support putting a URL instead of a file path
+;;Be mindful of these when modifying...
+;;1) When file A includes file B, if the same directive is found in both, that the value in file B wins.
+;;2) That any values for directives pulled in after a first file is loaded override directives of the same name found in the directive set 
+;;    created by reading in the previous .ini file.
+
+;; This option sets which folder on the hard drive the Aurora configuration files will be loaded from
+;; The default option for this is the bin/ directory, which requires no option set here
+;; This can be a full path
+;; Example
+Aurora.exe -mainIniDirectory C:\Config
+
+;; This option sets the name of the first .ini file to load
+;; The default for this option is Aurora.ini
+;; Example
+Aurora.exe -mainIniFileName AuroraTesting.ini
+
+;; This options sets the secondary file to load. This loads after the mainIniFileName file has loaded and can be used to override options from it
+;; The default for this option is ""
+;; Example
+Aurora.exe -secondaryIniFileName AuroraSecondaryTesting.ini
+
+
+;; Old Style Command line functions for .ini configuration
+;; These require "-oldoptions true" to be added as well
+
+Aurora.exe -oldoptions true -inifile MyIniOveride.ini
+Aurora.exe -oldoptions true -inigrid MyIniOveride.ini
+Aurora.exe -oldoptions true -inisim MyIniOveride.ini
+Aurora.exe -oldoptions true -inimaster MyIniMaster.ini
+Aurora.exe -oldoptions true -inidirectory c:\MyConfigs
+
 Example CommandLine
-Aurora.32bitlaunch.exe -inimaster C:\Grid\configs\MyIniMaster.ini -inifile C:\Grid\configs\MyIniOveride.ini
-
-
-inidbg 
-This creates a file in the BIN directory for each ini file loaded in Sequence
-Examples
-    Aurora.ini = ConfigFileDump1.ini
-    Main.ini = ConfigFileDump2.ini
-
-These are incremented according to to order of load and contain the parsed ini file contents.
-!! Used only for Debugging and tracing ini flow path.  Do Not Use as a Normal Setting. !!
+Aurora.32bitlaunch.exe -oldoptions true -inimaster C:\Grid\configs\MyIniMaster.ini -inifile C:\Grid\configs\MyIniOveride.ini

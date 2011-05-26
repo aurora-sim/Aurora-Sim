@@ -76,110 +76,153 @@ namespace OpenSim.Framework
 
             IConfig startupConfig = argvSource.Configs["Startup"];
 
-            List<string> sources = new List<string>();
+            List<string> sources = new List<string> ();
+
+            bool oldoptions =
+                startupConfig.GetBoolean ("oldoptions", false);
 
             inidbg =
-                startupConfig.GetBoolean("inidbg", inidbg);
+                startupConfig.GetBoolean ("inidbg", inidbg);
 
             showIniLoading =
-                startupConfig.GetBoolean("inishowfileloading", showIniLoading);
+                startupConfig.GetBoolean ("inishowfileloading", showIniLoading);
 
-            string masterFileName =
-                startupConfig.GetString("inimaster", String.Empty);
-
-            string iniGridName =
-                startupConfig.GetString("inigrid", String.Empty);
-
-            if(iniGridName == string.Empty) //Read the old name then
-                iniGridName =
-                    startupConfig.GetString("inifile", String.Empty);
-
-            string iniSimName =
-                startupConfig.GetString("inisim", defaultIniFile);
-
-            //Be mindful of these when modifying...
-            //1) When file A includes file B, if the same directive is found in both, that the value in file B wins.
-            //2) That inifile may be used with or without inimaster being used.
-            //3) That any values for directives pulled in via inifile (Config Set 2) override directives of the same name found in the directive set (Config Set 1) created by reading in bin/Aurora.ini and its subsequently included files or that created by reading in whatever file inimaster points to and its subsequently included files.
-            
-            if (IsUri(masterFileName))
+            if (oldoptions)
             {
-                if (!sources.Contains(masterFileName))
-                    sources.Add(masterFileName);
+                string masterFileName =
+                    startupConfig.GetString ("inimaster", String.Empty);
+
+                string iniGridName =
+                    startupConfig.GetString ("inigrid", String.Empty);
+
+                if (iniGridName == string.Empty) //Read the old name then
+                    iniGridName =
+                        startupConfig.GetString ("inifile", String.Empty);
+
+                string iniSimName =
+                    startupConfig.GetString ("inisim", defaultIniFile);
+
+                //Be mindful of these when modifying...
+                //1) When file A includes file B, if the same directive is found in both, that the value in file B wins.
+                //2) That inifile may be used with or without inimaster being used.
+                //3) That any values for directives pulled in via inifile (Config Set 2) override directives of the same name found in the directive set (Config Set 1) created by reading in bin/Aurora.ini and its subsequently included files or that created by reading in whatever file inimaster points to and its subsequently included files.
+
+                if (IsUri (masterFileName))
+                {
+                    if (!sources.Contains (masterFileName))
+                        sources.Add (masterFileName);
+                }
+                else
+                {
+                    string masterFilePath = Util.BasePathCombine (masterFileName);
+
+                    if (masterFileName != String.Empty &&
+                            File.Exists (masterFilePath) &&
+                            (!sources.Contains (masterFilePath)))
+                        sources.Add (masterFilePath);
+                    if (iniGridName == "") //Then it doesn't exist and we need to set this
+                        iniFilePath = masterFilePath;
+                    if (iniSimName == "") //Then it doesn't exist and we need to set this
+                        iniFilePath = masterFilePath;
+                }
+
+                if (iniGridName != "")
+                {
+                    if (IsUri (iniGridName))
+                    {
+                        if (!sources.Contains (iniGridName))
+                            sources.Add (iniGridName);
+                        iniFilePath = iniGridName;
+                    }
+                    else
+                    {
+                        iniFilePath = Util.BasePathCombine (iniGridName);
+
+                        if (File.Exists (iniFilePath))
+                        {
+                            if (!sources.Contains (iniFilePath))
+                                sources.Add (iniFilePath);
+                        }
+                    }
+                }
+
+                if (iniSimName != "")
+                {
+                    if (IsUri (iniSimName))
+                    {
+                        if (!sources.Contains (iniSimName))
+                            sources.Add (iniSimName);
+                        iniFilePath = iniSimName;
+                    }
+                    else
+                    {
+                        iniFilePath = Util.BasePathCombine (iniSimName);
+
+                        if (File.Exists (iniFilePath))
+                        {
+                            if (!sources.Contains (iniFilePath))
+                                sources.Add (iniFilePath);
+                        }
+                    }
+                }
+
+                string iniDirName =
+                        startupConfig.GetString ("inidirectory", "");
+
+                if (iniDirName != "" && Directory.Exists (iniDirName))
+                {
+                    m_log.InfoFormat ("Searching folder {0} for config ini files",
+                            iniDirName);
+
+                    string[] fileEntries = Directory.GetFiles (iniDirName);
+                    foreach (string filePath in fileEntries)
+                    {
+                        if (Path.GetExtension (filePath).ToLower () == ".ini")
+                        {
+                            if (!sources.Contains (Path.Combine (iniDirName, filePath)))
+                                sources.Add (Path.Combine (iniDirName, filePath));
+                        }
+                    }
+                }
             }
             else
             {
-                string masterFilePath = Util.BasePathCombine(masterFileName);
+                string mainIniDirectory = startupConfig.GetString ("mainIniDirectory", "");
 
-                if (masterFileName != String.Empty &&
-                        File.Exists(masterFilePath) &&
-                        (!sources.Contains(masterFilePath)))
-                    sources.Add(masterFilePath);
-                if (iniGridName == "") //Then it doesn't exist and we need to set this
-                    iniFilePath = masterFilePath;
-                if (iniSimName == "") //Then it doesn't exist and we need to set this
-                    iniFilePath = masterFilePath;
-            }
+                string mainIniFileName = startupConfig.GetString ("mainIniFileName", defaultIniFile);
 
-            if (iniGridName != "")
-            {
-                if (IsUri(iniGridName))
+                string secondaryIniFileName = startupConfig.GetString ("secondaryIniFileName", "");
+
+                if(mainIniFileName == "")
                 {
-                    if (!sources.Contains(iniGridName))
-                        sources.Add(iniGridName);
-                    iniFilePath = iniGridName;
+                }
+                else if (IsUri (mainIniFileName))
+                {
+                    if (!sources.Contains (mainIniFileName))
+                        sources.Add (mainIniFileName);
                 }
                 else
                 {
-                    iniFilePath = Util.BasePathCombine(iniGridName);
-
-                    if (File.Exists(iniFilePath))
-                    {
-                        if (!sources.Contains(iniFilePath))
-                            sources.Add(iniFilePath);
-                    }
+                    string mainIniFilePath = Path.Combine (mainIniDirectory, mainIniFileName);
+                    if (!sources.Contains (mainIniFilePath))
+                        sources.Add (mainIniFilePath);
                 }
-            }
 
-            if (iniSimName != "")
-            {
-                if (IsUri(iniSimName))
+                if (secondaryIniFileName == "")
                 {
-                    if (!sources.Contains(iniSimName))
-                        sources.Add(iniSimName);
-                    iniFilePath = iniSimName;
+                }
+                else if (IsUri (secondaryIniFileName))
+                {
+                    if (!sources.Contains (secondaryIniFileName))
+                        sources.Add (secondaryIniFileName);
                 }
                 else
                 {
-                    iniFilePath = Util.BasePathCombine(iniSimName);
-
-                    if (File.Exists(iniFilePath))
-                    {
-                        if (!sources.Contains(iniFilePath))
-                            sources.Add(iniFilePath);
-                    }
+                    string secondaryIniFilePath = Path.Combine (mainIniDirectory, secondaryIniFileName);
+                    if (!sources.Contains (secondaryIniFilePath))
+                        sources.Add (secondaryIniFilePath);
                 }
             }
-
-            string iniDirName =
-                    startupConfig.GetString("inidirectory", "");
-
-            if (iniDirName != "" && Directory.Exists (iniDirName))
-            {
-                m_log.InfoFormat("Searching folder {0} for config ini files",
-                        iniDirName);
-
-                string[] fileEntries = Directory.GetFiles(iniDirName);
-                foreach (string filePath in fileEntries)
-                {
-                    if (Path.GetExtension(filePath).ToLower() == ".ini")
-                    {
-                        if (!sources.Contains (Path.Combine (iniDirName, filePath)))
-                            sources.Add (Path.Combine (iniDirName, filePath));
-                    }
-                }
-            }
-
 
             m_config = new IniConfigSource();
             

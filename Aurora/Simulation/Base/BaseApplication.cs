@@ -147,7 +147,6 @@ namespace Aurora.Simulation.Base
             configSource.AddSwitch("Startup", "inifile");
             configSource.AddSwitch("Startup", "inimaster");
             configSource.AddSwitch("Startup", "inidirectory");
-            configSource.AddSwitch("Console", "Console");
             configSource.AddSwitch("Startup", "inidbg");
 
             configSource.AddConfig("Network");
