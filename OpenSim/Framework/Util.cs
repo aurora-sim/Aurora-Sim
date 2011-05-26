@@ -1300,7 +1300,7 @@ namespace OpenSim.Framework
 
         public static string[] GetSubFiles (string path)
         {
-            string[] comps = path.Split (new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
+            string[] comps = path.Split (new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.None);
             List<string> paths = new List<string> ();
             List<string> found = new List<string> ();
             string endFind = comps[comps.Length - 1];

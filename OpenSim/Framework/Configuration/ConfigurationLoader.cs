@@ -188,7 +188,8 @@ namespace OpenSim.Framework
             else
             {
                 string mainIniDirectory = startupConfig.GetString ("mainIniDirectory", "");
-                basePath = mainIniDirectory;
+                if(mainIniDirectory != "")
+                    basePath = mainIniDirectory;
 
                 string mainIniFileName = startupConfig.GetString ("mainIniFileName", defaultIniFile);
 
