@@ -202,7 +202,10 @@ namespace Aurora.Simulation.Base
             catch (Exception ex)
             {
                 //Only error that ever could occur is the restart one
-                Shutdown(false);
+                m_log.InfoFormat("[GUIConsole]: Exception {0}", ex.Message);
+                m_log.InfoFormat("[GUIConsole]: App {0}", ex.Source );
+                m_log.InfoFormat("[GUIConsole]: tgt {0}", ex.TargetSite);
+                Shutdown(true);
                 throw ex;
             }
         }
