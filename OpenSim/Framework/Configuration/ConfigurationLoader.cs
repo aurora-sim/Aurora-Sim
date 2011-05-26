@@ -163,21 +163,19 @@ namespace OpenSim.Framework
 
             string iniDirName =
                     startupConfig.GetString("inidirectory", "");
-            string iniDirPath =
-                    Util.BasePathCombine(iniDirName);
 
-            if (Directory.Exists(iniDirPath) && iniDirName != "")
+            if (iniDirName != "" && Directory.Exists (iniDirName))
             {
                 m_log.InfoFormat("Searching folder {0} for config ini files",
-                        iniDirPath);
+                        iniDirName);
 
                 string[] fileEntries = Directory.GetFiles(iniDirName);
                 foreach (string filePath in fileEntries)
                 {
                     if (Path.GetExtension(filePath).ToLower() == ".ini")
                     {
-                        if (!sources.Contains(Util.BasePathCombine(filePath)))
-                            sources.Add(Util.BasePathCombine(filePath));
+                        if (!sources.Contains (Path.Combine (iniDirName, filePath)))
+                            sources.Add (Path.Combine (iniDirName, filePath));
                     }
                 }
             }

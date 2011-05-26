@@ -633,6 +633,7 @@ namespace Aurora.BotManager
                 if (FollowSP == null)
                 {
                     IsFollowing = false;
+                    FollowName = "";
                     m_log.Warn ("Could not find avatar " + FollowName);
                 }
                 else
