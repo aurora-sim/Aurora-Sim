@@ -1,5 +1,5 @@
 Startup CommandLine Switches for Aurora
-You can use these switches with either Aurora.exe or Aurora.32BitLaunch.exe
+You can use these switches with either Aurora.exe, Aurora.32BitLaunch.exe, and Aurora.Server.exe
 
 ;; Saves all merged .ini files into the bin directory for viewing
 ;; This creates a file in the BIN directory for each ini file loaded in Sequence
