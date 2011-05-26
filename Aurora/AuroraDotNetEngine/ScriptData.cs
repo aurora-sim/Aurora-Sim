@@ -613,7 +613,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             {
                                 error += compileerror;
                             }
-                            DisplayUserNotification(error, "compiling", reupload, true);
+                            DisplayUserNotification (error, "compiling", reupload, true);
+                            //It might have failed, but we still need to add it so that we can reuse this script data class later
+                            ScriptEngine.ScriptProtection.AddNewScript (this);
                             return false;
                         }
 
@@ -632,7 +634,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                 {
                                     error += compileerror;
                                 }
-                                DisplayUserNotification(error, "compiling", reupload, false);
+                                DisplayUserNotification (error, "compiling", reupload, false);
+                                //It might have failed, but we still need to add it so that we can reuse this script data class later
+                                ScriptEngine.ScriptProtection.AddNewScript (this);
                                 return false;
                             }
                         }
@@ -644,7 +648,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     catch (Exception ex)
                     {
                         //LEAVE IT AS ToString() SO THAT WE GET THE STACK TRACE TOO
-                        DisplayUserNotification(ex.ToString(), "(exception) compiling", reupload, true);
+                        DisplayUserNotification (ex.ToString (), "(exception) compiling", reupload, true);
+                        //It might have failed, but we still need to add it so that we can reuse this script data class later
+                        ScriptEngine.ScriptProtection.AddNewScript (this);
                         return false;
                     }
                 }
@@ -670,7 +676,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             catch (Exception ex)
             {
-                DisplayUserNotification(ex.ToString(), "app domain creation", reupload, true);
+                DisplayUserNotification (ex.ToString (), "app domain creation", reupload, true);
+                //It might have failed, but we still need to add it so that we can reuse this script data class later
+                ScriptEngine.ScriptProtection.AddNewScript (this);
                 return false;
             }
 
