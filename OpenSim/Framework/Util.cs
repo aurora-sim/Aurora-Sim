@@ -1298,6 +1298,31 @@ namespace OpenSim.Framework
             return found.ToArray();
         }
 
+        public static string[] GetSubFiles (string path)
+        {
+            string[] comps = path.Split (new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
+            List<string> paths = new List<string> ();
+            List<string> found = new List<string> ();
+            string endFind = comps[comps.Length - 1];
+            string baseDir = "";
+            for (int i = 0; i < comps.Length - 1; i++)
+            {
+                if (i == comps.Length - 2)
+                    baseDir += comps[i];
+                else
+                    baseDir += comps[i] + Path.DirectorySeparatorChar;
+            }
+            paths.Add (baseDir);
+            foreach (string p in paths)
+            {
+                string[] files = Directory.GetFiles (p, endFind);
+                foreach (string f in files)
+                    found.Add (f);
+            }
+
+            return found.ToArray ();
+        }
+
         public static string ServerURI(string uri)
         {
             if (uri == string.Empty)

@@ -86,7 +86,7 @@ namespace OpenSim.Framework
 
             showIniLoading =
                 startupConfig.GetBoolean ("inishowfileloading", showIniLoading);
-
+            string basePath = Util.configDir();
             if (oldoptions)
             {
                 string masterFileName =
@@ -188,6 +188,7 @@ namespace OpenSim.Framework
             else
             {
                 string mainIniDirectory = startupConfig.GetString ("mainIniDirectory", "");
+                basePath = mainIniDirectory;
 
                 string mainIniFileName = startupConfig.GetString ("mainIniFileName", defaultIniFile);
 
@@ -240,7 +241,7 @@ namespace OpenSim.Framework
             {
                 if (ReadConfig(sources[i], i))
                     iniFileExists = true;
-                AddIncludes (sources, ref i, ref triedPaths);
+                AddIncludes (sources, basePath, ref i, ref triedPaths);
             }
 
             FixDefines (ref m_config);
@@ -285,7 +286,7 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="sources">List of URL strings or filename strings</param>
         /// <param name="cntr">Where should we start inserting sources into the list?</param>
-        private void AddIncludes (List<string> sources, ref int cntr, ref List<string> triedPaths)
+        private void AddIncludes (List<string> sources, string basePath, ref int cntr, ref List<string> triedPaths)
         {
             int cn = cntr;
             //Where should we insert the sources into the list?
@@ -318,7 +319,6 @@ namespace OpenSim.Framework
                         }
                         else
                         {
-                            string basepath = Util.BasePathCombine("");
                             // Resolve relative paths with wildcards
                             string chunkWithoutWildcards = file;
                             string chunkWithWildcards = string.Empty;
@@ -328,10 +328,10 @@ namespace OpenSim.Framework
                                 chunkWithoutWildcards = file.Substring(0, wildcardIndex);
                                 chunkWithWildcards = file.Substring(wildcardIndex);
                             }
-                            string path = Path.Combine(basepath, chunkWithoutWildcards + chunkWithWildcards);
+                            string path = Path.Combine (basePath, chunkWithoutWildcards + chunkWithWildcards);
                             string[] paths = new string[1] { path };
                             if(path.Contains("*"))
-                                paths = Util.Glob(path);
+                                paths = Util.GetSubFiles (path);
                             foreach (string p in paths)
                             {
                                 if (!sources.Contains(p))
