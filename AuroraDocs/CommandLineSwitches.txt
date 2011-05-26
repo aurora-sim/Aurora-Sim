@@ -8,10 +8,10 @@ You can use these switches with either Aurora.exe, Aurora.32BitLaunch.exe, and A
 ;;    Main.ini = ConfigFileDump2.ini
 ;; These are incremented according to to order of load and contain the parsed ini file contents.
 ;; !! Used only for Debugging and tracing ini flow path.  Do Not Use as a Normal Setting. !!
-Aurora.exe -inidbg true or false
+Aurora.exe -inidbg=true
 
 ;; Shows all .ini files as they are loaded on the console
-Aurora.exe -inishowfileloading true or false
+Aurora.exe -inishowfileloading=true
 
 ;; New Style Command Line Functions for .ini configuration
 ;; Note: All .ini options also support putting a URL instead of a file path
@@ -24,27 +24,27 @@ Aurora.exe -inishowfileloading true or false
 ;; The default option for this is the bin/ directory, which requires no option set here
 ;; This can be a full path
 ;; Example
-Aurora.exe -mainIniDirectory C:\Config
+Aurora.exe -mainIniDirectory=C:\Config
 
 ;; This option sets the name of the first .ini file to load
 ;; The default for this option is Aurora.ini
 ;; Example
-Aurora.exe -mainIniFileName AuroraTesting.ini
+Aurora.exe -mainIniFileName=AuroraTesting.ini
 
 ;; This options sets the secondary file to load. This loads after the mainIniFileName file has loaded and can be used to override options from it
 ;; The default for this option is ""
 ;; Example
-Aurora.exe -secondaryIniFileName AuroraSecondaryTesting.ini
+Aurora.exe -secondaryIniFileName=AuroraSecondaryTesting.ini
 
 
 ;; Old Style Command line functions for .ini configuration
-;; These require "-oldoptions true" to be added as well
+;; These require "-oldoptions=true" to be added as well
 
-Aurora.exe -oldoptions true -inifile MyIniOveride.ini
-Aurora.exe -oldoptions true -inigrid MyIniOveride.ini
-Aurora.exe -oldoptions true -inisim MyIniOveride.ini
-Aurora.exe -oldoptions true -inimaster MyIniMaster.ini
-Aurora.exe -oldoptions true -inidirectory c:\MyConfigs
+Aurora.exe -oldoptions=true -inifile=MyIniOveride.ini
+Aurora.exe -oldoptions=true -inigrid=MyIniOveride.ini
+Aurora.exe -oldoptions=true -inisim=MyIniOveride.ini
+Aurora.exe -oldoptions=true -inimaster=MyIniMaster.ini
+Aurora.exe -oldoptions=true -inidirectory=c:\MyConfigs
 
 Example CommandLine
-Aurora.32bitlaunch.exe -oldoptions true -inimaster C:\Grid\configs\MyIniMaster.ini -inifile C:\Grid\configs\MyIniOveride.ini
+Aurora.32bitlaunch.exe -oldoptions=true -inimaster=C:\Grid\configs\MyIniMaster.ini -inifile=C:\Grid\configs\MyIniOveride.ini
