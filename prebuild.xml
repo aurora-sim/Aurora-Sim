@@ -576,7 +576,7 @@
       
       <Files>
         <Match pattern="*.cs" recurse="true"/>
-		<Match buildAction="EmbeddedResource" path="Resources" pattern="*.migrations"/>
+		<Match buildAction="EmbeddedResource" path="Legacy/Resources" pattern="*.migrations"/>
       </Files>
     </Project>
 
@@ -632,7 +632,7 @@
       
       <Files>
         <Match pattern="*.cs" recurse="true"/>
-		<Match buildAction="EmbeddedResource" path="Resources" pattern="*.migrations"/>
+		<Match buildAction="EmbeddedResource" path="Legacy/Resources" pattern="*.migrations"/>
       </Files>
     </Project>
 
@@ -691,7 +691,7 @@
 
       <Files>
         <Match pattern="*.cs" recurse="true"/>
-		<Match buildAction="EmbeddedResource" path="Resources" pattern="*.migrations"/>
+		<Match buildAction="EmbeddedResource" path="Legacy/Resources" pattern="*.migrations"/>
       </Files>
     </Project>
 
