@@ -787,15 +787,36 @@ namespace OpenSim.Data.MySQL
         {
             lock (m_dbLock)
             {
+                bool hasX = false;
+                bool hasRevert = false;
                 using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
                 {
                     dbcon.Open();
 
                     using (MySqlCommand cmd = dbcon.CreateCommand())
                     {
-                        cmd.CommandText = "select Heightfield,X,Y " +
-                            "from terrain where RegionUUID = ?RegionUUID and Revert = '" + Revert.ToString() + "'" +
-                            "order by Revision desc limit 1";
+                        cmd.CommandText = "SHOW COLUMNS from terrain";
+                        using (IDataReader reader = ExecuteReader (cmd))
+                        {
+                            while (reader.Read ())
+                            {
+                                if (reader["Field"].ToString () == "X")
+                                    hasX = true;
+                                if (reader["Field"].ToString () == "Revert")
+                                    hasRevert = true;
+                            }
+                        }
+                    }
+                }
+                using (MySqlConnection dbcon = new MySqlConnection (m_connectionString))
+                {
+                    dbcon.Open ();
+
+                    using (MySqlCommand cmd = dbcon.CreateCommand ())
+                    {
+                        cmd.CommandText = "select Heightfield" + (hasX ? ",X,Y " : "") +
+                            "from terrain where RegionUUID = ?RegionUUID " + (hasRevert ? ("and Revert = '" + Revert.ToString() + "'") : "") +
+                            " order by Revision desc limit 1";
 
                         cmd.Parameters.AddWithValue ("RegionUUID", scene.RegionInfo.RegionID.ToString ());
 
@@ -803,8 +824,9 @@ namespace OpenSim.Data.MySQL
                         {
                             while (reader.Read())
                             {
-                                if (reader["X"].ToString() == "-1")
+                                if (!hasX || !hasRevert || reader["X"].ToString () == "-1")
                                 {
+                                    m_log.Warn ("Found double terrain");
                                     byte[] heightmap = (byte[])reader["Heightfield"];
                                     short[] map = new short[RegionSizeX * RegionSizeX];
                                     double[,] terrain = null;
@@ -831,11 +853,11 @@ namespace OpenSim.Data.MySQL
                                             map[y * RegionSizeX + x] = (short)(terrain[x, y] * Constants.TerrainCompression);
                                         }
                                     }
-                                    this.StoreTerrain (map, scene.RegionInfo.RegionID, Revert);
                                     return map;
                                 }
                                 else
                                 {
+                                    m_log.Warn ("Found single terrain");
                                     byte[] heightmap = (byte[])reader["Heightfield"];
                                     short[] map = new short[RegionSizeX * RegionSizeX];
                                     int ii = 0;
