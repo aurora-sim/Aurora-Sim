@@ -65,7 +65,7 @@ namespace OpenSim.Framework
             OpenSim.Framework.Culture.SetCurrentCulture();
             string line = ReadLine(m_defaultPrompt + "# ", true, true);
 
-            result.AsyncWaitHandle.WaitOne(-1);
+//            result.AsyncWaitHandle.WaitOne(-1);
 
 //            if (line != String.Empty && line.Replace(" ", "") != String.Empty) //If there is a space, its fine
 //            {
@@ -93,6 +93,11 @@ namespace OpenSim.Framework
             m_defaultPrompt = p;
 //            System.Console.Write("{0}", p);
             string cmdinput = System.Console.ReadLine();
+
+//            while (cmdinput.Equals(null))
+//            {
+//                ;
+//            }
 
             if (isCommand)
             {
@@ -319,17 +324,20 @@ namespace OpenSim.Framework
         public void ReadConsole()
         {
             Process curProc = Process.GetCurrentProcess();
-            WaitHandle[] wHandles = new WaitHandle[0];
-            wHandles[0] = result.AsyncWaitHandle;
+            WaitHandle[] wHandles = new WaitHandle[1];
+            if (result != null)
+            {
+                wHandles[0] = result.AsyncWaitHandle;
+            }
             m_log.Info("[GUIConsole]: ReadConsole .");
             m_log.InfoFormat("[CUIConsole]: {0}", curProc.MainModule.ModuleName);
             while (true)
             {
 #if !NET_4_0
-                if (!Processing)
-                {
-                    throw new Exception("Restart");
-                }
+//                if (!Processing)
+//                {
+//                    throw new Exception("Restart");
+//                }
                 lock (m_consoleLock)
                 {
                     if (action == null)
@@ -337,18 +345,22 @@ namespace OpenSim.Framework
                         action = Prompt;
                         result = action.BeginInvoke(null, null);
                         m_calledEndInvoke = false;
+                        wHandles[0] = result.AsyncWaitHandle;
                     }
+
+                    System.Threading.WaitHandle.WaitAny(wHandles,500);
 
                     try
                     {
-                        if ((!result.IsCompleted) &&
-                            (!result.AsyncWaitHandle.WaitOne(1000) || !result.IsCompleted))
-                        {
-                            m_log.Info("[GUIConsole]: Sleeping 60 secs");
-                            System.Threading.WaitHandle.WaitAny(wHandles);
-                            m_log.Info("[GUIConsole]: Yawn");
-                        }
-                        else if (action != null && !result.CompletedSynchronously && 
+                        //if ((!result.IsCompleted) &&
+                        //    (!result.AsyncWaitHandle.WaitOne() || !result.IsCompleted))
+                        //{
+                            //m_log.Info("[GUIConsole]: Sleeping 60 secs");
+                            //System.Threading.WaitHandle.WaitAny(wHandles);
+                            //m_log.Info("[GUIConsole]: Yawn");
+                        //}
+                        //else
+                        if (action != null && !result.CompletedSynchronously && 
                             result.IsCompleted && !m_calledEndInvoke)
                         {
                             m_calledEndInvoke = true;
@@ -376,6 +388,8 @@ namespace OpenSim.Framework
                         throw new Exception("Restart");
                 }
 #endif
+                action = null;
+                result = null;
             }
         }
     }
