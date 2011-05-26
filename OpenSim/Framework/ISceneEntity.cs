@@ -145,7 +145,7 @@ namespace OpenSim.Framework
         void ChildAgentDataUpdate (AgentData agentData);
         void ChildAgentDataUpdate (AgentPosition cAgentData, int tRegionX, int tRegionY, int p, int p_2);
         void CopyTo (AgentData agent);
-        void MakeRootAgent(bool isFlying);
+        void MakeRootAgent(Vector3 pos, bool isFlying);
         void MakeChildAgent ();
         void Close ();
 

@@ -194,8 +194,6 @@ namespace Aurora.BotManager
                     break;
                 }
             }
-
-            m_scenePresence.Teleport(DEFAULT_START_POSITION);
         }
 
         public void Close(bool forceKill)
@@ -1094,11 +1092,6 @@ namespace Aurora.BotManager
             if (OnRegionHandShakeReply != null)
             {
                 OnRegionHandShakeReply (this);
-            }
-
-            if (OnCompleteMovementToRegion != null)
-            {
-                OnCompleteMovementToRegion (this);
             }
         }
 

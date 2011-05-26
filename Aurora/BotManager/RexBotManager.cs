@@ -139,9 +139,8 @@ namespace Aurora.BotManager
             //This adds them to the scene and sets them inworld
             scene.AddNewClient (m_character);
             m_character.Initialize ();
-            m_character.SendRegionHandshake (scene.RegionInfo, null);
             IScenePresence SP = scene.GetScenePresence (m_character.AgentId);
-            SP.MakeRootAgent (false);
+            SP.MakeRootAgent (m_character.StartPos, false);
 
 
             IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule> ();

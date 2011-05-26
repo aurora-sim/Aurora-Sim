@@ -617,6 +617,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 module.ResetTerrain();
             }
+            m_log.Warn ("Region " + m_currentScene.RegionInfo.RegionName + " was reset");
         }
 
         #endregion

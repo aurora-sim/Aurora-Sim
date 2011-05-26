@@ -776,8 +776,24 @@ namespace OpenSim.Region.Framework.Scenes
         /// This is called when an agent teleports into a region, or if an
         /// agent crosses into this region from a neighbor over the border
         /// </summary>
-        public void MakeRootAgent(bool isFlying)
+        public void MakeRootAgent(Vector3 pos, bool isFlying)
         {
+            AbsolutePosition = pos;
+
+            int xmult = m_savedVelocity.X > 0 ? 1 : -1;
+            int ymult = m_savedVelocity.Y > 0 ? 1 : -1;
+            Vector3 look = new Vector3 (0.99f * xmult, 0.99f * ymult, 0);
+
+            //Put the agent in an allowed area and above the terrain.
+            IParcelManagementModule parcelManagement = RequestModuleInterface<IParcelManagementModule> ();
+            if (parcelManagement != null)
+                AbsolutePosition = parcelManagement.GetNearestAllowedPosition (this);
+
+            IsChildAgent = false;
+
+            //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
+            m_controllingClient.MoveAgentIntoRegion (m_regionInfo, AbsolutePosition, look);
+
             m_log.DebugFormat(
                 "[SCENE]: Upgrading child to root agent for {0} in {1}",
                 Name, m_scene.RegionInfo.RegionName);
@@ -809,6 +825,23 @@ namespace OpenSim.Region.Framework.Scenes
                 attMod.SendScriptEventToAttachments(UUID, "changed", new Object[] { Changed.TELEPORT });
 
             m_scene.EventManager.TriggerOnMakeRootAgent(this);
+
+            //Tell the grid that we successfully got here
+
+            AgentCircuitData agent = ControllingClient.RequestClientInfo ();
+            agent.startpos = AbsolutePosition;
+            agent.child = true;
+            IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
+            if (appearance != null)
+            {
+                //Send updates to everyone about us
+                appearance.SendAvatarDataToAllAgents ();
+                agent.Appearance = appearance.Appearance;
+            }
+
+            ISyncMessagePosterService syncPoster = Scene.RequestModuleInterface<ISyncMessagePosterService> ();
+            if (syncPoster != null)
+                syncPoster.Post (SyncMessageHelper.ArrivedAtDestination (UUID, (int)DrawDistance, agent, Scene.RegionInfo.RegionHandle), Scene.RegionInfo.RegionHandle);
         }
 
         /// <summary>
@@ -972,41 +1005,8 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            AbsolutePosition = pos;
-
-            int xmult = m_savedVelocity.X > 0 ? 1 : -1;
-            int ymult = m_savedVelocity.Y > 0 ? 1 : -1;
-            Vector3 look = new Vector3 (0.99f * xmult, 0.99f * ymult, 0);
-
-            //Put the agent in an allowed area and above the terrain.
-            IParcelManagementModule parcelManagement = RequestModuleInterface<IParcelManagementModule>();
-            if (parcelManagement != null)
-                AbsolutePosition = parcelManagement.GetNearestAllowedPosition(this);
-
-            IsChildAgent = false;
-            
-            //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
-            m_controllingClient.MoveAgentIntoRegion(m_regionInfo, AbsolutePosition, look);
-
             bool m_flying = ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
-            MakeRootAgent(m_flying);
-
-            //Tell the grid that we successfully got here
-
-            AgentCircuitData agent = ControllingClient.RequestClientInfo();
-            agent.startpos = AbsolutePosition;
-            agent.child = true;
-            IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
-            if (appearance != null)
-            {
-                //Send updates to everyone about us
-                appearance.SendAvatarDataToAllAgents ();
-                agent.Appearance = appearance.Appearance;
-            }
-
-            ISyncMessagePosterService syncPoster = Scene.RequestModuleInterface<ISyncMessagePosterService>();
-            if (syncPoster != null)
-                syncPoster.Post(SyncMessageHelper.ArrivedAtDestination(UUID, (int)DrawDistance, agent, Scene.RegionInfo.RegionHandle), Scene.RegionInfo.RegionHandle);
+            MakeRootAgent(pos, m_flying);
         }
 
         /// <summary>
