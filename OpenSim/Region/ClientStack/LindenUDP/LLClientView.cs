@@ -5436,7 +5436,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (OnAgentUpdate != null)
             {
                 bool update = false;
-                bool forcedUpdate = false;
+                //bool forcedUpdate = false;
                 AgentUpdatePacket agenUpdate = (AgentUpdatePacket)Pack;
 
                 #region Packet Session and User Check
@@ -5469,7 +5469,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 else
                 {
-                    forcedUpdate = true;
+                    //forcedUpdate = true;
                     update = true;
                 }
 

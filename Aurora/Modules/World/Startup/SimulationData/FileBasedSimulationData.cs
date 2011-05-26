@@ -32,6 +32,7 @@ using System.IO.Compression;
 using System.Timers;
 using System.Reflection;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Framework.Serialization;
 using OpenSim.Region.Framework.Interfaces;
@@ -263,7 +264,15 @@ namespace Aurora.Modules.FileBasedSimulationData
                 if (TarArchiveReader.TarEntryType.TYPE_DIRECTORY == entryType)
                     continue;
 
-                if (filePath.StartsWith ("terrain/"))
+                if (filePath.StartsWith ("parcels/"))
+                {
+                    //Only use if we are not merging
+                    LandData parcel = new LandData ();
+                    OSD parcelData = OSDParser.DeserializeLLSDBinary (data);
+                    parcel.FromOSD ((OSDMap)parcelData);
+                    m_parcels.Add (parcel);
+                }
+                else if (filePath.StartsWith ("terrain/"))
                 {
                     m_terrain = data;
                 }
@@ -359,7 +368,9 @@ More configuration options and info can be found in the Configuration/Data/FileB
 
             simStore.Initialise (connString);
 
+            IParcelServiceConnector conn = DataManager.DataManager.RequestPlugin<IParcelServiceConnector> ();
             m_parcels = simStore.LoadLandObjects (m_scene.RegionInfo.RegionID);
+            m_parcels.AddRange(conn.LoadLandObjects(m_scene.RegionInfo.RegionID));
             m_groups = simStore.LoadObjects (m_scene.RegionInfo.RegionID, m_scene);
             m_shortterrain = simStore.LoadTerrain (m_scene, false, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
             m_shortrevertTerrain = simStore.LoadTerrain (m_scene, true, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);

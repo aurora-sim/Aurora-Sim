@@ -265,22 +265,8 @@ namespace Aurora.Modules
             /// </summary>
             public void LoadAllLandObjectsFromStorage()
             {
-                m_log.Info("[BackupModule]: Loading Land Objects from database... ");
-                IParcelServiceConnector conn = DataManager.DataManager.RequestPlugin<IParcelServiceConnector>();
-                List<LandData> LandObjects = m_scene.SimulationDataService.LoadLandObjects(m_scene.RegionInfo.RegionID);
-                if (conn != null)
-                {
-                    //Read from the old database as well
-                    if (LandObjects.Count != 0)
-                    {
-                        foreach (LandData land in LandObjects)
-                        {
-                            //Store it in the new database
-                            conn.StoreLandObject(land);
-                        }
-                    }
-                    m_scene.EventManager.TriggerIncomingLandDataFromStorage(conn.LoadLandObjects(m_scene.RegionInfo.RegionID));
-                }
+                m_log.Info ("[BackupModule]: Loading Land Objects from database... ");
+                m_scene.EventManager.TriggerIncomingLandDataFromStorage(m_scene.SimulationDataService.LoadLandObjects(m_scene.RegionInfo.RegionID));
             }
 
             public void FinishStartup()
