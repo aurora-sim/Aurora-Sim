@@ -145,9 +145,15 @@ namespace Aurora.Simulation.Base
 
             ///Command line switches
             configSource.AddSwitch("Startup", "inifile");
-            configSource.AddSwitch("Startup", "inimaster");
-            configSource.AddSwitch("Startup", "inidirectory");
-            configSource.AddSwitch("Startup", "inidbg");
+            configSource.AddSwitch ("Startup", "inimaster");
+            configSource.AddSwitch ("Startup", "inigrid");
+            configSource.AddSwitch ("Startup", "inisim");
+            configSource.AddSwitch ("Startup", "inidirectory");
+            configSource.AddSwitch ("Startup", "oldoptions");
+            configSource.AddSwitch ("Startup", "inishowfileloading");
+            configSource.AddSwitch ("Startup", "mainIniDirectory");
+            configSource.AddSwitch ("Startup", "mainIniFileName");
+            configSource.AddSwitch ("Startup", "secondaryIniFileName");
 
             configSource.AddConfig("Network");
 
