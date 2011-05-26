@@ -90,7 +90,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private bool m_iscollidingObj = false;
 
         int m_colliderfilter = 0;
-        int m_colliderGroundfilter = 0;
         int m_colliderObjectfilter = 0;
 
         private bool m_alwaysRun = false;
@@ -243,10 +242,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set { return; }
         }
 
+        private bool m_shouldBePhysical = true;
         public override bool IsPhysical
         {
-            get { return false; }
-            set { return; }
+            get
+            {
+                return m_shouldBePhysical;
+            }
+            set
+            {
+                m_shouldBePhysical = value;
+            }
         }
 
         public override bool ThrottleUpdates
@@ -300,7 +306,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             get { return m_iscollidingGround; }
             set
             {
-
+                m_iscollidingGround = value;
+                /*
                 if (value)
                 {
                     m_colliderGroundfilter += 2;
@@ -317,7 +324,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (m_colliderGroundfilter == 0)
                     m_iscollidingGround = false;
                 else
-                    m_iscollidingGround = true;
+                    m_iscollidingGround = true;*/
             }
         }
 
@@ -753,6 +760,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (Body == IntPtr.Zero)
                 return;
 
+            if (!m_shouldBePhysical)
+                return;
+
             // replace amotor
             d.Quaternion dtmp;
             dtmp.W = 1;
@@ -905,6 +915,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 else
                     m_iscollidingGround = false;
             }
+            else
+                m_iscollidingGround = true;//Assume that they are crossing, and keep them from falling down
 
             #endregion
 
@@ -1216,6 +1228,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// </summary>
         public void UpdatePositionAndVelocity(float timestep)
         {
+            if (!m_shouldBePhysical)
+                return;
+
             //  no lock; called from Simulate() -- if you call this from elsewhere, gotta lock or do Monitor.Enter/Exit!
             d.Vector3 vec;
             try
@@ -1579,6 +1594,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void ProcessTaints(float timestep)
         {
+            if (!m_shouldBePhysical)
+                return;
 
             if (m_tainted_isPhysical != m_isPhysical)
             {

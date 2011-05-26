@@ -55,7 +55,8 @@ namespace OpenSim.Services.MessagingService
             OSDMap result = null;
             if (OnMessageReceived != null)
             {
-                foreach (MessageReceived messagedelegate in OnMessageReceived.GetInvocationList())
+                MessageReceived eventCopy = OnMessageReceived;
+                foreach (MessageReceived messagedelegate in eventCopy.GetInvocationList ())
                 {
                     OSDMap r = messagedelegate(message);
                     if (r != null)

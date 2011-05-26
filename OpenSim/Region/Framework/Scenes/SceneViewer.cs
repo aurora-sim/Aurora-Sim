@@ -405,7 +405,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="numUpdates">The number of updates to send</param>
         public void SendPrimUpdates (int numPrimUpdates, int numAvaUpdates)
         {
-            if (m_inUse)
+            if (m_inUse || ((ScenePresence)m_presence).IsInTransit)
                 return;
 
             if (m_numberOfLoops < NUMBER_OF_LOOPS_TO_WAIT) //Wait for the client to finish connecting fully before sending out bunches of updates

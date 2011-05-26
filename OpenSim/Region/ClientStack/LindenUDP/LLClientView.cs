@@ -471,6 +471,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void Reset()
         {
+            lastarg = null;
             //Reset the killObjectUpdate packet stats
             //m_killRecord = new HashSet<uint>();
         }
@@ -5435,6 +5436,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (OnAgentUpdate != null)
             {
                 bool update = false;
+                bool forcedUpdate = false;
                 AgentUpdatePacket agenUpdate = (AgentUpdatePacket)Pack;
 
                 #region Packet Session and User Check
@@ -5466,7 +5468,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                        );
                 }
                 else
+                {
+                    forcedUpdate = true;
                     update = true;
+                }
 
                 // These should be ordered from most-likely to
                 // least likely to change. I've made an initial

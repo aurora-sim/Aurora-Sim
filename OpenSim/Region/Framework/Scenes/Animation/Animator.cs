@@ -242,8 +242,9 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             #region Standup
 
+
             float standupElapsed = (float)(Util.EnvironmentTickCount() - m_animTickStandup) / 1000f;
-            if (standupElapsed < STANDUP_TIME &&
+            if (m_scenePresence.PhysicsActor != null && standupElapsed < STANDUP_TIME &&
                 m_useSplatAnimation)
             {
                 // Falling long enough to trigger the animation
@@ -354,7 +355,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             #region Falling/Floating/Landing
 
-            if (actor != null && (!actor.CollidingObj && !actor.CollidingGround) && m_scenePresence.Velocity.Z < -2)
+            if (actor != null && actor.IsPhysical && (!actor.CollidingObj && !actor.CollidingGround) && m_scenePresence.Velocity.Z < -2)
             {
                 //Always return falldown immediately as there shouldn't be a waiting period
                 if(m_animTickFall == 0)

@@ -510,11 +510,16 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         public virtual void Cross(IScenePresence agent, bool isFlying, GridRegion crossingRegion)
         {
-            Vector3 newposition = new Vector3(agent.AbsolutePosition.X, agent.AbsolutePosition.Y, agent.AbsolutePosition.Z);;
+            agent.PhysicsActor.IsPhysical = false;
+            CrossAgentToNewRegionAsyncUtil (agent, isFlying, crossingRegion);
+        }
 
-            Util.FireAndForget(delegate(object o)
+        private void CrossAgentToNewRegionAsyncUtil (IScenePresence agent, bool isFlying, GridRegion crossingRegion)
+        {
+            Vector3 newposition = new Vector3 (agent.AbsolutePosition.X, agent.AbsolutePosition.Y, agent.AbsolutePosition.Z);
+            Util.FireAndForget (delegate (object o)
             {
-                CrossAgentToNewRegionAsync(agent, newposition, crossingRegion, isFlying);
+                CrossAgentToNewRegionAsync (agent, newposition, crossingRegion, isFlying);
             });
         }
 
@@ -591,25 +596,23 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                                 result = map["Success"].AsBoolean();
                             if (!result)
                             {
-                                if(map != null)
-                                    agent.ControllingClient.SendTeleportFailed(map["Reason"].AsString());
-                                else
-                                    agent.ControllingClient.SendTeleportFailed("TP Failed");
-                                // If the cross was successful, this agent is a child agent
-                                // Otherwise, put them back in the scene
-                                if (!agent.IsChildAgent)
+                                if (map != null)
                                 {
-                                    bool m_flying = ((agent.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
-                                    agent.AddToPhysicalScene(m_flying, false);
+                                    if (map.ContainsKey("Note") && !map["Note"].AsBoolean ())
+                                        return agent;
+                                    agent.ControllingClient.SendTeleportFailed (map["Reason"].AsString ());
                                 }
-
+                                else
+                                    agent.ControllingClient.SendTeleportFailed ("TP Failed");
+                                if (agent.PhysicsActor != null)
+                                    agent.PhysicsActor.IsPhysical = true; //Fix the setting that we set earlier
                                 // In any case
                                 agent.NotInTransit();
                                 return agent;
                             }
                         }
                     }
-
+                    //We're killing the animator and the physics actor, so we don't need to worry about agent.PhysicsActor.IsPhysical
                     agent.MakeChildAgent();
 
                     //Revolution- We already were in this region... we don't need updates about the avatars we already know about, right?

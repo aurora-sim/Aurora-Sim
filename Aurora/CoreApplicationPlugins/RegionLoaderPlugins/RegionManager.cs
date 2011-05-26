@@ -44,9 +44,14 @@ namespace Aurora.Modules.RegionLoader
 
         private void RefreshCurrentRegions()
         {
-            RegionListBox.Items.Clear();
-            RegionInfo[] regionInfos = m_connector.GetRegionInfos(false);
-            foreach(RegionInfo r in regionInfos)
+            RegionInfo[] regionInfos = m_connector.GetRegionInfos (false);
+            List < RegionInfo >  infos = new List<RegionInfo> (regionInfos);
+            infos.Sort (delegate (RegionInfo a, RegionInfo b)
+            {
+                return a.RegionName.CompareTo (b.RegionName);
+            });
+            RegionListBox.Items.Clear ();
+            foreach(RegionInfo r in infos)
             {
                 RegionListBox.Items.Add(r.RegionName);
             }

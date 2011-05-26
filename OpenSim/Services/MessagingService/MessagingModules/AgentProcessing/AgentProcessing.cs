@@ -221,6 +221,20 @@ namespace OpenSim.Services.MessagingService
                     result["Reason"] = reason;
                     return result;
                 }
+                else if (clientCaps.InTeleport)
+                {
+                    OSDMap result = new OSDMap ();
+                    result["Success"] = false;
+                    result["Note"] = false;
+                    return result;
+                }
+                else
+                {
+                    OSDMap result = new OSDMap ();
+                    result["Success"] = false;
+                    result["Note"] = false;
+                    return result;
+                }
             }
             return null;
         }

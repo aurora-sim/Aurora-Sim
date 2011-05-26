@@ -2674,6 +2674,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                     {
                                         case ActorTypes.Agent:
                                             AuroraODECharacter cobj = (AuroraODECharacter)obj;
+                                            if (!cobj.IsPhysical)
+                                                break;
                                             cobj.AddCollisionFrameTime(100);
                                             cobj.SendCollisions();
                                             break;
