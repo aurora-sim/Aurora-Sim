@@ -5211,7 +5211,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
-            bool pushrestricted = World.RegionInfo.RegionSettings.RestrictPushing;
             bool pushAllowed = false;
 
             bool pusheeIsAvatar = false;
@@ -5274,29 +5273,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             else
             {
                 IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
-                if (pushrestricted)
+                if (World.RegionInfo.RegionSettings.RestrictPushing)
                 {
-                    if (parcelManagement != null)
-                    {
-                        ILandObject targetlandObj = parcelManagement.GetLandObject (PusheePos.X, PusheePos.Y);
-
-                        // We didn't find the parcel but region is push restricted so assume it is NOT ok
-                        if (targetlandObj == null)
-                            return;
-
-                        if (m_host.OwnerID == targetID)
-                            pushAllowed = true;
-                        else
-                            pushAllowed = m_host.ParentEntity.Scene.Permissions.CanPushObject (m_host.OwnerID, targetlandObj);
-                    }
+                    if (m_host.OwnerID == targetID) //People can push themselves
+                        pushAllowed = true;
                     else
-                        return;
+                        pushAllowed = m_host.ParentEntity.Scene.Permissions.IsAdministrator (m_host.OwnerID);
                 }
                 else
                 {
                     if (parcelManagement != null)
                     {
-                        ILandObject targetlandObj = parcelManagement.GetLandObject(PusheePos.X, PusheePos.Y);
+                        ILandObject targetlandObj = parcelManagement.GetLandObject (PusheePos.X, PusheePos.Y);
                         if (targetlandObj == null)
                             // We didn't find the parcel but region isn't push restricted so assume it's ok
                             pushAllowed = true;
