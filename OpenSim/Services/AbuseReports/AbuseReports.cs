@@ -42,38 +42,6 @@ namespace OpenSim.Services.AbuseReports
     {
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            string dllName = String.Empty;
-            string connString = String.Empty;
-
-            //
-            // Try reading the [AbuseReportsService] section first, if it exists
-            //
-            IConfig AbuseReportsConfig = config.Configs["AbuseReportsService"];
-            if (AbuseReportsConfig != null)
-            {
-                dllName = AbuseReportsConfig.GetString("StorageProvider", dllName);
-                connString = AbuseReportsConfig.GetString("ConnectionString", connString);
-            }
-
-            //
-            // Try reading the [DatabaseService] section, if it exists
-            //
-            IConfig dbConfig = config.Configs["DatabaseService"];
-            if (dbConfig != null)
-            {
-                if (dllName == String.Empty)
-                    dllName = dbConfig.GetString("StorageProvider", String.Empty);
-                if (connString == String.Empty)
-                    connString = dbConfig.GetString("ConnectionString", String.Empty);
-            }
-
-            //
-            // We tried, but this doesn't exist. We can't proceed.
-            //
-            if (String.Empty.Equals(dllName))
-                throw new Exception("No StorageProvider configured");
-
-
             registry.RegisterModuleInterface<IAbuseReports>(this);
         }
 

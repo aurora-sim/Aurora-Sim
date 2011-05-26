@@ -211,7 +211,6 @@ namespace Aurora.Modules
                 {
                     try
                     {
-                        m_scene.SceneGraph.CheckAllocationOfLocalIds(group);
                         if (group.IsAttachment || (group.RootChild.Shape != null && (group.RootChild.Shape.State != 0 &&
                             (group.RootChild.Shape.PCode == (byte)PCode.None ||
                             group.RootChild.Shape.PCode == (byte)PCode.Prim ||
@@ -236,6 +235,7 @@ namespace Aurora.Modules
                             //WTF went wrong here? Remove by passing it by on loading
                             continue;
                         }
+                        m_scene.SceneGraph.CheckAllocationOfLocalIds (group);
                         group.Scene = m_scene;
 
                         if (group.RootChild == null)

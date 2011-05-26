@@ -18,16 +18,17 @@ namespace Aurora.Services.DataService
 
         public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
-            if(source.Configs["AuroraConnectors"].GetString("AbuseReportsConnector", "LocalConnector") == "LocalConnector")
+            GD = GenericData;
+
+            if (source.Configs[Name] != null)
+                defaultConnectionString = source.Configs[Name].GetString ("ConnectionString", defaultConnectionString);
+
+            GD.ConnectToDatabase (defaultConnectionString, "AbuseReports", source.Configs["AuroraConnectors"].GetBoolean ("ValidateTables", true));
+
+            DataManager.DataManager.RegisterPlugin (Name + "Local", this);
+            if (source.Configs["AuroraConnectors"].GetString ("AbuseReportsConnector", "LocalConnector") == "LocalConnector")
             {
                 WebPassword = Util.Md5Hash(source.Configs["Handlers"].GetString("WireduxHandlerPassword", String.Empty));
-
-                GD = GenericData;
-
-                if (source.Configs[Name] != null)
-                    defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
-
-                GD.ConnectToDatabase(defaultConnectionString, "AbuseReports", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
                 //List<string> Results = GD.Query("Method", "abusereports", "passwords", "Password");
                 //if (Results.Count == 0)
@@ -35,8 +36,9 @@ namespace Aurora.Services.DataService
                 //    string newPass = MainConsole.Instance.PasswdPrompt("Password to access Abuse Reports");
                 //    GD.Insert("passwords", new object[] { "abusereports", Util.Md5Hash(Util.Md5Hash(newPass)) });
                 //}
-                DataManager.DataManager.RegisterPlugin(Name + "Local", this);
+                DataManager.DataManager.RegisterPlugin (Name, this);
             }
+
         }
 
         public string Name
@@ -216,10 +218,12 @@ namespace Aurora.Services.DataService
         {
             if (Password == WebPassword)
                 return true;
+            string OtherPass = Util.Md5Hash (Password);
+            if (OtherPass == WebPassword)
+                return true;
             List<string> TruePassword = GD.Query("Method", "abusereports", "passwords", "Password");
             if (TruePassword.Count == 0)
                 return false;
-            string OtherPass = Util.Md5Hash(Password);
             if (OtherPass == TruePassword[0])
                 return true;
             return false;
