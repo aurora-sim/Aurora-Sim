@@ -576,6 +576,7 @@
       
       <Files>
         <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.migrations" recurse="true"/>
       </Files>
     </Project>
 
@@ -631,6 +632,7 @@
       
       <Files>
         <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.migrations" recurse="true"/>
       </Files>
     </Project>
 
@@ -689,6 +691,7 @@
 
       <Files>
         <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.migrations" recurse="true"/>
       </Files>
     </Project>
 
