@@ -473,7 +473,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         if (SleepingScriptEvents.Count > 0)
                         {
                             QIS = SleepingScriptEvents.Dequeue ().Value;
-                            SleepingScriptEventCount--;
+                        restart:
+                            if (QIS.RunningNumber > 2 && SleepingScriptEventCount > 0)
+                            {
+                                QIS.RunningNumber = 1;
+                                SleepingScriptEvents.Enqueue (QIS, QIS.EventsProcData.TimeCheck.Ticks);
+                                QIS = null;
+                                QIS = SleepingScriptEvents.Dequeue ().Value;
+                                goto restart;
+                            }
+                            else
+                                SleepingScriptEventCount--;
                         }
                     }
                     if (QIS != null)
@@ -650,6 +660,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     //Did not finish so requeue it
                     QIS.CurrentlyAt = Running;
+                    QIS.RunningNumber++;
                     return true; //Do the return... otherwise we open the queue for this event back up
                 }
             }

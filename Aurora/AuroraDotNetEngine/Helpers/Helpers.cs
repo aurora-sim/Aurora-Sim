@@ -298,6 +298,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public EnumeratorInfo CurrentlyAt;
         //This is used to check whether the script has been updated since the last attempt to start
         public int VersionID;
+        //The times this event has been run through the scheduler
+        public int RunningNumber;
         //The currently running state that this event will be fired under
         public string State;
         //Event data
