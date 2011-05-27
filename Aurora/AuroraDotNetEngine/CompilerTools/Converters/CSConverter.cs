@@ -130,7 +130,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private CSharpCodeProvider CScodeProvider = new CSharpCodeProvider();
 
         public string DefaultState { get { return ""; } }
-        public List<string> m_includedDefines = new List<string>();
+        public List<string> m_includedDefines = new List<string> ();
+        public List<string> m_includedAssemblies = new List<string> ();
         public bool m_addLSLAPI = false;
         public bool m_allowUnsafe = false;
         private Compiler m_compiler;
@@ -212,8 +213,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 "using OpenMetaverse;\n" +
                 "using System;\n" +
                 "using System.Collections.Generic;\n" +
-                "using System.Collections;\n" +
-                "namespace Script\n" +
+                "using System.Collections;\n";
+            foreach (string line in m_includedDefines)
+            {
+                compiledScript += "using " + line + ";\n";
+            }
+            compiledScript += "namespace Script\n" +
                 "{\n";
 
             compiledScript += "public class ScriptClass : Aurora.ScriptEngine.AuroraDotNetEngine.Runtime.ScriptBaseClass, IDisposable\n";
@@ -230,12 +235,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         private void ReadLine(string line)
         {
-            if (line.StartsWith("#include"))
+            if (line.StartsWith ("#include"))
             {
-                line = line.Replace("#include", "");
-                m_includedDefines.Add(line); //TODO: Add a check here
+                line = line.Replace ("#include", "");
+                if (line.EndsWith (";"))
+                    line = line.Remove (line.Length - 1);
+                m_includedDefines.Add (line); //TODO: Add a check here
             }
-            else if (line.StartsWith("#threaded"))
+            else if (line.StartsWith ("#assembly"))
+            {
+                line = line.Replace ("#assembly", "");
+                if (line.EndsWith (";"))
+                    line = line.Remove (line.Length - 1);
+                m_includedAssemblies.Add (line); //TODO: Add a check here
+            }
+            else if (line.StartsWith ("#threaded"))
             {
             }
             else if (line.StartsWith("#useLSLAPI"))
@@ -259,8 +273,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     "OpenMetaverse.dll"));
             parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
                     "OpenMetaverseTypes.dll"));
-            parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
+            parameters.ReferencedAssemblies.Add (Path.Combine (rootPath,
                     "OpenMetaverse.StructuredData.dll"));
+            parameters.ReferencedAssemblies.Add (Path.Combine (rootPath,
+                    "Aurora.BotManager.dll"));
+            foreach (string line in m_includedAssemblies)
+            {
+                parameters.ReferencedAssemblies.Add (Path.Combine (rootPath,
+                        line));
+            }
             bool complete = false;
             bool retried = false;
             CompilerResults results;
@@ -303,7 +324,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public void FinishCompile(IScriptModulePlugin plugin, ScriptData data, IScript Script)
         {
-            Script.SetSceneRefs(data.World, data.Part);
+            Script.SetSceneRefs(data.World, data.Part, false);
         }
     }
 }

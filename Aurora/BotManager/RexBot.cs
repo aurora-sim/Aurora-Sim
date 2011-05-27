@@ -652,6 +652,7 @@ namespace Aurora.BotManager
                             mesh.AddEdge (1, 2, fly ? TravelMode.Fly : TravelMode.Walk);
                             mesh.AddNode (FollowSP.AbsolutePosition); //Give it the new point so that it will head toward it
                             SetPath (mesh, 0, false, 10000, false); //Set and go
+                            m_scenePresence.SetAlwaysRun = FollowSP.SetAlwaysRun;
                         }
                         else
                         {

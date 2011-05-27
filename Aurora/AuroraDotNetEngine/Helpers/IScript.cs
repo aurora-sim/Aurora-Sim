@@ -39,7 +39,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         /// <param name="iScene"></param>
         /// <param name="iSceneChildEntity"></param>
-        void SetSceneRefs(IScene iScene, ISceneChildEntity iSceneChildEntity);
+        /// <param name="useStateSaves"></param>
+        void SetSceneRefs (IScene iScene, ISceneChildEntity iSceneChildEntity, bool useStateSaves);
 
         /// <summary>
         /// Whether this script needs a state save performed

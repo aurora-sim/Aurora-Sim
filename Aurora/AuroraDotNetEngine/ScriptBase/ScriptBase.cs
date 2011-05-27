@@ -60,6 +60,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         {
             get
             {
+                if (!m_useStateSaves)
+                    return false;
                 if (m_stateSaveRequired)
                     return true;
                 if (m_lastStateSaveValues == null)
@@ -74,6 +76,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             }
             set
             {
+                if (!m_useStateSaves)
+                    return;
                 m_stateSaveRequired = value;
                 //Besides setting the value, if we don't need one, save the vars we have for the last state save as well
                 if(!value)
@@ -84,11 +88,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         private Dictionary<string, object> m_lastStateSaveValues = null;
         public IScene Scene = null;
         public ISceneChildEntity Object = null;
+        public bool m_useStateSaves = true;
 
-        public void SetSceneRefs(IScene scene, ISceneChildEntity child)
+        public void SetSceneRefs (IScene scene, ISceneChildEntity child, bool useStateSaves)
         {
             Scene = scene;
             Object = child;
+            m_useStateSaves = useStateSaves;
         }
 
         public override Object InitializeLifetimeService()
@@ -235,6 +241,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         /// <param name="vars"></param>
         public void SetVars(Dictionary<string, object> vars)
         {
+            if (!m_useStateSaves)
+                return;
             foreach (KeyValuePair<string, object> var in vars)
             {
                 if (m_Fields.ContainsKey (var.Key))
@@ -305,74 +313,75 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return tmp;
             }
 
-        public Dictionary<string, object> GetStoreVars()
-            {
-            Dictionary<string, object> vars = new Dictionary<string, object>();
-            
+        public Dictionary<string, object> GetStoreVars ()
+        {
+            Dictionary<string, object> vars = new Dictionary<string, object> ();
+            if (!m_useStateSaves)
+                return vars;
 
             if (m_Fields == null)
                 return vars;
 
-            m_Fields.Clear();
+            m_Fields.Clear ();
 
-            Type t = GetType();
+            Type t = GetType ();
 
-            FieldInfo[] fields = t.GetFields(BindingFlags.NonPublic |
+            FieldInfo[] fields = t.GetFields (BindingFlags.NonPublic |
                                              BindingFlags.Public |
                                              BindingFlags.Instance |
                                              BindingFlags.DeclaredOnly);
 
             foreach (FieldInfo field in fields)
-                {
+            {
                 m_Fields[field.Name] = field;
 
-                if (field.FieldType == typeof(LSL_Types.list)) // ref type, copy
-                    {
+                if (field.FieldType == typeof (LSL_Types.list)) // ref type, copy
+                {
                     string tmp = "";
                     string cur = "";
-                    LSL_Types.list v = (LSL_Types.list)field.GetValue(this);
+                    LSL_Types.list v = (LSL_Types.list)field.GetValue (this);
                     foreach (object o in v.Data)
-                        {
-                        if (o.GetType() == typeof(LSL_Types.LSLInteger))
-                            cur = "i" + o.ToString();
-                        else if (o.GetType() == typeof(LSL_Types.LSLFloat))
-                            cur = "f" + o.ToString();
-                        else if (o.GetType() == typeof(LSL_Types.Vector3))
-                            cur = "v" + o.ToString();
-                        else if (o.GetType() == typeof(LSL_Types.Quaternion))
-                            cur = "q" + o.ToString();
-                        else if (o.GetType() == typeof(LSL_Types.LSLString))
-                            cur = "\"" + o.ToString() + "\"";
-                        else if (o.GetType() == typeof(LSL_Types.key))
-                            cur = "k\"" + o.ToString() + "\"";
-                        else if (o.GetType() == typeof(LSL_Types.list))
-                            cur = "{" + ListToString(o) + "}";
+                    {
+                        if (o.GetType () == typeof (LSL_Types.LSLInteger))
+                            cur = "i" + o.ToString ();
+                        else if (o.GetType () == typeof (LSL_Types.LSLFloat))
+                            cur = "f" + o.ToString ();
+                        else if (o.GetType () == typeof (LSL_Types.Vector3))
+                            cur = "v" + o.ToString ();
+                        else if (o.GetType () == typeof (LSL_Types.Quaternion))
+                            cur = "q" + o.ToString ();
+                        else if (o.GetType () == typeof (LSL_Types.LSLString))
+                            cur = "\"" + o.ToString () + "\"";
+                        else if (o.GetType () == typeof (LSL_Types.key))
+                            cur = "k\"" + o.ToString () + "\"";
+                        else if (o.GetType () == typeof (LSL_Types.list))
+                            cur = "{" + ListToString (o) + "}";
 
                         if (tmp == "")
                             tmp = cur;
                         else
                             tmp += ", " + cur;
-                         }
-                    vars[field.Name] = (Object) tmp;
                     }
-                else if (field.FieldType == typeof(LSL_Types.LSLInteger) ||
-                        field.FieldType == typeof(LSL_Types.LSLString) ||
-                        field.FieldType == typeof(LSL_Types.LSLFloat) ||
-                        field.FieldType == typeof(Int32) ||
-                        field.FieldType == typeof(Double) ||
-                        field.FieldType == typeof(Single) ||
-                        field.FieldType == typeof(String) ||
-                        field.FieldType == typeof(Byte) ||
-                        field.FieldType == typeof(short) ||
-                        field.FieldType == typeof(LSL_Types.Vector3) ||
-                        field.FieldType == typeof(LSL_Types.Quaternion))
-                    {
-                    vars[field.Name] = field.GetValue(this).ToString();
-                    }
+                    vars[field.Name] = (Object)tmp;
                 }
+                else if (field.FieldType == typeof (LSL_Types.LSLInteger) ||
+                        field.FieldType == typeof (LSL_Types.LSLString) ||
+                        field.FieldType == typeof (LSL_Types.LSLFloat) ||
+                        field.FieldType == typeof (Int32) ||
+                        field.FieldType == typeof (Double) ||
+                        field.FieldType == typeof (Single) ||
+                        field.FieldType == typeof (String) ||
+                        field.FieldType == typeof (Byte) ||
+                        field.FieldType == typeof (short) ||
+                        field.FieldType == typeof (LSL_Types.Vector3) ||
+                        field.FieldType == typeof (LSL_Types.Quaternion))
+                {
+                    vars[field.Name] = field.GetValue (this).ToString ();
+                }
+            }
 
             return vars;
-            }
+        }
 
         public LSL_Types.list ParseValueToList(string inval, int start, out int end)
         {
@@ -480,6 +489,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         public void SetStoreVars(Dictionary<string, object> vars)
         {
+            if (!m_useStateSaves)
+                return;
             m_lastStateSaveValues = vars;
             m_stateSaveRequired = false; //If something is setting the vars, we don't need to do a state save, as this came from a state save 
             foreach (KeyValuePair<string, object> var in vars)
@@ -560,6 +571,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         public void ResetVars()
         {
+            if (!m_useStateSaves)
+                return;
             m_Executor.ResetStateEventFlags();
             m_stateSaveRequired = true;
             SetVars(m_InitialValues);
