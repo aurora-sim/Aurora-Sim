@@ -122,6 +122,8 @@ namespace OpenSim.Services.CapsService
             }
 
             httpResponse.Send();
+            httpRequest.InputStream.Close ();
+            httpRequest = null;
             return null;
         }
 
@@ -186,6 +188,7 @@ namespace OpenSim.Services.CapsService
                         if (format == DefaultFormat)
                         {
                             WriteTextureData(httpRequest, httpResponse, texture, format);
+                            texture = null;
                             return true;
                         }
                         else
@@ -199,6 +202,7 @@ namespace OpenSim.Services.CapsService
                             newTexture.Temporary = true;
                             m_assetService.Store(newTexture);
                             WriteTextureData(httpRequest, httpResponse, newTexture, format);
+                            newTexture = null;
                             return true;
                         }
                     }
@@ -212,6 +216,7 @@ namespace OpenSim.Services.CapsService
                     }
                     //m_log.DebugFormat("[GETTEXTURE]: texture was in the cache");
                     WriteTextureData(httpRequest, httpResponse, texture, format);
+                    texture = null;
                     return true;
                 }
 
