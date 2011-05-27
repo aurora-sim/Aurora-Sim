@@ -115,6 +115,7 @@ namespace Aurora.Modules
             }
 
             writer.Close();
+            GC.Collect ();
             m_log.Info ("[Archive]: Finished saving of archive.");
         }
 

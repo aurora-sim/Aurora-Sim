@@ -101,6 +101,7 @@ namespace OpenSim.Framework.Serialization
             }
 
             WriteEntry(filePath, data, fileType);
+            data = null;
         }
 
         /// <summary>

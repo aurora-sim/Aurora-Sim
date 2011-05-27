@@ -215,6 +215,12 @@ namespace OpenSim.Framework
         string ToXml2 ();
 
         /// <summary>
+        /// Returns an XML based document that represents this object
+        /// </summary>
+        /// <returns></returns>
+        byte[] ToBinaryXml2 ();
+
+        /// <summary>
         /// Adds the FromInventoryItemID to the xml
         /// </summary>
         /// <returns></returns>

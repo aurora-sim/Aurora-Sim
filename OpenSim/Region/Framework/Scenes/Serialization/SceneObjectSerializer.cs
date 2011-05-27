@@ -31,6 +31,7 @@ using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Xml;
+using System.Text;
 using log4net;
 using OpenMetaverse;
 using OpenSim.Framework;
@@ -207,7 +208,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 doc.LoadXml (xmlData);
                 
                 SceneObjectGroup grp = InternalFromXml2Format (doc, scene);
-                grp.XMLRepresentation = doc.OuterXml;
+                grp.XMLRepresentation = Encoding.UTF8.GetBytes(doc.OuterXml);
                 return grp;
             }
             catch (Exception e)
@@ -234,7 +235,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 doc.Load(ms);
 
                 grp = InternalFromXml2Format (doc, scene);
-                grp.XMLRepresentation = doc.OuterXml;
+                grp.XMLRepresentation = Encoding.UTF8.GetBytes (doc.OuterXml);
                 return grp;
             }
             catch (Exception e)
@@ -297,16 +298,40 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         /// </summary>
         /// <param name="sceneObject"></param>
         /// <returns></returns>
-        public static string ToXml2Format(SceneObjectGroup sceneObject)
+        public static string ToXml2Format (SceneObjectGroup sceneObject)
         {
-            using (StringWriter sw = new StringWriter())
+            using (StringWriter sw = new StringWriter ())
             {
-                using (XmlTextWriter writer = new XmlTextWriter(sw))
+                using (XmlTextWriter writer = new XmlTextWriter (sw))
                 {
-                    SOGToXml2(writer, sceneObject, new Dictionary<string, object>());
+                    SOGToXml2 (writer, sceneObject, new Dictionary<string, object> ());
+                    writer.Close ();
                 }
 
-                return sw.ToString();
+                string str = sw.ToString ();
+                sw.Flush ();
+                sw.Close ();
+                return str;
+            }
+        }
+
+        /// <summary>
+        /// Serialize a scene object to the 'xml2' format.
+        /// </summary>
+        /// <param name="sceneObject"></param>
+        /// <returns></returns>
+        public static byte[] ToBinaryXml2Format (SceneObjectGroup sceneObject)
+        {
+            using (MemoryStream sw = new MemoryStream ())
+            {
+                using (StreamWriter wr = new StreamWriter (sw, Encoding.UTF8))
+                {
+                    using (XmlTextWriter writer = new XmlTextWriter (wr))
+                    {
+                        SOGToXml2 (writer, sceneObject, new Dictionary<string, object> ());
+                    }
+                    return sw.ToArray();
+                }
             }
         }
 

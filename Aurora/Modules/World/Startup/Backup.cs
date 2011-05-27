@@ -530,23 +530,27 @@ namespace Aurora.Modules
                     tModule.SaveToStream (tModule.TerrainMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
                     writer.WriteFile ("terrain/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
                     s.Close ();
+                    s = null;
                     s = new MemoryStream ();
                     tModule.SaveToStream (tModule.TerrainRevertMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
                     writer.WriteFile ("revertterrain/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
                     s.Close ();
+                    s = null;
                     if (tModule.TerrainWaterMap != null)
                     {
                         s = new MemoryStream ();
                         tModule.SaveToStream (tModule.TerrainWaterMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
                         writer.WriteFile ("water/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
                         s.Close ();
+                        s = null;
                         s = new MemoryStream ();
                         tModule.SaveToStream (tModule.TerrainWaterRevertMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
                         writer.WriteFile ("revertwater/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
                         s.Close ();
+                        s = null;
                     }
                 }
-
+                
                 m_log.Info("[Archive]: Finished writing terrain to archive");
                 m_log.Info("[Archive]: Writing entities to archive");
                 ISceneEntity[] entities = scene.Entities.GetEntities();
@@ -566,11 +570,14 @@ namespace Aurora.Modules
                          && !((entity.RootChild.Flags & PrimFlags.TemporaryOnRez) == PrimFlags.TemporaryOnRez))
                         continue;
                     //Write all entities
-                    writer.WriteFile("entities/" + entity.UUID.ToString(), ((ISceneObject)entity).ToXml2());
+                    byte[] xml = ((ISceneObject)entity).ToBinaryXml2 ();
+                    writer.WriteFile ("entities/" + entity.UUID.ToString (), xml);
+                    xml = null;
                     //Get all the assets too
                     if(saveAssets)
                         assetGatherer.GatherAssetUuids(entity, assets, scene);
                 }
+                entities = null;
 
                 m_log.Info("[Archive]: Finished writing entities to archive");
                 m_log.Info("[Archive]: Writing assets for entities to archive");

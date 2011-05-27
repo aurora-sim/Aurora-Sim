@@ -187,8 +187,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (value)
                 {
-                    if(XMLRepresentation != "")
-                        XMLRepresentation = ""; //Reset this
+                    if(XMLRepresentation != null)
+                        XMLRepresentation = null; //Reset this
                     timeLastChanged = DateTime.Now;
                     if (!HasGroupChanged) //First change then
                         timeFirstChanged = DateTime.Now;
@@ -3433,11 +3433,16 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region ISceneObject
 
-        public string XMLRepresentation = "";
-        public virtual string ToXml2()
+        public byte[] XMLRepresentation = null;
+        public virtual string ToXml2 ()
         {
-            if (XMLRepresentation == "")
-                XMLRepresentation = SceneObjectSerializer.ToXml2Format(this);
+            return SceneObjectSerializer.ToXml2Format(this);
+        }
+
+        public virtual byte[] ToBinaryXml2 ()
+        {
+            if (XMLRepresentation == null)
+                XMLRepresentation = SceneObjectSerializer.ToBinaryXml2Format (this);
             return XMLRepresentation;
         }
 
