@@ -74,6 +74,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             m_imageManager = imageManager;
         }
 
+        public void Dispose ()
+        {
+            m_asset = null;
+            PriorityQueueHandle = null;
+        }
+
         /// <summary>
         /// Sends packets for this texture to a client until packetsToSend is 
         /// hit or the transfer completes
@@ -365,6 +371,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             else
             {
                 m_asset = asset.Data;
+                asset = null;
             }
 
             RunUpdate();
@@ -392,7 +399,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
 
             AssetDataCallback(assetID, asset);
-
         }
     }
 }

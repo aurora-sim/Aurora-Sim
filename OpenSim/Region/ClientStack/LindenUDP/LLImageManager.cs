@@ -278,6 +278,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             lock (m_syncRoot)
                 try { m_priorityQueue.Delete(image.PriorityQueueHandle); }
                 catch (Exception) { }
+            image.Dispose ();
         }
 
         void UpdateImageInQueue(J2KImage image)
