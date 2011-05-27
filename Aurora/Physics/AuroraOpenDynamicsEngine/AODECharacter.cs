@@ -1375,7 +1375,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             //Tell any listeners about the new info
             // This is for animations
-            base.TriggerMovementUpdate();
+            base.TriggerMovementUpdate ();
         }
 
         #endregion
