@@ -307,7 +307,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             StateSave.AddScene (scene);
 
             scene.EventManager.OnStartupComplete += EventManager_OnStartupComplete;
-            scene.EventManager.TriggerAddToStartupQueue("ScriptEngine");
             EventManager.HookUpRegionEvents(scene);
 
             //Hook up to client events

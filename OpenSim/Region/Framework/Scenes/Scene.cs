@@ -345,7 +345,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             EventManager.OnAddToStartupQueue += AddToStartupQueue;
             EventManager.OnModuleFinishedStartup += FinishedStartup;
-            EventManager.OnStartupComplete += StartupComplete;
+            //EventManager.OnStartupComplete += StartupComplete;
 
             AddToStartupQueue("Startup");
 
@@ -761,8 +761,9 @@ namespace OpenSim.Region.Framework.Scenes
         public void AddToStartupQueue(string name)
         {
             IConfig startupConfig = m_config.Configs["Startup"];
+            bool add = startupConfig.GetBoolean("CompleteStartupAfterAllModulesLoad", true);
             if ((startupConfig != null &&
-                !startupConfig.GetBoolean("CompleteStartupAfterAllModulesLoad", true)) ||
+                add) ||
                 name == "Startup") //We allow startup through to allow for normal starting up, even if all module loading is disabled
             {
                 StartupCallbacks.Add(name);
@@ -791,6 +792,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     //All callbacks are done, trigger startup complete
                     EventManager.TriggerStartupComplete(this, StartupData);
+                    StartupComplete (this, StartupData);
                 }
             }
         }
