@@ -1411,7 +1411,6 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                 {
                     ((SceneObjectGroup)group).SetPartDescription(Util.CleanString(description), LocalID);
-                    ((SceneObjectGroup)group).HasGroupChanged = true;
                     ((SceneObjectGroup)group).ScheduleGroupUpdate(PrimUpdateFlags.ClickAction);
                 }
             }
@@ -1426,7 +1425,6 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     ISceneChildEntity part = m_parentScene.GetSceneObjectPart(LocalID);
                     part.ClickAction = Convert.ToByte(clickAction);
-                    ((ISceneEntity)group).HasGroupChanged = true;
                     ((ISceneEntity)group).ScheduleGroupUpdate (PrimUpdateFlags.ClickAction);
                 }
             }
@@ -1441,7 +1439,6 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     ISceneChildEntity part = m_parentScene.GetSceneObjectPart (LocalID);
                     part.Material = Convert.ToByte(material);
-                    ((ISceneEntity)group).HasGroupChanged = true;
                     ((ISceneEntity)group).ScheduleGroupUpdate (PrimUpdateFlags.ClickAction);
                 }
             }

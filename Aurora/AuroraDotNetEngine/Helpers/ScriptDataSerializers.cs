@@ -69,6 +69,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             SaveStateTo(script, false);
         }
+
         public void SaveStateTo (ScriptData script, bool forced)
         {
             if (!forced)
@@ -182,8 +183,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             //Add our state to the list of all scripts in this object
             component[script.ItemID.ToString ()] = save.ToOSD ();
-
-            script.Part.ParentEntity.HasGroupChanged = true;
 
             //Now resave it
             m_manager.SetComponentState (script.Part, m_componentName, component);

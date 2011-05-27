@@ -977,6 +977,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (ScriptData id in ids)
             {
                 StateSave.SaveStateTo (id);
+
+                id.Part.ParentEntity.HasGroupChanged = true;
             }
         }
 

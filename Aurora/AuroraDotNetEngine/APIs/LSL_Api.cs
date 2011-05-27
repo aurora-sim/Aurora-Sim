@@ -1625,7 +1625,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             tmp.Z = (float)scale.z;
             part.Scale = tmp;
             part.ScheduleUpdate(PrimUpdateFlags.FindBest);
-            part.ParentEntity.HasGroupChanged = true;
         }
 
         public LSL_Vector llGetScale()
@@ -1640,8 +1639,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
             m_host.ClickAction = (byte)action;
-            if (m_host.ParentEntity != null) 
-                m_host.ParentEntity.HasGroupChanged = true;
             m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
         }
 
@@ -1924,23 +1921,43 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (part == null)
                 return;
 
+            bool same = true;
             if (light)
             {
+                if (part.Shape.LightEntry != true)
+                    same = false;
                 part.Shape.LightEntry = true;
-                part.Shape.LightColorR = Util.Clip((float)color.x, 0.0f, 1.0f);
-                part.Shape.LightColorG = Util.Clip((float)color.y, 0.0f, 1.0f);
+                if (part.Shape.LightColorR != Util.Clip ((float)color.x, 0.0f, 1.0f))
+                    same = false;
+                part.Shape.LightColorR = Util.Clip ((float)color.x, 0.0f, 1.0f);
+                if (part.Shape.LightColorG != Util.Clip ((float)color.y, 0.0f, 1.0f))
+                    same = false;
+                part.Shape.LightColorG = Util.Clip ((float)color.y, 0.0f, 1.0f);
+                if (part.Shape.LightColorB != Util.Clip ((float)color.z, 0.0f, 1.0f))
+                    same = false;
                 part.Shape.LightColorB = Util.Clip((float)color.z, 0.0f, 1.0f);
+                if (part.Shape.LightIntensity != intensity)
+                    same = false;
                 part.Shape.LightIntensity = intensity;
+                if (part.Shape.LightRadius != radius)
+                    same = false;
                 part.Shape.LightRadius = radius;
+                if (part.Shape.LightFalloff != falloff)
+                    same = false;
                 part.Shape.LightFalloff = falloff;
             }
             else
             {
+                if (part.Shape.LightEntry != false)
+                    same = false;
                 part.Shape.LightEntry = false;
             }
 
-            part.ParentGroup.HasGroupChanged = true;
-            part.ScheduleUpdate(PrimUpdateFlags.FindBest);
+            if (!same)
+            {
+                part.ParentGroup.HasGroupChanged = true;
+                part.ScheduleUpdate (PrimUpdateFlags.FindBest);
+            }
         }
 
         public LSL_Vector llGetColor(int face)
@@ -2244,7 +2261,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 LSL_Vector rel_vec = SetPosAdjust(currentPos, targetPos);
                 part.FixOffsetPosition((new Vector3((float)rel_vec.x, (float)rel_vec.y, (float)rel_vec.z)),true);
                 ISceneEntity parent = part.ParentEntity;
-                parent.HasGroupChanged = true;
                 parent.ScheduleGroupTerseUpdate();
             }
         }
@@ -4164,14 +4180,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llTargetOmega(LSL_Vector axis, double spinrate, double gain)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            m_host.AngularVelocity = new Vector3((float)(axis.x * spinrate), (float)(axis.y * spinrate), (float)(axis.z * spinrate));
+
+            m_host.AngularVelocity = new Vector3 ((float)(axis.x * spinrate), (float)(axis.y * spinrate), (float)(axis.z * spinrate));
             ScriptData script = ScriptProtection.GetScript(this.m_itemID);
             if (script != null)
                 script.TargetOmegaWasSet = true;
             m_host.ScheduleTerseUpdate();
             //m_host.SendTerseUpdateToAllClients();
-            m_host.ParentEntity.HasGroupChanged = true;
         }
 
         public LSL_Integer llGetStartParameter()
@@ -4508,7 +4523,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             parentPrim.TriggerScriptChangedEvent(Changed.LINK);
             parentPrim.RootChild.CreateSelected = true;
-            parentPrim.HasGroupChanged = true;
             parentPrim.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
 
             if (client != null)
@@ -4581,7 +4595,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     parentPrim.DelinkFromGroup(part, true);
                 }
-                parentPrim.HasGroupChanged = true;
                 parentPrim.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                 parentPrim.TriggerScriptChangedEvent(Changed.LINK);
 
@@ -4593,7 +4606,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     {
                         newRoot.ParentEntity.LinkToGroup (part.ParentGroup);
                     }
-                    newRoot.ParentEntity.HasGroupChanged = true;
                     newRoot.ParentEntity.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                 }
             }
@@ -4603,7 +4615,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     return;
 
                 parentPrim.DelinkFromGroup(childPrim, true);
-                parentPrim.HasGroupChanged = true;
                 parentPrim.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                 parentPrim.TriggerScriptChangedEvent(Changed.LINK);
             }
@@ -4625,7 +4636,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 parentPrim.DelinkFromGroup(part, true);
                 parentPrim.TriggerScriptChangedEvent(Changed.LINK);
             }
-            parentPrim.HasGroupChanged = true;
             parentPrim.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
         }
 
@@ -6655,7 +6665,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             part.AddTextureAnimation(pTexAnim);
             part.ScheduleUpdate(PrimUpdateFlags.FindBest);
-            part.ParentEntity.HasGroupChanged = true;
         }
 
         public void llTriggerSoundLimited(string sound, double volume, LSL_Vector top_north_east,
@@ -7079,7 +7088,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (rules.Length == 0)
             {
                 part.RemoveParticleSystem();
-                part.ParentEntity.HasGroupChanged = true;
             }
             else
             {
@@ -7255,7 +7263,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 prules.CRC = 1;
 
                 part.AddNewParticleSystem(prules);
-                part.ParentEntity.HasGroupChanged = true;
             }
             part.ScheduleUpdate(PrimUpdateFlags.Particles);
         }
@@ -7451,7 +7458,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             m_host.SitTargetPosition = new Vector3((float)offset.x, (float)offset.y, (float)offset.z);
             m_host.SitTargetOrientation = Rot2Quaternion(rot);
-            m_host.ParentEntity.HasGroupChanged = true;
         }
 
         public LSL_String llAvatarOnSitTarget()
@@ -10718,7 +10724,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_host.ParentEntity.RootChild.PayPrice[2] = (LSL_Integer)quick_pay_buttons.Data[1];
             m_host.ParentEntity.RootChild.PayPrice[3] = (LSL_Integer)quick_pay_buttons.Data[2];
             m_host.ParentEntity.RootChild.PayPrice[4] = (LSL_Integer)quick_pay_buttons.Data[3];
-            m_host.ParentEntity.HasGroupChanged = true;
         }
 
         public LSL_Vector llGetCameraPos()

@@ -148,7 +148,10 @@ namespace Aurora.Modules.FileBasedSimulationData
         {
             if (FunctionName == "Backup")
             {
+                m_saveTimer.Stop ();
+                m_requiresSave = false;
                 SaveBackup ("");
+                m_saveTimer.Start (); //Restart it as we just did a backup
             }
             return null;
         }
@@ -162,8 +165,10 @@ namespace Aurora.Modules.FileBasedSimulationData
         {
             if (m_requiresSave)
             {
+                m_saveTimer.Stop ();
                 SaveBackup ("");
                 m_requiresSave = false;
+                m_saveTimer.Start (); //Restart it as we just did a backup
             }
             else
                 m_log.Info ("[FileBasedSimulationData]: Not saving backup, not required");
@@ -202,6 +207,13 @@ namespace Aurora.Modules.FileBasedSimulationData
                         engine.SaveStateSaves ();
                     }
                 }
+            }
+
+            ISceneEntity[] entities = m_scene.Entities.GetEntities ();
+            foreach (ISceneEntity entity in entities)
+            {
+                if(entity.HasGroupChanged)
+                    entity.HasGroupChanged = false;
             }
 
             m_log.Info ("[FileBasedSimulationData]: Saving Backup for region " + m_scene.RegionInfo.RegionName);

@@ -367,7 +367,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 m_ScriptEngine.MaintenanceThread.AddEventSchQueue (this, "state_entry",
                     new DetectParams[0], EventPriority.FirstStart, new object[0] { });
                 //Save a state save after a state change, its a large change in the script's function
-                m_ScriptEngine.StateSave.SaveStateTo (this, false);
+                m_ScriptEngine.StateSave.SaveStateTo (this);
                 Script.NeedsStateSaved = true;
             }
         }

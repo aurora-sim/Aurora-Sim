@@ -285,7 +285,6 @@ namespace OpenSim.Region.Framework.Scenes
             List<TaskInventoryItem> LSLItems = GetInventoryScripts();
             if (LSLItems.Count == 0)
                 return;
-            HasInventoryChanged = true;
 
             bool SendUpdate = m_part.AddFlag(PrimFlags.Scripted);
             m_part.ParentGroup.Scene.EventManager.TriggerRezScripts(

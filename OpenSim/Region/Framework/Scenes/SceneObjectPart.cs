@@ -965,12 +965,15 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_name; }
             set 
             {
-                if (ParentGroup != null)
-                    ParentGroup.HasGroupChanged = true;
-                m_name = value;
-                if (PhysActor != null)
+                if (m_name != value)
                 {
-                    PhysActor.SOPName = value;
+                    if (ParentGroup != null)
+                        ParentGroup.HasGroupChanged = true;
+                    m_name = value;
+                    if (PhysActor != null)
+                    {
+                        PhysActor.SOPName = value;
+                    }
                 }
             }
         }
@@ -980,6 +983,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return (int) m_material; }
             set
             {
+                if (m_material == (Material)value)
+                    return;
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
                 m_material = (Material)value;
@@ -1145,8 +1150,23 @@ namespace OpenSim.Region.Framework.Scenes
             get { return GetComponentState("TextureAnimation").AsBinary(); }
             set
             {
-                if (ParentGroup != null)
-                    ParentGroup.HasGroupChanged = true;
+                bool same = true;
+                byte[] old = TextureAnimation;
+                if (old.Length == value.Length)
+                {
+                    for (int i = 0; i < value.Length; i++)
+                    {
+                        if (old[i] != value[i])
+                        {
+                            same = false;
+                            break;
+                        }
+                    }
+                }
+                else
+                    same = false;
+                if (same)
+                    return;
                 SetComponentState("TextureAnimation", value);
             }
         }
@@ -1160,6 +1180,23 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
+                bool same = true;
+                byte[] old = ParticleSystem;
+                if (old.Length == value.Length)
+                {
+                    for (int i = 0; i < value.Length; i++)
+                    {
+                        if (old[i] != value[i])
+                        {
+                            same = false;
+                            break;
+                        }
+                    }
+                }
+                else
+                    same = false;
+                if (same)
+                    return;
                 //MUST set via the OSD
                 SetComponentState("ParticleSystem", OSD.FromBinary(value));
             }
@@ -1339,6 +1376,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_description; }
             set 
             {
+                if (m_description == value)
+                    return;
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
                 m_description = value;
@@ -1419,6 +1458,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
+                if (m_text == value)
+                    return;
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
                 m_text = value;
@@ -1431,6 +1472,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_sitName; }
             set
             {
+                if (m_sitName == value)
+                    return;
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
                 m_sitName = value;
@@ -1442,6 +1485,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_touchName; }
             set
             {
+                if (m_touchName == value)
+                    return;
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
                 m_touchName = value;
@@ -1466,6 +1511,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_clickAction; }
             set
             {
+                if (m_clickAction == value)
+                    return;
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
                 m_clickAction = value;
@@ -1568,6 +1615,8 @@ namespace OpenSim.Region.Framework.Scenes
             
             set
             {
+                if (m_mediaUrl == value)
+                    return;
                 m_mediaUrl = value;
                 
                 if (ParentGroup != null)
@@ -1644,8 +1693,14 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 return GetComponentState("SitTargetOrientation").AsQuaternion();
             }
-            set 
+            set
             {
+                Quaternion oldSitTargetOrientation = SitTargetOrientation;
+                if (value.X == oldSitTargetOrientation.X &&
+                    value.Y == oldSitTargetOrientation.Y &&
+                    value.Z == oldSitTargetOrientation.Z &&
+                    value.W == oldSitTargetOrientation.W)
+                    return;
                 SetComponentState("SitTargetOrientation", value);
             }
         }
@@ -1659,7 +1714,12 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                SetComponentState("SitTargetPosition", value);
+                Vector3 oldSitTarget = SitTargetPosition;
+                if (value.X == oldSitTarget.X &&
+                    value.Y == oldSitTarget.Y &&
+                    value.Z == oldSitTarget.Z)
+                    return;
+                SetComponentState ("SitTargetPosition", value);
             }
         }
 
@@ -1673,6 +1733,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
+                Vector3 oldSitTarget = SitTargetPositionLL;
+                if (value.X == oldSitTarget.X &&
+                    value.Y == oldSitTarget.Y &&
+                    value.Z == oldSitTarget.Z)
+                    return;
                 SetComponentState("SitTargetPosition", value);
             }
         }
@@ -1686,6 +1751,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             set
             {
+                Quaternion oldSitTargetOrientation = SitTargetOrientationLL;
+                if (value.X == oldSitTargetOrientation.X &&
+                    value.Y == oldSitTargetOrientation.Y &&
+                    value.Z == oldSitTargetOrientation.Z &&
+                    value.W == oldSitTargetOrientation.W)
+                    return;
                 SetComponentState("SitTargetOrientationLL", value);
             }
         }
@@ -1918,56 +1989,57 @@ namespace OpenSim.Region.Framework.Scenes
         #region Public Methods
 
 
-        public void SetRotationOffset(bool UpdatePrimActor, Quaternion value, bool single)
-            {
+        public void SetRotationOffset (bool UpdatePrimActor, Quaternion value, bool single)
+        {
+            if (m_rotationOffset == value)
+                return;
             if (ParentGroup != null)
                 ParentGroup.HasGroupChanged = true;
             m_rotationOffset = value;
 
             if (value.W == 0) //We have an issue here... try to normalize it
-                value.Normalize();
+                value.Normalize ();
 
             PhysicsObject actor = PhysActor;
             if (actor != null)
-                {
+            {
                 if (actor.PhysicsActorType != (int)ActorTypes.Prim)  // for now let other times get updates
-                    {
+                {
                     UpdatePrimActor = true;
                     single = false;
-                    }
+                }
                 if (UpdatePrimActor)
-                    {
+                {
                     try
-                        {
+                    {
                         // Root prim gets value directly
                         if (_parentID == 0)
-                            {
+                        {
                             actor.Orientation = value;
                             //m_log.Info("[PART]: RO1:" + actor.Orientation.ToString());
-                            }
+                        }
                         else if (single || !actor.IsPhysical)
-                            {
+                        {
                             // Child prim we have to calculate it's world rotationwel
-                            Quaternion resultingrotation = GetWorldRotation();
+                            Quaternion resultingrotation = GetWorldRotation ();
                             actor.Orientation = resultingrotation;
                             //m_log.Info("[PART]: RO2:" + actor.Orientation.ToString());
-                            }
-                        m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
+                        }
+                        m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint (actor);
                         //}
-                        }
+                    }
                     catch (Exception ex)
-                        {
-                        m_log.Error("[SCENEOBJECTPART]: ROTATIONOFFSET" + ex.Message);
-                        }
+                    {
+                        m_log.Error ("[SCENEOBJECTPART]: ROTATIONOFFSET" + ex.Message);
                     }
                 }
-
             }
+        }
 
-        public void SetOffsetPosition(Vector3 value)
-            {
+        public void SetOffsetPosition (Vector3 value)
+        {
             m_offsetPosition = value;
-            }
+        }
 
         public void FixOffsetPosition(Vector3 value, bool single)
             {
@@ -4384,8 +4456,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="text"></param>
         public void SetText(string text)
         {
-            if (Text != text)
-                ParentGroup.HasGroupChanged = true;
             Text = text;
 
             ScheduleUpdate(PrimUpdateFlags.Text);
@@ -5265,7 +5335,6 @@ namespace OpenSim.Region.Framework.Scenes
                 (rot.W != RotationOffset.W))
             {
                 RotationOffset = rot;
-                ParentGroup.HasGroupChanged = true;
                 ScheduleTerseUpdate();
             }
         }
@@ -5367,6 +5436,23 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="textureEntry"></param>
         public void UpdateTextureEntry(byte[] textureEntry)
         {
+            bool same = true;
+            byte[] old = m_shape.TextureEntry;
+            if (old.Length == textureEntry.Length)
+            {
+                for (int i = 0; i < textureEntry.Length; i++)
+                {
+                    if (old[i] != textureEntry[i])
+                    {
+                        same = false;
+                        break;
+                    }
+                }
+            }
+            else
+                same = false;
+            if (same)
+                return;
             Primitive.TextureEntry oldEntry = m_shape.Textures;
             m_shape.TextureEntry = textureEntry;
             if (m_shape.Textures.DefaultTexture.RGBA.A != oldEntry.DefaultTexture.RGBA.A ||
