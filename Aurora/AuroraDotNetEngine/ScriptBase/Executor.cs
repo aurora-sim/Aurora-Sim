@@ -253,7 +253,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 // FriendlyErrors depends on getting the whole exception!
                 //
                 if (!(tie is EventAbortException) &&
-                        !(tie is MinEventDelayException))
+                        !(tie is MinEventDelayException) &&
+                        !(tie.InnerException.Message.Contains("EventAbortException")) &&
+                        !(tie.InnerException.Message.Contains ("MinEventDelayException")))
                     ex = tie;
                 if (Start != null)
                 {

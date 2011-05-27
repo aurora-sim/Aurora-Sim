@@ -915,6 +915,8 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             /// <param name="e"></param>
             void CheckToMakeSureWearablesHaveBeenSent (object sender, ElapsedEventArgs e)
             {
+                if (m_sp == null)
+                    return;
                 if (!m_InitialHasWearablesBeenSent)
                 {
                     m_InitialHasWearablesBeenSent = true;
