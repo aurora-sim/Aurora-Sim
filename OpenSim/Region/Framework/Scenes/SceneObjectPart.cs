@@ -185,11 +185,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         // TODO: This needs to be persisted in next XML version update!
         [XmlIgnore]
-        private readonly int[] m_PayPrice = {-2,-2,-2,-2,-2};
+        private int[] m_PayPrice = {-2,-2,-2,-2,-2};
 
         public int[] PayPrice
         {
             get { return m_PayPrice; }
+            set { m_PayPrice = value; }
         }
 
         [XmlIgnore]

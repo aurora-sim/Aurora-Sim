@@ -403,7 +403,12 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             m_SOPXmlProcessors.Add("CollisionSoundVolume", ProcessCollisionSoundVolume);
             m_SOPXmlProcessors.Add("MediaUrl", ProcessMediaUrl);
             m_SOPXmlProcessors.Add("TextureAnimation", ProcessTextureAnimation);
-            m_SOPXmlProcessors.Add("ParticleSystem", ProcessParticleSystem);
+            m_SOPXmlProcessors.Add ("ParticleSystem", ProcessParticleSystem);
+            m_SOPXmlProcessors.Add ("PayPrice0", ProcessPayPrice0);
+            m_SOPXmlProcessors.Add ("PayPrice1", ProcessPayPrice1);
+            m_SOPXmlProcessors.Add ("PayPrice2", ProcessPayPrice2);
+            m_SOPXmlProcessors.Add ("PayPrice3", ProcessPayPrice3);
+            m_SOPXmlProcessors.Add ("PayPrice4", ProcessPayPrice4);
             #endregion
 
             #region TaskInventoryXmlProcessors initialization
@@ -777,6 +782,32 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         {
             obj.ParticleSystem = Convert.FromBase64String(reader.ReadElementContentAsString("ParticleSystem", String.Empty));
         }
+        
+        private static void ProcessPayPrice0(SceneObjectPart obj, XmlTextReader reader)
+        {
+            obj.PayPrice[0] = (int)reader.ReadElementContentAsInt("PayPrice0", String.Empty);
+        }
+
+        private static void ProcessPayPrice1(SceneObjectPart obj, XmlTextReader reader)
+        {
+            obj.PayPrice[1] = (int)reader.ReadElementContentAsInt("PayPrice1", String.Empty);
+        }
+
+        private static void ProcessPayPrice2(SceneObjectPart obj, XmlTextReader reader)
+        {
+            obj.PayPrice[2] = (int)reader.ReadElementContentAsInt("PayPrice2", String.Empty);
+        }
+
+        private static void ProcessPayPrice3(SceneObjectPart obj, XmlTextReader reader)
+        {
+            obj.PayPrice[3] = (int)reader.ReadElementContentAsInt("PayPrice3", String.Empty);
+        }
+
+        private static void ProcessPayPrice4(SceneObjectPart obj, XmlTextReader reader)
+        {
+            obj.PayPrice[4] = (int)reader.ReadElementContentAsInt("PayPrice4", String.Empty);
+        }
+
         #endregion
 
         #region TaskInventoryXmlProcessors
@@ -1241,7 +1272,13 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             if (sop.MediaUrl != null)
                 writer.WriteElementString("MediaUrl", sop.MediaUrl.ToString());
             WriteBytes(writer, "TextureAnimation", sop.TextureAnimation);
-            WriteBytes(writer, "ParticleSystem", sop.ParticleSystem);
+            WriteBytes (writer, "ParticleSystem", sop.ParticleSystem);
+            writer.WriteElementString ("PayPrice0", sop.PayPrice[0].ToString ());
+            writer.WriteElementString ("PayPrice1", sop.PayPrice[1].ToString ());
+            writer.WriteElementString ("PayPrice2", sop.PayPrice[2].ToString ());
+            writer.WriteElementString ("PayPrice3", sop.PayPrice[3].ToString ());
+            writer.WriteElementString ("PayPrice4", sop.PayPrice[4].ToString ());
+
 
             //Write the generic elements last
             foreach (KeyValuePair<string, Serialization> kvp in m_genericSerializers)
