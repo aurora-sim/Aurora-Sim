@@ -420,7 +420,6 @@ namespace OpenSim.Region.Physics.Meshing
                                 try { idata.Save(decodedSculptFileName, ImageFormat.MemoryBmp); }
                                 catch (Exception e) { m_log.Error("[SCULPT]: unable to cache sculpt map " + decodedSculptFileName + " " + e.ToString()); }
                             }
-                            idata = null;
                         }
                         catch (DllNotFoundException)
                         {
@@ -590,6 +589,7 @@ namespace OpenSim.Region.Physics.Meshing
 
                 coords = primMesh.coords;
                 faces = primMesh.faces;
+                primMesh = null;
             }
 
             // Remove the reference to any JPEG2000 sculpt data so it can be GCed
@@ -613,6 +613,10 @@ namespace OpenSim.Region.Physics.Meshing
                 Face f = faces[i];
                 mesh.Add(new Triangle(vertices[f.v1], vertices[f.v2], vertices[f.v3]));
             }
+            coords.Clear ();
+            faces.Clear ();
+            coords = null;
+            faces = null;
             return mesh;
         }
 

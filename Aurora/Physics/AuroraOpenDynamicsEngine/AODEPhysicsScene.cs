@@ -1888,7 +1888,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             PhysicsObject result;
             IMesh mesh = null;
 
-            if (needsMeshing(pbs))
+            /*if (needsMeshing(pbs))
             {
                 try
                 {
@@ -1901,7 +1901,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     mesh = null;
                     return null;
                 }
-            }
+            }*/
 
             result = AddPrim(primName, position, size, rotation, mesh, pbs, isPhysical);
 

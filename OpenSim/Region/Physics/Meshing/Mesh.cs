@@ -202,7 +202,8 @@ namespace OpenSim.Region.Physics.Meshing
                 m_vertexCount = vertexList.Length / 3;
                 int byteCount = m_vertexCount * vertexStride;
                 m_verticesPtr = System.Runtime.InteropServices.Marshal.AllocHGlobal(byteCount);
-                System.Runtime.InteropServices.Marshal.Copy(vertexList, 0, m_verticesPtr, m_vertexCount * 3);
+                System.Runtime.InteropServices.Marshal.Copy (vertexList, 0, m_verticesPtr, m_vertexCount * 3);
+                GC.AddMemoryPressure ((long)m_vertexCount * 3);
             }
             vertices = m_verticesPtr;
             vertexCount = m_vertexCount;
@@ -251,6 +252,7 @@ namespace OpenSim.Region.Physics.Meshing
                 int byteCount = m_indexCount * sizeof(int);
                 m_indicesPtr = System.Runtime.InteropServices.Marshal.AllocHGlobal(byteCount);
                 System.Runtime.InteropServices.Marshal.Copy(indexList, 0, m_indicesPtr, m_indexCount);
+                GC.AddMemoryPressure ((long)byteCount);
             }
             // A triangle is 3 ints (indices)
             triStride = 3 * sizeof(int);
@@ -281,6 +283,10 @@ namespace OpenSim.Region.Physics.Meshing
         /// </summary>
         public void releaseSourceMeshData()
         {
+            if(m_triangles != null)
+                m_triangles.Clear ();
+            if(m_vertices != null)
+                m_vertices.Clear ();
             m_triangles = null;
             m_vertices = null;
         }
