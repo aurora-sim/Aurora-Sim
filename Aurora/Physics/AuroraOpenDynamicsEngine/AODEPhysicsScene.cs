@@ -98,6 +98,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float gravityx = 0f;
         public float gravityy = 0f;
         public float gravityz = -9.8f;
+        public bool m_hasSetUpPrims = false;
         private const int maxContactsbeforedeath = 4000;
         private int m_currentmaxContactsbeforedeath = maxContactsbeforedeath;
 
@@ -2586,6 +2587,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             }
                             if (tlimit-- <= 0)
                                 break;
+                        }
+
+                        if (ChangesQueue.Count == 0 && !m_hasSetUpPrims)
+                        {
+                            m_hasSetUpPrims = true;
+                            mesher.FinishedMeshing ();
                         }
 
                         // process changes

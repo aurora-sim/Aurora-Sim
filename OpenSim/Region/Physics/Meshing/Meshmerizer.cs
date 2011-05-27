@@ -625,6 +625,15 @@ namespace OpenSim.Region.Physics.Meshing
             return CreateMesh(primName, primShape, size, lod, false);
         }
 
+        public void FinishedMeshing ()
+        {
+            foreach (Mesh mesh in m_uniqueMeshes.Values)
+            {
+                mesh.releaseSourceMeshData ();
+            }
+            m_uniqueMeshes.Clear ();
+        }
+
         public void RemoveMesh(ulong key)
         {
             m_uniqueMeshes.Remove(key);
