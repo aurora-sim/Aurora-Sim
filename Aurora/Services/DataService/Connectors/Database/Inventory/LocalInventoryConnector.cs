@@ -79,11 +79,11 @@ namespace Aurora.Services.DataService
                 {
                     try
                     {
-                        if (reader != null)
-                        {
-                            reader.Close ();
-                            reader.Dispose ();
-                        }
+                        //if (reader != null)
+                        //{
+                        //    reader.Close ();
+                        //    reader.Dispose ();
+                        //}
                     }
                     catch { }
                     GD.CloseDatabase ();
@@ -114,11 +114,11 @@ namespace Aurora.Services.DataService
                 {
                     try
                     {
-                        if (reader != null)
-                        {
-                            reader.Close ();
-                            reader.Dispose ();
-                        }
+                        //if (reader != null)
+                        //{
+                        //    reader.Close ();
+                        //    reader.Dispose ();
+                        //}
                     }
                     catch { }
                     GD.CloseDatabase ();
@@ -183,7 +183,7 @@ namespace Aurora.Services.DataService
 
                 array.Add(item);
             }
-            retVal.Close();
+            //retVal.Close();
 
             return array;
         }
@@ -289,11 +289,11 @@ namespace Aurora.Services.DataService
                     {
                         try
                         {
-                            if (retVal != null)
-                            {
-                                retVal.Close ();
-                                retVal.Dispose ();
-                            }
+                            //if (retVal != null)
+                            //{
+                            //    retVal.Close ();
+                            //    retVal.Dispose ();
+                            //}
                         }
                         catch { }
                         GD.CloseDatabase ();
@@ -336,11 +336,11 @@ namespace Aurora.Services.DataService
                             {
                                 try
                                 {
-                                    if (retVal != null)
-                                    {
-                                        retVal.Close ();
-                                        retVal.Dispose ();
-                                    }
+                                    //if (retVal != null)
+                                    //{
+                                    //    retVal.Close ();
+                                    //    retVal.Dispose ();
+                                    //}
                                 }
                                 catch
                                 {
@@ -362,7 +362,14 @@ namespace Aurora.Services.DataService
             contents.WriteEndArray(); //end array folders
             contents.WriteEndMap(/*"llsd"*/); //end llsd
 
-            return contents.GetSerializer();
+            try
+            {
+                return contents.GetSerializer ();
+            }
+            finally
+            {
+                contents = null;
+            }
         }
 
         public class LLSDSerializationDictionary
@@ -470,6 +477,7 @@ namespace Aurora.Services.DataService
                     writer.WriteValue(Convert.ToBase64String((byte[])value)); //Has to be base64
                     writer.WriteEndElement();
                 }
+                t = null;
             }
 
             public object this[string name]
@@ -543,15 +551,19 @@ namespace Aurora.Services.DataService
                         writer.WriteValue(Convert.ToBase64String((byte[])value)); //Has to be base64
                         writer.WriteEndElement();
                     }
+                    t = null;
                 }
             }
 
             public byte[] GetSerializer()
             {
-                writer.WriteEndElement();
-                writer.Close();
+                writer.WriteEndElement ();
+                writer.Close ();
 
-                return sw.ToArray();
+                byte[] array = sw.ToArray ();
+                writer = null;
+                sw = null;
+                return array;
             }
 
             private string AsString(DateTime value)
@@ -581,7 +593,7 @@ namespace Aurora.Services.DataService
                 folder.ParentID = UUID.Parse (retVal["parentFolderID"][i]);
                 folders.Add (folder);
             }
-            retVal.Clear();
+            //retVal.Clear();
             return folders;
         }
 
@@ -613,7 +625,7 @@ namespace Aurora.Services.DataService
                 item.GroupPermissions = uint.Parse(retVal["inventoryGroupPermissions"].ToString());
                 items.Add(item);
             }
-            retVal.Close();
+            //retVal.Close();
             return items;
         }
 
@@ -675,11 +687,11 @@ namespace Aurora.Services.DataService
                 {
                     try
                     {
-                        if (reader != null)
-                        {
-                            reader.Close ();
-                            reader.Dispose ();
-                        }
+                        //if (reader != null)
+                        //{
+                        //    reader.Close ();
+                        //    reader.Dispose ();
+                        //}
                     }
                     catch { }
                 }
