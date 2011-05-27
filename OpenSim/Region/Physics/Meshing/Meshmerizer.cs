@@ -415,13 +415,12 @@ namespace OpenSim.Region.Physics.Meshing
                             OpenMetaverse.Imaging.OpenJPEG.DecodeToImage(primShape.SculptData, out unusedData, out idata);
                             unusedData = null;
 
-                            //idata = CSJ2K.J2kImage.FromBytes(primShape.SculptData);
-
                             if (cacheSculptMaps && idata != null)
                             {
                                 try { idata.Save(decodedSculptFileName, ImageFormat.MemoryBmp); }
                                 catch (Exception e) { m_log.Error("[SCULPT]: unable to cache sculpt map " + decodedSculptFileName + " " + e.ToString()); }
                             }
+                            idata = null;
                         }
                         catch (DllNotFoundException)
                         {
@@ -469,6 +468,7 @@ namespace OpenSim.Region.Physics.Meshing
                     sculptMesh = new PrimMesher.SculptMesh((Bitmap)idata, sculptType, (int)lod, false, mirror, invert);
 
                     idata.Dispose();
+                    idata = null;
 
                     sculptMesh.DumpRaw(baseDir, primName, "primMesh");
 
@@ -593,7 +593,7 @@ namespace OpenSim.Region.Physics.Meshing
             }
 
             // Remove the reference to any JPEG2000 sculpt data so it can be GCed
-            primShape.SculptData = Utils.EmptyBytes;
+            primShape.SculptData = null;
 
             int numCoords = coords.Count;
             int numFaces = faces.Count;

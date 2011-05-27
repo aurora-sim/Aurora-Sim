@@ -80,7 +80,8 @@ namespace Aurora.Modules
             GZipStream m_loadStream = new GZipStream(ArchiveHelpers.GetStream(fileName), CompressionMode.Decompress);
             TarArchiveReader reader = new TarArchiveReader(m_loadStream);
 
-            LoadRegionBackup(reader, scene);
+            LoadRegionBackup (reader, scene);
+            GC.Collect ();
         }
 
         private void SaveAuroraArchive(string mod, string[] cmd)

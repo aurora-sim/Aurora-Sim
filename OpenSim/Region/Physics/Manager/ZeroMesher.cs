@@ -70,7 +70,7 @@ namespace OpenSim.Region.Physics.Manager
         public IMesh CreateMesh(String primName, PrimitiveBaseShape primShape, Vector3 size, float lod, bool isPhysical)
         {
             // Remove the reference to the encoded JPEG2000 data so it can be GCed
-            primShape.SculptData = OpenMetaverse.Utils.EmptyBytes;
+            primShape.SculptData = null;
 
             return null;
         }

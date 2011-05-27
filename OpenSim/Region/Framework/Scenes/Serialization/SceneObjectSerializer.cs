@@ -235,7 +235,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 doc.Load(ms);
 
                 grp = InternalFromXml2Format (doc, scene);
-                grp.XMLRepresentation = Encoding.UTF8.GetBytes (doc.OuterXml);
+                grp.XMLRepresentation = ms.ToArray();
                 return grp;
             }
             catch (Exception e)
@@ -1388,10 +1388,10 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 writer.WriteElementString("SculptType", shp.SculptType.ToString());
                 writer.WriteStartElement("SculptData");
                 byte[] sd;
-                if (shp.SculptData != null)
+                //if (shp.SculptData != null)
                     sd = shp.ExtraParams;
-                else
-                    sd = Utils.EmptyBytes;
+                //else
+                //    sd = Utils.EmptyBytes;
                 writer.WriteBase64(sd, 0, sd.Length);
                 writer.WriteEndElement(); // SculptData
 

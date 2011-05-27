@@ -293,6 +293,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                     MemoryStream ms = new MemoryStream (data);
                     SceneObjectGroup sceneObject = SceneObjectSerializer.FromXml2Format (ms, scene);
                     ms.Close ();
+                    ms = null;
                     data = null;
                     foreach (ISceneChildEntity part in sceneObject.ChildrenEntities ())
                     {
@@ -305,7 +306,9 @@ namespace Aurora.Modules.FileBasedSimulationData
                 }
             }
             m_loadStream.Close ();
+            m_loadStream = null;
             foundLocalIDs.Clear ();
+            GC.Collect ();
         }
 
         protected virtual void CheckForOldDataBase ()
