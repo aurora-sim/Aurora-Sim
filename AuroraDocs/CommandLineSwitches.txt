@@ -38,6 +38,7 @@ Aurora.exe -secondaryIniFileName=AuroraSecondaryTesting.ini
 
 
 ;; Old Style Command line functions for .ini configuration
+;; NOTE: YOU CANNOT MIX OLD AND NEW OPTIONS
 ;; These require "-oldoptions=true" to be added as well
 
 Aurora.exe -oldoptions=true -inifile=MyIniOveride.ini
