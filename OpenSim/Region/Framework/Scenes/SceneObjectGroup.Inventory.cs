@@ -46,22 +46,18 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void ForceInventoryPersistence()
         {
-            Util.GetReaderLock (m_partsLock);
             foreach (SceneObjectPart part in m_partsList)
             {
                 part.Inventory.ForceInventoryPersistence ();
             }
-            Util.ReleaseReaderLock (m_partsLock);
         }
 
         public void BackupPreparation()
         {
-            Util.GetReaderLock (m_partsLock);
             foreach (SceneObjectPart part in m_partsList)
             {
                 part.Inventory.SaveScriptStateSaves ();
             }
-            Util.ReleaseReaderLock (m_partsLock);
         }
 
         /// <summary>
@@ -73,12 +69,10 @@ namespace OpenSim.Region.Framework.Scenes
             // Don't start scripts if they're turned off in the region!
             if (!m_scene.RegionInfo.RegionSettings.DisableScripts)
             {
-                Util.GetReaderLock (m_partsLock);
                 foreach (SceneObjectPart part in m_partsList)
                 {
                     part.Inventory.CreateScriptInstances (startParam, postOnRez, stateSource, RezzedFrom);
                 }
-                Util.ReleaseReaderLock (m_partsLock);
             }
         }
 
@@ -91,12 +85,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// </param>
         public void RemoveScriptInstances(bool sceneObjectBeingDeleted)
         {
-            Util.GetReaderLock (m_partsLock);
             foreach (SceneObjectPart part in m_partsList)
             {
                 part.Inventory.RemoveScriptInstances (sceneObjectBeingDeleted);
             }
-            Util.ReleaseReaderLock (m_partsLock);
         }
 
         /// <summary>
@@ -249,13 +241,11 @@ namespace OpenSim.Region.Framework.Scenes
                               PermissionMask.Transfer) | 7;
 
             uint ownerMask = 0x7ffffff;
-            Util.GetReaderLock (m_partsLock);
             foreach (SceneObjectPart part in m_partsList)
             {
                 ownerMask &= part.OwnerMask;
                 perms &= part.Inventory.MaskEffectivePermissions ();
             }
-            Util.ReleaseReaderLock (m_partsLock);
 
             if ((ownerMask & (uint)PermissionMask.Modify) == 0)
                 perms &= ~(uint)PermissionMask.Modify;
@@ -280,22 +270,18 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void ApplyNextOwnerPermissions()
         {
-            Util.GetReaderLock (m_partsLock);
             foreach (SceneObjectPart part in m_partsList)
             {
                 part.ApplyNextOwnerPermissions ();
             }
-            Util.ReleaseReaderLock (m_partsLock);
         }
 
         public void ResumeScripts()
         {
-            Util.GetReaderLock (m_partsLock);
             foreach (SceneObjectPart part in m_partsList)
             {
                 part.Inventory.ResumeScripts ();
             }
-            Util.ReleaseReaderLock (m_partsLock);
         }
     }
 }

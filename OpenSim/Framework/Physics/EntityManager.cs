@@ -38,11 +38,11 @@ namespace OpenSim.Framework
     {
         private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
         private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, ISceneEntity> m_objectEntities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, ISceneEntity> ();
-        private System.Threading.ReaderWriterLockSlim m_objectEntitiesLock = new System.Threading.ReaderWriterLockSlim (System.Threading.LockRecursionPolicy.SupportsRecursion);
+        private object m_objectEntitiesLock = new object ();
         private readonly Dictionary<UUID, IScenePresence> m_presenceEntities = new Dictionary<UUID, IScenePresence> ();
-        private System.Threading.ReaderWriterLockSlim m_presenceEntitiesLock = new System.Threading.ReaderWriterLockSlim (System.Threading.LockRecursionPolicy.SupportsRecursion);
+        private object m_presenceEntitiesLock = new object();
         private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID> m_child_2_parent_entities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID> ();
-        private System.Threading.ReaderWriterLockSlim m_child_2_parent_entitiesLock = new System.Threading.ReaderWriterLockSlim (System.Threading.LockRecursionPolicy.SupportsRecursion);
+        private object m_child_2_parent_entitiesLock = new object ();
 
         public int Count
         {
@@ -56,49 +56,42 @@ namespace OpenSim.Framework
 
             try
             {
-                Util.GetWriterLock (m_child_2_parent_entitiesLock);
-                Util.GetWriterLock (m_objectEntitiesLock);
-                Util.GetWriterLock (m_presenceEntitiesLock);
                 if (entity is ISceneEntity)
                 {
-                    foreach (ISceneChildEntity part in (entity as ISceneEntity).ChildrenEntities ())
+                    lock (m_child_2_parent_entitiesLock)
                     {
-                        m_child_2_parent_entities.Remove (part.UUID);
-                        m_child_2_parent_entities.Remove (part.LocalId);
-                        m_child_2_parent_entities.Add (part.UUID, part.LocalId, entity.UUID);
+                        foreach (ISceneChildEntity part in (entity as ISceneEntity).ChildrenEntities ())
+                        {
+                            m_child_2_parent_entities.Remove (part.UUID);
+                            m_child_2_parent_entities.Remove (part.LocalId);
+                            m_child_2_parent_entities.Add (part.UUID, part.LocalId, entity.UUID);
+                        }
                     }
-                    m_objectEntities.Add (entity.UUID, entity.LocalId, entity as ISceneEntity);
+                    lock(m_objectEntitiesLock)
+                        m_objectEntities.Add (entity.UUID, entity.LocalId, entity as ISceneEntity);
                 }
                 else
                 {
                     IScenePresence presence = (IScenePresence)entity;
 
-                    m_presenceEntities.Add (presence.UUID, presence);
+                    lock(m_presenceEntitiesLock)
+                        m_presenceEntities.Add (presence.UUID, presence);
                 }
             }
             catch (Exception e)
             {
                 m_log.ErrorFormat ("Add Entity failed: {0}", e.Message);
             }
-            finally
-            {
-                Util.ReleaseWriterLock (m_child_2_parent_entitiesLock);
-                Util.ReleaseWriterLock (m_objectEntitiesLock);
-                Util.ReleaseWriterLock (m_presenceEntitiesLock);
-            }
         }
 
         public void Clear ()
         {
-            Util.GetWriterLock (m_objectEntitiesLock);
+            lock (m_objectEntitiesLock)
             m_objectEntities.Clear ();
-            Util.ReleaseWriterLock (m_objectEntitiesLock);
-            Util.GetWriterLock (m_presenceEntitiesLock);
+            lock (m_presenceEntitiesLock)
             m_presenceEntities.Clear ();
-            Util.ReleaseWriterLock (m_presenceEntitiesLock);
-            Util.GetWriterLock (m_child_2_parent_entitiesLock);
-            m_child_2_parent_entities.Clear ();
-            Util.ReleaseWriterLock (m_child_2_parent_entitiesLock);
+            lock (m_child_2_parent_entitiesLock)
+                m_child_2_parent_entities.Clear ();
         }
 
         public bool Remove (IEntity entity)
@@ -108,23 +101,27 @@ namespace OpenSim.Framework
 
             try
             {
-                Util.GetWriterLock (m_child_2_parent_entitiesLock);
-                Util.GetWriterLock (m_objectEntitiesLock);
-                Util.GetWriterLock (m_presenceEntitiesLock);
                 if (entity is ISceneEntity)
                 {
-                    //Remove all child entities
-                    foreach (ISceneChildEntity part in (entity as ISceneEntity).ChildrenEntities ())
+                    lock (m_child_2_parent_entitiesLock)
                     {
-                        m_child_2_parent_entities.Remove (part.UUID);
-                        m_child_2_parent_entities.Remove (part.LocalId);
+                        //Remove all child entities
+                        foreach (ISceneChildEntity part in (entity as ISceneEntity).ChildrenEntities ())
+                        {
+                            m_child_2_parent_entities.Remove (part.UUID);
+                            m_child_2_parent_entities.Remove (part.LocalId);
+                        }
                     }
-                    m_objectEntities.Remove (entity.UUID);
-                    m_objectEntities.Remove (entity.LocalId);
+                    lock (m_objectEntitiesLock)
+                    {
+                        m_objectEntities.Remove (entity.UUID);
+                        m_objectEntities.Remove (entity.LocalId);
+                    }
                 }
                 else
                 {
-                    m_presenceEntities.Remove (entity.UUID);
+                    lock(m_presenceEntitiesLock)
+                        m_presenceEntities.Remove (entity.UUID);
                 }
                 return true;
             }
@@ -133,91 +130,69 @@ namespace OpenSim.Framework
                 m_log.ErrorFormat ("Remove Entity failed for {0}", entity.UUID, e);
                 return false;
             }
-            finally
-            {
-                Util.ReleaseWriterLock (m_objectEntitiesLock);
-                Util.ReleaseWriterLock (m_child_2_parent_entitiesLock);
-                Util.ReleaseWriterLock (m_presenceEntitiesLock);
-            }
         }
 
         public IScenePresence[] GetPresences()
         {
-            try
-            {
-                Util.GetReaderLock (m_presenceEntitiesLock);
+            lock (m_presenceEntitiesLock)
                 return new List<IScenePresence> (m_presenceEntities.Values).ToArray ();
-            }
-            finally
-            {
-                Util.ReleaseReaderLock (m_presenceEntitiesLock);
-            }
         }
 
         public int GetPresenceCount ()
         {
-            try
-            {
-                Util.GetReaderLock (m_presenceEntitiesLock);
+            lock (m_presenceEntitiesLock)
                 return m_presenceEntities.Count;
-            }
-            finally
-            {
-                Util.ReleaseReaderLock (m_presenceEntitiesLock);
-            }
         }
 
         public IScenePresence[] GetPresences (Vector3 pos, float radius)
         {
-            Util.GetReaderLock (m_presenceEntitiesLock);
-            List<IScenePresence> tmp = new List<IScenePresence> (m_presenceEntities.Count);
-
-            foreach (IScenePresence entity in m_presenceEntities.Values)
+            lock (m_presenceEntitiesLock)
             {
-                if ((entity.AbsolutePosition - pos).LengthSquared () < radius * radius)
-                    tmp.Add (entity);
+                List<IScenePresence> tmp = new List<IScenePresence> (m_presenceEntities.Count);
+
+                foreach (IScenePresence entity in m_presenceEntities.Values)
+                {
+                    if ((entity.AbsolutePosition - pos).LengthSquared () < radius * radius)
+                        tmp.Add (entity);
+                }
+                return tmp.ToArray ();
             }
-            Util.ReleaseReaderLock (m_presenceEntitiesLock);
-            return tmp.ToArray ();
         }
 
         public ISceneEntity[] GetEntities ()
         {
-            Util.GetReaderLock (m_objectEntitiesLock);
-            List<ISceneEntity> tmp = new List<ISceneEntity> (m_objectEntities.Count);
-            m_objectEntities.ForEach (delegate (ISceneEntity entity)
+            lock (m_objectEntitiesLock)
             {
-                tmp.Add (entity);
-            });
-            Util.ReleaseReaderLock (m_objectEntitiesLock);
-            return tmp.ToArray ();
+                List<ISceneEntity> tmp = new List<ISceneEntity> (m_objectEntities.Count);
+                m_objectEntities.ForEach (delegate (ISceneEntity entity)
+                {
+                    tmp.Add (entity);
+                });
+                return tmp.ToArray ();
+            }
         }
 
         public ISceneEntity[] GetEntities (Vector3 pos, float radius)
         {
-            Util.GetReaderLock (m_objectEntitiesLock);
-            List<ISceneEntity> tmp = new List<ISceneEntity> (m_objectEntities.Count);
-
-            m_objectEntities.ForEach (delegate (ISceneEntity entity)
+            lock (m_objectEntitiesLock)
             {
-                //Add attachments as well, as they might be needed
-                if ((entity.AbsolutePosition - pos).LengthSquared () < radius * radius || entity.IsAttachment)
-                    tmp.Add (entity);
-            });
-            Util.ReleaseReaderLock (m_objectEntitiesLock);
-            return tmp.ToArray ();
+                List<ISceneEntity> tmp = new List<ISceneEntity> (m_objectEntities.Count);
+
+                m_objectEntities.ForEach (delegate (ISceneEntity entity)
+                {
+                    //Add attachments as well, as they might be needed
+                    if ((entity.AbsolutePosition - pos).LengthSquared () < radius * radius || entity.IsAttachment)
+                        tmp.Add (entity);
+                });
+                return tmp.ToArray ();
+            }
         }
 
         public bool TryGetPresenceValue (UUID key, out IScenePresence presence)
         {
-            try
+            lock (m_presenceEntitiesLock)
             {
-                Util.GetReaderLock (m_presenceEntitiesLock);
                 return m_presenceEntities.TryGetValue (key, out presence);
-            }
-            finally
-            {
-                Util.ReleaseReaderLock (m_presenceEntitiesLock);
             }
         }
 
@@ -230,15 +205,13 @@ namespace OpenSim.Framework
         {
             IScenePresence presence;
             bool gotit;
-            Util.GetReaderLock (m_presenceEntitiesLock);
-            gotit = m_presenceEntities.TryGetValue (key, out presence);
-            Util.ReleaseReaderLock (m_presenceEntitiesLock);
+            lock (m_presenceEntitiesLock)
+                gotit = m_presenceEntities.TryGetValue (key, out presence);
             if (!gotit)
             {
                 ISceneEntity presence2;
-                Util.GetReaderLock (m_objectEntitiesLock);
-                gotit = m_objectEntities.TryGetValue (key, out presence2);
-                Util.ReleaseReaderLock (m_objectEntitiesLock);
+                lock (m_objectEntitiesLock)
+                    gotit = m_objectEntities.TryGetValue (key, out presence2);
 
                 //Deal with the possibility we may have been asked for a child prim
                 if ((!gotit) && checkRecursive)
@@ -268,9 +241,8 @@ namespace OpenSim.Framework
         {
             ISceneEntity entity;
             bool gotit;
-            Util.GetReaderLock (m_objectEntitiesLock);
-            gotit = m_objectEntities.TryGetValue (key, out entity);
-            Util.ReleaseReaderLock (m_objectEntitiesLock);
+            lock (m_objectEntitiesLock)
+                gotit = m_objectEntities.TryGetValue (key, out entity);
 
             //Deal with the possibility we may have been asked for a child prim
             if (!gotit && checkRecursive)
@@ -297,9 +269,8 @@ namespace OpenSim.Framework
         {
             UUID ParentKey = UUID.Zero;
             bool gotit;
-            Util.GetReaderLock (m_child_2_parent_entitiesLock);
-            gotit = m_child_2_parent_entities.TryGetValue (childkey, out ParentKey);
-            Util.ReleaseReaderLock (m_child_2_parent_entitiesLock);
+            lock (m_child_2_parent_entitiesLock)
+                gotit = m_child_2_parent_entities.TryGetValue (childkey, out ParentKey);
 
             if (gotit)
                 return InternalTryGetValue (ParentKey, false, out obj);
@@ -318,9 +289,8 @@ namespace OpenSim.Framework
         {
             bool gotit;
             UUID ParentKey = UUID.Zero;
-            Util.GetReaderLock (m_child_2_parent_entitiesLock);
-            gotit = m_child_2_parent_entities.TryGetValue (childkey, out ParentKey);
-            Util.ReleaseReaderLock (m_child_2_parent_entitiesLock);
+            lock (m_child_2_parent_entitiesLock)
+                gotit = m_child_2_parent_entities.TryGetValue (childkey, out ParentKey);
 
             if (gotit)
                 return InternalTryGetValue (ParentKey, false, out obj);
