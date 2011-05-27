@@ -342,14 +342,17 @@ namespace OpenSim.Services.CapsService
                 // If we encountered an exception, one or more of these will be null
                 if (mTexture != null)
                     mTexture.Dispose();
+                mTexture = null;
+                managedImage = null;
 
                 if (image != null)
                     image.Dispose();
+                image = null;
 
                 if (imgstream != null)
                 {
                     imgstream.Close();
-                    imgstream.Dispose();
+                    imgstream = null;
                 }
             }
 

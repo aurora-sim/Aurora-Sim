@@ -42,7 +42,8 @@ namespace OpenSim.Services.AssetService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
+                MethodBase.GetCurrentMethod ().DeclaringType);
+        protected IRegistryCore m_registry = null;
         protected IAssetDataPlugin m_Database = null;
 
         public virtual string Name
@@ -56,6 +57,7 @@ namespace OpenSim.Services.AssetService
             if (handlerConfig.GetString("AssetHandler", "") != Name)
                 return;
             Configure(config, registry);
+            m_registry = registry;
         }
 
         public void Configure(IConfigSource config, IRegistryCore registry)
@@ -122,17 +124,39 @@ namespace OpenSim.Services.AssetService
 
         public AssetBase Get(string id)
         {
-            return m_Database.GetAsset (id);
+            IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache> ();
+            if (cache != null)
+            {
+                AssetBase cachedAsset = cache.Get (id);
+                if (cachedAsset != null)
+                    return cachedAsset;
+            }
+            AssetBase asset = m_Database.GetAsset (id);
+            if (cache != null && asset != null)
+                cache.Cache (asset);
+            return asset;
         }
 
         public AssetBase GetCached(string id)
         {
-            return Get(id);
+            IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache> ();
+            if (cache != null)
+                return cache.Get (id);
+            return null;
         }
 
         public AssetMetadata GetMetadata(string id)
         {
+            IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache> ();
+            if (cache != null)
+            {
+                AssetBase cachedAsset = cache.Get (id);
+                if (cachedAsset != null)
+                    return cachedAsset.Metadata;
+            }
             AssetBase asset = m_Database.GetAsset (id);
+            if (cache != null && asset != null)
+                cache.Cache (asset);
             if (asset != null)
                 return asset.Metadata;
 
@@ -141,7 +165,16 @@ namespace OpenSim.Services.AssetService
 
         public byte[] GetData(string id)
         {
+            IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache> ();
+            if (cache != null)
+            {
+                AssetBase cachedAsset = cache.Get (id);
+                if (cachedAsset != null)
+                    return cachedAsset.Data;
+            }
             AssetBase asset = m_Database.GetAsset (id);
+            if (cache != null && asset != null)
+                cache.Cache (asset);
             return asset.Data;
         }
 
@@ -153,8 +186,11 @@ namespace OpenSim.Services.AssetService
         public bool Get(string id, Object sender, AssetRetrieved handler)
         {
             //m_log.DebugFormat("[AssetService]: Get asset async {0}", id);
-            
+
             AssetBase asset = m_Database.GetAsset (id);
+            IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache> ();
+            if (cache != null && asset != null)
+                cache.Cache (asset);
 
             //m_log.DebugFormat("[AssetService]: Got asset {0}", asset);
             
@@ -166,7 +202,13 @@ namespace OpenSim.Services.AssetService
         public string Store(AssetBase asset)
         {
             //m_log.DebugFormat("[ASSET SERVICE]: Store asset {0} {1}", asset.Name, asset.ID);
-            m_Database.StoreAsset(asset);
+            m_Database.StoreAsset (asset);
+            IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache> ();
+            if (cache != null && asset != null)
+            {
+                cache.Expire (asset.ID);
+                cache.Cache (asset);
+            }
 
             return asset.ID;
         }
