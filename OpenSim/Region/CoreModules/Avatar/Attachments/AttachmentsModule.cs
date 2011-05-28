@@ -127,6 +127,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             client.OnObjectDrop -= ClientDropObject;
             client.OnDetachAttachmentIntoInv -= DetachSingleAttachmentToInventory;
             client.OnUpdatePrimGroupPosition -= ClientUpdateAttachmentPosition;
+
+            //If its a root agent, we need to save all attachments as well
+            IScenePresence sp = client.Scene.GetScenePresence (client.AgentId);
+            if (sp != null && !sp.IsChildAgent)
+                DetachAndSaveAllAttachments (client);
         }
 
         protected void RezAttachments (IScenePresence presence)
@@ -751,6 +756,18 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     DetachSingleAttachmentGroupToInventoryInternal (itemID, remoteClient, fireEvent, group);
                     return;
                 }
+            }
+        }
+
+        protected void DetachAndSaveAllAttachments (IClientAPI remoteClient)
+        {
+            // We can NOT use the dictionaries here, as we are looking
+            // for an entity by the fromAssetID, which is NOT the prim UUID
+            ISceneEntity[] attachments = GetAttachmentsForAvatar (remoteClient.AgentId);
+
+            foreach (ISceneEntity group in attachments)
+            {
+                DetachSingleAttachmentGroupToInventoryInternal (group.RootChild.FromUserInventoryItemID, remoteClient, false, group);
             }
         }
 
