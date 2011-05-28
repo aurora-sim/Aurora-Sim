@@ -40,6 +40,7 @@ namespace Aurora.BotManager
     public class RexBot : IRexBot, IClientAPI
     {
         #region Declares
+        private const bool USE_NEW_FOLLOWING = true;
         public enum RexBotState { Idle, Walking, Flying, Unknown }
 
         private static readonly log4net.ILog m_log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -414,7 +415,9 @@ namespace Aurora.BotManager
 
         private void frames_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
+            m_frames.Stop ();
             Update();
+            m_frames.Start ();
         }
 
         private void startTime_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -451,7 +454,7 @@ namespace Aurora.BotManager
         /// <param name="pos"></param>
         private void walkTo(Vector3 pos)
         {
-            Vector3 bot_forward = new Vector3(1, 0, 0);
+            Vector3 bot_forward = new Vector3(2, 0, 0);
             Vector3 bot_toward;
             try
             {
@@ -554,7 +557,6 @@ namespace Aurora.BotManager
             {
                 foreach (string s in points)
                 {
-                    m_log.Debug (s);
                     string[] Vector = s.Split (',');
 
                     if (Vector.Length != 3)
@@ -565,6 +567,35 @@ namespace Aurora.BotManager
                         float.Parse (Vector[2])));
                 }
             }
+        }
+
+        public List<Vector3> InnerFindPath (int[,] map, int startX, int startY, int finishX, int finishY)
+        {
+            CurrentWayPoint = 0; //Reset to the beginning of the list
+            Games.Pathfinding.AStar2DTest.StartPath.Map = map;
+            Games.Pathfinding.AStar2DTest.StartPath.xLimit = (int)Math.Sqrt (map.Length);
+            Games.Pathfinding.AStar2DTest.StartPath.yLimit = (int)Math.Sqrt (map.Length);
+            List<string> points = Games.Pathfinding.AStar2DTest.StartPath.Path (startX, startY, finishX, finishY, 0, 0, 0);
+
+            List<Vector3> waypoints = new List<Vector3> ();
+            if (points.Contains ("no_path"))
+            {
+                m_log.Debug ("I'm sorry I could not find a solution to that path. Teleporting instead");
+                return waypoints;
+            }
+
+            foreach (string s in points)
+            {
+                string[] Vector = s.Split (',');
+
+                if (Vector.Length != 3)
+                    continue;
+
+                waypoints.Add (new Vector3 (float.Parse (Vector[0]),
+                    float.Parse (Vector[1]),
+                    float.Parse (Vector[2])));
+            }
+            return waypoints;
         }
 
         public void FollowAvatar (string avatarName, float followDistance)
@@ -611,60 +642,10 @@ namespace Aurora.BotManager
 
             if (IsFollowing)
             {
-                // FOLLOW an avatar - this is looking for an avatar UUID so wont follow a prim here  - yet
-                if (FollowSP == null)
-                {
-                    m_scenePresence.Scene.TryGetAvatarByName (FollowName, out FollowSP);
-                    if (FollowSP == null)
-                    {
-                        //Try by UUID then
-                        try
-                        {
-                            m_scenePresence.Scene.TryGetScenePresence (UUID.Parse (FollowName), out FollowSP);
-                        }
-                        catch
-                        {
-                        }
-                    }
-                }
-                //If its still null, the person doesn't exist, cancel the follow and return
-                if (FollowSP == null)
-                {
-                    IsFollowing = false;
-                    FollowName = "";
-                    m_log.Warn ("Could not find avatar " + FollowName);
-                }
+                if (USE_NEW_FOLLOWING)
+                    NewFollowing ();
                 else
-                {
-                    //Only check so many times
-                    CurrentFollowTimeBeforeUpdate++;
-                    if (CurrentFollowTimeBeforeUpdate == FollowTimeBeforeUpdate)
-                    {
-                        Vector3 diffAbsPos = FollowSP.AbsolutePosition - m_scenePresence.AbsolutePosition;
-                        if (Math.Abs (diffAbsPos.X) > m_closeToPoint || Math.Abs (diffAbsPos.Y) > m_closeToPoint)
-                        {
-                            NavMesh mesh = new NavMesh ();
-
-                            bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
-                            mesh.AddEdge (0, 1, fly ? TravelMode.Fly : TravelMode.Walk);
-                            mesh.AddNode (m_scenePresence.AbsolutePosition); //Give it the current pos so that it will know where to start
-
-                            mesh.AddEdge (1, 2, fly ? TravelMode.Fly : TravelMode.Walk);
-                            mesh.AddNode (FollowSP.AbsolutePosition); //Give it the new point so that it will head toward it
-                            SetPath (mesh, 0, false, 10000, false); //Set and go
-                            m_scenePresence.SetAlwaysRun = FollowSP.SetAlwaysRun;
-                        }
-                        else
-                        {
-                            //Stop the bot then
-                            State = RexBotState.Idle;
-                            m_walkTime.Stop ();
-                            m_startTime.Stop ();
-                        }
-                        //Reset the time
-                        CurrentFollowTimeBeforeUpdate = -1;
-                    }
-                }
+                    OldFollowing ();
             }
             else if (IsOnAPath)
             {
@@ -727,6 +708,243 @@ namespace Aurora.BotManager
                 OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
             }
             m_frameCount++;
+        }
+
+        private void OldFollowing ()
+        {
+            // FOLLOW an avatar - this is looking for an avatar UUID so wont follow a prim here  - yet
+            if (FollowSP == null)
+            {
+                m_scenePresence.Scene.TryGetAvatarByName (FollowName, out FollowSP);
+                if (FollowSP == null)
+                {
+                    //Try by UUID then
+                    try
+                    {
+                        m_scenePresence.Scene.TryGetScenePresence (UUID.Parse (FollowName), out FollowSP);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+            //If its still null, the person doesn't exist, cancel the follow and return
+            if (FollowSP == null)
+            {
+                IsFollowing = false;
+                FollowName = "";
+                m_log.Warn ("Could not find avatar " + FollowName);
+            }
+            else
+            {
+                //Only check so many times
+                CurrentFollowTimeBeforeUpdate++;
+                if (CurrentFollowTimeBeforeUpdate == FollowTimeBeforeUpdate)
+                {
+                    Vector3 diffAbsPos = FollowSP.AbsolutePosition - m_scenePresence.AbsolutePosition;
+                    if (Math.Abs (diffAbsPos.X) > m_closeToPoint || Math.Abs (diffAbsPos.Y) > m_closeToPoint)
+                    {
+                        NavMesh mesh = new NavMesh ();
+
+                        bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
+                        mesh.AddEdge (0, 1, fly ? TravelMode.Fly : TravelMode.Walk);
+                        mesh.AddNode (m_scenePresence.AbsolutePosition); //Give it the current pos so that it will know where to start
+
+                        mesh.AddEdge (1, 2, fly ? TravelMode.Fly : TravelMode.Walk);
+                        mesh.AddNode (FollowSP.AbsolutePosition); //Give it the new point so that it will head toward it
+                        SetPath (mesh, 0, false, 10000, false); //Set and go
+                        m_scenePresence.SetAlwaysRun = FollowSP.SetAlwaysRun;
+                    }
+                    else
+                    {
+                        //Stop the bot then
+                        State = RexBotState.Idle;
+                        m_walkTime.Stop ();
+                        m_startTime.Stop ();
+                    }
+                    //Reset the time
+                    CurrentFollowTimeBeforeUpdate = -1;
+                }
+            }
+        }
+
+        private void ShowMap (string mod, string[] cmd)
+        {
+            int sqrt = (int)Math.Sqrt(map.Length);
+            for (int x = sqrt - 1; x > -1; x--)
+            {
+                string line = "";
+                for (int y = sqrt - 1; y > -1; y--)
+                {
+                    if (map[x, y].ToString ().Length < 2)
+                        line += " " +map[x, y] + ",";
+                    else
+                    line += map[x, y] + ",";
+                }
+
+                m_log.Warn (line.Remove (line.Length - 1));
+            }
+            m_log.Warn ("\n");
+        }
+
+        private int resolution = 10;
+        private int[,] map;
+        private void NewFollowing ()
+        {
+            if (FollowSP == null)
+            {
+                m_scenePresence.Scene.TryGetAvatarByName (FollowName, out FollowSP);
+                if (FollowSP == null)
+                {
+                    //Try by UUID then
+                    try
+                    {
+                        m_scenePresence.Scene.TryGetScenePresence (UUID.Parse (FollowName), out FollowSP);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+            //If its still null, the person doesn't exist, cancel the follow and return
+            if (FollowSP == null)
+            {
+                IsFollowing = false;
+                FollowName = "";
+                m_log.Warn ("Could not find avatar " + FollowName);
+                return;
+            }
+            Vector3 targetPos = FollowSP.AbsolutePosition;
+            Vector3 currentPos = m_scenePresence.AbsolutePosition;
+            double distance = Util.GetDistanceTo (targetPos, currentPos);
+            if (distance < m_closeToPoint)
+            {
+                m_frames.Stop ();
+                m_walkTime.Stop ();
+                m_startTime.Stop ();
+                return;
+            }
+            CurrentFollowTimeBeforeUpdate++;
+            if (CurrentFollowTimeBeforeUpdate != 5)
+                return;
+            CurrentFollowTimeBeforeUpdate = 0;
+
+
+            resolution = 3;
+            if (distance > 10) //Greater than 10 meters, give up
+            {
+                m_log.Warn ("Target is out of range");
+                //IsFollowing = false;
+                //return;
+            }
+
+            restart:
+            map = new int[22 * resolution, 22 * resolution]; //10 * resolution squares in each direction from our pos
+            //We are in the center (11, 11) and our target is somewhere else
+            int targetX = 11 * resolution, targetY = 11 * resolution;
+            //Find where our target is on the map
+            FindTargets (currentPos, targetPos, ref targetX, ref targetY);
+            ISceneEntity[] entities = m_scenePresence.Scene.Entities.GetEntities (currentPos, 30);
+
+            //Add all the entities to the map
+            foreach (ISceneEntity entity in entities)
+            {
+                int entitybaseX = (11 * resolution);
+                int entitybaseY = (11 * resolution);
+                //Find the bottom left corner, and then build outwards from it
+                FindTargets (currentPos, entity.AbsolutePosition - (entity.OOBsize / 2), ref entitybaseX, ref entitybaseY);
+                for (int x = (int)-(0.5 * resolution); x < entity.OOBsize.X * 2 * resolution + ((int)(0.5 * resolution)); x++)
+                {
+                    for (int y = (int)-(0.5 * resolution); y < entity.OOBsize.Y * 2 * resolution + ((int)(0.5 * resolution)); y++)
+                    {
+                        if(entitybaseX + x > 0 && entitybaseY + y > 0 &&
+                            entitybaseX + x < (22 * resolution) && entitybaseY + y < (22 * resolution))
+                            if (x < 0 || y < 0 || x > entity.OOBsize.X * resolution || y > entity.OOBsize.Y * resolution)
+                                map[entitybaseX + x, entitybaseY + y] = 3; //Its a side hit, lock it down a bit
+                            else
+                                map[entitybaseX + x, entitybaseY + y] = 5; //Its a hit, lock it down
+                    }
+                }
+            }
+
+            for (int x = 0; x < (22 * resolution); x++)
+            {
+                for (int y = 0; y < (22 * resolution); y++)
+                {
+                    if (x == targetX && y == targetY)
+                        map[x, y] = 1;
+                    else if (x == 11 * resolution && y == 11 * resolution)
+                    {
+                        int old = map[x, y];
+                        map[x, y] = 1;
+                    }
+                    else if (map[x, y] == 0)
+                        map[x, y] = 1;
+                }
+            }
+
+            m_scenePresence.SetAlwaysRun = FollowSP.SetAlwaysRun;
+            List<Vector3> path = InnerFindPath (map, (11 * resolution), (11 * resolution), targetX, targetY);
+            
+            int i = 0;
+        //startOver:
+            Vector3 nextPos = ConvertPathToPos (currentPos, path, ref i);
+            if (nextPos == Vector3.Zero)
+            {
+                if (resolution < 2)
+                {
+                    ShowMap ("", null);
+                    return;
+                }
+                resolution--;
+                goto restart;
+            }
+            Vector3 diffAbsPos = nextPos - targetPos;
+            //if (Math.Abs (diffAbsPos.X) > m_closeToPoint || Math.Abs (diffAbsPos.Y) > m_closeToPoint)
+            {
+                //for (i = 0; i < path.Count; i++)
+                {
+                    nextPos = currentPos -= new Vector3 ((11 * resolution) - path[i].X, (11 * resolution) - path[i].Y, 0);
+                    NavMesh mesh = new NavMesh ();
+
+                    bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
+                    mesh.AddEdge (0, 1, fly ? TravelMode.Fly : TravelMode.Walk);
+                    mesh.AddNode (targetPos); //Give it the current pos so that it will know where to start
+
+                    mesh.AddEdge (1, 2, fly ? TravelMode.Fly : TravelMode.Walk);
+                    mesh.AddNode (nextPos); //Give it the new point so that it will head toward it
+                    SetPath (mesh, 0, false, 10000, false); //Set and go
+                }
+            }
+            //else
+            //{
+            //    i++;
+            //    goto startOver;
+            //}
+             
+        }
+
+        private Vector3 ConvertPathToPos (Vector3 originalPos, List<Vector3> path, ref int i)
+        {
+        start:
+            if (i == path.Count)
+                return Vector3.Zero;
+            if (path[i].X == (11 * resolution) && path[i].Y == (11 * resolution))
+            {
+                i++;
+                goto start;
+            }
+            return originalPos -= new Vector3 (((11 * resolution) - path[i].X) / resolution, ((11 * resolution) - path[i].Y) / resolution, 0);
+        }
+
+        private void FindTargets (Vector3 currentPos, Vector3 targetPos, ref int targetX, ref int targetY)
+        {
+            //we're at pos 11, 11, so we have to add/subtract from there
+            float xDiff = (targetPos.X - currentPos.X);
+            float yDiff = (targetPos.Y - currentPos.Y);
+
+            targetX += (int)(xDiff * resolution);
+            targetY += (int)(yDiff * resolution);
         }
 
         #endregion
