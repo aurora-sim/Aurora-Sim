@@ -1376,6 +1376,49 @@
         <Match pattern="*.cs" recurse="true"/>
       </Files>
     </Project>
+	
+	<Project frameworkVersion="v3_5" name="SmartThreadPool" path="OpenSim/Tools/SmartThreadPool" type="Library">
+      <Configuration name="Debug" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../bin/</ReferencePath>
+      <Reference name="System"/>
+      <Reference name="System.Data"/>
+      <Reference name="System.Web"/>
+      <Reference name="System.Xml"/>
+      
+      <Files>
+        <Match pattern="*.cs" recurse="false"/>
+      </Files>
+    </Project>
 
     <?include file="addon-modules/*/prebuild*.xml" ?>
 
