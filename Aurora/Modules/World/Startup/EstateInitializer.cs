@@ -76,7 +76,7 @@ namespace OpenSim.Region.CoreModules
                     {
                         m_log.Warn(ownerEstates[i].EstateName);
                     }
-                    response = MainConsole.Instance.CmdPrompt ("Do you wish to join one of these existing estates? (Options are {yes, no})", response, new List<string> () { "yes", "no" });
+                    response = MainConsole.Instance.CmdPrompt ("Do you wish to join one of these existing estates? (Options are {yes, no, cancel})", response, new List<string> () { "yes", "no", "cancel" });
                 }
                 else
                 {
@@ -86,8 +86,9 @@ namespace OpenSim.Region.CoreModules
                 if (response == "no")
                 {
                     // Create a new estate
-                    ES.EstateName = MainConsole.Instance.CmdPrompt("New estate name", "My Estate");
-
+                    ES.EstateName = MainConsole.Instance.CmdPrompt("New estate name (or cancel to go back)", "My Estate");
+                    if (ES.EstateName == "cancel")
+                        continue;
                     //Set to auto connect to this region next
                     LastEstateName = ES.EstateName;
                     LastEstateChoise = "yes";
@@ -127,8 +128,9 @@ namespace OpenSim.Region.CoreModules
                         foreach (EstateSettings settings in ownerEstates)
                             responses.Add (settings.EstateName);
                         responses.Add ("None");
+                        responses.Add ("Cancel");
                         response = MainConsole.Instance.CmdPrompt("Estate name to join", LastEstateName, responses);
-                        if (response == "None")
+                        if (response == "None" || response == "Cancel")
                             continue;
                         LastEstateName = response;
                     }
