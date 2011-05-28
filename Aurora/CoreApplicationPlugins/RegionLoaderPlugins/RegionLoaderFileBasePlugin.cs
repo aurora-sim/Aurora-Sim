@@ -388,26 +388,28 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         /// <param name="cmd">0,1,region name, region XML file</param>
         public void AddRegion(string module, string[] cmd)
         {
-            if (cmd.Length < 4)
+            if (cmd.Length < 2)
             {
-                m_log.Info ("Usage: create region <region name> <region_file.ini>");
+                m_log.Info ("Usage: create region");
                 return;
             }
-            else if (cmd[3].EndsWith(".ini"))
-            {
-                string regionFile = String.Format("{0}/{1}", m_regionConfigPath, cmd[3]);
-                // Allow absolute and relative specifiers
-                if (cmd[3].StartsWith("/") || cmd[3].StartsWith("\\") || cmd[3].StartsWith(".."))
-                    regionFile = cmd[3];
+            string fileName = MainConsole.Instance.CmdPrompt ("File Name", "Regions.ini");
+            string regionName = MainConsole.Instance.CmdPrompt ("Region Name", "New Region");
 
-                m_log.Debug("[LOADREGIONS]: Creating Region: " + cmd[2]);
+            if (fileName.EndsWith (".ini"))
+            {
+                string regionFile = String.Format ("{0}/{1}", m_regionConfigPath, fileName);
+                // Allow absolute and relative specifiers
+                if (fileName.StartsWith ("/") || fileName.StartsWith ("\\") || fileName.StartsWith (".."))
+                    regionFile = fileName;
+
+                m_log.Debug ("[LOADREGIONS]: Creating Region: " + regionName);
                 SceneManager manager = m_openSim.ApplicationRegistry.RequestModuleInterface<SceneManager>();
-                manager.CreateRegion(LoadRegionFromFile(cmd[2], regionFile, false, m_configSource, cmd[2]));
+                manager.CreateRegion (LoadRegionFromFile (regionName, regionFile, false, m_configSource, regionName));
             }
             else
             {
-                m_log.Info ("Usage: create region <region name> <region_file.ini>");
-                return;
+                m_log.Info ("The file name must end with .ini");
             }
         }
 
