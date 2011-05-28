@@ -27,7 +27,7 @@ namespace Aurora.Modules.World.On_Demand
     /// -- Normal --
     /// Same as always
     /// </summary>
-    public class OnDemandRegionModule : INonSharedRegionModule, IActivityDetector
+    public class OnDemandRegionModule : INonSharedRegionModule
     {
         #region Declares
 
@@ -51,12 +51,12 @@ namespace Aurora.Modules.World.On_Demand
             if (scene.RegionInfo.Startup != StartupType.Normal)
             {
                 m_scene = scene;
-                scene.StackModuleInterface<IActivityDetector> (this);
                 //Disable the heartbeat for this region
                 scene.ShouldRunHeartbeat = false;
 
                 scene.EventManager.OnRemovePresence += OnRemovePresence;
                 scene.AuroraEventManager.RegisterEventHandler("NewUserConnection", OnGenericEvent);
+                scene.AuroraEventManager.RegisterEventHandler ("AgentIsAZombie", OnGenericEvent);
             }
         }
 
@@ -104,6 +104,8 @@ namespace Aurora.Modules.World.On_Demand
                     }
                 }
             }
+            else if (FunctionName == "AgentIsAZombie")
+                m_zombieAgents.Add ((UUID)parameters);
             return null;
         }
 
@@ -177,15 +179,6 @@ namespace Aurora.Modules.World.On_Demand
         {
             m_scene.ShouldRunHeartbeat = true;
             m_scene.StartHeartbeat ();
-        }
-
-        #endregion
-
-        #region IActivityDetector Members
-
-        public void AgentIsAZombie (UUID agentID)
-        {
-            m_zombieAgents.Add (agentID);
         }
 
         #endregion

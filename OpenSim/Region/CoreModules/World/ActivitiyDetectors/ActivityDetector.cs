@@ -40,7 +40,7 @@ using Nini.Config;
 
 namespace OpenSim.Region.CoreModules
 {
-    public class ActivityDetector : ISharedRegionModule, IActivityDetector
+    public class ActivityDetector : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Timer m_presenceUpdateTimer = null;
@@ -61,7 +61,7 @@ namespace OpenSim.Region.CoreModules
 
         public void AddRegion(Scene scene)
         {
-            scene.RegisterModuleInterface<IActivityDetector> (this);
+            scene.AuroraEventManager.RegisterEventHandler ("AgentIsAZombie", OnGenericEvent);
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
@@ -131,9 +131,10 @@ namespace OpenSim.Region.CoreModules
             client.OnConnectionClosed -= OnConnectionClose;
         }
 
-        public void AgentIsAZombie(UUID agentID)
+        public object OnGenericEvent (string functionName, object parameters)
         {
-            m_zombieAgents.Add (agentID);
+            m_zombieAgents.Add ((UUID)parameters);
+            return null;
         }
 
         public void OnConnectionClose(IClientAPI client)
