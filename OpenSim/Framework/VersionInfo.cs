@@ -31,7 +31,7 @@ namespace OpenSim.Framework
 {
     public class VersionInfo
     {
-        private const string VERSION_NUMBER = "0.3";
+        private const string VERSION_NUMBER = "0.3.2";
         private const Flavour VERSION_FLAVOUR = Flavour.Dev;
         private const string VERSION_NAME = "Aurora";
 
