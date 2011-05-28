@@ -67,7 +67,7 @@ namespace Aurora.Modules
             scene.EventManager.OnObjectBeingAddedToScene += OnObjectBeingAddedToScene;
             scene.EventManager.OnObjectBeingRemovedFromScene += OnObjectBeingRemovedFromScene;
 
-            scene.AuroraEventManager.OnGenericEvent += OnGenericEvent;
+            scene.AuroraEventManager.RegisterEventHandler("ObjectChangedPhysicalStatus", OnGenericEvent);
         }
 
         public void RegionLoaded(Scene scene)

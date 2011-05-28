@@ -53,7 +53,7 @@ namespace OpenSim.Services
         {
             m_config = config;
             m_registry = registry;
-            registry.RequestModuleInterface<ISimulationBase>().EventManager.OnGenericEvent += new Aurora.Framework.OnGenericEventHandler(EventManager_OnGenericEvent);
+            registry.RequestModuleInterface<ISimulationBase> ().EventManager.RegisterEventHandler("PreRegisterRegion", EventManager_OnGenericEvent);
         }
 
         object EventManager_OnGenericEvent(string FunctionName, object parameters)

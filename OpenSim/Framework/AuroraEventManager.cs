@@ -15,6 +15,8 @@ namespace Aurora.Framework
     /// </summary>
     public class AuroraEventManager
     {
+        private Dictionary<string, List<OnGenericEventHandler>> m_events = new Dictionary<string, List<OnGenericEventHandler>> ();
+        
         /// <summary>
         /// Events so far:
         /// 
@@ -60,7 +62,20 @@ namespace Aurora.Framework
         ///      no params
         ///      
         /// </summary>
-        public event OnGenericEventHandler OnGenericEvent;
+        public void RegisterEventHandler (string functionName, OnGenericEventHandler handler)
+        {
+            if (!m_events.ContainsKey (functionName))
+                m_events.Add (functionName, new List<OnGenericEventHandler> ());
+            m_events[functionName].Add (handler);
+        }
+
+        public void UnregisterEventHandler (string functionName, OnGenericEventHandler handler)
+        {
+            if (!m_events.ContainsKey (functionName))
+                return;
+            m_events[functionName].Remove (handler);
+        }
+
         /// <summary>
         /// Fire a generic event for all modules hooking onto it
         /// </summary>
@@ -70,13 +85,14 @@ namespace Aurora.Framework
         {
             List<object> retVal = new List<object>();
             //If not null, fire for all
-            if (OnGenericEvent != null)
+            List<OnGenericEventHandler> events;
+            if (m_events.TryGetValue (FunctionName, out events))
             {
-                foreach(OnGenericEventHandler handler in OnGenericEvent.GetInvocationList())
+                foreach (OnGenericEventHandler handler in events)
                 {
-                    object param = handler(FunctionName, Param);
+                    object param = handler (FunctionName, Param);
                     if (param != null)
-                        retVal.Add(param);
+                        retVal.Add (param);
                 }
             }
             return retVal;

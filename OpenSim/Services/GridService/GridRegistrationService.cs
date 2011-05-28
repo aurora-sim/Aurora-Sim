@@ -90,7 +90,7 @@ namespace OpenSim.Services.GridService
             registry.RegisterModuleInterface<IGridRegistrationService>(this);
             m_registry = registry;
             m_simulationBase = registry.RequestModuleInterface<ISimulationBase>();
-            m_simulationBase.EventManager.OnGenericEvent += EventManager_OnGenericEvent;
+            m_simulationBase.EventManager.RegisterEventHandler("GridRegionSuccessfullyRegistered", EventManager_OnGenericEvent);
 
             m_configurationConfig = config.Configs["Configuration"];
             m_loadBalancer.SetConfig (m_configurationConfig);

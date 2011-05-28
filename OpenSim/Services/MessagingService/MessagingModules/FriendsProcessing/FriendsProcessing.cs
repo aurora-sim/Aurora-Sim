@@ -32,7 +32,7 @@ namespace OpenSim.Services.MessagingService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            registry.RequestModuleInterface<ISimulationBase>().EventManager.OnGenericEvent += OnGenericEvent;
+            registry.RequestModuleInterface<ISimulationBase> ().EventManager.RegisterEventHandler("UserStatusChange", OnGenericEvent);
 
             //Also look for incoming messages to display
             registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;

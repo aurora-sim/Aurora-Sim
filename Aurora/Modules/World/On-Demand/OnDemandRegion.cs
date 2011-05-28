@@ -56,7 +56,7 @@ namespace Aurora.Modules.World.On_Demand
                 scene.ShouldRunHeartbeat = false;
 
                 scene.EventManager.OnRemovePresence += OnRemovePresence;
-                scene.AuroraEventManager.OnGenericEvent += OnGenericEvent;
+                scene.AuroraEventManager.RegisterEventHandler("NewUserConnection", OnGenericEvent);
             }
         }
 

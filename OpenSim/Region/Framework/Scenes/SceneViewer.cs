@@ -98,7 +98,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_presence = presence;
             m_presence.Scene.EventManager.OnSignificantClientMovement += SignificantClientMovement;
-            m_presence.Scene.AuroraEventManager.OnGenericEvent += AuroraEventManager_OnGenericEvent;
+            m_presence.Scene.AuroraEventManager.RegisterEventHandler ("DrawDistanceChanged", AuroraEventManager_OnGenericEvent);
+            m_presence.Scene.AuroraEventManager.RegisterEventHandler ("SignficantCameraMovement", AuroraEventManager_OnGenericEvent);
             m_prioritizer = new Prioritizer (presence.Scene);
             m_culler = new Culler (presence.Scene);
         }
@@ -710,7 +711,8 @@ namespace OpenSim.Region.Framework.Scenes
             m_objectUpdatesToSend.Clear ();
             m_presenceUpdatesToSend.Clear ();
             m_presence.Scene.EventManager.OnSignificantClientMovement -= SignificantClientMovement;
-            m_presence.Scene.AuroraEventManager.OnGenericEvent -= AuroraEventManager_OnGenericEvent;
+            m_presence.Scene.AuroraEventManager.UnregisterEventHandler ("DrawDistanceChanged", AuroraEventManager_OnGenericEvent);
+            m_presence.Scene.AuroraEventManager.UnregisterEventHandler ("SignficantCameraMovement", AuroraEventManager_OnGenericEvent);
             m_presence = null;
         }
 

@@ -94,7 +94,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                     OnObjectBeingRemovedFromScene;
             m_Scene.EventManager.OnLandObjectAdded += OnLandObjectAdded;
             m_Scene.EventManager.OnLandObjectRemoved += OnLandObjectRemoved;
-            m_Scene.AuroraEventManager.OnGenericEvent += OnGenericEvent;
+            m_Scene.AuroraEventManager.RegisterEventHandler ("ObjectChangedOwner", OnGenericEvent);
+            m_Scene.AuroraEventManager.RegisterEventHandler ("ObjectEnteringNewParcel", OnGenericEvent);
         }
 
         public void RegionLoaded(Scene scene)
@@ -111,7 +112,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                     OnObjectBeingRemovedFromScene;
             m_Scene.EventManager.OnLandObjectAdded -= OnLandObjectAdded;
             m_Scene.EventManager.OnLandObjectRemoved -= OnLandObjectRemoved;
-            m_Scene.AuroraEventManager.OnGenericEvent -= OnGenericEvent;
+            m_Scene.AuroraEventManager.UnregisterEventHandler ("ObjectChangedOwner", OnGenericEvent);
+            m_Scene.AuroraEventManager.UnregisterEventHandler ("ObjectEnteringNewParcel", OnGenericEvent);
 
             m_Scene = null;
         }

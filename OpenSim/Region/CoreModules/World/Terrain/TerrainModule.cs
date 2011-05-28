@@ -162,7 +162,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
             m_scene.EventManager.OnClosingClient += OnClosingClient;
             m_scene.EventManager.OnSignificantClientMovement += EventManager_OnSignificantClientMovement;
-            m_scene.AuroraEventManager.OnGenericEvent += AuroraEventManager_OnGenericEvent;
+            m_scene.AuroraEventManager.RegisterEventHandler ("DrawDistanceChanged", AuroraEventManager_OnGenericEvent);
+            m_scene.AuroraEventManager.RegisterEventHandler ("SignficantCameraMovement", AuroraEventManager_OnGenericEvent);
             m_scene.EventManager.OnNewPresence += OnNewPresence;
         }
 
@@ -178,7 +179,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 m_scene.EventManager.OnNewClient -= EventManager_OnNewClient;
                 m_scene.EventManager.OnClosingClient -= OnClosingClient;
                 m_scene.EventManager.OnSignificantClientMovement -= EventManager_OnSignificantClientMovement;
-                m_scene.AuroraEventManager.OnGenericEvent -= AuroraEventManager_OnGenericEvent;
+                m_scene.AuroraEventManager.UnregisterEventHandler ("DrawDistanceChanged", AuroraEventManager_OnGenericEvent);
+                m_scene.AuroraEventManager.UnregisterEventHandler ("SignficantCameraMovement", AuroraEventManager_OnGenericEvent);
                 m_scene.EventManager.OnNewPresence -= OnNewPresence;
 
                 // remove the interface

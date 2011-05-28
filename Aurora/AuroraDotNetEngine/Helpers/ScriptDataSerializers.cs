@@ -44,7 +44,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void AddScene (Scene scene)
         {
-            scene.AuroraEventManager.OnGenericEvent += AuroraEventManager_OnGenericEvent;
+            scene.AuroraEventManager.RegisterEventHandler("DeleteToInventory", AuroraEventManager_OnGenericEvent);
         }
 
         public void Close ()

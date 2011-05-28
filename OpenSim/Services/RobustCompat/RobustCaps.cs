@@ -36,7 +36,8 @@ namespace OpenSim.Services.RobustCompat
             m_scene = scene;
             scene.EventManager.OnClosingClient += OnClosingClient;
             scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
-            scene.AuroraEventManager.OnGenericEvent += OnGenericEvent;
+            scene.AuroraEventManager.RegisterEventHandler ("NewUserConnection", OnGenericEvent);
+            scene.AuroraEventManager.RegisterEventHandler ("UserStatusChange", OnGenericEvent);
         }
 
         void OnMakeRootAgent (IScenePresence presence)

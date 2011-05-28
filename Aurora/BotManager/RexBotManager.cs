@@ -58,7 +58,8 @@ namespace Aurora.BotManager
 
         public void AddRegion(Scene scene)
         {
-            scene.RegisterModuleInterface<IBotManager>(this);
+            scene.RegisterModuleInterface<IBotManager> (this);
+            scene.RegisterModuleInterface<BotManager> (this);
         }
 
         public void RemoveRegion(Scene scene)
@@ -303,6 +304,42 @@ namespace Aurora.BotManager
             if (m_bots.TryGetValue (botID, out bot))
             {
                 bot.FollowAvatar (avatarName, followDistance);
+            }
+        }
+
+        /// <summary>
+        /// SecondBotID begins to follow BotID
+        /// </summary>
+        /// <param name="Bot"></param>
+        /// <param name="modifier"></param>
+        public void FollowBot (UUID botID, UUID secondBotID, float followDistance)
+        {
+            IRexBot bot;
+            if (m_bots.TryGetValue (botID, out bot))
+            {
+                IRexBot secondBot;
+                if (m_bots.TryGetValue (secondBotID, out secondBot))
+                {
+                    ((RexBot)bot).ChildFollowers.Add ((RexBot)secondBot);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Stops following the given bot
+        /// </summary>
+        /// <param name="Bot"></param>
+        /// <param name="modifier"></param>
+        public void StopFollowBot (UUID botID, UUID secondBotID)
+        {
+            IRexBot bot;
+            if (m_bots.TryGetValue (botID, out bot))
+            {
+                IRexBot secondBot;
+                if (m_bots.TryGetValue (secondBotID, out secondBot))
+                {
+                    ((RexBot)bot).ChildFollowers.Remove ((RexBot)secondBot);
+                }
             }
         }
 

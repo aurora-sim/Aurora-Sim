@@ -87,6 +87,11 @@ namespace Aurora.BotManager
         private const float FollowTimeBeforeUpdate = 10;
         private float CurrentFollowTimeBeforeUpdate = 0;
 
+        /// <summary>
+        /// So that other bots can follow us
+        /// </summary>
+        public List<RexBot> ChildFollowers = new List<RexBot> ();
+
         #endregion
 
         #region Path declares
@@ -915,6 +920,11 @@ namespace Aurora.BotManager
                     mesh.AddEdge (1, 2, fly ? TravelMode.Fly : TravelMode.Walk);
                     mesh.AddNode (nextPos); //Give it the new point so that it will head toward it
                     SetPath (mesh, 0, false, 10000, false); //Set and go
+
+                    foreach (RexBot bot in ChildFollowers)
+                    {
+                        bot.ParentMoved (mesh);
+                    }
                 }
             }
             //else
@@ -923,6 +933,11 @@ namespace Aurora.BotManager
             //    goto startOver;
             //}
              
+        }
+
+        public void ParentMoved (NavMesh mesh)
+        {
+            SetPath (mesh, 0, false, 10000, false); //Set and go
         }
 
         private Vector3 ConvertPathToPos (Vector3 originalPos, List<Vector3> path, ref int i)

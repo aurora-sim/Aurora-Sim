@@ -336,7 +336,8 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_scene.EventManager.OnRegisterCaps += EventManagerOnRegisterCaps;
             m_scene.EventManager.OnClosingClient += OnClosingClient;
             m_scene.EventManager.OnFrame += EventManager_OnFrame;
-            m_scene.AuroraEventManager.OnGenericEvent += AuroraEventManager_OnGenericEvent;
+            m_scene.AuroraEventManager.RegisterEventHandler ("ObjectAddedFlag", AuroraEventManager_OnGenericEvent);
+            m_scene.AuroraEventManager.RegisterEventHandler ("ObjectRemovedFlag", AuroraEventManager_OnGenericEvent);
             if(m_UpdateDirectoryOnTimer)
                 m_scene.EventManager.OnStartupComplete += EventManager_OnStartupComplete;
 

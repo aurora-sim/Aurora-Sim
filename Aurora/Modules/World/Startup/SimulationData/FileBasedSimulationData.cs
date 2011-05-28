@@ -132,7 +132,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                 m_backupSaveTimer.Start ();
             }
 
-            scene.AuroraEventManager.OnGenericEvent += AuroraEventManager_OnGenericEvent;
+            scene.AuroraEventManager.RegisterEventHandler("Backup", AuroraEventManager_OnGenericEvent);
 
             m_scene = scene;
             m_fileName = scene.RegionInfo.RegionName + m_loadAppenedFileName + ".abackup";

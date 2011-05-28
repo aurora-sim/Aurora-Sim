@@ -43,7 +43,7 @@ namespace Aurora.Modules
             //Register the interface
             m_config = source;
             scene.RegisterModuleInterface<IGridRegisterModule>(this);
-            openSimBase.EventManager.OnGenericEvent += OnGenericEvent;
+            openSimBase.EventManager.RegisterEventHandler("GridRegionRegistered", OnGenericEvent);
             //Now register our region with the grid
             RegisterRegionWithGrid(scene);
         }
