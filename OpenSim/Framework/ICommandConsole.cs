@@ -37,6 +37,10 @@ using log4net.Core;
 
 namespace OpenSim.Framework
 {
+    /// <summary>
+    /// The console interface
+    /// This deals with all things that happen on the console or GUI
+    /// </summary>
     public interface ICommandConsole
     {
         /// <summary>

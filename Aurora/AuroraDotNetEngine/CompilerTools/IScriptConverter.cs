@@ -5,6 +5,9 @@ using System.Text;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
+    /// <summary>
+    /// This allows for scripts to be converted and compiled for different languages
+    /// </summary>
     public interface IScriptConverter
     {
         /// <summary>

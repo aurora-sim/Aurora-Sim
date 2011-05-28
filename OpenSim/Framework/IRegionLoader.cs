@@ -29,6 +29,9 @@ using Nini.Config;
 
 namespace OpenSim.Framework
 {
+    /// <summary>
+    /// Loads regions from all IRegionLoaderPlugins and returns them to the SceneManager (normally)
+    /// </summary>
     public interface IRegionLoader
     {
         /// <summary>

@@ -43,14 +43,52 @@ namespace OpenSim.Framework
 {
     public interface ISimulationBase
     {
+        /// <summary>
+        /// Get an instance of the HTTP server on the given port
+        /// </summary>
+        /// <param name="port"></param>
+        /// <returns></returns>
         IHttpServer GetHttpServer(uint port);
+
+        /// <summary>
+        /// Get the configuration settings
+        /// </summary>
         IConfigSource ConfigSource { get; set; }
+
+        /// <summary>
+        /// Get the base instance of the Application (Module) Registry
+        /// </summary>
         IRegistryCore ApplicationRegistry { get; }
+
+        /// <summary>
+        /// The time this instance was started
+        /// </summary>
         DateTime StartupTime { get; }
+
+        /// <summary>
+        /// The event manager for the simulation base
+        /// </summary>
         AuroraEventManager EventManager { get; }
+
+        /// <summary>
+        /// The version string of Aurora
+        /// </summary>
         string Version { get; }
+
+        /// <summary>
+        /// Run any startup commands that may need to be run
+        /// </summary>
         void RunStartupCommands();
+
+        /// <summary>
+        /// Run the commands in the given file
+        /// </summary>
+        /// <param name="p"></param>
         void RunCommandScript(string p);
+
+        /// <summary>
+        /// All parameters that were passed by the command line when Aurora started
+        /// </summary>
         string[] CommandLineParameters { get; }
 
         /// <summary>
