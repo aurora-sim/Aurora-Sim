@@ -56,10 +56,11 @@ namespace OpenSim.Services.MessagingService
                 {
                     //Get all friends
                     object[] info = (object[])parameters;
-                    UUID us = UUID.Parse (info[0].ToString());
+                    UUID us = UUID.Parse (info[0].ToString ());
+                    bool isOnline = bool.Parse (info[1].ToString ());
+
                     FriendInfo[] friends = friendsService.GetFriends (us);
                     List<UUID> OnlineFriends = new List<UUID>();
-                    bool isOnline = bool.Parse(info[1].ToString());
                     foreach (FriendInfo friend in friends)
                     {
                         UUID FriendToInform = UUID.Parse(friend.Friend);
@@ -67,13 +68,18 @@ namespace OpenSim.Services.MessagingService
                         IClientCapsService clientCaps = capsService.GetClientCapsService(FriendToInform);
                         if (clientCaps != null)
                         {
-                            OnlineFriends.Add(FriendToInform);
                             //Find the root agent
                             IRegionClientCapsService regionClientCaps = clientCaps.GetRootCapsService();
                             if (regionClientCaps != null)
                             {
+                                OnlineFriends.Add (FriendToInform);
                                 //Post!
-                                asyncPoster.Post(regionClientCaps.RegionHandle, SyncMessageHelper.AgentStatusChange(us, FriendToInform, isOnline));
+                                asyncPoster.Post (regionClientCaps.RegionHandle, SyncMessageHelper.AgentStatusChange (us, FriendToInform, isOnline));
+                            }
+                            else
+                            {
+                                //If they don't have a root agent, wtf happened?
+                                capsService.RemoveCAPS (clientCaps.AgentID);
                             }
                         }
                     }

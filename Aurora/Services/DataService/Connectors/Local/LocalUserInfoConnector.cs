@@ -116,8 +116,9 @@ namespace Aurora.Services.DataService
             GD.Update(m_realm, values, keys, new string[1] { "UserID" }, new object[1] { userID });
         }
 
-        public UserInfo Get (string userID, bool checkOnlineStatus)
+        public UserInfo Get (string userID, bool checkOnlineStatus, out bool onlineStatusChanged)
         {
+            onlineStatusChanged = false;
             List<string> query = GD.Query("UserID", userID, m_realm, "*");
             if (query.Count == 0)
                 return null;
@@ -154,6 +155,7 @@ namespace Aurora.Services.DataService
                     "(since " + timeLastSeen.ToLocalTime ().ToString () + ", time elapsed " + (timeNow - timeLastSeen).Days + " days, " + (timeNow - timeLastSeen).Hours + " hours)! Logging them out.");
                 user.IsOnline = false;
                 Set(user);
+                onlineStatusChanged = true;
             }
             return user;
         }

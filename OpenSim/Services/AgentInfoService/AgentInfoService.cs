@@ -87,7 +87,17 @@ namespace OpenSim.Services
 
         public UserInfo GetUserInfo(string userID)
         {
-            return m_agentInfoConnector.Get(userID, true);
+            return GetUserInfo (userID, true);
+        }
+
+        private UserInfo GetUserInfo (string userID, bool checkForOfflineStatus)
+        {
+            bool changed = false;
+            UserInfo info = m_agentInfoConnector.Get (userID, checkForOfflineStatus, out changed);
+            if (changed)
+                if (!m_lockedUsers.Contains (userID))
+                    m_registry.RequestModuleInterface<ISimulationBase> ().EventManager.FireGenericEventHandler ("UserStatusChange", new object[3] { userID, false, UUID.Zero });
+            return info;
         }
 
         public UserInfo[] GetUserInfos(string[] userIDs)
@@ -135,7 +145,7 @@ namespace OpenSim.Services
 
         public void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion)
         {
-            UserInfo userInfo = GetUserInfo (userID);
+            UserInfo userInfo = GetUserInfo (userID, false);//We are changing the status, so don't look
             if (userInfo == null)
             {
                 Save (new UserInfo ()

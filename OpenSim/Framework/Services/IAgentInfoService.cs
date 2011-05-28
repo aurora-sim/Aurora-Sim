@@ -175,6 +175,6 @@ namespace OpenSim.Services.Interfaces
         void Update (string userID, string[] keys, object[] values);
         void SetLastPosition(string userID, UUID regionID, Vector3 Position, Vector3 LookAt);
         void SetHomePosition(string userID, UUID regionID, Vector3 Position, Vector3 LookAt);
-        UserInfo Get(string userID, bool checkOnlineStatus);
+        UserInfo Get(string userID, bool checkOnlineStatus, out bool onlineStatusChanged);
     }
 }
