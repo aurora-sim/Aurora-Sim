@@ -328,7 +328,7 @@ namespace Aurora.Framework
                 try
                 {
                     //Ask what is my ip for it
-                    externalIp = utf8.GetString(webClient.DownloadData("http://whatismyip.com/automation/n09230945.asp"));
+                    externalIp = utf8.GetString(webClient.DownloadData("http://automation.whatismyip.com/n09230945.asp"));
                 }
                 catch (Exception) { }
                 CachedExternalIP = externalIp;
