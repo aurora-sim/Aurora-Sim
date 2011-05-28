@@ -67,7 +67,7 @@ namespace Aurora.Services.DataService
         {
             foreach (string m_ServerURI in m_ServerURIs)
             {
-                SimianUtils.AddGeneric(PrincipalID, "MuteList", mute.MuteID.ToString(), Util.DictionaryToOSD(mute.ToKeyValuePairs()), m_ServerURI);
+                SimianUtils.AddGeneric(PrincipalID, "MuteList", mute.MuteID.ToString(), mute.ToOSD(), m_ServerURI);
             }
         }
 

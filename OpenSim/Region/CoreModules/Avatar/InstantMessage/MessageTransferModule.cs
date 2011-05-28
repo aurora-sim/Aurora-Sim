@@ -33,6 +33,7 @@ using log4net;
 using Nini.Config;
 using Nwc.XmlRpc;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -194,211 +195,41 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         protected virtual XmlRpcResponse processXMLRPCGridInstantMessage(XmlRpcRequest request, IPEndPoint remoteClient)
         {
             bool successful = false;
-            
-            // For now, as IMs seem to be a bit unreliable on OSGrid, catch all exception that
-            // happen here and aren't caught and log them.
-            try 
+            GridInstantMessage gim = new GridInstantMessage ();
+            Hashtable requestData = (Hashtable)request.Params[0];
+
+            if (requestData.ContainsKey ("message"))
             {
-                // various rational defaults
-                UUID fromAgentID = UUID.Zero;
-                UUID toAgentID = UUID.Zero;
-                UUID imSessionID = UUID.Zero;
-                uint timestamp = 0;
-                string fromAgentName = "";
-                string message = "";
-                byte dialog = (byte)0;
-                bool fromGroup = false;
-                byte offline = (byte)0;
-                uint ParentEstateID=0;
-                Vector3 Position = Vector3.Zero;
-                UUID RegionID = UUID.Zero ;
-                byte[] binaryBucket = new byte[0];
+                //Deserialize it
+                gim.FromOSD ((OSDMap)OSDParser.DeserializeJson (requestData["message"].ToString ()));
 
-                float pos_x = 0;
-                float pos_y = 0;
-                float pos_z = 0;
-                //m_log.Info("Processing IM");
+                if (gim.dialog == (byte)InstantMessageDialog.GodLikeRequestTeleport)
+                    gim.dialog = (byte)InstantMessageDialog.RequestTeleport;
 
-
-                Hashtable requestData = (Hashtable)request.Params[0];
-                // Check if it's got all the data
-                if (requestData.ContainsKey("from_agent_id")
-                        && requestData.ContainsKey("to_agent_id") && requestData.ContainsKey("im_session_id")
-                        && requestData.ContainsKey("timestamp") && requestData.ContainsKey("from_agent_name")
-                        && requestData.ContainsKey("message") && requestData.ContainsKey("dialog")
-                        && requestData.ContainsKey("from_group")
-                        && requestData.ContainsKey("offline") && requestData.ContainsKey("parent_estate_id")
-                        && requestData.ContainsKey("position_x") && requestData.ContainsKey("position_y")
-                        && requestData.ContainsKey("position_z") && requestData.ContainsKey("region_id")
-                        && requestData.ContainsKey("binary_bucket"))
+                // Trigger the Instant message in the scene.
+                foreach (Scene scene in m_Scenes)
                 {
-                    // Do the easy way of validating the UUIDs
-                    UUID.TryParse((string)requestData["from_agent_id"], out fromAgentID);
-                    UUID.TryParse((string)requestData["to_agent_id"], out toAgentID);
-                    UUID.TryParse((string)requestData["im_session_id"], out imSessionID);
-                    UUID.TryParse((string)requestData["region_id"], out RegionID);
-
-                    try
+                    IScenePresence user;
+                    if (scene.TryGetScenePresence (gim.toAgentID, out user))
                     {
-                        timestamp = (uint)Convert.ToInt32((string)requestData["timestamp"]);
-                    }
-                    catch (ArgumentException)
-                    {
-                    }
-                    catch (FormatException)
-                    {
-                    }
-                    catch (OverflowException)
-                    {
-                    }
-
-                    fromAgentName = (string)requestData["from_agent_name"];
-                    message = (string)requestData["message"];
-                    if (message == null)
-                        message = string.Empty;
-
-                    // Bytes don't transfer well over XMLRPC, so, we Base64 Encode them.
-                    string requestData1 = (string)requestData["dialog"];
-                    if (string.IsNullOrEmpty(requestData1))
-                    {
-                        dialog = 0;
-                    }
-                    else
-                    {
-                        byte[] dialogdata = Convert.FromBase64String(requestData1);
-                        dialog = dialogdata[0];
-                    }
-
-                    if ((string)requestData["from_group"] == "TRUE")
-                        fromGroup = true;
-
-                    string requestData2 = (string)requestData["offline"];
-                    if (String.IsNullOrEmpty(requestData2))
-                    {
-                        offline = 0;
-                    }
-                    else
-                    {
-                        byte[] offlinedata = Convert.FromBase64String(requestData2);
-                        offline = offlinedata[0];
-                    }
-
-                    try
-                    {
-                        ParentEstateID = (uint)Convert.ToInt32((string)requestData["parent_estate_id"]);
-                    }
-                    catch (ArgumentException)
-                    {
-                    }
-                    catch (FormatException)
-                    {
-                    }
-                    catch (OverflowException)
-                    {
-                    }
-
-                    try
-                    {
-                        pos_x = float.Parse((string)requestData["position_x"]);
-                    }
-                    catch (ArgumentException)
-                    {
-                    }
-                    catch (FormatException)
-                    {
-                    }
-                    catch (OverflowException)
-                    {
-                    }
-                    try
-                    {
-                        pos_y = float.Parse((string)requestData["position_y"]);
-                    }
-                    catch (ArgumentException)
-                    {
-                    }
-                    catch (FormatException)
-                    {
-                    }
-                    catch (OverflowException)
-                    {
-                    }
-                    try
-                    {
-                        pos_z = float.Parse((string)requestData["position_z"]);
-                    }
-                    catch (ArgumentException)
-                    {
-                    }
-                    catch (FormatException)
-                    {
-                    }
-                    catch (OverflowException)
-                    {
-                    }
-
-                    Position = new Vector3(pos_x, pos_y, pos_z);
-
-                    string requestData3 = (string)requestData["binary_bucket"];
-                    if (string.IsNullOrEmpty(requestData3))
-                    {
-                        binaryBucket = new byte[0];
-                    }
-                    else
-                    {
-                        binaryBucket = Convert.FromBase64String(requestData3);
-                    }
-
-                    // Create a New GridInstantMessageObject the the data
-                    GridInstantMessage gim = new GridInstantMessage();
-                    gim.fromAgentID = fromAgentID;
-                    gim.fromAgentName = fromAgentName;
-                    gim.fromGroup = fromGroup;
-                    gim.imSessionID = imSessionID;
-                    gim.RegionID = UUID.Zero; // RegionID.Guid;
-                    gim.timestamp = timestamp;
-                    gim.toAgentID = toAgentID;
-                    gim.message = message;
-                    gim.dialog = dialog;
-                    gim.offline = offline;
-                    gim.ParentEstateID = ParentEstateID;
-                    gim.Position = Position;
-                    gim.binaryBucket = binaryBucket;
-
-                    //We don't allow god tps from other regions
-                    if (gim.dialog == (byte)InstantMessageDialog.GodLikeRequestTeleport)
-                        gim.dialog = (byte)InstantMessageDialog.RequestTeleport;
-
-                    // Trigger the Instant message in the scene.
-                    foreach (Scene scene in m_Scenes)
-                    {
-                        IScenePresence user;
-                        if (scene.TryGetScenePresence (toAgentID, out user))
+                        if (!user.IsChildAgent)
                         {
-                            if (!user.IsChildAgent)
-                            {
-                                scene.EventManager.TriggerIncomingInstantMessage(gim);
-                                successful = true;
-                            }
+                            scene.EventManager.TriggerIncomingInstantMessage (gim);
+                            successful = true;
                         }
                     }
-                    if (!successful)
-                    {
-                        // If the message can't be delivered to an agent, it
-                        // is likely to be a group IM. On a group IM, the
-                        // imSessionID = toAgentID = group id. Raise the
-                        // unhandled IM event to give the groups module
-                        // a chance to pick it up. We raise that in a random
-                        // scene, since the groups module is shared.
-                        //
-                        m_Scenes[0].EventManager.TriggerUnhandledInstantMessage(gim);
-                    }
                 }
-            }
-            catch (Exception e)
-            {
-                m_log.Error("[INSTANT MESSAGE]: Caught unexpected exception:", e);
-                successful = false;
+                if (!successful)
+                {
+                    // If the message can't be delivered to an agent, it
+                    // is likely to be a group IM. On a group IM, the
+                    // imSessionID = toAgentID = group id. Raise the
+                    // unhandled IM event to give the groups module
+                    // a chance to pick it up. We raise that in a random
+                    // scene, since the groups module is shared.
+                    //
+                    m_Scenes[0].EventManager.TriggerUnhandledInstantMessage (gim);
+                }
             }
 
             //Send response back to region calling if it was successful
@@ -714,29 +545,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         protected virtual Hashtable ConvertGridInstantMessageToXMLRPC(GridInstantMessage msg)
         {
             Hashtable gim = new Hashtable();
-            gim["from_agent_id"] = msg.fromAgentID.ToString();
-            // Kept for compatibility
-            gim["from_agent_session"] = UUID.Zero.ToString();
-            gim["to_agent_id"] = msg.toAgentID.ToString();
-            gim["im_session_id"] = msg.imSessionID.ToString();
-            gim["timestamp"] = msg.timestamp.ToString();
-            gim["from_agent_name"] = msg.fromAgentName;
-            gim["message"] = msg.message;
-            byte[] dialogdata = new byte[1];dialogdata[0] = msg.dialog;
-            gim["dialog"] = Convert.ToBase64String(dialogdata,Base64FormattingOptions.None);
-
-            if (msg.fromGroup)
-                gim["from_group"] = "TRUE";
-            else
-                gim["from_group"] = "FALSE";
-            byte[] offlinedata = new byte[1]; offlinedata[0] = msg.offline;
-            gim["offline"] = Convert.ToBase64String(offlinedata, Base64FormattingOptions.None);
-            gim["parent_estate_id"] = (0).ToString();
-            gim["position_x"] = (0).ToString();
-            gim["position_y"] = (0).ToString();
-            gim["position_z"] = (0).ToString();
-            gim["region_id"] = UUID.Zero.Guid.ToString();
-            gim["binary_bucket"] = Convert.ToBase64String(msg.binaryBucket,Base64FormattingOptions.None);
+            gim["message"] = OSDParser.SerializeJsonString (msg.ToOSD ());
             return gim;
         }
     }

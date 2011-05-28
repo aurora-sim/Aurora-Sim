@@ -95,11 +95,6 @@ namespace OpenSim.Framework
         {
         }
 
-        public override Dictionary<string, object> ToKeyValuePairs()
-        {
-            return Util.OSDToDictionary(ToOSD());
-        }
-
         public override OSDMap ToOSD()
         {
             OSDMap map = new OSDMap();
@@ -134,11 +129,6 @@ namespace OpenSim.Framework
             RegionID = map["RegionID"].AsUUID();
             imSessionID = map["imSessionID"].AsUUID();
             timestamp = map["timestamp"].AsUInteger();
-        }
-
-        public override void FromKVP(Dictionary<string, object> RetVal)
-        {
-            FromOSD(Util.DictionaryToOSD(RetVal));
         }
 
         public override IDataTransferable Duplicate()
