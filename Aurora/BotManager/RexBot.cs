@@ -40,7 +40,7 @@ namespace Aurora.BotManager
     public class RexBot : IRexBot, IClientAPI
     {
         #region Declares
-        private const bool USE_NEW_FOLLOWING = true;
+        private bool USE_NEW_FOLLOWING = true;
         public enum RexBotState { Idle, Walking, Flying, Unknown }
 
         private static readonly log4net.ILog m_log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -825,7 +825,7 @@ namespace Aurora.BotManager
                 return;
             }
             CurrentFollowTimeBeforeUpdate++;
-            if (CurrentFollowTimeBeforeUpdate != 5)
+            if (CurrentFollowTimeBeforeUpdate != 2)
                 return;
             CurrentFollowTimeBeforeUpdate = 0;
 
@@ -904,7 +904,8 @@ namespace Aurora.BotManager
             {
                 //for (i = 0; i < path.Count; i++)
                 {
-                    nextPos = currentPos -= new Vector3 ((11 * resolution) - path[i].X, (11 * resolution) - path[i].Y, 0);
+                    //nextPos = currentPos -= new Vector3 ((11 * resolution) - path[i].X, (11 * resolution) - path[i].Y, 0);
+                    nextPos.Z = targetPos.Z; //Fix the Z coordinate
                     NavMesh mesh = new NavMesh ();
 
                     bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
