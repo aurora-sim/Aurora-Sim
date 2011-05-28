@@ -1,0 +1,32 @@
+//ascript
+#useLSLAPI
+#include Aurora.BotManager;
+
+string first = "Zombie";
+string last = "Bot";
+string userToDuplicate;
+string botID;
+bool resetNext = false;
+
+public void state_entry()
+{
+    userToDuplicate = llGetOwner();
+    botID = botCreateBot(first, last, userToDuplicate);
+    botFollowAvatar(botID, llGetOwner(), 2.5);
+
+    IScenePresence SP = Scene.GetScenePresence(UUID.Parse(botID));
+    SP.Teleport(new Vector3((float)llGetPos().x,(float)llGetPos().y,(float)llGetPos().z));
+}
+
+public void touch_start(LSL_Types.LSLInteger a)
+{
+    //botStopFollowAvatar (botID);
+    botRemoveBot(botID);
+    
+    if(resetNext)
+    {
+        resetNext = false;
+        llResetScript();
+    }
+    resetNext = true;
+}
