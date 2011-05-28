@@ -37,8 +37,14 @@ using log4net.Core;
 
 namespace OpenSim.Framework
 {
-    public interface ICommandConsole: IPlugin
+    public interface ICommandConsole
     {
+        /// <summary>
+        /// Returns the plugin name
+        /// </summary>
+        /// <returns></returns>
+        string Name { get; }
+
         /// <summary>
         /// All commands that are enabled on this console
         /// </summary>

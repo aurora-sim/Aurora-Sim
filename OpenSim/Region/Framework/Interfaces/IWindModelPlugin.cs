@@ -35,12 +35,18 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
-    public interface IWindModelPlugin : IPlugin
+    public interface IWindModelPlugin
     {
         /// <summary>
         /// Brief description of this plugin's wind model
         /// </summary>
         string Description { get; }
+
+        /// <summary>
+        /// Returns the plugin name
+        /// </summary>
+        /// <returns></returns>
+        string Name { get; }
 
         /// <summary>
         /// Provides access to the wind configuration, if any.
@@ -80,6 +86,5 @@ namespace OpenSim.Region.Framework.Interfaces
         float WindParamGet(string param);
 
         void Initialise();
-
     }
 }

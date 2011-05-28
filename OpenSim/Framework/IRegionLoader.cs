@@ -29,8 +29,14 @@ using Nini.Config;
 
 namespace OpenSim.Framework
 {
-    public interface IRegionLoader : IPlugin
+    public interface IRegionLoader
     {
+        /// <summary>
+        /// Returns the plugin name
+        /// </summary>
+        /// <returns></returns>
+        string Name { get; }
+
         /// <summary>
         /// This determines whether this plugin will be loaded
         /// </summary>

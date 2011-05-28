@@ -10,8 +10,14 @@ using OpenMetaverse.StructuredData;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
-    public interface IScriptPlugin : IPlugin
+    public interface IScriptPlugin
     {
+        /// <summary>
+        /// Returns the plugin name
+        /// </summary>
+        /// <returns></returns>
+        string Name { get; }
+
         void Initialize (ScriptEngine engine);
         void AddRegion (Scene scene);
         bool Check();

@@ -33,7 +33,7 @@ using OpenSim.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
-    public interface IScriptApi : IPlugin
+    public interface IScriptApi
     {
         //
         // Each API has an identifier, which is used to load the
@@ -46,6 +46,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         /// <returns></returns>
         IScriptApi Copy();
+
+        /// <summary>
+        /// Returns the plugin name
+        /// </summary>
+        /// <returns></returns>
+        string Name { get; }
 
         /// <summary>
         /// The name of the interface that is used to implement the functions

@@ -12,13 +12,42 @@ using Aurora.Framework;
 
 namespace Aurora.Framework
 {
-    public interface IChatPlugin : IPlugin
+    /// <summary>
+    /// Adds functionality so that modules can be developed to be triggered by chat said inworld by avatars
+    /// </summary>
+    public interface IChatPlugin
     {
+        /// <summary>
+        /// Returns the plugin name
+        /// </summary>
+        /// <returns></returns>
+        string Name { get; }
+
+        /// <summary>
+        /// Starts the module and gives the reference to the ChatModule
+        /// </summary>
+        /// <param name="module"></param>
         void Initialize(IChatModule module);
+
+        /// <summary>
+        /// A new message has been said by an avatar
+        /// </summary>
+        /// <param name="message">The message said by the avatar</param>
+        /// <param name="newmessage">What should be said (allows for modification of the message by modules)</param>
+        /// <returns>Whether this message should be said at all</returns>
         bool OnNewChatMessageFromWorld(OSChatMessage message, out OSChatMessage newmessage);
 
+        /// <summary>
+        /// A new client has entered the scene
+        /// </summary>
+        /// <param name="client"></param>
         void OnNewClient(IClientAPI client);
 
+        /// <summary>
+        /// A client has left the scene
+        /// </summary>
+        /// <param name="clientID"></param>
+        /// <param name="scene"></param>
         void OnClosingClient (UUID clientID, IScene scene);
     }
 

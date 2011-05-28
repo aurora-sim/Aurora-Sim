@@ -33,10 +33,16 @@ using OpenSim.Framework;
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// OpenSimulator Application Plugin framework interface
+    /// Aurora-Sim Application Plugin framework interface
     /// </summary>
-    public interface IApplicationPlugin: IPlugin
+    public interface IApplicationPlugin
     {
+        /// <summary>
+        /// Returns the plugin name
+        /// </summary>
+        /// <returns></returns>
+        string Name { get; }
+
         /// <summary>
         /// Initialize the Plugin
         /// </summary>
@@ -225,8 +231,14 @@ namespace Aurora.Framework
         string ConCat(string[] toConCat);
     }
 
-    public interface IAuroraDataPlugin : IPlugin
+    public interface IAuroraDataPlugin
     {
+        /// <summary>
+        /// Returns the plugin name
+        /// </summary>
+        /// <returns></returns>
+        string Name { get; }
+
         /// <summary>
         /// Starts the database plugin, performs migrations if needed
         /// </summary>

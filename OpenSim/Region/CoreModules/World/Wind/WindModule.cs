@@ -160,10 +160,6 @@ namespace OpenSim.Region.CoreModules
                 m_ready = false;
 
                 m_activeWindPlugin = null;
-                foreach (IWindModelPlugin windPlugin in m_availableWindPlugins.Values)
-                {
-                    windPlugin.Dispose();
-                }
 
                 m_availableWindPlugins.Clear();
 
