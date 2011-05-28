@@ -209,13 +209,13 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
                 if (im.dialog == (byte)InstantMessageDialog.MessageFromAgent)
                 {
-                    IClientAPI client = FindClient(new UUID(im.fromAgentID));
+                    IClientAPI client = FindClient(im.fromAgentID);
                     if (client == null)
                         return;
 
                     client.SendInstantMessage(new GridInstantMessage(
-                            null, new UUID(im.toAgentID),
-                            "System", new UUID(im.fromAgentID),
+                            null, im.toAgentID,
+                            "System", im.fromAgentID,
                             (byte)InstantMessageDialog.MessageFromAgent,
                             "User is not logged in. "+
                             (success ? "Message saved." : "Message not saved"),

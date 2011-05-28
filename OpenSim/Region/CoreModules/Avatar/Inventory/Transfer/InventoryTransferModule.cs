@@ -171,7 +171,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
                 if (im.binaryBucket.Length < 17) // Invalid
                     return;
             
-                UUID receipientID = new UUID(im.toAgentID);
+                UUID receipientID = im.toAgentID;
                 IScenePresence user = scene.GetScenePresence (receipientID);
                 UUID copyID;
 
@@ -190,7 +190,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
 
                         m_log.DebugFormat ("[INVENTORY TRANSFER]: Inserting original folder {0} " +
                                 "into agent {1}'s inventory",
-                                folderID, new UUID (im.toAgentID));
+                                folderID, im.toAgentID);
 
                         InventoryFolderBase folderCopy = null;
                         ILLClientInventory inventoryModule = scene.RequestModuleInterface<ILLClientInventory> ();
@@ -216,7 +216,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
                             user.ControllingClient.SendBulkUpdateInventory (folderCopy);
                         }
 
-                        im.imSessionID = folderID.Guid;
+                        im.imSessionID = folderID;
                     }
                     else
                     {
@@ -227,14 +227,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
 
                         m_log.DebugFormat ("[INVENTORY TRANSFER]: (giving) Inserting item {0} " +
                                 "into agent {1}'s inventory",
-                                itemID, new UUID (im.toAgentID));
+                                itemID, im.toAgentID);
 
                         InventoryItemBase itemCopy = null;
                         ILLClientInventory inventoryModule = scene.RequestModuleInterface<ILLClientInventory> ();
                         if (inventoryModule != null)
                             itemCopy = inventoryModule.GiveInventoryItem (
-                                new UUID (im.toAgentID),
-                                new UUID (im.fromAgentID), itemID, UUID.Zero);
+                                im.toAgentID,
+                                im.fromAgentID, itemID, UUID.Zero);
 
                         if (itemCopy == null)
                         {
@@ -250,7 +250,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
                             user.ControllingClient.SendBulkUpdateInventory (itemCopy);
                         }
 
-                        im.imSessionID = itemID.Guid;
+                        im.imSessionID = itemID;
                     }
 
                     user.ControllingClient.SendInstantMessage (im);
@@ -264,7 +264,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             }
             else if (im.dialog == (byte) InstantMessageDialog.InventoryAccepted)
             {
-                IScenePresence user = scene.GetScenePresence (new UUID (im.toAgentID));
+                IScenePresence user = scene.GetScenePresence (im.toAgentID);
 
                 if (user != null) // Local
                 {
@@ -287,7 +287,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
                 InventoryFolderBase trashFolder =
                     invService.GetFolderForType(client.AgentId, AssetType.TrashFolder);
 
-                UUID inventoryID = new UUID(im.imSessionID); // The inventory item/folder, back from it's trip
+                UUID inventoryID = im.imSessionID; // The inventory item/folder, back from it's trip
 
                 InventoryItemBase item = new InventoryItemBase(inventoryID, client.AgentId);
                 item = invService.GetItem(item);
@@ -332,7 +332,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
                             "received inventory" + reason, false);
                 }
 
-                IScenePresence user = scene.GetScenePresence (new UUID (im.toAgentID));
+                IScenePresence user = scene.GetScenePresence (im.toAgentID);
 
                 if (user != null) // Local
                 {
@@ -358,14 +358,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
         {
             // Check if this is ours to handle
             //
-            Scene scene = FindClientScene(new UUID(msg.toAgentID));
+            Scene scene = FindClientScene(msg.toAgentID);
 
             if (scene == null)
                 return;
 
             // Find agent to deliver to
             //
-            IScenePresence user = scene.GetScenePresence (new UUID (msg.toAgentID));
+            IScenePresence user = scene.GetScenePresence (msg.toAgentID);
 
             // Just forward to local handling
             OnInstantMessage(user.ControllingClient, msg);

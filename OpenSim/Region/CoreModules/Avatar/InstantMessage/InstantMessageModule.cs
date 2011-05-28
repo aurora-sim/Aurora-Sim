@@ -163,7 +163,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             {
                 if (client == null)
                 {
-                    UserAccount account = m_scenes[0].UserAccountService.GetUserAccount(m_scenes[0].RegionInfo.ScopeID, new UUID(im.fromAgentID));
+                    UserAccount account = m_scenes[0].UserAccountService.GetUserAccount(m_scenes[0].RegionInfo.ScopeID, im.fromAgentID);
                     if (account != null)
                         im.fromAgentName = account.Name;
                     else
@@ -186,8 +186,8 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                         {
                             client.SendInstantMessage(
                                     new GridInstantMessage(
-                                    null, new UUID(im.fromAgentID), "System",
-                                    new UUID(im.toAgentID),
+                                    null, im.fromAgentID, "System",
+                                    im.toAgentID,
                                     (byte)InstantMessageDialog.BusyAutoResponse,
                                     "Unable to send instant message. "+
                                     "User is not logged in.", false,
@@ -216,7 +216,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
             if (m_TransferModule != null)
             {
-                UserAccount account = m_scenes[0].UserAccountService.GetUserAccount (m_scenes[0].RegionInfo.ScopeID, new UUID (msg.fromAgentID));
+                UserAccount account = m_scenes[0].UserAccountService.GetUserAccount (m_scenes[0].RegionInfo.ScopeID, msg.fromAgentID);
                 if (account != null)
                     msg.fromAgentName = account.Name;
                 else
@@ -225,7 +225,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 foreach (Scene scene in m_scenes)
                 {
                     IScenePresence presence = null;
-                    if (scene.TryGetScenePresence (new UUID (msg.toAgentID), out presence))
+                    if (scene.TryGetScenePresence (msg.toAgentID, out presence))
                     {
                         presence.ControllingClient.SendInstantMessage (msg);
                         return;

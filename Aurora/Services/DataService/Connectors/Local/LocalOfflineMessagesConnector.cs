@@ -64,9 +64,9 @@ namespace Aurora.Services.DataService
         /// <param name="message"></param>
         public bool AddOfflineMessage(GridInstantMessage message)
 		{
-            if(GenericUtils.GetGenericCount(new UUID(message.toAgentID), "OfflineMessages", GD) < m_maxOfflineMessages)
+            if(GenericUtils.GetGenericCount(message.toAgentID, "OfflineMessages", GD) < m_maxOfflineMessages)
             {
-                GenericUtils.AddGeneric(new UUID(message.toAgentID), "OfflineMessages", UUID.Random().ToString(), message.ToOSD(), GD);
+                GenericUtils.AddGeneric(message.toAgentID, "OfflineMessages", UUID.Random().ToString(), message.ToOSD(), GD);
                 return true;
             }
             return false;

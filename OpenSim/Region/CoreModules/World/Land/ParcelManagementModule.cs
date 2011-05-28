@@ -594,9 +594,9 @@ namespace OpenSim.Region.CoreModules.World.Land
                         UUID transaction = UUID.Random ();
 
                         GridInstantMessage msg = new GridInstantMessage ();
-                        msg.fromAgentID = new Guid (UUID.Zero.ToString ()); // From server
-                        msg.toAgentID = new Guid (ret.Key.ToString ());
-                        msg.imSessionID = new Guid (transaction.ToString ());
+                        msg.fromAgentID = UUID.Zero; // From server
+                        msg.toAgentID = ret.Key;
+                        msg.imSessionID = transaction;
                         msg.timestamp = (uint)Util.UnixTimeSinceEpoch ();
                         msg.fromAgentName = "Server";
                         msg.dialog = (byte)19; // Object msg
@@ -604,7 +604,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                         msg.offline = (byte)1;
                         msg.ParentEstateID = m_scene.RegionInfo.EstateSettings.ParentEstateID;
                         msg.Position = Vector3.Zero;
-                        msg.RegionID = m_scene.RegionInfo.RegionID.Guid;
+                        msg.RegionID = m_scene.RegionInfo.RegionID;
                         msg.binaryBucket = new byte[0];
 
                         if (ret.Value.count > 1)

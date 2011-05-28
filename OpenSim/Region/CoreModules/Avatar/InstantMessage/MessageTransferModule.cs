@@ -148,7 +148,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
         public virtual void SendInstantMessage(GridInstantMessage im, MessageResultNotification result)
         {
-            UUID toAgentID = new UUID(im.toAgentID);
+            UUID toAgentID = im.toAgentID;
 
             // Try root avatar only first - incorrect now, see below
             foreach (Scene scene in m_Scenes)
@@ -351,13 +351,13 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
                     // Create a New GridInstantMessageObject the the data
                     GridInstantMessage gim = new GridInstantMessage();
-                    gim.fromAgentID = fromAgentID.Guid;
+                    gim.fromAgentID = fromAgentID;
                     gim.fromAgentName = fromAgentName;
                     gim.fromGroup = fromGroup;
-                    gim.imSessionID = imSessionID.Guid;
-                    gim.RegionID = UUID.Zero.Guid; // RegionID.Guid;
+                    gim.imSessionID = imSessionID;
+                    gim.RegionID = UUID.Zero; // RegionID.Guid;
                     gim.timestamp = timestamp;
-                    gim.toAgentID = toAgentID.Guid;
+                    gim.toAgentID = toAgentID;
                     gim.message = message;
                     gim.dialog = dialog;
                     gim.offline = offline;
@@ -452,7 +452,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             foreach (KeyValuePair<UUID, string> kvp in HTTPPaths)
             {
                 //Fix the agentID
-                im.toAgentID = kvp.Key.Guid;
+                im.toAgentID = kvp.Key;
                 Hashtable msgdata = ConvertGridInstantMessageToXMLRPC(im);
                 //We've tried to send an IM to them before, pull out their info
                 //Send the IM to their last location
@@ -516,7 +516,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             {
                 if (kvp.Value != "")
                 {
-                    im.toAgentID = kvp.Key.Guid;
+                    im.toAgentID = kvp.Key;
                     Hashtable msgdata = ConvertGridInstantMessageToXMLRPC(im);
                     if (!doIMSending(kvp.Value, msgdata))
                     {
@@ -569,7 +569,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         /// </param>
         protected virtual void SendGridInstantMessageViaXMLRPCAsync(GridInstantMessage im, MessageResultNotification result, GridRegion prevRegion)
         {
-            UUID toAgentID = new UUID(im.toAgentID);
+            UUID toAgentID = im.toAgentID;
             string HTTPPath = "";
 
             Hashtable msgdata = ConvertGridInstantMessageToXMLRPC(im);

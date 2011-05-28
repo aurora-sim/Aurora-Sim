@@ -961,7 +961,7 @@ namespace Aurora.Modules
 
         private void OnGridInstantMessage(GridInstantMessage msg)
         {
-            OnInstantMessage(findScenePresence(new UUID(msg.toAgentID)).ControllingClient, msg);
+            OnInstantMessage(findScenePresence(msg.toAgentID).ControllingClient, msg);
         }
 
         /// <summary>
@@ -1030,13 +1030,13 @@ namespace Aurora.Modules
         public void DropMemberFromSession(IClientAPI client, GridInstantMessage im)
         {
             ChatSession session;
-            ChatSessions.TryGetValue(UUID.Parse(im.imSessionID.ToString()), out session);
+            ChatSessions.TryGetValue(im.imSessionID, out session);
             if (session == null)
                 return;
             ChatSessionMember member = new ChatSessionMember() { AvatarKey = UUID.Zero };
             foreach (ChatSessionMember testmember in session.Members)
             {
-                if (member.AvatarKey == UUID.Parse(im.fromAgentID.ToString()))
+                if (member.AvatarKey == im.fromAgentID)
                     member = testmember;
             }
 
@@ -1071,7 +1071,7 @@ namespace Aurora.Modules
         public void SendChatToSession(IClientAPI client, GridInstantMessage im)
         {
             ChatSession session;
-            ChatSessions.TryGetValue(UUID.Parse(im.imSessionID.ToString()), out session);
+            ChatSessions.TryGetValue(im.imSessionID, out session);
             if (session == null)
                 return;
             IEventQueueService eq = client.Scene.RequestModuleInterface<IEventQueueService>();
@@ -1079,22 +1079,22 @@ namespace Aurora.Modules
             {
                 if (member.HasBeenAdded)
                 {
-                    im.toAgentID = member.AvatarKey.Guid;
+                    im.toAgentID = member.AvatarKey;
                     im.binaryBucket = OpenMetaverse.Utils.StringToBytes(session.Name);
-                    im.RegionID = Guid.Empty;
+                    im.RegionID = UUID.Zero;
                     im.ParentEstateID = 0;
                     //im.timestamp = 0;
                     m_TransferModule.SendInstantMessage(im);
                 }
                 else
                 {
-                    im.toAgentID = member.AvatarKey.Guid;
+                    im.toAgentID = member.AvatarKey;
                     eq.ChatterboxInvitation(
                         session.SessionID
                         , session.Name
-                        , new UUID(im.fromAgentID)
+                        , im.fromAgentID
                         , im.message
-                        , new UUID(im.toAgentID)
+                        , im.toAgentID
                         , im.fromAgentName
                         , im.dialog
                         , im.timestamp
@@ -1102,7 +1102,7 @@ namespace Aurora.Modules
                         , (int)im.ParentEstateID
                         , im.Position
                         , 1
-                        , new UUID(im.imSessionID)
+                        , im.imSessionID
                         , false
                         , OpenMetaverse.Utils.StringToBytes(session.Name)
                         , findScene(member.AvatarKey).RegionInfo.RegionHandle

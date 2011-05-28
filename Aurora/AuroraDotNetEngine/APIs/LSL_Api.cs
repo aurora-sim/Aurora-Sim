@@ -3900,9 +3900,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID friendTransactionID = UUID.Random();
 
             GridInstantMessage msg = new GridInstantMessage();
-            msg.fromAgentID = new Guid(m_host.UUID.ToString());
-            msg.toAgentID = new Guid(user); 
-            msg.imSessionID = new Guid(friendTransactionID.ToString()); // This is the item we're mucking with here
+            msg.fromAgentID = m_host.UUID;
+            msg.toAgentID = UUID.Parse(user); 
+            msg.imSessionID = friendTransactionID; // This is the item we're mucking with here
             msg.fromAgentName = m_host.Name;
             
             // Cap the message length at 1024.
@@ -3916,7 +3916,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             msg.offline = (byte)0; 
             msg.ParentEstateID = 0;
             msg.Position = m_host.AbsolutePosition;
-            msg.RegionID = World.RegionInfo.RegionID.Guid;
+            msg.RegionID = World.RegionInfo.RegionID;
             msg.binaryBucket
                 = Util.StringToBytes256(
                     "{0}/{1}/{2}/{3}",

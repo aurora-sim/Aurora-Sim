@@ -205,11 +205,11 @@ namespace Aurora.Modules
         {
             if (!OfflineMessagesConnector.AddOfflineMessage (im))
             {
-                IClientAPI client = FindClient (new UUID (im.fromAgentID));
+                IClientAPI client = FindClient (im.fromAgentID);
                 if (client != null)
                     client.SendInstantMessage (new GridInstantMessage (
-                            null, new UUID (im.toAgentID),
-                            "System", new UUID (im.fromAgentID),
+                            null, im.toAgentID,
+                            "System", im.fromAgentID,
                             (byte)InstantMessageDialog.MessageFromAgent,
                             "User has too many IMs already, please try again later.",
                             false, new Vector3 ()));
@@ -228,10 +228,10 @@ namespace Aurora.Modules
                 IEmailModule emailModule = m_SceneList[0].RequestModuleInterface<IEmailModule> ();
                 if (emailModule != null && m_SendOfflineMessagesToEmail)
                 {
-                    IUserProfileInfo profile = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector> ().GetUserProfile (UUID.Parse (im.toAgentID.ToString ()));
+                    IUserProfileInfo profile = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector> ().GetUserProfile (im.toAgentID);
                     if (profile.IMViaEmail)
                     {
-                        UserAccount account = m_SceneList[0].UserAccountService.GetUserAccount (UUID.Zero, UUID.Parse (im.toAgentID.ToString ()));
+                        UserAccount account = m_SceneList[0].UserAccountService.GetUserAccount (UUID.Zero, im.toAgentID.ToString ());
                         if (account != null && account.Email != "" && account.Email != null)
                         {
                             emailModule.SendEmail (UUID.Zero, account.Email, string.Format ("Offline Message from {0}", im.fromAgentName),
@@ -244,13 +244,13 @@ namespace Aurora.Modules
 
                 if (im.dialog == (byte)InstantMessageDialog.MessageFromAgent)
                 {
-                    IClientAPI client = FindClient(new UUID(im.fromAgentID));
+                    IClientAPI client = FindClient(im.fromAgentID);
                     if (client == null)
                         return;
 
                     client.SendInstantMessage(new GridInstantMessage(
-                            null, new UUID(im.toAgentID),
-                            "System", new UUID(im.fromAgentID),
+                            null, im.toAgentID,
+                            "System", im.fromAgentID,
                             (byte)InstantMessageDialog.MessageFromAgent,
                             "User is not logged in. Message saved.",
                             false, new Vector3()));
@@ -258,7 +258,7 @@ namespace Aurora.Modules
 
                 if (im.dialog == (byte)InstantMessageDialog.InventoryOffered)
                 {
-                    IClientAPI client = FindClient(new UUID(im.fromAgentID));
+                    IClientAPI client = FindClient(im.fromAgentID);
                     if (client == null)
                         return;
 
@@ -269,13 +269,13 @@ namespace Aurora.Modules
             {
                 if (im.dialog == (byte)InstantMessageDialog.MessageFromAgent)
                 {
-                    IClientAPI client = FindClient(new UUID(im.fromAgentID));
+                    IClientAPI client = FindClient(im.fromAgentID);
                     if (client == null)
                         return;
 
                     client.SendInstantMessage(new GridInstantMessage(
-                            null, new UUID(im.toAgentID),
-                            "System", new UUID(im.fromAgentID),
+                            null, im.toAgentID,
+                            "System", im.fromAgentID,
                             (byte)InstantMessageDialog.MessageFromAgent,
                             "User is not able to be found. Message saved.",
                             false, new Vector3()));
@@ -283,7 +283,7 @@ namespace Aurora.Modules
 
                 if (im.dialog == (byte)InstantMessageDialog.InventoryOffered)
                 {
-                    IClientAPI client = FindClient(new UUID(im.fromAgentID));
+                    IClientAPI client = FindClient(im.fromAgentID);
                     if (client == null)
                         return;
 

@@ -64,7 +64,7 @@ namespace Aurora.Services.DataService
         {
             foreach (string m_ServerURI in m_ServerURIs)
             {
-                SimianUtils.AddGeneric(new UUID(message.toAgentID), "OfflineMessages", UUID.Random().ToString(), message.ToOSD(), m_ServerURI);
+                SimianUtils.AddGeneric(message.toAgentID, "OfflineMessages", UUID.Random().ToString(), message.ToOSD(), m_ServerURI);
             }
             return true;
         }

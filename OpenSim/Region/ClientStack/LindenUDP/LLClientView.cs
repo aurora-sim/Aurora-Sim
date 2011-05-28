@@ -809,26 +809,26 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         // Don't remove transaction ID! Groups and item gives need to set it!
         public void SendInstantMessage(GridInstantMessage im)
         {
-            if (((Scene)(m_scene)).Permissions.CanInstantMessage(new UUID(im.fromAgentID), new UUID(im.toAgentID)))
+            if (m_scene.Permissions.CanInstantMessage(im.fromAgentID, im.toAgentID))
             {
                 ImprovedInstantMessagePacket msg
                     = (ImprovedInstantMessagePacket)PacketPool.Instance.GetPacket(PacketType.ImprovedInstantMessage);
 
-                msg.AgentData.AgentID = new UUID(im.fromAgentID);
+                msg.AgentData.AgentID = im.fromAgentID;
                 msg.AgentData.SessionID = UUID.Zero;
                 msg.MessageBlock.FromAgentName = Util.StringToBytes256(im.fromAgentName);
                 msg.MessageBlock.Dialog = im.dialog;
                 msg.MessageBlock.FromGroup = im.fromGroup;
-                if (im.imSessionID == UUID.Zero.Guid)
-                    msg.MessageBlock.ID = new UUID(im.fromAgentID) ^ new UUID(im.toAgentID);
+                if (im.imSessionID == UUID.Zero)
+                    msg.MessageBlock.ID = im.fromAgentID ^ im.toAgentID;
                 else
-                    msg.MessageBlock.ID = new UUID(im.imSessionID);
+                    msg.MessageBlock.ID = im.imSessionID;
                 msg.MessageBlock.Offline = im.offline;
                 msg.MessageBlock.ParentEstateID = im.ParentEstateID;
                 msg.MessageBlock.Position = im.Position;
-                msg.MessageBlock.RegionID = new UUID(im.RegionID);
+                msg.MessageBlock.RegionID = im.RegionID;
                 msg.MessageBlock.Timestamp = im.timestamp;
-                msg.MessageBlock.ToAgentID = new UUID(im.toAgentID);
+                msg.MessageBlock.ToAgentID = im.toAgentID;
                 msg.MessageBlock.Message = Util.StringToBytes1024(im.message);
                 msg.MessageBlock.BinaryBucket = im.binaryBucket;
 

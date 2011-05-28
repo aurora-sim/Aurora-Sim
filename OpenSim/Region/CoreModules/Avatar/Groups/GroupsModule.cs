@@ -92,8 +92,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         private bool m_groupsEnabled = false;
         private bool m_groupNoticesEnabled = true;
         private bool m_debugEnabled = true;
-        private Dictionary<Guid, UUID> GroupAttachmentCache = new Dictionary<Guid, UUID>();
-        private Dictionary<Guid, UUID> GroupSessionIDCache = new Dictionary<Guid, UUID>(); //For offline messages
+        private Dictionary<UUID, UUID> GroupAttachmentCache = new Dictionary<UUID, UUID> ();
+        private Dictionary<UUID, UUID> GroupSessionIDCache = new Dictionary<UUID, UUID> (); //For offline messages
         private bool m_findOnlineStatus = false;
 
         #region IRegionModuleBase Members
@@ -381,14 +381,14 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 {
                     if (m_msgTransferModule != null)
                     {
-                        Guid inviteUUID = Invite.InviteID.Guid;
+                        UUID inviteUUID = Invite.InviteID;
 
                         GridInstantMessage msg = new GridInstantMessage();
 
                         msg.imSessionID = inviteUUID;
 
-                        msg.fromAgentID = Invite.GroupID.Guid;
-                        msg.toAgentID = Invite.AgentID.Guid;
+                        msg.fromAgentID = Invite.GroupID;
+                        msg.toAgentID = Invite.AgentID;
                         msg.timestamp = (uint)Util.UnixTimeSinceEpoch();
                         msg.fromAgentName = Invite.FromAgentName;
 
@@ -403,7 +403,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                         msg.offline = (byte)0;
                         msg.ParentEstateID = 0;
                         msg.Position = Vector3.Zero;
-                        msg.RegionID = UUID.Zero.Guid;
+                        msg.RegionID = UUID.Zero;
                         msg.binaryBucket = new byte[20];
 
                         OutgoingInstantMessage(msg, Invite.AgentID);
@@ -508,7 +508,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             // Group invitations
             if ((im.dialog == (byte)InstantMessageDialog.GroupInvitationAccept) || (im.dialog == (byte)InstantMessageDialog.GroupInvitationDecline))
             {
-                UUID inviteID = new UUID(im.imSessionID);
+                UUID inviteID = im.imSessionID;
                 GroupInviteInfo inviteInfo = m_groupData.GetAgentToGroupInvite(GetRequestingAgentID(remoteClient), inviteID);
 
                 if (inviteInfo == null)
@@ -519,7 +519,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
                 if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: Invite is for Agent {0} to Group {1}.", inviteInfo.AgentID, inviteInfo.GroupID);
 
-                UUID fromAgentID = new UUID(im.fromAgentID);
+                UUID fromAgentID = im.fromAgentID;
                 if ((inviteInfo != null) && (fromAgentID == inviteInfo.AgentID))
                 {
                     // Accept
@@ -534,9 +534,9 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                             m_groupData.AddAgentToGroup(account.PrincipalID, inviteInfo.AgentID, inviteInfo.GroupID, inviteInfo.RoleID);
 
                             GridInstantMessage msg = new GridInstantMessage();
-                            msg.imSessionID = UUID.Zero.Guid;
-                            msg.fromAgentID = UUID.Zero.Guid;
-                            msg.toAgentID = inviteInfo.AgentID.Guid;
+                            msg.imSessionID = UUID.Zero;
+                            msg.fromAgentID = UUID.Zero;
+                            msg.toAgentID = inviteInfo.AgentID;
                             msg.timestamp = (uint)Util.UnixTimeSinceEpoch();
                             msg.fromAgentName = "Groups";
                             msg.message = string.Format("You have been added to the group.");
@@ -545,7 +545,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                             msg.offline = (byte)0;
                             msg.ParentEstateID = 0;
                             msg.Position = Vector3.Zero;
-                            msg.RegionID = UUID.Zero.Guid;
+                            msg.RegionID = UUID.Zero;
                             msg.binaryBucket = new byte[0];
 
                             OutgoingInstantMessage(msg, inviteInfo.AgentID);
@@ -577,7 +577,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 if (!m_groupNoticesEnabled)
                     return;
 
-                UUID GroupID = new UUID(im.toAgentID);
+                UUID GroupID = im.toAgentID;
                 if (m_groupData.GetGroupRecord(GetRequestingAgentID(remoteClient), GroupID, null) != null)
                 {
                     UUID NoticeID = UUID.Random();
@@ -645,7 +645,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                             // Build notice IIM
                             GridInstantMessage msg = CreateGroupNoticeIM(GetRequestingAgentID(remoteClient), NoticeID, (byte)OpenMetaverse.InstantMessageDialog.GroupNotice);
 
-                            msg.toAgentID = member.AgentID.Guid;
+                            msg.toAgentID = member.AgentID;
                             OutgoingInstantMessage(msg, member.AgentID);
                         }
                     }
@@ -676,7 +676,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 // if it's being delivered here, then the ejectee is here
                 // so we need to send local updates to the agent.
 
-                UUID ejecteeID = new UUID(im.toAgentID);
+                UUID ejecteeID = im.toAgentID;
 
                 im.dialog = (byte)InstantMessageDialog.MessageFromAgent;
                 OutgoingInstantMessage(im, ejecteeID);
@@ -684,7 +684,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 IClientAPI ejectee = GetActiveClient(ejecteeID);
                 if (ejectee != null)
                 {
-                    UUID groupID = new UUID(im.imSessionID);
+                    UUID groupID = im.imSessionID;
                     ejectee.SendAgentDropGroup(groupID);
                 }
             }
@@ -695,10 +695,10 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 im.dialog = (byte)InstantMessageDialog.GroupNotice;
 
                 //In offline group notices, imSessionID is replaced with the NoticeID so that we can rebuild the packet here
-                GroupNoticeInfo GND = m_groupData.GetGroupNotice(new UUID(im.toAgentID), new UUID(im.imSessionID));
+                GroupNoticeInfo GND = m_groupData.GetGroupNotice(im.toAgentID, im.imSessionID);
 
                 //We reset the ID so that if this was set before, it won't be misadded or anything to the cache
-                im.imSessionID = UUID.Random().Guid; 
+                im.imSessionID = UUID.Random(); 
 
                 //Rebuild the binary bucket
                 if (GND.noticeData.HasAttachment)
@@ -718,7 +718,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     im.binaryBucket = bucket;
                 }
 
-                OutgoingInstantMessage(im, new UUID(im.toAgentID));
+                OutgoingInstantMessage(im, im.toAgentID);
 
                 //You MUST reset this, otherwise the client will get it twice,
                 // as it goes through OnGridInstantMessage
@@ -741,7 +741,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 {
                     case (byte)InstantMessageDialog.GroupInvitation:
                     case (byte)InstantMessageDialog.GroupNotice:
-                        UUID toAgentID = new UUID(msg.toAgentID);
+                        UUID toAgentID = msg.toAgentID;
                         IClientAPI localClient = GetActiveClient(toAgentID);
                         if (localClient != null)
                         {
@@ -1091,8 +1091,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         {
             GridInstantMessage msg = new GridInstantMessage();
 
-            msg.fromAgentID = data.GroupID.Guid;
-            msg.toAgentID = AgentID.Guid;
+            msg.fromAgentID = data.GroupID;
+            msg.toAgentID = AgentID;
             msg.timestamp = data.noticeData.Timestamp;
             msg.fromAgentName = data.noticeData.FromName;
             msg.message = data.noticeData.Subject + "|" + data.Message;
@@ -1101,8 +1101,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             msg.offline = (byte)1; //Allow offline
             msg.ParentEstateID = 0;
             msg.Position = Vector3.Zero;
-            msg.RegionID = UUID.Zero.Guid;
-            msg.imSessionID = UUID.Random().Guid;
+            msg.RegionID = UUID.Zero;
+            msg.imSessionID = UUID.Random();
 
             if (data.noticeData.HasAttachment)
             {
@@ -1144,20 +1144,20 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
             GridInstantMessage msg = new GridInstantMessage();
 
-            msg.toAgentID = agentID.Guid;
+            msg.toAgentID = agentID;
             msg.dialog = dialog;
             // msg.dialog = (byte)OpenMetaverse.InstantMessageDialog.GroupNotice;
             msg.fromGroup = true;
             msg.offline = (byte)1; // Allow this message to be stored for offline use
             msg.ParentEstateID = 0;
             msg.Position = Vector3.Zero;
-            msg.RegionID = UUID.Zero.Guid;
-            msg.imSessionID = UUID.Random().Guid;
+            msg.RegionID = UUID.Zero;
+            msg.imSessionID = UUID.Random();
 
             GroupNoticeInfo info = m_groupData.GetGroupNotice(agentID, groupNoticeID);
             if (info != null)
             {
-                msg.fromAgentID = info.GroupID.Guid;
+                msg.fromAgentID = info.GroupID;
                 msg.timestamp = info.noticeData.Timestamp;
                 msg.fromAgentName = info.noticeData.FromName;
                 msg.message = info.noticeData.Subject + "|" + info.Message;
@@ -1184,7 +1184,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             else
             {
                 if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: Group Notice {0} not found, composing empty message.", groupNoticeID);
-                msg.fromAgentID = UUID.Zero.Guid;
+                msg.fromAgentID = UUID.Zero;
                 msg.timestamp = (uint)Util.UnixTimeSinceEpoch(); ;
                 msg.fromAgentName = string.Empty;
                 msg.message = string.Empty;
@@ -1232,17 +1232,17 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             {
                 // SL sends out notifcations to the group messaging session that the person has left
                 GridInstantMessage im = new GridInstantMessage();
-                im.fromAgentID = groupID.Guid;
+                im.fromAgentID = groupID;
                 im.dialog = (byte)InstantMessageDialog.SessionSend;
                 im.binaryBucket = new byte[0];
                 im.fromAgentName = "System";
                 im.fromGroup = true;
-                im.imSessionID = groupID.Guid;
+                im.imSessionID = groupID;
                 im.message = remoteClient.Name + " has left the group.";
                 im.offline = 1;
-                im.RegionID = remoteClient.Scene.RegionInfo.RegionID.Guid;
+                im.RegionID = remoteClient.Scene.RegionInfo.RegionID;
                 im.timestamp = (uint)Util.UnixTimeSinceEpoch();
-                im.toAgentID = Guid.Empty;
+                im.toAgentID = UUID.Zero;
 
                 m_groupsMessagingModule.SendMessageToGroup(im, groupID);
             }
@@ -1269,9 +1269,9 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             // Send Message to Ejectee
             GridInstantMessage msg = new GridInstantMessage();
             
-            msg.imSessionID = UUID.Zero.Guid;
-            msg.fromAgentID = GetRequestingAgentID(remoteClient).Guid;
-            msg.toAgentID = ejecteeID.Guid;
+            msg.imSessionID = UUID.Zero;
+            msg.fromAgentID = GetRequestingAgentID(remoteClient);
+            msg.toAgentID = ejecteeID;
             msg.timestamp = 0;
             msg.fromAgentName = remoteClient.Name;
             msg.message = string.Format("You have been ejected from '{1}' by {0}.", remoteClient.Name, groupInfo.GroupName);
@@ -1280,7 +1280,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             msg.offline = (byte)0;
             msg.ParentEstateID = 0;
             msg.Position = Vector3.Zero;
-            msg.RegionID = remoteClient.Scene.RegionInfo.RegionID.Guid;
+            msg.RegionID = remoteClient.Scene.RegionInfo.RegionID;
             msg.binaryBucket = new byte[0];
             OutgoingInstantMessage(msg, ejecteeID);
 
@@ -1299,9 +1299,9 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             // this only works within the comms servers domain, and won't work hypergrid
 
             msg = new GridInstantMessage();
-            msg.imSessionID = UUID.Zero.Guid;
-            msg.fromAgentID = GetRequestingAgentID(remoteClient).Guid;
-            msg.toAgentID = GetRequestingAgentID(remoteClient).Guid;
+            msg.imSessionID = UUID.Zero;
+            msg.fromAgentID = GetRequestingAgentID(remoteClient);
+            msg.toAgentID = GetRequestingAgentID(remoteClient);
             msg.timestamp = 0;
             msg.fromAgentName = remoteClient.Name;
             if (account != null)
@@ -1317,7 +1317,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             msg.offline = (byte)0;
             msg.ParentEstateID = 0;
             msg.Position = Vector3.Zero;
-            msg.RegionID = remoteClient.Scene.RegionInfo.RegionID.Guid;
+            msg.RegionID = remoteClient.Scene.RegionInfo.RegionID;
             msg.binaryBucket = new byte[0];
             OutgoingInstantMessage(msg, GetRequestingAgentID(remoteClient));
 
@@ -1327,17 +1327,17 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             {
                 // SL sends out notifcations to the group messaging session that the person has left
                 GridInstantMessage im = new GridInstantMessage();
-                im.fromAgentID = groupID.Guid;
+                im.fromAgentID = groupID;
                 im.dialog = (byte)InstantMessageDialog.SessionSend;
                 im.binaryBucket = new byte[0];
                 im.fromAgentName = "System";
                 im.fromGroup = true;
-                im.imSessionID = groupID.Guid;
+                im.imSessionID = groupID;
                 im.message = remoteClient.Name + " has left the group.";
                 im.offline = 1;
-                im.RegionID = remoteClient.Scene.RegionInfo.RegionID.Guid;
+                im.RegionID = remoteClient.Scene.RegionInfo.RegionID;
                 im.timestamp = (uint)Util.UnixTimeSinceEpoch();
-                im.toAgentID = Guid.Empty;
+                im.toAgentID = UUID.Zero;
 
                 m_groupsMessagingModule.SendMessageToGroup(im, groupID);
             }
@@ -1359,15 +1359,15 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             {
                 if (m_msgTransferModule != null)
                 {
-                    Guid inviteUUID = InviteID.Guid;
+                    UUID inviteUUID = InviteID;
 
                     GridInstantMessage msg = new GridInstantMessage();
 
                     msg.imSessionID = inviteUUID;
 
                     // msg.fromAgentID = GetRequestingAgentID(remoteClient).Guid;
-                    msg.fromAgentID = groupID.Guid;
-                    msg.toAgentID = invitedAgentID.Guid;
+                    msg.fromAgentID = groupID;
+                    msg.toAgentID = invitedAgentID;
                     //msg.timestamp = (uint)Util.UnixTimeSinceEpoch();
                     msg.timestamp = 0;
                     msg.fromAgentName = remoteClient.Name;
@@ -1383,7 +1383,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     msg.offline = (byte)0;
                     msg.ParentEstateID = 0;
                     msg.Position = Vector3.Zero;
-                    msg.RegionID = remoteClient.Scene.RegionInfo.RegionID.Guid;
+                    msg.RegionID = remoteClient.Scene.RegionInfo.RegionID;
                     msg.binaryBucket = new byte[20];
 
                     OutgoingInstantMessage(msg, invitedAgentID);
@@ -1734,7 +1734,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         public GridInstantMessage BuildOfflineGroupNotice(GridInstantMessage msg)
         {
             msg.dialog = 211; //We set this so that it isn't taken the wrong way later
-            Guid NoticeID = GroupSessionIDCache[msg.imSessionID].Guid;
+            UUID NoticeID = GroupSessionIDCache[msg.imSessionID];
             GroupSessionIDCache.Remove(msg.imSessionID);
             msg.imSessionID = NoticeID;
             return msg;

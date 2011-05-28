@@ -36,20 +36,20 @@ namespace OpenSim.Framework
     [Serializable]
     public class GridInstantMessage : IDataTransferable
     {
-        public Guid fromAgentID;
+        public UUID fromAgentID;
         public string fromAgentName;
-        public Guid toAgentID;
+        public UUID toAgentID;
         public byte dialog;
         public bool fromGroup;
         public string message;
-        public Guid imSessionID;
+        public UUID imSessionID;
         public byte offline;
         public Vector3 Position;
         public byte[] binaryBucket;
 
 
         public uint ParentEstateID;
-        public Guid RegionID;
+        public UUID RegionID;
         public uint timestamp;
 
         public GridInstantMessage()
@@ -64,13 +64,13 @@ namespace OpenSim.Framework
                 UUID _imSessionID, bool _offline, Vector3 _position,
                 byte[] _binaryBucket)
         {
-            fromAgentID = _fromAgentID.Guid;
+            fromAgentID = _fromAgentID;
             fromAgentName = _fromAgentName;
-            toAgentID = _toAgentID.Guid;
+            toAgentID = _toAgentID;
             dialog = _dialog;
             fromGroup = _fromGroup;
             message = _message;
-            imSessionID = _imSessionID.Guid;
+            imSessionID = _imSessionID;
             if (_offline)
                 offline = 1;
             else
@@ -81,7 +81,7 @@ namespace OpenSim.Framework
             if (scene != null)
             {
                 ParentEstateID = scene.RegionInfo.EstateSettings.ParentEstateID;
-                RegionID = scene.RegionInfo.RegionSettings.RegionUUID.Guid;
+                RegionID = scene.RegionInfo.RegionSettings.RegionUUID;
             }
             timestamp = (uint)Util.UnixTimeSinceEpoch();
         }
@@ -103,27 +103,27 @@ namespace OpenSim.Framework
         public override OSDMap ToOSD()
         {
             OSDMap map = new OSDMap();
-            map.Add("fromAgentID", OSD.FromUUID(new UUID(fromAgentID)));
+            map.Add("fromAgentID", OSD.FromUUID(fromAgentID));
             map.Add("fromAgentName", OSD.FromString(fromAgentName));
-            map.Add("toAgentID", OSD.FromUUID(new UUID(toAgentID)));
+            map.Add("toAgentID", OSD.FromUUID(toAgentID));
             map.Add("dialog", OSD.FromInteger(dialog));
             map.Add("fromGroup", OSD.FromBoolean(fromGroup));
             map.Add("message", OSD.FromString(message));
-            map.Add("imSessionID", OSD.FromUUID(new UUID(imSessionID)));
+            map.Add("imSessionID", OSD.FromUUID(imSessionID));
             map.Add("offline", OSD.FromInteger(offline));
             map.Add("Position", OSD.FromVector3(Position));
             map.Add("binaryBucket", OSD.FromBinary(binaryBucket));
             map.Add("ParentEstateID", OSD.FromUInteger(ParentEstateID));
-            map.Add("RegionID", OSD.FromUUID(new UUID(RegionID)));
+            map.Add("RegionID", OSD.FromUUID(RegionID));
             map.Add("timestamp", OSD.FromUInteger(timestamp));
             return map;
         }
 
         public override void FromOSD(OSDMap map)
         {
-            fromAgentID = map["fromAgentID"].AsUUID().Guid;
+            fromAgentID = map["fromAgentID"].AsUUID();
             fromAgentName = map["fromAgentName"].AsString();
-            toAgentID = map["toAgentID"].AsUUID().Guid;
+            toAgentID = map["toAgentID"].AsUUID();
             dialog = (byte)map["dialog"].AsInteger();
             fromGroup = map["fromGroup"].AsBoolean();
             message = map["message"].ToString();
@@ -131,8 +131,8 @@ namespace OpenSim.Framework
             Position = map["Position"].AsVector3();
             binaryBucket = map["binaryBucket"].AsBinary();
             ParentEstateID = map["ParentEstateID"].AsUInteger();
-            RegionID = map["RegionID"].AsUUID().Guid;
-            imSessionID = map["imSessionID"].AsUUID().Guid;
+            RegionID = map["RegionID"].AsUUID();
+            imSessionID = map["imSessionID"].AsUUID();
             timestamp = map["timestamp"].AsUInteger();
         }
 

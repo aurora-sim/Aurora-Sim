@@ -274,7 +274,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
 
                 UserAccount account = m_Scenes[0].UserAccountService.GetUserAccount(client.Scene.RegionInfo.ScopeID, fromAgentID);
 
-                im.fromAgentID = fromAgentID.Guid;
+                im.fromAgentID = fromAgentID;
                 im.fromAgentName = account.FirstName + " " + account.LastName;
                 im.offline = 1;
                 im.imSessionID = im.fromAgentID;
@@ -362,8 +362,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             if ((InstantMessageDialog)im.dialog == InstantMessageDialog.FriendshipOffered)
             { 
                 // we got a friendship offer
-                UUID principalID = new UUID(im.fromAgentID);
-                UUID friendID = new UUID(im.toAgentID);
+                UUID principalID = im.fromAgentID;
+                UUID friendID = im.toAgentID;
 
                 //Can't trust the incoming name for friend offers, so we have to find it ourselves.
                 UserAccount sender = m_Scenes[0].UserAccountService.GetUserAccount(UUID.Zero, principalID);

@@ -211,7 +211,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             // Copy Message
 
             GridInstantMessage msg = new GridInstantMessage();
-            msg.imSessionID = groupID.Guid;
+            msg.imSessionID = groupID;
             msg.fromAgentName = im.fromAgentName;
             msg.message = im.message;
             msg.dialog = im.dialog;
@@ -225,7 +225,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             msg.fromAgentID = im.fromAgentID;
             msg.fromGroup = true;
 
-            foreach (GroupMembersData member in m_groupData.GetGroupMembers(UUID.Parse(msg.fromAgentID.ToString()), groupID))
+            foreach (GroupMembersData member in m_groupData.GetGroupMembers(msg.fromAgentID, groupID))
             {
                 if (m_groupData.hasAgentDroppedGroupChatSession(member.AgentID, groupID))
                 {
@@ -234,7 +234,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     continue;
                 }
 
-                msg.toAgentID = member.AgentID.Guid;
+                msg.toAgentID = member.AgentID;
 
                 if (m_debugEnabled) m_log.DebugFormat("[GROUPS-MESSAGING]: Delivering to {0}", member.AgentID);
                 m_msgTransferModule.SendInstantMessage(msg);
@@ -244,11 +244,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         private void SendInstantMessages(object message)
         {
             GridInstantMessage msg = message as GridInstantMessage;
-            List<GroupMembersData> members = m_groupData.GetGroupMembers(UUID.Parse(msg.fromAgentID.ToString()), UUID.Parse(msg.imSessionID.ToString()));
+            List<GroupMembersData> members = m_groupData.GetGroupMembers(msg.fromAgentID, msg.imSessionID);
             List<UUID> agentsToSendTo = new List<UUID>();
             foreach (GroupMembersData member in members)
             {
-                if (m_groupData.hasAgentDroppedGroupChatSession(member.AgentID, UUID.Parse(msg.imSessionID.ToString())))
+                if (m_groupData.hasAgentDroppedGroupChatSession(member.AgentID, msg.imSessionID))
                 {
                     // Don't deliver messages to people who have dropped this session
                     if (m_debugEnabled) m_log.DebugFormat("[GROUPS-MESSAGING]: {0} has dropped session, not delivering to them", member.AgentID);
@@ -330,8 +330,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         {
             if (m_debugEnabled) m_log.DebugFormat("[GROUPS-MESSAGING]: Session message from {0} going to agent {1}", msg.fromAgentName, msg.toAgentID);
 
-            UUID AgentID = new UUID(msg.fromAgentID);
-            UUID GroupID = new UUID(msg.imSessionID);
+            UUID AgentID = msg.fromAgentID;
+            UUID GroupID = msg.imSessionID;
 
             switch (msg.dialog)
             {
@@ -352,7 +352,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                         // Add them to the session for now, and Invite them
                         m_groupData.AgentInvitedToGroupChatSession(AgentID, GroupID);
 
-                        UUID toAgentID = new UUID(msg.toAgentID);
+                        UUID toAgentID = msg.toAgentID;
                         IClientAPI activeClient = GetActiveClient(toAgentID);
                         if (activeClient != null)
                         {
@@ -367,9 +367,9 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                                 eq.ChatterboxInvitation(
                                     GroupID
                                     , groupInfo.GroupName
-                                    , new UUID(msg.fromAgentID)
+                                    , msg.fromAgentID
                                     , msg.message
-                                    , new UUID(msg.toAgentID)
+                                    , msg.toAgentID
                                     , msg.fromAgentName
                                     , msg.dialog
                                     , msg.timestamp
@@ -377,16 +377,16 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                                     , (int)msg.ParentEstateID
                                     , msg.Position
                                     , 1
-                                    , new UUID(msg.imSessionID)
+                                    , msg.imSessionID
                                     , msg.fromGroup
                                     , OpenMetaverse.Utils.StringToBytes(groupInfo.GroupName)
                                     , activeClient.Scene.RegionInfo.RegionHandle
                                     );
 
                                 eq.ChatterBoxSessionAgentListUpdates(
-                                    new UUID(GroupID)
-                                    , new UUID(msg.fromAgentID)
-                                    , new UUID(msg.toAgentID)
+                                    GroupID
+                                    , msg.fromAgentID
+                                    , msg.toAgentID
                                     , false //canVoiceChat
                                     , false //isModerator
                                     , false //text mute
@@ -399,7 +399,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     {
                         // User hasn't dropped, so they're in the session, 
                         // maybe we should deliver it.
-                        IClientAPI client = GetActiveClient(new UUID(msg.toAgentID));
+                        IClientAPI client = GetActiveClient(msg.toAgentID);
                         if (client != null)
                         {
                             // Deliver locally, directly
@@ -437,8 +437,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             {
                 if (m_debugEnabled) m_log.InfoFormat("[GROUPS-MESSAGING]: imSessionID({0}) toAgentID({1})", im.imSessionID, im.toAgentID);
 
-                UUID GroupID = new UUID(im.imSessionID);
-                UUID AgentID = new UUID(im.fromAgentID);
+                UUID GroupID = im.imSessionID;
+                UUID AgentID = im.fromAgentID;
 
                 GroupRecord groupInfo = m_groupData.GetGroupRecord(UUID.Zero, GroupID, null);
     
@@ -452,7 +452,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     queue.ChatterBoxSessionAgentListUpdates(
                         GroupID
                         , AgentID
-                        , new UUID(im.toAgentID)
+                        , im.toAgentID
                         , false //canVoiceChat
                         , false //isModerator
                         , false //text mute
@@ -464,8 +464,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             // Send a message from locally connected client to a group
             if ((im.dialog == (byte)InstantMessageDialog.SessionSend) && im.message != "")
             {
-                UUID GroupID = new UUID(im.imSessionID);
-                UUID AgentID = new UUID(im.fromAgentID);
+                UUID GroupID = im.imSessionID;
+                UUID AgentID = im.fromAgentID;
 
                 if (m_debugEnabled) 
                     m_log.DebugFormat("[GROUPS-MESSAGING]: Send message to session for group {0} with session ID {1}", GroupID, im.imSessionID.ToString());
