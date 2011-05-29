@@ -652,13 +652,7 @@ namespace OpenSim.Framework
 
         public virtual void Output(string text)
         {
-            Log(text);
             System.Console.WriteLine(text);
-        }
-
-        public virtual void Log(string text)
-        {
-
         }
 
         public virtual void LockOutput()

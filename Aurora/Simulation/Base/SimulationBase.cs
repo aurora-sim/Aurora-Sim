@@ -208,9 +208,9 @@ namespace Aurora.Simulation.Base
                 catch (Exception ex)
                 {
                     //Only error that ever could occur is the restart one
-                    m_log.InfoFormat("[GUIConsole]: Exception {0}", ex.Message);
-                    m_log.InfoFormat("[GUIConsole]: App {0}", ex.Source);
-                    m_log.InfoFormat("[GUIConsole]: tgt {0}", ex.TargetSite);
+                    m_log.InfoFormat("[Console]: Exception {0}", ex.Message);
+                    m_log.InfoFormat("[Console]: App {0}", ex.Source);
+                    m_log.InfoFormat("[Console]: tgt {0}", ex.TargetSite);
                     Shutdown(true);
                     throw ex;
                 }
@@ -234,14 +234,7 @@ namespace Aurora.Simulation.Base
 
             m_console = m_applicationRegistry.RequestModuleInterface<ICommandConsole>();
             if (m_console == null)
-            {
-                m_log.Info("[GUIConsole]: NO CONSOLE AVAILABLE!");
-                //m_console = new LocalConsole();
-            }
-            else
-            {
-                m_log.InfoFormat("[GUIConsole]: Console located {0}", m_console.Name);
-            }
+                m_log.Info("[Console]: No Console located");
             ILoggerRepository repository = LogManager.GetRepository();
             IAppender[] appenders = repository.GetAppenders();
             foreach (IAppender appender in appenders)

@@ -75,7 +75,7 @@ namespace OpenSim.Framework
         /// <summary>
         /// All finished with inserting text onto the console, let other threads go through
         /// </summary>
-        void UnlockOutput();
+        void UnlockOutput ();
 
         /// <summary>
         /// This is only to be used by the OpenSimAppender, do NOT use unless you have a valid reason!
@@ -83,6 +83,12 @@ namespace OpenSim.Framework
         /// <param name="text">The text that will be shown on the console</param>
         /// <param name="level">The level of output that this text is (determines the color)</param>
         void Output (string text, Level level);
+
+        /// <summary>
+        /// This is only to be used by the OpenSimAppender, do NOT use unless you have a valid reason!
+        /// </summary>
+        /// <param name="text">The text that will be shown on the console</param>
+        void Output (string text);
 
         /// <summary>
         /// Read a line of text from the console, can return ""

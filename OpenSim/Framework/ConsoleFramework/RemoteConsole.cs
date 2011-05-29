@@ -112,7 +112,6 @@ namespace OpenSim.Framework
                 m_LineNumber++;
                 m_Scrollback.Add(String.Format("{0}", m_LineNumber)+":"+level+":"+text);
             }
-            Log(text.Trim());
             System.Console.WriteLine(text.Trim());
         }
 

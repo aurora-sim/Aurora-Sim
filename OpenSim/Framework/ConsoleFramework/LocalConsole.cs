@@ -365,7 +365,6 @@ namespace OpenSim.Framework
                     logtext += line;
                 }
             }
-            Log(logtext);
 
             System.Console.WriteLine();
         }
