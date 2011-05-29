@@ -377,15 +377,16 @@ namespace Aurora.Modules
                     if (allmapitems.items.ContainsKey(item.regionhandle))
                     {
                         mapitems = allmapitems.items[item.regionhandle];
-                        item.remoteClient.SendMapItemReply(mapitems.ToArray(), item.itemtype, 0);
 
                         //Update the cache
                         foreach (KeyValuePair<ulong, List<mapItemReply>> kvp in allmapitems.items)
                         {
-                            m_mapItemCache.AddOrUpdate(kvp.Key, kvp.Value, 30 * 60); //30 mins
+                            m_mapItemCache.AddOrUpdate(kvp.Key, kvp.Value, 3 * 60); //5 mins
                         }
                     }
                 }
+
+                item.remoteClient.SendMapItemReply (mapitems.ToArray (), item.itemtype, item.flags);
             }
             itemRequesterIsRunning = false;
         }
