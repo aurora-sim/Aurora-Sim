@@ -41,6 +41,8 @@ namespace Aurora.BotManager
     {
         #region Declares
         private bool USE_NEW_FOLLOWING = true;
+        private bool m_allowJump = false;
+        private bool m_UseJumpDecisionTree = true;
         public enum RexBotState { Idle, Walking, Flying, Unknown }
 
         private static readonly log4net.ILog m_log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -70,6 +72,29 @@ namespace Aurora.BotManager
                 m_currentState = value;
             }
         }
+        public bool AllowJump
+        {
+            get
+            {
+                return m_allowJump;
+            }
+            set
+            {
+                m_allowJump = value;
+            }
+        }
+        public bool UseJumpDecisionTree
+        {
+            get
+            {
+                return m_UseJumpDecisionTree;
+            }
+            set
+            {
+                m_UseJumpDecisionTree = value;
+            }
+        }
+
         private RexBotState m_previousState = RexBotState.Idle;
         
         private bool m_autoMove = true;
@@ -239,7 +264,7 @@ namespace Aurora.BotManager
         // Makes the bot walk to the specified destination
         private void WalkTo(Vector3 destination)
         {
-            if (Util.IsZeroVector(destination - m_scenePresence.AbsolutePosition) == false)
+            if (!Util.IsZeroVector(destination - m_scenePresence.AbsolutePosition))
             {
                 walkTo(destination);
                 State = RexBotState.Walking;
@@ -472,6 +497,46 @@ namespace Aurora.BotManager
 
             OnBotAgentUpdate(m_movementFlag, m_bodyDirection);
             m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
+        }
+
+        private bool JumpDecisionTree (Vector3 start, Vector3 end)
+        {
+            //Cast a ray in the direction that we are going
+            List<ISceneChildEntity> entities = llCastRay(start, end);
+
+            foreach (ISceneChildEntity entity in entities)
+            {
+                if (entity.IsAttachment)
+                    continue; //No attachments
+
+                //If the size is huge, we jump
+                if (entity.Scale.Z > m_scenePresence.PhysicsActor.Size.Z)
+                    return true;
+            }
+            return false;
+        }
+
+        public List<ISceneChildEntity> llCastRay (Vector3 start, Vector3 end)
+        {
+            Vector3 dir = new Vector3 ((float)(end - start).X, (float)(end - start).Y, (float)(end - start).Z);
+            Vector3 startvector = new Vector3 ((float)start.X, (float)start.Y, (float)start.Z);
+            Vector3 endvector = new Vector3 ((float)end.X, (float)end.Y, (float)end.Z);
+
+            List<ISceneChildEntity> entities = new List<ISceneChildEntity> ();
+            List<ContactResult> results = m_scenePresence.Scene.PhysicsScene.RaycastWorld (startvector, dir, dir.Length (), 5);
+
+            double distance = Util.GetDistanceTo (startvector, endvector);
+            if (distance == 0)
+                distance = 0.001;
+            Vector3 posToCheck = startvector;
+            foreach (ContactResult result in results)
+            {
+                ISceneChildEntity child = m_scenePresence.Scene.GetSceneObjectPart (result.ConsumerID);
+                if(!entities.Contains(child))
+                    entities.Add (child);
+            }
+
+            return entities;
         }
 
         /// <summary>
@@ -773,6 +838,8 @@ namespace Aurora.BotManager
             }
         }
 
+        #region New Following code
+
         private void ShowMap (string mod, string[] cmd)
         {
             int sqrt = (int)Math.Sqrt(map.Length);
@@ -914,7 +981,19 @@ namespace Aurora.BotManager
                 //for (i = 0; i < path.Count; i++)
                 {
                     //nextPos = currentPos -= new Vector3 ((11 * resolution) - path[i].X, (11 * resolution) - path[i].Y, 0);
+                    //Check to see whether the avatar will jump, and if so, deal with the settings we have for jumping
+                    if (diffAbsPos.Z < -0.25)
+                    {
+                        if (!m_allowJump)
+                            targetPos.Z = nextPos.Z + 0.15f;
+                        else if (m_UseJumpDecisionTree)
+                        {
+                            if (!JumpDecisionTree (m_scenePresence.AbsolutePosition, targetPos))
+                                targetPos.Z = nextPos.Z + 0.15f;
+                        }
+                    }
                     nextPos.Z = targetPos.Z; //Fix the Z coordinate
+                    
                     NavMesh mesh = new NavMesh ();
 
                     bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
@@ -966,6 +1045,8 @@ namespace Aurora.BotManager
             targetX += (int)(xDiff * resolution);
             targetY += (int)(yDiff * resolution);
         }
+
+        #endregion
 
         #endregion
 
