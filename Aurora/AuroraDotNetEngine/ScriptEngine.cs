@@ -251,11 +251,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Register the console commands
             if (FirstStartup)
             {
-                MainConsole.Instance.Commands.AddCommand ("ADNE restart", "ADNE restart", "Restarts all scripts and clears all script caches", AuroraDotNetRestart);
-                MainConsole.Instance.Commands.AddCommand ("ADNE stop", "ADNE stop", "Stops all scripts", AuroraDotNetStop);
-                MainConsole.Instance.Commands.AddCommand ("ADNE stats", "ADNE stats", "Tells stats about the script engine", AuroraDotNetStats);
-                MainConsole.Instance.Commands.AddCommand ("ADNE disable", "ADNE disable", "Disables the script engine temperarily", AuroraDotNetDisable);
-                MainConsole.Instance.Commands.AddCommand ("ADNE enable", "ADNE enable", "Reenables the script engine", AuroraDotNetEnable);
+                if (MainConsole.Instance != null)
+                {
+                    MainConsole.Instance.Commands.AddCommand ("ADNE restart", "ADNE restart", "Restarts all scripts and clears all script caches", AuroraDotNetRestart);
+                    MainConsole.Instance.Commands.AddCommand ("ADNE stop", "ADNE stop", "Stops all scripts", AuroraDotNetStop);
+                    MainConsole.Instance.Commands.AddCommand ("ADNE stats", "ADNE stats", "Tells stats about the script engine", AuroraDotNetStats);
+                    MainConsole.Instance.Commands.AddCommand ("ADNE disable", "ADNE disable", "Disables the script engine temperarily", AuroraDotNetDisable);
+                    MainConsole.Instance.Commands.AddCommand ("ADNE enable", "ADNE enable", "Reenables the script engine", AuroraDotNetEnable);
+                }
 
                 // Create all objects we'll be using
                 ScriptProtection = new ScriptProtectionModule (this, Config);

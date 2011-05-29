@@ -62,14 +62,17 @@ namespace OpenSim.Region.CoreModules.World.Region
         {
             m_scene = scene;
             scene.RegisterModuleInterface<IRestartModule>(this);
-            MainConsole.Instance.Commands.AddCommand("RestartModule",
-                    false, "region restart",
-                    "region restart <message> <time (in seconds)>",
-                    "Restart the region", HandleRegionRestart);
-            MainConsole.Instance.Commands.AddCommand("RestartModule",
-                    false, "region restart abort",
-                    "region restart abort [<message>]",
-                    "Restart the region", HandleRegionRestart);
+            if (MainConsole.Instance != null)
+            {
+                MainConsole.Instance.Commands.AddCommand (
+                       "region restart",
+                       "region restart <message> <time (in seconds)>",
+                       "Restart the region", HandleRegionRestart);
+                MainConsole.Instance.Commands.AddCommand (
+                        "region restart abort",
+                        "region restart abort [<message>]",
+                        "Restart the region", HandleRegionRestart);
+            }
         }
 
         public void RegionLoaded(Scene scene)

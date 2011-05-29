@@ -68,7 +68,8 @@ namespace OpenSim.Services.InventoryService
 
             registry.RegisterModuleInterface<IInventoryService>(this);
 
-            MainConsole.Instance.Commands.AddCommand ("fix inventory", "fix inventory", "If the user's inventory has been corrupted, this function will attempt to fix it", FixInventory);
+            if (MainConsole.Instance != null)
+                MainConsole.Instance.Commands.AddCommand ("fix inventory", "fix inventory", "If the user's inventory has been corrupted, this function will attempt to fix it", FixInventory);
         }
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)

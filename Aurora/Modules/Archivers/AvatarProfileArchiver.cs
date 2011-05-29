@@ -37,12 +37,15 @@ namespace Aurora.Modules
             if (m_scene == null)
                 m_scene = scene;
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "save avatar profile",
+            if (MainConsole.Instance != null)
+            {
+                MainConsole.Instance.Commands.AddCommand ("save avatar profile",
                                           "save avatar profile <First> <Last> <Filename>",
                                           "Saves profile and avatar data to an archive", HandleSaveAvatarProfile);
-            MainConsole.Instance.Commands.AddCommand("region", false, "load avatar profile",
-                                          "load avatar profile <First> <Last> <Filename>",
-                                          "Loads profile and avatar data from an archive", HandleLoadAvatarProfile);
+                MainConsole.Instance.Commands.AddCommand ("load avatar profile",
+                                              "load avatar profile <First> <Last> <Filename>",
+                                              "Loads profile and avatar data from an archive", HandleLoadAvatarProfile);
+            }
         }
 
         public void RemoveRegion(Scene scene)

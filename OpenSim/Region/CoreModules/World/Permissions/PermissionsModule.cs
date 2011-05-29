@@ -238,23 +238,26 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             m_scene.Permissions.OnTakeLandmark += TakeLandmark;
             m_scene.Permissions.OnSetHomePoint += SetHomePoint;
 
-            MainConsole.Instance.Commands.AddCommand(this.Name, false,
-                "bypass permissions",
-                    "bypass permissions <true / false>",
-                    "Bypass permission checks",
-                    HandleBypassPermissions);
+            if (MainConsole.Instance != null)
+            {
+                MainConsole.Instance.Commands.AddCommand (
+                    "bypass permissions",
+                        "bypass permissions <true / false>",
+                        "Bypass permission checks",
+                        HandleBypassPermissions);
 
-            MainConsole.Instance.Commands.AddCommand(this.Name, false,
-                "force permissions",
-                    "force permissions <true / false>",
-                    "Force permissions on or off",
-                    HandleForcePermissions);
+                MainConsole.Instance.Commands.AddCommand (
+                    "force permissions",
+                        "force permissions <true / false>",
+                        "Force permissions on or off",
+                        HandleForcePermissions);
 
-            MainConsole.Instance.Commands.AddCommand(this.Name, false,
-                "debug permissions",
-                    "debug permissions <true / false>",
-                    "Enable permissions debugging",
-                    HandleDebugPermissions);
+                MainConsole.Instance.Commands.AddCommand (
+                    "debug permissions",
+                        "debug permissions <true / false>",
+                        "Enable permissions debugging",
+                        HandleDebugPermissions);
+            }
 
 
             string grant = PermissionsConfig.GetString("GrantLSL", "");

@@ -65,12 +65,14 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 m_enabled = config.GetBoolean(Name + "_Enabled", m_enabled);
                 if (!m_enabled)
                     return;
-                MainConsole.Instance.Commands.AddCommand("base", false, "open region manager", "open region manager", "Opens the region manager", OpenRegionManager);
+                if (MainConsole.Instance != null)
+                    MainConsole.Instance.Commands.AddCommand("open region manager", "open region manager", "Opens the region manager", OpenRegionManager);
                 m_default = config.GetString("Default") == Name;
 
                 //Add the console command if it is the default
                 if (m_default)
-                    MainConsole.Instance.Commands.AddCommand("create region", "create region", "Create a new region.", AddRegion);
+                    if (MainConsole.Instance != null)
+                        MainConsole.Instance.Commands.AddCommand ("create region", "create region", "Create a new region.", AddRegion);
             }
 
             m_openSim.ApplicationRegistry.StackModuleInterface<IRegionLoader>(this);

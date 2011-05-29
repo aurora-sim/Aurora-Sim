@@ -43,7 +43,8 @@ namespace Aurora.Modules
 
         public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            MainConsole.Instance.Commands.AddCommand("region", false, "backup", "backup [all]", "Persist objects to the database now, if [all], will force the persistence of all prims", RunCommand);
+            if (MainConsole.Instance != null)
+                MainConsole.Instance.Commands.AddCommand ("backup", "backup [all]", "Persist objects to the database now, if [all], will force the persistence of all prims", RunCommand);
             //Set up the backup for the scene
             m_backup[scene] = new InternalSceneBackup(scene);
 
@@ -122,18 +123,21 @@ namespace Aurora.Modules
                 m_scene.StackModuleInterface<IAuroraBackupModule> (this);
                 m_scene.RegisterModuleInterface<IBackupModule> (this);
 
-                MainConsole.Instance.Commands.AddCommand ("region", false, "delete object owner",
+                if (MainConsole.Instance != null)
+                {
+                    MainConsole.Instance.Commands.AddCommand ("delete object owner",
                     "delete object owner <UUID>",
                     "Delete object by owner", HandleDeleteObject);
-                MainConsole.Instance.Commands.AddCommand ("region", false, "delete object creator",
-                    "delete object creator <UUID>",
-                    "Delete object by creator", HandleDeleteObject);
-                MainConsole.Instance.Commands.AddCommand ("region", false, "delete object uuid",
-                    "delete object uuid <UUID>",
-                    "Delete object by uuid", HandleDeleteObject);
-                MainConsole.Instance.Commands.AddCommand ("region", false, "delete object name",
-                    "delete object name <name>",
-                    "Delete object by name", HandleDeleteObject);
+                    MainConsole.Instance.Commands.AddCommand ("delete object creator",
+                        "delete object creator <UUID>",
+                        "Delete object by creator", HandleDeleteObject);
+                    MainConsole.Instance.Commands.AddCommand ("delete object uuid",
+                        "delete object uuid <UUID>",
+                        "Delete object by uuid", HandleDeleteObject);
+                    MainConsole.Instance.Commands.AddCommand ("delete object name",
+                        "delete object name <name>",
+                        "Delete object by name", HandleDeleteObject);
+                }
             }
 
             #endregion

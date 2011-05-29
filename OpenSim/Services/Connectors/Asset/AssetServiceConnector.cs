@@ -351,7 +351,8 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("AssetHandler", "") != Name)
                 return;
 
-            MainConsole.Instance.Commands.AddCommand("asset", false, "dump asset",
+            if (MainConsole.Instance != null)
+                MainConsole.Instance.Commands.AddCommand ("dump asset",
                                           "dump asset <id> <file>",
                                           "dump one cached asset", HandleDumpAsset);
 

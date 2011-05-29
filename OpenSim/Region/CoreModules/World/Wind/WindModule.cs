@@ -121,18 +121,21 @@ namespace OpenSim.Region.CoreModules
                     m_log.ErrorFormat("[WIND] Defaulting to no wind.");
                 }
 
-                // Get a list of the parameters for each plugin
-                foreach (IWindModelPlugin windPlugin in m_availableWindPlugins.Values)
+                if (MainConsole.Instance != null)
                 {
-                    MainConsole.Instance.Commands.AddCommand(this.Name, false,
-                        String.Format("wind base wind_plugin {0}", windPlugin.Name), String.Format("{0} - {1}", windPlugin.Name, windPlugin.Description), "", HandleConsoleBaseCommand);
-                    MainConsole.Instance.Commands.AddCommand(this.Name, false,
-                        String.Format("wind base wind_update_rate"), "Change the wind update rate.", "", HandleConsoleBaseCommand);
-
-                    foreach (KeyValuePair<string, string> kvp in windPlugin.WindParams())
+                    // Get a list of the parameters for each plugin
+                    foreach (IWindModelPlugin windPlugin in m_availableWindPlugins.Values)
                     {
-                        MainConsole.Instance.Commands.AddCommand(this.Name, false,
-                            String.Format("wind {0} {1}", windPlugin.Name, kvp.Key), String.Format("{0} : {1} - {2}", windPlugin.Name, kvp.Key, kvp.Value), "", HandleConsoleParamCommand);
+                        MainConsole.Instance.Commands.AddCommand (
+                            String.Format ("wind base wind_plugin {0}", windPlugin.Name), String.Format ("{0} - {1}", windPlugin.Name, windPlugin.Description), "", HandleConsoleBaseCommand);
+                        MainConsole.Instance.Commands.AddCommand (
+                            String.Format ("wind base wind_update_rate"), "Change the wind update rate.", "", HandleConsoleBaseCommand);
+
+                        foreach (KeyValuePair<string, string> kvp in windPlugin.WindParams ())
+                        {
+                            MainConsole.Instance.Commands.AddCommand (
+                                String.Format ("wind {0} {1}", windPlugin.Name, kvp.Key), String.Format ("{0} : {1} - {2}", windPlugin.Name, kvp.Key, kvp.Value), "", HandleConsoleParamCommand);
+                        }
                     }
                 }
 

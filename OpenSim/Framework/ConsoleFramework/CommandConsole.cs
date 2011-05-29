@@ -381,28 +381,6 @@ namespace OpenSim.Framework
             tree.AddCommand (info);
         }
 
-        public void AddCommand (string module, bool shared, string command,
-                string help, string longhelp, CommandDelegate fn)
-        {
-            AddCommand (command, help, longhelp, fn);
-        }
-
-        /// <summary>
-        /// Add a command to those which can be invoked from the console.
-        /// </summary>
-        /// <param name="module"></param>
-        /// <param name="command"></param>
-        /// <param name="help"></param>
-        /// <param name="longhelp"></param>
-        /// <param name="descriptivehelp"></param>
-        /// <param name="fn"></param>
-        public void AddCommand (string module, bool shared, string command,
-                string help, string longhelp, string descriptivehelp,
-                CommandDelegate fn)
-        {
-            AddCommand (command, help, longhelp, fn);
-        }
-
         public string[] FindNextOption (string[] cmd)
         {
             return tree.FindCommands (cmd);

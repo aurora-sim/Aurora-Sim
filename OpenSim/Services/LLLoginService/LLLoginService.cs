@@ -1207,17 +1207,18 @@ namespace OpenSim.Services.LLLoginService
 
         protected void RegisterCommands()
         {
-            //MainConsole.Instance.Commands.AddCommand
-            MainConsole.Instance.Commands.AddCommand("loginservice", false, "login level",
+            if (MainConsole.Instance == null)
+                return;
+            MainConsole.Instance.Commands.AddCommand("login level",
                     "login level <level>",
                     "Set the minimum user level to log in", HandleLoginCommand);
 
-            MainConsole.Instance.Commands.AddCommand("loginservice", false, "login reset",
+            MainConsole.Instance.Commands.AddCommand("login reset",
                     "login reset",
                     "Reset the login level to allow all users",
                     HandleLoginCommand);
 
-            MainConsole.Instance.Commands.AddCommand("loginservice", false, "login text",
+            MainConsole.Instance.Commands.AddCommand("login text",
                     "login text <text>",
                     "Set the text users will see on login", HandleLoginCommand);
         }
@@ -1261,14 +1262,17 @@ namespace AvatarArchives
         private IInventoryService InventoryService;
         private IAssetService AssetService;
 
-        public GridAvatarArchiver(IUserAccountService ACS, IAvatarService AS, IInventoryService IS, IAssetService AService)
+        public GridAvatarArchiver (IUserAccountService ACS, IAvatarService AS, IInventoryService IS, IAssetService AService)
         {
             UserAccountService = ACS;
             AvatarService = AS;
             InventoryService = IS;
             AssetService = AService;
-            MainConsole.Instance.Commands.AddCommand("region", false, "save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto> [<Snapshot UUID>] [<Public>]", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word. To save to the database ensure the name ends with .database. Snapshot is a uuid of the a snapshot of this archive. IsPublic should be a 0 or 1. IsPublic and Snapshot are only saved when saving to the database. )", HandleSaveAvatarArchive);
-            MainConsole.Instance.Commands.AddCommand("region", false, "load avatar archive", "load avatar archive <First> <Last> <Filename>", "Loads appearance from an avatar archive archive", HandleLoadAvatarArchive);
+            if (MainConsole.Instance != null)
+            {
+                MainConsole.Instance.Commands.AddCommand ("save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto> [<Snapshot UUID>] [<Public>]", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word. To save to the database ensure the name ends with .database. Snapshot is a uuid of the a snapshot of this archive. IsPublic should be a 0 or 1. IsPublic and Snapshot are only saved when saving to the database. )", HandleSaveAvatarArchive);
+                MainConsole.Instance.Commands.AddCommand ("load avatar archive", "load avatar archive <First> <Last> <Filename>", "Loads appearance from an avatar archive archive", HandleLoadAvatarArchive);
+            }
         }
 
         protected void HandleLoadAvatarArchive(string module, string[] cmdparams)
@@ -1651,15 +1655,18 @@ namespace AvatarArchives
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IUserAccountService UserAccountService;
-        public GridAvatarProfileArchiver(IUserAccountService UAS)
+        public GridAvatarProfileArchiver (IUserAccountService UAS)
         {
             UserAccountService = UAS;
-            MainConsole.Instance.Commands.AddCommand("region", false, "save avatar profile",
-                                          "save avatar profile <First> <Last> <Filename>",
-                                          "Saves profile and avatar data to an archive", HandleSaveAvatarProfile);
-            MainConsole.Instance.Commands.AddCommand("region", false, "load avatar profile",
-                                          "load avatar profile <First> <Last> <Filename>",
-                                          "Loads profile and avatar data from an archive", HandleLoadAvatarProfile);
+            if (MainConsole.Instance != null)
+            {
+                MainConsole.Instance.Commands.AddCommand ("save avatar profile",
+                                      "save avatar profile <First> <Last> <Filename>",
+                                      "Saves profile and avatar data to an archive", HandleSaveAvatarProfile);
+                MainConsole.Instance.Commands.AddCommand ("load avatar profile",
+                                              "load avatar profile <First> <Last> <Filename>",
+                                              "Loads profile and avatar data from an archive", HandleLoadAvatarProfile);
+            }
         }
 
         protected void HandleLoadAvatarProfile(string module, string[] cmdparams)

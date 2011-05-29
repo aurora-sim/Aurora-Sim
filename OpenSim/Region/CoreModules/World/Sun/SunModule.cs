@@ -297,10 +297,13 @@ namespace OpenSim.Region.CoreModules
         {
             m_scene = scene;
             // This one enables the ability to type just "sun" without any parameters
-            foreach (KeyValuePair<string, string> kvp in GetParamList())
+            if (MainConsole.Instance != null)
             {
-                MainConsole.Instance.Commands.AddCommand(this.Name, false,
-                    String.Format("sun {0}", kvp.Key), String.Format("{0} - {1}", kvp.Key, kvp.Value), "", HandleSunConsoleCommand);
+                foreach (KeyValuePair<string, string> kvp in GetParamList ())
+                {
+                    MainConsole.Instance.Commands.AddCommand (
+                        String.Format ("sun {0}", kvp.Key), String.Format ("{0} - {1}", kvp.Key, kvp.Value), "", HandleSunConsoleCommand);
+                }
             }
 
 

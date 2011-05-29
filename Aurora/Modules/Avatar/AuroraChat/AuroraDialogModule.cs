@@ -75,11 +75,14 @@ namespace Aurora.Modules
             m_scene.RegisterModuleInterface<IDialogModule>(this);
             m_scene.EventManager.OnPermissionError += SendAlertToUser;
 
-            MainConsole.Instance.Commands.AddCommand(this.Name, false, 
-                "alert", "alert [first] [last] [message]", "Send an alert to a user", HandleAlertConsoleCommand);
+            if (MainConsole.Instance != null)
+            {
+                MainConsole.Instance.Commands.AddCommand (
+                    "alert", "alert [first] [last] [message]", "Send an alert to a user", HandleAlertConsoleCommand);
 
-            MainConsole.Instance.Commands.AddCommand(this.Name, false,
-                 "alert general", "alert general [message]", "Send an alert to everyone", HandleAlertConsoleCommand);
+                MainConsole.Instance.Commands.AddCommand (
+                    "alert general", "alert general [message]", "Send an alert to everyone", HandleAlertConsoleCommand);
+            }
         }
 
         public void RemoveRegion(Scene scene)

@@ -950,15 +950,18 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             PeriodicDiagnosticsTimer.Elapsed += LogDiagnostics;
             PeriodicDiagnosticsTimer.Enabled = true;
             PeriodicDiagnosticsTimer.Start ();
-            MainConsole.Instance.Commands.AddCommand ("show threads", "show threads", "List tracked threads", HandleShowThreads);
-            MainConsole.Instance.Commands.AddCommand ("show uptime", "show uptime", "Show server startup time and uptime", HandleShowUptime);
-            MainConsole.Instance.Commands.AddCommand ("show queues", "show queues [full]", "Shows the queues for the given agent (if full is given as a parameter, child agents are displayed as well)", HandleShowQueues);
-            MainConsole.Instance.Commands.AddCommand ("show stats", "show stats", "Show statistical information for this server", HandleShowStats);
-            
-            MainConsole.Instance.Commands.AddCommand("Stats", false, "stats report",
-                               "stats report",
-                               "Returns a variety of statistics about the current region and/or simulator",
-                               DebugMonitors);
+            if (MainConsole.Instance != null)
+            {
+                MainConsole.Instance.Commands.AddCommand ("show threads", "show threads", "List tracked threads", HandleShowThreads);
+                MainConsole.Instance.Commands.AddCommand ("show uptime", "show uptime", "Show server startup time and uptime", HandleShowUptime);
+                MainConsole.Instance.Commands.AddCommand ("show queues", "show queues [full]", "Shows the queues for the given agent (if full is given as a parameter, child agents are displayed as well)", HandleShowQueues);
+                MainConsole.Instance.Commands.AddCommand ("show stats", "show stats", "Show statistical information for this server", HandleShowStats);
+
+                MainConsole.Instance.Commands.AddCommand ("stats report",
+                                   "stats report",
+                                   "Returns a variety of statistics about the current region and/or simulator",
+                                   DebugMonitors);
+            }
 
             MonitorRegistry reg = new MonitorRegistry(this);
             //This registers the default commands, but not region specific ones

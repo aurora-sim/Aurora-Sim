@@ -93,7 +93,8 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             scene.EventManager.OnNewPresence += EventManager_OnNewPresence;
             scene.EventManager.OnRemovePresence += EventManager_OnRemovePresence;
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "force send appearance", "force send appearance",
+            if (MainConsole.Instance != null)
+                MainConsole.Instance.Commands.AddCommand ("force send appearance", "force send appearance",
                 "Force send the avatar's appearance", HandleConsoleForceSendAppearance);
 
             m_updateTimer.Enabled = false;

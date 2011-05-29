@@ -28,8 +28,11 @@ namespace Aurora.Modules
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            MainConsole.Instance.Commands.AddCommand("save archive", "save archive", "Saves an Aurora Archive", SaveAuroraArchive);
-            MainConsole.Instance.Commands.AddCommand("load archive", "load archive", "Loads an Aurora Archive", LoadAuroraArchive);
+            if (MainConsole.Instance != null)
+            {
+                MainConsole.Instance.Commands.AddCommand ("save archive", "save archive", "Saves an Aurora Archive", SaveAuroraArchive);
+                MainConsole.Instance.Commands.AddCommand ("load archive", "load archive", "Loads an Aurora Archive", LoadAuroraArchive);
+            }
             //Register the extention
             string ext = ".abackup";
             RegistryKey key = Registry.ClassesRoot.CreateSubKey(ext + "\\DefaultIcon");

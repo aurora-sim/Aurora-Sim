@@ -32,13 +32,16 @@ namespace Aurora.Modules
         {
 		}
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (Scene scene)
         {
             if (m_scene == null)
                 m_scene = scene;
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto>", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word. Put all attachments in BodyParts folder before to save the archive)", HandleSaveAvatarArchive);
-            MainConsole.Instance.Commands.AddCommand("region", false, "load avatar archive", "load avatar archive <First> <Last> <Filename>", "Loads appearance from an avatar archive archive", HandleLoadAvatarArchive);
+            if (MainConsole.Instance != null)
+            {
+                MainConsole.Instance.Commands.AddCommand ("save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto>", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word. Put all attachments in BodyParts folder before to save the archive)", HandleSaveAvatarArchive);
+                MainConsole.Instance.Commands.AddCommand ("load avatar archive", "load avatar archive <First> <Last> <Filename>", "Loads appearance from an avatar archive archive", HandleLoadAvatarArchive);
+            }
         }
 
         public void RemoveRegion(Scene scene)

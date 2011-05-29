@@ -73,7 +73,8 @@ namespace Aurora.Modules
                     m_SceneList.Add(scene);
             }
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "open abusereportsGUI",
+            if (MainConsole.Instance != null)
+                MainConsole.Instance.Commands.AddCommand ("open abusereportsGUI",
                                           "open abusereportsGUI",
                                           "Opens the abuse reports GUI", OpenGUI);
             scene.EventManager.OnNewClient += OnNewClient;

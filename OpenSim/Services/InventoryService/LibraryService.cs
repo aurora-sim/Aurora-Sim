@@ -92,8 +92,9 @@ namespace OpenSim.Services.InventoryService
         {
             if (m_enabled)
             {
-                MainConsole.Instance.Commands.AddCommand ("clear default inventory", "clear default inventory",
-                    "Clears the Default Inventory stored for this grid", ClearDefaultInventory);
+                if (MainConsole.Instance != null)
+                    MainConsole.Instance.Commands.AddCommand ("clear default inventory", "clear default inventory",
+                        "Clears the Default Inventory stored for this grid", ClearDefaultInventory);
             }
         }
 

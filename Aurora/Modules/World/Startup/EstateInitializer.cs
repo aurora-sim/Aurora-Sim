@@ -243,8 +243,9 @@ namespace OpenSim.Region.CoreModules
 
         public void StartupComplete()
         {
-            MainConsole.Instance.Commands.AddCommand("Estates", true, "change estate", "change estate",
-                "change info about the estate for the given region", ChangeEstate); 
+            if (MainConsole.Instance != null)
+                MainConsole.Instance.Commands.AddCommand ("change estate", "change estate",
+                    "change info about the estate for the given region", ChangeEstate); 
         }
 
         public void Close(Scene scene)

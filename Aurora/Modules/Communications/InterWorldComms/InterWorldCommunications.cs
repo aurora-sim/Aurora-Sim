@@ -235,11 +235,13 @@ namespace Aurora.Modules
 
         private void AddConsoleCommands()
         {
-            MainConsole.Instance.Commands.AddCommand("IWC", true, "iwc add connection", "iwc add connection",
+            if (MainConsole.Instance == null)
+                return;
+            MainConsole.Instance.Commands.AddCommand ("iwc add connection", "iwc add connection",
                 "Add an IWC connection to another host.", AddIWCConnection);
-            MainConsole.Instance.Commands.AddCommand("IWC", true, "iwc remove connection", "iwc remove connection",
+            MainConsole.Instance.Commands.AddCommand("iwc remove connection", "iwc remove connection",
                 "Remove an IWC connection from another host.", RemoveIWCConnection);
-            MainConsole.Instance.Commands.AddCommand("IWC", true, "iwc show connections", "iwc show connections",
+            MainConsole.Instance.Commands.AddCommand("iwc show connections", "iwc show connections",
                 "Shows all active IWC connections.", ShowIWCConnections);
         }
 

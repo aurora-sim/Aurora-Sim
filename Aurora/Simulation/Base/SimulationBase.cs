@@ -457,6 +457,8 @@ namespace Aurora.Simulation.Base
         /// </summary>
         public virtual void RegisterConsoleCommands()
         {
+            if (m_console == null)
+                return;
             m_console.Commands.AddCommand ("quit", "quit", "Quit the application", HandleQuit);
 
             m_console.Commands.AddCommand ("shutdown", "shutdown", "Quit the application", HandleQuit);

@@ -329,8 +329,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             string regionName = (CurrentScene == null ? "root" : CurrentScene.RegionInfo.RegionName);
-            MainConsole.Instance.DefaultPrompt = String.Format("Region ({0}) ", regionName);
-            MainConsole.Instance.ConsoleScene = CurrentScene;
+            if (MainConsole.Instance != null)
+            {
+                MainConsole.Instance.DefaultPrompt = String.Format ("Region ({0}) ", regionName);
+                MainConsole.Instance.ConsoleScene = CurrentScene;
+            }
         }
 
         #endregion
@@ -779,20 +782,22 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void AddConsoleCommands()
         {
+            if (MainConsole.Instance == null)
+                return;
             MainConsole.Instance.Commands.AddCommand ("show users", "show users [full]", "Shows users in the given region (if full is added, child agents are shown as well)", HandleShowUsers);
             MainConsole.Instance.Commands.AddCommand ("show regions", "show regions", "Show information about all regions in this instance", HandleShowRegions);
             MainConsole.Instance.Commands.AddCommand ("show maturity", "show maturity", "Show all region's maturity levels", HandleShowMaturity);
 
-            MainConsole.Instance.Commands.AddCommand ("region", false, "force update", "force update", "Force the update of all objects on clients", HandleForceUpdate);
+            MainConsole.Instance.Commands.AddCommand ("force update", "force update", "Force the update of all objects on clients", HandleForceUpdate);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "debug packet", "debug packet [level]", "Turn on packet debugging", Debug);
-            MainConsole.Instance.Commands.AddCommand("region", false, "debug scene", "debug scene [scripting] [collisions] [physics]", "Turn on scene debugging", Debug);
+            MainConsole.Instance.Commands.AddCommand("debug packet", "debug packet [level]", "Turn on packet debugging", Debug);
+            MainConsole.Instance.Commands.AddCommand("debug scene", "debug scene [scripting] [collisions] [physics]", "Turn on scene debugging", Debug);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "change region", "change region [region name]", "Change current console region", ChangeSelectedRegion);
+            MainConsole.Instance.Commands.AddCommand("change region", "change region [region name]", "Change current console region", ChangeSelectedRegion);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "load xml2", "load xml2", "Load a region's data from XML2 format", LoadXml2);
+            MainConsole.Instance.Commands.AddCommand("load xml2", "load xml2", "Load a region's data from XML2 format", LoadXml2);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "save xml2", "save xml2", "Save a region's data in XML2 format", SaveXml2);
+            MainConsole.Instance.Commands.AddCommand("save xml2", "save xml2", "Save a region's data in XML2 format", SaveXml2);
 
             MainConsole.Instance.Commands.AddCommand ("load oar", "load oar [--merge] [--skip-assets] [oar name] [OffsetX=#] [OffsetY=#] [OffsetZ=#]", "Load a region's data from OAR archive.  --merge will merge the oar with the existing scene.  --skip-assets will load the oar but ignore the assets it contains. OffsetX will change where the X location of the oar is loaded, and the same for Y and Z.", LoadOar);
 
@@ -800,23 +805,23 @@ namespace OpenSim.Region.Framework.Scenes
                                            + "The OAR path must be a filesystem path."
                                            + "  If this is not given then the oar is saved to region.oar in the current directory.", SaveOar);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "kick user", "kick user [first] [last] [message]", "Kick a user off the simulator", KickUserCommand);
+            MainConsole.Instance.Commands.AddCommand("kick user", "kick user [first] [last] [message]", "Kick a user off the simulator", KickUserCommand);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "reset region", "reset region", "Reset region to the default terrain, wipe all prims, etc.", RunCommand);
+            MainConsole.Instance.Commands.AddCommand("reset region", "reset region", "Reset region to the default terrain, wipe all prims, etc.", RunCommand);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "restart-instance", "restart-instance", "Restarts the instance (as if you closed and re-opened Aurora)", RunCommand);
+            MainConsole.Instance.Commands.AddCommand("restart-instance", "restart-instance", "Restarts the instance (as if you closed and re-opened Aurora)", RunCommand);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "command-script", "command-script [script]", "Run a command script from file", RunCommand);
+            MainConsole.Instance.Commands.AddCommand("command-script", "command-script [script]", "Run a command script from file", RunCommand);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "remove-region", "remove-region [name]", "Remove a region from this simulator", RunCommand);
+            MainConsole.Instance.Commands.AddCommand("remove-region", "remove-region [name]", "Remove a region from this simulator", RunCommand);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "delete-region", "delete-region [name]", "Delete a region from disk", RunCommand);
+            MainConsole.Instance.Commands.AddCommand("delete-region", "delete-region [name]", "Delete a region from disk", RunCommand);
 
             MainConsole.Instance.Commands.AddCommand ("modules list", "modules list", "Lists all simulator modules", HandleModulesList);
 
             MainConsole.Instance.Commands.AddCommand ("modules unload", "modules unload [module]", "Unload the given simulator module", HandleModulesUnload);
 
-            MainConsole.Instance.Commands.AddCommand ("region", false, "kill uuid", "kill uuid [UUID]", "Kill an object by UUID", KillUUID);
+            MainConsole.Instance.Commands.AddCommand ("kill uuid", "kill uuid [UUID]", "Kill an object by UUID", KillUUID);
         }
 
         /// <summary>

@@ -415,42 +415,43 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             {
                 OnInventoryArchiveSaved += SaveInvConsoleCommandCompleted;
 
-                MainConsole.Instance.Commands.AddCommand(
-                    this.Name, true, "load iar",
-                    "load iar <first> <last> <inventory path> <password> [<IAR path>]",
-                    //"load iar [--merge] <first> <last> <inventory path> <password> [<IAR path>]",
-                    "Load user inventory archive (IAR).",
-                    //"--merge is an option which merges the loaded IAR with existing inventory folders where possible, rather than always creating new ones"
-                    //+ "<first> is user's first name." + Environment.NewLine
-                    "<first> is user's first name." + Environment.NewLine
-                    + "<last> is user's last name." + Environment.NewLine
-                    + "<inventory path> is the path inside the user's inventory where the IAR should be loaded." + Environment.NewLine
-                    + "<password> is the user's password." + Environment.NewLine
-                    + "<IAR path> is the filesystem path or URI from which to load the IAR."
-                    + string.Format("  If this is not given then the filename {0} in the current directory is used", DEFAULT_INV_BACKUP_FILENAME),
-                    HandleLoadInvConsoleCommand);
+                if (MainConsole.Instance != null)
+                {
+                    MainConsole.Instance.Commands.AddCommand (
+                           "load iar",
+                           "load iar <first> <last> <inventory path> <password> [<IAR path>]",
+                        //"load iar [--merge] <first> <last> <inventory path> <password> [<IAR path>]",
+                           "Load user inventory archive (IAR). "
+                           + "--merge is an option which merges the loaded IAR with existing inventory folders where possible, rather than always creating new ones"
+                           + "<first> is user's first name." + Environment.NewLine
+                           + "<last> is user's last name." + Environment.NewLine
+                           + "<inventory path> is the path inside the user's inventory where the IAR should be loaded." + Environment.NewLine
+                           + "<password> is the user's password." + Environment.NewLine
+                           + "<IAR path> is the filesystem path or URI from which to load the IAR."
+                           + string.Format ("  If this is not given then the filename {0} in the current directory is used", DEFAULT_INV_BACKUP_FILENAME),
+                           HandleLoadInvConsoleCommand);
 
-                MainConsole.Instance.Commands.AddCommand(
-                    this.Name, true, "save iar",
-                    "save iar <first> <last> <inventory path> <password> [<IAR path>]",
-                    "Save user inventory archive (IAR).",
-                    "<first> is the user's first name." + Environment.NewLine
-                    + "<last> is the user's last name." + Environment.NewLine
-                    + "<inventory path> is the path inside the user's inventory for the folder/item to be saved." + Environment.NewLine
-                    + "<IAR path> is the filesystem path at which to save the IAR."
-                    + string.Format("  If this is not given then the filename {0} in the current directory is used", DEFAULT_INV_BACKUP_FILENAME),
-                    HandleSaveInvConsoleCommand);
+                    MainConsole.Instance.Commands.AddCommand (
+                        "save iar",
+                        "save iar <first> <last> <inventory path> <password> [<IAR path>]",
+                        "Save user inventory archive (IAR). <first> is the user's first name." + Environment.NewLine
+                        + "<last> is the user's last name." + Environment.NewLine
+                        + "<inventory path> is the path inside the user's inventory for the folder/item to be saved." + Environment.NewLine
+                        + "<IAR path> is the filesystem path at which to save the IAR."
+                        + string.Format ("  If this is not given then the filename {0} in the current directory is used", DEFAULT_INV_BACKUP_FILENAME),
+                        HandleSaveInvConsoleCommand);
 
-                MainConsole.Instance.Commands.AddCommand(
-                    this.Name, true, "save iar withoutassets",
-                    "save iar withoutassets <first> <last> <inventory path> <password> [<IAR path>]",
-                    "Save user inventory archive (IAR) withOUT assets. This version will NOT load on another grid/standalone other than the current grid/standalone!",
-                    "<first> is the user's first name." + Environment.NewLine
-                    + "<last> is the user's last name." + Environment.NewLine
-                    + "<inventory path> is the path inside the user's inventory for the folder/item to be saved." + Environment.NewLine
-                    + "<IAR path> is the filesystem path at which to save the IAR."
-                    + string.Format("  If this is not given then the filename {0} in the current directory is used", DEFAULT_INV_BACKUP_FILENAME),
-                    HandleSaveInvWOAssetsConsoleCommand);
+                    MainConsole.Instance.Commands.AddCommand (
+                        "save iar withoutassets",
+                        "save iar withoutassets <first> <last> <inventory path> <password> [<IAR path>]",
+                        "Save user inventory archive (IAR) withOUT assets. This version will NOT load on another grid/standalone other than the current grid/standalone! " +
+                        "<first> is the user's first name." + Environment.NewLine
+                        + "<last> is the user's last name." + Environment.NewLine
+                        + "<inventory path> is the path inside the user's inventory for the folder/item to be saved." + Environment.NewLine
+                        + "<IAR path> is the filesystem path at which to save the IAR."
+                        + string.Format ("  If this is not given then the filename {0} in the current directory is used", DEFAULT_INV_BACKUP_FILENAME),
+                        HandleSaveInvWOAssetsConsoleCommand);
+                }
             }
         }
 

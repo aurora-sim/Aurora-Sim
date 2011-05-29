@@ -1815,55 +1815,58 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
                 supportedFileExtensions += " " + loader.Key + " (" + loader.Value + ")";
 
-            MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain save",
-                "terrain save <FileName>", "Saves the current heightmap to a specified file. FileName: The destination filename for your heightmap, the file extension determines the format to save in. Supported extensions include: " +
-                                          supportedFileExtensions, InterfaceSaveFile);
+            if (MainConsole.Instance != null)
+            {
+                MainConsole.Instance.Commands.AddCommand ("terrain save",
+                    "terrain save <FileName>", "Saves the current heightmap to a specified file. FileName: The destination filename for your heightmap, the file extension determines the format to save in. Supported extensions include: " +
+                                              supportedFileExtensions, InterfaceSaveFile);
 
-            MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain physics update",
-                "terrain physics update", "Update the physics map", InterfaceSavePhysics);
+                MainConsole.Instance.Commands.AddCommand ("terrain physics update",
+                    "terrain physics update", "Update the physics map", InterfaceSavePhysics);
 
-            MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain load",
-                "terrain load <FileName>", "Loads a terrain from a specified file. FileName: The file you wish to load from, the file extension determines the loader to be used. Supported extensions include: " +
-                                            supportedFileExtensions, InterfaceLoadFile);
-            MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain load-tile",
-                "terrain load-tile <file width> <file height> <minimum X tile> <minimum Y tile>",
-                "Loads a terrain from a section of a larger file. " + 
-            "\n file width: The width of the file in tiles" + 
-            "\n file height: The height of the file in tiles" + 
-            "\n minimum X tile: The X region coordinate of the first section on the file" + 
-            "\n minimum Y tile: The Y region coordinate of the first section on the file", InterfaceLoadTileFile);
+                MainConsole.Instance.Commands.AddCommand ("terrain load",
+                    "terrain load <FileName>", "Loads a terrain from a specified file. FileName: The file you wish to load from, the file extension determines the loader to be used. Supported extensions include: " +
+                                                supportedFileExtensions, InterfaceLoadFile);
+                MainConsole.Instance.Commands.AddCommand ("terrain load-tile",
+                    "terrain load-tile <file width> <file height> <minimum X tile> <minimum Y tile>",
+                    "Loads a terrain from a section of a larger file. " +
+                "\n file width: The width of the file in tiles" +
+                "\n file height: The height of the file in tiles" +
+                "\n minimum X tile: The X region coordinate of the first section on the file" +
+                "\n minimum Y tile: The Y region coordinate of the first section on the file", InterfaceLoadTileFile);
 
-            MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain fill",
-                "terrain fill <value> ", "Fills the current heightmap with a specified value." +
-                                            "\n value: The numeric value of the height you wish to set your region to.", InterfaceFillTerrain);
-            MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain elevate",
-                "terrain elevate <amount> ", "Raises the current heightmap by the specified amount." +
-                                            "\n amount: The amount of height to remove from the terrain in meters.", InterfaceElevateTerrain);
-            MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain lower",
-                "terrain lower <amount> ", "Lowers the current heightmap by the specified amount." +
-                                            "\n amount: The amount of height to remove from the terrain in meters.", InterfaceLowerTerrain);
-            MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain multiply",
-                "terrain multiply <value> ", "Multiplies the heightmap by the value specified." +
-                                            "\n value: The value to multiply the heightmap by.", InterfaceMultiplyTerrain);
+                MainConsole.Instance.Commands.AddCommand ("terrain fill",
+                    "terrain fill <value> ", "Fills the current heightmap with a specified value." +
+                                                "\n value: The numeric value of the height you wish to set your region to.", InterfaceFillTerrain);
+                MainConsole.Instance.Commands.AddCommand ("terrain elevate",
+                    "terrain elevate <amount> ", "Raises the current heightmap by the specified amount." +
+                                                "\n amount: The amount of height to remove from the terrain in meters.", InterfaceElevateTerrain);
+                MainConsole.Instance.Commands.AddCommand ("terrain lower",
+                    "terrain lower <amount> ", "Lowers the current heightmap by the specified amount." +
+                                                "\n amount: The amount of height to remove from the terrain in meters.", InterfaceLowerTerrain);
+                MainConsole.Instance.Commands.AddCommand ("terrain multiply",
+                    "terrain multiply <value> ", "Multiplies the heightmap by the value specified." +
+                                                "\n value: The value to multiply the heightmap by.", InterfaceMultiplyTerrain);
 
-            MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain bake",
-                "terrain bake", "Saves the current terrain into the regions revert map.", InterfaceBakeTerrain);
-            MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain revert",
-                "terrain revert", "Loads the revert map terrain into the regions heightmap.", InterfaceRevertTerrain);
-            MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain stats",
-                "terrain stats", "Shows some information about the regions heightmap for debugging purposes.", InterfaceShowDebugStats);
-            MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain newbrushes",
-                "terrain newbrushes <enabled> ", "Enables experimental brushes which replace the standard terrain brushes." +
-                                            "\n enabled: true / false - Enable new brushes", InterfaceEnableExperimentalBrushes);
-            MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain flip",
-                "terrain flip <direction> ", "Flips the current terrain about the X or Y axis" +
-                                            "\n direction: [x|y] the direction to flip the terrain in", InterfaceFlipTerrain);
-            MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain rescale",
-                "terrain rescale <min> <max>", "Rescales the current terrain to fit between the given min and max heights" +
-                                            "\n Min: min terrain height after rescaling" +
-                                            "\n Max: max terrain height after rescaling", InterfaceRescaleTerrain);
-            MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain help",
-                "terrain help", "Gives help about the terrain module.", InterfaceHelp);
+                MainConsole.Instance.Commands.AddCommand ("terrain bake",
+                    "terrain bake", "Saves the current terrain into the regions revert map.", InterfaceBakeTerrain);
+                MainConsole.Instance.Commands.AddCommand ("terrain revert",
+                    "terrain revert", "Loads the revert map terrain into the regions heightmap.", InterfaceRevertTerrain);
+                MainConsole.Instance.Commands.AddCommand ("terrain stats",
+                    "terrain stats", "Shows some information about the regions heightmap for debugging purposes.", InterfaceShowDebugStats);
+                MainConsole.Instance.Commands.AddCommand ("terrain newbrushes",
+                    "terrain newbrushes <enabled> ", "Enables experimental brushes which replace the standard terrain brushes." +
+                                                "\n enabled: true / false - Enable new brushes", InterfaceEnableExperimentalBrushes);
+                MainConsole.Instance.Commands.AddCommand ("terrain flip",
+                    "terrain flip <direction> ", "Flips the current terrain about the X or Y axis" +
+                                                "\n direction: [x|y] the direction to flip the terrain in", InterfaceFlipTerrain);
+                MainConsole.Instance.Commands.AddCommand ("terrain rescale",
+                    "terrain rescale <min> <max>", "Rescales the current terrain to fit between the given min and max heights" +
+                                                "\n Min: min terrain height after rescaling" +
+                                                "\n Max: max terrain height after rescaling", InterfaceRescaleTerrain);
+                MainConsole.Instance.Commands.AddCommand ("terrain help",
+                    "terrain help", "Gives help about the terrain module.", InterfaceHelp);
+            }
         }
 
 

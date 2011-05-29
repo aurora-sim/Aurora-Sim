@@ -101,15 +101,16 @@ namespace OpenSim.Services.AssetService
 
             registry.RegisterModuleInterface<IAssetService>(this);
 
-            MainConsole.Instance.Commands.AddCommand("kfs", false,
-                "show digest",
-                "show digest <ID>",
-                "Show asset digest", HandleShowDigest);
+            if (MainConsole.Instance != null)
+            {
+                MainConsole.Instance.Commands.AddCommand ("show digest",
+                        "show digest <ID>",
+                        "Show asset digest", HandleShowDigest);
 
-            MainConsole.Instance.Commands.AddCommand("kfs", false,
-                    "delete asset",
-                    "delete asset <ID>",
-                    "Delete asset from database", HandleDeleteAsset);
+                MainConsole.Instance.Commands.AddCommand ("delete asset",
+                        "delete asset <ID>",
+                        "Delete asset from database", HandleDeleteAsset);
+            }
 
             m_log.Debug("[ASSET SERVICE]: Local asset service enabled");
         }

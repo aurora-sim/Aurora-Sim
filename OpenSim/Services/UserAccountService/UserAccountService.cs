@@ -72,11 +72,11 @@ namespace OpenSim.Services.UserAccountService
         {
             if (MainConsole.Instance != null)
             {
-                MainConsole.Instance.Commands.AddCommand("UserService", false,
+                MainConsole.Instance.Commands.AddCommand(
                         "create user",
                         "create user [<first> [<last> [<pass> [<email>]]]]",
                         "Create a new user", HandleCreateUser);
-                MainConsole.Instance.Commands.AddCommand("UserService", false, "reset user password",
+                MainConsole.Instance.Commands.AddCommand("reset user password",
                         "reset user password [<first> [<last> [<password>]]]",
                         "Reset a user password", HandleResetUserPassword);
             }

@@ -69,16 +69,19 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
             m_scene = scene;
             m_scene.RegisterModuleInterface<IDialogModule>(this);
 
-            MainConsole.Instance.Commands.AddCommand(
-                    this.Name, false, "alert", "alert <first> <last> <message>",
-                "Send an alert to a user",
-                HandleAlertConsoleCommand);
+            if (MainConsole.Instance != null)
+            {
+                MainConsole.Instance.Commands.AddCommand (
+                        "alert", "alert <first> <last> <message>",
+                    "Send an alert to a user",
+                    HandleAlertConsoleCommand);
 
-            MainConsole.Instance.Commands.AddCommand(
-                    this.Name, false, "alert general", "alert [general] <message>",
-                "Send an alert to everyone",
-                "If keyword 'general' is omitted, then <message> must be surrounded by quotation marks.",
-                HandleAlertConsoleCommand);
+                MainConsole.Instance.Commands.AddCommand (
+                        "alert general", "alert [general] <message>",
+                    "Send an alert to everyone. " +
+                    "If keyword 'general' is omitted, then <message> must be surrounded by quotation marks.",
+                    HandleAlertConsoleCommand);
+            }
         }
 
         public void RemoveRegion(Scene scene)

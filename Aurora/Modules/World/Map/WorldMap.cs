@@ -116,14 +116,17 @@ namespace Aurora.Modules
 
                 m_scene.RegisterModuleInterface<IWorldMapModule>(this);
 
-                MainConsole.Instance.Commands.AddCommand("update map",
-                    "update map",
-                    "Updates the image of the world map", HandleUpdateWorldMapConsoleCommand);
+                if (MainConsole.Instance != null)
+                {
+                    MainConsole.Instance.Commands.AddCommand ("update map",
+                        "update map",
+                        "Updates the image of the world map", HandleUpdateWorldMapConsoleCommand);
 
-                MainConsole.Instance.Commands.AddCommand(this.Name, false,
-                    "export-map",
-                    "export-map [<path>]",
-                    "Save an image of the world map", HandleExportWorldMapConsoleCommand);
+                    MainConsole.Instance.Commands.AddCommand (
+                        "export-map",
+                        "export-map [<path>]",
+                        "Save an image of the world map", HandleExportWorldMapConsoleCommand);
+                }
 
                 AddHandlers();
 
