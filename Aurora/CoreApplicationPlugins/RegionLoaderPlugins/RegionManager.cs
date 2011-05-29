@@ -364,6 +364,8 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
                 //Make sure the directory exists
                 if (!Directory.Exists("Regions"))
                     Directory.CreateDirectory("Regions");
+                if (!File.Exists ("Regions\\" + ExportFileName.Text))
+                     File.Create ("Regions\\" + ExportFileName.Text).Close();
                 IniConfigSource source = new IniConfigSource("Regions\\" + ExportFileName.Text, IniFileType.AuroraStyle);
                 if (source.Configs[region.RegionName] != null)
                 {
