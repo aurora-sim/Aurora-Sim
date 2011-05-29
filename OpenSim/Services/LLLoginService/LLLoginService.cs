@@ -1223,7 +1223,7 @@ namespace OpenSim.Services.LLLoginService
                     "Set the text users will see on login", HandleLoginCommand);
         }
 
-        protected void HandleLoginCommand(string module, string[] cmd)
+        protected void HandleLoginCommand(string[] cmd)
         {
             string subcommand = cmd[1];
 
@@ -1275,7 +1275,7 @@ namespace AvatarArchives
             }
         }
 
-        protected void HandleLoadAvatarArchive(string module, string[] cmdparams)
+        protected void HandleLoadAvatarArchive(string[] cmdparams)
         {
             if (cmdparams.Length < 5)
             {
@@ -1419,7 +1419,7 @@ namespace AvatarArchives
             return appearance;
         }
 
-        protected void HandleSaveAvatarArchive(string module, string[] cmdparams)
+        protected void HandleSaveAvatarArchive(string[] cmdparams)
         {
             if (cmdparams.Length < 7)
             {
@@ -1669,7 +1669,7 @@ namespace AvatarArchives
             }
         }
 
-        protected void HandleLoadAvatarProfile(string module, string[] cmdparams)
+        protected void HandleLoadAvatarProfile(string[] cmdparams)
         {
             if (cmdparams.Length != 6)
             {
@@ -1726,7 +1726,7 @@ namespace AvatarArchives
 
             m_log.Info("[AvatarProfileArchiver] Loaded Avatar Profile from " + cmdparams[5]);
         }
-        protected void HandleSaveAvatarProfile(string module, string[] cmdparams)
+        protected void HandleSaveAvatarProfile(string[] cmdparams)
         {
             if (cmdparams.Length != 6)
             {

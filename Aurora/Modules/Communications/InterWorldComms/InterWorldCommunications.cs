@@ -252,7 +252,7 @@ namespace Aurora.Modules
         /// </summary>
         /// <param name="module"></param>
         /// <param name="cmds"></param>
-        private void AddIWCConnection(string module, string[] cmds)
+        private void AddIWCConnection(string[] cmds)
         {
             string Url = MainConsole.Instance.CmdPrompt("Url to the connection");
             //Be user friendly, add the http:// if needed as well as the final /
@@ -301,7 +301,7 @@ namespace Aurora.Modules
             TryAddConnection(con);
         }
 
-        private void RemoveIWCConnection(string module, string[] cmds)
+        private void RemoveIWCConnection(string[] cmds)
         {
             string Url = MainConsole.Instance.CmdPrompt("Url to the connection");
             IWCCertificate c = FindConnectionByURL(Url);
@@ -317,7 +317,7 @@ namespace Aurora.Modules
             configService.RemoveUrls (c.Connection.UserName);
         }
 
-        private void ShowIWCConnections(string module, string[] cmds)
+        private void ShowIWCConnections(string[] cmds)
         {
             m_log.InfoFormat("Showing {0} active IWC connections.", Connections.Count);
             for (int i = 0; i < Connections.Count; i++)

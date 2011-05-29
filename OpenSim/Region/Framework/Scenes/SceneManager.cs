@@ -829,7 +829,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="module"></param>
         /// <param name="cmdparams">name of avatar to kick</param>
-        private void KickUserCommand(string module, string[] cmdparams)
+        private void KickUserCommand(string[] cmdparams)
         {
             string alert = null;
             IList agents = GetCurrentScenePresences();
@@ -886,17 +886,12 @@ namespace OpenSim.Region.Framework.Scenes
             m_log.Info ("");
         }
 
-        private void HandleClearAssets(string module, string[] args)
-        {
-            m_log.Info ("Not implemented.");
-        }
-
         /// <summary>
         /// Force resending of all updates to all clients in active region(s)
         /// </summary>
         /// <param name="module"></param>
         /// <param name="args"></param>
-        private void HandleForceUpdate(string module, string[] args)
+        private void HandleForceUpdate(string[] args)
         {
             m_log.Info ("Updating all clients");
             ForEachCurrentScene(delegate(Scene scene)
@@ -927,7 +922,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="module"></param>
         /// <param name="cmd"></param>
-        private void HandleModulesUnload(string module, string[] cmd)
+        private void HandleModulesUnload(string[] cmd)
         {
             List<string> args = new List<string> (cmd);
             args.RemoveAt (0);
@@ -954,7 +949,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="module"></param>
         /// <param name="cmd"></param>
-        private void HandleModulesList (string module, string[] cmd)
+        private void HandleModulesList (string[] cmd)
         {
             List<string> args = new List<string> (cmd);
             args.RemoveAt (0);
@@ -976,7 +971,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="module"></param>
         /// <param name="cmdparams"></param>
-        protected void SaveXml2(string module, string[] cmdparams)
+        protected void SaveXml2(string[] cmdparams)
         {
             if (cmdparams.Length > 2)
             {
@@ -995,7 +990,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="command">The first argument of the parameter (the command)</param>
         /// <param name="cmdparams">Additional arguments passed to the command</param>
-        public void RunCommand(string module, string[] cmdparams)
+        public void RunCommand(string[] cmdparams)
         {
             List<string> args = new List<string>(cmdparams);
             if (args.Count < 1)
@@ -1050,7 +1045,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Change the currently selected region.  The selected region is that operated upon by single region commands.
         /// </summary>
         /// <param name="cmdParams"></param>
-        protected void ChangeSelectedRegion(string module, string[] cmdparams)
+        protected void ChangeSelectedRegion(string[] cmdparams)
         {
             if (cmdparams.Length > 2)
             {
@@ -1067,7 +1062,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Turn on some debugging values for OpenSim.
         /// </summary>
         /// <param name="args"></param>
-        protected void Debug(string module, string[] args)
+        protected void Debug(string[] args)
         {
             if (args.Length == 1)
                 return;
@@ -1122,7 +1117,7 @@ namespace OpenSim.Region.Framework.Scenes
             );
         }
 
-        public void HandleShowUsers (string mod, string[] cmd)
+        public void HandleShowUsers (string[] cmd)
         {
             List<string> args = new List<string> (cmd);
             args.RemoveAt (0);
@@ -1163,7 +1158,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_log.Info (String.Empty);
         }
 
-        public void HandleShowRegions (string mod, string[] cmd)
+        public void HandleShowRegions (string[] cmd)
         {
             ForEachScene (delegate (Scene scene)
             {
@@ -1171,7 +1166,7 @@ namespace OpenSim.Region.Framework.Scenes
             });
         }
 
-        public void HandleShowMaturity (string mod, string[] cmd)
+        public void HandleShowMaturity (string[] cmd)
         {
             ForEachCurrentScene (delegate (Scene scene)
             {
@@ -1207,7 +1202,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="module"></param>
         /// <param name="cmdparams"></param>
-        protected void LoadXml2(string module, string[] cmdparams)
+        protected void LoadXml2(string[] cmdparams)
         {
             if (cmdparams.Length > 2)
             {
@@ -1232,7 +1227,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Load a whole region from an opensimulator archive.
         /// </summary>
         /// <param name="cmdparams"></param>
-        protected void LoadOar(string module, string[] cmdparams)
+        protected void LoadOar(string[] cmdparams)
         {
             try
             {
@@ -1250,7 +1245,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Save a region to a file, including all the assets needed to restore it.
         /// </summary>
         /// <param name="cmdparams"></param>
-        protected void SaveOar(string module, string[] cmdparams)
+        protected void SaveOar(string[] cmdparams)
         {
             IRegionArchiverModule archiver = CurrentOrFirstScene.RequestModuleInterface<IRegionArchiverModule>();
             if (archiver != null)
@@ -1261,7 +1256,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Kill an object given its UUID.
         /// </summary>
         /// <param name="cmdparams"></param>
-        protected void KillUUID(string module, string[] cmdparams)
+        protected void KillUUID(string[] cmdparams)
         {
             if (cmdparams.Length > 2)
             {

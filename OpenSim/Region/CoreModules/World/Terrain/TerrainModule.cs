@@ -1194,7 +1194,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 }
                 if (parameter1 == "revert")
                 {
-                    InterfaceRevertTerrain("", null);
+                    InterfaceRevertTerrain(null);
                 }
                 if (parameter1 == "swap")
                 {
@@ -1413,7 +1413,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
             if (m_scene.Permissions.CanIssueEstateCommand(remoteClient.AgentId, true))
             {
-                InterfaceBakeTerrain("", null); //bake terrain does not use the passed in parameter
+                InterfaceBakeTerrain(null); //bake terrain does not use the passed in parameter
             }
         }
         
@@ -1465,7 +1465,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             return modules;
         }
 
-        private void InterfaceLoadFile(string module, string[] cmd)
+        private void InterfaceLoadFile(string[] cmd)
         {
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
             int offsetX = 0;
@@ -1494,7 +1494,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        private void InterfaceLoadTileFile(string module, string[] cmd)
+        private void InterfaceLoadTileFile(string[] cmd)
         {
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
@@ -1509,7 +1509,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        private void InterfaceSaveFile(string module, string[] cmd)
+        private void InterfaceSaveFile(string[] cmd)
         {
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
@@ -1519,7 +1519,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        private void InterfaceSavePhysics(string module, string[] cmd)
+        private void InterfaceSavePhysics(string[] cmd)
         {
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
@@ -1529,7 +1529,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        private void InterfaceBakeTerrain(string module, string[] cmd)
+        private void InterfaceBakeTerrain(string[] cmd)
         {
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
@@ -1539,7 +1539,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        private void InterfaceRevertTerrain(string module, string[] cmd)
+        private void InterfaceRevertTerrain(string[] cmd)
         {
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
@@ -1554,7 +1554,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        private void InterfaceFlipTerrain(string module, string[] cmd)
+        private void InterfaceFlipTerrain(string[] cmd)
         {
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
@@ -1600,7 +1600,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        private void InterfaceRescaleTerrain(string module, string[] cmd)
+        private void InterfaceRescaleTerrain(string[] cmd)
         {
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
@@ -1616,7 +1616,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 if (desiredRange == 0d)
                 {
                     // delta is zero so flatten at requested height
-                    tmodule.InterfaceFillTerrain("", cmd);
+                    tmodule.InterfaceFillTerrain(cmd);
                 }
                 else
                 {
@@ -1664,7 +1664,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        private void InterfaceElevateTerrain(string module, string[] cmd)
+        private void InterfaceElevateTerrain(string[] cmd)
         {
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
@@ -1678,7 +1678,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        private void InterfaceMultiplyTerrain(string module, string[] cmd)
+        private void InterfaceMultiplyTerrain(string[] cmd)
         {
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
@@ -1692,7 +1692,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        private void InterfaceLowerTerrain(string module, string[] cmd)
+        private void InterfaceLowerTerrain(string[] cmd)
         {
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
@@ -1706,7 +1706,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        private void InterfaceFillTerrain(string module, string[] cmd)
+        private void InterfaceFillTerrain(string[] cmd)
         {
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
@@ -1721,7 +1721,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        private void InterfaceShowDebugStats(string module, string[] cmd)
+        private void InterfaceShowDebugStats(string[] cmd)
         {
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
@@ -1752,7 +1752,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        private void InterfaceEnableExperimentalBrushes(string module, string[] cmd)
+        private void InterfaceEnableExperimentalBrushes(string[] cmd)
         {
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
@@ -1771,7 +1771,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        private void InterfaceHelp(string module, string[] cmd)
+        private void InterfaceHelp(string[] cmd)
         {
             if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;

@@ -47,7 +47,7 @@ namespace OpenSim.Framework
             m_log.Info("[GUIConsole] initialised.");
         }
 
-        public void Help(string module, string[] cmd)
+        public void Help(string[] cmd)
         {
             List<string> help = m_Commands.GetHelp(cmd);
 

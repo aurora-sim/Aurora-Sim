@@ -145,7 +145,7 @@ namespace OpenSim.Framework
                                 foreach (CommandDelegate fn in commands[com].fn)
                                 {
                                     if (fn != null)
-                                        fn ("", command);
+                                        fn (command);
                                 }
                                 return new string[0];
                             }
@@ -181,7 +181,7 @@ namespace OpenSim.Framework
                                             foreach (CommandDelegate fn in cmd.Value.fn)
                                             {
                                                 if (fn != null)
-                                                    fn ("", command);
+                                                    fn (command);
                                             }
                                             return new string[0];
                                         }
@@ -391,7 +391,7 @@ namespace OpenSim.Framework
             return tree.ExecuteCommand (cmd);
         }
     }
-    public delegate void CommandDelegate(string module, string[] cmd);
+    public delegate void CommandDelegate(string[] cmd);
 
     public class Parser
     {
@@ -451,7 +451,7 @@ namespace OpenSim.Framework
                     "Get a general command list", Help);
         }
 
-        public void Help(string module, string[] cmd)
+        public void Help(string[] cmd)
         {
             List<string> help = m_Commands.GetHelp(cmd);
 

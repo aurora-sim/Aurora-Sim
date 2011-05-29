@@ -237,7 +237,7 @@ namespace OpenSim.Services.AssetService
             return false;
         }
 
-        void HandleShowDigest(string module, string[] args)
+        void HandleShowDigest(string[] args)
         {
             if (args.Length < 3)
             {
@@ -278,7 +278,7 @@ namespace OpenSim.Services.AssetService
             }
         }
 
-        void HandleDeleteAsset(string module, string[] args)
+        void HandleDeleteAsset(string[] args)
         {
             if (args.Length < 3)
             {

@@ -44,7 +44,7 @@ namespace Aurora.Modules
 
         #region Console Commands
 
-        protected void ProcessLoginCommands(string module, string[] cmd)
+        protected void ProcessLoginCommands(string[] cmd)
         {
             if (cmd.Length < 2)
             {
@@ -73,7 +73,7 @@ namespace Aurora.Modules
             }
         }
 
-        protected void BanUser(string module, string[] cmdparams)
+        protected void BanUser(string[] cmdparams)
         {
             if (cmdparams.Length < 4)
             {
@@ -112,7 +112,7 @@ namespace Aurora.Modules
                 transferModule.IncomingCloseAgent (SP.Scene, SP.UUID);
         }
 
-        protected void SetRegionInfoOption(string module, string[] cmdparams)
+        protected void SetRegionInfoOption(string[] cmdparams)
         {
             IScene scene = MainConsole.Instance.ConsoleScene;
             if (scene == null)

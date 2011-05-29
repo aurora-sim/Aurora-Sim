@@ -107,7 +107,7 @@ namespace Aurora.Modules
 
         #endregion
 
-        protected virtual void PhysicsStatsCommand(string module, string[] cmd)
+        protected virtual void PhysicsStatsCommand(string[] cmd)
         {
             List<Scene> scenesToRun = new List<Scene>();
             if (cmd.Length == 3)
@@ -146,7 +146,7 @@ namespace Aurora.Modules
             }
         }
 
-        protected virtual void PhysicsProfilerCommand(string module, string[] cmd)
+        protected virtual void PhysicsProfilerCommand(string[] cmd)
         {
             List<Scene> scenesToRun = new List<Scene>();
             if (cmd.Length == 3)
@@ -191,7 +191,7 @@ namespace Aurora.Modules
             }
         }
 
-        protected virtual void CurrentPhysicsStatsCommand(string module, string[] cmd)
+        protected virtual void CurrentPhysicsStatsCommand(string[] cmd)
         {
             List<Scene> scenesToRun = new List<Scene>();
             if (cmd.Length == 3)

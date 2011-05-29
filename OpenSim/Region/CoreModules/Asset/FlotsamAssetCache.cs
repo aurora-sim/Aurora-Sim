@@ -748,7 +748,7 @@ namespace Flotsam.RegionModules.AssetCache
         }
 
         #region Console Commands
-        private void HandleConsoleCommand(string module, string[] cmdparams)
+        private void HandleConsoleCommand(string[] cmdparams)
         {
             if (cmdparams.Length >= 2)
             {

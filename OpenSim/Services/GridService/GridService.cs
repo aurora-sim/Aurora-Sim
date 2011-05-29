@@ -143,14 +143,14 @@ namespace OpenSim.Services.GridService
             registry.RegisterModuleInterface<IGridService>(this);
         }
 
-        private void HandleClearAllRegions(string module, string[] cmd)
+        private void HandleClearAllRegions(string[] cmd)
         {
             //Delete everything... give no criteria to just do 'delete from gridregions'
             m_Database.DeleteAll (new string[0], new object[0]);
             m_log.Warn ("Cleared all regions");
         }
 
-        private void HandleClearRegion(string module, string[] cmd)
+        private void HandleClearRegion(string[] cmd)
         {
             if (cmd.Length <= 3)
             {
@@ -168,7 +168,7 @@ namespace OpenSim.Services.GridService
             m_Database.Delete(r.RegionID);
         }
 
-        private void HandleClearAllDownRegions(string module, string[] cmd)
+        private void HandleClearAllDownRegions(string[] cmd)
         {
             //Delete any flags with (Flags & 254) == 254
             m_Database.DeleteAll(new string[4] { "Flags", "Flags", "Flags", "Flags" },
@@ -709,7 +709,7 @@ namespace OpenSim.Services.GridService
                 return -1;
         }
 
-        private void HandleShowRegion(string module, string[] cmd)
+        private void HandleShowRegion(string[] cmd)
         {
             if (cmd.Length != 3)
             {
@@ -775,7 +775,7 @@ namespace OpenSim.Services.GridService
             return (int)f;
         }
 
-        private void HandleSetFlags(string module, string[] cmd)
+        private void HandleSetFlags(string[] cmd)
         {
             if (cmd.Length < 5)
             {

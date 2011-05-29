@@ -252,7 +252,7 @@ namespace OpenSim.Region.CoreModules
         {
         }
 
-        protected void ChangeEstate(string module, string[] cmd)
+        protected void ChangeEstate(string[] cmd)
         {
             IEstateConnector EstateConnector = DataManager.RequestPlugin<IEstateConnector>();
             if (EstateConnector != null)

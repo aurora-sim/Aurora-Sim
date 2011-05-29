@@ -784,7 +784,7 @@ namespace Aurora.Modules
         /// Update the world map
         /// </summary>
         /// <param name="fileName"></param>
-        public void HandleUpdateWorldMapConsoleCommand(string module, string[] cmdparams)
+        public void HandleUpdateWorldMapConsoleCommand(string[] cmdparams)
         {
             CreateTerrainTexture();
         }
@@ -793,7 +793,7 @@ namespace Aurora.Modules
         /// Export the world map
         /// </summary>
         /// <param name="fileName"></param>
-        public void HandleExportWorldMapConsoleCommand(string module, string[] cmdparams)
+        public void HandleExportWorldMapConsoleCommand(string[] cmdparams)
         {
             if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;

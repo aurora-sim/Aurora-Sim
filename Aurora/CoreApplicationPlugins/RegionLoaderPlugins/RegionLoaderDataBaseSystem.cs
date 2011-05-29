@@ -118,13 +118,13 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         /// </summary>
         /// <param name="module"></param>
         /// <param name="cmd">0,1,region name, region XML file</param>
-        public void AddRegion(string module, string[] cmd)
+        public void AddRegion(string[] cmd)
         {
             RegionManager manager = new RegionManager(false, true, m_openSim);
             System.Windows.Forms.Application.Run(manager);
         }
 
-        protected void OpenRegionManager(string module, string[] cmdparams)
+        protected void OpenRegionManager(string[] cmdparams)
         {
             StartRegionManagerThread ();
         }

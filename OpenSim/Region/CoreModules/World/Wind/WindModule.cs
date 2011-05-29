@@ -216,7 +216,7 @@ namespace OpenSim.Region.CoreModules
         /// <summary>
         /// Base console command handler, only used if a person specifies the base command with now options
         /// </summary>
-        private void HandleConsoleCommand(string module, string[] cmdparams)
+        private void HandleConsoleCommand(string[] cmdparams)
         {
             ValidateConsole();
             m_log.Info("[WIND] The wind command can be used to change the currently active wind model plugin and update the parameters for wind plugins.");
@@ -225,7 +225,7 @@ namespace OpenSim.Region.CoreModules
         /// <summary>
         /// Called to change the active wind model plugin
         /// </summary>
-        private void HandleConsoleBaseCommand(string module, string[] cmdparams)
+        private void HandleConsoleBaseCommand(string[] cmdparams)
         {
             ValidateConsole();
 
@@ -278,7 +278,7 @@ namespace OpenSim.Region.CoreModules
         /// <summary>
         /// Called to change plugin parameters.
         /// </summary>
-        private void HandleConsoleParamCommand(string module, string[] cmdparams)
+        private void HandleConsoleParamCommand(string[] cmdparams)
         {
             ValidateConsole();
 

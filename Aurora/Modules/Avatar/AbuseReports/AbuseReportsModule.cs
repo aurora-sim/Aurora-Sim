@@ -223,7 +223,7 @@ namespace Aurora.Modules
 
         #region GUI Code
 
-        protected void OpenGUI(string module, string[] cmdparams)
+        protected void OpenGUI(string[] cmdparams)
         {
             System.Threading.Thread t = new System.Threading.Thread(new System.Threading.ThreadStart(ThreadProcARGUI));
             t.Start();

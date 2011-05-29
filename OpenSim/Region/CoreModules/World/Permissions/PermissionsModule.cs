@@ -350,7 +350,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             get { return null; }
         }
 
-        public void HandleBypassPermissions(string module, string[] args)
+        public void HandleBypassPermissions(string[] args)
         {
             if (MainConsole.Instance.ConsoleScene != m_scene)
             {
@@ -372,7 +372,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             }
         }
 
-        public void HandleForcePermissions(string module, string[] args)
+        public void HandleForcePermissions(string[] args)
         {
             if (MainConsole.Instance.ConsoleScene != m_scene)
             {
@@ -398,7 +398,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             }
         }
 
-        public void HandleDebugPermissions(string module, string[] args)
+        public void HandleDebugPermissions(string[] args)
         {
             if (MainConsole.Instance.ConsoleScene != m_scene)
             {

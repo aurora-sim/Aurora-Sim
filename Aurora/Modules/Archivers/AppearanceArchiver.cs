@@ -78,7 +78,7 @@ namespace Aurora.Modules
 			get { return true; }
 		}
 
-		protected void HandleLoadAvatarArchive(string module, string[] cmdparams)
+		protected void HandleLoadAvatarArchive(string[] cmdparams)
 		{
 			if (cmdparams.Length != 6) {
                 m_log.Info("[AvatarArchive] Not enough parameters!");
@@ -217,7 +217,7 @@ namespace Aurora.Modules
             return appearance;
         }
 
-        protected void HandleSaveAvatarArchive(string module, string[] cmdparams)
+        protected void HandleSaveAvatarArchive(string[] cmdparams)
         {
             if (cmdparams.Length != 7)
             {

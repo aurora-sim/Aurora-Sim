@@ -252,7 +252,7 @@ namespace Aurora.Modules
         /// </summary>
         /// <param name="module"></param>
         /// <param name="cmdparams"></param>
-        public void HandleAlertConsoleCommand(string module, string[] cmdparams)
+        public void HandleAlertConsoleCommand(string[] cmdparams)
         {
             if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;

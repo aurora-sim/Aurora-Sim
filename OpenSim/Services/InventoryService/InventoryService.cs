@@ -113,7 +113,7 @@ namespace OpenSim.Services.InventoryService
             return result;
         }
 
-        public virtual void FixInventory (string module, string[] cmd)
+        public virtual void FixInventory (string[] cmd)
         {
             string userName = MainConsole.Instance.CmdPrompt ("Name of user");
             UserAccount account = m_UserAccountService.GetUserAccount (UUID.Zero, userName);

@@ -414,7 +414,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        protected void AuroraDotNetRestart (string module, string[] cmdparams)
+        protected void AuroraDotNetRestart (string[] cmdparams)
         {
             string go = MainConsole.Instance.CmdPrompt ("Are you sure you want to restart all scripts? (This also wipes the script state saves database, which could cause loss of information in your scripts)", "no");
             if (go.Equals ("yes", StringComparison.CurrentCultureIgnoreCase))
@@ -453,7 +453,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        protected void AuroraDotNetStop (string module, string[] cmdparams)
+        protected void AuroraDotNetStop (string[] cmdparams)
         {
             string go = MainConsole.Instance.CmdPrompt ("Are you sure you want to stop all scripts?", "no");
             if (go.Contains ("yes") || go.Contains ("Yes"))
@@ -467,7 +467,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        protected void AuroraDotNetStats (string module, string[] cmdparams)
+        protected void AuroraDotNetStats (string[] cmdparams)
         {
             m_log.Info ("Aurora DotNet Script Engine Stats:"
                     + "\nNumber of scripts compiled: " + Compiler.ScriptCompileCounter
@@ -479,13 +479,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     + "/" + (MaintenanceThread.scriptThreadpool == null ? 0 : MaintenanceThread.scriptThreadpool.nSleepingthreads).ToString ());
         }
 
-        protected void AuroraDotNetDisable (string module, string[] cmdparams)
+        protected void AuroraDotNetDisable (string[] cmdparams)
         {
             ConsoleDisabled = true;
             m_log.Warn ("[ADNE]: ADNE has been disabled.");
         }
 
-        protected void AuroraDotNetEnable(string module, string[] cmdparams)
+        protected void AuroraDotNetEnable(string[] cmdparams)
         {
             ConsoleDisabled = false;
             MaintenanceThread.Started = true;

@@ -124,7 +124,7 @@ namespace OpenSim.Services.InventoryService
             }
         }
 
-        private void ClearDefaultInventory(string module, string[] cmd)
+        private void ClearDefaultInventory(string[] cmd)
         {
             string sure = MainConsole.Instance.CmdPrompt("Are you sure you want to delete the default inventory?", "yes");
             if (!sure.Equals("yes", StringComparison.CurrentCultureIgnoreCase))

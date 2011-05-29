@@ -668,7 +668,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
         #region Console Commands
 
-        private void HandleConsoleForceSendAppearance(string module, string[] cmds)
+        private void HandleConsoleForceSendAppearance(string[] cmds)
         {
             //Make sure its set to the right region
             if (MainConsole.Instance.ConsoleScene != m_scene)

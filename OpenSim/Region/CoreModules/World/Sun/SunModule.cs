@@ -576,7 +576,7 @@ namespace OpenSim.Region.CoreModules
 
         public void SetSunParameter(string param, double value)
         {
-            HandleSunConsoleCommand("sun", new string[] {param, value.ToString() });
+            HandleSunConsoleCommand(new string[] {param, value.ToString() });
         }
 
         public float GetCurrentSunHour()
@@ -589,7 +589,7 @@ namespace OpenSim.Region.CoreModules
 
         #endregion
 
-        public void HandleSunConsoleCommand(string module, string[] cmdparams)
+        public void HandleSunConsoleCommand(string[] cmdparams)
         {
             if (MainConsole.Instance.ConsoleScene != m_scene)
             {

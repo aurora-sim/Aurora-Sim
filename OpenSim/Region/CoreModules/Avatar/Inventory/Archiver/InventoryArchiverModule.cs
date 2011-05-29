@@ -231,7 +231,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// Load inventory from an inventory file archive
         /// </summary>
         /// <param name="cmdparams"></param>
-        protected void HandleLoadInvConsoleCommand(string module, string[] cmdparams)
+        protected void HandleLoadInvConsoleCommand(string[] cmdparams)
         {
             try
             {
@@ -274,7 +274,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// Save inventory to a file archive
         /// </summary>
         /// <param name="cmdparams"></param>
-        protected void HandleSaveInvWOAssetsConsoleCommand(string module, string[] cmdparams)
+        protected void HandleSaveInvWOAssetsConsoleCommand(string[] cmdparams)
         {
             if (cmdparams.Length < 7)
             {
@@ -308,7 +308,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// Save inventory to a file archive
         /// </summary>
         /// <param name="cmdparams"></param>
-        protected void HandleSaveInvConsoleCommand(string module, string[] cmdparams)
+        protected void HandleSaveInvConsoleCommand(string[] cmdparams)
         {
             try
             {

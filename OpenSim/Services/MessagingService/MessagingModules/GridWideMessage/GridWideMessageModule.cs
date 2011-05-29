@@ -57,7 +57,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
         #region Commands
 
-        protected void SendGridAlert(string module, string[] cmd)
+        protected void SendGridAlert(string[] cmd)
         {
             //Combine the params and figure out the message
             string message = CombineParams(cmd, 3);
@@ -65,7 +65,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             SendAlert (message);
         }
 
-        protected void SendGridMessage(string module, string[] cmd)
+        protected void SendGridMessage(string[] cmd)
         {
             //Combine the params and figure out the message
             string user = CombineParams(cmd, 3, 5);
@@ -81,7 +81,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             MessageUser (account.PrincipalID, message);
         }
 
-        protected void KickUserMessage(string module, string[] cmd)
+        protected void KickUserMessage(string[] cmd)
         {
             //Combine the params and figure out the message
             string user = CombineParams(cmd, 2, 4);

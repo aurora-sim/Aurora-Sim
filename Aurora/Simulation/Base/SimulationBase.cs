@@ -475,12 +475,12 @@ namespace Aurora.Simulation.Base
             m_console.Commands.AddCommand ("force GC", "force GC", "Forces garbage collection.", HandleForceGC);
         }
 
-        private void HandleQuit(string module, string[] args)
+        private void HandleQuit(string[] args)
         {
             Shutdown(true);
         }
 
-        private void HandleLogLevel(string module, string[] cmd)
+        private void HandleLogLevel(string[] cmd)
         {
             if (null == m_consoleAppender)
             {
@@ -547,13 +547,13 @@ namespace Aurora.Simulation.Base
             }
         }
 
-        public virtual void HandleForceGC(string mod, string[] cmd)
+        public virtual void HandleForceGC(string[] cmd)
         {
             GC.Collect();
             m_log.Warn("Garbage collection finished");
         }
 
-        public virtual void HandleTimerScriptTime(string mod, string[] cmd)
+        public virtual void HandleTimerScriptTime(string[] cmd)
         {
             if (cmd.Length != 5)
             {
@@ -567,7 +567,7 @@ namespace Aurora.Simulation.Base
             m_TimerScriptTimer.Enabled = true;
         }
 
-        public virtual void HandleConfigRefresh(string mod, string[] cmd)
+        public virtual void HandleConfigRefresh(string[] cmd)
         {
             //Rebuild the configs
             m_config = m_configurationLoader.LoadConfigSettings (m_original_config);
@@ -578,13 +578,13 @@ namespace Aurora.Simulation.Base
             m_log.Info ("Finished reloading configuration.");
         }
 
-        public virtual void HandleShowInfo (string mod, string[] cmd)
+        public virtual void HandleShowInfo (string[] cmd)
         {
-            m_log.Info ("Version: " + m_version + " Cobra Branch");
+            m_log.Info ("Version: " + m_version);
             m_log.Info ("Startup directory: " + Environment.CurrentDirectory);
         }
 
-        public virtual void HandleShowVersion (string mod, string[] cmd)
+        public virtual void HandleShowVersion (string[] cmd)
         {
             m_log.Info (
                 String.Format (

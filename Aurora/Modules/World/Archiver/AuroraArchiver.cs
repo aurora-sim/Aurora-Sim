@@ -71,7 +71,7 @@ namespace Aurora.Modules
             }
         }
 
-        private void LoadAuroraArchive(string mod, string[] cmd)
+        private void LoadAuroraArchive(string[] cmd)
         {
             IScene scene = MainConsole.Instance.ConsoleScene;
             if (scene == null)
@@ -89,7 +89,7 @@ namespace Aurora.Modules
             GC.Collect ();
         }
 
-        private void SaveAuroraArchive(string mod, string[] cmd)
+        private void SaveAuroraArchive(string[] cmd)
         {
             IScene scene = MainConsole.Instance.ConsoleScene;
             if (scene == null)

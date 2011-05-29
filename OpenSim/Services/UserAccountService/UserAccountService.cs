@@ -240,7 +240,7 @@ namespace OpenSim.Services.UserAccountService
         /// Handle the create user command from the console.
         /// </summary>
         /// <param name="cmdparams">string array with parameters: firstname, lastname, password, locationX, locationY, email</param>
-        protected void HandleCreateUser(string module, string[] cmdparams)
+        protected void HandleCreateUser(string[] cmdparams)
         {
             string name;
             string password;
@@ -255,7 +255,7 @@ namespace OpenSim.Services.UserAccountService
             CreateUser(name, Util.Md5Hash(password), email);
         }
 
-        protected void HandleResetUserPassword(string module, string[] cmdparams)
+        protected void HandleResetUserPassword(string[] cmdparams)
         {
             string name;
             string newPassword;

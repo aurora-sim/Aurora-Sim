@@ -299,7 +299,7 @@ namespace OpenSim.Services.Connectors
             return true;
         }
 
-        protected virtual void HandleDumpAsset(string module, string[] args)
+        protected virtual void HandleDumpAsset(string[] args)
         {
             if (args.Length != 4)
             {

@@ -703,7 +703,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
         /// </summary>
         /// <param name="module"></param>
         /// <param name="args"></param>
-        protected void DebugMonitors(string module, string[] args)
+        protected void DebugMonitors(string[] args)
         {
             //Dump all monitors to the console
             foreach (MonitorRegistry registry in m_registry.Values)
@@ -718,7 +718,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
         /// </summary>
         /// <param name="module"></param>
         /// <param name="args"></param>
-        protected void DebugMonitorsInCurrentRegion(string module, string[] args)
+        protected void DebugMonitorsInCurrentRegion(string[] args)
         {
             SceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
             if (manager != null)
@@ -737,26 +737,26 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             else
             {
                 //Dump all the monitors to the console
-                DebugMonitors(module, args);
+                DebugMonitors(args);
             }
         }
 
-        protected void HandleShowThreads (string mod, string[] cmd)
+        protected void HandleShowThreads (string[] cmd)
         {
             m_log.Info (GetThreadsReport ());
         }
 
-        protected void HandleShowUptime (string mod, string[] cmd)
+        protected void HandleShowUptime (string[] cmd)
         {
             m_log.Info (GetUptimeReport ());
         }
 
-        protected void HandleShowStats (string mod, string[] cmd)
+        protected void HandleShowStats (string[] cmd)
         {
-            DebugMonitorsInCurrentRegion(mod, cmd);
+            DebugMonitorsInCurrentRegion(cmd);
         }
 
-        protected void HandleShowQueues (string mod, string[] cmd)
+        protected void HandleShowQueues (string[] cmd)
         {
             List<string> args = new List<string> (cmd);
             args.RemoveAt (0);

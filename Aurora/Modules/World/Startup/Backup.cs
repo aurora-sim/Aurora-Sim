@@ -88,9 +88,8 @@ namespace Aurora.Modules
         /// <summary>
         /// Runs commands issued by the server console from the operator
         /// </summary>
-        /// <param name="command">The first argument of the parameter (the command)</param>
         /// <param name="cmdparams">Additional arguments passed to the command</param>
-        public void RunCommand(string module, string[] cmdparams)
+        public void RunCommand(string[] cmdparams)
         {
             m_manager.ForEachCurrentScene(delegate(Scene scene)
                     {
@@ -144,7 +143,7 @@ namespace Aurora.Modules
 
             #region Console Commands
 
-            private void HandleDeleteObject (string module, string[] cmd)
+            private void HandleDeleteObject (string[] cmd)
             {
                 if (cmd.Length < 4)
                     return;

@@ -1379,7 +1379,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
         #region Console Commands
 
-        public void consoleSetTerrainTexture(string module, string[] args)
+        public void consoleSetTerrainTexture(string[] args)
         {
             string num = args[3];
             string uuid = args[4];
@@ -1419,7 +1419,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             }
          }
  
-        public void consoleSetTerrainHeights(string module, string[] args)
+        public void consoleSetTerrainHeights(string[] args)
         {
             string num = args[3];
             string min = args[4];

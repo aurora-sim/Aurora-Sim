@@ -74,7 +74,7 @@ namespace Aurora.Modules
             get { return true; }
         }
 
-        protected void HandleLoadAvatarProfile(string module, string[] cmdparams)
+        protected void HandleLoadAvatarProfile(string[] cmdparams)
         {
             if (cmdparams.Length != 6)
             {
@@ -131,7 +131,8 @@ namespace Aurora.Modules
 
             m_log.Info("[AvatarProfileArchiver] Loaded Avatar Profile from " + cmdparams[5]);
         }
-        protected void HandleSaveAvatarProfile(string module, string[] cmdparams)
+
+        protected void HandleSaveAvatarProfile(string[] cmdparams)
         {
             if (cmdparams.Length != 6)
             {

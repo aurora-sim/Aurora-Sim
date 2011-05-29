@@ -386,7 +386,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         /// </summary>
         /// <param name="module"></param>
         /// <param name="cmd">0,1,region name, region XML file</param>
-        public void AddRegion(string module, string[] cmd)
+        public void AddRegion(string[] cmd)
         {
             if (cmd.Length < 2)
             {
