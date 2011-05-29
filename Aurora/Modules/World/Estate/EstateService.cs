@@ -376,6 +376,8 @@ namespace Aurora.Modules
 
             if (ILO == null)
             {
+                if (Sp != null)
+                    Sp.ClearSavedVelocity (); //If we are moving the agent, clear their velocity
                 //Can't find land, give them the first parcel in the region and find a good position for them
                 ILO = parcelManagement.AllParcels()[0];
                 Position = parcelManagement.GetParcelCenterAtGround(ILO);
@@ -384,6 +386,8 @@ namespace Aurora.Modules
             //parcel permissions
             if (ILO.IsBannedFromLand(userID)) //Note: restricted is dealt with in the next block
             {
+                if (Sp != null)
+                    Sp.ClearSavedVelocity (); //If we are moving the agent, clear their velocity
                 if (Sp == null)
                 {
                     reason = "Banned from this parcel.";
@@ -402,6 +406,8 @@ namespace Aurora.Modules
                 (parcelflags & ParcelFlags.UseAccessList) == ParcelFlags.UseAccessList &&
                 (parcelflags & ParcelFlags.UsePassList) == ParcelFlags.UsePassList)
             {
+                if (Sp != null)
+                    Sp.ClearSavedVelocity (); //If we are moving the agent, clear their velocity
                 //One of these is in play then
                 if ((parcelflags & ParcelFlags.UseAccessGroup) == ParcelFlags.UseAccessGroup)
                 {
@@ -456,6 +462,8 @@ namespace Aurora.Modules
             //Move them to the nearest landing point
             if (!isCrossing && !ES.AllowDirectTeleport)
             {
+                if (Sp != null)
+                    Sp.ClearSavedVelocity(); //If we are moving the agent, clear their velocity
                 if (!scene.Permissions.IsGod(userID))
                 {
                     Telehub telehub = RegionConnector.FindTelehub(scene.RegionInfo.RegionID, scene.RegionInfo.RegionHandle);
@@ -481,6 +489,8 @@ namespace Aurora.Modules
             }
             else if (!isCrossing && !scene.Permissions.GenericParcelPermission(userID, ILO, (ulong)GroupPowers.None)) //Telehubs override parcels
             {
+                if (Sp != null)
+                    Sp.ClearSavedVelocity (); //If we are moving the agent, clear their velocity
                 if (ILO.LandData.LandingType == (int)LandingType.None) //Blocked, force this person off this land
                 {
                     //Find a new parcel for them

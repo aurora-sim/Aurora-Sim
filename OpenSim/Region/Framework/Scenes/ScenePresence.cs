@@ -541,6 +541,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         private Vector3 m_savedVelocity;
+
         /// <summary>
         /// Current velocity of the avatar.
         /// </summary>
@@ -574,6 +575,12 @@ namespace OpenSim.Region.Framework.Scenes
                 else
                     m_savedVelocity = value;
             }
+        }
+
+        public void ClearSavedVelocity ()
+        {
+            Velocity = Vector3.Zero;
+            m_savedVelocity = Vector3.Zero;
         }
 
         public override Quaternion Rotation
