@@ -28,30 +28,26 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Reflection;
+using Aurora.Framework;
+using log4net;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
-using System.Diagnostics;
-using Aurora.Framework;
-using System.IO;
 
 namespace Aurora.BotManager
 {
     public class RexBot : IRexBot, IClientAPI
     {
         #region Declares
-        private bool USE_NEW_FOLLOWING = true;
+
         private bool m_allowJump = false;
         private bool m_UseJumpDecisionTree = true;
+
         public enum RexBotState { Idle, Walking, Flying, Unknown }
 
-        private static readonly log4net.ILog m_log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILog m_log = log4net.LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Vector3 DEFAULT_START_POSITION = new Vector3(128, 128, 128);
-
-        private static UInt32 UniqueId = 1;
-
-        private string m_firstName = "Default";
-        private string m_lastName = "RexBot" + UniqueId.ToString();
 
         private uint m_movementFlag = 0;
         private Quaternion m_bodyDirection = Quaternion.Identity;
@@ -61,6 +57,7 @@ namespace Aurora.BotManager
         private Scene m_scene;
         private IScenePresence m_scenePresence;
         private AgentCircuitData m_circuitData;
+        public AuroraEventManager EventManager = new AuroraEventManager ();
 
         private RexBotState m_currentState = RexBotState.Idle;
         public RexBotState State
@@ -72,6 +69,8 @@ namespace Aurora.BotManager
                 m_currentState = value;
             }
         }
+        #region Jump Settings
+
         public bool AllowJump
         {
             get
@@ -83,6 +82,7 @@ namespace Aurora.BotManager
                 m_allowJump = value;
             }
         }
+
         public bool UseJumpDecisionTree
         {
             get
@@ -95,29 +95,14 @@ namespace Aurora.BotManager
             }
         }
 
+        #endregion
+
         private RexBotState m_previousState = RexBotState.Idle;
         
-        private bool m_autoMove = true;
         private Vector3 m_destination;
 
         private System.Timers.Timer m_frames;
-        private System.Timers.Timer m_walkTime;
         private System.Timers.Timer m_startTime;
-
-        #region Following declares
-
-        public bool IsFollowing = false;
-        public IScenePresence FollowSP = null;
-        public string FollowName = "";
-        private const float FollowTimeBeforeUpdate = 10;
-        private float CurrentFollowTimeBeforeUpdate = 0;
-
-        /// <summary>
-        /// So that other bots can follow us
-        /// </summary>
-        public List<RexBot> ChildFollowers = new List<RexBot> ();
-
-        #endregion
 
         #region Path declares
 
@@ -132,6 +117,13 @@ namespace Aurora.BotManager
         private float m_closeToPoint = 1;
 
         #endregion
+
+        #region IClientAPI properties
+
+        private static UInt32 UniqueId = 1;
+
+        private string m_firstName = "";
+        private string m_lastName = "";
 
         private NavMeshInstance m_navMesh;
 
@@ -191,6 +183,10 @@ namespace Aurora.BotManager
 
         #endregion
 
+        #endregion
+
+        #region Constructor
+
         // creates new bot on the default location
         public RexBot(Scene scene, AgentCircuitData data)
         {
@@ -204,13 +200,13 @@ namespace Aurora.BotManager
             m_frames = new System.Timers.Timer(100);
             m_frames.Start();
             m_frames.Elapsed += (frames_Elapsed);
-            m_walkTime = new System.Timers.Timer(30000);
-            m_walkTime.Elapsed += (walkTime_Elapsed);
             m_startTime = new System.Timers.Timer(10);
             m_startTime.Elapsed += (startTime_Elapsed);
 
             UniqueId++;
         }
+
+        #endregion
 
         #region Initialize/Close
 
@@ -238,7 +234,6 @@ namespace Aurora.BotManager
             OnBotConnectionClosed();
 
             m_frames.Stop();
-            m_walkTime.Stop();
             m_startTime.Stop ();
         }
 
@@ -250,11 +245,18 @@ namespace Aurora.BotManager
         {
             m_navMesh = new NavMeshInstance(mesh, startNode, reverse, timeOut);
 
-            SetDefaultWalktimeInterval();
-
             if(tpToStart)
                 m_scenePresence.Teleport(m_navMesh.GetNextNode().Position);
             GetNextDestination();
+        }
+
+        #endregion
+
+        #region Set Av Speed
+
+        public void SetMovementSpeedMod (float speed)
+        {
+            m_scenePresence.SpeedModifier = speed;
         }
 
         #endregion
@@ -270,10 +272,6 @@ namespace Aurora.BotManager
                 State = RexBotState.Walking;
 
                 m_destination = destination;
-
-                m_walkTime.Stop();
-                SetDefaultWalktimeInterval();
-                m_walkTime.Start();
             }
         }
 
@@ -285,10 +283,6 @@ namespace Aurora.BotManager
                 flyTo(destination);
                 m_destination = destination;
                 State = RexBotState.Flying;
-
-                m_walkTime.Stop();
-                SetDefaultWalktimeInterval();
-                m_walkTime.Start();
             }
             else
             {
@@ -311,198 +305,104 @@ namespace Aurora.BotManager
             m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
         }
 
-        #endregion
-
-        #region Start/Stop movement
-
-        public void UnpauseAutoMove()
-        {
-            EnableAutoMove(true, false);
-        }
-
-        public void PauseAutoMove()
-        {
-            EnableAutoMove(false, false);
-        }
-
-        public void StopAutoMove()
-        {
-            EnableAutoMove(false, true);
-        }
-
-        public void EnableAutoMove()
-        {
-            EnableAutoMove(true, true);
-        }
-
-        #endregion
-
-        #region Enable/Disable walking
-
-        /// <summary>
-        /// Blocks walking and sets to only flying
-        /// </summary>
-        /// <param name="pos"></param>
-        public void DisableWalk()
-        {
-            ShouldFly = true;
-            m_scenePresence.ForceFly = true;
-            if(!IsFollowing)
-                m_closeToPoint = 1.5f;
-        }
-
-        /// <summary>
-        /// Allows for flying and walkin
-        /// </summary>
-        /// <param name="pos"></param>
-        public void EnableWalk()
-        {
-            ShouldFly = false;
-            m_scenePresence.ForceFly = false;
-            if (!IsFollowing)
-                m_closeToPoint = 1;
-        }
-
-        #endregion
-
-        #region Set Av Speed
-
-        public void SetMovementSpeedMod(float speed)
-        {
-            m_scenePresence.SpeedModifier = speed;
-        }
-
-        #endregion
-
-        #region Automove and walk interval
-
-        private void SetDefaultWalktimeInterval()
-        {
-            if (m_navMesh != null)
-                m_walkTime.Interval = m_navMesh.TimeOut * 1000;
-            else
-                m_walkTime.Interval = 600000; // 10 minutes to get to destination 
-        }
-
-        private void EnableAutoMove(bool enable, bool stopWarpTimer)
-        {
-            if (enable != m_autoMove)
-            {
-                m_autoMove = enable;
-                if (enable)
-                {
-                    State = m_previousState; // restore previous state
-                    if (stopWarpTimer)
-                    {
-                        m_walkTime.Stop();
-                        SetDefaultWalktimeInterval();
-                        m_walkTime.Start();
-                    }
-                }
-                else
-                {
-                    State = RexBotState.Idle;
-                    if (stopWarpTimer)
-                    {
-                        m_walkTime.Stop();
-                    }
-                    m_startTime.Stop();
-                    m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
-                }
-            }
-        }
-
-        #endregion
-
         #region rotation helper functions
-        private Vector3 llRot2Fwd(Quaternion r)
+
+        private Vector3 llRot2Fwd (Quaternion r)
         {
-            return (new Vector3(1, 0, 0) * r);
+            return (new Vector3 (1, 0, 0) * r);
         }
 
-        private Quaternion llRotBetween(Vector3 a, Vector3 b)
+        private Quaternion llRotBetween (Vector3 a, Vector3 b)
         {
             //A and B should both be normalized
-            double dotProduct = Vector3.Dot(a, b);
-            Vector3 crossProduct = Vector3.Cross(a, b);
-            double magProduct = Vector3.Distance(Vector3.Zero, a) * Vector3.Distance(Vector3.Zero,b);
-            double angle = Math.Acos(dotProduct / magProduct);
-            Vector3 axis = Vector3.Normalize(crossProduct);
-            float s = (float)Math.Sin(angle / 2);
+            double dotProduct = Vector3.Dot (a, b);
+            Vector3 crossProduct = Vector3.Cross (a, b);
+            double magProduct = Vector3.Distance (Vector3.Zero, a) * Vector3.Distance (Vector3.Zero, b);
+            double angle = Math.Acos (dotProduct / magProduct);
+            Vector3 axis = Vector3.Normalize (crossProduct);
+            float s = (float)Math.Sin (angle / 2);
 
-            return new Quaternion(axis.X * s, axis.Y * s, axis.Z * s, (float)Math.Cos(angle / 2));
+            return new Quaternion (axis.X * s, axis.Y * s, axis.Z * s, (float)Math.Cos (angle / 2));
         }
 
         #endregion
 
-        #region Timers
-
-        private void walkTime_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            m_walkTime.Stop();
-            m_scenePresence.Teleport(m_destination);
-        }
-
-        private void frames_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            m_frames.Stop ();
-            Update();
-            m_frames.Start ();
-        }
-
-        private void startTime_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            m_startTime.Stop();
-            GetNextDestination();
-        }
-
-        #endregion
-
-        #region Chat interface
-
-        public void SendChatMessage (int sayType, string message, int channel)
-        {
-            OSChatMessage args = new OSChatMessage ();
-            args.Message = message;
-            args.Channel = channel;
-            args.From = FirstName + " " + LastName;
-            args.Position = m_scenePresence.AbsolutePosition;
-            args.Sender = this;
-            args.Type = (ChatTypeEnum)sayType;
-            args.Scene = m_scene;
-
-            OnBotChatFromViewer (this, args);
-        }
-
-        #endregion
-
-        #region Move / fly bot base code
+        #region Move / fly bot
 
         /// <summary>
         /// Does the actual movement of the bot
         /// </summary>
         /// <param name="pos"></param>
-        private void walkTo(Vector3 pos)
+        private void walkTo (Vector3 pos)
         {
-            Vector3 bot_forward = new Vector3(2, 0, 0);
+            Vector3 bot_forward = new Vector3 (2, 0, 0);
             Vector3 bot_toward;
             try
             {
-                bot_toward = Util.GetNormalizedVector(pos - m_scenePresence.AbsolutePosition);
-                Quaternion rot_result = llRotBetween(bot_forward, bot_toward);
+                bot_toward = Util.GetNormalizedVector (pos - m_scenePresence.AbsolutePosition);
+                Quaternion rot_result = llRotBetween (bot_forward, bot_toward);
                 m_bodyDirection = rot_result;
-            } catch (System.ArgumentException) {}
+            }
+            catch (System.ArgumentException)
+            {
+            }
             m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
-            
 
-            OnBotAgentUpdate(m_movementFlag, m_bodyDirection);
+
+            OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
             m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
         }
 
+        /// <summary>
+        /// Does the actual movement of the bot
+        /// </summary>
+        /// <param name="pos"></param>
+        private void flyTo (Vector3 pos)
+        {
+            Vector3 bot_forward = new Vector3 (1, 0, 0);
+            try
+            {
+                Vector3 bot_toward = Util.GetNormalizedVector (pos - m_scenePresence.AbsolutePosition);
+                Quaternion rot_result = llRotBetween (bot_forward, bot_toward);
+                m_bodyDirection = rot_result;
+            }
+            catch (System.ArgumentException)
+            {
+            }
+
+            m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
+
+            Vector3 diffPos = m_destination - m_scenePresence.AbsolutePosition;
+            if (Math.Abs (diffPos.X) > 1.5 || Math.Abs (diffPos.Y) > 1.5)
+            {
+                m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
+            }
+
+            if (m_scenePresence.AbsolutePosition.Z < pos.Z - 1)
+            {
+                m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS;
+            }
+            else if (m_scenePresence.AbsolutePosition.Z > pos.Z + 1)
+            {
+                m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG;
+            }
+
+            OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
+            m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
+        }
+
+        #region Jump Decision Tree
+
+        /// <summary>
+        /// See whether we should jump based on the start and end positions given
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
         private bool JumpDecisionTree (Vector3 start, Vector3 end)
         {
             //Cast a ray in the direction that we are going
-            List<ISceneChildEntity> entities = llCastRay(start, end);
+            List<ISceneChildEntity> entities = llCastRay (start, end);
 
             foreach (ISceneChildEntity entity in entities)
             {
@@ -532,52 +432,81 @@ namespace Aurora.BotManager
             foreach (ContactResult result in results)
             {
                 ISceneChildEntity child = m_scenePresence.Scene.GetSceneObjectPart (result.ConsumerID);
-                if(!entities.Contains(child))
+                if (!entities.Contains (child))
                     entities.Add (child);
             }
 
             return entities;
         }
 
+        #endregion
+
+        #endregion
+
+        #endregion
+
+        #region Enable/Disable walking
+
         /// <summary>
-        /// Does the actual movement of the bot
+        /// Blocks walking and sets to only flying
         /// </summary>
         /// <param name="pos"></param>
-        private void flyTo(Vector3 pos)
+        public void DisableWalk()
         {
-            Vector3 bot_forward = new Vector3(1, 0, 0);
-            try
-            {
-                Vector3 bot_toward = Util.GetNormalizedVector(pos - m_scenePresence.AbsolutePosition);
-                Quaternion rot_result = llRotBetween(bot_forward, bot_toward);
-                m_bodyDirection = rot_result;
-            }
-            catch (System.ArgumentException)
-            {
-            }
-            
-            m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
+            ShouldFly = true;
+            m_scenePresence.ForceFly = true;
+            m_closeToPoint = 1.5f;
+        }
 
-            Vector3 diffPos = m_destination - m_scenePresence.AbsolutePosition;
-            if (Math.Abs(diffPos.X) > 1.5 || Math.Abs(diffPos.Y) > 1.5)
-            {
-                m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
-            }
-
-            if (m_scenePresence.AbsolutePosition.Z < pos.Z-1)
-            {
-                m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS;
-            }
-            else if (m_scenePresence.AbsolutePosition.Z > pos.Z+1)
-            {
-                m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG;
-            }
-
-            OnBotAgentUpdate(m_movementFlag, m_bodyDirection);
-            m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
+        /// <summary>
+        /// Allows for flying and walkin
+        /// </summary>
+        /// <param name="pos"></param>
+        public void EnableWalk()
+        {
+            ShouldFly = false;
+            m_scenePresence.ForceFly = false;
+            m_closeToPoint = 1;
         }
 
         #endregion
+
+        #region Timers
+
+        private void frames_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            m_frames.Stop ();
+            Update();
+            m_frames.Start ();
+        }
+
+        private void startTime_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            m_startTime.Stop();
+            GetNextDestination();
+        }
+
+        #endregion
+
+        #region Get next destination
+
+        private void GetNextDestination()
+        {
+            if (m_navMesh != null)
+            {
+                Node node = m_navMesh.GetNextNode();
+
+                if (node.Mode == TravelMode.Fly)
+                    FlyTo(node.Position);
+                else if (node.Mode == TravelMode.Walk)
+                    WalkTo(node.Position);
+            }
+        }
+
+        #endregion
+
+
+        #region Path Following Code
 
         #region AStarBot memebers
 
@@ -589,53 +518,6 @@ namespace Aurora.BotManager
             if (currentMap[0, 0] == -99)
             {
                 m_log.Warn ("The map was found but failed to load. Check the map.");
-            }
-        }
-
-        public void FindPath (Vector3 currentPos, Vector3 finishVector)
-        {
-            // Bot position converted to map coordinates -maybe here we can check if on Map
-            int startX = (int)currentPos.X - cornerStoneX;
-            int startY = (int)currentPos.Y - cornerStoneY;
-
-            m_log.Debug ("My Pos " + currentPos.ToString () + " , End Pos " + finishVector.ToString ());
-
-            // Goal position converted to map coordinates
-            int finishX = (int)finishVector.X - cornerStoneX;
-            int finishY = (int)finishVector.Y - cornerStoneY;
-            int finishZ = 25;
-
-            m_scenePresence.StandUp (); //Can't follow a path if sitting
-
-            IsFollowing = false; //Turn off following
-
-            CurrentWayPoint = 0; //Reset to the beginning of the list
-            List<string> points = Games.Pathfinding.AStar2DTest.StartPath.Path (startX, startY, finishX, finishY, finishZ, cornerStoneX, cornerStoneY);
-
-            if (points.Contains ("no_path"))
-            {
-                m_log.Debug ("I'm sorry I could not find a solution to that path. Teleporting instead");
-                m_scenePresence.Teleport (finishVector);
-                return;
-            }
-            else
-            {
-                IsOnAPath = true;
-            }
-
-            lock (WayPoints)
-            {
-                foreach (string s in points)
-                {
-                    string[] Vector = s.Split (',');
-
-                    if (Vector.Length != 3)
-                        continue;
-
-                    WayPoints.Add (new Vector3 (float.Parse (Vector[0]),
-                        float.Parse (Vector[1]),
-                        float.Parse (Vector[2])));
-                }
             }
         }
 
@@ -668,56 +550,67 @@ namespace Aurora.BotManager
             return waypoints;
         }
 
-        public void FollowAvatar (string avatarName, float followDistance)
-        {
-            m_scenePresence.StandUp (); //Can't follow if sitting
-            IsFollowing = true;
-            FollowName = avatarName;
-            m_closeToPoint = followDistance;
-            m_autoMove = false;
-        }
+        #endregion
 
-        public void StopFollowAvatar ()
+        #region Follow Path
+
+        public void FindPath (Vector3 currentPos, Vector3 finishVector)
         {
-            FollowSP = null; //null out everything
-            IsFollowing = false;
-            FollowName = "";
-            m_autoMove = true;
+            // Bot position converted to map coordinates -maybe here we can check if on Map
+            int startX = (int)currentPos.X - cornerStoneX;
+            int startY = (int)currentPos.Y - cornerStoneY;
+
+            m_log.Debug ("My Pos " + currentPos.ToString () + " , End Pos " + finishVector.ToString ());
+
+            // Goal position converted to map coordinates
+            int finishX = (int)finishVector.X - cornerStoneX;
+            int finishY = (int)finishVector.Y - cornerStoneY;
+            int finishZ = 25;
+
+            m_scenePresence.StandUp (); //Can't follow a path if sitting
+
+            CurrentWayPoint = 0; //Reset to the beginning of the list
+            List<string> points = Games.Pathfinding.AStar2DTest.StartPath.Path (startX, startY, finishX, finishY, finishZ, cornerStoneX, cornerStoneY);
+
+            if (points.Contains ("no_path"))
+            {
+                m_log.Debug ("I'm sorry I could not find a solution to that path. Teleporting instead");
+                m_scenePresence.Teleport (finishVector);
+                return;
+            }
+            else
+            {
+                if (!IsOnAPath)
+                    EventManager.RegisterEventHandler ("Update", FollowUpdate);
+                IsOnAPath = true;
+            }
+
+            lock (WayPoints)
+            {
+                foreach (string s in points)
+                {
+                    string[] Vector = s.Split (',');
+
+                    if (Vector.Length != 3)
+                        continue;
+
+                    WayPoints.Add (new Vector3 (float.Parse (Vector[0]),
+                        float.Parse (Vector[1]),
+                        float.Parse (Vector[2])));
+                }
+            }
         }
 
         #endregion
 
-        #region Update and move the bot
-
-        private void GetNextDestination()
-        {
-            if (m_navMesh != null)
-            {
-                Node node = m_navMesh.GetNextNode();
-
-                if (node.Mode == TravelMode.Fly)
-                    FlyTo(node.Position);
-                else if (node.Mode == TravelMode.Walk)
-                    WalkTo(node.Position);
-            }
-        }
+        #region Follow Update Method
 
         /// <summary>
         /// This is called to make the bot walk nicely around every 100 milliseconds by m_frames timer
         /// </summary>
-        private void Update ()
+        private object FollowUpdate (string functionName, object param)
         {
-            if (m_scenePresence == null)
-                return;
-
-            if (IsFollowing)
-            {
-                if (USE_NEW_FOLLOWING)
-                    NewFollowing ();
-                else
-                    OldFollowing ();
-            }
-            else if (IsOnAPath)
+            if (IsOnAPath)
             {
                 lock (WayPoints)
                 {
@@ -729,7 +622,8 @@ namespace Aurora.BotManager
                         {
                             //We are at the last point, end the path checking
                             IsOnAPath = false;
-                            return;
+                            EventManager.UnregisterEventHandler ("Update", FollowUpdate);
+                            return null;
                         }
                         NavMesh mesh = new NavMesh ();
                         //Build the next mesh to tell the bot where to go
@@ -741,21 +635,36 @@ namespace Aurora.BotManager
                     }
                 }
             }
+            return null;
+        }
 
+        #endregion
+
+        #endregion
+
+        #region Update Event
+
+        public void Update ()
+        {
+            if (m_scenePresence == null)
+                return;
+            //Tell any interested modules that we are ready to go
+            EventManager.FireGenericEventHandler ("Update", null);
+
+            //Now move the avatar
             if (State != RexBotState.Idle)
             {
                 bool CheckFly = State == RexBotState.Flying;
                 if (!ShouldFly && CheckFly)
                     ShouldFly = CheckFly;
                 Vector3 diffPos = m_destination - m_scenePresence.AbsolutePosition;
-                if (Math.Abs(diffPos.X) < m_closeToPoint && Math.Abs(diffPos.Y) < m_closeToPoint &&
+                if (Math.Abs (diffPos.X) < m_closeToPoint && Math.Abs (diffPos.Y) < m_closeToPoint &&
                     (!CheckFly || (ShouldFly && Math.Abs (diffPos.Z) < m_closeToPoint))) //If we are flying, Z checking matters
                 {
                     State = RexBotState.Idle;
-                    m_walkTime.Stop ();
+                    //Restart the start time
                     m_startTime.Stop ();
-                    if (m_autoMove)
-                        m_startTime.Start ();
+                    m_startTime.Start ();
                 }
                 else
                 {
@@ -773,12 +682,60 @@ namespace Aurora.BotManager
                 }
             }
 
-            if (State != RexBotState.Flying && State != RexBotState.Walking)
+            if (State == RexBotState.Idle)
             {
+                //We arn't going anywhere
                 OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
             }
             m_frameCount++;
         }
+
+        #endregion
+
+        #region Following Code 
+
+        #region Following declares
+
+        public IScenePresence FollowSP = null;
+        public string FollowName = "";
+        private float m_followCloseToPoint = 1.5f;
+        private const float FollowTimeBeforeUpdate = 10;
+        private float CurrentFollowTimeBeforeUpdate = 0;
+
+        /// <summary>
+        /// So that other bots can follow us
+        /// </summary>
+        public List<RexBot> ChildFollowers = new List<RexBot> ();
+
+        #endregion
+
+        public void FollowAvatar (string avatarName, float followDistance)
+        {
+            EventManager.RegisterEventHandler ("Update", FollowingUpdate);
+            m_scenePresence.StandUp (); //Can't follow if sitting
+            FollowName = avatarName;
+            m_followCloseToPoint = followDistance;
+        }
+
+        public void StopFollowAvatar ()
+        {
+            EventManager.UnregisterEventHandler ("Update", FollowingUpdate);
+            FollowSP = null; //null out everything
+            FollowName = "";
+        }
+
+        #region Following Update Event
+
+        private object FollowingUpdate (string functionName, object param)
+        {
+            //Update, time to check where we should be going
+            NewFollowing ();
+            return null;
+        }
+
+        #endregion
+
+        #region Old Following code
 
         private void OldFollowing ()
         {
@@ -801,7 +758,6 @@ namespace Aurora.BotManager
             //If its still null, the person doesn't exist, cancel the follow and return
             if (FollowSP == null)
             {
-                IsFollowing = false;
                 FollowName = "";
                 m_log.Warn ("Could not find avatar " + FollowName);
             }
@@ -812,7 +768,7 @@ namespace Aurora.BotManager
                 if (CurrentFollowTimeBeforeUpdate == FollowTimeBeforeUpdate)
                 {
                     Vector3 diffAbsPos = FollowSP.AbsolutePosition - m_scenePresence.AbsolutePosition;
-                    if (Math.Abs (diffAbsPos.X) > m_closeToPoint || Math.Abs (diffAbsPos.Y) > m_closeToPoint)
+                    if (Math.Abs (diffAbsPos.X) > m_followCloseToPoint || Math.Abs (diffAbsPos.Y) > m_followCloseToPoint)
                     {
                         NavMesh mesh = new NavMesh ();
 
@@ -829,7 +785,6 @@ namespace Aurora.BotManager
                     {
                         //Stop the bot then
                         State = RexBotState.Idle;
-                        m_walkTime.Stop ();
                         m_startTime.Stop ();
                     }
                     //Reset the time
@@ -838,20 +793,22 @@ namespace Aurora.BotManager
             }
         }
 
+        #endregion
+
         #region New Following code
 
         private void ShowMap (string mod, string[] cmd)
         {
-            int sqrt = (int)Math.Sqrt(map.Length);
+            int sqrt = (int)Math.Sqrt (map.Length);
             for (int x = sqrt - 1; x > -1; x--)
             {
                 string line = "";
                 for (int y = sqrt - 1; y > -1; y--)
                 {
                     if (map[x, y].ToString ().Length < 2)
-                        line += " " +map[x, y] + ",";
+                        line += " " + map[x, y] + ",";
                     else
-                    line += map[x, y] + ",";
+                        line += map[x, y] + ",";
                 }
 
                 m_log.Warn (line.Remove (line.Length - 1));
@@ -881,7 +838,6 @@ namespace Aurora.BotManager
             //If its still null, the person doesn't exist, cancel the follow and return
             if (FollowSP == null)
             {
-                IsFollowing = false;
                 FollowName = "";
                 m_log.Warn ("Could not find avatar " + FollowName);
                 return;
@@ -889,11 +845,10 @@ namespace Aurora.BotManager
             Vector3 targetPos = FollowSP.AbsolutePosition;
             Vector3 currentPos = m_scenePresence.AbsolutePosition;
             double distance = Util.GetDistanceTo (targetPos, currentPos);
-            if (distance < m_closeToPoint)
+            if (distance < m_followCloseToPoint)
             {
-                m_frames.Stop ();
-                m_walkTime.Stop ();
-                m_startTime.Stop ();
+                //Try old style then
+                OldFollowing ();
                 return;
             }
             CurrentFollowTimeBeforeUpdate++;
@@ -910,7 +865,7 @@ namespace Aurora.BotManager
                 //return;
             }
 
-            restart:
+        restart:
             map = new int[22 * resolution, 22 * resolution]; //10 * resolution squares in each direction from our pos
             //We are in the center (11, 11) and our target is somewhere else
             int targetX = 11 * resolution, targetY = 11 * resolution;
@@ -961,9 +916,9 @@ namespace Aurora.BotManager
 
             m_scenePresence.SetAlwaysRun = FollowSP.SetAlwaysRun;
             List<Vector3> path = InnerFindPath (map, (11 * resolution), (11 * resolution), targetX, targetY);
-            
+
             int i = 0;
-        //startOver:
+            //startOver:
             Vector3 nextPos = ConvertPathToPos (currentPos, path, ref i);
             if (nextPos == Vector3.Zero)
             {
@@ -993,7 +948,7 @@ namespace Aurora.BotManager
                         }
                     }
                     nextPos.Z = targetPos.Z; //Fix the Z coordinate
-                    
+
                     NavMesh mesh = new NavMesh ();
 
                     bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
@@ -1015,7 +970,7 @@ namespace Aurora.BotManager
             //    i++;
             //    goto startOver;
             //}
-             
+
         }
 
         public void ParentMoved (NavMesh mesh)
@@ -1050,45 +1005,30 @@ namespace Aurora.BotManager
 
         #endregion
 
-        #region IClientCore Members
 
-        private readonly Dictionary<Type, object> m_clientInterfaces = new Dictionary<Type, object>();
 
-        public T Get<T>()
+
+
+
+        #region Chat interface
+
+        public void SendChatMessage (int sayType, string message, int channel)
         {
-            return (T)m_clientInterfaces[typeof(T)];
-        }
+            OSChatMessage args = new OSChatMessage ();
+            args.Message = message;
+            args.Channel = channel;
+            args.From = FirstName + " " + LastName;
+            args.Position = m_scenePresence.AbsolutePosition;
+            args.Sender = this;
+            args.Type = (ChatTypeEnum)sayType;
+            args.Scene = m_scene;
 
-        public bool TryGet<T>(out T iface)
-        {
-            if (m_clientInterfaces.ContainsKey(typeof(T)))
-            {
-                iface = (T)m_clientInterfaces[typeof(T)];
-                return true;
-            }
-            iface = default(T);
-            return false;
-        }
-
-        protected virtual void RegisterInterfaces()
-        {
-            RegisterInterface<IRexBot>(this);
-            RegisterInterface<IClientAPI>(this);
-            RegisterInterface<RexBot>(this);
-        }
-
-        protected void RegisterInterface<T>(T iface)
-        {
-            lock (m_clientInterfaces)
-            {
-                if (!m_clientInterfaces.ContainsKey(typeof(T)))
-                {
-                    m_clientInterfaces.Add(typeof(T), iface);
-                }
-            }
+            OnBotChatFromViewer (this, args);
         }
 
         #endregion
+
+        #region Useful IClientAPI members
 
         protected virtual void OnBotChatFromViewer (IClientAPI sender, OSChatMessage e)
         {
@@ -1119,7 +1059,47 @@ namespace Aurora.BotManager
             OnConnectionClosed (this);
         }
 
+        #endregion
+
         #region IClientAPI
+
+        #region IClientCore Members
+
+        private readonly Dictionary<Type, object> m_clientInterfaces = new Dictionary<Type, object> ();
+
+        public T Get<T> ()
+        {
+            return (T)m_clientInterfaces[typeof (T)];
+        }
+
+        public bool TryGet<T> (out T iface)
+        {
+            if (m_clientInterfaces.ContainsKey (typeof (T)))
+            {
+                iface = (T)m_clientInterfaces[typeof (T)];
+                return true;
+            }
+            iface = default (T);
+            return false;
+        }
+
+        protected virtual void RegisterInterfaces ()
+        {
+        }
+
+        protected void RegisterInterface<T> (T iface)
+        {
+            lock (m_clientInterfaces)
+            {
+                if (!m_clientInterfaces.ContainsKey (typeof (T)))
+                {
+                    m_clientInterfaces.Add (typeof (T), iface);
+                }
+            }
+        }
+
+        #endregion
+
 
 #pragma warning disable 67
         public event Action<IClientAPI> OnLogout;

@@ -205,51 +205,6 @@ namespace Aurora.BotManager
         }
 
         /// <summary>
-        /// Unfreeze the bot and let them finish their route
-        /// </summary>
-        /// <param name="Bot"></param>
-        public void UnpauseAutoMove(UUID Bot)
-        {
-            IRexBot bot;
-            if (m_bots.TryGetValue(Bot, out bot))
-                bot.UnpauseAutoMove();
-        }
-
-        /// <summary>
-        /// Stop the bot from moving until Unpause is called
-        /// NOTE: this does not turn off the timer to auto teleport the agent to the next destination
-        /// </summary>
-        /// <param name="Bot"></param>
-        public void PauseAutoMove(UUID Bot)
-        {
-            IRexBot bot;
-            if (m_bots.TryGetValue(Bot, out bot))
-                bot.PauseAutoMove();
-        }
-
-        /// <summary>
-        /// Stop the bot from moving
-        /// </summary>
-        /// <param name="Bot"></param>
-        public void StopAutoMove(UUID Bot)
-        {
-            IRexBot bot;
-            if (m_bots.TryGetValue(Bot, out bot))
-                bot.StopAutoMove();
-        }
-
-        /// <summary>
-        /// Start the bot moving
-        /// </summary>
-        /// <param name="Bot"></param>
-        public void EnableAutoMove(UUID Bot)
-        {
-            IRexBot bot;
-            if (m_bots.TryGetValue(Bot, out bot))
-                bot.EnableAutoMove();
-        }
-
-        /// <summary>
         /// Speed up or slow down the bot
         /// </summary>
         /// <param name="Bot"></param>

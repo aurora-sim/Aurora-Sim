@@ -11,10 +11,6 @@ namespace Aurora.BotManager
     {
         UUID CreateAvatar (string FirstName, string LastName, IScene scene, UUID cloneAppearanceFrom);
         void SetBotMap(UUID Bot, List<Vector3> Positions, List<TravelMode> mode);
-        void UnpauseAutoMove(UUID Bot);
-        void PauseAutoMove(UUID Bot);
-        void StopAutoMove(UUID Bot);
-        void EnableAutoMove(UUID Bot);
         void SetMovementSpeedMod(UUID Bot, float modifier);
         void RemoveAvatar (UUID Bot, IScene iScene);
 
@@ -47,10 +43,6 @@ namespace Aurora.BotManager
     public interface IRexBot
     {
         void SetPath (NavMesh mesh, int startNode, bool reverse, int timeOut, bool teleportToStart);
-        void PauseAutoMove ();
-        void StopAutoMove ();
-        void EnableAutoMove ();
-        void UnpauseAutoMove ();
         void SetMovementSpeedMod (float speed);
         void DisableWalk ();
         void EnableWalk ();

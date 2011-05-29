@@ -178,38 +178,6 @@ namespace Aurora.BotManager
                 manager.SetBotMap(UUID.Parse(keyOfBot), PositionsMap, TravelMap);
         }
 
-        public void botPause(string bot)
-        {
-            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botPause", m_host, "bot");
-            IBotManager manager = World.RequestModuleInterface<IBotManager>();
-            if (manager != null)
-                manager.PauseAutoMove(UUID.Parse(bot));
-        }
-
-        public void botResume(string bot)
-        {
-            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botResume", m_host, "bot");
-            IBotManager manager = World.RequestModuleInterface<IBotManager>();
-            if (manager != null)
-                manager.UnpauseAutoMove(UUID.Parse(bot));
-        }
-
-        public void botStop(string bot)
-        {
-            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botStop", m_host, "bot");
-            IBotManager manager = World.RequestModuleInterface<IBotManager>();
-            if (manager != null)
-                manager.StopAutoMove(UUID.Parse(bot));
-        }
-
-        public void botStart(string bot)
-        {
-            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botStart", m_host, "bot");
-            IBotManager manager = World.RequestModuleInterface<IBotManager>();
-            if (manager != null)
-                manager.EnableAutoMove(UUID.Parse(bot));
-        }
-
         public void botRemoveBot (string bot)
         {
             ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botRemoveBot", m_host, "bot");
