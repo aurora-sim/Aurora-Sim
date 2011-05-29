@@ -334,62 +334,50 @@ namespace OpenSim.Framework
             t.Start ();
             while (true)
             {
-#if !NET_4_0
-//                if (!Processing)
-//                {
-//                    throw new Exception("Restart");
-//                }
+                if (!Processing)
+                {
+                    throw new Exception ("Restart");
+                }
                 lock (m_consoleLock)
                 {
                     if (action == null)
                     {
                         action = Prompt;
-                        result = action.BeginInvoke(null, null);
+                        result = action.BeginInvoke (null, null);
                         m_calledEndInvoke = false;
-                        wHandles[0] = result.AsyncWaitHandle;
                     }
-
-                    System.Threading.WaitHandle.WaitAny(wHandles,500);
-
                     try
                     {
-                        if (action != null && !result.CompletedSynchronously && 
-                            result.IsCompleted && !m_calledEndInvoke)
+                        if ((!result.IsCompleted) &&
+                            (!result.AsyncWaitHandle.WaitOne (5000, false) || !result.IsCompleted))
+                        {
+
+                        }
+                        else if (action != null &&
+                            !result.CompletedSynchronously &&
+                            !m_calledEndInvoke)
                         {
                             m_calledEndInvoke = true;
-                            action.EndInvoke(result);
+                            action.EndInvoke (result);
                             action = null;
                             result = null;
-                            m_log.Info("[GUIConsole]: acting.");
                         }
                     }
                     catch (Exception ex)
                     {
                         //Eat the exception and go on
-                        Output("[GUIConsole]: Failed to execute command: " + ex.ToString());
+                        Output ("[Console]: Failed to execute command: " + ex.ToString ());
                         action = null;
                         result = null;
                     }
                 }
-#else
-                Task prompt = TaskEx.Run(() => { Prompt(); });
-                if (!Processing)
-                    throw new Exception("Restart");
-                while (!Task.WaitAll(new Task[1] { prompt }, 1000))
-                {
-                    if (!Processing)
-                        throw new Exception("Restart");
-                }
-#endif
-                action = null;
-                result = null;
             }
         }
 
         void t_Elapsed (object sender, System.Timers.ElapsedEventArgs e)
         {
             //Tell the GUI that we are still here and it needs to keep checking
-            Console.Write (char.MaxValue);
+            Console.Write ((char)0);
         }
     }
 }
