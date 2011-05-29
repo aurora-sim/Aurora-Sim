@@ -255,11 +255,13 @@ namespace OpenSim.Services.Interfaces
         public int RegionSizeX
         {
             get { return m_RegionSizeX; }
+            set { m_RegionSizeX = value; }
         }
 
         public int RegionSizeY
         {
             get { return m_RegionSizeY; }
+            set { m_RegionSizeY = value; }
         }
 
         public int RegionSizeZ

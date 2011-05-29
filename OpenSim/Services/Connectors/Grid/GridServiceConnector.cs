@@ -47,7 +47,7 @@ namespace OpenSim.Services.Connectors
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IRegistryCore m_registry;
+        protected IRegistryCore m_registry;
 
         public virtual IGridService InnerService
         {
@@ -121,7 +121,7 @@ namespace OpenSim.Services.Connectors
             return OldRegisterRegion(regionInfo);
         }
 
-        public string OldRegisterRegion(GridRegion region)
+        public virtual string OldRegisterRegion (GridRegion region)
         {
             Dictionary<string, object> rinfo = region.ToKeyValuePairs();
             Dictionary<string, object> sendData = new Dictionary<string, object>();
@@ -787,12 +787,12 @@ namespace OpenSim.Services.Connectors
 
         #region IService Members
 
-        public string Name
+        public virtual string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IRegistryCore registry)
+        public virtual void Initialize (IConfigSource config, IRegistryCore registry)
         {
             m_registry = registry;
             IConfig handlerConfig = config.Configs["Handlers"];
@@ -802,11 +802,11 @@ namespace OpenSim.Services.Connectors
             registry.RegisterModuleInterface<IGridService>(this);
         }
 
-        public void Start(IConfigSource config, IRegistryCore registry)
+        public virtual void Start (IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void FinishedStartup()
+        public virtual void FinishedStartup ()
         {
         }
 
