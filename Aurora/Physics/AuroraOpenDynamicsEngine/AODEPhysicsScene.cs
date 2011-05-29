@@ -451,8 +451,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     avDensity = physicsconfig.GetFloat("av_density", 80f);
                     avHeightFudgeFactor = physicsconfig.GetFloat("av_height_fudge_factor", 0.52f);
-                    avMovementDivisorWalk = (physicsconfig.GetFloat("av_movement_divisor_walk", 1.3f) * 2);
-                    avMovementDivisorRun = (physicsconfig.GetFloat("av_movement_divisor_run", 0.8f) * 2);
+                    avMovementDivisorWalk = (physicsconfig.GetFloat("WalkSpeed", 1.3f) * 2);
+                    avMovementDivisorRun = (physicsconfig.GetFloat("RunSpeed", 0.8f) * 2);
                     avCapRadius = physicsconfig.GetFloat("av_capsule_radius", 0.37f);
 
                     contactsPerCollision = physicsconfig.GetInt("contacts_per_collision", 80);
