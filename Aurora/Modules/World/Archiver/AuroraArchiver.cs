@@ -35,10 +35,12 @@ namespace Aurora.Modules
             }
             //Register the extention
             string ext = ".abackup";
-            RegistryKey key = Registry.ClassesRoot.CreateSubKey(ext + "\\DefaultIcon");
-            key.SetValue("", Application.StartupPath + "\\CrateDownload.ico");
-            key.Close();
-
+            try
+            {
+                RegistryKey key = Registry.ClassesRoot.CreateSubKey(ext + "\\DefaultIcon");
+                key.SetValue("", Application.StartupPath + "\\CrateDownload.ico");
+                key.Close();
+            }catch{}
             //Register the interface
             registry.RegisterModuleInterface<IAuroraBackupArchiver> (this);
         }
