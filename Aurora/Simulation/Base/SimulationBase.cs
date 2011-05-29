@@ -195,16 +195,25 @@ namespace Aurora.Simulation.Base
         /// </summary>
         public virtual void Run()
         {
-            try
+            while (true)
             {
-                //Start the prompt
-                MainConsole.Instance.ReadConsole();
-            }
-            catch (Exception ex)
-            {
-                //Only error that ever could occur is the restart one
-                Shutdown(false);
-                throw ex;
+                try
+                {
+                    //Start the prompt
+                    if (MainConsole.Instance != null)
+                    {
+                        MainConsole.Instance.ReadConsole();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    //Only error that ever could occur is the restart one
+                    m_log.InfoFormat("[GUIConsole]: Exception {0}", ex.Message);
+                    m_log.InfoFormat("[GUIConsole]: App {0}", ex.Source);
+                    m_log.InfoFormat("[GUIConsole]: tgt {0}", ex.TargetSite);
+                    Shutdown(true);
+                    throw ex;
+                }
             }
         }
 
@@ -225,7 +234,14 @@ namespace Aurora.Simulation.Base
 
             m_console = m_applicationRegistry.RequestModuleInterface<ICommandConsole>();
             if (m_console == null)
-                m_console = new LocalConsole();
+            {
+                m_log.Info("[GUIConsole]: NO CONSOLE AVAILABLE!");
+                //m_console = new LocalConsole();
+            }
+            else
+            {
+                m_log.InfoFormat("[GUIConsole]: Console located {0}", m_console.Name);
+            }
             ILoggerRepository repository = LogManager.GetRepository();
             IAppender[] appenders = repository.GetAppenders();
             foreach (IAppender appender in appenders)
@@ -569,7 +585,7 @@ namespace Aurora.Simulation.Base
 
         public virtual void HandleShowInfo (string mod, string[] cmd)
         {
-            m_log.Info ("Version: " + m_version);
+            m_log.Info ("Version: " + m_version + " Cobra Branch");
             m_log.Info ("Startup directory: " + Environment.CurrentDirectory);
         }
 
