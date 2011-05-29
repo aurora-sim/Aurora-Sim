@@ -323,14 +323,15 @@ namespace OpenSim.Framework
         /// </summary>
         public void ReadConsole()
         {
-            Process curProc = Process.GetCurrentProcess();
             WaitHandle[] wHandles = new WaitHandle[1];
             if (result != null)
             {
                 wHandles[0] = result.AsyncWaitHandle;
             }
-            m_log.Info("[GUIConsole]: ReadConsole .");
-            m_log.InfoFormat("[CUIConsole]: {0}", curProc.MainModule.ModuleName);
+            System.Timers.Timer t = new System.Timers.Timer ();
+            t.Interval = 0.5;
+            t.Elapsed += new System.Timers.ElapsedEventHandler (t_Elapsed);
+            t.Start ();
             while (true)
             {
 #if !NET_4_0
@@ -352,14 +353,6 @@ namespace OpenSim.Framework
 
                     try
                     {
-                        //if ((!result.IsCompleted) &&
-                        //    (!result.AsyncWaitHandle.WaitOne() || !result.IsCompleted))
-                        //{
-                            //m_log.Info("[GUIConsole]: Sleeping 60 secs");
-                            //System.Threading.WaitHandle.WaitAny(wHandles);
-                            //m_log.Info("[GUIConsole]: Yawn");
-                        //}
-                        //else
                         if (action != null && !result.CompletedSynchronously && 
                             result.IsCompleted && !m_calledEndInvoke)
                         {
@@ -391,6 +384,12 @@ namespace OpenSim.Framework
                 action = null;
                 result = null;
             }
+        }
+
+        void t_Elapsed (object sender, System.Timers.ElapsedEventArgs e)
+        {
+            //Tell the GUI that we are still here and it needs to keep checking
+            Console.Write (char.MaxValue);
         }
     }
 }
