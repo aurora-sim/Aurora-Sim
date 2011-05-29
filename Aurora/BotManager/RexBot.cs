@@ -854,20 +854,24 @@ namespace Aurora.BotManager
             //Add all the entities to the map
             foreach (ISceneEntity entity in entities)
             {
-                int entitybaseX = (11 * resolution);
-                int entitybaseY = (11 * resolution);
-                //Find the bottom left corner, and then build outwards from it
-                FindTargets (currentPos, entity.AbsolutePosition - (entity.OOBsize / 2), ref entitybaseX, ref entitybaseY);
-                for (int x = (int)-(0.5 * resolution); x < entity.OOBsize.X * 2 * resolution + ((int)(0.5 * resolution)); x++)
+                if (entity.AbsolutePosition.Z < m_scenePresence.AbsolutePosition.Z + 1 &&
+                    entity.AbsolutePosition.Z > m_scenePresence.AbsolutePosition.Z - 1)
                 {
-                    for (int y = (int)-(0.5 * resolution); y < entity.OOBsize.Y * 2 * resolution + ((int)(0.5 * resolution)); y++)
+                    int entitybaseX = (11 * resolution);
+                    int entitybaseY = (11 * resolution);
+                    //Find the bottom left corner, and then build outwards from it
+                    FindTargets (currentPos, entity.AbsolutePosition - (entity.OOBsize / 2), ref entitybaseX, ref entitybaseY);
+                    for (int x = (int)-(0.5 * resolution); x < entity.OOBsize.X * 2 * resolution + ((int)(0.5 * resolution)); x++)
                     {
-                        if(entitybaseX + x > 0 && entitybaseY + y > 0 &&
-                            entitybaseX + x < (22 * resolution) && entitybaseY + y < (22 * resolution))
-                            if (x < 0 || y < 0 || x > entity.OOBsize.X * resolution || y > entity.OOBsize.Y * resolution)
-                                map[entitybaseX + x, entitybaseY + y] = 3; //Its a side hit, lock it down a bit
-                            else
-                                map[entitybaseX + x, entitybaseY + y] = 5; //Its a hit, lock it down
+                        for (int y = (int)-(0.5 * resolution); y < entity.OOBsize.Y * 2 * resolution + ((int)(0.5 * resolution)); y++)
+                        {
+                            if (entitybaseX + x > 0 && entitybaseY + y > 0 &&
+                                entitybaseX + x < (22 * resolution) && entitybaseY + y < (22 * resolution))
+                                if (x < 0 || y < 0 || x > entity.OOBsize.X * resolution || y > entity.OOBsize.Y * resolution)
+                                    map[entitybaseX + x, entitybaseY + y] = 3; //Its a side hit, lock it down a bit
+                                else
+                                    map[entitybaseX + x, entitybaseY + y] = 5; //Its a hit, lock it down
+                        }
                     }
                 }
             }
