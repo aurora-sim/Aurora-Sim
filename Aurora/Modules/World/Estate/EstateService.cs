@@ -31,6 +31,7 @@ namespace Aurora.Modules
         private string[] BanCriteria = new string[0];
         private bool LoginsDisabled = true;
         private bool StartDisabled = false;
+        private bool ForceLandingPointsOnCrossing = false;
 
         private Dictionary<UUID, int> LastTelehub = new Dictionary<UUID, int>();
 
@@ -311,6 +312,9 @@ namespace Aurora.Modules
                 return false; //NO!
             }
 
+            //If the user wants to force landing points on crossing, we act like they are not crossing, otherwise, check the child property
+            bool isCrossing = ForceLandingPointsOnCrossing ? false : Sp != null && Sp.IsChildAgent;
+
             //Make sure that this user is inside the region as well
             if (Position.X < -2f || Position.Y < -2f || 
                 Position.X > scene.RegionInfo.RegionSizeX+2 || Position.Y > scene.RegionInfo.RegionSizeY+2)
@@ -450,7 +454,7 @@ namespace Aurora.Modules
             EstateSettings ES = scene.RegionInfo.EstateSettings;
 
             //Move them to the nearest landing point
-            if (!ES.AllowDirectTeleport)
+            if (!isCrossing && !ES.AllowDirectTeleport)
             {
                 if (!scene.Permissions.IsGod(userID))
                 {
@@ -475,7 +479,7 @@ namespace Aurora.Modules
                     }
                 }
             }
-            else if (!scene.Permissions.GenericParcelPermission(userID, ILO, (ulong)GroupPowers.None)) //Telehubs override parcels
+            else if (!isCrossing && !scene.Permissions.GenericParcelPermission(userID, ILO, (ulong)GroupPowers.None)) //Telehubs override parcels
             {
                 if (ILO.LandData.LandingType == (int)LandingType.None) //Blocked, force this person off this land
                 {
@@ -847,8 +851,9 @@ namespace Aurora.Modules
             {
                 m_enabled = config.GetBoolean("Enabled", true);
                 m_enabledBlockTeleportSeconds = config.GetBoolean("AllowBlockTeleportsMinTime", true);
-                SecondsBeforeNextTeleport = config.GetFloat("BlockTeleportsTime", 3);
-                StartDisabled = config.GetBoolean("StartDisabled", StartDisabled);
+                SecondsBeforeNextTeleport = config.GetFloat ("BlockTeleportsTime", 3);
+                StartDisabled = config.GetBoolean ("StartDisabled", StartDisabled);
+                ForceLandingPointsOnCrossing = config.GetBoolean ("ForceLandingPointsOnCrossing", ForceLandingPointsOnCrossing);
 
                 string banCriteriaString = config.GetString("BanCriteria", "");
                 if (banCriteriaString != "")
