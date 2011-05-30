@@ -57,7 +57,7 @@ namespace Aurora.BotManager
     {
         #region Declares
 
-        private bool m_allowJump = false;
+        private bool m_allowJump = true;
         private bool m_UseJumpDecisionTree = true;
 
         private static readonly ILog m_log = log4net.LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -853,7 +853,6 @@ namespace Aurora.BotManager
                 //return;
             }
 
-        restart:
             map = new int[22 * resolution, 22 * resolution]; //10 * resolution squares in each direction from our pos
             //We are in the center (11, 11) and our target is somewhere else
             int targetX = 11 * resolution, targetY = 11 * resolution;
