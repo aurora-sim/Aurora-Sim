@@ -849,8 +849,7 @@ namespace Aurora.BotManager
                 m_log.Warn ("Target is out of range");
                 //Try old style then
                 OldFollowing ();
-                //IsFollowing = false;
-                //return;
+                return;
             }
 
             map = new int[22 * resolution, 22 * resolution]; //10 * resolution squares in each direction from our pos
