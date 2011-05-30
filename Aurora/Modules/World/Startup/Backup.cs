@@ -528,28 +528,35 @@ namespace Aurora.Modules
                 ITerrainModule tModule = scene.RequestModuleInterface<ITerrainModule> ();
                 if (tModule != null)
                 {
-                    MemoryStream s = new MemoryStream ();
-                    tModule.SaveToStream (tModule.TerrainMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
-                    writer.WriteFile ("terrain/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
-                    s.Close ();
-                    s = null;
-                    s = new MemoryStream ();
-                    tModule.SaveToStream (tModule.TerrainRevertMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
-                    writer.WriteFile ("revertterrain/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
-                    s.Close ();
-                    s = null;
-                    if (tModule.TerrainWaterMap != null)
+                    try
                     {
-                        s = new MemoryStream ();
-                        tModule.SaveToStream (tModule.TerrainWaterMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
-                        writer.WriteFile ("water/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
+                        MemoryStream s = new MemoryStream ();
+                        tModule.SaveToStream (tModule.TerrainMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
+                        writer.WriteFile ("terrain/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
                         s.Close ();
                         s = null;
                         s = new MemoryStream ();
-                        tModule.SaveToStream (tModule.TerrainWaterRevertMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
-                        writer.WriteFile ("revertwater/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
+                        tModule.SaveToStream (tModule.TerrainRevertMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
+                        writer.WriteFile ("revertterrain/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
                         s.Close ();
                         s = null;
+                        if (tModule.TerrainWaterMap != null)
+                        {
+                            s = new MemoryStream ();
+                            tModule.SaveToStream (tModule.TerrainWaterMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
+                            writer.WriteFile ("water/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
+                            s.Close ();
+                            s = null;
+                            s = new MemoryStream ();
+                            tModule.SaveToStream (tModule.TerrainWaterRevertMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
+                            writer.WriteFile ("revertwater/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
+                            s.Close ();
+                            s = null;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex.ToString ());
                     }
                 }
                 
@@ -565,19 +572,26 @@ namespace Aurora.Modules
                 bool saveAssets = false;
                 if(archiver.AllowPrompting)
                     saveAssets = MainConsole.Instance.CmdPrompt ("Save assets? (Will not be able to load on other grids)", "false").Equals ("true", StringComparison.CurrentCultureIgnoreCase);
-                        
+
                 foreach (ISceneEntity entity in entities)
                 {
-                    if (entity.IsAttachment && !((entity.RootChild.Flags & PrimFlags.Temporary) == PrimFlags.Temporary)
-                         && !((entity.RootChild.Flags & PrimFlags.TemporaryOnRez) == PrimFlags.TemporaryOnRez))
-                        continue;
-                    //Write all entities
-                    byte[] xml = ((ISceneObject)entity).ToBinaryXml2 ();
-                    writer.WriteFile ("entities/" + entity.UUID.ToString (), xml);
-                    xml = null;
-                    //Get all the assets too
-                    if(saveAssets)
-                        assetGatherer.GatherAssetUuids(entity, assets, scene);
+                    try
+                    {
+                        if (entity.IsAttachment && !((entity.RootChild.Flags & PrimFlags.Temporary) == PrimFlags.Temporary)
+                             && !((entity.RootChild.Flags & PrimFlags.TemporaryOnRez) == PrimFlags.TemporaryOnRez))
+                            continue;
+                        //Write all entities
+                        byte[] xml = ((ISceneObject)entity).ToBinaryXml2 ();
+                        writer.WriteFile ("entities/" + entity.UUID.ToString (), xml);
+                        xml = null;
+                        //Get all the assets too
+                        if (saveAssets)
+                            assetGatherer.GatherAssetUuids (entity, assets, scene);
+                    }
+                    catch (Exception ex)
+                    {
+                        m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex.ToString ());
+                    }
                 }
                 entities = null;
 
@@ -585,16 +599,23 @@ namespace Aurora.Modules
                 m_log.Info("[Archive]: Writing assets for entities to archive");
 
                 bool foundAllAssets = true;
-                foreach (UUID assetID in new List<UUID>(assets.Keys))
+                foreach (UUID assetID in new List<UUID> (assets.Keys))
                 {
-                    AssetBase asset = m_scene.AssetService.GetCached(assetID.ToString());
-                    if (asset != null)
-                        WriteAsset(assetID.ToString(), asset, writer); //Write it syncronously since we havn't 
-                    else
+                    try
                     {
-                        foundAllAssets = false; //Not all are cached
-                        m_missingAssets.Add(assetID);
-                        m_scene.AssetService.Get(assetID.ToString(), writer, RetrievedAsset);
+                        AssetBase asset = m_scene.AssetService.GetCached (assetID.ToString ());
+                        if (asset != null)
+                            WriteAsset (assetID.ToString (), asset, writer); //Write it syncronously since we havn't 
+                        else
+                        {
+                            foundAllAssets = false; //Not all are cached
+                            m_missingAssets.Add (assetID);
+                            m_scene.AssetService.Get (assetID.ToString (), writer, RetrievedAsset);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex.ToString ());
                     }
                 }
                 if (foundAllAssets)

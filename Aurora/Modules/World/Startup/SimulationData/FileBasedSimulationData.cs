@@ -198,22 +198,36 @@ namespace Aurora.Modules.FileBasedSimulationData
 
             //Save any script state saves that might be around
             IScriptModule[] engines = m_scene.RequestModuleInterfaces<IScriptModule> ();
-            if (engines != null)
+            try
             {
-                foreach (IScriptModule engine in engines)
+                if (engines != null)
                 {
-                    if (engine != null)
+                    foreach (IScriptModule engine in engines)
                     {
-                        engine.SaveStateSaves ();
+                        if (engine != null)
+                        {
+                            engine.SaveStateSaves ();
+                        }
                     }
                 }
             }
+            catch(Exception ex)
+            {
+                m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex.ToString());
+            }
 
             ISceneEntity[] entities = m_scene.Entities.GetEntities ();
-            foreach (ISceneEntity entity in entities)
+            try
             {
-                if(entity.HasGroupChanged)
-                    entity.HasGroupChanged = false;
+                foreach (ISceneEntity entity in entities)
+                {
+                    if (entity.HasGroupChanged)
+                        entity.HasGroupChanged = false;
+                }
+            }
+            catch(Exception ex)
+            {
+                m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex.ToString());
             }
 
             m_log.Info ("[FileBasedSimulationData]: Saving Backup for region " + m_scene.RegionInfo.RegionName);
