@@ -5017,12 +5017,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             if ((updateFlags & CompressedFlags.HasText) != 0)
             {
-                foreach(char c in part.Text)
-                {
-                    objectData[i] = (byte)c;
-                    i++;
-                }
-                i++;
+                byte[] text = Utils.StringToBytes (part.Text);
+                Buffer.BlockCopy (text, 0, objectData, i, text.Length);
+                i += text.Length;
                 
                 byte[] textcolor = part.GetTextColor().GetBytes(false);
                 Buffer.BlockCopy(textcolor, 0, objectData, i, textcolor.Length);
