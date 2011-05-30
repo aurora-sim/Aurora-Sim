@@ -42,7 +42,7 @@ namespace Aurora.Services.DataService
             }
 
             IGenericData DataConnector = null;
-            if (StorageProvider == "MySQL" || StorageProvider == "OpenSim.Data.MySQL.dll") //Allow for fallback when AuroraData isn't set
+            if (StorageProvider == "MySQL" || StorageProvider == "Aurora.DataManager.MySQL.dll") //Allow for fallback when AuroraData isn't set
             {
                 MySQLDataLoader GenericData = new MySQLDataLoader();
 
@@ -60,7 +60,7 @@ namespace Aurora.Services.DataService
 
                 DataConnector = GenericData;
             }
-            else if (StorageProvider == "SQLite" || StorageProvider == "OpenSim.Data.SQLite.dll") //Allow for fallback when AuroraData isn't set
+            else if (StorageProvider == "SQLite" || StorageProvider == "Aurora.DataManager.SQLite.dll") //Allow for fallback when AuroraData isn't set
             {
                 SQLiteLoader GenericData = new SQLiteLoader();
 
