@@ -649,8 +649,12 @@ namespace OpenSim.Services.LLLoginService
                                 AssetBase asset = m_AssetService.Get(item.Value.ToString());
                                 if (asset == null)
                                 {
-                                    m_log.Warn("Missing avatar appearance asset for user " + account.Name + " for item " + item.Value + ", asset should be " + item.Key + "!");
-                                    messedUp = true;
+                                    InventoryItemBase invItem = m_InventoryService.GetItem (new InventoryItemBase (item.Value));
+                                    if (invItem == null)
+                                    {
+                                        m_log.Warn ("Missing avatar appearance asset for user " + account.Name + " for item " + item.Value + ", asset should be " + item.Key + "!");
+                                        messedUp = true;
+                                    }
                                 }
                             }
                             if (messedUp)
