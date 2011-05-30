@@ -838,6 +838,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (cmdparams.Length < 3)
                     return;
+                UUID avID = UUID.Zero;
                 if (cmdparams[2] == "all")
                 {
                     foreach (IScenePresence presence in agents)
@@ -856,6 +857,29 @@ namespace OpenSim.Region.Framework.Scenes
                         IEntityTransferModule transferModule = presence.Scene.RequestModuleInterface<IEntityTransferModule> ();
                         if(transferModule != null)
                             transferModule.IncomingCloseAgent (presence.Scene, presence.UUID);
+                    }
+                }
+                else if(UUID.TryParse(cmdparams[2], out avID))
+                {
+                    foreach (IScenePresence presence in agents)
+                    {
+                        if (presence.UUID == avID)
+                        {
+                            RegionInfo regionInfo = presence.Scene.RegionInfo;
+
+                            m_log.Info (String.Format ("Kicking user: {0,-16}{1,-37} in region: {2,-16}", presence.Name, presence.UUID, regionInfo.RegionName));
+
+                            // kick client...
+                            if (alert != null)
+                                presence.ControllingClient.Kick (alert);
+                            else
+                                presence.ControllingClient.Kick ("\nThe Aurora manager kicked you out.\n");
+
+                            // ...and close on our side
+                            IEntityTransferModule transferModule = presence.Scene.RequestModuleInterface<IEntityTransferModule> ();
+                            if (transferModule != null)
+                                transferModule.IncomingCloseAgent (presence.Scene, presence.UUID);
+                        }
                     }
                 }
             }

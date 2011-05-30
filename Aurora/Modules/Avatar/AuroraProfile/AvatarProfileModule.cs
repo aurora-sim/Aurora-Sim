@@ -473,7 +473,13 @@ namespace Aurora.Modules
         {
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(target);
             if (UPI == null)
+            {
+                remoteClient.SendAvatarProperties (target, "",
+                                                  Util.ToDateTime (0).ToString ("M/d/yyyy", CultureInfo.InvariantCulture),
+                                                  new Byte[1], "", 0,
+                                                  UUID.Zero, UUID.Zero, "", UUID.Zero);
                 return;
+            }
             UserInfo TargetPI = remoteClient.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(target.ToString());
             bool isFriend = IsFriendOfUser(remoteClient.AgentId, target);
             if (isFriend)

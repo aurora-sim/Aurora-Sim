@@ -686,7 +686,7 @@ namespace Aurora.BotManager
         #region Following declares
 
         public IScenePresence FollowSP = null;
-        public string FollowName = "";
+        public UUID FollowUUID = UUID.Zero;
         private float m_followCloseToPoint = 1.5f;
         private const float FollowTimeBeforeUpdate = 10;
         private float CurrentFollowTimeBeforeUpdate = 0;
@@ -700,9 +700,26 @@ namespace Aurora.BotManager
 
         public void FollowAvatar (string avatarName, float followDistance)
         {
+            m_scenePresence.Scene.TryGetAvatarByName (avatarName, out FollowSP);
+            if (FollowSP == null)
+            {
+                //Try by UUID then
+                try
+                {
+                    m_scenePresence.Scene.TryGetScenePresence (UUID.Parse (avatarName), out FollowSP);
+                }
+                catch
+                {
+                }
+            }
+            if (FollowSP == null)
+            {
+                m_log.Warn ("Could not find avatar");
+                return;
+            }
+            FollowUUID = FollowSP.UUID;
             EventManager.RegisterEventHandler ("Update", FollowingUpdate);
             m_scenePresence.StandUp (); //Can't follow if sitting
-            FollowName = avatarName;
             m_followCloseToPoint = followDistance;
         }
 
@@ -710,7 +727,7 @@ namespace Aurora.BotManager
         {
             EventManager.UnregisterEventHandler ("Update", FollowingUpdate);
             FollowSP = null; //null out everything
-            FollowName = "";
+            FollowUUID = UUID.Zero;
         }
 
         #region Following Update Event
@@ -728,56 +745,31 @@ namespace Aurora.BotManager
 
         private void OldFollowing ()
         {
-            // FOLLOW an avatar - this is looking for an avatar UUID so wont follow a prim here  - yet
-            if (FollowSP == null)
+            Vector3 diffAbsPos = FollowSP.AbsolutePosition - m_scenePresence.AbsolutePosition;
+            if (Math.Abs (diffAbsPos.X) > m_followCloseToPoint || Math.Abs (diffAbsPos.Y) > m_followCloseToPoint)
             {
-                m_scenePresence.Scene.TryGetAvatarByName (FollowName, out FollowSP);
-                if (FollowSP == null)
+                Vector3 targetPos = FollowSP.AbsolutePosition;
+                Vector3 ourPos = m_scenePresence.AbsolutePosition;
+                bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
+                if (!fly && diffAbsPos.Z > 0.25)
                 {
-                    //Try by UUID then
-                    try
+                    if (!m_allowJump)
+                        targetPos.Z = ourPos.Z + 0.15f;
+                    else if (m_UseJumpDecisionTree)
                     {
-                        m_scenePresence.Scene.TryGetScenePresence (UUID.Parse (FollowName), out FollowSP);
-                    }
-                    catch
-                    {
+                        if (!JumpDecisionTree (m_scenePresence.AbsolutePosition, targetPos))
+                            targetPos.Z = ourPos.Z + 0.15f;
                     }
                 }
-            }
-            //If its still null, the person doesn't exist, cancel the follow and return
-            if (FollowSP == null)
-            {
-                FollowName = "";
-                m_log.Warn ("Could not find avatar " + FollowName);
+                m_nodeGraph.Clear ();
+                m_nodeGraph.Add (targetPos, fly ? TravelMode.Fly : TravelMode.Walk);
+                m_scenePresence.SetAlwaysRun = FollowSP.SetAlwaysRun;
             }
             else
             {
-                Vector3 diffAbsPos = FollowSP.AbsolutePosition - m_scenePresence.AbsolutePosition;
-                if (Math.Abs (diffAbsPos.X) > m_followCloseToPoint || Math.Abs (diffAbsPos.Y) > m_followCloseToPoint)
-                {
-                    Vector3 targetPos = FollowSP.AbsolutePosition;
-                    Vector3 ourPos = m_scenePresence.AbsolutePosition;
-                    bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
-                    if (!fly && diffAbsPos.Z > 0.25)
-                    {
-                        if (!m_allowJump)
-                            targetPos.Z = ourPos.Z + 0.15f;
-                        else if (m_UseJumpDecisionTree)
-                        {
-                            if (!JumpDecisionTree (m_scenePresence.AbsolutePosition, targetPos))
-                                targetPos.Z = ourPos.Z + 0.15f;
-                        }
-                    }
-                    m_nodeGraph.Clear ();
-                    m_nodeGraph.Add (targetPos, fly ? TravelMode.Fly : TravelMode.Walk);
-                    m_scenePresence.SetAlwaysRun = FollowSP.SetAlwaysRun;
-                }
-                else
-                {
-                    //Stop the bot then
-                    State = BotState.Idle;
-                    m_nodeGraph.Clear ();
-                }
+                //Stop the bot then
+                State = BotState.Idle;
+                m_nodeGraph.Clear ();
             }
         }
 
@@ -808,28 +800,12 @@ namespace Aurora.BotManager
         private int[,] map;
         private void NewFollowing ()
         {
-            if (FollowSP == null)
-            {
-                m_scenePresence.Scene.TryGetAvatarByName (FollowName, out FollowSP);
-                if (FollowSP == null)
-                {
-                    //Try by UUID then
-                    try
-                    {
-                        m_scenePresence.Scene.TryGetScenePresence (UUID.Parse (FollowName), out FollowSP);
-                    }
-                    catch
-                    {
-                    }
-                }
-            }
+            // FOLLOW an avatar - this is looking for an avatar UUID so wont follow a prim here  - yet
+            //Call this each iteration so that if the av leaves, we don't get stuck following a null person
+            FollowSP = m_scenePresence.Scene.GetScenePresence (FollowUUID);
             //If its still null, the person doesn't exist, cancel the follow and return
             if (FollowSP == null)
-            {
-                FollowName = "";
-                m_log.Warn ("Could not find avatar " + FollowName);
                 return;
-            }
             Vector3 targetPos = FollowSP.AbsolutePosition;
             Vector3 currentPos = m_scenePresence.AbsolutePosition;
             double distance = Util.GetDistanceTo (targetPos, currentPos);
