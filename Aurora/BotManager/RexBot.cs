@@ -37,14 +37,28 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.BotManager
 {
+    public enum BotState
+    {
+        Idle,
+        Walking,
+        Flying,
+        Unknown
+    }
+
+    public enum TravelMode
+    {
+        Walk,
+        Fly,
+        Teleport,
+        None
+    };
+
     public class RexBot : IRexBot, IClientAPI
     {
         #region Declares
 
         private bool m_allowJump = false;
         private bool m_UseJumpDecisionTree = true;
-
-        public enum BotState { Idle, Walking, Flying, Unknown }
 
         private static readonly ILog m_log = log4net.LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Vector3 DEFAULT_START_POSITION = new Vector3(128, 128, 128);
@@ -111,7 +125,7 @@ namespace Aurora.BotManager
         private string m_firstName = "";
         private string m_lastName = "";
 
-        private NavMeshInstance m_navMesh;
+        private NodeGraph m_nodeGraph = new NodeGraph ();
 
         private float m_RexCharacterSpeedMod = 1.0f;
 
@@ -119,11 +133,6 @@ namespace Aurora.BotManager
         {
             get { return m_RexCharacterSpeedMod; }
             set { m_RexCharacterSpeedMod = value; }
-        }
-
-        public NavMeshInstance NavMeshInstance
-        {
-            get { return m_navMesh; }
         }
 
         public Vector3 StartPos
@@ -180,7 +189,6 @@ namespace Aurora.BotManager
 
             m_circuitData = data;
             m_scene = scene;
-            m_navMesh = null;
             
             m_circuitCode = UniqueId;
             m_frames = new System.Timers.Timer(100);
@@ -227,12 +235,10 @@ namespace Aurora.BotManager
 
         #region SetPath
 
-        public void SetPath(NavMesh mesh, int startNode, bool reverse, int timeOut, bool tpToStart)
+        public void SetPath (List<Vector3> Positions, List<TravelMode> modes)
         {
-            m_navMesh = new NavMeshInstance(mesh, startNode, reverse, timeOut);
-
-            if(tpToStart)
-                m_scenePresence.Teleport(m_navMesh.GetNextNode().Position);
+            m_nodeGraph.Clear ();
+            m_nodeGraph.AddRange (Positions, modes);
             GetNextDestination();
         }
 
@@ -478,14 +484,17 @@ namespace Aurora.BotManager
 
         private void GetNextDestination()
         {
-            if (m_navMesh != null)
+            Vector3 pos;
+            TravelMode state;
+            bool teleport;
+            if (m_nodeGraph.GetNextPosition (m_scenePresence.AbsolutePosition, m_closeToPoint, 60, out pos, out state, out teleport))
             {
-                Node node = m_navMesh.GetNextNode();
-
-                if (node.Mode == TravelMode.Fly)
-                    FlyTo(node.Position);
-                else if (node.Mode == TravelMode.Walk)
-                    WalkTo(node.Position);
+                if (state == TravelMode.Fly)
+                    FlyTo (pos);
+                else if (state == TravelMode.Walk)
+                    WalkTo (pos);
+                else if (state == TravelMode.Teleport)
+                    m_scenePresence.Teleport (pos);
             }
         }
 
@@ -634,6 +643,8 @@ namespace Aurora.BotManager
                 IsOnAPath = true;
             }
 
+            m_nodeGraph.Clear ();
+
             lock (WayPoints)
             {
                 foreach (string s in points)
@@ -643,9 +654,9 @@ namespace Aurora.BotManager
                     if (Vector.Length != 3)
                         continue;
 
-                    WayPoints.Add (new Vector3 (float.Parse (Vector[0]),
+                    m_nodeGraph.Add (new Vector3 (float.Parse (Vector[0]),
                         float.Parse (Vector[1]),
-                        float.Parse (Vector[2])));
+                        float.Parse (Vector[2])), ShouldFly ? TravelMode.Fly : TravelMode.Walk);
                 }
             }
         }
@@ -659,31 +670,6 @@ namespace Aurora.BotManager
         /// </summary>
         private object FollowUpdate (string functionName, object param)
         {
-            if (IsOnAPath)
-            {
-                lock (WayPoints)
-                {
-                    if (WayPoints[CurrentWayPoint].ApproxEquals (m_scenePresence.AbsolutePosition, m_closeToPoint)) //Are we about to the new position?
-                    {
-                        //We need to update the waypoint then and send the av to a new location
-                        CurrentWayPoint++;
-                        if (WayPoints.Count >= CurrentWayPoint)
-                        {
-                            //We are at the last point, end the path checking
-                            IsOnAPath = false;
-                            EventManager.UnregisterEventHandler ("Update", FollowUpdate);
-                            return null;
-                        }
-                        NavMesh mesh = new NavMesh ();
-                        //Build the next mesh to tell the bot where to go
-                        mesh.AddEdge (0, 1, ShouldFly ? TravelMode.Fly : TravelMode.Walk);
-                        mesh.AddNode (m_scenePresence.AbsolutePosition); //Give it the current pos so that it will know where to start
-                        mesh.AddEdge (1, 2, ShouldFly ? TravelMode.Fly : TravelMode.Walk);
-                        mesh.AddNode (WayPoints[CurrentWayPoint]); //Give it the new point so that it will head toward it
-                        SetPath (mesh, 0, false, 10000, false); //Set and go
-                    }
-                }
-            }
             return null;
         }
 
@@ -769,15 +755,9 @@ namespace Aurora.BotManager
                     Vector3 diffAbsPos = FollowSP.AbsolutePosition - m_scenePresence.AbsolutePosition;
                     if (Math.Abs (diffAbsPos.X) > m_followCloseToPoint || Math.Abs (diffAbsPos.Y) > m_followCloseToPoint)
                     {
-                        NavMesh mesh = new NavMesh ();
-
                         bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
-                        mesh.AddEdge (0, 1, fly ? TravelMode.Fly : TravelMode.Walk);
-                        mesh.AddNode (m_scenePresence.AbsolutePosition); //Give it the current pos so that it will know where to start
-
-                        mesh.AddEdge (1, 2, fly ? TravelMode.Fly : TravelMode.Walk);
-                        mesh.AddNode (FollowSP.AbsolutePosition); //Give it the new point so that it will head toward it
-                        SetPath (mesh, 0, false, 10000, false); //Set and go
+                        m_nodeGraph.Clear ();
+                        m_nodeGraph.Add (FollowSP.AbsolutePosition, fly ? TravelMode.Fly : TravelMode.Walk);
                         m_scenePresence.SetAlwaysRun = FollowSP.SetAlwaysRun;
                     }
                     else
@@ -948,19 +928,13 @@ namespace Aurora.BotManager
                     }
                     nextPos.Z = targetPos.Z; //Fix the Z coordinate
 
-                    NavMesh mesh = new NavMesh ();
-
                     bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
-                    mesh.AddEdge (0, 1, fly ? TravelMode.Fly : TravelMode.Walk);
-                    mesh.AddNode (targetPos); //Give it the current pos so that it will know where to start
-
-                    mesh.AddEdge (1, 2, fly ? TravelMode.Fly : TravelMode.Walk);
-                    mesh.AddNode (nextPos); //Give it the new point so that it will head toward it
-                    SetPath (mesh, 0, false, 10000, false); //Set and go
+                    m_nodeGraph.Clear ();
+                    m_nodeGraph.Add (nextPos, fly ? TravelMode.Fly : TravelMode.Walk);
 
                     foreach (RexBot bot in ChildFollowers)
                     {
-                        bot.ParentMoved (mesh);
+                        bot.ParentMoved (m_nodeGraph);
                     }
                 }
             }
@@ -972,9 +946,9 @@ namespace Aurora.BotManager
 
         }
 
-        public void ParentMoved (NavMesh mesh)
+        public void ParentMoved (NodeGraph graph)
         {
-            SetPath (mesh, 0, false, 10000, false); //Set and go
+            m_nodeGraph.CopyFrom (graph);
         }
 
         private Vector3 ConvertPathToPos (Vector3 originalPos, List<Vector3> path, ref int i)

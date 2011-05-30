@@ -5,8 +5,6 @@ using OpenMetaverse;
 
 namespace Aurora.BotManager
 {
-    public enum TravelMode { Walk, Fly, None };
-
     public interface IBotManager
     {
         UUID CreateAvatar (string FirstName, string LastName, IScene scene, UUID cloneAppearanceFrom);
@@ -42,7 +40,7 @@ namespace Aurora.BotManager
     /// </summary>
     public interface IRexBot
     {
-        void SetPath (NavMesh mesh, int startNode, bool reverse, int timeOut, bool teleportToStart);
+        void SetPath (List<Vector3> Positions, List<TravelMode> mode);
         void SetMovementSpeedMod (float speed);
         void DisableWalk ();
         void EnableWalk ();

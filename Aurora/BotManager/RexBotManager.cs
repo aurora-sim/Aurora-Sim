@@ -186,21 +186,7 @@ namespace Aurora.BotManager
             //Find the bot
             if (m_bots.TryGetValue(Bot, out bot))
             {
-                NavMesh mesh = new NavMesh();
-                int i = 0;
-                foreach (Vector3 position in Positions)
-                {
-                    //Add the position first
-                    mesh.AddNode(position);
-                    //Add the edge so that we know in which order the positions are and what to do between them
-                    if (i + 1 == Positions.Count)
-                        mesh.AddEdge(i, 0, mode[i]);
-                    else
-                        mesh.AddEdge(i, i + 1, mode[i]);
-                    i++;
-                }
-                //Tell the bot about it
-                bot.SetPath(mesh, 0, false, 100000, true);
+                bot.SetPath (Positions, mode);
             }
         }
 
