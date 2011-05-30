@@ -471,7 +471,9 @@ namespace Aurora.BotManager
         private void frames_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             m_frames.Stop ();
+            m_startTime.Stop ();
             Update();
+            m_startTime.Start ();
             m_frames.Start ();
         }
 
@@ -591,6 +593,7 @@ namespace Aurora.BotManager
             Games.Pathfinding.AStar2DTest.StartPath.Map = map;
             Games.Pathfinding.AStar2DTest.StartPath.xLimit = (int)Math.Sqrt (map.Length);
             Games.Pathfinding.AStar2DTest.StartPath.yLimit = (int)Math.Sqrt (map.Length);
+            //ShowMap ("", null);
             List<string> points = Games.Pathfinding.AStar2DTest.StartPath.Path (startX, startY, finishX, finishY, 0, 0, 0);
 
             List<Vector3> waypoints = new List<Vector3> ();
@@ -788,10 +791,17 @@ namespace Aurora.BotManager
                 string line = "";
                 for (int y = sqrt - 1; y > -1; y--)
                 {
-                    if (map[x, y].ToString ().Length < 2)
-                        line += " " + map[x, y] + ",";
+                    if (x == 11 * resolution && y == 11 * resolution)
+                    {
+                        line += "XX" + ",";
+                    }
                     else
-                        line += map[x, y] + ",";
+                    {
+                        if (map[x, y].ToString ().Length < 2)
+                            line += " " + map[x, y] + ",";
+                        else
+                            line += map[x, y] + ",";
+                    }
                 }
 
                 m_log.Warn (line.Remove (line.Length - 1));
@@ -824,7 +834,7 @@ namespace Aurora.BotManager
             CurrentFollowTimeBeforeUpdate = 0;
 
 
-            resolution = 3;
+            resolution = 2;
             if (distance > 10) //Greater than 10 meters, give up
             {
                 m_log.Warn ("Target is out of range");
@@ -856,10 +866,10 @@ namespace Aurora.BotManager
                         {
                             if (entitybaseX + x > 0 && entitybaseY + y > 0 &&
                                 entitybaseX + x < (22 * resolution) && entitybaseY + y < (22 * resolution))
-                                if (x < 0 || y < 0 || x > entity.OOBsize.X * resolution || y > entity.OOBsize.Y * resolution)
+                                if (x < 0 || y < 0 || x > (entity.OOBsize.X * 2) * resolution || y > (entity.OOBsize.Y * 2) * resolution)
                                     map[entitybaseX + x, entitybaseY + y] = 3; //Its a side hit, lock it down a bit
                                 else
-                                    map[entitybaseX + x, entitybaseY + y] = 5; //Its a hit, lock it down
+                                    map[entitybaseX + x, entitybaseY + y] = -1; //Its a hit, lock it down
                         }
                     }
                 }
@@ -881,6 +891,7 @@ namespace Aurora.BotManager
                 }
             }
 
+            //ShowMap ("", null);
             m_scenePresence.SetAlwaysRun = FollowSP.SetAlwaysRun;
             List<Vector3> path = InnerFindPath (map, (11 * resolution), (11 * resolution), targetX, targetY);
 
@@ -888,7 +899,9 @@ namespace Aurora.BotManager
             Vector3 nextPos = ConvertPathToPos (currentPos, path, ref i);
             Vector3 diffAbsPos = nextPos - targetPos;
             if (nextPos != Vector3.Zero)
-                m_nodeGraph.Clear();
+            {
+                m_nodeGraph.Clear ();
+            }
             else
             {
                 //Try the old way
@@ -911,8 +924,8 @@ namespace Aurora.BotManager
                 nextPos.Z = targetPos.Z; //Fix the Z coordinate
 
                 m_nodeGraph.Add (nextPos, fly ? TravelMode.Fly : TravelMode.Walk);
-                nextPos = ConvertPathToPos (currentPos, path, ref i);
                 i++;
+                nextPos = ConvertPathToPos (currentPos, path, ref i);
             }
             /*
             //startOver:

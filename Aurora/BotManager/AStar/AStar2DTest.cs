@@ -222,6 +222,7 @@ namespace Games.Pathfinding.AStar2DTest
 
         /// <summary>
         /// Gets movement cost from the 2-dimensional map
+        /// -1 blocks off all movement there
         /// </summary>
         /// <param name="x">X-coordinate</param>
         /// <param name="y">Y-coordinate</param>
