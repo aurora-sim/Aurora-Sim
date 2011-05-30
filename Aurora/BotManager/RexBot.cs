@@ -74,7 +74,8 @@ namespace Aurora.BotManager
         /// There are several events added so far,
         /// Update - called every 0.1s, allows for updating of the position of where the avatar is supposed to be goign
         /// Move - called every 10ms, allows for subtle changes and fast callbacks before the avatar moves toward its next location
-        /// ToAvatar - a following event, called when the bot is within range of the avatar (range = m_followCloseToPoint distance)
+        /// ToAvatar - a following event, called when the bot is within range of the avatar (range = m_followCloseToPoint)
+        /// LostAvatar - a following event, called when the bot is out of the maximum range to look for its avatar (range = m_followLoseAvatarDistance)
         /// </summary>
         public AuroraEventManager EventManager = new AuroraEventManager ();
 
@@ -703,8 +704,21 @@ namespace Aurora.BotManager
         public IScenePresence FollowSP = null;
         public UUID FollowUUID = UUID.Zero;
         private float m_followCloseToPoint = 1.5f;
+        private float m_followLoseAvatarDistance = 1000;
         private const float FollowTimeBeforeUpdate = 10;
         private float CurrentFollowTimeBeforeUpdate = 0;
+
+        public float FollowCloseToPoint
+        {
+            get { return m_followCloseToPoint; }
+            set { m_followCloseToPoint = value; }
+        }
+
+        public float FollowLoseAvatarDistance
+        {
+            get { return m_followLoseAvatarDistance; }
+            set { m_followLoseAvatarDistance = value; }
+        }
 
         /// <summary>
         /// So that other bots can follow us
@@ -765,6 +779,11 @@ namespace Aurora.BotManager
             {
                 //Fire our event
                 EventManager.FireGenericEventHandler ("ToAvatar", null);
+            }
+            else if (distance > m_followLoseAvatarDistance)
+            {
+                //Lost the avatar, fire the event
+                EventManager.FireGenericEventHandler ("LostAvatar", null);
             }
             return null;
         }
@@ -849,21 +868,14 @@ namespace Aurora.BotManager
                 return;
             Vector3 targetPos = FollowSP.AbsolutePosition;
             Vector3 currentPos = m_scenePresence.AbsolutePosition;
-            double distance = Util.GetDistanceTo (targetPos, currentPos);
-            if (distance < m_followCloseToPoint)
-            {
-                //Fire our event
-                EventManager.FireGenericEventHandler ("ToAvatar", null);
-                return;
-            }
             CurrentFollowTimeBeforeUpdate++;
             m_closeToPoint = 0.5f;
-            if (CurrentFollowTimeBeforeUpdate <= 2/* || m_nodeGraph.GetNextPosition (m_scenePresence.AbsolutePosition, m_closeToPoint, 100, out pos, out mode, out tp)*/)
+            if (CurrentFollowTimeBeforeUpdate <= 2)
                 return;
             CurrentFollowTimeBeforeUpdate = 0;
 
-
             resolution = 3;
+            double distance = Util.GetDistanceTo (targetPos, currentPos);
             if (distance > 10) //Greater than 10 meters, give up
             {
                 m_log.Warn ("Target is out of range");
