@@ -8161,8 +8161,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (remain < 1)
                         return;
                     LSL_Rotation lr = rules.GetQuaternionItem(idx++);
-                    if (part is SceneObjectPart)
-                        SetRot((part as SceneObjectPart), Rot2Quaternion(lr));
+                    if (part is ISceneChildEntity)
+                        SetRot((part as ISceneChildEntity), Rot2Quaternion(lr));
                 }
 
                 else if (code == (int)ScriptBaseClass.PRIM_POSITION)
@@ -8171,8 +8171,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         return;
 
                     v = rules.GetVector3Item(idx++);
-                    if (part is SceneObjectPart)
-                        SetPos(part as SceneObjectPart, v);
+                    if (part is ISceneChildEntity)
+                        SetPos(part as ISceneChildEntity, v);
                     else if (part is IScenePresence)
                     {
                         (part as IScenePresence).OffsetPosition = new Vector3 ((float)v.x, (float)v.y, (float)v.z);
@@ -8186,8 +8186,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
 
                     v = rules.GetVector3Item(idx++);
-                    if (part is SceneObjectPart)
-                        SetScale(part as SceneObjectPart, v);
+                    if (part is ISceneChildEntity)
+                        SetScale(part as ISceneChildEntity, v);
 
                 }
                 else if (code == (int)ScriptBaseClass.PRIM_ROTATION)
@@ -8200,10 +8200,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     LSL_Rotation q = rules.GetQuaternionItem(idx++);
                     // try to let this work as in SL...
-                    if ((part as SceneObjectPart).ParentID == 0)
+                    if ((part as ISceneChildEntity).ParentID == 0)
                     {
                         // special case: If we are root, rotate complete SOG to new rotation
-                        SetRot(part as SceneObjectPart, Rot2Quaternion(q));
+                        SetRot(part as ISceneChildEntity, Rot2Quaternion(q));
                     }
                     else
                     {
@@ -8214,7 +8214,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             SceneObjectPart rootPart = group.RootPart;
                             if (rootPart != null) // again, better safe than sorry
                             {
-                                SetRot((part as SceneObjectPart), rootPart.RotationOffset * Rot2Quaternion(q));
+                                SetRot((part as ISceneChildEntity), rootPart.RotationOffset * Rot2Quaternion(q));
                             }
                         }
                     }
@@ -8901,17 +8901,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 int remain = rules.Length - idx;
                 Primitive.TextureEntry tex = part.Shape.Textures;
                 int face = 0;
-                if (idx < rules.Length)
-                    face = (int)rules.GetLSLIntegerItem(idx++);
+                //if (idx < rules.Length)
+                //    face = (int)rules.GetLSLIntegerItem(idx++);
 
                 if (code == (int)ScriptBaseClass.PRIM_NAME)
                 {
-                    res.Add(new LSL_Integer(part.Name));
+                    res.Add(new LSL_String(part.Name));
                 }
 
                 if (code == (int)ScriptBaseClass.PRIM_DESC)
                 {
-                    res.Add(new LSL_Integer(part.Description));
+                    res.Add (new LSL_String (part.Description));
                 }
 
                 if (code == (int)ScriptBaseClass.PRIM_MATERIAL)

@@ -37,6 +37,8 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.BotManager
 {
+    #region Enums
+
     public enum BotState
     {
         Idle,
@@ -52,6 +54,8 @@ namespace Aurora.BotManager
         Teleport,
         None
     };
+
+    #endregion
 
     public class RexBot : IRexBot, IClientAPI
     {

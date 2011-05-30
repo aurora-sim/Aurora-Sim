@@ -45,7 +45,8 @@ namespace Aurora.Server
         {
             base.SetUpConsole();
             //Fix the default prompt
-            m_console.DefaultPrompt = "Aurora.Server ";
+            if(m_console != null)
+                m_console.DefaultPrompt = "Aurora.Server ";
         }
 
         /// <summary>
