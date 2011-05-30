@@ -752,26 +752,31 @@ namespace Aurora.BotManager
             }
             else
             {
-                //Only check so many times
-                CurrentFollowTimeBeforeUpdate++;
-                if (CurrentFollowTimeBeforeUpdate == FollowTimeBeforeUpdate)
+                Vector3 diffAbsPos = FollowSP.AbsolutePosition - m_scenePresence.AbsolutePosition;
+                if (Math.Abs (diffAbsPos.X) > m_followCloseToPoint || Math.Abs (diffAbsPos.Y) > m_followCloseToPoint)
                 {
-                    Vector3 diffAbsPos = FollowSP.AbsolutePosition - m_scenePresence.AbsolutePosition;
-                    if (Math.Abs (diffAbsPos.X) > m_followCloseToPoint || Math.Abs (diffAbsPos.Y) > m_followCloseToPoint)
+                    Vector3 targetPos = FollowSP.AbsolutePosition;
+                    Vector3 ourPos = m_scenePresence.AbsolutePosition;
+                    bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
+                    if (!fly && diffAbsPos.Z > 0.25)
                     {
-                        bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
-                        m_nodeGraph.Clear ();
-                        m_nodeGraph.Add (FollowSP.AbsolutePosition, fly ? TravelMode.Fly : TravelMode.Walk);
-                        m_scenePresence.SetAlwaysRun = FollowSP.SetAlwaysRun;
+                        if (!m_allowJump)
+                            targetPos.Z = ourPos.Z + 0.15f;
+                        else if (m_UseJumpDecisionTree)
+                        {
+                            if (!JumpDecisionTree (m_scenePresence.AbsolutePosition, targetPos))
+                                targetPos.Z = ourPos.Z + 0.15f;
+                        }
                     }
-                    else
-                    {
-                        //Stop the bot then
-                        State = BotState.Idle;
-                        m_startTime.Stop ();
-                    }
-                    //Reset the time
-                    CurrentFollowTimeBeforeUpdate = -1;
+                    m_nodeGraph.Clear ();
+                    m_nodeGraph.Add (targetPos, fly ? TravelMode.Fly : TravelMode.Walk);
+                    m_scenePresence.SetAlwaysRun = FollowSP.SetAlwaysRun;
+                }
+                else
+                {
+                    //Stop the bot then
+                    State = BotState.Idle;
+                    m_nodeGraph.Clear ();
                 }
             }
         }
@@ -903,12 +908,18 @@ namespace Aurora.BotManager
             int i = 0;
             Vector3 nextPos = ConvertPathToPos (currentPos, path, ref i);
             Vector3 diffAbsPos = nextPos - targetPos;
-            if(nextPos != Vector3.Zero)
-                m_nodeGraph.Clear ();
+            if (nextPos != Vector3.Zero)
+                m_nodeGraph.Clear();
+            else
+            {
+                //Try the old way
+                OldFollowing ();
+                return;
+            }
             bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
             while (nextPos != Vector3.Zero)
             {
-                if (diffAbsPos.Z < -0.25)
+                if (!fly && diffAbsPos.Z < -0.25)
                 {
                     if (!m_allowJump)
                         targetPos.Z = nextPos.Z + 0.15f;
