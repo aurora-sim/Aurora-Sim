@@ -81,6 +81,7 @@ namespace Aurora.BotManager
                         if ((DateTime.Now - m_lastChangedPosition).Seconds > secondsBeforeForcedTeleport)
                             needsToTeleportToPosition = true;
                     }
+                    return true;
                 }
             }
             return found;

@@ -196,6 +196,7 @@ namespace Aurora.BotManager
             m_frames.Elapsed += (frames_Elapsed);
             m_startTime = new System.Timers.Timer(10);
             m_startTime.Elapsed += (startTime_Elapsed);
+            m_startTime.Start ();
 
             UniqueId++;
         }
@@ -475,7 +476,8 @@ namespace Aurora.BotManager
         private void startTime_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             m_startTime.Stop();
-            GetNextDestination();
+            GetNextDestination ();
+            m_startTime.Start ();
         }
 
         #endregion
@@ -484,6 +486,8 @@ namespace Aurora.BotManager
 
         private void GetNextDestination()
         {
+            if (m_scenePresence == null)
+                return;
             Vector3 pos;
             TravelMode state;
             bool teleport;
@@ -826,12 +830,10 @@ namespace Aurora.BotManager
             double distance = Util.GetDistanceTo (targetPos, currentPos);
             if (distance < m_followCloseToPoint)
             {
-                //Try old style then
-                OldFollowing ();
                 return;
             }
             CurrentFollowTimeBeforeUpdate++;
-            if (CurrentFollowTimeBeforeUpdate != 2)
+            if (CurrentFollowTimeBeforeUpdate <= 2)
                 return;
             CurrentFollowTimeBeforeUpdate = 0;
 
@@ -840,6 +842,8 @@ namespace Aurora.BotManager
             if (distance > 10) //Greater than 10 meters, give up
             {
                 m_log.Warn ("Target is out of range");
+                //Try old style then
+                OldFollowing ();
                 //IsFollowing = false;
                 //return;
             }
@@ -897,6 +901,30 @@ namespace Aurora.BotManager
             List<Vector3> path = InnerFindPath (map, (11 * resolution), (11 * resolution), targetX, targetY);
 
             int i = 0;
+            Vector3 nextPos = ConvertPathToPos (currentPos, path, ref i);
+            Vector3 diffAbsPos = nextPos - targetPos;
+            if(nextPos != Vector3.Zero)
+                m_nodeGraph.Clear ();
+            bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
+            while (nextPos != Vector3.Zero)
+            {
+                if (diffAbsPos.Z < -0.25)
+                {
+                    if (!m_allowJump)
+                        targetPos.Z = nextPos.Z + 0.15f;
+                    else if (m_UseJumpDecisionTree)
+                    {
+                        if (!JumpDecisionTree (m_scenePresence.AbsolutePosition, targetPos))
+                            targetPos.Z = nextPos.Z + 0.15f;
+                    }
+                }
+                nextPos.Z = targetPos.Z; //Fix the Z coordinate
+
+                m_nodeGraph.Add (nextPos, fly ? TravelMode.Fly : TravelMode.Walk);
+                nextPos = ConvertPathToPos (currentPos, path, ref i);
+                i++;
+            }
+            /*
             //startOver:
             Vector3 nextPos = ConvertPathToPos (currentPos, path, ref i);
             if (nextPos == Vector3.Zero)
@@ -909,7 +937,6 @@ namespace Aurora.BotManager
                 resolution--;
                 goto restart;
             }
-            Vector3 diffAbsPos = nextPos - targetPos;
             //if (Math.Abs (diffAbsPos.X) > m_closeToPoint || Math.Abs (diffAbsPos.Y) > m_closeToPoint)
             {
                 //for (i = 0; i < path.Count; i++)
@@ -931,11 +958,6 @@ namespace Aurora.BotManager
                     bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
                     m_nodeGraph.Clear ();
                     m_nodeGraph.Add (nextPos, fly ? TravelMode.Fly : TravelMode.Walk);
-
-                    foreach (RexBot bot in ChildFollowers)
-                    {
-                        bot.ParentMoved (m_nodeGraph);
-                    }
                 }
             }
             //else
@@ -943,7 +965,11 @@ namespace Aurora.BotManager
             //    i++;
             //    goto startOver;
             //}
-
+            */
+            foreach (RexBot bot in ChildFollowers)
+            {
+                bot.ParentMoved (m_nodeGraph);
+            }
         }
 
         public void ParentMoved (NodeGraph graph)
