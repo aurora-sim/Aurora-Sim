@@ -44,14 +44,13 @@ namespace Aurora.BotManager
         private bool m_allowJump = false;
         private bool m_UseJumpDecisionTree = true;
 
-        public enum RexBotState { Idle, Walking, Flying, Unknown }
+        public enum BotState { Idle, Walking, Flying, Unknown }
 
         private static readonly ILog m_log = log4net.LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Vector3 DEFAULT_START_POSITION = new Vector3(128, 128, 128);
 
         private uint m_movementFlag = 0;
         private Quaternion m_bodyDirection = Quaternion.Identity;
-        private short m_frameCount = 0;
 
         private UUID m_myID = UUID.Random();
         private Scene m_scene;
@@ -59,8 +58,8 @@ namespace Aurora.BotManager
         private AgentCircuitData m_circuitData;
         public AuroraEventManager EventManager = new AuroraEventManager ();
 
-        private RexBotState m_currentState = RexBotState.Idle;
-        public RexBotState State
+        private BotState m_currentState = BotState.Idle;
+        public BotState State
         {
             get { return m_currentState; }
             set 
@@ -69,6 +68,7 @@ namespace Aurora.BotManager
                 m_currentState = value;
             }
         }
+
         #region Jump Settings
 
         public bool AllowJump
@@ -97,26 +97,12 @@ namespace Aurora.BotManager
 
         #endregion
 
-        private RexBotState m_previousState = RexBotState.Idle;
+        private BotState m_previousState = BotState.Idle;
         
         private Vector3 m_destination;
 
         private System.Timers.Timer m_frames;
         private System.Timers.Timer m_startTime;
-
-        #region Path declares
-
-        public int cornerStoneX = 128;
-        public int cornerStoneY = 128;
-        int[,] currentMap = new int[5, 5];
-        public bool ShouldFly = false;
-
-        public bool IsOnAPath = false;
-        public List<Vector3> WayPoints = new List<Vector3> ();
-        public int CurrentWayPoint = 0;
-        private float m_closeToPoint = 1;
-
-        #endregion
 
         #region IClientAPI properties
 
@@ -269,7 +255,7 @@ namespace Aurora.BotManager
             if (!Util.IsZeroVector(destination - m_scenePresence.AbsolutePosition))
             {
                 walkTo(destination);
-                State = RexBotState.Walking;
+                State = BotState.Walking;
 
                 m_destination = destination;
             }
@@ -282,7 +268,7 @@ namespace Aurora.BotManager
             {
                 flyTo(destination);
                 m_destination = destination;
-                State = RexBotState.Flying;
+                State = BotState.Flying;
             }
             else
             {
@@ -505,8 +491,71 @@ namespace Aurora.BotManager
 
         #endregion
 
+        #region Update Event
 
-        #region Path Following Code
+        public void Update ()
+        {
+            if (m_scenePresence == null)
+                return;
+            //Tell any interested modules that we are ready to go
+            EventManager.FireGenericEventHandler ("Update", null);
+
+            //Now move the avatar
+            if (State != BotState.Idle)
+            {
+                bool CheckFly = State == BotState.Flying;
+                if (!ShouldFly && CheckFly)
+                    ShouldFly = CheckFly;
+                Vector3 diffPos = m_destination - m_scenePresence.AbsolutePosition;
+                if (Math.Abs (diffPos.X) < m_closeToPoint && Math.Abs (diffPos.Y) < m_closeToPoint &&
+                    (!CheckFly || (ShouldFly && Math.Abs (diffPos.Z) < m_closeToPoint))) //If we are flying, Z checking matters
+                {
+                    State = BotState.Idle;
+                    //Restart the start time
+                    m_startTime.Stop ();
+                    m_startTime.Start ();
+                }
+                else
+                {
+                    //Move to the position!
+                    switch (State)
+                    {
+                        case BotState.Walking:
+                            walkTo (m_destination);
+                            break;
+
+                        case BotState.Flying:
+                            flyTo (m_destination);
+                            break;
+                    }
+                }
+            }
+
+            if (State == BotState.Idle)
+            {
+                //We arn't going anywhere, stop movement
+                OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
+            }
+        }
+
+        #endregion
+
+
+        #region A* Path Following Code
+
+        #region Path declares
+
+        public int cornerStoneX = 128;
+        public int cornerStoneY = 128;
+        int[,] currentMap = new int[5, 5];
+        public bool ShouldFly = false;
+
+        public bool IsOnAPath = false;
+        public List<Vector3> WayPoints = new List<Vector3> ();
+        public int CurrentWayPoint = 0;
+        private float m_closeToPoint = 1;
+
+        #endregion
 
         #region AStarBot memebers
 
@@ -642,56 +691,6 @@ namespace Aurora.BotManager
 
         #endregion
 
-        #region Update Event
-
-        public void Update ()
-        {
-            if (m_scenePresence == null)
-                return;
-            //Tell any interested modules that we are ready to go
-            EventManager.FireGenericEventHandler ("Update", null);
-
-            //Now move the avatar
-            if (State != RexBotState.Idle)
-            {
-                bool CheckFly = State == RexBotState.Flying;
-                if (!ShouldFly && CheckFly)
-                    ShouldFly = CheckFly;
-                Vector3 diffPos = m_destination - m_scenePresence.AbsolutePosition;
-                if (Math.Abs (diffPos.X) < m_closeToPoint && Math.Abs (diffPos.Y) < m_closeToPoint &&
-                    (!CheckFly || (ShouldFly && Math.Abs (diffPos.Z) < m_closeToPoint))) //If we are flying, Z checking matters
-                {
-                    State = RexBotState.Idle;
-                    //Restart the start time
-                    m_startTime.Stop ();
-                    m_startTime.Start ();
-                }
-                else
-                {
-                    //Move to the position!
-                    switch (State)
-                    {
-                        case RexBotState.Walking:
-                            walkTo (m_destination);
-                            break;
-
-                        case RexBotState.Flying:
-                            flyTo (m_destination);
-                            break;
-                    }
-                }
-            }
-
-            if (State == RexBotState.Idle)
-            {
-                //We arn't going anywhere
-                OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
-            }
-            m_frameCount++;
-        }
-
-        #endregion
-
         #region Following Code 
 
         #region Following declares
@@ -784,7 +783,7 @@ namespace Aurora.BotManager
                     else
                     {
                         //Stop the bot then
-                        State = RexBotState.Idle;
+                        State = BotState.Idle;
                         m_startTime.Stop ();
                     }
                     //Reset the time
