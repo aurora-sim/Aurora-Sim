@@ -70,6 +70,12 @@ namespace Aurora.BotManager
         private Scene m_scene;
         private IScenePresence m_scenePresence;
         private AgentCircuitData m_circuitData;
+        /// <summary>
+        /// There are several events added so far,
+        /// Update - called every 0.1s, allows for updating of the position of where the avatar is supposed to be goign
+        /// Move - called every 10ms, allows for subtle changes and fast callbacks before the avatar moves toward its next location
+        /// ToAvatar - a following event, called when the bot is within range of the avatar (range = m_followCloseToPoint distance)
+        /// </summary>
         public AuroraEventManager EventManager = new AuroraEventManager ();
 
         private BotState m_currentState = BotState.Idle;
@@ -492,6 +498,10 @@ namespace Aurora.BotManager
         {
             if (m_scenePresence == null)
                 return;
+
+            //Fire the move event
+            EventManager.FireGenericEventHandler ("Move", null);
+
             Vector3 pos;
             TravelMode state;
             bool teleport;
@@ -724,6 +734,7 @@ namespace Aurora.BotManager
             }
             FollowUUID = FollowSP.UUID;
             EventManager.RegisterEventHandler ("Update", FollowingUpdate);
+            EventManager.RegisterEventHandler ("Move", FollowingMove);
             m_scenePresence.StandUp (); //Can't follow if sitting
             m_followCloseToPoint = followDistance;
         }
@@ -741,6 +752,20 @@ namespace Aurora.BotManager
         {
             //Update, time to check where we should be going
             NewFollowing ();
+            return null;
+        }
+
+        private object FollowingMove (string functionName, object param)
+        {
+            //Check to see whether we are close to our avatar, and fire the event if needed
+            Vector3 targetPos = FollowSP.AbsolutePosition;
+            Vector3 currentPos = m_scenePresence.AbsolutePosition;
+            double distance = Util.GetDistanceTo (targetPos, currentPos);
+            if (distance < m_followCloseToPoint)
+            {
+                //Fire our event
+                EventManager.FireGenericEventHandler ("ToAvatar", null);
+            }
             return null;
         }
 
