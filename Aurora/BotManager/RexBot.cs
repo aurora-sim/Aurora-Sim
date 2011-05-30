@@ -120,6 +120,7 @@ namespace Aurora.BotManager
 
         #region IClientAPI properties
 
+        private UUID m_avatarCreatorID = UUID.Zero;
         private static UInt32 UniqueId = 1;
 
         private string m_firstName = "";
@@ -183,10 +184,11 @@ namespace Aurora.BotManager
         #region Constructor
 
         // creates new bot on the default location
-        public RexBot(Scene scene, AgentCircuitData data)
+        public RexBot(Scene scene, AgentCircuitData data, UUID creatorID)
         {
             RegisterInterfaces();
 
+            m_avatarCreatorID = creatorID;
             m_circuitData = data;
             m_scene = scene;
             
@@ -768,6 +770,7 @@ namespace Aurora.BotManager
             else
             {
                 //Stop the bot then
+                EventManager.FireGenericEventHandler ("ToAvatar", null);
                 State = BotState.Idle;
                 m_nodeGraph.Clear ();
             }
@@ -811,6 +814,8 @@ namespace Aurora.BotManager
             double distance = Util.GetDistanceTo (targetPos, currentPos);
             if (distance < m_followCloseToPoint)
             {
+                //Fire our event
+                EventManager.FireGenericEventHandler ("ToAvatar", null);
                 return;
             }
             CurrentFollowTimeBeforeUpdate++;
@@ -1013,6 +1018,24 @@ namespace Aurora.BotManager
         #endregion
 
         #region Useful IClientAPI members
+
+        public void SendInstantMessage (GridInstantMessage im)
+        {
+            if (im.dialog == (byte)InstantMessageDialog.GodLikeRequestTeleport ||
+                im.dialog == (byte)InstantMessageDialog.RequestTeleport)
+            {
+                if (m_avatarCreatorID == im.fromAgentID || this.Scene.Permissions.IsAdministrator (im.fromAgentID))
+                {
+                    ulong handle = 0;
+                    uint x = 128;
+                    uint y = 128;
+                    uint z = 70;
+
+                    Util.ParseFakeParcelID (im.imSessionID, out handle, out x, out y, out z);
+                    m_scenePresence.Teleport (new Vector3 (x, y, z));
+                }
+            }
+        }
 
         protected virtual void OnBotChatFromViewer (IClientAPI sender, OSChatMessage e)
         {
@@ -1383,7 +1406,6 @@ namespace Aurora.BotManager
 
         #region IClientAPI Members
 
-
         public UUID SessionId
         {
             get;
@@ -1508,11 +1530,6 @@ namespace Aurora.BotManager
         }
 
         public void SendChatMessage (string message, byte type, Vector3 fromPos, string fromName, UUID fromAgentID, byte source, byte audible)
-        {
-            
-        }
-
-        public void SendInstantMessage (GridInstantMessage im)
         {
             
         }

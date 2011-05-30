@@ -113,7 +113,7 @@ namespace Aurora.BotManager
         /// <param name="LastName"></param>
         /// <param name="cloneAppearanceFrom">UUID of the avatar whos appearance will be copied to give this bot an appearance</param>
         /// <returns>ID of the bot</returns>
-        public UUID CreateAvatar(string FirstName, string LastName, IScene s, UUID cloneAppearanceFrom)
+        public UUID CreateAvatar (string FirstName, string LastName, IScene s, UUID cloneAppearanceFrom, UUID creatorID)
         {
             Scene scene = (Scene)s;
             AgentCircuitData m_aCircuitData = new AgentCircuitData ();
@@ -129,7 +129,7 @@ namespace Aurora.BotManager
                 m_aCircuitData.Appearance.Wearables = AvatarWearable.DefaultWearables;
             }
             //Create the new bot data
-            RexBot m_character = new RexBot (scene, m_aCircuitData);
+            RexBot m_character = new RexBot (scene, m_aCircuitData, creatorID);
 
             m_character.FirstName = FirstName;
             m_character.LastName = LastName;

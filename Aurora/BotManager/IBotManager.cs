@@ -7,7 +7,7 @@ namespace Aurora.BotManager
 {
     public interface IBotManager
     {
-        UUID CreateAvatar (string FirstName, string LastName, IScene scene, UUID cloneAppearanceFrom);
+        UUID CreateAvatar (string FirstName, string LastName, IScene scene, UUID cloneAppearanceFrom, UUID creatorID);
         void SetBotMap(UUID Bot, List<Vector3> Positions, List<TravelMode> mode);
         void SetMovementSpeedMod(UUID Bot, float modifier);
         void RemoveAvatar (UUID Bot, IScene iScene);

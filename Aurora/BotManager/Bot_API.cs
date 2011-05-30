@@ -145,7 +145,7 @@ namespace Aurora.BotManager
             ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botCreateBot", m_host, "bot");
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
             if (manager != null)
-                return manager.CreateAvatar(FirstName, LastName, m_host.ParentEntity.Scene, UUID.Parse(appearanceToClone)).ToString();
+                return manager.CreateAvatar(FirstName, LastName, m_host.ParentEntity.Scene, UUID.Parse(appearanceToClone), m_host.OwnerID).ToString();
             return "";
         }
 
