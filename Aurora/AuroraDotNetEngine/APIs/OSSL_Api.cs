@@ -2113,27 +2113,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public void osKickAvatar(LSL_String FirstName, LSL_String SurName, LSL_String alert)
+        public void osKickAvatar (LSL_String FirstName, LSL_String SurName, LSL_String alert)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Severe, "osKickAvatar", m_host, "OSSL");
-            if (World.Permissions.CanRunConsoleCommand(m_host.OwnerID))
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Severe, "osKickAvatar", m_host, "OSSL");
+            World.ForEachScenePresence (delegate (IScenePresence sp)
             {
-                World.ForEachScenePresence(delegate(IScenePresence sp)
+                if (!sp.IsChildAgent &&
+                    sp.Firstname == FirstName &&
+                    sp.Lastname == SurName)
                 {
-                    if (!sp.IsChildAgent &&
-                        sp.Firstname == FirstName &&
-                        sp.Lastname == SurName)
-                    {
-                        // kick client...
-                        sp.ControllingClient.Kick(alert);
+                    // kick client...
+                    sp.ControllingClient.Kick (alert);
 
-                        // ...and close on our side
-                        IEntityTransferModule transferModule = sp.Scene.RequestModuleInterface<IEntityTransferModule> ();
-                        if (transferModule != null)
-                            transferModule.IncomingCloseAgent (sp.Scene, sp.UUID);
-                    }
-                });
-            }
+                    // ...and close on our side
+                    IEntityTransferModule transferModule = sp.Scene.RequestModuleInterface<IEntityTransferModule> ();
+                    if (transferModule != null)
+                        transferModule.IncomingCloseAgent (sp.Scene, sp.UUID);
+                }
+            });
         }
         
         public LSL_List osGetPrimitiveParams(LSL_Key prim, LSL_List rules)
