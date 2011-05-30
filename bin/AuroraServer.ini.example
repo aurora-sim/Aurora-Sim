@@ -3,6 +3,20 @@
     ;; 127.0.0.1 should be your IP address or DNS
     HostName = http://127.0.0.1
 
+[Console]
+    ;; Setting for which console log will be used
+    ;; Values are:
+    ;; LocalConsole = Color console that is enabled by default
+    ;; RemoteConsole = Remote access enabled console
+    ;; CommandConsole = Default black and white console
+    ;; GUIConsole = Special interface to allow i/o redirection to work for GUI applications.
+    Console = LocalConsole
+
+    ;; These are the settings for the remote console, unneeded if not using the remote console
+    ;RemoteConsoleUser =
+    ;RemoteConsolePass =
+    ;remote_console_port = 0
+
 [LibraryService]
     ;;  Set this if you want to change the name of the Aurora Library
     LibraryName = Aurora Library
