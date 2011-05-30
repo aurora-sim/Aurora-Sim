@@ -479,7 +479,7 @@ namespace Aurora.BotManager
 
         private void startTime_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            m_startTime.Stop();
+            m_startTime.Stop ();
             GetNextDestination ();
             m_startTime.Start ();
         }
@@ -811,6 +811,9 @@ namespace Aurora.BotManager
 
         private int resolution = 10;
         private int[,] map;
+        private int failedToMove = 0;
+        private int sincefailedToMove = 0;
+        private Vector3 m_lastPos = Vector3.Zero;
         private void NewFollowing ()
         {
             // FOLLOW an avatar - this is looking for an avatar UUID so wont follow a prim here  - yet
@@ -829,12 +832,13 @@ namespace Aurora.BotManager
                 return;
             }
             CurrentFollowTimeBeforeUpdate++;
-            if (CurrentFollowTimeBeforeUpdate <= 2)
+            m_closeToPoint = 0.5f;
+            if (CurrentFollowTimeBeforeUpdate <= 2/* || m_nodeGraph.GetNextPosition (m_scenePresence.AbsolutePosition, m_closeToPoint, 100, out pos, out mode, out tp)*/)
                 return;
             CurrentFollowTimeBeforeUpdate = 0;
 
 
-            resolution = 2;
+            resolution = 3;
             if (distance > 10) //Greater than 10 meters, give up
             {
                 m_log.Warn ("Target is out of range");
@@ -853,11 +857,14 @@ namespace Aurora.BotManager
             //Add all the entities to the map
             foreach (ISceneEntity entity in entities)
             {
-                if (entity.AbsolutePosition.Z < m_scenePresence.AbsolutePosition.Z + 1 &&
-                    entity.AbsolutePosition.Z > m_scenePresence.AbsolutePosition.Z - 1)
+                if (entity.AbsolutePosition.Z < m_scenePresence.AbsolutePosition.Z + m_scenePresence.PhysicsActor.Size.Z /2 &&
+                    entity.AbsolutePosition.Z > m_scenePresence.AbsolutePosition.Z - m_scenePresence.PhysicsActor.Size.Z / 2)
                 {
                     int entitybaseX = (11 * resolution);
                     int entitybaseY = (11 * resolution);
+                    if (entity.OOBsize.X > 5)
+                    {
+                    }
                     //Find the bottom left corner, and then build outwards from it
                     FindTargets (currentPos, entity.AbsolutePosition - (entity.OOBsize / 2), ref entitybaseX, ref entitybaseY);
                     for (int x = (int)-(0.5 * resolution); x < entity.OOBsize.X * 2 * resolution + ((int)(0.5 * resolution)); x++)
@@ -896,7 +903,7 @@ namespace Aurora.BotManager
             List<Vector3> path = InnerFindPath (map, (11 * resolution), (11 * resolution), targetX, targetY);
 
             int i = 0;
-            Vector3 nextPos = ConvertPathToPos (currentPos, path, ref i);
+            Vector3 nextPos = ConvertPathToPos (entities, currentPos, path, ref i);
             Vector3 diffAbsPos = nextPos - targetPos;
             if (nextPos != Vector3.Zero)
             {
@@ -925,50 +932,9 @@ namespace Aurora.BotManager
 
                 m_nodeGraph.Add (nextPos, fly ? TravelMode.Fly : TravelMode.Walk);
                 i++;
-                nextPos = ConvertPathToPos (currentPos, path, ref i);
+                nextPos = ConvertPathToPos (entities, currentPos, path, ref i);
             }
-            /*
-            //startOver:
-            Vector3 nextPos = ConvertPathToPos (currentPos, path, ref i);
-            if (nextPos == Vector3.Zero)
-            {
-                if (resolution < 2)
-                {
-                    ShowMap ("", null);
-                    return;
-                }
-                resolution--;
-                goto restart;
-            }
-            //if (Math.Abs (diffAbsPos.X) > m_closeToPoint || Math.Abs (diffAbsPos.Y) > m_closeToPoint)
-            {
-                //for (i = 0; i < path.Count; i++)
-                {
-                    //nextPos = currentPos -= new Vector3 ((11 * resolution) - path[i].X, (11 * resolution) - path[i].Y, 0);
-                    //Check to see whether the avatar will jump, and if so, deal with the settings we have for jumping
-                    if (diffAbsPos.Z < -0.25)
-                    {
-                        if (!m_allowJump)
-                            targetPos.Z = nextPos.Z + 0.15f;
-                        else if (m_UseJumpDecisionTree)
-                        {
-                            if (!JumpDecisionTree (m_scenePresence.AbsolutePosition, targetPos))
-                                targetPos.Z = nextPos.Z + 0.15f;
-                        }
-                    }
-                    nextPos.Z = targetPos.Z; //Fix the Z coordinate
-
-                    bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
-                    m_nodeGraph.Clear ();
-                    m_nodeGraph.Add (nextPos, fly ? TravelMode.Fly : TravelMode.Walk);
-                }
-            }
-            //else
-            //{
-            //    i++;
-            //    goto startOver;
-            //}
-            */
+            
             foreach (RexBot bot in ChildFollowers)
             {
                 bot.ParentMoved (m_nodeGraph);
@@ -980,7 +946,7 @@ namespace Aurora.BotManager
             m_nodeGraph.CopyFrom (graph);
         }
 
-        private Vector3 ConvertPathToPos (Vector3 originalPos, List<Vector3> path, ref int i)
+        private Vector3 ConvertPathToPos (ISceneEntity[] entites, Vector3 originalPos, List<Vector3> path, ref int i)
         {
         start:
             if (i == path.Count)
@@ -990,7 +956,106 @@ namespace Aurora.BotManager
                 i++;
                 goto start;
             }
-            return originalPos -= new Vector3 (((11 * resolution) - path[i].X) / resolution, ((11 * resolution) - path[i].Y) / resolution, 0);
+            Vector3 pos = path[i];
+            Vector3 newPos = originalPos - new Vector3 (((11 * resolution) - pos.X) / resolution, ((11 * resolution) - pos.Y) / resolution, 0);
+
+            if (i < 2)
+            {
+                if (m_lastPos.ApproxEquals (newPos, 1))
+                    failedToMove++;
+                else if (failedToMove < 2)
+                {
+                    m_lastPos = newPos;
+                    failedToMove = 0;
+                }
+                else
+                {
+                    if (sincefailedToMove == 5)
+                    {
+                        sincefailedToMove = 0;
+                        failedToMove = 1;
+                    }
+                    else if (!m_lastPos.ApproxEquals (newPos, 2))
+                        sincefailedToMove++;
+                }
+            }
+            if (failedToMove > 1)
+                CleanUpPos (entites, ref newPos);
+            return newPos;
+        }
+
+        private void CleanUpPos (ISceneEntity[] entites, ref Vector3 pos)
+        {
+            List<ISceneChildEntity> childEntities = llCastRay (m_scenePresence.AbsolutePosition, pos);
+            int restartNum = 0;
+        restart:
+            bool needsRestart = false;
+        foreach (ISceneChildEntity entity in childEntities)
+        {
+            if (entity.AbsolutePosition.Z < m_scenePresence.AbsolutePosition.Z + 2 &&
+                entity.AbsolutePosition.Z > m_scenePresence.AbsolutePosition.Z - 2 &&
+                entity.Scale.Z > m_scenePresence.PhysicsActor.Size.Z)
+            {
+                //If this position is inside an entity + its size + avatar size, move it out!
+                float sizeXPlus = (entity.AbsolutePosition.X + (entity.Scale.X / 2) + (m_scenePresence.PhysicsActor.Size.X / 2));
+                float sizeXNeg = (entity.AbsolutePosition.X - (entity.Scale.X / 2) - (m_scenePresence.PhysicsActor.Size.X / 2));
+                float sizeYPlus = (entity.AbsolutePosition.Y + (entity.Scale.Y / 2) + (m_scenePresence.PhysicsActor.Size.Y / 2));
+                float sizeYNeg = (entity.AbsolutePosition.Y - (entity.Scale.Y / 2) - (m_scenePresence.PhysicsActor.Size.Y / 2));
+
+                if (pos.X < sizeXPlus && pos.X > sizeXNeg)
+                {
+                    if (pos.X < entity.AbsolutePosition.X)
+                        pos.X = sizeXNeg - (m_scenePresence.PhysicsActor.Size.X / 2);
+                    else
+                        pos.X = sizeXPlus + (m_scenePresence.PhysicsActor.Size.X / 2);
+                    needsRestart = true;
+                }
+                if (pos.Y < sizeYPlus && pos.Y > sizeYNeg)
+                {
+                    if (pos.Y < entity.AbsolutePosition.Y)
+                        pos.Y = sizeYNeg - (m_scenePresence.PhysicsActor.Size.Y / 2);
+                    else
+                        pos.Y = sizeYPlus + (m_scenePresence.PhysicsActor.Size.Y / 2);
+                    needsRestart = true;
+                }
+            }
+        }
+            /*foreach (ISceneEntity entity in entites)
+            {
+                if (entity.AbsolutePosition.Z < m_scenePresence.AbsolutePosition.Z + 1 &&
+                    entity.AbsolutePosition.Z > m_scenePresence.AbsolutePosition.Z - 1 &&
+                    entity.OOBsize.Z * 2 > m_scenePresence.PhysicsActor.Size.Z)
+                {
+                    //If this position is inside an entity + its size + avatar size, move it out!
+                    float sizeXPlus = (entity.AbsolutePosition.X + entity.OOBsize.X + (m_scenePresence.PhysicsActor.Size.X / 2));
+                    float sizeXNeg = (entity.AbsolutePosition.X - entity.OOBsize.X - (m_scenePresence.PhysicsActor.Size.X / 2));
+                    float sizeYPlus = (entity.AbsolutePosition.Y + entity.OOBsize.Y + (m_scenePresence.PhysicsActor.Size.Y / 2));
+                    float sizeYNeg = (entity.AbsolutePosition.Y - entity.OOBsize.Y - (m_scenePresence.PhysicsActor.Size.Y / 2));
+
+                    if (pos.X < sizeXPlus && pos.X > sizeXNeg)
+                    {
+                        if (pos.X < entity.AbsolutePosition.X)
+                            pos.X = sizeXNeg - (m_scenePresence.PhysicsActor.Size.X / 2);
+                        else
+                            pos.X = sizeXPlus + (m_scenePresence.PhysicsActor.Size.X / 2);
+                        needsRestart = true;
+                    }
+                    if (pos.Y < sizeYPlus && pos.Y > sizeYNeg)
+                    {
+                        if (pos.Y < entity.AbsolutePosition.Y)
+                            pos.Y = sizeYNeg - (m_scenePresence.PhysicsActor.Size.Y / 2);
+                        else
+                            pos.Y = sizeYPlus + (m_scenePresence.PhysicsActor.Size.Y / 2);
+                        needsRestart = true;
+                    }
+                }
+            }*/
+            //If we changed something, we need to recheck the pos...
+            if (needsRestart && restartNum < 3)
+            {
+                restartNum++;
+                goto restart;
+            }
         }
 
         private void FindTargets (Vector3 currentPos, Vector3 targetPos, ref int targetX, ref int targetY)
