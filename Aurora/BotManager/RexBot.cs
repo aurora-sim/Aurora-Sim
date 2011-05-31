@@ -845,7 +845,7 @@ namespace Aurora.BotManager
                 bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
                 if (!fly && (diffAbsPos.Z > 0.25 || jumpTry > 5))
                 {
-                    if (jumpTry > 5 || diffAbsPos.Z < -3)
+                    if (jumpTry > 5 || diffAbsPos.Z > 3)
                     {
                         if (jumpTry <= 5)
                             jumpTry = 6;
@@ -866,14 +866,28 @@ namespace Aurora.BotManager
                                 targetPos.Z = ourPos.Z + 0.15f;
                             }
                             else
+                            {
+                                if (jumpTry < 0)
+                                    jumpTry = 0;
                                 jumpTry++;
+                            }
                         }
                         else
                             jumpTry--;
                     }
                 }
                 else if (!fly)
+                {
+                    if (diffAbsPos.Z < -3)
+                    {
+                        //We should fly down to the avatar, rather than fall
+                        //We also know that because this is the old, we have no entities in our way
+                        //(unless this is > 10m, but that case is messed up anyway, needs dealt with later)
+                        //so we can assume that it is safe to fly
+                        fly = true;
+                    }
                     jumpTry--;
+                }
                 m_nodeGraph.Clear ();
                 m_nodeGraph.Add (targetPos, fly ? TravelMode.Fly : TravelMode.Walk);
                 m_scenePresence.SetAlwaysRun = FollowSP.SetAlwaysRun;
@@ -1077,14 +1091,25 @@ namespace Aurora.BotManager
                                     targetPos.Z = nextPos.Z + 0.15f;
                                 }
                                 else
+                                {
+                                    if (jumpTry < 0)
+                                        jumpTry = 0;
                                     jumpTry++;
+                                }
                             }
                             else
                                 jumpTry--;
                         }
                     }
                     else if (!fly)
+                    {
+                        if (diffAbsPos.Z > 3)
+                        {
+                            //We should fly down to the avatar, rather than fall
+                            fly = true;
+                        }
                         jumpTry--;
+                    }
                     nextPos.Z = targetPos.Z; //Fix the Z coordinate
 
                     m_nodeGraph.Add (nextPos, fly ? TravelMode.Fly : TravelMode.Walk);
