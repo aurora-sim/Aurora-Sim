@@ -228,7 +228,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (Script != null)
             {
                 // Stop long command on script
-                m_ScriptEngine.RemoveScript(Part.UUID, ItemID);
+                m_ScriptEngine.RemoveScriptFromPlugins(Part.UUID, ItemID);
 
                 //Release the script and destroy it
                 ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as MarshalByRefObject);
@@ -330,7 +330,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             RemoveTouchEvents = true;
 
             //Unset the events that may still be firing after the change.
-            m_ScriptEngine.RemoveScript(Part.UUID, ItemID);
+            m_ScriptEngine.RemoveScriptFromPlugins (Part.UUID, ItemID);
 
             //Fire state_entry
             m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew(this,false); // accept new events

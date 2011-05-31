@@ -1056,7 +1056,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         }
                     }
                     OSDMap Plugins = GetSerializationData(SD.ItemID, SD.Part.UUID);
-                    RemoveScript(SD.Part.UUID, SD.ItemID);
+                    RemoveScriptFromPlugins(SD.Part.UUID, SD.ItemID);
 
                     MaintenanceThread.SetEventSchSetIgnoreNew(SD, true);
 
@@ -1256,7 +1256,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         /// <param name="localID"></param>
         /// <param name="itemID"></param>
-        public void RemoveScript(UUID primID, UUID itemID)
+        public void RemoveScriptFromPlugins(UUID primID, UUID itemID)
         {
             foreach (IScriptPlugin plugin in ScriptPlugins)
             {

@@ -451,8 +451,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             
             lock (ScriptEvents)
             {
-                if (ScriptEventCount > 100)
-                    return;
                 ScriptEvents.Enqueue (QIS);
                 ScriptEventCount++;
 #if Debug
@@ -557,6 +555,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     timeToSleep = (int)(NextSleepersTest - DateTime.Now).TotalMilliseconds;
                 if (timeToSleep < 5)
                     timeToSleep = 5;
+                if (timeToSleep > 100)
+                    timeToSleep = 100;
 
                 if (SleepingScriptEventCount == 0 && ScriptEventCount == 0)
                 {
@@ -580,11 +580,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         timeToSleep += 5;
                 }
                 else
-                    numberOfEmptyWork = 0;
+                    numberOfEmptyWork /= 2; //Cut it down, but don't zero it out, as this may just be one event
 #if Debug
                 m_log.Warn (timeToSleep);
 #endif
+                Interlocked.Increment (ref scriptThreadpool.nSleepingthreads);
                 Thread.Sleep (timeToSleep);
+                Interlocked.Decrement (ref scriptThreadpool.nSleepingthreads);
             }
         }
 
