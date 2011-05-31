@@ -835,10 +835,11 @@ namespace Aurora.BotManager
 
         #region Old Following code
 
-        private void OldFollowing ()
+        private void OldFollowing (List<ISceneChildEntity> raycastEntities)
         {
+            double distance = Util.GetDistanceTo (FollowSP.AbsolutePosition, m_scenePresence.AbsolutePosition);
             Vector3 diffAbsPos = FollowSP.AbsolutePosition - m_scenePresence.AbsolutePosition;
-            if (Math.Abs (diffAbsPos.X) > m_followCloseToPoint || Math.Abs (diffAbsPos.Y) > m_followCloseToPoint)
+            if (distance > m_followCloseToPoint || raycastEntities.Count > 0)
             {
                 Vector3 targetPos = FollowSP.AbsolutePosition;
                 Vector3 ourPos = m_scenePresence.AbsolutePosition;
@@ -890,7 +891,6 @@ namespace Aurora.BotManager
                 }
                 m_nodeGraph.Clear ();
                 m_nodeGraph.Add (targetPos, fly ? TravelMode.Fly : TravelMode.Walk);
-                m_scenePresence.SetAlwaysRun = FollowSP.SetAlwaysRun;
             }
             else
             {
@@ -960,7 +960,7 @@ namespace Aurora.BotManager
             {
                 m_log.Warn ("Target is out of range");
                 //Try old style then
-                OldFollowing ();
+                OldFollowing (raycastEntities);
                 foreach (Bot bot in ChildFollowers)
                 {
                     bot.ParentMoved (m_nodeGraph);
@@ -986,7 +986,7 @@ namespace Aurora.BotManager
             if (raycastEntities.Count == 0)
             {
                 //Nothing between us and the target, go for it!
-                OldFollowing ();
+                OldFollowing (raycastEntities);
                 foreach (Bot bot in ChildFollowers)
                 {
                     bot.ParentMoved (m_nodeGraph);
@@ -1062,7 +1062,7 @@ namespace Aurora.BotManager
                 else
                 {
                     //Try the old way
-                    OldFollowing ();
+                    OldFollowing (raycastEntities);
                     return;
                 }
                 bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
