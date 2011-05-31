@@ -208,8 +208,7 @@ namespace Aurora.BotManager
             m_frames.Elapsed += (frames_Elapsed);
             m_startTime = new System.Timers.Timer(10);
             m_startTime.Elapsed += (startTime_Elapsed);
-            m_scene.EventManager.OnSignificantClientMovement += EventManager_OnSignificantClientMovement;
-
+            
             UniqueId++;
         }
 
@@ -752,6 +751,7 @@ namespace Aurora.BotManager
                 m_log.Warn ("Could not find avatar");
                 return;
             }
+            FollowSP.PhysicsActor.OnRequestTerseUpdate += EventManager_OnClientMovement;
             FollowUUID = FollowSP.UUID;
             EventManager.RegisterEventHandler ("Update", FollowingUpdate);
             EventManager.RegisterEventHandler ("Move", FollowingMove);
@@ -792,8 +792,12 @@ namespace Aurora.BotManager
             if (distance < closeToPoint)
             {
                 //Fire our event once
-                if(!m_toAvatar) //Changed
+                if (!m_toAvatar) //Changed
+                {
                     EventManager.FireGenericEventHandler ("ToAvatar", null);
+                    //Fix the animation
+                    m_scenePresence.Animator.UpdateMovementAnimations ();
+                }
                 m_toAvatar = true;
                 bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
                 if (fly)
@@ -809,8 +813,12 @@ namespace Aurora.BotManager
             else if (distance > m_followLoseAvatarDistance)
             {
                 //Lost the avatar, fire the event
-                if(!m_lostAvatar)
+                if (!m_lostAvatar)
+                {
                     EventManager.FireGenericEventHandler ("LostAvatar", null);
+                    //We stopped, fix the animation
+                    m_scenePresence.Animator.UpdateMovementAnimations ();
+                }
                 m_lostAvatar = true;
                 m_paused = true;
             }
@@ -868,11 +876,10 @@ namespace Aurora.BotManager
                     //Nothing between us and the target, go for it!
                     DirectFollowing (raycastEntities);
                 else
-                    if (!BestFitPathFollowing (raycastEntities))//If this doesn't work, try significant positions
+                    //if (!BestFitPathFollowing (raycastEntities))//If this doesn't work, try significant positions
                         SignificantPositionFollowing (raycastEntities);
             }
-            //Clear out any insignificant positions that may be in the queue
-            ClearOutInSignificantPositions ();
+            ClearOutInSignificantPositions (false);
             //Tell any child followers about us
             foreach (Bot bot in ChildFollowers)
                 bot.ParentMoved (m_nodeGraph);
@@ -1155,7 +1162,10 @@ namespace Aurora.BotManager
                 }
             }
             if (failedToMove > 1)
-                CleanUpPos (raycastEntities, entites, ref newPos);
+            {
+                return Vector3.Zero;
+                //CleanUpPos (raycastEntities, entites, ref newPos);
+            }
             return newPos;
         }
 
@@ -1220,39 +1230,59 @@ namespace Aurora.BotManager
         private List<Vector3> m_significantAvatarPositions = new List<Vector3> ();
         private int currentPos = 0;
         private int lastChangedCurrentPos = 0;
-        private int highestCurrentPos = 0;
+        private int currentRemoveMultiplier = 0;
+        private int highestCurrentPos2 = 0;
+        private int lastCorrectCurrentPos = 0;
 
-        void EventManager_OnSignificantClientMovement (IClientAPI remote_client)
+        void EventManager_OnClientMovement ()
         {
             if (FollowSP != null)
-            {
-                if (FollowSP.UUID == remote_client.AgentId)
-                    m_significantAvatarPositions.Add(FollowSP.AbsolutePosition);
-            }
+                m_significantAvatarPositions.Add(FollowSP.AbsolutePosition);
         }
 
-        private void ClearOutInSignificantPositions ()
+        private void ClearOutInSignificantPositions (bool checkPositions)
         {
             int clearPos = 0;
             bool changed = false;
             for (int i = currentPos; i < m_significantAvatarPositions.Count; i++)
             {
-                if (m_scenePresence.AbsolutePosition.ApproxEquals (m_significantAvatarPositions[i], m_StopFollowDistance / 4))
+                if (m_scenePresence.AbsolutePosition.ApproxEquals (m_significantAvatarPositions[i], 0.5f))
                 {
-                    if (i > highestCurrentPos)
+                    if (highestCurrentPos2 < i)
                     {
                         changed = true;
-                        highestCurrentPos = i;
+                        highestCurrentPos2 = i;
                     }
                     currentPos = i;
                 }
             }
-            if (changed)
-                lastChangedCurrentPos = 0;
-            else
-                lastChangedCurrentPos++;
-            if (lastChangedCurrentPos > 10)
-                currentPos--;
+            if (checkPositions)
+            {
+                if (changed)
+                {
+                    currentPos++;
+                    lastCorrectCurrentPos = currentPos;
+                    lastChangedCurrentPos = 0;
+                }
+                else
+                    lastChangedCurrentPos++;
+                if (lastChangedCurrentPos > 10)
+                {
+                    lastChangedCurrentPos = 1;
+                    if (currentPos != 0)
+                        currentPos++;//Go on to the next one... hopefully we can get there?
+                    if (currentPos == m_significantAvatarPositions.Count)
+                    {
+                        currentRemoveMultiplier++;
+                        //Go back a few to try to figure out where we were
+                        currentPos = lastCorrectCurrentPos - (15 * currentRemoveMultiplier);
+                    }
+                    if (currentPos < 0)
+                        currentPos = 0;
+                }
+                else if (lastChangedCurrentPos < 1)
+                    currentRemoveMultiplier = 0;
+            }
             //Remove all insignificant
             for (int i = 0; i < clearPos; i++)
             {
@@ -1263,15 +1293,58 @@ namespace Aurora.BotManager
         private void SignificantPositionFollowing (List<ISceneChildEntity> raycastEntities)
         {
             //Do this first
-            ClearOutInSignificantPositions ();
+            ClearOutInSignificantPositions (true);
 
             bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
-            if (m_significantAvatarPositions.Count > 0)
+            if (m_significantAvatarPositions.Count > 0 && currentPos+1 < m_significantAvatarPositions.Count)
             {
-                m_nodeGraph.Add (m_significantAvatarPositions[currentPos], fly ? TravelMode.Fly : TravelMode.Walk);
-            }
-            else
-            {
+                m_nodeGraph.Clear ();
+
+                Vector3 targetPos = m_significantAvatarPositions[currentPos+1];
+                Vector3 diffAbsPos = targetPos - m_scenePresence.AbsolutePosition;
+                if (!fly && (diffAbsPos.Z < -0.25 || jumpTry > 5))
+                {
+                    if (jumpTry > 5 || diffAbsPos.Z < -3)
+                    {
+                        if (jumpTry <= 5)
+                            jumpTry = 6;
+                        fly = true;
+                    }
+                    else
+                    {
+                        if (!m_allowJump)
+                        {
+                            jumpTry--;
+                            targetPos.Z = m_scenePresence.AbsolutePosition.Z + 0.15f;
+                        }
+                        else if (m_UseJumpDecisionTree)
+                        {
+                            if (!JumpDecisionTree (m_scenePresence.AbsolutePosition, targetPos))
+                            {
+                                jumpTry--;
+                                targetPos.Z = m_scenePresence.AbsolutePosition.Z + 0.15f;
+                            }
+                            else
+                            {
+                                if (jumpTry < 0)
+                                    jumpTry = 0;
+                                jumpTry++;
+                            }
+                        }
+                        else
+                            jumpTry--;
+                    }
+                }
+                else if (!fly)
+                {
+                    if (diffAbsPos.Z > 3)
+                    {
+                        //We should fly down to the avatar, rather than fall
+                        fly = true;
+                    }
+                    jumpTry--;
+                }
+                m_nodeGraph.Add (targetPos, fly ? TravelMode.Fly : TravelMode.Walk);
             }
         }
 
