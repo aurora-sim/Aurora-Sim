@@ -152,7 +152,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         /// This helps make sure that we clear out previous versions so that we don't have overlapping script versions running
         /// </summary>
-        public int VersionID = 0;
+        public long VersionID = 0;
         public bool IgnoreNew = false;
 
         #endregion
@@ -303,13 +303,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             if (Script == null)
                 return;
+            //Unset the events that may still be firing after the change.
+            m_ScriptEngine.RemoveScriptFromPlugins (Part.UUID, ItemID);
+            //Remove other items from the queue.
+            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue (this, false); // let current InExec finish or lsl reset fails
+            
             //Release controls over people.
             ReleaseControls();
-            //Remove other items from the queue.
-
-//            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this);
-            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this, false); // let current InExec finish or lsl reset fails
-//            VersionID++;
             //Reset the state to default
             State = DefaultState;
             //Reset all variables back to their original values.
@@ -323,20 +323,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Remove MinEventDelay
             EventDelayTicks = 0;
             //Remove events that may be fired again after the user stops touching the prim, etc
-            // These will be removed after the next ***_start event
-            ResetEvents();
+            ResetEvents ();
+            // These will be removed after the next ***_start event, and will remove ones that are not finished yet
             RemoveLandCollisionEvents = true;
             RemoveCollisionEvents = true;
             RemoveTouchEvents = true;
 
-            //Unset the events that may still be firing after the change.
-            m_ScriptEngine.RemoveScriptFromPlugins (Part.UUID, ItemID);
-
             //Fire state_entry
-            m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew(this,false); // accept new events
+            m_ScriptEngine.StateSave.SaveStateTo (this);
+            m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew(this, false); // accept new events
             m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], EventPriority.FirstStart, new object[] { });
 
-            m_ScriptEngine.StateSave.SaveStateTo (this);
             m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Reset Script " + ItemID);
         }
 
@@ -750,8 +747,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (EventDelayTicks != 0)
             {
-            if (NowTicks < NextEventTimeTicks)
-                return false;
+                if (NowTicks < NextEventTimeTicks)
+                    return false;
                 NextEventTimeTicks = NowTicks + EventDelayTicks;
             }
             switch (functionName)

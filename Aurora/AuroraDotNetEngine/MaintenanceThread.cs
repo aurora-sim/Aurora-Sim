@@ -416,15 +416,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             QIS.functionName = FunctionName;
             QIS.llDetectParams = qParams;
             QIS.param = param;
-            QIS.VersionID = ID.VersionID;
+            QIS.VersionID = Interlocked.Read(ref ID.VersionID);
             QIS.State = ID.State;
             QIS.CurrentlyAt = null;
 
             lock (ScriptEvents)
             {
-                if (ScriptEventCount > 100)
-                    return;
-
                 ScriptEvents.Enqueue (QIS);
                 ScriptEventCount++;
 #if Debug
@@ -457,7 +454,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 m_log.Warn (ScriptEventCount + ", " + QIS.functionName);
 #endif
             }
-
             long threadCount = Interlocked.Read (ref scriptThreadpool.nthreads);
             if (threadCount == 0 || threadCount < (ScriptEventCount + (SleepingScriptEventCount / 2)) * EventPerformance)
             {
@@ -604,14 +600,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 }
             }
+            
             //Check the versionID so that we can kill events
-            if (QIS.VersionID != QIS.ID.VersionID)
+            if (QIS.VersionID != Interlocked.Read(ref QIS.ID.VersionID))
+            {
+                m_log.WarnFormat ("FOUND BAD VERSION ID, OLD {0}, NEW {1}, FUNCTION NAME {2}", QIS.VersionID, Interlocked.Read(ref QIS.ID.VersionID), QIS.functionName);
                 return;
+            }
 
             if (!EventSchProcessQIS(ref QIS)) //Execute the event
             {
                 //All done
-                QIS.EventsProcData.State = (int)ScriptEventsState.Idle;
+                QIS.EventsProcData.State = ScriptEventsState.Idle;
             }
             else
             {
@@ -631,7 +631,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 else
                     QIS.EventsProcData.State = ScriptEventsState.Running;
             }
-            return;
         }
 
         public bool EventSchProcessQIS(ref QueueItemStruct QIS)

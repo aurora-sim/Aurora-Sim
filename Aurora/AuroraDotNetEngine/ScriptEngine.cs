@@ -629,7 +629,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             QIS.functionName = FunctionName;
             QIS.llDetectParams = qParams;
             QIS.param = param;
-            QIS.VersionID = ID.VersionID;
+            QIS.VersionID = Interlocked.Read(ref ID.VersionID);
             QIS.State = ID.State;
 
             MaintenanceThread.AddEvent(QIS, priority);
