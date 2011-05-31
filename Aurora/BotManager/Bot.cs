@@ -208,6 +208,7 @@ namespace Aurora.BotManager
             m_frames.Elapsed += (frames_Elapsed);
             m_startTime = new System.Timers.Timer(10);
             m_startTime.Elapsed += (startTime_Elapsed);
+            m_scene.EventManager.OnSignificantClientMovement += EventManager_OnSignificantClientMovement;
 
             UniqueId++;
         }
@@ -730,6 +731,8 @@ namespace Aurora.BotManager
 
         #endregion
 
+        #region Interface members
+
         public void FollowAvatar (string avatarName, float startFollowDistance, float stopFollowDistance)
         {
             m_scenePresence.Scene.TryGetAvatarByName (avatarName, out FollowSP);
@@ -764,12 +767,14 @@ namespace Aurora.BotManager
             FollowUUID = UUID.Zero;
         }
 
+        #endregion
+
         #region Following Update Event
 
         private object FollowingUpdate (string functionName, object param)
         {
             //Update, time to check where we should be going
-            NewFollowing ();
+            FollowDecision ();
             return null;
         }
 
@@ -820,9 +825,61 @@ namespace Aurora.BotManager
 
         #endregion
 
-        #region Old Following code
+        #region Following Decision
 
-        private void OldFollowing (List<ISceneChildEntity> raycastEntities)
+        private void FollowDecision ()
+        {
+            // FOLLOW an avatar - this is looking for an avatar UUID so wont follow a prim here  - yet
+            //Call this each iteration so that if the av leaves, we don't get stuck following a null person
+            FollowSP = m_scenePresence.Scene.GetScenePresence (FollowUUID);
+            //If its still null, the person doesn't exist, cancel the follow and return
+            if (FollowSP == null)
+                return;
+
+            Vector3 targetPos = FollowSP.AbsolutePosition;
+            Vector3 currentPos = m_scenePresence.AbsolutePosition;
+
+            resolution = 3;
+            double distance = Util.GetDistanceTo (targetPos, currentPos);
+            List<ISceneChildEntity> raycastEntities = llCastRay (m_scenePresence.AbsolutePosition, FollowSP.AbsolutePosition);
+            float closeToPoint = m_toAvatar ? StartFollowDistance : StopFollowDistance;
+            if (distance > 10) //Greater than 10 meters, give up
+            {
+                m_log.Warn ("Target is out of range");
+                //Try direct then, since it is way out of range
+                DirectFollowing (raycastEntities);
+            }
+            else if (distance < closeToPoint && raycastEntities.Count == 0)//If the raycastEntities isn't zero, there is something between us and the avatar, don't stop on the other side of walls, etc
+            {
+                //We're here!
+                //If we were having to fly to here, stop flying
+                if (jumpTry > 0)
+                {
+                    m_scenePresence.PhysicsActor.Flying = false;
+                    walkTo (m_scenePresence.AbsolutePosition);
+                    //Fix the animation from flying > walking
+                    m_scenePresence.Animator.UpdateMovementAnimations ();
+                }
+                jumpTry = 0;
+            }
+            else
+            {
+                if (raycastEntities.Count == 0)
+                    //Nothing between us and the target, go for it!
+                    DirectFollowing (raycastEntities);
+                else
+                    BestFitPathFollowing (raycastEntities);
+            }
+            //Tell any child followers about us
+            foreach (Bot bot in ChildFollowers)
+                bot.ParentMoved (m_nodeGraph);
+        }
+
+        #endregion
+
+        #region Direct Following code
+
+        private void DirectFollowing (List<ISceneChildEntity> raycastEntities)
         {
             double distance = Util.GetDistanceTo (FollowSP.AbsolutePosition, m_scenePresence.AbsolutePosition);
             Vector3 diffAbsPos = FollowSP.AbsolutePosition - m_scenePresence.AbsolutePosition;
@@ -891,7 +948,7 @@ namespace Aurora.BotManager
 
         #endregion
 
-        #region New Following code
+        #region BestFitPath Following code
 
         private void ShowMap (string mod, string[] cmd)
         {
@@ -926,191 +983,133 @@ namespace Aurora.BotManager
         private Vector3 m_lastPos = Vector3.Zero;
         private bool m_toAvatar = false;
 
-        private void NewFollowing ()
+        private void BestFitPathFollowing (List<ISceneChildEntity> raycastEntities)
         {
-            // FOLLOW an avatar - this is looking for an avatar UUID so wont follow a prim here  - yet
-            //Call this each iteration so that if the av leaves, we don't get stuck following a null person
-            FollowSP = m_scenePresence.Scene.GetScenePresence (FollowUUID);
-            //If its still null, the person doesn't exist, cancel the follow and return
-            if (FollowSP == null)
-                return;
-            m_scenePresence.SetAlwaysRun = FollowSP.SetAlwaysRun;
             Vector3 targetPos = FollowSP.AbsolutePosition;
             Vector3 currentPos = m_scenePresence.AbsolutePosition;
-            CurrentFollowTimeBeforeUpdate++;
-            //m_closeToPoint = 0.5f;
-            //if (CurrentFollowTimeBeforeUpdate <= 2)
-            //    return;
-            CurrentFollowTimeBeforeUpdate = 0;
 
-            resolution = 3;
-            double distance = Util.GetDistanceTo (targetPos, currentPos);
-            List<ISceneChildEntity> raycastEntities = llCastRay (m_scenePresence.AbsolutePosition, FollowSP.AbsolutePosition);
-            float closeToPoint = m_toAvatar ? StartFollowDistance : StopFollowDistance;
-            if (distance > 10) //Greater than 10 meters, give up
+            ISceneEntity[] entities = new ISceneEntity[raycastEntities.Count];
+            int ii = 0;
+            foreach (ISceneChildEntity child in raycastEntities)
             {
-                m_log.Warn ("Target is out of range");
-                //Try old style then
-                OldFollowing (raycastEntities);
-                foreach (Bot bot in ChildFollowers)
-                {
-                    bot.ParentMoved (m_nodeGraph);
-                }
-                return;
-            }
-            else if (distance < closeToPoint && raycastEntities.Count == 0)//If the raycastEntities isn't zero, there is something between us and the avatar, don't stop on the other side of walls, etc
-            {
-                if (jumpTry > 0)
-                {
-                    m_scenePresence.PhysicsActor.Flying = false;
-                    walkTo (m_scenePresence.AbsolutePosition);
-                }
-                jumpTry = 0;
-                foreach (Bot bot in ChildFollowers)
-                {
-                    bot.ParentMoved (m_nodeGraph);
-                }
-                return;
+                entities[ii] = child.ParentEntity;
+                ii++;
             }
 
-            
-            if (raycastEntities.Count == 0)
+            map = new int[22 * resolution, 22 * resolution]; //10 * resolution squares in each direction from our pos
+            //We are in the center (11, 11) and our target is somewhere else
+            int targetX = 11 * resolution, targetY = 11 * resolution;
+            //Find where our target is on the map
+            FindTargets (currentPos, targetPos, ref targetX, ref targetY);
+            //ISceneEntity[] entities = m_scenePresence.Scene.Entities.GetEntities (currentPos, 30);
+
+            //Add all the entities to the map
+            foreach (ISceneEntity entity in entities)
             {
-                //Nothing between us and the target, go for it!
-                OldFollowing (raycastEntities);
-                foreach (Bot bot in ChildFollowers)
+                //if (entity.AbsolutePosition.Z < m_scenePresence.AbsolutePosition.Z + m_scenePresence.PhysicsActor.Size.Z / 2 + m_scenePresence.Velocity.Z / 2 &&
+                //    entity.AbsolutePosition.Z > m_scenePresence.AbsolutePosition.Z - m_scenePresence.PhysicsActor.Size.Z / 2 + m_scenePresence.Velocity.Z / 2)
                 {
-                    bot.ParentMoved (m_nodeGraph);
+                    int entitybaseX = (11 * resolution);
+                    int entitybaseY = (11 * resolution);
+                    //Find the bottom left corner, and then build outwards from it
+                    FindTargets (currentPos, entity.AbsolutePosition - (entity.OOBsize / 2), ref entitybaseX, ref entitybaseY);
+                    for (int x = (int)-(0.5 * resolution); x < entity.OOBsize.X * 2 * resolution + ((int)(0.5 * resolution)); x++)
+                    {
+                        for (int y = (int)-(0.5 * resolution); y < entity.OOBsize.Y * 2 * resolution + ((int)(0.5 * resolution)); y++)
+                        {
+                            if (entitybaseX + x > 0 && entitybaseY + y > 0 &&
+                                entitybaseX + x < (22 * resolution) && entitybaseY + y < (22 * resolution))
+                                if (x < 0 || y < 0 || x > (entity.OOBsize.X * 2) * resolution || y > (entity.OOBsize.Y * 2) * resolution)
+                                    map[entitybaseX + x, entitybaseY + y] = 3; //Its a side hit, lock it down a bit
+                                else
+                                    map[entitybaseX + x, entitybaseY + y] = -1; //Its a hit, lock it down
+                        }
+                    }
                 }
+            }
+
+            for (int x = 0; x < (22 * resolution); x++)
+            {
+                for (int y = 0; y < (22 * resolution); y++)
+                {
+                    if (x == targetX && y == targetY)
+                        map[x, y] = 1;
+                    else if (x == 11 * resolution && y == 11 * resolution)
+                    {
+                        int old = map[x, y];
+                        map[x, y] = 1;
+                    }
+                    else if (map[x, y] == 0)
+                        map[x, y] = 1;
+                }
+            }
+
+            //ShowMap ("", null);
+            List<Vector3> path = InnerFindPath (map, (11 * resolution), (11 * resolution), targetX, targetY);
+
+            int i = 0;
+            Vector3 nextPos = ConvertPathToPos (raycastEntities.ToArray (), entities, currentPos, path, ref i);
+            Vector3 diffAbsPos = nextPos - targetPos;
+            if (nextPos != Vector3.Zero)
+            {
+                m_nodeGraph.Clear ();
             }
             else
             {
-                ISceneEntity[] entities = new ISceneEntity[raycastEntities.Count];
-                int ii = 0;
-                foreach (ISceneChildEntity child in raycastEntities)
+                //Try the old way
+                DirectFollowing (raycastEntities);
+                return;
+            }
+            bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
+            while (nextPos != Vector3.Zero)
+            {
+                if (!fly && (diffAbsPos.Z < -0.25 || jumpTry > 5))
                 {
-                    entities[ii] = child.ParentEntity;
-                    ii++;
-                }
-                map = new int[22 * resolution, 22 * resolution]; //10 * resolution squares in each direction from our pos
-                //We are in the center (11, 11) and our target is somewhere else
-                int targetX = 11 * resolution, targetY = 11 * resolution;
-                //Find where our target is on the map
-                FindTargets (currentPos, targetPos, ref targetX, ref targetY);
-                //ISceneEntity[] entities = m_scenePresence.Scene.Entities.GetEntities (currentPos, 30);
-
-                //Add all the entities to the map
-                foreach (ISceneEntity entity in entities)
-                {
-                    //if (entity.AbsolutePosition.Z < m_scenePresence.AbsolutePosition.Z + m_scenePresence.PhysicsActor.Size.Z / 2 + m_scenePresence.Velocity.Z / 2 &&
-                    //    entity.AbsolutePosition.Z > m_scenePresence.AbsolutePosition.Z - m_scenePresence.PhysicsActor.Size.Z / 2 + m_scenePresence.Velocity.Z / 2)
+                    if (jumpTry > 5 || diffAbsPos.Z < -3)
                     {
-                        int entitybaseX = (11 * resolution);
-                        int entitybaseY = (11 * resolution);
-                        //Find the bottom left corner, and then build outwards from it
-                        FindTargets (currentPos, entity.AbsolutePosition - (entity.OOBsize / 2), ref entitybaseX, ref entitybaseY);
-                        for (int x = (int)-(0.5 * resolution); x < entity.OOBsize.X * 2 * resolution + ((int)(0.5 * resolution)); x++)
-                        {
-                            for (int y = (int)-(0.5 * resolution); y < entity.OOBsize.Y * 2 * resolution + ((int)(0.5 * resolution)); y++)
-                            {
-                                if (entitybaseX + x > 0 && entitybaseY + y > 0 &&
-                                    entitybaseX + x < (22 * resolution) && entitybaseY + y < (22 * resolution))
-                                    if (x < 0 || y < 0 || x > (entity.OOBsize.X * 2) * resolution || y > (entity.OOBsize.Y * 2) * resolution)
-                                        map[entitybaseX + x, entitybaseY + y] = 3; //Its a side hit, lock it down a bit
-                                    else
-                                        map[entitybaseX + x, entitybaseY + y] = -1; //Its a hit, lock it down
-                            }
-                        }
+                        if (jumpTry <= 5)
+                            jumpTry = 6;
+                        fly = true;
                     }
-                }
-
-                for (int x = 0; x < (22 * resolution); x++)
-                {
-                    for (int y = 0; y < (22 * resolution); y++)
+                    else
                     {
-                        if (x == targetX && y == targetY)
-                            map[x, y] = 1;
-                        else if (x == 11 * resolution && y == 11 * resolution)
+                        if (!m_allowJump)
                         {
-                            int old = map[x, y];
-                            map[x, y] = 1;
+                            jumpTry--;
+                            targetPos.Z = nextPos.Z + 0.15f;
                         }
-                        else if (map[x, y] == 0)
-                            map[x, y] = 1;
-                    }
-                }
-
-                //ShowMap ("", null);
-                List<Vector3> path = InnerFindPath (map, (11 * resolution), (11 * resolution), targetX, targetY);
-
-                int i = 0;
-                Vector3 nextPos = ConvertPathToPos (raycastEntities.ToArray (), entities, currentPos, path, ref i);
-                Vector3 diffAbsPos = nextPos - targetPos;
-                if (nextPos != Vector3.Zero)
-                {
-                    m_nodeGraph.Clear ();
-                }
-                else
-                {
-                    //Try the old way
-                    OldFollowing (raycastEntities);
-                    return;
-                }
-                bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
-                while (nextPos != Vector3.Zero)
-                {
-                    if (!fly && (diffAbsPos.Z < -0.25 || jumpTry > 5))
-                    {
-                        if (jumpTry > 5 || diffAbsPos.Z < -3)
+                        else if (m_UseJumpDecisionTree)
                         {
-                            if (jumpTry <= 5)
-                                jumpTry = 6;
-                            fly = true;
-                        }
-                        else
-                        {
-                            if (!m_allowJump)
+                            if (!JumpDecisionTree (m_scenePresence.AbsolutePosition, targetPos))
                             {
                                 jumpTry--;
                                 targetPos.Z = nextPos.Z + 0.15f;
                             }
-                            else if (m_UseJumpDecisionTree)
-                            {
-                                if (!JumpDecisionTree (m_scenePresence.AbsolutePosition, targetPos))
-                                {
-                                    jumpTry--;
-                                    targetPos.Z = nextPos.Z + 0.15f;
-                                }
-                                else
-                                {
-                                    if (jumpTry < 0)
-                                        jumpTry = 0;
-                                    jumpTry++;
-                                }
-                            }
                             else
-                                jumpTry--;
+                            {
+                                if (jumpTry < 0)
+                                    jumpTry = 0;
+                                jumpTry++;
+                            }
                         }
+                        else
+                            jumpTry--;
                     }
-                    else if (!fly)
-                    {
-                        if (diffAbsPos.Z > 3)
-                        {
-                            //We should fly down to the avatar, rather than fall
-                            fly = true;
-                        }
-                        jumpTry--;
-                    }
-                    nextPos.Z = targetPos.Z; //Fix the Z coordinate
-
-                    m_nodeGraph.Add (nextPos, fly ? TravelMode.Fly : TravelMode.Walk);
-                    i++;
-                    nextPos = ConvertPathToPos (raycastEntities.ToArray(), entities, currentPos, path, ref i);
                 }
-            }
-            foreach (Bot bot in ChildFollowers)
-            {
-                bot.ParentMoved (m_nodeGraph);
+                else if (!fly)
+                {
+                    if (diffAbsPos.Z > 3)
+                    {
+                        //We should fly down to the avatar, rather than fall
+                        fly = true;
+                    }
+                    jumpTry--;
+                }
+                nextPos.Z = targetPos.Z; //Fix the Z coordinate
+
+                m_nodeGraph.Add (nextPos, fly ? TravelMode.Fly : TravelMode.Walk);
+                i++;
+                nextPos = ConvertPathToPos (raycastEntities.ToArray (), entities, currentPos, path, ref i);
             }
         }
 
@@ -1209,6 +1208,20 @@ namespace Aurora.BotManager
 
             targetX += (int)(xDiff * resolution);
             targetY += (int)(yDiff * resolution);
+        }
+
+        #endregion
+
+        #region Significant Client Movement Following code
+
+        private List<Vector3> m_significantAvatarPositions = new List<Vector3> ();
+        void EventManager_OnSignificantClientMovement (IClientAPI remote_client)
+        {
+            if (FollowSP != null)
+            {
+                if (FollowSP.UUID == remote_client.AgentId)
+                    m_significantAvatarPositions.Add(FollowSP.AbsolutePosition);
+            }
         }
 
         #endregion
