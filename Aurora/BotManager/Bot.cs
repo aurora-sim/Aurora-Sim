@@ -125,8 +125,6 @@ namespace Aurora.BotManager
         #endregion
 
         private BotState m_previousState = BotState.Idle;
-        
-        private Vector3 m_destination;
 
         private System.Timers.Timer m_frames;
         private System.Timers.Timer m_startTime;
@@ -278,8 +276,6 @@ namespace Aurora.BotManager
             {
                 walkTo(destination);
                 State = BotState.Walking;
-
-                m_destination = destination;
             }
         }
 
@@ -289,7 +285,6 @@ namespace Aurora.BotManager
             if (Util.IsZeroVector(destination - m_scenePresence.AbsolutePosition) == false)
             {
                 flyTo(destination);
-                m_destination = destination;
                 State = BotState.Flying;
             }
             else
@@ -389,7 +384,7 @@ namespace Aurora.BotManager
 
             m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
 
-            Vector3 diffPos = m_destination - m_scenePresence.AbsolutePosition;
+            Vector3 diffPos = pos - m_scenePresence.AbsolutePosition;
             if (Math.Abs (diffPos.X) > 1.5 || Math.Abs (diffPos.Y) > 1.5)
             {
                 m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
@@ -563,43 +558,6 @@ namespace Aurora.BotManager
                 return;
             //Tell any interested modules that we are ready to go
             EventManager.FireGenericEventHandler ("Update", null);
-
-            //Now move the avatar
-            if (State != BotState.Idle)
-            {
-                bool CheckFly = State == BotState.Flying;
-                if (!ShouldFly && CheckFly)
-                    ShouldFly = CheckFly;
-                Vector3 diffPos = m_destination - m_scenePresence.AbsolutePosition;
-                if (Math.Abs (diffPos.X) < m_closeToPoint && Math.Abs (diffPos.Y) < m_closeToPoint &&
-                    (!CheckFly || (ShouldFly && Math.Abs (diffPos.Z) < m_closeToPoint))) //If we are flying, Z checking matters
-                {
-                    State = BotState.Idle;
-                    //Restart the start time
-                    m_startTime.Stop ();
-                    m_startTime.Start ();
-                }
-                else
-                {
-                    //Move to the position!
-                    switch (State)
-                    {
-                        case BotState.Walking:
-                            walkTo (m_destination);
-                            break;
-
-                        case BotState.Flying:
-                            flyTo (m_destination);
-                            break;
-                    }
-                }
-            }
-
-            if (State == BotState.Idle)
-            {
-                //We arn't going anywhere, stop movement
-                OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
-            }
         }
 
         #endregion
@@ -839,6 +797,7 @@ namespace Aurora.BotManager
                 }
                 else
                     WalkTo (m_scenePresence.AbsolutePosition);
+                return null;
             }
             else if (distance > m_followLoseAvatarDistance)
             {
@@ -977,7 +936,7 @@ namespace Aurora.BotManager
             Vector3 targetPos = FollowSP.AbsolutePosition;
             Vector3 currentPos = m_scenePresence.AbsolutePosition;
             CurrentFollowTimeBeforeUpdate++;
-            m_closeToPoint = 0.5f;
+            //m_closeToPoint = 0.5f;
             //if (CurrentFollowTimeBeforeUpdate <= 2)
             //    return;
             CurrentFollowTimeBeforeUpdate = 0;
