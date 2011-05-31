@@ -816,7 +816,10 @@ namespace Aurora.BotManager
                 EventManager.FireGenericEventHandler ("ToAvatar", null);
                 bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
                 if (fly)
-                    FlyTo (m_scenePresence.AbsolutePosition);
+                {
+                    //FlyTo (m_scenePresence.AbsolutePosition);
+                   // m_scenePresence.PhysicsActor.Flying = true;
+                }
                 else
                     WalkTo (m_scenePresence.AbsolutePosition);
             }
