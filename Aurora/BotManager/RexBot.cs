@@ -1036,7 +1036,7 @@ namespace Aurora.BotManager
                 List<Vector3> path = InnerFindPath (map, (11 * resolution), (11 * resolution), targetX, targetY);
 
                 int i = 0;
-                Vector3 nextPos = ConvertPathToPos (entities, currentPos, path, ref i);
+                Vector3 nextPos = ConvertPathToPos (raycastEntities.ToArray (), entities, currentPos, path, ref i);
                 Vector3 diffAbsPos = nextPos - targetPos;
                 if (nextPos != Vector3.Zero)
                 {
@@ -1086,7 +1086,7 @@ namespace Aurora.BotManager
 
                     m_nodeGraph.Add (nextPos, fly ? TravelMode.Fly : TravelMode.Walk);
                     i++;
-                    nextPos = ConvertPathToPos (entities, currentPos, path, ref i);
+                    nextPos = ConvertPathToPos (raycastEntities.ToArray(), entities, currentPos, path, ref i);
                 }
             }
             foreach (Bot bot in ChildFollowers)
@@ -1100,7 +1100,7 @@ namespace Aurora.BotManager
             m_nodeGraph.CopyFrom (graph);
         }
 
-        private Vector3 ConvertPathToPos (ISceneEntity[] entites, Vector3 originalPos, List<Vector3> path, ref int i)
+        private Vector3 ConvertPathToPos (ISceneChildEntity[] raycastEntities, ISceneEntity[] entites, Vector3 originalPos, List<Vector3> path, ref int i)
         {
         start:
             if (i == path.Count)
@@ -1134,21 +1134,21 @@ namespace Aurora.BotManager
                 }
             }
             if (failedToMove > 1)
-                CleanUpPos (entites, ref newPos);
+                CleanUpPos (raycastEntities, entites, ref newPos);
             return newPos;
         }
 
-        private void CleanUpPos (ISceneEntity[] entites, ref Vector3 pos)
+        private void CleanUpPos (ISceneChildEntity[] raycastEntities, ISceneEntity[] entites, ref Vector3 pos)
         {
             List<ISceneChildEntity> childEntities = llCastRay (m_scenePresence.AbsolutePosition, pos);
+            childEntities.AddRange(raycastEntities);//Add all of the ones that are in between us and the avatar as well
             int restartNum = 0;
         restart:
             bool needsRestart = false;
             foreach (ISceneChildEntity entity in childEntities)
             {
                 if (entity.AbsolutePosition.Z < m_scenePresence.AbsolutePosition.Z + 2 &&
-                    entity.AbsolutePosition.Z > m_scenePresence.AbsolutePosition.Z - 2 &&
-                    entity.Scale.Z > m_scenePresence.PhysicsActor.Size.Z)
+                    entity.AbsolutePosition.Z > m_scenePresence.AbsolutePosition.Z - 2)
                 {
                     //If this position is inside an entity + its size + avatar size, move it out!
                     float sizeXPlus = (entity.AbsolutePosition.X + (entity.Scale.X / 2) + (m_scenePresence.PhysicsActor.Size.X / 2));
