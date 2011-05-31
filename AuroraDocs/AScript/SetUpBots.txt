@@ -12,7 +12,7 @@ public void state_entry()
 {
     userToDuplicate = llGetOwner();
     botID = botCreateBot(first, last, userToDuplicate);
-    botFollowAvatar(botID, llGetOwner(), 2.5);
+    botFollowAvatar(botID, llGetOwner(), 2.5, 2.5);
 
     IScenePresence SP = Scene.GetScenePresence(UUID.Parse(botID));
     SP.Teleport(new Vector3((float)llGetPos().x,(float)llGetPos().y,(float)llGetPos().z));
@@ -20,13 +20,13 @@ public void state_entry()
 
 public void touch_start(LSL_Types.LSLInteger a)
 {
-    //botStopFollowAvatar (botID);
-    botRemoveBot(botID);
-    
-    if(resetNext)
+    if(botID != "")
+	{
+		botRemoveBot(botID);
+		botID = "";
+	}
+    else
     {
-        resetNext = false;
         llResetScript();
     }
-    resetNext = true;
 }

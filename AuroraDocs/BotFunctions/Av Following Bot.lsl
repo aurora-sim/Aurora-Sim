@@ -11,7 +11,9 @@ default
         userToDuplicate = llGetOwner();
         botID = botCreateBot(first, last, userToDuplicate);
         //You can either put an avatar's name or UUID as the second parameter, and then the last parameter is how close it should get to the avatar
-        botFollowAvatar(botID, llGetOwner(), 1);
+        //The third and fourth parameters have to do with how far away the avatar can be before it follows
+		// The third is how far away the avatar can be before it begins to follow them, and the fourth is how far away the avatar has to be before it stops attempting to follow the avatar
+		botFollowAvatar(botID, llGetOwner(), 2, 2);
     }
     touch_start(integer a)
     {
