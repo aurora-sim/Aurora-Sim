@@ -483,6 +483,8 @@ namespace Aurora.BotManager
         {
             m_frames.Stop ();
             m_startTime.Stop ();
+            if (m_scenePresence == null)
+                return;
             Update();
             m_startTime.Start ();
             m_frames.Start ();

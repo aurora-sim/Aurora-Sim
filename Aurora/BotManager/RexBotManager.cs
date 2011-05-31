@@ -135,6 +135,7 @@ namespace Aurora.BotManager
             m_character.LastName = LastName;
             m_aCircuitData.AgentID = m_character.AgentId;
             m_aCircuitData.Appearance.Owner = m_character.AgentId;
+            List<AvatarAttachment> attachments = m_aCircuitData.Appearance.GetAttachments ();
 
             scene.AuthenticateHandler.AgentCircuits.Add (m_character.CircuitCode, m_aCircuitData);
             //This adds them to the scene and sets them inworld
