@@ -148,7 +148,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                 int x;
                 for (x = 0; x < retval.Width; x++)
                 {
-                    retval[x, (retval.Height - 1) - y] = bs.ReadByte() * (bs.ReadByte() / 128);
+                    retval[x, (retval.Height - 1) - y] = bs.ReadByte () * (bs.ReadByte () / (retval.Height / 2));
                     bs.ReadBytes(11); // Advance the stream to next bytes.
                 }
             }
@@ -171,13 +171,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
         {
             if (LookupHeightTable == null)
             {
-                LookupHeightTable = new HeightmapLookupValue[256 * 256];
+                LookupHeightTable = new HeightmapLookupValue[map.Height * map.Width];
 
-                for (int i = 0; i < 256; i++)
+                for (int i = 0; i < map.Height; i++)
                 {
-                    for (int j = 0; j < 256; j++)
+                    for (int j = 0; j < map.Width; j++)
                     {
-                        LookupHeightTable[i + (j * 256)] = new HeightmapLookupValue((ushort)(i + (j * 256)), (float)((double)i * ((double)j / 128.0d)));
+                        LookupHeightTable[i + (j * map.Width)] = new HeightmapLookupValue ((ushort)(i + (j * map.Width)), (float)((double)i * ((double)j / (map.Width / 2))));
                     }
                 }
                 Array.Sort<HeightmapLookupValue>(LookupHeightTable);
