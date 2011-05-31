@@ -916,6 +916,11 @@ namespace Aurora.BotManager
             }
             else if (distance < m_followCloseToPoint)
             {
+                if (jumpTry > 0)
+                {
+                    m_scenePresence.PhysicsActor.Flying = false;
+                    walkTo (m_scenePresence.AbsolutePosition);
+                }
                 jumpTry = 0;
                 return;
             }
