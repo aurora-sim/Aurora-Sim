@@ -868,8 +868,11 @@ namespace Aurora.BotManager
                     //Nothing between us and the target, go for it!
                     DirectFollowing (raycastEntities);
                 else
-                    BestFitPathFollowing (raycastEntities);
+                    if (!BestFitPathFollowing (raycastEntities))//If this doesn't work, try significant positions
+                        SignificantPositionFollowing (raycastEntities);
             }
+            //Clear out any insignificant positions that may be in the queue
+            ClearOutInSignificantPositions ();
             //Tell any child followers about us
             foreach (Bot bot in ChildFollowers)
                 bot.ParentMoved (m_nodeGraph);
@@ -983,7 +986,7 @@ namespace Aurora.BotManager
         private Vector3 m_lastPos = Vector3.Zero;
         private bool m_toAvatar = false;
 
-        private void BestFitPathFollowing (List<ISceneChildEntity> raycastEntities)
+        private bool BestFitPathFollowing (List<ISceneChildEntity> raycastEntities)
         {
             Vector3 targetPos = FollowSP.AbsolutePosition;
             Vector3 currentPos = m_scenePresence.AbsolutePosition;
@@ -1056,9 +1059,8 @@ namespace Aurora.BotManager
             }
             else
             {
-                //Try the old way
-                DirectFollowing (raycastEntities);
-                return;
+                //Try another way
+                return false;
             }
             bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
             while (nextPos != Vector3.Zero)
@@ -1111,6 +1113,7 @@ namespace Aurora.BotManager
                 i++;
                 nextPos = ConvertPathToPos (raycastEntities.ToArray (), entities, currentPos, path, ref i);
             }
+            return true;
         }
 
         public void ParentMoved (NodeGraph graph)
@@ -1215,12 +1218,60 @@ namespace Aurora.BotManager
         #region Significant Client Movement Following code
 
         private List<Vector3> m_significantAvatarPositions = new List<Vector3> ();
+        private int currentPos = 0;
+        private int lastChangedCurrentPos = 0;
+        private int highestCurrentPos = 0;
+
         void EventManager_OnSignificantClientMovement (IClientAPI remote_client)
         {
             if (FollowSP != null)
             {
                 if (FollowSP.UUID == remote_client.AgentId)
                     m_significantAvatarPositions.Add(FollowSP.AbsolutePosition);
+            }
+        }
+
+        private void ClearOutInSignificantPositions ()
+        {
+            int clearPos = 0;
+            bool changed = false;
+            for (int i = currentPos; i < m_significantAvatarPositions.Count; i++)
+            {
+                if (m_scenePresence.AbsolutePosition.ApproxEquals (m_significantAvatarPositions[i], m_StopFollowDistance / 4))
+                {
+                    if (i > highestCurrentPos)
+                    {
+                        changed = true;
+                        highestCurrentPos = i;
+                    }
+                    currentPos = i;
+                }
+            }
+            if (changed)
+                lastChangedCurrentPos = 0;
+            else
+                lastChangedCurrentPos++;
+            if (lastChangedCurrentPos > 10)
+                currentPos--;
+            //Remove all insignificant
+            for (int i = 0; i < clearPos; i++)
+            {
+                m_significantAvatarPositions.RemoveAt (0);
+            }
+        }
+
+        private void SignificantPositionFollowing (List<ISceneChildEntity> raycastEntities)
+        {
+            //Do this first
+            ClearOutInSignificantPositions ();
+
+            bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
+            if (m_significantAvatarPositions.Count > 0)
+            {
+                m_nodeGraph.Add (m_significantAvatarPositions[currentPos], fly ? TravelMode.Fly : TravelMode.Walk);
+            }
+            else
+            {
             }
         }
 
