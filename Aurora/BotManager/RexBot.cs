@@ -840,22 +840,37 @@ namespace Aurora.BotManager
                 Vector3 targetPos = FollowSP.AbsolutePosition;
                 Vector3 ourPos = m_scenePresence.AbsolutePosition;
                 bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
-                if (!fly && diffAbsPos.Z > 0.25)
+                if (!fly && (diffAbsPos.Z > 0.25 || jumpTry > 5))
                 {
-                    if (!m_allowJump)
-                        targetPos.Z = ourPos.Z + 0.15f;
-                    else if (m_UseJumpDecisionTree)
+                    if (jumpTry > 5 || diffAbsPos.Z < -3)
                     {
-                        if (!JumpDecisionTree (m_scenePresence.AbsolutePosition, targetPos))
-                            targetPos.Z = ourPos.Z + 0.15f;
-                        else
-                            jumpTry++;
-                    }
-                    if (jumpTry > 5 && diffAbsPos.Z > 3)
-                    {
+                        if (jumpTry <= 5)
+                            jumpTry = 6;
                         fly = true;
                     }
+                    else
+                    {
+                        if (!m_allowJump)
+                        {
+                            jumpTry--;
+                            targetPos.Z = ourPos.Z + 0.15f;
+                        }
+                        else if (m_UseJumpDecisionTree)
+                        {
+                            if (!JumpDecisionTree (m_scenePresence.AbsolutePosition, targetPos))
+                            {
+                                jumpTry--;
+                                targetPos.Z = ourPos.Z + 0.15f;
+                            }
+                            else
+                                jumpTry++;
+                        }
+                        else
+                            jumpTry--;
+                    }
                 }
+                else if (!fly)
+                    jumpTry--;
                 m_nodeGraph.Clear ();
                 m_nodeGraph.Add (targetPos, fly ? TravelMode.Fly : TravelMode.Walk);
                 m_scenePresence.SetAlwaysRun = FollowSP.SetAlwaysRun;
@@ -946,6 +961,7 @@ namespace Aurora.BotManager
                 {
                     bot.ParentMoved (m_nodeGraph);
                 }
+                return;
             }
 
             List<ISceneChildEntity> raycastEntities = llCastRay (m_scenePresence.AbsolutePosition, FollowSP.AbsolutePosition);
@@ -961,18 +977,25 @@ namespace Aurora.BotManager
             }
             else
             {
+                ISceneEntity[] entities = new ISceneEntity[raycastEntities.Count];
+                int ii = 0;
+                foreach (ISceneChildEntity child in raycastEntities)
+                {
+                    entities[ii] = child.ParentEntity;
+                    ii++;
+                }
                 map = new int[22 * resolution, 22 * resolution]; //10 * resolution squares in each direction from our pos
                 //We are in the center (11, 11) and our target is somewhere else
                 int targetX = 11 * resolution, targetY = 11 * resolution;
                 //Find where our target is on the map
                 FindTargets (currentPos, targetPos, ref targetX, ref targetY);
-                ISceneEntity[] entities = m_scenePresence.Scene.Entities.GetEntities (currentPos, 30);
+                //ISceneEntity[] entities = m_scenePresence.Scene.Entities.GetEntities (currentPos, 30);
 
                 //Add all the entities to the map
                 foreach (ISceneEntity entity in entities)
                 {
-                    if (entity.AbsolutePosition.Z < m_scenePresence.AbsolutePosition.Z + m_scenePresence.PhysicsActor.Size.Z / 2 + m_scenePresence.Velocity.Z / 2 &&
-                        entity.AbsolutePosition.Z > m_scenePresence.AbsolutePosition.Z - m_scenePresence.PhysicsActor.Size.Z / 2 + m_scenePresence.Velocity.Z / 2)
+                    //if (entity.AbsolutePosition.Z < m_scenePresence.AbsolutePosition.Z + m_scenePresence.PhysicsActor.Size.Z / 2 + m_scenePresence.Velocity.Z / 2 &&
+                    //    entity.AbsolutePosition.Z > m_scenePresence.AbsolutePosition.Z - m_scenePresence.PhysicsActor.Size.Z / 2 + m_scenePresence.Velocity.Z / 2)
                     {
                         int entitybaseX = (11 * resolution);
                         int entitybaseY = (11 * resolution);
