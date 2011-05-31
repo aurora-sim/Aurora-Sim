@@ -775,6 +775,8 @@ namespace Aurora.BotManager
 
         private object FollowingMove (string functionName, object param)
         {
+            if (FollowSP == null)
+                return null;
             //Check to see whether we are close to our avatar, and fire the event if needed
             Vector3 targetPos = FollowSP.AbsolutePosition;
             Vector3 currentPos = m_scenePresence.AbsolutePosition;
