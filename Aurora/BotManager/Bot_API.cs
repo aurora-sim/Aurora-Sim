@@ -149,6 +149,22 @@ namespace Aurora.BotManager
             return "";
         }
 
+        public void botPauseMovement (string bot)
+        {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botPauseMovement", m_host, "bot");
+            IBotManager manager = World.RequestModuleInterface<IBotManager> ();
+            if (manager != null)
+                manager.PauseMovement (UUID.Parse (bot));
+        }
+
+        public void botResumeMovement (string bot)
+        {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botResumeMovement", m_host, "bot");
+            IBotManager manager = World.RequestModuleInterface<IBotManager> ();
+            if (manager != null)
+                manager.ResumeMovement (UUID.Parse (bot));
+        }
+
         public void botSetShouldFly (string keyOfBot, int ShouldFly)
         {
             ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botSetShouldFly", m_host, "bot");

@@ -57,12 +57,14 @@ namespace Aurora.BotManager
 
     #endregion
 
-    public class RexBot : IRexBot, IClientAPI
+    public class Bot : IClientAPI
     {
         #region Declares
 
         private bool m_allowJump = true;
         private bool m_UseJumpDecisionTree = true;
+
+        private bool m_paused = false;
 
         private static readonly ILog m_log = log4net.LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Vector3 DEFAULT_START_POSITION = new Vector3(128, 128, 128);
@@ -195,7 +197,7 @@ namespace Aurora.BotManager
         #region Constructor
 
         // creates new bot on the default location
-        public RexBot(Scene scene, AgentCircuitData data, UUID creatorID)
+        public Bot(Scene scene, AgentCircuitData data, UUID creatorID)
         {
             RegisterInterfaces();
 
@@ -205,11 +207,9 @@ namespace Aurora.BotManager
             
             m_circuitCode = UniqueId;
             m_frames = new System.Timers.Timer(100);
-            m_frames.Start();
             m_frames.Elapsed += (frames_Elapsed);
             m_startTime = new System.Timers.Timer(10);
             m_startTime.Elapsed += (startTime_Elapsed);
-            m_startTime.Start ();
 
             UniqueId++;
         }
@@ -229,6 +229,8 @@ namespace Aurora.BotManager
                     break;
                 }
             }
+            m_startTime.Start ();
+            m_frames.Start ();
         }
 
         public void Close(bool forceKill)
@@ -499,11 +501,11 @@ namespace Aurora.BotManager
 
         #endregion
 
-        #region Get next destination
+        #region Get next destination / Pause/Resume movement
 
         private void GetNextDestination()
         {
-            if (m_scenePresence == null)
+            if (m_scenePresence == null || m_paused)
                 return;
 
             //Fire the move event
@@ -523,13 +525,25 @@ namespace Aurora.BotManager
             }
         }
 
+        public void PauseMovement ()
+        {
+            m_paused = true;
+            //Stop movement
+            WalkTo (m_scenePresence.AbsolutePosition);
+        }
+
+        public void ResumeMovement ()
+        {
+            m_paused = false;
+        }
+
         #endregion
 
         #region Update Event
 
         public void Update ()
         {
-            if (m_scenePresence == null)
+            if (m_scenePresence == null || m_paused)
                 return;
             //Tell any interested modules that we are ready to go
             EventManager.FireGenericEventHandler ("Update", null);
@@ -729,7 +743,7 @@ namespace Aurora.BotManager
         /// <summary>
         /// So that other bots can follow us
         /// </summary>
-        public List<RexBot> ChildFollowers = new List<RexBot> ();
+        public List<Bot> ChildFollowers = new List<Bot> ();
 
         #endregion
 
@@ -978,7 +992,7 @@ namespace Aurora.BotManager
                 nextPos = ConvertPathToPos (entities, currentPos, path, ref i);
             }
             
-            foreach (RexBot bot in ChildFollowers)
+            foreach (Bot bot in ChildFollowers)
             {
                 bot.ParentMoved (m_nodeGraph);
             }

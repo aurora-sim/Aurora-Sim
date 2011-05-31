@@ -9,7 +9,10 @@ namespace Aurora.BotManager
     {
         UUID CreateAvatar (string FirstName, string LastName, IScene scene, UUID cloneAppearanceFrom, UUID creatorID);
         void SetBotMap(UUID Bot, List<Vector3> Positions, List<TravelMode> mode);
-        void SetMovementSpeedMod(UUID Bot, float modifier);
+        void SetMovementSpeedMod (UUID Bot, float modifier);
+        void SetBotShouldFly (UUID botID, bool shouldFly);
+        void PauseMovement (UUID botID);
+        void ResumeMovement (UUID botID);
         void RemoveAvatar (UUID Bot, IScene iScene);
 
         #region Path following
@@ -32,22 +35,6 @@ namespace Aurora.BotManager
 
         #endregion
 
-        void SetBotShouldFly (UUID Bot, bool shouldFly);
-    }
 
-    /// <summary>
-    /// Created by RealXtend
-    /// </summary>
-    public interface IRexBot
-    {
-        void SetPath (List<Vector3> Positions, List<TravelMode> mode);
-        void SetMovementSpeedMod (float speed);
-        void DisableWalk ();
-        void EnableWalk ();
-        void ReadMap (string filename, int X, int Y, int CornerStoneX, int CornerStoneY);
-        void FindPath (Vector3 currentPos, Vector3 finishVector);
-        void FollowAvatar (string avatarName, float followDistance);
-        void StopFollowAvatar ();
-        void SendChatMessage (int sayType, string message, int channel);
     }
 }

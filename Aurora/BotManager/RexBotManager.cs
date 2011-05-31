@@ -40,9 +40,6 @@ using OpenSim.Services.Interfaces;
 
 namespace Aurora.BotManager
 {
-    /// <summary>
-    /// Partially created by RealXtend
-    /// </summary>
     public class BotManager : ISharedRegionModule, IBotManager
     {
         #region IRegionModule Members
@@ -50,7 +47,7 @@ namespace Aurora.BotManager
         private static readonly log4net.ILog m_log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         
         private Scene m_scene;
-        private Dictionary<UUID, IRexBot> m_bots = new Dictionary<UUID, IRexBot>();
+        private Dictionary<UUID, Bot> m_bots = new Dictionary<UUID, Bot> ();
 
         public void Initialise(IConfigSource source)
         {
@@ -129,13 +126,24 @@ namespace Aurora.BotManager
                 m_aCircuitData.Appearance.Wearables = AvatarWearable.DefaultWearables;
             }
             //Create the new bot data
-            RexBot m_character = new RexBot (scene, m_aCircuitData, creatorID);
+            Bot m_character = new Bot (scene, m_aCircuitData, creatorID);
 
             m_character.FirstName = FirstName;
             m_character.LastName = LastName;
             m_aCircuitData.AgentID = m_character.AgentId;
             m_aCircuitData.Appearance.Owner = m_character.AgentId;
             List<AvatarAttachment> attachments = m_aCircuitData.Appearance.GetAttachments ();
+
+            foreach (AvatarAttachment att in attachments)
+            {
+                InventoryItemBase item = scene.InventoryService.GetItem(new InventoryItemBase(att.ItemID));
+                if (item != null)
+                {
+                    item.Owner = m_character.AgentId;
+                    item.Folder = UUID.Zero;
+                    scene.InventoryService.AddItem (item);
+                }
+            }
 
             scene.AuthenticateHandler.AgentCircuits.Add (m_character.CircuitCode, m_aCircuitData);
             //This adds them to the scene and sets them inworld
@@ -175,6 +183,22 @@ namespace Aurora.BotManager
             module.IncomingCloseAgent (scene, avatarID);
         }
 
+        public void PauseMovement (UUID botID)
+        {
+            Bot bot;
+            //Find the bot
+            if (m_bots.TryGetValue (botID, out bot))
+                bot.PauseMovement ();
+        }
+
+        public void ResumeMovement (UUID botID)
+        {
+            Bot bot;
+            //Find the bot
+            if (m_bots.TryGetValue (botID, out bot))
+                bot.ResumeMovement ();
+        }
+
         /// <summary>
         /// Sets up where the bot should be walking
         /// </summary>
@@ -183,12 +207,10 @@ namespace Aurora.BotManager
         /// <param name="mode">List of what the bot should be doing inbetween the positions</param>
         public void SetBotMap(UUID Bot, List<Vector3> Positions, List<TravelMode> mode)
         {
-            IRexBot bot;
+            Bot bot;
             //Find the bot
             if (m_bots.TryGetValue(Bot, out bot))
-            {
                 bot.SetPath (Positions, mode);
-            }
         }
 
         /// <summary>
@@ -198,7 +220,7 @@ namespace Aurora.BotManager
         /// <param name="modifier"></param>
         public void SetMovementSpeedMod(UUID Bot, float modifier)
         {
-            IRexBot bot;
+            Bot bot;
             if (m_bots.TryGetValue(Bot, out bot))
                 bot.SetMovementSpeedMod(modifier);
         }
@@ -214,7 +236,7 @@ namespace Aurora.BotManager
         /// <param name="modifier"></param>
         public void ReadMap(UUID botID, string map, int X, int Y, int CornerStoneX, int CornerStoneY)
         {
-            IRexBot bot;
+            Bot bot;
             if (m_bots.TryGetValue(botID, out bot))
             {
                 bot.ReadMap (map, X, Y, CornerStoneX, CornerStoneY);
@@ -228,7 +250,7 @@ namespace Aurora.BotManager
         /// <param name="modifier"></param>
         public void FindPath(UUID botID, Vector3 currentPos, Vector3 finishVector)
         {
-            IRexBot bot;
+            Bot bot;
             if (m_bots.TryGetValue(botID, out bot))
             {
                 bot.FindPath(currentPos, finishVector);
@@ -242,7 +264,7 @@ namespace Aurora.BotManager
         /// <param name="modifier"></param>
         public void FollowAvatar (UUID botID, string avatarName, float followDistance)
         {
-            IRexBot bot;
+            Bot bot;
             if (m_bots.TryGetValue (botID, out bot))
             {
                 bot.FollowAvatar (avatarName, followDistance);
@@ -256,13 +278,13 @@ namespace Aurora.BotManager
         /// <param name="modifier"></param>
         public void FollowBot (UUID botID, UUID secondBotID, float followDistance)
         {
-            IRexBot bot;
+            Bot bot;
             if (m_bots.TryGetValue (botID, out bot))
             {
-                IRexBot secondBot;
+                Bot secondBot;
                 if (m_bots.TryGetValue (secondBotID, out secondBot))
                 {
-                    ((RexBot)bot).ChildFollowers.Add ((RexBot)secondBot);
+                    bot.ChildFollowers.Add (secondBot);
                 }
             }
         }
@@ -274,13 +296,13 @@ namespace Aurora.BotManager
         /// <param name="modifier"></param>
         public void StopFollowBot (UUID botID, UUID secondBotID)
         {
-            IRexBot bot;
+            Bot bot;
             if (m_bots.TryGetValue (botID, out bot))
             {
-                IRexBot secondBot;
+                Bot secondBot;
                 if (m_bots.TryGetValue (secondBotID, out secondBot))
                 {
-                    ((RexBot)bot).ChildFollowers.Remove ((RexBot)secondBot);
+                    bot.ChildFollowers.Remove (secondBot);
                 }
             }
         }
@@ -292,11 +314,9 @@ namespace Aurora.BotManager
         /// <param name="modifier"></param>
         public void StopFollowAvatar (UUID botID)
         {
-            IRexBot bot;
+            Bot bot;
             if (m_bots.TryGetValue (botID, out bot))
-            {
                 bot.StopFollowAvatar ();
-            }
         }
 
         /// <summary>
@@ -306,11 +326,9 @@ namespace Aurora.BotManager
         /// <param name="modifier"></param>
         public void SendChatMessage (UUID botID, string message, int sayType, int channel)
         {
-            IRexBot bot;
+            Bot bot;
             if (m_bots.TryGetValue (botID, out bot))
-            {
                 bot.SendChatMessage (sayType, message, channel);
-            }
         }
 
         #endregion
@@ -320,14 +338,12 @@ namespace Aurora.BotManager
 
         public void SetBotShouldFly (UUID botID, bool shouldFly)
         {
-            IRexBot bot;
+            Bot bot;
             if (m_bots.TryGetValue (botID, out bot))
-            {
                 if (shouldFly)
                     bot.DisableWalk ();
                 else
                     bot.EnableWalk ();
-            }
         }
 
         #endregion
