@@ -59,6 +59,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         private const int EMPTY_WORK_KILL_THREAD_TIME = 250;
         private Queue<QueueItemStruct> ScriptEvents = new Queue<QueueItemStruct> ();
+        private float EventPerformance = 0.1f;
         private int ScriptEventCount = 0;
         private int m_CheckingEvents = 0;
         private Mischel.Collections.PriorityQueue<QueueItemStruct, Int64> SleepingScriptEvents = new Mischel.Collections.PriorityQueue<QueueItemStruct, Int64> (10, DateTimeComparer);
@@ -82,6 +83,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 scriptChangeThreadpool.QueueEvent (ScriptChangeQueue, 2);
                 //Start the queue because it can't start itself
+                cmdThreadpool.ClearEvents ();
                 cmdThreadpool.QueueEvent (CmdHandlerQueue, 2);
             }
         }
@@ -114,7 +116,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             info.Threads = 1;
             info.MaxSleepTime = Engine.Config.GetInt ("SleepTime", 100);
             info.SleepIncrementTime = Engine.Config.GetInt ("SleepIncrementTime", 1);
+            info.Name = "Script Cmd Thread Pools";
             cmdThreadpool = new AuroraThreadPool (info);
+            info.Name = "Script Loading Thread Pools";
             scriptChangeThreadpool = new AuroraThreadPool (info);
 
 
@@ -124,6 +128,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             sinfo.Threads = MaxScriptThreads;
             sinfo.MaxSleepTime = Engine.Config.GetInt ("SleepTime", 100);
             sinfo.SleepIncrementTime = Engine.Config.GetInt ("SleepIncrementTime", 1);
+            sinfo.KillThreadAfterQueueClear = true;
+            sinfo.Name = "Script Event Thread Pools";
             scriptThreadpool = new AuroraThreadPool (sinfo);
             
             AppDomain.CurrentDomain.AssemblyResolve += m_ScriptEngine.AssemblyResolver.OnAssemblyResolve;
@@ -346,6 +352,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             else if (thread == "CmdHandlerQueue" && Interlocked.Read(ref CmdHandlerQueueIsRunning) == 0)
             {
+                cmdThreadpool.ClearEvents ();
                 cmdThreadpool.QueueEvent (CmdHandlerQueue, 2);
             }
         }
@@ -425,9 +432,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 #endif
             }
 
-            if (Interlocked.Read (ref scriptThreadpool.nthreads) < ScriptEventCount + (SleepingScriptEventCount / 2))
+            long threadCount = Interlocked.Read (ref scriptThreadpool.nthreads);
+            if (threadCount == 0 || threadCount < (ScriptEventCount + (SleepingScriptEventCount / 2)) * EventPerformance)
             {
-                scriptThreadpool.QueueEvent (loop, 2);
+                scriptThreadpool.QueueEvent (eventLoop, 2);
             }
         }
 
@@ -452,13 +460,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 #endif
             }
 
-            if (Interlocked.Read (ref scriptThreadpool.nthreads) < ScriptEventCount + (SleepingScriptEventCount / 2))
+            long threadCount = Interlocked.Read (ref scriptThreadpool.nthreads);
+            if (threadCount == 0 || threadCount < (ScriptEventCount + (SleepingScriptEventCount / 2)) * EventPerformance)
             {
-                scriptThreadpool.QueueEvent (loop, 2);
+                scriptThreadpool.QueueEvent (eventLoop, 2);
             }
         }
 
-        public void loop()
+        public void eventLoop()
         {
             int numberOfEmptyWork = 0;
             while (!m_ScriptEngine.ConsoleDisabled && !m_ScriptEngine.Disabled)

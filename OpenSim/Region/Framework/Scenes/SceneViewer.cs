@@ -114,7 +114,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 //Draw Distance chagned, force a cull check
                 m_forceCullCheck = true;
-                //Don't do this immediately
+                //Don't do this immediately as the viewer may keep changing the draw distance
                 //SignificantClientMovement (m_presence.ControllingClient);
             }
             else if (FunctionName == "SignficantCameraMovement")

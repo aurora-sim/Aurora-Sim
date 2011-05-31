@@ -2884,8 +2884,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     //Some notes on this part
                     //xx and yy are used for the original heightmap, as we are offsetting the new one by 1
                     // so we subtract one so that we can put the heightmap in correctly
-                    int xx = Util.Clip (x - 1, 0, m_region.RegionSizeX - 1);
-                    int yy = Util.Clip (y - 1, 0, m_region.RegionSizeY - 1);
+                    int xx = x - 1;
+                    if(xx < 0)
+                        xx = 0;
+                    if(xx > m_region.RegionSizeX - 1)
+                        xx = m_region.RegionSizeX - 1;
+                    int yy = y - 1;
+                    if (yy < 0)
+                        yy = 0;
+                    if (yy > m_region.RegionSizeY - 1)
+                        yy = m_region.RegionSizeY - 1;
 
                     short val = heightMap[yy * m_region.RegionSizeX + xx];
                     //ODE is evil... flip x and y
