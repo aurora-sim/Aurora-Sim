@@ -518,11 +518,14 @@ namespace Aurora.BotManager
 
         private void GetNextDestination()
         {
-            if (m_scenePresence == null || m_paused)
+            if (m_scenePresence == null)
                 return;
 
             //Fire the move event
             EventManager.FireGenericEventHandler ("Move", null);
+
+            if(m_paused)
+                return;
 
             Vector3 pos;
             TravelMode state;
@@ -736,16 +739,24 @@ namespace Aurora.BotManager
 
         public IScenePresence FollowSP = null;
         public UUID FollowUUID = UUID.Zero;
-        private float m_followCloseToPoint = 1.5f;
+        private float m_StopFollowDistance = 2f;
+        private float m_StartFollowDistance = 3f;
         private float m_followLoseAvatarDistance = 1000;
         private const float FollowTimeBeforeUpdate = 10;
         private float CurrentFollowTimeBeforeUpdate = 0;
         private int jumpTry = 0;
+        private bool m_lostAvatar = false;
 
-        public float FollowCloseToPoint
+        public float StartFollowDistance
         {
-            get { return m_followCloseToPoint; }
-            set { m_followCloseToPoint = value; }
+            get { return m_StartFollowDistance; }
+            set { m_StartFollowDistance = value; }
+        }
+
+        public float StopFollowDistance
+        {
+            get { return m_StopFollowDistance; }
+            set { m_StopFollowDistance = value; }
         }
 
         public float FollowLoseAvatarDistance
@@ -761,7 +772,7 @@ namespace Aurora.BotManager
 
         #endregion
 
-        public void FollowAvatar (string avatarName, float followDistance)
+        public void FollowAvatar (string avatarName, float startFollowDistance, float stopFollowDistance)
         {
             m_scenePresence.Scene.TryGetAvatarByName (avatarName, out FollowSP);
             if (FollowSP == null)
@@ -784,7 +795,8 @@ namespace Aurora.BotManager
             EventManager.RegisterEventHandler ("Update", FollowingUpdate);
             EventManager.RegisterEventHandler ("Move", FollowingMove);
             m_scenePresence.StandUp (); //Can't follow if sitting
-            m_followCloseToPoint = followDistance;
+            StartFollowDistance = startFollowDistance;
+            StopFollowDistance = stopFollowDistance;
         }
 
         public void StopFollowAvatar ()
@@ -809,16 +821,21 @@ namespace Aurora.BotManager
             Vector3 targetPos = FollowSP.AbsolutePosition;
             Vector3 currentPos = m_scenePresence.AbsolutePosition;
             double distance = Util.GetDistanceTo (targetPos, currentPos);
+            float closeToPoint = m_toAvatar ? StartFollowDistance : StopFollowDistance;
+            //Fix how we are running
             m_scenePresence.SetAlwaysRun = FollowSP.SetAlwaysRun;
-            if (distance < m_followCloseToPoint)
+            if (distance < closeToPoint)
             {
-                //Fire our event
-                EventManager.FireGenericEventHandler ("ToAvatar", null);
+                //Fire our event once
+                if(!m_toAvatar) //Changed
+                    EventManager.FireGenericEventHandler ("ToAvatar", null);
+                m_toAvatar = true;
                 bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
                 if (fly)
                 {
+                    //Avatar will fall from the sky with this???
                     //FlyTo (m_scenePresence.AbsolutePosition);
-                   // m_scenePresence.PhysicsActor.Flying = true;
+                    //m_scenePresence.PhysicsActor.Flying = true;
                 }
                 else
                     WalkTo (m_scenePresence.AbsolutePosition);
@@ -826,8 +843,17 @@ namespace Aurora.BotManager
             else if (distance > m_followLoseAvatarDistance)
             {
                 //Lost the avatar, fire the event
-                EventManager.FireGenericEventHandler ("LostAvatar", null);
+                if(!m_lostAvatar)
+                    EventManager.FireGenericEventHandler ("LostAvatar", null);
+                m_lostAvatar = true;
+                m_paused = true;
             }
+            else if (m_lostAvatar)
+            {
+                m_lostAvatar = false;
+                m_paused = false; //Fixed pause status, avatar entered our range again
+            }
+            m_toAvatar = false;
             return null;
         }
 
@@ -839,7 +865,8 @@ namespace Aurora.BotManager
         {
             double distance = Util.GetDistanceTo (FollowSP.AbsolutePosition, m_scenePresence.AbsolutePosition);
             Vector3 diffAbsPos = FollowSP.AbsolutePosition - m_scenePresence.AbsolutePosition;
-            if (distance > m_followCloseToPoint || raycastEntities.Count > 0)
+            float closeToPoint = m_toAvatar ? StartFollowDistance : StopFollowDistance;
+            if (distance > closeToPoint || raycastEntities.Count > 0)
             {
                 Vector3 targetPos = FollowSP.AbsolutePosition;
                 Vector3 ourPos = m_scenePresence.AbsolutePosition;
@@ -936,6 +963,8 @@ namespace Aurora.BotManager
         private int failedToMove = 0;
         private int sincefailedToMove = 0;
         private Vector3 m_lastPos = Vector3.Zero;
+        private bool m_toAvatar = false;
+
         private void NewFollowing ()
         {
             // FOLLOW an avatar - this is looking for an avatar UUID so wont follow a prim here  - yet
@@ -956,6 +985,7 @@ namespace Aurora.BotManager
             resolution = 3;
             double distance = Util.GetDistanceTo (targetPos, currentPos);
             List<ISceneChildEntity> raycastEntities = llCastRay (m_scenePresence.AbsolutePosition, FollowSP.AbsolutePosition);
+            float closeToPoint = m_toAvatar ? StartFollowDistance : StopFollowDistance;
             if (distance > 10) //Greater than 10 meters, give up
             {
                 m_log.Warn ("Target is out of range");
@@ -967,7 +997,7 @@ namespace Aurora.BotManager
                 }
                 return;
             }
-            else if (distance < m_followCloseToPoint && raycastEntities.Count == 0)//If the raycastEntities isn't zero, there is something between us and the avatar, don't stop on the other side of walls, etc
+            else if (distance < closeToPoint && raycastEntities.Count == 0)//If the raycastEntities isn't zero, there is something between us and the avatar, don't stop on the other side of walls, etc
             {
                 if (jumpTry > 0)
                 {

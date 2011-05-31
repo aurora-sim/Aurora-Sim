@@ -225,6 +225,16 @@ namespace Aurora.BotManager
                 bot.SetMovementSpeedMod(modifier);
         }
 
+        public void SetBotShouldFly (UUID botID, bool shouldFly)
+        {
+            Bot bot;
+            if (m_bots.TryGetValue (botID, out bot))
+                if (shouldFly)
+                    bot.DisableWalk ();
+                else
+                    bot.EnableWalk ();
+        }
+
         #endregion
 
         #region IAStarBotManager
@@ -262,12 +272,12 @@ namespace Aurora.BotManager
         /// </summary>
         /// <param name="Bot"></param>
         /// <param name="modifier"></param>
-        public void FollowAvatar (UUID botID, string avatarName, float followDistance)
+        public void FollowAvatar (UUID botID, string avatarName, float startFollowDistance, float endFollowDistance)
         {
             Bot bot;
             if (m_bots.TryGetValue (botID, out bot))
             {
-                bot.FollowAvatar (avatarName, followDistance);
+                bot.FollowAvatar (avatarName, startFollowDistance, endFollowDistance);
             }
         }
 
@@ -329,21 +339,6 @@ namespace Aurora.BotManager
             Bot bot;
             if (m_bots.TryGetValue (botID, out bot))
                 bot.SendChatMessage (sayType, message, channel);
-        }
-
-        #endregion
-
-        #region IBotManager Members
-
-
-        public void SetBotShouldFly (UUID botID, bool shouldFly)
-        {
-            Bot bot;
-            if (m_bots.TryGetValue (botID, out bot))
-                if (shouldFly)
-                    bot.DisableWalk ();
-                else
-                    bot.EnableWalk ();
         }
 
         #endregion

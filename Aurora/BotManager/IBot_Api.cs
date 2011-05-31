@@ -45,7 +45,7 @@ namespace Aurora.BotManager
         void botRemoveBot (string bot);
         void botPauseMovement (string bot);
         void botResumeMovement (string bot);
-        void botFollowAvatar (string bot, string avatarName, LSL_Float followDistance);
+        void botFollowAvatar (string bot, string avatarName, LSL_Float startFollowDistance, LSL_Float endFollowDistance);
         void botStopFollowAvatar (string bot);
         void botSetPathMap (string bot, string pathMap, int x, int y, int cornerstoneX, int cornerstoneY);
         void botFindPath (string bot, LSL_Vector startPos, LSL_Vector endPos);

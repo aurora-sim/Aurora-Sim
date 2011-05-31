@@ -202,12 +202,12 @@ namespace Aurora.BotManager
                 manager.RemoveAvatar (UUID.Parse (bot), m_host.ParentEntity.Scene);
         }
 
-        public void botFollowAvatar (string bot, string avatarName, LSL_Float followDistance)
+        public void botFollowAvatar (string bot, string avatarName, LSL_Float startFollowDistance, LSL_Float endFollowDistance)
         {
             ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botFollowAvatar", m_host, "bot");
             IBotManager manager = World.RequestModuleInterface<IBotManager> ();
             if (manager != null)
-                manager.FollowAvatar (UUID.Parse (bot), avatarName, (float)followDistance);
+                manager.FollowAvatar (UUID.Parse (bot), avatarName, (float)startFollowDistance, (float)endFollowDistance);
         }
 
         public void botStopFollowAvatar (string bot)

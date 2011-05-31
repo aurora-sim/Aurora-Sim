@@ -24,7 +24,7 @@ namespace Aurora.BotManager
 
         #region FollowAvatar
 
-        void FollowAvatar (UUID botID, string avatarName, float followDistance);
+        void FollowAvatar (UUID botID, string avatarName, float startFollowDistance, float endFollowDistance);
         void StopFollowAvatar (UUID botID);
 
         #endregion
