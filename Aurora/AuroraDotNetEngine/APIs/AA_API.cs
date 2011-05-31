@@ -357,10 +357,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public LSL_String aaGetText()
+        public LSL_String aaGetText ()
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetText", m_host, "AA");
+            ScriptProtection.CheckThreatLevel (ThreatLevel.None, "AAGetText", m_host, "AA");
             return m_host.Text;
+        }
+
+        public LSL_Rotation aaGetTextColor ()
+        {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.None, "AAGetText", m_host, "AA");
+            LSL_Rotation v = new LSL_Rotation (m_host.Color.R, m_host.Color.G, m_host.Color.B, m_host.Color.A);
+            return v;
         }
 
         public void aaRaiseError(string message)
@@ -447,7 +454,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public bool aaGetWalkDisabled(string vPresenceId)
+        public LSL_Types.LSLInteger aaGetWalkDisabled (string vPresenceId)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetWalkDisabled", m_host, "AA");
             TaskInventoryItem item;
@@ -506,7 +513,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public bool aaGetFlyDisabled(string vPresenceId)
+        public LSL_Types.LSLInteger aaGetFlyDisabled (string vPresenceId)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetFlyDisabled", m_host, "AA");
             TaskInventoryItem item;
@@ -565,7 +572,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public string aaAvatarFullName2Key(string fullname)
+        public LSL_Types.LSLString aaAvatarFullName2Key (string fullname)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAAvatarFullName2Key", m_host, "AA");
             UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, fullname);

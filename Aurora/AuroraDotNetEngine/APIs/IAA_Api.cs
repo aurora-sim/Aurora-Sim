@@ -74,20 +74,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 
         void aaSayTo(string userID, string text);
 
-        bool aaGetWalkDisabled(string userID);
+        LSL_Types.LSLInteger aaGetWalkDisabled (string userID);
 
         void aaSetWalkDisabled(string userID, bool Value);
 
-        bool aaGetFlyDisabled(string userID);
+        LSL_Types.LSLInteger aaGetFlyDisabled (string userID);
 
         void aaSetFlyDisabled(string userID, bool Value);
 
-        string aaAvatarFullName2Key(string username);
+        LSL_Types.LSLString aaAvatarFullName2Key (string username);
 
         void aaSetCenterOfGravity(LSL_Types.Vector3 position);
 
         void aaRaiseError(string message);
 
-        LSL_Types.LSLString aaGetText();
+        LSL_Types.LSLString aaGetText ();
+
+        LSL_Types.Quaternion aaGetTextColor ();
     }
 }
