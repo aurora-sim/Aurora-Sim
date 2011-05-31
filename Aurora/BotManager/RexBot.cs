@@ -955,6 +955,7 @@ namespace Aurora.BotManager
 
             resolution = 3;
             double distance = Util.GetDistanceTo (targetPos, currentPos);
+            List<ISceneChildEntity> raycastEntities = llCastRay (m_scenePresence.AbsolutePosition, FollowSP.AbsolutePosition);
             if (distance > 10) //Greater than 10 meters, give up
             {
                 m_log.Warn ("Target is out of range");
@@ -966,7 +967,7 @@ namespace Aurora.BotManager
                 }
                 return;
             }
-            else if (distance < m_followCloseToPoint)
+            else if (distance < m_followCloseToPoint && raycastEntities.Count == 0)//If the raycastEntities isn't zero, there is something between us and the avatar, don't stop on the other side of walls, etc
             {
                 if (jumpTry > 0)
                 {
@@ -981,8 +982,7 @@ namespace Aurora.BotManager
                 return;
             }
 
-            List<ISceneChildEntity> raycastEntities = llCastRay (m_scenePresence.AbsolutePosition, FollowSP.AbsolutePosition);
-
+            
             if (raycastEntities.Count == 0)
             {
                 //Nothing between us and the target, go for it!
