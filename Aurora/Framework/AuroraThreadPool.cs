@@ -24,8 +24,7 @@ namespace Aurora.Framework
     public class AuroraThreadPool
     {
         public delegate void QueueItem ();
-        private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
-
+        
         AuroraThreadPoolStartInfo m_info = null;
         Thread[] Threads = null;
         int[] Sleeping;
@@ -66,7 +65,6 @@ namespace Aurora.Framework
                         OurSleepTime += m_info.SleepIncrementTime;
                         if (m_info.KillThreadAfterQueueClear || OurSleepTime > m_info.MaxSleepTime)
                         {
-                            m_log.Fatal ((m_info.Name == "" ? "Aurora Thread Pool" : m_info.Name) + " #" + ThreadNumber + ": dieing");
                             Threads[ThreadNumber] = null;
                             Interlocked.Decrement(ref nthreads);
                             break;
@@ -121,7 +119,6 @@ namespace Aurora.Framework
                             Thread thread = new Thread (ThreadStart);
                             thread.Priority = m_info.priority;
                             thread.Name = (m_info.Name == "" ? "AuroraThreadPool" : m_info.Name) + "#" + i.ToString ();
-                            m_log.Fatal ((m_info.Name == "" ? "Aurora Thread Pool" : m_info.Name) + " #" + i + ": creating " + Environment.StackTrace);
                             thread.IsBackground = true;
                             try
                             {
