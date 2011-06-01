@@ -99,7 +99,7 @@ namespace OpenSim.Services.CapsService
             foreach(ISceneChildEntity entity in entities)
             {
                 message.ObjectPhysicsProperties[i] = new Primitive.PhysicsProperties ();
-                message.ObjectPhysicsProperties[i].Density = 1000;
+                message.ObjectPhysicsProperties[i].Density = entity.Density;
                 message.ObjectPhysicsProperties[i].Friction = 1;
                 message.ObjectPhysicsProperties[i].GravityMultiplier = entity.PhysActor == null ? 1.0f : entity.PhysActor.GravityMultiplier;
                 message.ObjectPhysicsProperties[i].LocalID = entity.LocalId;

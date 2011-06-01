@@ -1866,6 +1866,13 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_PhysicsShapeType = value; }
         }
 
+        private float m_Density = 1000;
+        public float Density
+        {
+            get { return m_Density; }
+            set { m_Density = value; }
+        }
+
         /// <summary>
         /// Property flags.  See OpenMetaverse.PrimFlags 
         /// </summary>
@@ -2346,7 +2353,8 @@ namespace OpenSim.Region.Framework.Scenes
                     tmp,
                     Scale,
                     qtmp,
-                    RigidBody);
+                    RigidBody,
+                    Density);
 
                 // Basic Physics returns null..  joy joy joy.
                 if (PhysActor != null)
@@ -5172,6 +5180,12 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 if (this.PhysActor != null)
                     PhysActor.GravityMultiplier = block.GravityMultiplier;
+
+                if (Density != block.Density)
+                {
+                    Density = block.Density;
+                    ParentGroup.RebuildPhysicalRepresentation ();
+                }
             }
 
             if ((UsePhysics == wasUsingPhysics) && (wasTemporary == IsTemporary) && (wasPhantom == IsPhantom) && (IsVD==wasVD))
@@ -5262,7 +5276,8 @@ namespace OpenSim.Region.Framework.Scenes
                         tmp,
                         Scale,
                         qtmp,
-                        UsePhysics);
+                        UsePhysics,
+                        Density);
 
                     pa = PhysActor;
                     if (pa != null)

@@ -1849,7 +1849,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         private PhysicsObject AddPrim(String name, Vector3 position, Vector3 size, Quaternion rotation,
-                                     IMesh mesh, PrimitiveBaseShape pbs, bool isphysical)
+                                     IMesh mesh, PrimitiveBaseShape pbs, bool isphysical, float Density)
         {
 
             Vector3 pos = position;
@@ -1857,7 +1857,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             Quaternion rot = rotation;
 
             AuroraODEPrim newPrim;
-            newPrim = new AuroraODEPrim(name, this, pos, siz, rot, mesh, pbs, isphysical, ode);
+            newPrim = new AuroraODEPrim (name, this, pos, siz, rot, mesh, pbs, isphysical, ode, Density);
 
             lock (_prims)
                 _prims.Add(newPrim);
@@ -1878,35 +1878,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         public override PhysicsObject AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
-                                                  Vector3 size, Quaternion rotation) //To be removed
+                                                  Vector3 size, Quaternion rotation, bool isPhysical, float Density)
         {
-            return AddPrimShape(primName, pbs, position, size, rotation, false);
-        }
-
-        public override PhysicsObject AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
-                                                  Vector3 size, Quaternion rotation, bool isPhysical)
-        {
-            PhysicsObject result;
-            IMesh mesh = null;
-
-            /*if (needsMeshing(pbs))
-            {
-                try
-                {
-                    mesh = mesher.CreateMesh(primName, pbs, size, 32f, isPhysical);
-                }
-                catch (Exception e)
-                {
-                    m_log.ErrorFormat("[PHYSICS]: Exception while meshing prim {0}.", primName);
-                    m_log.Debug(e.ToString());
-                    mesh = null;
-                    return null;
-                }
-            }*/
-
-            result = AddPrim(primName, position, size, rotation, mesh, pbs, isPhysical);
-
-            return result;
+            return AddPrim (primName, position, size, rotation, null, pbs, isPhysical, Density);
         }
 
         public override float TimeDilation

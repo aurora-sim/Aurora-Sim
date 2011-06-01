@@ -289,7 +289,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         }
 
         private PhysicsObject AddPrim(String name, Vector3 position, Vector3 size, Quaternion rotation,
-                                    IMesh mesh, PrimitiveBaseShape pbs, bool isphysical)
+                                    IMesh mesh, PrimitiveBaseShape pbs, bool isphysical, float Density)
         {
 
             Vector3 pos = position;
@@ -316,12 +316,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             return newPrim;
         }
 
-        public override PhysicsObject AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position, Vector3 size, Quaternion rotation)
-        {
-            return AddPrimShape(primName, pbs, position, size, rotation, false);
-        }
-
-        public override PhysicsObject AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical)
+        public override PhysicsObject AddPrimShape (string primName, PrimitiveBaseShape pbs, Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical, float Density)
         {
             PhysicsObject result;
             IMesh mesh = null;
@@ -341,7 +336,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             if (needsMeshing(pbs))
                 mesh = mesher.CreateMesh(primName, pbs, size, 32f, isPhysical);
 
-            result = AddPrim(primName, position, size, rotation, mesh, pbs, isPhysical);
+            result = AddPrim(primName, position, size, rotation, mesh, pbs, isPhysical, Density);
 
             return result;
         }

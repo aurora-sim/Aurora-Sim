@@ -1513,13 +1513,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void RebuildPhysicalRepresentation()
         {
-           
-            /*
             foreach (SceneObjectPart part in m_partsList)
             {
                 if (part.PhysActor != null)
                 {
-                    PhysicsActor oldActor = part.PhysActor;
+                    PhysicsObject oldActor = part.PhysActor;
                     PrimitiveBaseShape pbs = part.Shape;
 
                     //Remove the old one so that we don't have more than we should,
@@ -1534,7 +1532,8 @@ namespace OpenSim.Region.Framework.Scenes
                             part.AbsolutePosition,
                             part.Scale,
                             part.RotationOffset,
-                            part.PhysActor.IsPhysical);
+                            part.PhysActor.IsPhysical,
+                            part.Density);
 
                     //Fix the localID!
                     part.PhysActor.LocalID = part.LocalId;
@@ -1545,7 +1544,7 @@ namespace OpenSim.Region.Framework.Scenes
                     part.PhysActor.PIDTau = oldActor.PIDTau;
                     part.PhysActor.PIDActive = oldActor.PIDActive;
 
-                    part.PhysActor.SetVolumeDetect(part.VolumeDetectActive ? 1 : 0);
+                    part.PhysActor.VolumeDetect = part.VolumeDetectActive;
 
                     //Force deselection here so that it isn't stuck forever
                     part.PhysActor.Selected = false;
@@ -1553,7 +1552,6 @@ namespace OpenSim.Region.Framework.Scenes
                     part.ScriptSetPhysicsStatus(oldActor.IsPhysical);
                 }
             }
-             */
         }
 
         #endregion

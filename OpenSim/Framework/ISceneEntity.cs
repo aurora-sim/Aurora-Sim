@@ -671,6 +671,12 @@ namespace OpenSim.Framework
             get;
             set;
         }
+
+        float Density
+        {
+            get;
+            set;
+        }
     }
 
     public interface ISceneGraph

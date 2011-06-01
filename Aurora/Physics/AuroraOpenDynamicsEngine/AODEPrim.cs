@@ -195,7 +195,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         internal int m_material = (int)Material.Wood;
 
         public AuroraODEPrim(String primName, AuroraODEPhysicsScene parent_scene, Vector3 pos, Vector3 size,
-                       Quaternion rotation, IMesh mesh, PrimitiveBaseShape pbs, bool pisPhysical, CollisionLocker dode)
+                       Quaternion rotation, IMesh mesh, PrimitiveBaseShape pbs, bool pisPhysical, CollisionLocker dode, float Density)
         {
             m_vehicle = new AuroraODEDynamics();
             //gc = GCHandle.Alloc(prim_geom, GCHandleType.Pinned);
@@ -216,7 +216,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             PID_D /= (parent_scene.ODE_STEPSIZE * 50f); // original ode fps of 50
             PID_G /= (parent_scene.ODE_STEPSIZE * 50f);
 
-            m_density = parent_scene.geomDefaultDensity;
+            m_density = Density / 100;
             // m_tensor = parent_scene.bodyMotorJointMaxforceTensor;
             body_autodisable_frames = parent_scene.bodyFramesAutoDisable;
 
@@ -1828,43 +1828,43 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         }
 
-        public void changePhysicsStatus(bool newphys)
-            {
+        public void changePhysicsStatus (bool newphys)
+        {
             m_isphysical = newphys;
             if (!childPrim)
-                {
+            {
                 if (newphys == true)
-                    {
+                {
                     if (Body == IntPtr.Zero)
-                        {
-                        if (_pbs.SculptEntry && _parent_scene.meshSculptedPrim)
-                            {
-                            changeshape((object) _pbs);
-                            }
-                        else
-                            {
-                            MakeBody();
-                            }
-                        }
-                    }
-                else
                     {
-                    if (Body != IntPtr.Zero)
-                        {
-                        UpdateChildsfromgeom();
                         if (_pbs.SculptEntry && _parent_scene.meshSculptedPrim)
-                            {
-                            changeshape((object)_pbs);
-                            }
+                        {
+                            changeshape ((object)_pbs);
+                        }
                         else
-                            DestroyBody();
+                        {
+                            MakeBody ();
                         }
                     }
                 }
-            
-            changeSelectedStatus(m_isSelected);
-            resetCollisionAccounting();
+                else
+                {
+                    if (Body != IntPtr.Zero)
+                    {
+                        UpdateChildsfromgeom ();
+                        if (_pbs.SculptEntry && _parent_scene.meshSculptedPrim)
+                        {
+                            changeshape ((object)_pbs);
+                        }
+                        else
+                            DestroyBody ();
+                    }
+                }
             }
+
+            changeSelectedStatus (m_isSelected);
+            resetCollisionAccounting ();
+        }
 
        
 
@@ -2063,17 +2063,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override bool IsPhysical
         {
-            get {
+            get
+            {
                 if (childPrim && _parent != null)  // root prim defines if is physical or not
                     return ((AuroraODEPrim)_parent).m_isphysical;
                 else
                     return m_isphysical;
-                }
-            set {
-                AddChange(changes.Physical, (object)value);
+            }
+            set
+            {
+                AddChange (changes.Physical, (object)value);
                 if (!(bool)value) // Zero the remembered last velocity
-                      m_lastVelocity = Vector3.Zero;
-                }
+                    m_lastVelocity = Vector3.Zero;
+            }
         }
 
         public void setPrimForRemoval()
