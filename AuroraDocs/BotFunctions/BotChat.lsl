@@ -21,8 +21,8 @@ default
         botID = botCreateBot(first, last, userToDuplicate);
     }
     touch_start(integer number)
-	{
-	    //Say the message to users
-        botSendChatMessage (bot, message, channel, sayType);
+    {
+        //Say the message to users
+        botSendChatMessage (botID, message, channel, sayType);
     }
 }
