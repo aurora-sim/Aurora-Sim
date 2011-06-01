@@ -95,9 +95,17 @@ namespace OpenSim.Services.CapsService
         {
             ObjectPhysicsPropertiesMessage message = new ObjectPhysicsPropertiesMessage ();
             message.ObjectPhysicsProperties = new Primitive.PhysicsProperties[entities.Length];
+            int i = 0;
             foreach(ISceneChildEntity entity in entities)
             {
-                //message.ObjectPhysicsProperties[0].Density
+                message.ObjectPhysicsProperties[i] = new Primitive.PhysicsProperties ();
+                message.ObjectPhysicsProperties[i].Density = 1;
+                message.ObjectPhysicsProperties[i].Friction = 1;
+                message.ObjectPhysicsProperties[i].GravityMultiplier = entity.PhysActor.GravityMultiplier;
+                message.ObjectPhysicsProperties[i].LocalID = entity.LocalId;
+                message.ObjectPhysicsProperties[i].PhysicsShapeType = PhysicsShapeType.Prim;
+                message.ObjectPhysicsProperties[i].Restitution = 1;
+                i++;
             }
             return message.Serialize ();
         }

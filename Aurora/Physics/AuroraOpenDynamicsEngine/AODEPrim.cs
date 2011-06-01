@@ -144,6 +144,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private PhysicsObject _parent;
 
         private List<AuroraODEPrim> childrenPrim = new List<AuroraODEPrim>();
+        private float m_GravityMultiplier = 1;
+
+        public override float GravityMultiplier
+        {
+            get { return m_GravityMultiplier; }
+            set { m_GravityMultiplier = value; }
+        }
 
         private bool iscolliding;
         private bool m_isphysical;
@@ -1481,22 +1488,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // m_buoyancy: (unlimited value) <0=Falls fast; 0=1g; 1=0g; >1 = floats up 
                     // gravityz multiplier = 1 - m_buoyancy
                     if (!_parent_scene.UsePointGravity)
-                        {
+                    {
                         if (!testRealGravity)
-                            {
-                            fx = _parent_scene.gravityx * (1.0f - m_buoyancy);
-                            fy = _parent_scene.gravityy * (1.0f - m_buoyancy);
-                            fz = _parent_scene.gravityz * (1.0f - m_buoyancy);
-                            }
+                        {
+                            fx = _parent_scene.gravityx * (1.0f - m_buoyancy) * GravityMultiplier;
+                            fy = _parent_scene.gravityy * (1.0f - m_buoyancy) * GravityMultiplier;
+                            fz = _parent_scene.gravityz * (1.0f - m_buoyancy) * GravityMultiplier;
+                        }
                         else
-                            {
+                        {
                             fx = _parent_scene.gravityx * -1 * (1.0f - m_buoyancy);
                             fy = _parent_scene.gravityy * -1 * (1.0f - m_buoyancy);
                             fz = _parent_scene.gravityz * -1 * (1.0f - m_buoyancy);
-                            }
                         }
+                    }
                     else
-                        {
+                    {
                         //Set up point gravity for this object
                         Vector3 cog = _parent_scene.PointOfGravity;
                         if (cog.X != 0)
@@ -1505,7 +1512,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             fy = (cog.Y - dcpos.Y);
                         if (cog.Z != 0)
                             fz = (cog.Z - dcpos.Z);
-                        }
+                    }
 
 
                     #region PID

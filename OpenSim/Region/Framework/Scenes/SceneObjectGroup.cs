@@ -2414,9 +2414,11 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
 
+                ((SceneObjectPart)selectionPart).UpdatePrimFlags (UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, blocks);
                 foreach (SceneObjectPart part in m_partsList)
                 {
-                    part.UpdatePrimFlags (UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, blocks);
+                    if(selectionPart != part)
+                        part.UpdatePrimFlags (UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, null);
                 }
             }
         }

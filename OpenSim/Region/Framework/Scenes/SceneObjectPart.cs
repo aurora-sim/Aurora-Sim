@@ -5148,6 +5148,15 @@ namespace OpenSim.Region.Framework.Scenes
             bool wasPhantom = ((Flags & PrimFlags.Phantom) != 0);
             bool wasVD = VolumeDetectActive;
 
+            if (blocks != null && blocks.Length != 0)
+            {
+                ObjectFlagUpdatePacket.ExtraPhysicsBlock block = blocks[0];
+                if (block.PhysicsShapeType == (byte)PhysicsShapeType.None)
+                    IsPhantom = true;
+                if (this.PhysActor != null)
+                    PhysActor.GravityMultiplier = block.GravityMultiplier;
+            }
+
             if ((UsePhysics == wasUsingPhysics) && (wasTemporary == IsTemporary) && (wasPhantom == IsPhantom) && (IsVD==wasVD))
                 return;
 

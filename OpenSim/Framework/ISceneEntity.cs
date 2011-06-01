@@ -879,6 +879,12 @@ namespace OpenSim.Framework
             set { return; }
         }
 
+        public virtual float GravityMultiplier
+        {
+            get { return 1; }
+            set {}
+        }
+
         public virtual bool PIDActive
         {
             get { return false; }
