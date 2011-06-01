@@ -1242,52 +1242,37 @@ namespace Aurora.BotManager
 
         private void ClearOutInSignificantPositions (bool checkPositions)
         {
-            int clearPos = 0;
-            bool changed = false;
-            for (int i = currentPos; i < m_significantAvatarPositions.Count; i++)
+            Vector3[] sigPos = new Vector3[m_significantAvatarPositions.Count];
+            int closestPosition = 0;
+            double closestDistance = 0;
+            m_significantAvatarPositions.CopyTo (sigPos);
+
+            for (int i = 0; i < sigPos.Length; i++)
             {
-                if (m_scenePresence.AbsolutePosition.ApproxEquals (m_significantAvatarPositions[i], 0.5f))
+                double val = Util.GetDistanceTo (m_scenePresence.AbsolutePosition, sigPos[i]);
+                if (closestDistance == 0 || closestDistance > val)
                 {
-                    if (highestCurrentPos2 < i)
-                    {
-                        changed = true;
-                        highestCurrentPos2 = i;
-                    }
-                    currentPos = i;
+                    closestDistance = val;
+                    closestPosition = i;
                 }
             }
-            if (checkPositions)
+            if (currentPos > closestPosition)
             {
-                if (changed)
-                {
-                    currentPos++;
-                    lastCorrectCurrentPos = currentPos;
-                    lastChangedCurrentPos = 0;
-                }
-                else
-                    lastChangedCurrentPos++;
-                if (lastChangedCurrentPos > 10)
-                {
-                    lastChangedCurrentPos = 1;
-                    if (currentPos != 0)
-                        currentPos++;//Go on to the next one... hopefully we can get there?
-                    if (currentPos == m_significantAvatarPositions.Count)
-                    {
-                        currentRemoveMultiplier++;
-                        //Go back a few to try to figure out where we were
-                        currentPos = lastCorrectCurrentPos - (15 * currentRemoveMultiplier);
-                    }
-                    if (currentPos < 0)
-                        currentPos = 0;
-                }
-                else if (lastChangedCurrentPos < 1)
-                    currentRemoveMultiplier = 0;
+                currentPos = closestPosition+2;
+                //Going backwards? We must have no idea where we are
             }
+            else //Going forwards in the line, all good
+                currentPos = closestPosition+2;
+            
             //Remove all insignificant
-            for (int i = 0; i < clearPos; i++)
+            List<Vector3> vectors = new List<Vector3> ();
+            for (int i = sigPos.Length - 50; i < sigPos.Length; i++)
             {
-                m_significantAvatarPositions.RemoveAt (0);
+                if (i < 0)
+                    continue;
+                vectors.Add (sigPos[i]);
             }
+            m_significantAvatarPositions = vectors;
         }
 
         private void SignificantPositionFollowing (List<ISceneChildEntity> raycastEntities)
