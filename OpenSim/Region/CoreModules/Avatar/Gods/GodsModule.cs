@@ -26,12 +26,15 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
@@ -58,6 +61,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
             m_scene.RegisterModuleInterface<IGodsModule>(this);
             m_scene.EventManager.OnNewClient += SubscribeToClientEvents;
             m_scene.EventManager.OnClosingClient += UnsubscribeFromClientEvents;
+            m_scene.EventManager.OnRegisterCaps += RegisterCaps;
         }
 
         public void RemoveRegion(Scene scene)
@@ -65,6 +69,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
             m_scene.UnregisterModuleInterface<IGodsModule>(this);
             m_scene.EventManager.OnNewClient -= SubscribeToClientEvents;
             m_scene.EventManager.OnClosingClient -= UnsubscribeFromClientEvents;
+            m_scene.EventManager.OnRegisterCaps -= RegisterCaps;
         }
 
         public void RegionLoaded(Scene scene)
@@ -94,6 +99,41 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
         {
             client.OnGodKickUser -= KickUser;
             client.OnRequestGodlikePowers -= RequestGodlikePowers;
+        }
+
+        public OSDMap RegisterCaps (UUID agentID, IHttpServer server)
+        {
+            OSDMap retVal = new OSDMap ();
+            retVal["UntrustedSimulatorMessage"] = OpenSim.Framework.Capabilities.CapsUtil.CreateCAPS ("UntrustedSimulatorMessage", "");
+
+            server.AddStreamHandler (new RestHTTPHandler ("POST", retVal["UntrustedSimulatorMessage"],
+                                                      delegate (Hashtable m_dhttpMethod)
+                                                      {
+                                                          return UntrustedSimulatorMessage (agentID, m_dhttpMethod);
+                                                      }));
+            return retVal;
+        }
+
+        private Hashtable UntrustedSimulatorMessage (UUID AgentID, Hashtable mDhttpMethod)
+        {
+            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml ((string)mDhttpMethod["requestbody"]);
+            if (rm["message"] == "GodKickUser")
+            {
+                OSDArray innerArray = ((OSDArray)((OSDMap)rm["body"])["UserInfo"]);
+                OSDMap innerMap = (OSDMap)innerArray[0];
+                UUID toKick = innerMap["AgentID"].AsUUID ();
+                UUID sessionID = innerMap["GodSessionID"].AsUUID ();
+                string reason = innerMap["Reason"].AsString ();
+                uint kickFlags = innerMap["KickFlags"].AsUInteger ();
+                KickUser (AgentID, sessionID, toKick, kickFlags, reason);
+            }
+            //Send back data
+            Hashtable responsedata = new Hashtable ();
+            responsedata["int_response_code"] = 200; //501; //410; //404;
+            responsedata["content_type"] = "text/plain";
+            responsedata["keepalive"] = false;
+            responsedata["str_response_string"] = "";
+            return responsedata;
         }
         
         public void RequestGodlikePowers(
