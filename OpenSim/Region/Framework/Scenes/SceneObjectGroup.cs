@@ -1511,46 +1511,58 @@ namespace OpenSim.Region.Framework.Scenes
         /// Rebuild the physical representation of all the prims.
         /// This is used after copying the prim so that all of the object is readded to the physics scene.
         /// </summary>
-        public void RebuildPhysicalRepresentation()
+        public void RebuildPhysicalRepresentation ()
         {
             foreach (SceneObjectPart part in m_partsList)
             {
+                PhysicsObject oldActor = part.PhysActor;
+                PrimitiveBaseShape pbs = part.Shape;
                 if (part.PhysActor != null)
                 {
-                    PhysicsObject oldActor = part.PhysActor;
-                    PrimitiveBaseShape pbs = part.Shape;
-
                     //Remove the old one so that we don't have more than we should,
                     //  as when we copy, it readds it to the PhysicsScene somehow
-                    m_scene.PhysicsScene.RemovePrim(part.PhysActor);
+                    m_scene.PhysicsScene.RemovePrim (part.PhysActor);
+                }
 
-                    //Now readd the physics actor to the physics scene
-                    part.PhysActor
-                        = m_scene.PhysicsScene.AddPrimShape(
-                            string.Format("{0}/{1}", part.Name, part.UUID),
-                            pbs,
-                            part.AbsolutePosition,
-                            part.Scale,
-                            part.RotationOffset,
-                            part.PhysActor.IsPhysical,
-                            part.Density);
+                if (RootPart.PhysicsType == (byte)PhysicsShapeType.None)
+                {
+                    part.PhysActor = null;
+                    continue; //Don't rebuild! All phantom if the root is phantom
+                }
+                if (part.PhysicsType == (byte)PhysicsShapeType.None)
+                {
+                    part.PhysActor = null;
+                    continue; //Don't rebuild!
+                }
+                bool usePhysics = (RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics;
+                //Now readd the physics actor to the physics scene
+                part.PhysActor
+                    = m_scene.PhysicsScene.AddPrimShape (
+                        string.Format ("{0}/{1}", part.Name, part.UUID),
+                        pbs,
+                        part.AbsolutePosition,
+                        part.Scale,
+                        part.RotationOffset,
+                        usePhysics,
+                        part.Density);
 
-                    //Fix the localID!
-                    part.PhysActor.LocalID = part.LocalId;
-                    //Set physical and etc up correctly
-                    part.DoPhysicsPropertyUpdate(oldActor.IsPhysical, true);
-
+                //Fix the localID!
+                part.PhysActor.LocalID = part.LocalId;
+                //Set physical and etc up correctly
+                part.DoPhysicsPropertyUpdate (usePhysics, true);
+                if (oldActor != null)
+                {
                     part.PhysActor.PIDTarget = oldActor.PIDTarget;
                     part.PhysActor.PIDTau = oldActor.PIDTau;
                     part.PhysActor.PIDActive = oldActor.PIDActive;
-
-                    part.PhysActor.VolumeDetect = part.VolumeDetectActive;
-
-                    //Force deselection here so that it isn't stuck forever
-                    part.PhysActor.Selected = false;
-
-                    part.ScriptSetPhysicsStatus(oldActor.IsPhysical);
                 }
+
+                part.PhysActor.VolumeDetect = part.VolumeDetectActive;
+
+                //Force deselection here so that it isn't stuck forever
+                part.PhysActor.Selected = false;
+
+                part.ScriptSetPhysicsStatus (usePhysics);
             }
         }
 
@@ -2026,8 +2038,11 @@ namespace OpenSim.Region.Framework.Scenes
                 // let physics link it
                 if (linkPart.PhysActor != null && m_rootPart.PhysActor != null)
                 {
-                    linkPart.PhysActor.link (m_rootPart.PhysActor);
-                    this.Scene.PhysicsScene.AddPhysicsActorTaint (linkPart.PhysActor);
+                    if (linkPart.PhysicsType != (byte)PhysicsShapeType.None)
+                    {
+                        linkPart.PhysActor.link (m_rootPart.PhysActor);
+                        this.Scene.PhysicsScene.AddPhysicsActorTaint (linkPart.PhysActor);
+                    }
                 }
                 //rest of parts
                 foreach (SceneObjectPart part in objectGroupChildren)

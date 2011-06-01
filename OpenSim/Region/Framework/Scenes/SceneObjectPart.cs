@@ -5171,12 +5171,15 @@ namespace OpenSim.Region.Framework.Scenes
                 if (PhysicsType != block.PhysicsShapeType)
                 {
                     PhysicsType = block.PhysicsShapeType;
-                    if (block.PhysicsShapeType != (byte)PhysicsShapeType.None)
+                    ParentGroup.RebuildPhysicalRepresentation ();
+                    /*if (block.PhysicsShapeType != (byte)PhysicsShapeType.None)
                     {
                         ParentGroup.ApplyPhysics (true);
                     }
                     else
+                    {
                         DoPhysicsPropertyUpdate (block.PhysicsShapeType != (byte)PhysicsShapeType.None, true);
+                    }*/
                 }
                 if (this.PhysActor != null)
                     PhysActor.GravityMultiplier = block.GravityMultiplier;
