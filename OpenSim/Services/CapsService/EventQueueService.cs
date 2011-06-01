@@ -144,10 +144,16 @@ namespace OpenSim.Services.CapsService
             Enqueue(item, avatarID, RegionHandle);
         }
 
-        public virtual void EnableSimulator(ulong handle, byte[] IPAddress, int Port, UUID avatarID, int RegionSizeX, int RegionSizeY, ulong RegionHandle)
+        public virtual void EnableSimulator (ulong handle, byte[] IPAddress, int Port, UUID avatarID, int RegionSizeX, int RegionSizeY, ulong RegionHandle)
         {
-            OSD item = EventQueueHelper.EnableSimulator(handle, IPAddress, Port, RegionSizeX, RegionSizeY);
-            Enqueue(item, avatarID, RegionHandle);
+            OSD item = EventQueueHelper.EnableSimulator (handle, IPAddress, Port, RegionSizeX, RegionSizeY);
+            Enqueue (item, avatarID, RegionHandle);
+        }
+
+        public virtual void ObjectPhysicsProperties (ISceneChildEntity[] entities, UUID avatarID, ulong RegionHandle)
+        {
+            OSD item = EventQueueHelper.ObjectPhysicsProperties (entities);
+            Enqueue (item, avatarID, RegionHandle);
         }
 
         public virtual void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, byte[] IPAddress, int Port, string CapsUrl, int RegionSizeX, int RegionSizeY, ulong RegionHandle)

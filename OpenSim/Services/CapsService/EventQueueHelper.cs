@@ -91,6 +91,17 @@ namespace OpenSim.Services.CapsService
             return buildEvent("EnableSimulator", llsdBody);
         }
 
+        public static OSD ObjectPhysicsProperties (ISceneChildEntity[] entities)
+        {
+            ObjectPhysicsPropertiesMessage message = new ObjectPhysicsPropertiesMessage ();
+            message.ObjectPhysicsProperties = new Primitive.PhysicsProperties[entities.Length];
+            foreach(ISceneChildEntity entity in entities)
+            {
+                //message.ObjectPhysicsProperties[0].Density
+            }
+            return message.Serialize ();
+        }
+
         public static OSD DisableSimulator(ulong handle)
         {
             OSDMap llsdBody = new OSDMap(1);

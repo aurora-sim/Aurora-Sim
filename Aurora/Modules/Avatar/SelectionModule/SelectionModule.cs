@@ -33,6 +33,7 @@ using System.Text;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using log4net;
@@ -215,7 +216,12 @@ namespace Aurora.Modules
             IScenePresence SP;
             scene.TryGetScenePresence(remoteClient.AgentId, out SP);
             if (EntitiesToUpdate.Count != 0)
-                SP.SceneViewer.QueuePartsForPropertiesUpdate(EntitiesToUpdate.ToArray());
+            {
+                SP.SceneViewer.QueuePartsForPropertiesUpdate (EntitiesToUpdate.ToArray ());
+                IEventQueueService eqs = remoteClient.Scene.RequestModuleInterface<IEventQueueService> ();
+                if (eqs != null)
+                    eqs.ObjectPhysicsProperties (EntitiesToUpdate.ToArray (), remoteClient.AgentId, remoteClient.Scene.RegionInfo.RegionHandle);
+            }
             PerClientSelectionParticles selection = SP.RequestModuleInterface<PerClientSelectionParticles>();
             if (selection != null)
             {

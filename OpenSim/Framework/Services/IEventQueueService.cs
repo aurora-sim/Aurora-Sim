@@ -86,6 +86,7 @@ namespace OpenSim.Services.Interfaces
         void QueryReply(PlacesReplyPacket placesReply, UUID avatarID, string[] RegionTypes, ulong RegionHandle);
         void ScriptRunningReply(UUID objectID, UUID itemID, bool running, bool mono,
             UUID avatarID, ulong RegionHandle);
+        void ObjectPhysicsProperties (ISceneChildEntity[] entities, UUID avatarID, ulong RegionHandle);
 
         /// <summary>
         /// The local service (if possible)
