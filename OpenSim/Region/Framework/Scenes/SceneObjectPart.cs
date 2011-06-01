@@ -2584,6 +2584,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (UsePhysics != PhysActor.IsPhysical || isNew)
                 {
+                    if (PhysicsType == (byte)PhysicsShapeType.None)
+                        UsePhysics = false;
                     if (PhysActor.IsPhysical) // implies UsePhysics==false for this block
                     {
                         PhysActor.OnRequestTerseUpdate -= PhysicsRequestingTerseUpdate;
@@ -5158,14 +5160,16 @@ namespace OpenSim.Region.Framework.Scenes
             if (blocks != null && blocks.Length != 0)
             {
                 ObjectFlagUpdatePacket.ExtraPhysicsBlock block = blocks[0];
-                if (block.PhysicsShapeType == (byte)PhysicsType.None)
+                if (PhysicsType != block.PhysicsShapeType)
                 {
-                    if (PhysicsType != (byte)PhysicsType.None)
-                        PhysActor.delink ();
+                    PhysicsType = block.PhysicsShapeType;
+                    if (block.PhysicsShapeType != (byte)PhysicsShapeType.None)
+                    {
+                        ParentGroup.ApplyPhysics (true);
+                    }
+                    else
+                        DoPhysicsPropertyUpdate (block.PhysicsShapeType != (byte)PhysicsShapeType.None, true);
                 }
-                else
-                    PhysActor.link (this.ParentGroup.RootChild.PhysActor);
-                PhysicsType = block.PhysicsShapeType;
                 if (this.PhysActor != null)
                     PhysActor.GravityMultiplier = block.GravityMultiplier;
             }
