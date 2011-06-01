@@ -379,8 +379,6 @@ namespace OpenSim.Framework
 
         bool VolumeDetectActive { get; set; }
 
-        void UpdatePrimFlags (bool p, bool wasTemporary, bool wasPhantom, bool wasVD);
-
         UUID GroupID { get; set; }
 
         UUID CreatorID { get; set; }

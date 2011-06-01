@@ -1055,7 +1055,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                             bool wasTemporary = ((group.RootChild.Flags & PrimFlags.TemporaryOnRez) != 0);
                             bool wasPhantom = ((group.RootChild.Flags & PrimFlags.Phantom) != 0);
                             bool wasVD = group.RootChild.VolumeDetectActive;
-                            group.RootChild.UpdatePrimFlags (false, wasTemporary, wasPhantom, wasVD);
+                            ((SceneObjectPart)group.RootChild).UpdatePrimFlags (false, wasTemporary, wasPhantom, wasVD, null);
                         }
                         //Send an update so that all clients see it
                         group.ScheduleGroupTerseUpdate();

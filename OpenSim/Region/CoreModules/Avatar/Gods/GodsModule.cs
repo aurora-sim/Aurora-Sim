@@ -143,6 +143,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
         /// <param name="reason">The message to send to the user after it's been turned into a field</param>
         public void KickUser(UUID godID, UUID sessionID, UUID agentID, uint kickflags, byte[] reason)
         {
+            KickUser (godID, sessionID, agentID, kickflags, Utils.BytesToString (reason));
+        }
+
+        public void KickUser (UUID godID, UUID sessionID, UUID agentID, uint kickflags, string reason)
+        {
             UUID kickUserID = ALL_AGENTS;
 
             IScenePresence sp = m_scene.GetScenePresence (agentID);
@@ -155,13 +160,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                     {
                         if (agentID == kickUserID)
                         {
-                            string reasonStr = Utils.BytesToString(reason);
-
                             m_scene.ForEachClient(
                                 delegate(IClientAPI controller)
                                 {
                                     if (controller.AgentId != godID)
-                                        controller.Kick(reasonStr);
+                                        controller.Kick(reason);
                                 }
                             );
 
@@ -186,13 +189,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                     else if (kickflags == 1)
                     {
                         sp.Frozen = true;
-                        m_dialogModule.SendAlertToUser(agentID, Utils.BytesToString(reason));
+                        m_dialogModule.SendAlertToUser(agentID, reason);
                         m_dialogModule.SendAlertToUser(godID, "User Frozen");
                     }
                     else if (kickflags == 2)
                     {
                         sp.Frozen = false;
-                        m_dialogModule.SendAlertToUser(agentID, Utils.BytesToString(reason));
+                        m_dialogModule.SendAlertToUser(agentID, reason);
                         m_dialogModule.SendAlertToUser(godID, "User Unfrozen");
                     }
                 }

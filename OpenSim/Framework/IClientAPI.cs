@@ -124,7 +124,7 @@ namespace OpenSim.Framework
     public delegate void ObjectDrop(uint localID, IClientAPI remoteClient);
 
     public delegate void UpdatePrimFlags(
-        uint localID, bool UsePhysics, bool IsTemporary, bool IsPhantom, IClientAPI remoteClient);
+        uint localID, bool UsePhysics, bool IsTemporary, bool IsPhantom, ObjectFlagUpdatePacket.ExtraPhysicsBlock[] blocks, IClientAPI remoteClient);
 
     public delegate void UpdatePrimTexture(uint localID, byte[] texture, IClientAPI remoteClient);
 

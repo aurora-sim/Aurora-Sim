@@ -7218,7 +7218,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if (handlerUpdatePrimFlags != null)
             {
-                handlerUpdatePrimFlags(flags.AgentData.ObjectLocalID, flags.AgentData.UsePhysics, flags.AgentData.IsTemporary, flags.AgentData.IsPhantom, this);
+                handlerUpdatePrimFlags(flags.AgentData.ObjectLocalID, flags.AgentData.UsePhysics, flags.AgentData.IsTemporary, flags.AgentData.IsPhantom, flags.ExtraPhysics, this);
             }
             return true;
         }

@@ -51,8 +51,8 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="godID">The person doing the kicking</param>
         /// <param name="sessionID">The session of the person doing the kicking</param>
         /// <param name="agentID">the person that is being kicked</param>
-        /// <param name="kickflags">This isn't used apparently</param>
-        /// <param name="reason">The message to send to the user after it's been turned into a field</param>
-        void KickUser(UUID godID, UUID sessionID, UUID agentID, uint kickflags, byte[] reason);
+        /// <param name="kickflags">What to do to the user (kick, freeze/unfreeze)</param>
+        /// <param name="reason">The message to send to the user</param>
+        void KickUser(UUID godID, UUID sessionID, UUID agentID, uint kickflags, string reason);
     }
 }

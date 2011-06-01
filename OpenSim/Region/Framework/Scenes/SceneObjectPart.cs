@@ -5141,7 +5141,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void UpdatePrimFlags(bool UsePhysics, bool IsTemporary, bool IsPhantom, bool IsVD)
+        public void UpdatePrimFlags (bool UsePhysics, bool IsTemporary, bool IsPhantom, bool IsVD, ObjectFlagUpdatePacket.ExtraPhysicsBlock[] blocks)
         {
             bool wasUsingPhysics = ((Flags & PrimFlags.Physics) != 0);
             bool wasTemporary = ((Flags & PrimFlags.TemporaryOnRez) != 0);
@@ -5149,9 +5149,7 @@ namespace OpenSim.Region.Framework.Scenes
             bool wasVD = VolumeDetectActive;
 
             if ((UsePhysics == wasUsingPhysics) && (wasTemporary == IsTemporary) && (wasPhantom == IsPhantom) && (IsVD==wasVD))
-            {
                 return;
-            }
 
             // Special cases for VD. VD can only be called from a script 
             // and can't be combined with changes to other states. So we can rely
@@ -5188,15 +5186,9 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     DoPhysicsPropertyUpdate(UsePhysics, false);
                     if (m_parentGroup != null)
-                    {
                         if (!m_parentGroup.IsDeleted)
-                        {
                             if (LocalId == m_parentGroup.RootPart.LocalId)
-                            {
                                 m_parentGroup.CheckSculptAndLoad();
-                            }
-                        }
-                    }
                 }
                 if (PhysActor != null)
                 {
@@ -5208,9 +5200,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 RemFlag(PrimFlags.Physics);
                 if (wasUsingPhysics)
-                {
                     DoPhysicsPropertyUpdate(UsePhysics, false);
-                }
+
                 if (PhysActor != null)
                 {
                     PhysActor.UnSubscribeEvents();

@@ -1301,21 +1301,19 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        ///
+        /// A user has changed an object setting
         /// </summary>
         /// <param name="localID"></param>
         /// <param name="packet"></param>
         /// <param name="remoteClient"></param>
-        /// This routine seems to get called when a user changes object settings in the viewer.
-        /// If some one can confirm that, please change the comment according.
-        protected internal void UpdatePrimFlags(uint LocalID, bool UsePhysics, bool IsTemporary, bool IsPhantom, IClientAPI remoteClient)
+        protected internal void UpdatePrimFlags (uint LocalID, bool UsePhysics, bool IsTemporary, bool IsPhantom, ObjectFlagUpdatePacket.ExtraPhysicsBlock[] blocks, IClientAPI remoteClient)
         {
             IEntity entity;
             if (TryGetEntity(LocalID, out entity))
             {
-                if (m_parentScene.Permissions.CanEditObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
+                if (m_parentScene.Permissions.CanEditObject(entity.UUID, remoteClient.AgentId))
                 {
-                    ((SceneObjectGroup)entity).UpdatePrimFlags(LocalID, UsePhysics, IsTemporary, IsPhantom, false); // VolumeDetect can't be set via UI and will always be off when a change is made there
+                    ((SceneObjectGroup)entity).UpdatePrimFlags(LocalID, UsePhysics, IsTemporary, IsPhantom, false, blocks); // VolumeDetect can't be set via UI and will always be off when a change is made there
                 }
             }
         }
