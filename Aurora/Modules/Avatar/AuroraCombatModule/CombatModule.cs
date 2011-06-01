@@ -127,17 +127,16 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             }
         }
 
-        private bool AllowedTeleports(UUID userID, IScene scene, out string reason)
+        private bool AllowedTeleports (UUID userID, IScene scene, out string reason)
         {
             //Make sure that agents that are in combat cannot tp around. They CAN tp if they are out of combat however
             reason = "";
             IScenePresence SP = null;
-            if (scene.TryGetScenePresence(userID, out SP))
-                if (DisallowTeleportingForCombatants)
-                    if (SP.RequestModuleInterface<ICombatPresence>() != null)
-                        if (SP.RequestModuleInterface<ICombatPresence>().HasLeftCombat == false)
-                            if (!SP.Invulnerable)
-                                return false;
+            if (scene.TryGetScenePresence (userID, out SP))
+                if (DisallowTeleportingForCombatants &&
+                    SP.RequestModuleInterface<ICombatPresence> () != null &&
+                    !SP.RequestModuleInterface<ICombatPresence> ().HasLeftCombat && !SP.Invulnerable)
+                    return false;
             return true;
         }
 
@@ -217,6 +216,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 
         private class CombatPresence : ICombatPresence
         {
+            #region Declares
+
             private IScenePresence m_SP;
             private AuroraCombatModule m_combatModule;
             private float m_health = 100f; 
@@ -254,6 +255,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 }
             }
 
+            #endregion
+
+            #region Initialization/Close
+
             public CombatPresence (AuroraCombatModule module, IScenePresence SP, IConfig m_config)
             {
                 m_SP = SP;
@@ -281,6 +286,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 SP_OnRemovePhysics ();
                 m_SP = null;
             }
+
+            #endregion
+
+            #region Physics events
 
             public void SP_OnRemovePhysics()
             {
@@ -367,6 +376,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                     KillAvatar (killingAvatar, "You killed " + m_SP.Name, "You died!", true, true);
             }
 
+            #endregion
+
+            #region Kill Avatar
+
             public void KillAvatar (IScenePresence killingAvatar, string killingAvatarMessage, string deadAvatarMessage, bool TeleportAgent, bool showAgentMessages)
             {
                 try
@@ -407,7 +420,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                             transferModule.TeleportHome(m_SP.UUID, m_SP.ControllingClient);
                     }
                 }
+
+                m_SP.Scene.AuroraEventManager.FireGenericEventHandler ("OnAvatarDeath", null);
             }
+
+            #endregion
+
+            #region Timer events
 
             void fixAvatarHealth_Elapsed (object sender, System.Timers.ElapsedEventArgs e)
             {
@@ -425,6 +444,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 this.HasLeftCombat = false;
             }
 
+            #endregion
+
             #region Combat functions
 
             public void LeaveCombat()
@@ -439,12 +460,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 m_combatModule.AddPlayerToTeam(m_Team, m_SP.UUID);
             }
 
-            #endregion
-
             public List<UUID> GetTeammates()
             {
                 return m_combatModule.GetTeammates(m_Team);
             }
+
+            #endregion
 
             #region Incur* functions
 
@@ -519,10 +540,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 
             #endregion
 
+            #region Stat functions
+
             public void SetStat(string StatName, float statValue)
             {
 
             }
+
+            #endregion
         }
 
         private class CombatObject : ICombatPresence
