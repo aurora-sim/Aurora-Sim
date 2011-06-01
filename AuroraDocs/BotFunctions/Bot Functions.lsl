@@ -12,7 +12,7 @@ default
         userToDuplicate = llGetOwner();
         botID = botCreateBot(first, last, userToDuplicate);
         
-		//Now give it a list of positions to go around
+        //Now give it a list of positions to go around
         list positions = [llGetPos(), llGetPos() + <0, 20, 20>, llGetPos() + <20, 0, 20>];
         //Now tell it how it will get there
         //0 - Walk to the next target
@@ -24,9 +24,14 @@ default
     touch_start(integer number)
     {
         if(paused)
-		   botResumeMovement(botID);
-		else
-		   botPauseMovement(botID);
-		paused = !paused;
+           botResumeMovement(botID);
+        else if(!paused)
+           botPauseMovement(botID);
+        else
+        {
+            botRemoveBot(botID);
+            paused = FALSE;
+        }
+        paused++;
     }
 }
