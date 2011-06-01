@@ -53,7 +53,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
         private bool m_enabled;
         private Dictionary<string, List<UUID>> Teams = new Dictionary<string, List<UUID>>();
         private List<UUID> CombatAllowedAgents = new List<UUID>();
-        public List<UUID> PrimCombatServers = new List<UUID>();
         public bool ForceRequireCombatPermission = true;
         public bool DisallowTeleportingForCombatants = true;
         public Scene m_scene;
@@ -168,18 +167,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             return CombatAllowedAgents.Contains(AgentID);
         }
 
-        public void RegisterToAvatarDeathEvents(UUID primID)
-        {
-            if(!PrimCombatServers.Contains(primID))
-                PrimCombatServers.Add(primID);
-        }
-
-        public void DeregisterFromAvatarDeathEvents(UUID primID)
-        {
-            if (PrimCombatServers.Contains(primID))
-                PrimCombatServers.Remove(primID);
-        }
-
         public void AddPlayerToTeam(string Team, UUID AgentID)
         {
             lock (Teams)
@@ -238,12 +225,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             {
                 get { return m_health; }
                 set 
-                { 
-                    m_health = value;
-                    if (value <= 0)
-                    {
-                        KillAvatar (0, true, false);
-                    }
+                {
+                    if (value > m_health)
+                        IncurHealing (value - m_health, m_SP.UUID);
+                    else
+                        IncurDamage (-1, m_health - value, m_SP.UUID);
                 }
             }
 
@@ -306,30 +292,25 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 
             public void PhysicsActor_OnCollisionUpdate(EventArgs e)
             {
-                if (m_SP == null || m_SP.Invulnerable)
-                    return;
-
-                if (HasLeftCombat)
-                    return;
-
-                if (e == null)
+                if (m_SP == null || m_SP.Invulnerable || HasLeftCombat || e == null)
                     return;
 
                 CollisionEventUpdate collisionData = (CollisionEventUpdate)e;
                 Dictionary<uint, ContactPoint> coldata = collisionData.m_objCollisionList;
 
                 float starthealth = Health;
-                uint killerObj = 0;
+                IScenePresence killingAvatar = null;
                 foreach (uint localid in coldata.Keys)
                 {
                     ISceneChildEntity part = m_SP.Scene.GetSceneObjectPart(localid);
+                    IScenePresence otherAvatar = null;
                     if (part != null && part.ParentEntity.Damage > 0)
                     {
-                        IScenePresence otherAvatar = m_SP.Scene.GetScenePresence (part.OwnerID);
+                        otherAvatar = m_SP.Scene.GetScenePresence (part.OwnerID);
                         ICombatPresence OtherAvatarCP = otherAvatar == null ? null : otherAvatar.RequestModuleInterface<ICombatPresence> ();
                         if (OtherAvatarCP != null && OtherAvatarCP.HasLeftCombat) // If the avatar is null, the person is not inworld, and not on a team
-                                //If they have left combat, do not let them cause any damage.
-                                continue;
+                            //If they have left combat, do not let them cause any damage.
+                            continue;
 
                         //Check max damage to inflict
                         if (part.ParentEntity.Damage > m_combatModule.MaximumDamageToInflict)
@@ -345,7 +326,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                             if (m_combatModule.SendTeamKillerInfo && Hits == m_combatModule.TeamHitsBeforeSend)
                             {
                                 otherAvatar.ControllingClient.SendAlertMessage ("You have shot too many teammates and " + m_combatModule.DamageToTeamKillers + " health has been taken from you!");
-                                IncurDamage (0, m_combatModule.DamageToTeamKillers, otherAvatar.UUID);
+                                IncurDamage (-1, m_combatModule.DamageToTeamKillers, otherAvatar.UUID);
                                 Hits = 0;
                             }
                             TeamHits[otherAvatar.UUID] = Hits;
@@ -369,8 +350,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 
                     if (Health > m_combatModule.MaximumHealth)
                         Health = m_combatModule.MaximumHealth;
-                    
-                    killerObj = localid;
+
+                    if (Health <= 0 && killingAvatar == null)
+                        killingAvatar = otherAvatar;
                     //m_log.Debug("[AVATAR]: Collision with localid: " + localid.ToString() + " at depth: " + coldata[localid].ToString());
                 }
 
@@ -378,73 +360,18 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                     m_SP.ControllingClient.SendHealth(Health);
 
                 if (Health <= 0)
-                    KillAvatar(killerObj, true);
+                    KillAvatar (killingAvatar, "You killed " + m_SP.Name, "You died!", true, true);
             }
 
-            public void KillAvatar (uint killerObjectLocalID, bool TeleportAgent)
+            public void KillAvatar (IScenePresence killingAvatar, string killingAvatarMessage, string deadAvatarMessage, bool TeleportAgent, bool showAgentMessages)
             {
-                KillAvatar (killerObjectLocalID, TeleportAgent, true);
-            }
-
-            public void KillAvatar(uint killerObjectLocalID, bool TeleportAgent, bool showAgentMessage)
-            {
-                string deadAvatarMessage;
-                IScenePresence killingAvatar = null;
-                string killingAvatarMessage = "You fragged " + m_SP.Name;
-
-                if (killerObjectLocalID == 0)
-                    deadAvatarMessage = "You committed suicide!";
-                else
-                {
-                    // Try to get the avatar responsible for the killing
-                    killingAvatar = m_SP.Scene.GetScenePresence(killerObjectLocalID);
-                    if (killingAvatar == null)
-                    {
-                        // Try to get the object which was responsible for the killing
-                        ISceneChildEntity part = m_SP.Scene.GetSceneObjectPart (killerObjectLocalID);
-                        if (part == null)
-                        {
-                            // Cause of death: Unknown
-                            deadAvatarMessage = "You died!";
-                        }
-                        else
-                        {
-                            // Try to find the avatar wielding the killing object
-                            killingAvatar = m_SP.Scene.GetScenePresence(part.OwnerID);
-                            if (killingAvatar == null)
-                            {
-                                UserAccount account = m_SP.Scene.UserAccountService.GetUserAccount(m_SP.Scene.RegionInfo.ScopeID, part.OwnerID);
-                                deadAvatarMessage = String.Format("You impaled yourself on {0} owned by {1}!", part.Name, account.Name);
-                            }
-                            else
-                            {
-                                killingAvatarMessage = String.Format("You fragged {0}!", m_SP.Name);
-                                deadAvatarMessage = String.Format("You got killed by {0}!", killingAvatar.Name);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        ISceneChildEntity part = m_SP.Scene.GetSceneObjectPart (killerObjectLocalID);
-                        if (part == null)
-                        {
-                            // Cause of death: Unknown
-                            killingAvatarMessage = String.Format("You fragged {0}!", m_SP.Name);
-                            deadAvatarMessage = String.Format("You got killed by {0}!", killingAvatar.Name);
-                        }
-                        else
-                        {
-                            killingAvatarMessage = String.Format("You fragged {0}!", m_SP.Name);
-                            deadAvatarMessage = String.Format("You got killed by {0}!", killingAvatar.Name);
-                        }
-                    }
-                }
                 try
                 {
-                    if (showAgentMessage)
+                    if (showAgentMessages)
                     {
-                        m_SP.ControllingClient.SendAgentAlertMessage (deadAvatarMessage, true);
-                        if (killingAvatar != null)
+                        if(deadAvatarMessage != "")
+                            m_SP.ControllingClient.SendAgentAlertMessage (deadAvatarMessage, true);//Send it as a blue box at the bottom of the screen rather than as a full popup
+                        if (killingAvatar != null && killingAvatarMessage != "")
                             killingAvatar.ControllingClient.SendAlertMessage (killingAvatarMessage);
                     }
                 }
@@ -464,7 +391,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                             //Use this to reenable movement and combat
                             t.Interval = m_combatModule.m_SecondsBeforeRespawn * 1000;
                             t.Enabled = true;
-                            t.Elapsed += new System.Timers.ElapsedEventHandler(t_Elapsed);
+                            t.Elapsed += new System.Timers.ElapsedEventHandler(respawn_Elapsed);
                             t.Start ();
                         }
                         m_SP.Teleport (m_combatModule.m_RespawnPosition);
@@ -485,11 +412,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                     Health += 0.0625f;
             }
 
-            void t_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+            void respawn_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
             {
                 m_SP.AllowMovement = true;
                 this.HasLeftCombat = false;
             }
+
+            #region Combat functions
 
             public void LeaveCombat()
             {
@@ -503,6 +432,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 m_combatModule.AddPlayerToTeam(m_Team, m_SP.UUID);
             }
 
+            #endregion
+
             public List<UUID> GetTeammates()
             {
                 return m_combatModule.GetTeammates(m_Team);
@@ -510,7 +441,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 
             #region Incur* functions
 
-            public void IncurDamage(uint localID, double damage, UUID OwnerID)
+            public void IncurDamage(int localID, double damage, UUID OwnerID)
             {
                 if (damage < 0)
                     return;
@@ -527,7 +458,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                     health -= (float)damage;
                     m_SP.ControllingClient.SendHealth(health);
                     if (health <= 0)
-                        KillAvatar(localID, true);
+                        KillAvatar(null, "", "You died!", true, true);
                 }
             }
 
@@ -549,7 +480,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                     m_SP.ControllingClient.SendHealth(health);
                     if (health <= 0)
                     {
-                        KillAvatar(localID, false);
+                        KillAvatar (null, "", "You died!", false, true);
                         m_SP.ControllingClient.SendTeleportStart((uint)TeleportFlags.ViaHome);
                         IEntityTransferModule entityTransfer = m_SP.Scene.RequestModuleInterface<IEntityTransferModule>();
                         if (entityTransfer != null)
