@@ -57,7 +57,17 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
         public bool ForceRequireCombatPermission = true;
         public bool DisallowTeleportingForCombatants = true;
         public Scene m_scene;
-
+        public bool AllowTeamKilling;
+        public bool AllowTeams;
+        public bool SendTeamKillerInfo;
+        public float MaximumDamageToInflict;
+        public float TeamHitsBeforeSend;
+        public float DamageToTeamKillers;
+        public bool m_HasLeftCombat;
+        public int m_SecondsBeforeRespawn;
+        public Vector3 m_RespawnPosition;
+        public bool m_shouldRespawn;
+            
         public void Initialise(IConfigSource source)
         {
             m_config = source.Configs["CombatModule"];
@@ -67,6 +77,18 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 MaximumHealth = m_config.GetFloat("MaximumHealth", 100);
                 ForceRequireCombatPermission = m_config.GetBoolean("ForceRequireCombatPermission", ForceRequireCombatPermission);
                 DisallowTeleportingForCombatants = m_config.GetBoolean("DisallowTeleportingForCombatants", DisallowTeleportingForCombatants);
+                AllowTeamKilling = m_config.GetBoolean ("AllowTeamKilling", true);
+                AllowTeams = m_config.GetBoolean ("AllowTeams", false);
+                SendTeamKillerInfo = m_config.GetBoolean ("SendTeamKillerInfo", false);
+                TeamHitsBeforeSend = m_config.GetFloat ("TeamHitsBeforeSend", 3);
+                DamageToTeamKillers = m_config.GetFloat ("DamageToTeamKillers", 100);
+                MaximumHealth = m_config.GetFloat ("MaximumHealth", 100);
+                MaximumDamageToInflict = m_config.GetFloat ("MaximumDamageToInflict", 100);
+                m_RespawnPosition.X = m_config.GetFloat ("RespawnPositionX", 128);
+                m_RespawnPosition.Y = m_config.GetFloat ("RespawnPositionY", 128);
+                m_RespawnPosition.Z = m_config.GetFloat ("RespawnPositionZ", 128);
+                m_SecondsBeforeRespawn = m_config.GetInt ("SecondsBeforeRespawn", 5);
+                m_shouldRespawn = m_config.GetBoolean ("ShouldRespawn", false);
             }
         }
 
@@ -205,18 +227,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
         private class CombatPresence : ICombatPresence
         {
             private IScenePresence m_SP;
-            private bool FireOnDeadEvent;
-            private bool AllowTeamKilling;
-            private bool AllowTeams;
-            private bool SendTeamKillerInfo;
-            private float MaximumHealth;
-            private float MaximumDamageToInflict;
-            private float TeamHitsBeforeSend;
-            private float DamageToTeamKillers;
-            private bool m_HasLeftCombat;
-            private int m_SecondsBeforeRespawn;
-            private Vector3 m_RespawnPosition;
-            private bool m_shouldRespawn;
             private AuroraCombatModule m_combatModule;
             private float m_health = 100f; 
             private string m_Team;
@@ -227,13 +237,20 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             public float Health
             {
                 get { return m_health; }
-                set { m_health = value; }
+                set 
+                { 
+                    m_health = value;
+                    if (value <= 0)
+                    {
+                        KillAvatar (0, true, false);
+                    }
+                }
             }
 
             public bool HasLeftCombat
             {
-                get { return m_HasLeftCombat; }
-                set { m_HasLeftCombat = value; }
+                get { return m_combatModule.m_HasLeftCombat; }
+                set { m_combatModule.m_HasLeftCombat = value; }
             }
 
             public string Team
@@ -252,20 +269,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 m_SP = SP;
                 m_combatModule = module;
 
-                FireOnDeadEvent = m_config.GetBoolean("FireDeadEvent", false);
-                AllowTeamKilling = m_config.GetBoolean("AllowTeamKilling", true);
-                AllowTeams = m_config.GetBoolean("AllowTeams", false);
-                SendTeamKillerInfo = m_config.GetBoolean("SendTeamKillerInfo", false);
-                TeamHitsBeforeSend = m_config.GetFloat("TeamHitsBeforeSend", 3);
-                DamageToTeamKillers = m_config.GetFloat("DamageToTeamKillers", 100);
-                MaximumHealth = m_config.GetFloat("MaximumHealth", 100);
-                MaximumDamageToInflict = m_config.GetFloat("MaximumDamageToInflict", 100);
-                m_RespawnPosition.X = m_config.GetFloat("RespawnPositionX", 128);
-                m_RespawnPosition.Y = m_config.GetFloat("RespawnPositionY", 128);
-                m_RespawnPosition.Z = m_config.GetFloat("RespawnPositionZ", 128);
-                m_SecondsBeforeRespawn = m_config.GetInt("SecondsBeforeRespawn", 5);
-                m_shouldRespawn = m_config.GetBoolean("ShouldRespawn", false);
-
                 HasLeftCombat = false;
                 m_Team = "No Team";
 
@@ -275,7 +278,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 //Use this to fix the avatars health
                 m_healthtimer.Interval = 1000; // 1 sec
                 m_healthtimer.Enabled = true;
-                m_healthtimer.Elapsed += new System.Timers.ElapsedEventHandler (fixAvatarHealth_Elapsed);
+                m_healthtimer.Elapsed += fixAvatarHealth_Elapsed;
             }
 
             public void Close ()
@@ -320,62 +323,43 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 foreach (uint localid in coldata.Keys)
                 {
                     ISceneChildEntity part = m_SP.Scene.GetSceneObjectPart(localid);
-                    if (part != null)
+                    if (part != null && part.ParentEntity.Damage > 0)
                     {
-                        if (part.ParentEntity.Damage != -1.0f)
-                            continue;
                         IScenePresence otherAvatar = m_SP.Scene.GetScenePresence (part.OwnerID);
-                        if (otherAvatar != null) // If the avatar is null, the person is not inworld, and not on a team
-                        {
-                            if (otherAvatar.RequestModuleInterface<ICombatPresence>().HasLeftCombat)
-                            {
+                        ICombatPresence OtherAvatarCP = otherAvatar == null ? null : otherAvatar.RequestModuleInterface<ICombatPresence> ();
+                        if (OtherAvatarCP != null && OtherAvatarCP.HasLeftCombat) // If the avatar is null, the person is not inworld, and not on a team
                                 //If they have left combat, do not let them cause any damage.
                                 continue;
-                            }
-                        }
-                        if (part.ParentEntity.Damage > MaximumDamageToInflict)
-                            part.ParentEntity.Damage = MaximumDamageToInflict;
 
-                        if (AllowTeams)
+                        //Check max damage to inflict
+                        if (part.ParentEntity.Damage > m_combatModule.MaximumDamageToInflict)
+                            part.ParentEntity.Damage = m_combatModule.MaximumDamageToInflict;
+
+                        // If the avatar is null, the person is not inworld, and not on a team
+                        if (m_combatModule.AllowTeams && OtherAvatarCP != null && OtherAvatarCP.Team == Team)
                         {
-                            if (otherAvatar != null) // If the avatar is null, the person is not inworld, and not on a team
+                            float Hits = 0;
+                            if (!TeamHits.TryGetValue (otherAvatar.UUID, out Hits))
+                                Hits = 0;
+                            Hits++;
+                            if (m_combatModule.SendTeamKillerInfo && Hits == m_combatModule.TeamHitsBeforeSend)
                             {
-                                ICombatPresence OtherAvatarCP = otherAvatar.RequestModuleInterface<ICombatPresence>();
-                                if (OtherAvatarCP.Team == Team)
-                                {
-                                    float Hits = 0;
-                                    if (!TeamHits.TryGetValue(otherAvatar.UUID, out Hits))
-                                        Hits = 0;
-                                    Hits++;
-                                    if (SendTeamKillerInfo && Hits == TeamHitsBeforeSend)
-                                    {
-                                        otherAvatar.ControllingClient.SendAlertMessage("You have shot too many teammates and " + DamageToTeamKillers + " health has been taken from you!");
-                                        OtherAvatarCP.Health -= DamageToTeamKillers;
-                                        otherAvatar.ControllingClient.SendHealth(OtherAvatarCP.Health);
-                                        if (OtherAvatarCP.Health <= 0)
-                                        {
-                                            KillAvatar(otherAvatar.LocalId, true);
-                                        }
-                                        Hits = 0;
-                                    }
-                                    TeamHits[otherAvatar.UUID] = Hits;
-
-                                    if(AllowTeamKilling) //Green light on team killing
-                                        Health -= part.ParentEntity.Damage;
-                                }
-                                else //Object, hit em
-                                    Health -= part.ParentEntity.Damage;
+                                otherAvatar.ControllingClient.SendAlertMessage ("You have shot too many teammates and " + m_combatModule.DamageToTeamKillers + " health has been taken from you!");
+                                IncurDamage (0, m_combatModule.DamageToTeamKillers, otherAvatar.UUID);
+                                Hits = 0;
                             }
-                            else //Other team, hit em
+                            TeamHits[otherAvatar.UUID] = Hits;
+
+                            if (m_combatModule.AllowTeamKilling) //Green light on team killing
                                 Health -= part.ParentEntity.Damage;
                         }
-                        else //Free for all, hit em
+                        else //Object, hit em
                             Health -= part.ParentEntity.Damage;
                     }
                     else
                     {
                         float Z = m_SP.Velocity.Length () / 20;
-                        if (coldata[localid].PenetrationDepth >= 0.05f && Math.Abs(m_SP.Velocity.X) < 1 && Math.Abs(m_SP.Velocity.Y) < 1)
+                        if (coldata[localid].PenetrationDepth >= 0.05f && Math.Abs (m_SP.Velocity.X) < 1 && Math.Abs (m_SP.Velocity.Y) < 1)
                         {
                             Z = Math.Min (Z, 1.5f);
                             float damage = Math.Min (coldata[localid].PenetrationDepth, 15f);
@@ -385,39 +369,31 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 
                     if (Health > m_combatModule.MaximumHealth)
                         Health = m_combatModule.MaximumHealth;
-
-                    if (Health <= 0.0f)
-                    {
-                        if (localid != 0)
-                            killerObj = localid;
-                    }
+                    
+                    killerObj = localid;
                     //m_log.Debug("[AVATAR]: Collision with localid: " + localid.ToString() + " at depth: " + coldata[localid].ToString());
                 }
 
                 if (starthealth != Health)
-                {
                     m_SP.ControllingClient.SendHealth(Health);
-                }
+
                 if (Health <= 0)
-                {
                     KillAvatar(killerObj, true);
-                }
             }
 
-            public void KillAvatar(uint killerObjectLocalID, bool TeleportAgent)
+            public void KillAvatar (uint killerObjectLocalID, bool TeleportAgent)
+            {
+                KillAvatar (killerObjectLocalID, TeleportAgent, true);
+            }
+
+            public void KillAvatar(uint killerObjectLocalID, bool TeleportAgent, bool showAgentMessage)
             {
                 string deadAvatarMessage;
                 IScenePresence killingAvatar = null;
                 string killingAvatarMessage = "You fragged " + m_SP.Name;
 
                 if (killerObjectLocalID == 0)
-                {
                     deadAvatarMessage = "You committed suicide!";
-                    if (FireOnDeadEvent)
-                    {
-                        FireDeadAvatarEvent(m_SP.Name, m_SP, null);
-                    }
-                }
                 else
                 {
                     // Try to get the avatar responsible for the killing
@@ -430,8 +406,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                         {
                             // Cause of death: Unknown
                             deadAvatarMessage = "You died!";
-                            if (FireOnDeadEvent)
-                                FireDeadAvatarEvent("", m_SP, null);
                         }
                         else
                         {
@@ -441,14 +415,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                             {
                                 UserAccount account = m_SP.Scene.UserAccountService.GetUserAccount(m_SP.Scene.RegionInfo.ScopeID, part.OwnerID);
                                 deadAvatarMessage = String.Format("You impaled yourself on {0} owned by {1}!", part.Name, account.Name);
-                                if (FireOnDeadEvent)
-                                    FireDeadAvatarEvent (account.Name, m_SP, part.ParentEntity);
                             }
                             else
                             {
                                 killingAvatarMessage = String.Format("You fragged {0}!", m_SP.Name);
-                                if (FireOnDeadEvent)
-                                    FireDeadAvatarEvent (killingAvatar.Name, m_SP, part.ParentEntity);
                                 deadAvatarMessage = String.Format("You got killed by {0}!", killingAvatar.Name);
                             }
                         }
@@ -461,43 +431,43 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                             // Cause of death: Unknown
                             killingAvatarMessage = String.Format("You fragged {0}!", m_SP.Name);
                             deadAvatarMessage = String.Format("You got killed by {0}!", killingAvatar.Name);
-                            if (FireOnDeadEvent)
-                                FireDeadAvatarEvent(killingAvatar.Name, m_SP, null);
                         }
                         else
                         {
                             killingAvatarMessage = String.Format("You fragged {0}!", m_SP.Name);
                             deadAvatarMessage = String.Format("You got killed by {0}!", killingAvatar.Name);
-                            if (FireOnDeadEvent)
-                                FireDeadAvatarEvent (killingAvatar.Name, m_SP, part.ParentEntity);
                         }
                     }
                 }
                 try
                 {
-                    m_SP.ControllingClient.SendAgentAlertMessage(deadAvatarMessage, true);
-                    if (killingAvatar != null)
-                        killingAvatar.ControllingClient.SendAlertMessage(killingAvatarMessage);
+                    if (showAgentMessage)
+                    {
+                        m_SP.ControllingClient.SendAgentAlertMessage (deadAvatarMessage, true);
+                        if (killingAvatar != null)
+                            killingAvatar.ControllingClient.SendAlertMessage (killingAvatarMessage);
+                    }
                 }
                 catch (InvalidOperationException)
                 { }
 
-                Health = MaximumHealth;
+                Health = m_combatModule.MaximumHealth;
                 if (TeleportAgent)
                 {
-                    if (m_shouldRespawn)
+                    if (m_combatModule.m_shouldRespawn)
                     {
-                        if (m_SecondsBeforeRespawn != 0)
+                        if (m_combatModule.m_SecondsBeforeRespawn != 0)
                         {
                             m_SP.AllowMovement = false;
                             this.HasLeftCombat = true;
                             System.Timers.Timer t = new System.Timers.Timer();
                             //Use this to reenable movement and combat
-                            t.Interval = m_SecondsBeforeRespawn * 1000;
+                            t.Interval = m_combatModule.m_SecondsBeforeRespawn * 1000;
                             t.Enabled = true;
                             t.Elapsed += new System.Timers.ElapsedEventHandler(t_Elapsed);
+                            t.Start ();
                         }
-                        m_SP.Teleport(m_RespawnPosition);
+                        m_SP.Teleport (m_combatModule.m_RespawnPosition);
                     }
                     else
                     {
@@ -521,25 +491,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 this.HasLeftCombat = false;
             }
 
-            private void FireDeadAvatarEvent (string KillerName, IScenePresence DeadAv, ISceneEntity killer)
-            {
-                IScriptModule[] scriptEngines = DeadAv.Scene.RequestModuleInterfaces<IScriptModule>();
-                foreach (IScriptModule m in scriptEngines)
-                {
-                    if (killer != null)
-                    {
-                        foreach (ISceneChildEntity part in killer.ChildrenEntities())
-                        {
-                            m.PostObjectEvent(part.UUID, "dead_avatar", new object[] { DeadAv.Name, KillerName, DeadAv.UUID });
-                        }
-                        foreach (UUID primID in m_combatModule.PrimCombatServers)
-                        {
-                            m.PostObjectEvent(primID, "dead_avatar", new object[] { DeadAv.Name, KillerName, DeadAv.UUID });
-                        }
-                    }
-                }
-            }
-
             public void LeaveCombat()
             {
                 m_combatModule.RemovePlayerFromTeam(m_Team, m_SP.UUID);
@@ -557,6 +508,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 return m_combatModule.GetTeammates(m_Team);
             }
 
+            #region Incur* functions
+
             public void IncurDamage(uint localID, double damage, UUID OwnerID)
             {
                 if (damage < 0)
@@ -568,8 +521,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 ICombatPresence cp = SP.RequestModuleInterface<ICombatPresence>();
                 if (!cp.HasLeftCombat || !m_combatModule.ForceRequireCombatPermission)
                 {
-                    if (damage > MaximumDamageToInflict)
-                        damage = MaximumDamageToInflict;
+                    if (damage > m_combatModule.MaximumDamageToInflict)
+                        damage = m_combatModule.MaximumDamageToInflict;
                     float health = Health;
                     health -= (float)damage;
                     m_SP.ControllingClient.SendHealth(health);
@@ -589,8 +542,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 ICombatPresence cp = SP.RequestModuleInterface<ICombatPresence>();
                 if (!cp.HasLeftCombat || !m_combatModule.ForceRequireCombatPermission)
                 {
-                    if (damage > MaximumDamageToInflict)
-                        damage = MaximumDamageToInflict;
+                    if (damage > m_combatModule.MaximumDamageToInflict)
+                        damage = m_combatModule.MaximumDamageToInflict;
                     float health = Health;
                     health -= (float)damage;
                     m_SP.ControllingClient.SendHealth(health);
@@ -619,12 +572,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 {
                     float health = Health;
                     health += (float)healing;
-                    if (health >= MaximumHealth)
-                        health = MaximumHealth;
+                    if (health >= m_combatModule.MaximumHealth)
+                        health = m_combatModule.MaximumHealth;
 
                     m_SP.ControllingClient.SendHealth(health);
                 }
             }
+
+            #endregion
 
             public void SetStat(string StatName, float statValue)
             {
