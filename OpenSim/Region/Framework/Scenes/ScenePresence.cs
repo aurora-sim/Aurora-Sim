@@ -377,7 +377,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_DrawDistance = value;
                     //Fire the event
                     Scene.AuroraEventManager.FireGenericEventHandler("DrawDistanceChanged", this);
-                    if (!IsChildAgent)
+                    if (!IsChildAgent && !m_enqueueSendChildAgentUpdate)
                     {
                         //Send an update to all child agents if we are a root agent
                         m_enqueueSendChildAgentUpdate = true;
@@ -1944,27 +1944,29 @@ namespace OpenSim.Region.Framework.Scenes
             //    }
             //}
             if (m_enqueueSendChildAgentUpdate &&
-                m_enqueueSendChildAgentUpdateTime != new DateTime() &&
+                m_enqueueSendChildAgentUpdateTime != new DateTime () &&
                 DateTime.Now > m_enqueueSendChildAgentUpdateTime)
             {
                 //Reset it now
-                m_enqueueSendChildAgentUpdateTime = new DateTime();
+                m_enqueueSendChildAgentUpdateTime = new DateTime ();
                 m_enqueueSendChildAgentUpdate = false;
-                Util.FireAndForget(delegate(object o)
-                {
-                    //Send the child agent data update
-                    ISimulationService simService = m_scene.RequestModuleInterface<ISimulationService> ();
-                    IGridRegisterModule gridRegService = m_scene.RequestModuleInterface<IGridRegisterModule> ();
-                    if (simService != null && gridRegService != null)
-                    {
-                        AgentData data = new AgentData();
-                        CopyTo(data);
-                        foreach (GridRegion region in gridRegService.GetNeighbors (Scene))
-                        {
-                            simService.UpdateAgent (region, data);
-                        }
-                    }
-                });
+
+                AgentPosition agentpos = new AgentPosition ();
+                agentpos.AgentID = UUID;
+                agentpos.AtAxis = CameraAtAxis;
+                agentpos.Center = m_lastChildAgentUpdateCamPosition;
+                agentpos.Far = DrawDistance;
+                agentpos.LeftAxis = CameraLeftAxis;
+                agentpos.Position = m_lastChildAgentUpdatePosition;
+                agentpos.RegionHandle = Scene.RegionInfo.RegionHandle;
+                agentpos.Size = PhysicsActor != null ? PhysicsActor.Size : new Vector3 (0, 0, m_avHeight);
+                agentpos.UpAxis = CameraUpAxis;
+                agentpos.Velocity = Velocity;
+
+                //Send the child agent data update
+                ISyncMessagePosterService syncPoster = Scene.RequestModuleInterface<ISyncMessagePosterService> ();
+                if (syncPoster != null)
+                    syncPoster.Post (SyncMessageHelper.SendChildAgentUpdate (agentpos, m_scene.RegionInfo.RegionHandle), m_scene.RegionInfo.RegionHandle);
             }
         }
 
@@ -2052,8 +2054,8 @@ namespace OpenSim.Region.Framework.Scenes
             double  tmpsq = m_sceneViewer.Prioritizer.ChildReprioritizationDistance;
             tmpsq *= tmpsq;
             float vel = Velocity.LengthSquared();
-            if (vel < 4.0f && (Vector3.DistanceSquared(AbsolutePosition, m_lastChildAgentUpdatePosition) >= tmpsq ||
-                Vector3.DistanceSquared(CameraPosition, m_lastChildAgentUpdateCamPosition) >= tmpsq)) 
+            if (Vector3.DistanceSquared(AbsolutePosition, m_lastChildAgentUpdatePosition) >= tmpsq ||
+                Vector3.DistanceSquared (CameraPosition, m_lastChildAgentUpdateCamPosition) >= tmpsq * tmpsq) 
                  
             {
                 m_lastChildAgentUpdatePosition = AbsolutePosition;
@@ -2063,15 +2065,11 @@ namespace OpenSim.Region.Framework.Scenes
                 agentpos.AgentID = UUID;
                 agentpos.AtAxis = CameraAtAxis;
                 agentpos.Center = m_lastChildAgentUpdateCamPosition;
-                agentpos.ChangedGrid = false;
-                agentpos.CircuitCode = 0;
                 agentpos.Far = DrawDistance;
                 agentpos.LeftAxis = CameraLeftAxis;
                 agentpos.Position = m_lastChildAgentUpdatePosition;
                 agentpos.RegionHandle = Scene.RegionInfo.RegionHandle;
-                agentpos.SessionID = UUID.Zero;
                 agentpos.Size = PhysicsActor != null ? PhysicsActor.Size : new Vector3(0, 0, m_avHeight);
-                agentpos.Throttles = new byte[0];
                 agentpos.UpAxis = CameraUpAxis;
                 agentpos.Velocity = Velocity;
 
@@ -2247,9 +2245,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_CameraCenter = cAgentData.Center + offset;
 
             m_avHeight = cAgentData.Size.Z;
-
-            if ((cAgentData.Throttles != null) && cAgentData.Throttles.Length > 0)
-                ControllingClient.SetChildAgentThrottle(cAgentData.Throttles);
 
             m_scene.EventManager.TriggerSignificantClientMovement(m_controllingClient);
 

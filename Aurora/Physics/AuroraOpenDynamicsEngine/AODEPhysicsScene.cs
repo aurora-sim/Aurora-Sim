@@ -128,7 +128,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float avMovementDivisorWalk = 1.3f;
         public float avMovementDivisorRun = 0.8f;
         private float minimumGroundFlightOffset = 3f;
-        public float maximumMassObject = 10000.01f;
+        public float maximumMassObject = 100000.01f;
 
         public bool meshSculptedPrim = true;
         public bool forceSimplePrimMeshing = true;
@@ -491,7 +491,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     m_NINJA_physics_joints_enabled = physicsconfig.GetBoolean("use_NINJA_physics_joints", false);
                     minimumGroundFlightOffset = physicsconfig.GetFloat("minimum_ground_flight_offset", 3f);
-                    maximumMassObject = physicsconfig.GetFloat("maximum_mass_object", 10000.01f);
+                    maximumMassObject = physicsconfig.GetFloat("maximum_mass_object", 100000.01f);
                 }
             }
 

@@ -56,8 +56,6 @@ namespace OpenSim.Framework
         }
 
         public ulong RegionHandle;
-        public uint CircuitCode;
-        public UUID SessionID;
 
         public float Far;
         public Vector3 Position;
@@ -67,10 +65,6 @@ namespace OpenSim.Framework
         public Vector3 AtAxis;
         public Vector3 LeftAxis;
         public Vector3 UpAxis;
-        public bool ChangedGrid;
-
-        // This probably shouldn't be here
-        public byte[] Throttles;
 
 
         public OSDMap Pack()
@@ -79,9 +73,7 @@ namespace OpenSim.Framework
             args["message_type"] = OSD.FromString("AgentPosition");
 
             args["region_handle"] = OSD.FromString(RegionHandle.ToString());
-            args["circuit_code"] = OSD.FromString(CircuitCode.ToString());
             args["agent_uuid"] = OSD.FromUUID(AgentID);
-            args["session_uuid"] = OSD.FromUUID(SessionID);
 
             args["position"] = OSD.FromString(Position.ToString());
             args["velocity"] = OSD.FromString(Velocity.ToString());
@@ -92,10 +84,6 @@ namespace OpenSim.Framework
             args["up_axis"] = OSD.FromString(UpAxis.ToString());
 
             args["far"] = OSD.FromReal(Far);
-            args["changed_grid"] = OSD.FromBoolean(ChangedGrid);
-
-            if ((Throttles != null) && (Throttles.Length > 0))
-                args["throttles"] = OSD.FromBinary(Throttles);
 
             return args;
         }
@@ -105,14 +93,8 @@ namespace OpenSim.Framework
             if (args.ContainsKey("region_handle"))
                 UInt64.TryParse(args["region_handle"].AsString(), out RegionHandle);
 
-            if (args["circuit_code"] != null)
-                UInt32.TryParse((string)args["circuit_code"].AsString(), out CircuitCode);
-
             if (args["agent_uuid"] != null)
                 AgentID = args["agent_uuid"].AsUUID();
-
-            if (args["session_uuid"] != null)
-                SessionID = args["session_uuid"].AsUUID();
 
             if (args["position"] != null)
                 Vector3.TryParse(args["position"].AsString(), out Position);
@@ -135,14 +117,8 @@ namespace OpenSim.Framework
             if (args["up_axis"] != null)
                 Vector3.TryParse(args["up_axis"].AsString(), out UpAxis);
 
-            if (args["changed_grid"] != null)
-                ChangedGrid = args["changed_grid"].AsBoolean();
-
             if (args["far"] != null)
                 Far = (float)(args["far"].AsReal());
-
-            if (args["throttles"] != null)
-                Throttles = args["throttles"].AsBinary();
         }
     }
 
