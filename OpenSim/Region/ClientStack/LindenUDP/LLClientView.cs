@@ -1428,6 +1428,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             money.MoneyData.TransactionSuccess = success;
             money.MoneyData.Description = description;
             money.MoneyData.MoneyBalance = balance;
+            money.TransactionInfo.ItemDescription = Util.StringToBytes256 ("NONE");
             OutPacket(money, ThrottleOutPacketType.AvatarInfo);
         }
 
@@ -2250,7 +2251,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(loadURL, ThrottleOutPacketType.AvatarInfo);
         }
 
-        public void SendDialog(string objectname, UUID objectID, string ownerFirstName, string ownerLastName, string msg, UUID textureID, int ch, string[] buttonlabels)
+        public void SendDialog (string objectname, UUID objectID, UUID ownerID, string ownerFirstName, string ownerLastName, string msg, UUID textureID, int ch, string[] buttonlabels)
         {
             ScriptDialogPacket dialog = (ScriptDialogPacket)PacketPool.Instance.GetPacket(PacketType.ScriptDialog);
             dialog.Data.ObjectID = objectID;
@@ -2268,6 +2269,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 buttons[i].ButtonLabel = Util.StringToBytes256(buttonlabels[i]);
             }
             dialog.Buttons = buttons;
+            dialog.OwnerData = new ScriptDialogPacket.OwnerDataBlock[1];
+            dialog.OwnerData[0] = new ScriptDialogPacket.OwnerDataBlock ();
+            dialog.OwnerData[0].OwnerID = ownerID;
             OutPacket(dialog, ThrottleOutPacketType.AvatarInfo);
         }
 
