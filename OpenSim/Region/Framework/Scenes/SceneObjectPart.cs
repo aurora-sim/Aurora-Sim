@@ -1859,6 +1859,13 @@ namespace OpenSim.Region.Framework.Scenes
             set { _nextOwnerMask = value; }
         }
 
+        private byte m_PhysicsShapeType = 0;
+        public byte PhysicsType
+        {
+            get { return m_PhysicsShapeType; }
+            set { m_PhysicsShapeType = value; }
+        }
+
         /// <summary>
         /// Property flags.  See OpenMetaverse.PrimFlags 
         /// </summary>
@@ -5151,8 +5158,14 @@ namespace OpenSim.Region.Framework.Scenes
             if (blocks != null && blocks.Length != 0)
             {
                 ObjectFlagUpdatePacket.ExtraPhysicsBlock block = blocks[0];
-                if (block.PhysicsShapeType == (byte)PhysicsShapeType.None)
-                    IsPhantom = true;
+                if (block.PhysicsShapeType == (byte)PhysicsType.None)
+                {
+                    if (PhysicsType != (byte)PhysicsType.None)
+                        PhysActor.delink ();
+                }
+                else
+                    PhysActor.link (this.ParentGroup.RootChild.PhysActor);
+                PhysicsType = block.PhysicsShapeType;
                 if (this.PhysActor != null)
                     PhysActor.GravityMultiplier = block.GravityMultiplier;
             }

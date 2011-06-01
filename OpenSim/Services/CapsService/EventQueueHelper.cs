@@ -99,15 +99,20 @@ namespace OpenSim.Services.CapsService
             foreach(ISceneChildEntity entity in entities)
             {
                 message.ObjectPhysicsProperties[i] = new Primitive.PhysicsProperties ();
-                message.ObjectPhysicsProperties[i].Density = 1;
+                message.ObjectPhysicsProperties[i].Density = 1000;
                 message.ObjectPhysicsProperties[i].Friction = 1;
-                message.ObjectPhysicsProperties[i].GravityMultiplier = entity.PhysActor.GravityMultiplier;
+                message.ObjectPhysicsProperties[i].GravityMultiplier = entity.PhysActor == null ? 1.0f : entity.PhysActor.GravityMultiplier;
                 message.ObjectPhysicsProperties[i].LocalID = entity.LocalId;
-                message.ObjectPhysicsProperties[i].PhysicsShapeType = PhysicsShapeType.Prim;
+                message.ObjectPhysicsProperties[i].PhysicsShapeType = (PhysicsShapeType)entity.PhysicsType;
                 message.ObjectPhysicsProperties[i].Restitution = 1;
                 i++;
             }
-            return message.Serialize ();
+
+            OSDMap m = new OSDMap ();
+            m.Add ("message", OSD.FromString ("ObjectPhysicsProperties"));
+            OSD message_body = message.Serialize ();
+            m.Add ("body", message_body);
+            return m;
         }
 
         public static OSD DisableSimulator(ulong handle)

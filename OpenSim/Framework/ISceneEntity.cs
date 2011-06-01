@@ -665,6 +665,12 @@ namespace OpenSim.Framework
         Color Color { get; set; }
 
         void TrimPermissions ();
+
+        byte PhysicsType
+        {
+            get;
+            set;
+        }
     }
 
     public interface ISceneGraph

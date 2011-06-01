@@ -218,9 +218,6 @@ namespace Aurora.Modules
             if (EntitiesToUpdate.Count != 0)
             {
                 SP.SceneViewer.QueuePartsForPropertiesUpdate (EntitiesToUpdate.ToArray ());
-                IEventQueueService eqs = remoteClient.Scene.RequestModuleInterface<IEventQueueService> ();
-                if (eqs != null)
-                    eqs.ObjectPhysicsProperties (EntitiesToUpdate.ToArray (), remoteClient.AgentId, remoteClient.Scene.RegionInfo.RegionHandle);
             }
             PerClientSelectionParticles selection = SP.RequestModuleInterface<PerClientSelectionParticles>();
             if (selection != null)
