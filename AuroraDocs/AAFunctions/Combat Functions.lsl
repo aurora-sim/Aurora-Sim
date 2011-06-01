@@ -1,26 +1,12 @@
-dead_avatar(string deadAvName, string killerName,
-      string deadAvUUID)
-{
-    //This gets triggered when someone dies if the prim is hooked up to the dead_avatar event (shown below).
-    llShout(0, deadAvName + " was killed by " + killerName);
-}
-
 default
 {
     state_entry()
     {
-        // This hooks up to the event that gets triggered
-        //  every time an avatar dies so that we don't have
-        //  to set up complex sensors to do so.
-        aaRegisterToAvatarDeathEvents();
         // Set up the listener
         llListen(0, "", "", "");
     }
     state_exit()
     {
-        // This takes us off the dead avatar event that we
-        //  registered to above.
-        aaDeregisterFromAvatarDeathEvents();
     }
     listen( integer channel, string name, key id, string message )
     {
