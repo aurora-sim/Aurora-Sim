@@ -677,6 +677,12 @@ namespace OpenSim.Framework
             get;
             set;
         }
+
+        float GravityMultiplier
+        {
+            get;
+            set;
+        }
     }
 
     public interface ISceneGraph

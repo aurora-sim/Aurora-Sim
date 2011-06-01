@@ -1859,18 +1859,56 @@ namespace OpenSim.Region.Framework.Scenes
             set { _nextOwnerMask = value; }
         }
 
-        private byte m_PhysicsShapeType = 0;
         public byte PhysicsType
         {
-            get { return m_PhysicsShapeType; }
-            set { m_PhysicsShapeType = value; }
+            get
+            {
+                OSD d = GetComponentState ("PhysicsType");
+                if (d == null)
+                    d = 0;
+                return (byte)d.AsInteger ();
+            }
+            set
+            {
+                SetComponentState ("PhysicsType", OSD.FromInteger((int)value));
+            }
         }
 
-        private float m_Density = 1000;
         public float Density
         {
-            get { return m_Density; }
-            set { m_Density = value; }
+            get
+            {
+                OSD d = GetComponentState ("Density");
+                if (d == null)
+                    d = 1000;
+                return (float)d.AsReal ();
+            }
+            set
+            {
+                SetComponentState ("Density", value);
+            }
+        }
+
+        public float GravityMultiplier
+        {
+            get
+            {
+                if (PhysActor != null)
+                    return PhysActor.GravityMultiplier;
+                else
+                {
+                    OSD d = GetComponentState ("GravityMultiplier");
+                    if (d == null)
+                        d = 1;
+                    return (float)d.AsReal ();
+                }
+            }
+            set
+            {
+                SetComponentState ("GravityMultiplier", value);
+                if (PhysActor != null)
+                    PhysActor.GravityMultiplier = value;
+            }
         }
 
         /// <summary>
@@ -5172,17 +5210,9 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     PhysicsType = block.PhysicsShapeType;
                     ParentGroup.RebuildPhysicalRepresentation ();
-                    /*if (block.PhysicsShapeType != (byte)PhysicsShapeType.None)
-                    {
-                        ParentGroup.ApplyPhysics (true);
-                    }
-                    else
-                    {
-                        DoPhysicsPropertyUpdate (block.PhysicsShapeType != (byte)PhysicsShapeType.None, true);
-                    }*/
                 }
                 if (this.PhysActor != null)
-                    PhysActor.GravityMultiplier = block.GravityMultiplier;
+                    GravityMultiplier = block.GravityMultiplier;
 
                 if (Density != block.Density)
                 {
