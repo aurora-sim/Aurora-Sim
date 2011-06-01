@@ -519,8 +519,11 @@ namespace Aurora.BotManager
             //Fire the move event
             EventManager.FireGenericEventHandler ("Move", null);
 
-            if(m_paused)
+            if (m_paused)
+            {
+                State = BotState.Idle;
                 return;
+            }
 
             Vector3 pos;
             TravelMode state;
@@ -534,6 +537,8 @@ namespace Aurora.BotManager
                 else if (state == TravelMode.Teleport)
                     m_scenePresence.Teleport (pos);
             }
+            else
+                State = BotState.Idle;//Not going anywhere
         }
 
         public void PauseMovement ()
