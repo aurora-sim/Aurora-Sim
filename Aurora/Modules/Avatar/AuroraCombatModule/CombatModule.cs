@@ -66,6 +66,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
         public int m_SecondsBeforeRespawn;
         public Vector3 m_RespawnPosition;
         public bool m_shouldRespawn;
+        public bool m_regenHealth;
+        public float RegenerateHealthSpeed;
             
         public void Initialise(IConfigSource source)
         {
@@ -88,6 +90,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 m_RespawnPosition.Z = m_config.GetFloat ("RespawnPositionZ", 128);
                 m_SecondsBeforeRespawn = m_config.GetInt ("SecondsBeforeRespawn", 5);
                 m_shouldRespawn = m_config.GetBoolean ("ShouldRespawn", false);
+                m_regenHealth = m_config.GetBoolean ("RegenerateHealth", true);
+                RegenerateHealthSpeed = m_config.GetFloat ("RegenerateHealthSpeed", 0.0625f);
             }
         }
 
@@ -263,8 +267,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 
                 //Use this to fix the avatars health
                 m_healthtimer.Interval = 1000; // 1 sec
-                m_healthtimer.Enabled = true;
                 m_healthtimer.Elapsed += fixAvatarHealth_Elapsed;
+                m_healthtimer.Start ();
             }
 
             public void Close ()
@@ -390,7 +394,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                             System.Timers.Timer t = new System.Timers.Timer();
                             //Use this to reenable movement and combat
                             t.Interval = m_combatModule.m_SecondsBeforeRespawn * 1000;
-                            t.Enabled = true;
+                            t.AutoReset = false; //Only once
                             t.Elapsed += new System.Timers.ElapsedEventHandler(respawn_Elapsed);
                             t.Start ();
                         }
@@ -408,8 +412,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             void fixAvatarHealth_Elapsed (object sender, System.Timers.ElapsedEventArgs e)
             {
                 //Regenerate health a bit every second
-                if ((int)(Health + 0.0625) <= m_combatModule.MaximumHealth)
-                    Health += 0.0625f;
+                if (m_combatModule.m_regenHealth)
+                {
+                    if ((int)(Health + m_combatModule.RegenerateHealthSpeed) <= m_combatModule.MaximumHealth)
+                        Health += m_combatModule.RegenerateHealthSpeed;
+                }
             }
 
             void respawn_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
