@@ -304,8 +304,8 @@ namespace Aurora.BotManager
             m_nodeGraph.Clear ();
             //Send the stop message
             m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
-            OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
             m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
+            OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
         }
 
         private void RotateTo(Vector3 destination)
@@ -815,6 +815,7 @@ namespace Aurora.BotManager
                     m_scenePresence.Animator.UpdateMovementAnimations ();
                 }
                 m_toAvatar = true;
+                StopMoving ();
                 bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
                 if (fly)
                 {
@@ -822,8 +823,8 @@ namespace Aurora.BotManager
                     //FlyTo (m_scenePresence.AbsolutePosition);
                     //m_scenePresence.PhysicsActor.Flying = true;
                 }
-                else
-                    WalkTo (m_scenePresence.AbsolutePosition);
+                //else
+                    //WalkTo (m_scenePresence.AbsolutePosition);
                 return null;
             }
             else if (distance > m_followLoseAvatarDistance)

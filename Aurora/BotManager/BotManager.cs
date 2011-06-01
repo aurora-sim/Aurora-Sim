@@ -100,6 +100,13 @@ namespace Aurora.BotManager
         /// <returns></returns>
         private AvatarAppearance GetAppearance(UUID target)
         {
+            IScenePresence sp = m_scene.GetScenePresence (target);
+            if (sp != null)
+            {
+                IAvatarAppearanceModule aa = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
+                if (aa != null)
+                    return aa.Appearance;
+            }
             return m_scene.AvatarService.GetAppearance (target);
         }
 
