@@ -423,20 +423,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public void aaRegisterToAvatarDeathEvents()
-        {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AARegisterToAvatarDeathEvents", m_host, "AA");
-            ICombatModule module = World.RequestModuleInterface<ICombatModule>();
-            module.RegisterToAvatarDeathEvents(m_host.UUID);
-        }
-
-        public void aaDeregisterFromAvatarDeathEvents()
-        {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AADeregisterFromAvatarDeathEvents", m_host, "AA");
-            ICombatModule module = World.RequestModuleInterface<ICombatModule>();
-            module.DeregisterFromAvatarDeathEvents(m_host.UUID);
-        }
-
         //This asks the agent whether they would like to participate in the combat
         public void aaRequestCombatPermission(string ID)
         {

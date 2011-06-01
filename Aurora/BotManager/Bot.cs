@@ -701,7 +701,6 @@ namespace Aurora.BotManager
         private float m_StartFollowDistance = 3f;
         private float m_followLoseAvatarDistance = 1000;
         private const float FollowTimeBeforeUpdate = 10;
-        private float CurrentFollowTimeBeforeUpdate = 0;
         private int jumpTry = 0;
         private bool m_lostAvatar = false;
 
@@ -1229,10 +1228,6 @@ namespace Aurora.BotManager
 
         private List<Vector3> m_significantAvatarPositions = new List<Vector3> ();
         private int currentPos = 0;
-        private int lastChangedCurrentPos = 0;
-        private int currentRemoveMultiplier = 0;
-        private int highestCurrentPos2 = 0;
-        private int lastCorrectCurrentPos = 0;
 
         void EventManager_OnClientMovement ()
         {

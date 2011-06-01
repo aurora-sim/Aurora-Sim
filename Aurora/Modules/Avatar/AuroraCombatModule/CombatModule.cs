@@ -175,13 +175,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             lock (Teams)
             {
                 List<UUID> Teammates = new List<UUID>();
-                if (Teams.ContainsKey(Team))
+                if (Teams.TryGetValue (Team, out Teammates))
                 {
-                    Teams.TryGetValue(Team, out Teammates);
-                    Teams.Remove(Team);
+                    Teams.Remove (Team);
+                    Teammates.Add (AgentID);
+                    Teams.Add (Team, Teammates);
                 }
-                Teammates.Add(AgentID);
-                Teams.Add(Team, Teammates);
             }
         }
 
@@ -190,14 +189,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             lock (Teams)
             {
                 List<UUID> Teammates = new List<UUID>();
-                if (Teams.ContainsKey(Team))
+                if (Teams.TryGetValue (Team, out Teammates))
                 {
-                    Teams.TryGetValue(Team, out Teammates);
-                    Teams.Remove(Team);
+                    Teams.Remove (Team);
+                    if (Teammates.Contains (AgentID))
+                        Teammates.Remove (AgentID);
+                    Teams.Add (Team, Teammates);
                 }
-                if (Teammates.Contains(AgentID))
-                    Teammates.Remove(AgentID);
-                Teams.Add(Team, Teammates);
             }
         }
 
@@ -232,9 +230,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 set 
                 {
                     if (value > m_health)
-                        IncurHealing (value - m_health, m_SP.UUID);
+                        IncurHealing (value - m_health);
                     else
-                        IncurDamage (-1, m_health - value, m_SP.UUID);
+                        IncurDamage (null, m_health - value);
                 }
             }
 
@@ -339,7 +337,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                             if (m_combatModule.SendTeamKillerInfo && Hits == m_combatModule.TeamHitsBeforeSend)
                             {
                                 otherAvatar.ControllingClient.SendAlertMessage ("You have shot too many teammates and " + m_combatModule.DamageToTeamKillers + " health has been taken from you!");
-                                IncurDamage (-1, m_combatModule.DamageToTeamKillers, otherAvatar.UUID);
+                                OtherAvatarCP.IncurDamage (null, m_combatModule.DamageToTeamKillers);
                                 Hits = 0;
                             }
                             TeamHits[otherAvatar.UUID] = Hits;
@@ -469,65 +467,50 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 
             #region Incur* functions
 
-            public void IncurDamage(int localID, double damage, UUID OwnerID)
+            public void IncurDamage(IScenePresence killingAvatar, double damage)
             {
-                if (damage < 0)
-                    return;
-
-                IScenePresence SP = m_SP.Scene.GetScenePresence (OwnerID);
-                if (SP == null)
-                    return;
-                ICombatPresence cp = SP.RequestModuleInterface<ICombatPresence>();
-                if (!cp.HasLeftCombat || !m_combatModule.ForceRequireCombatPermission)
-                {
-                    if (damage > m_combatModule.MaximumDamageToInflict)
-                        damage = m_combatModule.MaximumDamageToInflict;
-                    float health = Health;
-                    health -= (float)damage;
-                    m_SP.ControllingClient.SendHealth(health);
-                    if (health <= 0)
-                        KillAvatar(null, "", "You died!", true, true);
-                }
+                InnerIncurDamage (killingAvatar, damage, true);
             }
 
-            public void IncurDamage(uint localID, double damage, string RegionName, Vector3 pos, Vector3 lookat, UUID OwnerID)
+            private bool InnerIncurDamage (IScenePresence killingAvatar, double damage, bool teleport)
             {
                 if (damage < 0)
-                    return;
+                    return false;
 
-                IScenePresence SP = m_SP.Scene.GetScenePresence (OwnerID);
-                if (SP == null)
-                    return;
-                ICombatPresence cp = SP.RequestModuleInterface<ICombatPresence>();
-                if (!cp.HasLeftCombat || !m_combatModule.ForceRequireCombatPermission)
+                if (!this.HasLeftCombat || !m_combatModule.ForceRequireCombatPermission)
                 {
                     if (damage > m_combatModule.MaximumDamageToInflict)
                         damage = m_combatModule.MaximumDamageToInflict;
                     float health = Health;
                     health -= (float)damage;
-                    m_SP.ControllingClient.SendHealth(health);
+                    m_SP.ControllingClient.SendHealth (health);
                     if (health <= 0)
                     {
-                        KillAvatar (null, "", "You died!", false, true);
-                        m_SP.ControllingClient.SendTeleportStart((uint)TeleportFlags.ViaHome);
-                        IEntityTransferModule entityTransfer = m_SP.Scene.RequestModuleInterface<IEntityTransferModule>();
-                        if (entityTransfer != null)
-                        {
-                            entityTransfer.RequestTeleportLocation(m_SP.ControllingClient, RegionName, pos, lookat, (uint)TeleportFlags.ViaHome);
-                        }
+                        KillAvatar (killingAvatar, "You killed " + m_SP.Name, "You died!", teleport, true);
+                        return true;
                     }
+                }
+                return false;
+            }
+
+            public void IncurDamage (IScenePresence killingAvatar, double damage, string RegionName, Vector3 pos, Vector3 lookat)
+            {
+                if (damage < 0)
+                    return;
+                if (InnerIncurDamage (killingAvatar, damage, false))
+                {
+                    //They died, teleport them
+                    IEntityTransferModule entityTransfer = m_SP.Scene.RequestModuleInterface<IEntityTransferModule> ();
+                    if (entityTransfer != null)
+                        entityTransfer.RequestTeleportLocation (m_SP.ControllingClient, RegionName, pos, lookat, (uint)TeleportFlags.ViaHome);
                 }
             }
 
-            public void IncurHealing(double healing, UUID OwnerID)
+            public void IncurHealing(double healing)
             {
                 if (healing < 0)
                     return;
-                IScenePresence SP = m_SP.Scene.GetScenePresence (OwnerID);
-                if (SP == null)
-                    return;
-                ICombatPresence cp = SP.RequestModuleInterface<ICombatPresence>();
-                if (!cp.HasLeftCombat || !m_combatModule.ForceRequireCombatPermission)
+                if (!this.HasLeftCombat || !m_combatModule.ForceRequireCombatPermission)
                 {
                     float health = Health;
                     health += (float)healing;
@@ -550,7 +533,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             #endregion
         }
 
-        private class CombatObject : ICombatPresence
+        private class CombatObject //: ICombatPresence
         {
             private float m_health = 100f;
             private string m_Team;

@@ -2286,7 +2286,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
                     {
                         ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence> ();
-                        cp.IncurDamage (m_host.LocalId, damage, m_host.OwnerID);
+                        cp.IncurDamage (World.GetScenePresence(m_host.OwnerID), damage);
                     }
                 }
             }
@@ -2309,8 +2309,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
                     {
                         ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence> ();
-                        cp.IncurDamage (m_host.LocalId, damage, regionName, new Vector3 ((float)position.x, (float)position.y, (float)position.z),
-                                new Vector3 ((float)lookat.x, (float)lookat.y, (float)lookat.z), m_host.OwnerID);
+                        cp.IncurDamage (World.GetScenePresence(m_host.OwnerID), damage, regionName, new Vector3 ((float)position.x, (float)position.y, (float)position.z),
+                                new Vector3 ((float)lookat.x, (float)lookat.y, (float)lookat.z));
 
                     }
                 }
@@ -2334,7 +2334,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
                     {
                         ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence> ();
-                        cp.IncurHealing (healing, m_host.OwnerID);
+                        cp.IncurHealing (healing);
                     }
                 }
             }
