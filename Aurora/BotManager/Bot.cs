@@ -280,20 +280,32 @@ namespace Aurora.BotManager
         }
 
         // Makes the bot fly to the specified destination
-        private void FlyTo(Vector3 destination)
+        private void FlyTo (Vector3 destination)
         {
-            if (Util.IsZeroVector(destination - m_scenePresence.AbsolutePosition) == false)
+            if (Util.IsZeroVector (destination - m_scenePresence.AbsolutePosition) == false)
             {
-                flyTo(destination);
+                flyTo (destination);
                 State = BotState.Flying;
             }
             else
             {
                 m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
 
-                OnBotAgentUpdate(m_movementFlag, m_bodyDirection);
+                OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
                 m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
             }
+        }
+
+        // Makes the bot fly to the specified destination
+        private void StopMoving ()
+        {
+            State = BotState.Idle;
+            //Clear out any nodes
+            m_nodeGraph.Clear ();
+            //Send the stop message
+            m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
+            OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
+            m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
         }
 
         private void RotateTo(Vector3 destination)
@@ -521,7 +533,7 @@ namespace Aurora.BotManager
 
             if (m_paused)
             {
-                State = BotState.Idle;
+                StopMoving ();
                 return;
             }
 
@@ -538,7 +550,7 @@ namespace Aurora.BotManager
                     m_scenePresence.Teleport (pos);
             }
             else
-                State = BotState.Idle;//Not going anywhere
+                StopMoving ();
         }
 
         public void PauseMovement ()
@@ -954,9 +966,7 @@ namespace Aurora.BotManager
             else
             {
                 //Stop the bot then
-                EventManager.FireGenericEventHandler ("ToAvatar", null);
-                State = BotState.Idle;
-                m_nodeGraph.Clear ();
+                StopMoving ();
             }
         }
 
