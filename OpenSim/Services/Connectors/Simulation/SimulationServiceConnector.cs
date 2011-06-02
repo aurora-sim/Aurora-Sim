@@ -70,7 +70,7 @@ namespace OpenSim.Services.Connectors.Simulation
             return "/agent/";
         }
 
-        public bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, AgentData data, out string reason)
+        public virtual bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, AgentData data, out string reason)
         {
             reason = String.Empty;
             // Try local first
@@ -101,6 +101,9 @@ namespace OpenSim.Services.Connectors.Simulation
                 reason = results["reason"] != null ? results["reason"].AsString() : "";
                 if (result["Success"].AsBoolean())
                 {
+                    //Not right... don't return true except for opensim combatibility :/
+                    if (reason == "")
+                        return true;
                     try
                     {
                         OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
@@ -362,7 +365,7 @@ namespace OpenSim.Services.Connectors.Simulation
 
         #endregion
 
-        #region IService Member
+        #region IService Members
 
         public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {

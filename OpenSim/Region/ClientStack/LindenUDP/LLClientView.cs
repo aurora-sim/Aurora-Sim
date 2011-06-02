@@ -1276,8 +1276,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             AgentCircuitData agentData = new AgentCircuitData();
             agentData.AgentID = AgentId;
-            agentData.firstname = FirstName;
-            agentData.lastname = LastName;
             agentData.SessionID = m_sessionId;
             agentData.SecureSessionID = SecureSessionId;
             agentData.circuitcode = m_circuitCode;

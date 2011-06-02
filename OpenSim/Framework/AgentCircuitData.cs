@@ -109,20 +109,6 @@ namespace OpenSim.Framework
         /// </summary>
         public Vector3 startpos;
 
-        #region OPENSIM ONLY
-
-        /// <summary>
-        /// Agent's account first name
-        /// </summary>
-        public string firstname;
-
-        /// <summary>
-        /// Agent's account last name
-        /// </summary>
-        public string lastname;
-
-        #endregion
-
         public AgentCircuitData()
         {
         }
@@ -131,19 +117,11 @@ namespace OpenSim.Framework
         /// Pack AgentCircuitData into an OSDMap for transmission over LLSD XML or LLSD json
         /// </summary>
         /// <returns>map of the agent circuit data</returns>
-        public OSDMap PackAgentCircuitData()
+        public virtual OSDMap PackAgentCircuitData()
         {
             OSDMap args = new OSDMap();
             args["agent_id"] = OSD.FromUUID(AgentID);
             args["caps_path"] = OSD.FromString(CapsPath);
-
-            #region OPENSIM ONLY
-
-            args["first_name"] = OSD.FromString (firstname);
-            args["last_name"] = OSD.FromString (lastname);
-
-            #endregion
-
             args["child"] = OSD.FromBoolean(child);
             args["circuit_code"] = OSD.FromString(circuitcode.ToString());
             args["secure_session_id"] = OSD.FromUUID(SecureSessionID);
@@ -166,13 +144,11 @@ namespace OpenSim.Framework
             return args;
         }
 
-        public AgentCircuitData Copy()
+        public virtual AgentCircuitData Copy ()
         {
             AgentCircuitData Copy = new AgentCircuitData();
 
             Copy.AgentID = AgentID;
-            Copy.firstname = firstname;
-            Copy.lastname = lastname;
             Copy.Appearance = Appearance;
             Copy.CapsPath = CapsPath;
             Copy.child = child;
@@ -191,7 +167,7 @@ namespace OpenSim.Framework
         /// Unpack agent circuit data map into an AgentCiruitData object
         /// </summary>
         /// <param name="args"></param>
-        public void UnpackAgentCircuitData(OSDMap args)
+        public virtual void UnpackAgentCircuitData (OSDMap args)
         {
             if (args["agent_id"] != null)
                 AgentID = args["agent_id"].AsUUID();
