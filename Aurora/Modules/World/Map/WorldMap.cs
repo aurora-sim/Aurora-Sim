@@ -389,7 +389,8 @@ namespace Aurora.Modules
                     }
                 }
 
-                item.remoteClient.SendMapItemReply (mapitems.ToArray (), item.itemtype, item.flags);
+                if(mapitems != null)
+                    item.remoteClient.SendMapItemReply (mapitems.ToArray (), item.itemtype, item.flags);
             }
             itemRequesterIsRunning = false;
         }
