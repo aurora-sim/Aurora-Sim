@@ -297,14 +297,15 @@ namespace Aurora.BotManager
         }
 
         // Makes the bot fly to the specified destination
-        private void StopMoving ()
+        private void StopMoving (bool fly)
         {
             State = BotState.Idle;
             //Clear out any nodes
             m_nodeGraph.Clear ();
             //Send the stop message
-            m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
             m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
+            if (fly)
+                m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
             OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
         }
 
@@ -502,7 +503,8 @@ namespace Aurora.BotManager
             try
             {
                 m_frames.Stop ();
-                m_startTime.Stop ();
+                if(m_startTime.Enabled)
+                    m_startTime.Stop ();
             }
             catch { }
             if (m_scenePresence == null)
@@ -533,7 +535,7 @@ namespace Aurora.BotManager
 
             if (m_paused)
             {
-                StopMoving ();
+                StopMoving (State == BotState.Flying);
                 return;
             }
 
@@ -550,7 +552,7 @@ namespace Aurora.BotManager
                     m_scenePresence.Teleport (pos);
             }
             else
-                StopMoving ();
+                StopMoving (State == BotState.Flying);
         }
 
         public void PauseMovement ()
@@ -815,16 +817,8 @@ namespace Aurora.BotManager
                     m_scenePresence.Animator.UpdateMovementAnimations ();
                 }
                 m_toAvatar = true;
-                StopMoving ();
                 bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
-                if (fly)
-                {
-                    //Avatar will fall from the sky with this???
-                    //FlyTo (m_scenePresence.AbsolutePosition);
-                    //m_scenePresence.PhysicsActor.Flying = true;
-                }
-                //else
-                    //WalkTo (m_scenePresence.AbsolutePosition);
+                StopMoving (fly);
                 return null;
             }
             else if (distance > m_followLoseAvatarDistance)
@@ -967,7 +961,7 @@ namespace Aurora.BotManager
             else
             {
                 //Stop the bot then
-                StopMoving ();
+                StopMoving (State == BotState.Flying);
             }
         }
 
