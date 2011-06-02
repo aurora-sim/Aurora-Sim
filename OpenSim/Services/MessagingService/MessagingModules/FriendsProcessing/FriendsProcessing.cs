@@ -62,7 +62,7 @@ namespace OpenSim.Services.MessagingService
             registry.RequestModuleInterface<ISimulationBase> ().EventManager.RegisterEventHandler("UserStatusChange", OnGenericEvent);
 
             //Also look for incoming messages to display
-            registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
+            registry.RequestModuleInterface<IAsyncMessageRecievedService> ().OnMessageReceived += OnMessageReceived;
         }
 
         public void FinishedStartup()
@@ -129,25 +129,87 @@ namespace OpenSim.Services.MessagingService
 
         protected OSDMap OnMessageReceived(OSDMap message)
         {
+            IGridService gridService = m_registry.RequestModuleInterface<IGridService> ();
+            IAsyncMessagePostService asyncPost = m_registry.RequestModuleInterface<IAsyncMessagePostService> ();
             //We need to check and see if this is an AgentStatusChange
-            if (message.ContainsKey("Method") && message["Method"] == "AgentStatusChange")
+            if (message.ContainsKey ("Method") && message["Method"] == "AgentStatusChange")
             {
                 OSDMap innerMessage = (OSDMap)message["Message"];
                 //We got a message, now pass it on to the clients that need it
-                UUID AgentID = innerMessage["AgentID"].AsUUID();
-                UUID FriendToInformID = innerMessage["FriendToInformID"].AsUUID();
-                bool NewStatus = innerMessage["NewStatus"].AsBoolean();
+                UUID AgentID = innerMessage["AgentID"].AsUUID ();
+                UUID FriendToInformID = innerMessage["FriendToInformID"].AsUUID ();
+                bool NewStatus = innerMessage["NewStatus"].AsBoolean ();
 
                 //Do this since IFriendsModule is a scene module, not a ISimulationBase module (not interchangable)
-                SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
+                SceneManager manager = m_registry.RequestModuleInterface<SceneManager> ();
                 if (manager != null && manager.Scenes.Count > 0)
                 {
-                    IFriendsModule friendsModule = manager.Scenes[0].RequestModuleInterface<IFriendsModule>();
+                    IFriendsModule friendsModule = manager.Scenes[0].RequestModuleInterface<IFriendsModule> ();
                     if (friendsModule != null)
                     {
                         //Send the message
-                        friendsModule.SendFriendsStatusMessage(FriendToInformID, AgentID, NewStatus);
+                        friendsModule.SendFriendsStatusMessage (FriendToInformID, AgentID, NewStatus);
                     }
+                }
+            }
+            else if (message.ContainsKey ("Method") && message["Method"] == "FriendGrantRights")
+            {
+                OSDMap body = (OSDMap)message["Message"];
+                UUID targetID = body["Target"].AsUUID ();
+                UserInfo friendSession = m_registry.RequestModuleInterface<IAgentInfoService> ().GetUserInfo (targetID.ToString ());
+                if (friendSession != null && friendSession.IsOnline)
+                {
+                    GridRegion region = gridService.GetRegionByUUID (UUID.Zero, friendSession.CurrentRegionID);
+                    //Forward the message
+                    asyncPost.Post (region.RegionHandle, message);
+                }
+            }
+            else if (message.ContainsKey ("Method") && message["Method"] == "FriendshipOffered")
+            {
+                OSDMap body = (OSDMap)message["Message"];
+                UUID targetID = body["Friend"].AsUUID ();
+                UserInfo friendSession = m_registry.RequestModuleInterface<IAgentInfoService> ().GetUserInfo (targetID.ToString ());
+                if (friendSession != null && friendSession.IsOnline)
+                {
+                    GridRegion region = gridService.GetRegionByUUID (UUID.Zero, friendSession.CurrentRegionID);
+                    //Forward the message
+                    asyncPost.Post (region.RegionHandle, message);
+                }
+            }
+            else if (message.ContainsKey ("Method") && message["Method"] == "FriendTerminated")
+            {
+                OSDMap body = (OSDMap)message["Message"];
+                UUID targetID = body["ExFriend"].AsUUID ();
+                UserInfo friendSession = m_registry.RequestModuleInterface<IAgentInfoService> ().GetUserInfo (targetID.ToString ());
+                if (friendSession != null && friendSession.IsOnline)
+                {
+                    GridRegion region = gridService.GetRegionByUUID (UUID.Zero, friendSession.CurrentRegionID);
+                    //Forward the message
+                    asyncPost.Post (region.RegionHandle, message);
+                }
+            }
+            else if (message.ContainsKey ("Method") && message["Method"] == "FriendshipDenied")
+            {
+                OSDMap body = (OSDMap)message["Message"];
+                UUID targetID = body["FriendID"].AsUUID ();
+                UserInfo friendSession = m_registry.RequestModuleInterface<IAgentInfoService> ().GetUserInfo (targetID.ToString ());
+                if (friendSession != null && friendSession.IsOnline)
+                {
+                    GridRegion region = gridService.GetRegionByUUID (UUID.Zero, friendSession.CurrentRegionID);
+                    //Forward the message
+                    asyncPost.Post (region.RegionHandle, message);
+                }
+            }
+            else if (message.ContainsKey ("Method") && message["Method"] == "FriendshipApproved")
+            {
+                OSDMap body = (OSDMap)message["Message"];
+                UUID targetID = body["FriendID"].AsUUID ();
+                UserInfo friendSession = m_registry.RequestModuleInterface<IAgentInfoService> ().GetUserInfo (targetID.ToString ());
+                if (friendSession != null && friendSession.IsOnline)
+                {
+                    GridRegion region = gridService.GetRegionByUUID (UUID.Zero, friendSession.CurrentRegionID);
+                    //Forward the message
+                    asyncPost.Post (region.RegionHandle, message);
                 }
             }
             return null;

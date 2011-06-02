@@ -103,6 +103,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             get { return m_Scenes[0].RequestModuleInterface<IAsyncMessagePostService>(); }
         }
 
+        public ISyncMessagePosterService SyncMessagePosterService
+        {
+            get { return m_Scenes[0].RequestModuleInterface<ISyncMessagePosterService>(); }
+        }
+
         public IAsyncMessageRecievedService AsyncMessageRecievedService
         {
             get { return m_Scenes[0].RequestModuleInterface<IAsyncMessageRecievedService>(); }
@@ -394,13 +399,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 return;
 
             // The prospective friend is not here [as root]. Let's forward.
-            UserInfo friendSession = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(friendID.ToString());
-            if (friendSession != null && friendSession.IsOnline)
-            {
-                GridRegion region = GridService.GetRegionByUUID(m_Scenes[0].RegionInfo.ScopeID, friendSession.CurrentRegionID);
-                AsyncMessagePostService.Post(region.RegionHandle, SyncMessageHelper.FriendshipOffered(
-                    agentID, friendID, im, region.RegionHandle));
-            }
+            SyncMessagePosterService.Post(SyncMessageHelper.FriendshipOffered(
+                    agentID, friendID, im, m_Scenes[0].RegionInfo.RegionHandle), m_Scenes[0].RegionInfo.RegionHandle);
             // If the prospective friend is not online, he'll get the message upon login.
         }
 
@@ -433,15 +433,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             // Try Local
             if (LocalFriendshipApproved(agentID, client.Name, client, friendID))
                 return;
-
-            // The friend is not here
-            UserInfo friendSession = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(friendID.ToString());
-            if (friendSession != null && friendSession.IsOnline)
-            {
-                GridRegion region = GridService.GetRegionByUUID(m_Scenes[0].RegionInfo.ScopeID, friendSession.CurrentRegionID);
-                AsyncMessagePostService.Post(region.RegionHandle, SyncMessageHelper.FriendshipApproved(
-                    agentID, client.Name, friendID, region.RegionHandle));
-            }
+            SyncMessagePosterService.Post (SyncMessageHelper.FriendshipApproved (
+                    agentID, client.Name, friendID, m_Scenes[0].RegionInfo.RegionHandle), m_Scenes[0].RegionInfo.RegionHandle);
         }
 
         private void OnDenyFriendRequest(IClientAPI client, UUID agentID, UUID friendID, List<UUID> callingCardFolders)
@@ -458,14 +451,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             // Try local
             if (LocalFriendshipDenied(agentID, client.Name, friendID))
                 return;
-
-            UserInfo friendSession = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(friendID.ToString());
-            if (friendSession != null && friendSession.IsOnline)
-            {
-                GridRegion region = GridService.GetRegionByUUID(m_Scenes[0].RegionInfo.ScopeID, friendSession.CurrentRegionID);
-                AsyncMessagePostService.Post(region.RegionHandle, SyncMessageHelper.FriendshipDenied(
-                    agentID, client.Name, friendID, region.RegionHandle));
-            }
+            SyncMessagePosterService.Post (SyncMessageHelper.FriendshipDenied (
+                    agentID, client.Name, friendID, m_Scenes[0].RegionInfo.RegionHandle), m_Scenes[0].RegionInfo.RegionHandle);
         }
 
         private void OnTerminateFriendship(IClientAPI client, UUID agentID, UUID exfriendID)
@@ -486,13 +473,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             if (LocalFriendshipTerminated(exfriendID, agentID))
                 return;
 
-            UserInfo friendSession = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(exfriendID.ToString());
-            if (friendSession != null && friendSession.IsOnline)
-            {
-                GridRegion region = GridService.GetRegionByUUID(m_Scenes[0].RegionInfo.ScopeID, friendSession.CurrentRegionID);
-                AsyncMessagePostService.Post(region.RegionHandle, SyncMessageHelper.FriendTerminated(
-                    agentID, exfriendID, region.RegionHandle));
-            }
+            SyncMessagePosterService.Post (SyncMessageHelper.FriendTerminated (
+                    agentID, exfriendID, m_Scenes[0].RegionInfo.RegionHandle), m_Scenes[0].RegionInfo.RegionHandle);
         }
 
         private void OnGrantUserRights(IClientAPI remoteClient, UUID requester, UUID target, int rights)
@@ -530,14 +512,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 // Try local
                 if (!LocalGrantRights(requester, target, myFlags, rights))
                 {
-                    UserInfo friendSession = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(target.ToString());
-                    if (friendSession != null && friendSession.IsOnline)
-                    {
-                        GridRegion region = GridService.GetRegionByUUID(m_Scenes[0].RegionInfo.ScopeID, 
-                            friendSession.CurrentRegionID);
-                        AsyncMessagePostService.Post(region.RegionHandle, SyncMessageHelper.FriendGrantRights(
-                            requester, target, myFlags, rights, region.RegionHandle));
-                    }
+                    SyncMessagePosterService.Post (SyncMessageHelper.FriendGrantRights (
+                            requester, target, myFlags, rights, m_Scenes[0].RegionInfo.RegionHandle), m_Scenes[0].RegionInfo.RegionHandle);
                 }
             }
         }
