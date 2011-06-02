@@ -747,42 +747,13 @@ namespace OpenSim.Services.LLLoginService
 
         protected string FillOutSeedCap(AgentCircuitData aCircuit, GridRegion destination, IPEndPoint ipepClient, UUID AgentID)
         {
-            string capsSeedPath = String.Empty;
-            string SimcapsSeedPath = String.Empty;
-
-            #region IP Translation for NAT
-            if (ipepClient != null)
-            {
-                SimcapsSeedPath
-                    = "http://"
-                      + NetworkUtil.GetHostFor(ipepClient.Address, destination.ExternalHostName)
-                      + ":" + destination.HttpPort
-                      + CapsUtil.GetCapsSeedPath(aCircuit.CapsPath);
-            }
-            else
-            {
-                SimcapsSeedPath
-                    = destination.ServerURI
-                      + CapsUtil.GetCapsSeedPath(aCircuit.CapsPath);
-            }
-            #endregion
-
-            // Don't use the following!  It Fails for logging into any region not on the same port as the http server!
-            // Kept here so it doesn't happen again!
-            // response.SeedCapability = regionInfo.ServerURI + capsSeedPath;
-
             if(m_CapsService != null)
             {
                 //Remove any previous users
                 string CapsBase = CapsUtil.GetRandomCapsObjectPath();
-                capsSeedPath = m_CapsService.CreateCAPS(AgentID, CapsUtil.GetCapsSeedPath(CapsBase), destination.RegionHandle, true, aCircuit);
+                return m_CapsService.CreateCAPS(AgentID, CapsUtil.GetCapsSeedPath(CapsBase), destination.RegionHandle, true, aCircuit);
             }
-            else
-            {
-                capsSeedPath = SimcapsSeedPath;
-            }
-            
-            return capsSeedPath;
+            return "";
         }
 
         protected GridRegion FindDestination(UserAccount account, UUID scopeID, UserInfo pinfo, UUID sessionID, string startLocation, GridRegion home, out string where, out Vector3 position, out Vector3 lookAt)
@@ -1160,7 +1131,7 @@ namespace OpenSim.Services.LLLoginService
             }
             aCircuit.teleportFlags = (uint)TeleportFlags.ViaLogin;
             // As we are creating the agent, we must also initialize the CapsService for the agent
-            bool success = simConnector.CreateAgent(region, aCircuit, (int)TeleportFlags.ViaLogin, null, out reason);
+            bool success = simConnector.CreateAgent(region, ref aCircuit, (int)TeleportFlags.ViaLogin, null, out reason);
             if (!success) // If it failed, do not set up any CapsService for the client
             {
                 if (reason != "")

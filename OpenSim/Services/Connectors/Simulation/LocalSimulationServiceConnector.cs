@@ -124,7 +124,7 @@ namespace OpenSim.Services.Connectors.Simulation
          * Agent-related communications
          */
 
-        public bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, AgentData data, out string reason)
+        public bool CreateAgent(GridRegion destination, ref AgentCircuitData aCircuit, uint teleportFlags, AgentData data, out string reason)
         {
             if (destination == null)
             {

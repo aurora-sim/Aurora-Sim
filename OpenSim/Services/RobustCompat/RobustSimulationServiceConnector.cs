@@ -32,6 +32,7 @@ using System.IO;
 using System.Reflection;
 using Nini.Config;
 using OpenSim.Framework;
+using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
@@ -41,7 +42,7 @@ using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Connectors.Simulation;
 
-namespace OpenSim.Services.Connectors
+namespace OpenSim.Services.RobustCompat
 {
     public class RobustedAgentCircuitData : AgentCircuitData
     {
@@ -84,10 +85,10 @@ namespace OpenSim.Services.Connectors
                 MethodBase.GetCurrentMethod().DeclaringType);
         private IRegistryCore m_registry;
 
-        public override bool CreateAgent (GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, AgentData data, out string reason)
+        public override bool CreateAgent (GridRegion destination, ref AgentCircuitData aCircuit, uint teleportFlags, AgentData data, out string reason)
         {
             aCircuit = FixAgentCircuitData (aCircuit);
-            return base.CreateAgent (destination, aCircuit, teleportFlags, data, out reason);
+            return base.CreateAgent (destination, ref aCircuit, teleportFlags, data, out reason);
         }
 
         private AgentCircuitData FixAgentCircuitData (AgentCircuitData aCircuit)
@@ -97,7 +98,7 @@ namespace OpenSim.Services.Connectors
             RobustedAgentCircuitData newCircuit = new RobustedAgentCircuitData ();
             newCircuit.AgentID = aCircuit.AgentID;
             newCircuit.Appearance = aCircuit.Appearance;
-            newCircuit.CapsPath = aCircuit.CapsPath;
+            newCircuit.CapsPath = CapsUtil.GetRandomCapsObjectPath ();
             newCircuit.child = aCircuit.child;
             newCircuit.circuitcode = aCircuit.circuitcode;
             newCircuit.firstname = account.FirstName;

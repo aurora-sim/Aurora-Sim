@@ -203,7 +203,7 @@ namespace OpenSim.Services
             string reason = String.Empty;
 
             // This is the meaning of POST agent
-            bool result = CreateAgent(destination, aCircuit, teleportFlags, agent, out reason);
+            bool result = CreateAgent(destination, ref aCircuit, teleportFlags, agent, out reason);
 
             resp["reason"] = reason;
             resp["success"] = OSD.FromBoolean(result);
@@ -234,9 +234,9 @@ namespace OpenSim.Services
         }
 
         // subclasses can override this
-        protected virtual bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, AgentData agent, out string reason)
+        protected virtual bool CreateAgent(GridRegion destination, ref AgentCircuitData aCircuit, uint teleportFlags, AgentData agent, out string reason)
         {
-            return m_SimulationService.CreateAgent(destination, aCircuit, teleportFlags, agent, out reason);
+            return m_SimulationService.CreateAgent(destination, ref aCircuit, teleportFlags, agent, out reason);
         }
 
         protected void DoAgentPut(Hashtable request, Hashtable responsedata)

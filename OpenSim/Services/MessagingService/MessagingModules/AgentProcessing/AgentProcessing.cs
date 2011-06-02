@@ -41,6 +41,7 @@ using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using log4net;
+using OpenSim.Services.RobustCompat;
 
 namespace OpenSim.Services.MessagingService
 {
@@ -441,18 +442,7 @@ namespace OpenSim.Services.MessagingService
                     circuitData.OtherInformation["UserUrls"] = commsService.GetUrlsForUser(neighbor, circuitData.AgentID);
                 }
 
-                #region OpenSim teleport compatibility!
-
-                if (!m_useCallbacks)
-                {
-                    circuitData.CapsPath = CapsUtil.GetRandomCapsObjectPath ();
-                    circuitData.startpos.X += (neighbor.RegionLocX - clientCaps.GetRootCapsService ().RegionX);
-                    circuitData.startpos.Y += (neighbor.RegionLocY - clientCaps.GetRootCapsService ().RegionY);
-                }
-
-                #endregion
-
-                bool regionAccepted = SimulationService.CreateAgent(neighbor, circuitData,
+                bool regionAccepted = SimulationService.CreateAgent(neighbor, ref circuitData,
                         TeleportFlags, agentData, out reason);
                 if (regionAccepted)
                 {

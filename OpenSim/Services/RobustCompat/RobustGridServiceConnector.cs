@@ -39,8 +39,9 @@ using Aurora.Simulation.Base;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Services.Connectors;
 
-namespace OpenSim.Services.Connectors
+namespace OpenSim.Services.RobustCompat
 {
     public class RobustGridServicesConnector : GridServicesConnector
     {

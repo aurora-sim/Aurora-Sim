@@ -70,11 +70,11 @@ namespace OpenSim.Services.Connectors.Simulation
             return "/agent/";
         }
 
-        public virtual bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, AgentData data, out string reason)
+        public virtual bool CreateAgent(GridRegion destination, ref AgentCircuitData aCircuit, uint teleportFlags, AgentData data, out string reason)
         {
             reason = String.Empty;
             // Try local first
-            if (m_localBackend.CreateAgent(destination, aCircuit, teleportFlags, data, out reason))
+            if (m_localBackend.CreateAgent(destination, ref aCircuit, teleportFlags, data, out reason))
                 return true;
 
             reason = String.Empty;
