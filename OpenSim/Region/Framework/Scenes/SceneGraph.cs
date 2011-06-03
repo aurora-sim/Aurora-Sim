@@ -2100,7 +2100,10 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (ISceneChildEntity child in children)
             {
                 if (((SceneObjectPart)child).PhysActor != null)
+                {
                     ((SceneObjectPart)child).PhysActor.LocalID = child.LocalId;
+                    ((SceneObjectPart)child).PhysActor.UUID = child.UUID;
+                }
                 if (child.LocalId == 0)
                     child.LocalId = AllocateLocalId();
                 entity.AddChild(child, child.LinkNum);

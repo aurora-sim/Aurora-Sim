@@ -44,6 +44,8 @@ namespace OpenSim.Framework
         public Vector3 Normal;
     }
 
+    public delegate void OnCollisionEvent (PhysicsActor actor, PhysicsActor collidedActor, ContactPoint contact);
+
     public abstract class PhysicsScene
     {
         public static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -54,10 +56,16 @@ namespace OpenSim.Framework
             set { }
         }
 
+        public event OnCollisionEvent OnCollisionEvent;
+        public void FireCollisionEvent (PhysicsActor actor, PhysicsActor collidedActor, ContactPoint contact)
+        {
+            OnCollisionEvent (actor, collidedActor, contact);
+        }
+
         public abstract void Initialise(IMesher meshmerizer, RegionInfo region);
         public abstract void PostInitialise(IConfigSource config);
 
-        public abstract PhysicsCharacter AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying, uint LocalID);
+        public abstract PhysicsCharacter AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying, uint LocalID, UUID UUID);
 
         public abstract void RemoveAvatar(PhysicsCharacter actor);
 
@@ -211,7 +219,7 @@ namespace OpenSim.Framework
         {
         }
 
-        public override PhysicsCharacter AddAvatar (string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying, uint localID)
+        public override PhysicsCharacter AddAvatar (string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying, uint localID, UUID UUID)
         {
             m_log.InfoFormat ("[PHYSICS]: NullPhysicsScene : AddAvatar({0})", position);
             return new NullCharacterPhysicsActor ();

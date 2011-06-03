@@ -2400,6 +2400,7 @@ namespace OpenSim.Region.Framework.Scenes
                     PhysActor.SOPName = this.Name; // save object name and desc into the PhysActor so ODE internals know the joint/body info
                     PhysActor.SOPDescription = this.Description;
                     PhysActor.LocalID = LocalId;
+                    PhysActor.UUID = UUID;
                     DoPhysicsPropertyUpdate(RigidBody, true);
                     PhysActor.VolumeDetect = VolumeDetectActive;
                     if (OnAddPhysics != null)
@@ -3738,7 +3739,10 @@ namespace OpenSim.Region.Framework.Scenes
 
             //Fix the localID now for the physics engine
             if (m_physActor != null)
+            {
                 m_physActor.LocalID = LocalId;
+                PhysActor.UUID = UUID;
+            }
             //Fix the rezzed attribute
             Rezzed = DateTime.UtcNow;
             //TODO: Check to make sure the physics engine is fully updated here
@@ -5316,6 +5320,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (pa != null)
                     {
                         pa.LocalID = LocalId;
+                        pa.UUID = UUID;
                         DoPhysicsPropertyUpdate(UsePhysics, true);
                         if (m_parentGroup != null)
                         {

@@ -2424,7 +2424,7 @@ namespace OpenSim.Region.Framework.Scenes
                 pVec.Z += m_avHeight;
 
             m_physicsActor = scene.AddAvatar(Name, pVec, Rotation,
-                                                 new Vector3 (0f, 0f, m_avHeight), isFlying, LocalId);
+                                                 new Vector3 (0f, 0f, m_avHeight), isFlying, LocalId, UUID);
 
             scene.AddPhysicsActorTaint(m_physicsActor);
             m_physicsActor.OnRequestTerseUpdate += SendTerseUpdateToAllClients;

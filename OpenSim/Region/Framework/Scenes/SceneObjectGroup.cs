@@ -1548,6 +1548,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 //Fix the localID!
                 part.PhysActor.LocalID = part.LocalId;
+                part.PhysActor.UUID = part.UUID;
                 //Set physical and etc up correctly
                 part.DoPhysicsPropertyUpdate (usePhysics, true);
                 if (oldActor != null)

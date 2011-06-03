@@ -1386,6 +1386,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             obj2LocalID = 0;
             if (!p2.SubscribedEvents() && !p1.SubscribedEvents())
                 return;
+            FireCollisionEvent (p1, p2, contact);
 
             switch ((ActorTypes)p2.PhysicsActorType)
             {
@@ -1796,7 +1797,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         #region Add/Remove Entities
 
-        public override PhysicsCharacter AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying, uint localID)
+        public override PhysicsCharacter AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying, uint localID, UUID UUID)
         {
             Vector3 pos;
             pos.X = position.X;
@@ -1804,6 +1805,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             pos.Z = position.Z;
             AuroraODECharacter newAv = new AuroraODECharacter(avName, this, pos, rotation, size);
             newAv.LocalID = localID;
+            newAv.UUID = UUID;
             newAv.Flying = isFlying;
             newAv.MinimumGroundFlightOffset = minimumGroundFlightOffset;
 

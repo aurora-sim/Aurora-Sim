@@ -962,6 +962,12 @@ namespace OpenSim.Framework
 
         public abstract uint LocalID { get; set; }
 
+        private UUID m_UUID;
+        public UUID UUID { 
+            get { return m_UUID; }
+            set { m_UUID = value; } 
+        }
+
         public virtual void RequestPhysicsterseUpdate ()
         {
             // Make a temporary copy of the event to avoid possibility of
