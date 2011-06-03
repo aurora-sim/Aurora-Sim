@@ -211,7 +211,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         return;
                     }
                     //Now respect things like parcel bans with this
-                    if (!sp.Scene.Permissions.AllowedIncomingTeleport(sp.UUID, position, out position, out reason))
+                    if (!sp.Scene.Permissions.AllowedIncomingTeleport(sp.UUID, position, teleportFlags, out position, out reason))
                     {
                         sp.ControllingClient.SendTeleportFailed(reason);
                         return;

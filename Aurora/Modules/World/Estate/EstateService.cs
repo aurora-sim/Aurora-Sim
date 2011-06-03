@@ -327,7 +327,7 @@ namespace Aurora.Modules
 
         #region Teleport Permissions
 
-        private bool OnAllowedIncomingTeleport(UUID userID, IScene scene, Vector3 Position, out Vector3 newPosition, out string reason)
+        private bool OnAllowedIncomingTeleport(UUID userID, IScene scene, Vector3 Position, uint TeleportFlags, out Vector3 newPosition, out string reason)
         {
             newPosition = Position;
             UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, userID);
@@ -485,9 +485,12 @@ namespace Aurora.Modules
             }
 
             EstateSettings ES = scene.RegionInfo.EstateSettings;
-
+            TeleportFlags tpflags = (TeleportFlags)TeleportFlags;
+            TeleportFlags allowableFlags = OpenMetaverse.TeleportFlags.ViaLandmark | OpenMetaverse.TeleportFlags.ViaHome |
+                OpenMetaverse.TeleportFlags.ViaLogin | OpenMetaverse.TeleportFlags.ViaLure | OpenMetaverse.TeleportFlags.ForceRedirect |
+                OpenMetaverse.TeleportFlags.Godlike | OpenMetaverse.TeleportFlags.NineOneOne;
             //Move them to the nearest landing point
-            if (!isCrossing && !ES.AllowDirectTeleport)
+            if (!((tpflags & allowableFlags) != 0) && !isCrossing && !ES.AllowDirectTeleport)
             {
                 if (Sp != null)
                     Sp.ClearSavedVelocity(); //If we are moving the agent, clear their velocity
@@ -514,7 +517,7 @@ namespace Aurora.Modules
                     }
                 }
             }
-            else if (!isCrossing && !scene.Permissions.GenericParcelPermission(userID, ILO, (ulong)GroupPowers.None)) //Telehubs override parcels
+            else if (!((tpflags & allowableFlags) != 0) && !isCrossing && !scene.Permissions.GenericParcelPermission (userID, ILO, (ulong)GroupPowers.None)) //Telehubs override parcels
             {
                 if (Sp != null)
                     Sp.ClearSavedVelocity (); //If we are moving the agent, clear their velocity

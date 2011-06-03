@@ -81,7 +81,7 @@ namespace OpenSim.Framework
     public delegate bool EditUserInventoryHandler(UUID itemID, UUID userID);
     public delegate bool CopyUserInventoryHandler(UUID itemID, UUID userID);
     public delegate bool DeleteUserInventoryHandler(UUID itemID, UUID userID);
-    public delegate bool TeleportHandler (UUID userID, IScene scene, Vector3 Position, out Vector3 newPosition, out string reason);
+    public delegate bool TeleportHandler (UUID userID, IScene scene, Vector3 Position, uint TeleportFlags, out Vector3 newPosition, out string reason);
     public delegate bool OutgoingRemoteTeleport (UUID userID, IScene scene, out string reason);
     public delegate bool IncomingAgentHandler (IScene scene, AgentCircuitData agent, bool isRootAgent, out string reason);
     public delegate bool PushObjectHandler(UUID userID, ILandObject parcel);
@@ -1080,7 +1080,7 @@ namespace OpenSim.Framework
         /// <param name="newPosition">The position the user is going to get</param>
         /// <param name="reason">If the check fails, this will tell why</param>
         /// <returns>Whether this user can teleport into/around this region</returns>
-        public bool AllowedIncomingTeleport(UUID userID, Vector3 Position, out Vector3 newPosition, out string reason)
+        public bool AllowedIncomingTeleport(UUID userID, Vector3 Position, uint TeleportFlags, out Vector3 newPosition, out string reason)
         {
             newPosition = Position;
             reason = "";
@@ -1090,7 +1090,7 @@ namespace OpenSim.Framework
                 Delegate[] list = handler.GetInvocationList();
                 foreach (TeleportHandler h in list)
                 {
-                    if (h(userID, m_scene, Position, out newPosition, out reason) == false)
+                    if (h(userID, m_scene, Position, TeleportFlags, out newPosition, out reason) == false)
                         return false;
                 }
             }

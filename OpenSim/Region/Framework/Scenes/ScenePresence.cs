@@ -1005,7 +1005,9 @@ namespace OpenSim.Region.Framework.Scenes
             string reason;
             Vector3 pos;
             //Get a good position and make sure that we exist in the grid
-            if (!Scene.Permissions.AllowedIncomingTeleport(UUID, AbsolutePosition, out pos, out reason))
+            AgentCircuitData agent = ((Scene)m_scene).AuthenticateHandler.GetAgentCircuitData (UUID);
+
+            if (!Scene.Permissions.AllowedIncomingTeleport (UUID, AbsolutePosition, agent.teleportFlags, out pos, out reason))
             {
                 m_log.Error("[ScenePresence]: Error in MakeRootAgent! Could not authorize agent " + Name +
                     ", reason: " + reason);
