@@ -1158,7 +1158,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     //Tell the grid that we are logged out
                     syncPoster.Post (SyncMessageHelper.DisableSimulator (presence.UUID, scene.RegionInfo.RegionHandle), scene.RegionInfo.RegionHandle);
                 }
-
                 return RetVal;
             }
             return false;

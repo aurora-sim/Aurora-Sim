@@ -127,8 +127,10 @@ namespace OpenSim.Services.MessagingService
                 //KILL IT!
                 if (regionCaps == null || clientCaps == null)
                     return null;
-                regionCaps.Close();
-                clientCaps.RemoveCAPS(requestingRegion);
+                IEventQueueService eventQueue = m_registry.RequestModuleInterface<IEventQueueService> ();
+                eventQueue.DisableSimulator (regionCaps.AgentID, regionCaps.RegionHandle);
+                //regionCaps.Close();
+                //clientCaps.RemoveCAPS(requestingRegion);
             }
             else if (message["Method"] == "ArrivedAtDestination")
             {
