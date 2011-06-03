@@ -550,7 +550,7 @@ namespace OpenSim.Services.LLLoginService
             }
             catch (Exception e)
             {
-                m_log.Warn("[CLIENT]: LoginResponse: Error creating Hashtable Response: " + e.Message);
+                m_log.Warn("[CLIENT]: LoginResponse: Error creating Hashtable Response: " + e.ToString());
 
                 return LLFailedLoginResponse.InternalError.ToHashtable();
             }

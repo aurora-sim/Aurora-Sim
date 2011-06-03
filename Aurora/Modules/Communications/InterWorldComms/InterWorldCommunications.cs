@@ -201,8 +201,18 @@ namespace Aurora.Modules
 
         internal void AddNewConnectionFromRequest (OSDMap args)
         {
-            //Add the other servers IP to our connections
-            Connections.Add (args["OurURL"]);
+            //Add the other servers IP to our connections=
+            IConfigurationService configService = Registry.RequestModuleInterface<IConfigurationService> ();
+            if (configService != null)
+            {
+                //Add the URLs they sent us
+                configService.AddNewUrls (args["OurIdentifier"], args);
+            }
+        }
+
+        public string GetOurIP ()
+        {
+            return "http://" + Utilities.GetExternalIp () + ":" + Registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (0).Port;
         }
     }
 
@@ -226,13 +236,22 @@ namespace Aurora.Modules
         /// <returns>The connection that has been recieved from the host</returns>
         public bool AttemptConnection (string host)
         {
-            OSDMap callThem = new OSDMap ();
-            callThem["OurURL"] = "http://" + Utilities.GetExternalIp() + ":" + IWC.Registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0).Port;
-            
-            callThem["Method"] = "ConnectionRequest";
-            OSDMap result = WebUtils.PostToService (host, callThem, true, false);
-            if (result["Success"])
-                return true;
+            IGridRegistrationService module = IWC.Registry.RequestModuleInterface<IGridRegistrationService> ();
+            if (module != null)
+            {
+                OSDMap callThem = module.GetUrlForRegisteringClient (host);
+                callThem["OurIdentifier"] = "asdfasdfasdf";
+
+                callThem["Method"] = "ConnectionRequest";
+                OSDMap result = WebUtils.PostToService (host, callThem, true, false, true);
+                if (result["Success"])
+                {
+                    //Add their URLs back again
+                    m_log.Warn ("Successfully Connected to " + host);
+                    IWC.AddNewConnectionFromRequest (result);
+                    return true;
+                }
+            }
             return false;
         }
     }
@@ -272,10 +291,6 @@ namespace Aurora.Modules
                     string Method = args["Method"].AsString ();
                     if (Method == "ConnectionRequest")
                         return ConnectionRequest (args);
-                    /*if (Method == "Query")
-                        return Query (args);
-                    else if (Method == "Delete")
-                        return Delete (args);*/
                 }
             }
             return new byte[0];
@@ -283,9 +298,18 @@ namespace Aurora.Modules
 
         private byte[] ConnectionRequest (OSDMap args)
         {
+            IGridRegistrationService module = IWC.Registry.RequestModuleInterface<IGridRegistrationService> ();
             OSDMap result = new OSDMap ();
-            result["Success"] = true;
-            IWC.AddNewConnectionFromRequest (args);
+            if (module != null)
+            {
+                //Add our URLs for them so that they can connect too
+                result = module.GetUrlForRegisteringClient ("asdfasdfasdfasdf");
+                result["OurIdentifier"] = "asdfasdfasdfasdf";
+                string theirIdent = args["OurIdentifier"];
+                m_log.Warn (theirIdent + " successfully connected to us");
+                IWC.AddNewConnectionFromRequest (args);
+                result["Success"] = true;
+            }
 
             string json = OSDParser.SerializeJsonString (result);
             UTF8Encoding enc = new UTF8Encoding ();
