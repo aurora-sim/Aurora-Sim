@@ -51,8 +51,9 @@ namespace OpenSim.Services
     public class AuroraDataServerPostOSDHandler : BaseStreamHandler
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private ProfileInfoHandler ProfileHandler = new ProfileInfoHandler();
+        private ProfileInfoHandler ProfileHandler = new ProfileInfoHandler ();
         private OfflineMessagesInfoHandler OfflineMessagesHandler = new OfflineMessagesInfoHandler ();
+        private DirectoryInfoOSDHandler DirectoryHandler = new DirectoryInfoOSDHandler ();
         
         protected ulong m_regionHandle;
         protected IRegistryCore m_registry;
@@ -143,6 +144,31 @@ namespace OpenSim.Services
                             if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.Medium))
                                 return FailureResult ();
                         return OfflineMessagesHandler.GetOfflineMessages (args);
+                    #endregion
+                    #region Directory Messages
+                    case "addlandobject":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult ();
+                        return DirectoryHandler.AddLandObject (args);
+                    case "removelandobject":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult ();
+                        int x,y;
+                        Util.UlongToInts(m_regionHandle, out x, out y);
+                        UUID regionID = this.m_registry.RequestModuleInterface<IGridService> ().GetRegionByPosition (UUID.Zero, x, y).RegionID;
+                        return DirectoryHandler.RemoveLandObject (m_regionHandle, regionID, args);
+                    case "getparcelinfo":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.Low))
+                                return FailureResult ();
+                        return DirectoryHandler.GetParcelInfo (args);
+                    case "getparcelbyowner":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.Medium))
+                                return FailureResult ();
+                        return DirectoryHandler.GetParcelByOwner (args);
                     #endregion
                 }
             }
@@ -483,4 +509,60 @@ namespace OpenSim.Services
 
         }
     }
+
+
+    public class DirectoryInfoOSDHandler
+    {
+        IDirectoryServiceConnector DirectoryServiceConnector;
+        public DirectoryInfoOSDHandler ()
+        {
+            DirectoryServiceConnector = DataManager.RequestPlugin<IDirectoryServiceConnector> ("IDirectoryServiceConnectorLocal");
+        }
+
+        public byte[] GetParcelInfo (OSDMap request)
+        {
+            UUID infoID = request["InfoUUID"].AsUUID ();
+            LandData parcel = DirectoryServiceConnector.GetParcelInfo (infoID);
+            OSDMap result = parcel == null ? new OSDMap() : parcel.ToOSD ();
+            request["Success"] = parcel != null;
+            UTF8Encoding encoding = new UTF8Encoding ();
+            return encoding.GetBytes (OSDParser.SerializeJsonString (request));
+        }
+
+        public byte[] GetParcelByOwner (OSDMap request)
+        {
+            UUID OwnerID = request["OwnerID"].AsUUID ();
+            LandData[] parcels = DirectoryServiceConnector.GetParcelByOwner (OwnerID);
+            OSDMap result = new OSDMap ();
+            OSDArray array = new OSDArray ();
+            foreach (LandData land in parcels)
+            {
+                array.Add (land.ToOSD ());
+            }
+            result["Parcels"] = array;
+            UTF8Encoding encoding = new UTF8Encoding ();
+            return encoding.GetBytes (OSDParser.SerializeJsonString (request));
+        }
+
+        public byte[] AddLandObject (OSDMap request)
+        {
+            LandData land = new LandData ();
+            land.FromOSD (request);
+            DirectoryServiceConnector.AddLandObject (land);
+
+            return new byte[1];
+        }
+
+        public byte[] RemoveLandObject (ulong regionhandle, UUID regionID, OSDMap request)
+        {
+            LandData land = new LandData ();
+            land.FromOSD (request);
+            land.RegionHandle = regionhandle;
+            land.RegionID = regionID;
+            DirectoryServiceConnector.RemoveLandObject (regionID, land);
+
+            return new byte[1];
+        }
+    }
+
 }

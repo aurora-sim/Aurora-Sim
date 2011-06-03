@@ -182,29 +182,6 @@ namespace OpenSim.Services
                         return MuteHandler.IsMuted(request);
                     #endregion
                     #region Search
-                    case "addlandobject":
-                        if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.Low))
-                                return FailureResult ();
-                        return DirectoryHandler.AddLandObject (request);
-                    case "removelandobject":
-                        if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.Low))
-                                return FailureResult ();
-                        int x,y;
-                        Util.UlongToInts(m_regionHandle, out x, out y);
-                        UUID regionID = this.m_registry.RequestModuleInterface<IGridService> ().GetRegionByPosition (UUID.Zero, x, y).RegionID;
-                        return DirectoryHandler.RemoveLandObject (regionID, request);
-                    case "getparcelinfo":
-                        if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
-                                return FailureResult();
-                        return DirectoryHandler.GetParcelInfo(request);
-                    case "getparcelbyowner":
-                        if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
-                                return FailureResult();
-                        return DirectoryHandler.GetParcelByOwner(request);
                     case "findland":
                         if (urlModule != null)
                             if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
@@ -1179,42 +1156,6 @@ namespace OpenSim.Services
             DirectoryServiceConnector = DataManager.RequestPlugin<IDirectoryServiceConnector>("IDirectoryServiceConnectorLocal");
         }
 
-        public byte[] GetParcelInfo(Dictionary<string, object> request)
-        {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
-            UUID INFOUUID = UUID.Parse(request["INFOUUID"].ToString());
-            LandData land = DirectoryServiceConnector.GetParcelInfo(INFOUUID);
-
-            if(land != null)
-                result.Add("Land", land.ToKeyValuePairs());
-
-            string xmlString = WebUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding();
-            return encoding.GetBytes(xmlString);
-        }
-
-        public byte[] GetParcelByOwner(Dictionary<string, object> request)
-        {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
-            UUID OWNERID = UUID.Parse(request["OWNERID"].ToString());
-            LandData[] lands = DirectoryServiceConnector.GetParcelByOwner(OWNERID);
-
-            int i = 0;
-            foreach (LandData land in lands)
-            {
-                result.Add(ConvertDecString(i), land.ToKeyValuePairs());
-                i++;
-            }
-
-            string xmlString = WebUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding();
-            return encoding.GetBytes(xmlString);
-        }
-
         public byte[] FindLand(Dictionary<string, object> request)
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
@@ -1361,24 +1302,6 @@ namespace OpenSim.Services
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
-        }
-
-        public byte[] AddLandObject (Dictionary<string, object> request)
-        {
-            LandData land = new LandData ();
-            land.FromKVP (request);
-            DirectoryServiceConnector.AddLandObject (land);
-
-            return SuccessResult ();
-        }
-
-        public byte[] RemoveLandObject (UUID regionID, Dictionary<string, object> request)
-        {
-            LandData land = new LandData ();
-            land.FromKVP (request);
-            DirectoryServiceConnector.RemoveLandObject (regionID, land);
-
-            return SuccessResult ();
         }
 
         private byte[] SuccessResult()

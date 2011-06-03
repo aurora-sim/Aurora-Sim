@@ -80,146 +80,65 @@ namespace Aurora.Services.DataService
         /// <param name="showInSearch"></param>
         public void AddLandObject(LandData args)
         {
-            Dictionary<string, object> sendData = args.ToKeyValuePairs();
-
-            sendData["METHOD"] = "addlandobject";
-
-            string reqString = WebUtils.BuildXmlResponse(sendData);
-
-            try
+            OSDMap mess = args.ToOSD ();
+            mess["Method"] = "addlandobject";
+            List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+            foreach (string m_ServerURI in m_ServerURIs)
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
-                {
-                    AsynchronousRestObjectRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                }
-            }
-            catch (Exception e)
-            {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                WebUtils.PostToService (m_ServerURI + "osd", mess, false, false);
             }
         }
 
         public void RemoveLandObject (UUID regionID, LandData args)
         {
-            Dictionary<string, object> sendData = args.ToKeyValuePairs ();
-
-            sendData["METHOD"] = "removelandobject";
-
-            string reqString = WebUtils.BuildXmlResponse (sendData);
-
-            try
+            OSDMap mess = args.ToOSD ();
+            mess["Method"] = "removelandobject";
+            List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf ("RemoteServerURI");
+            foreach (string m_ServerURI in m_ServerURIs)
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf ("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
-                {
-                    AsynchronousRestObjectRequester.MakeRequest ("POST",
-                           m_ServerURI,
-                           reqString);
-                }
-            }
-            catch (Exception e)
-            {
-                m_log.DebugFormat ("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString ());
+                WebUtils.PostToService (m_ServerURI + "osd", mess, false, false);
             }
         }
 
         public LandData GetParcelInfo(UUID InfoUUID)
         {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
-
-            sendData["INFOUUID"] = InfoUUID.ToString();
-            sendData["METHOD"] = "getparcelinfo";
-
-            string reqString = WebUtils.BuildQueryString(sendData);
-
-            try
+            OSDMap mess = new OSDMap ();
+            mess["Method"] = "getparcelinfo";
+            mess["InfoUUID"] = InfoUUID;
+            List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf ("RemoteServerURI");
+            foreach (string m_ServerURI in m_ServerURIs)
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
+                OSDMap results = WebUtils.PostToService (m_ServerURI + "osd", mess, true, false);
+                OSDMap innerResults = (OSDMap)OSDParser.DeserializeJson (results["_RawResult"]);
+                if (innerResults["Success"])
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                        {
-                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                            LandData land = null;
-                            foreach (object f in replyvalues)
-                            {
-                                if (f is Dictionary<string, object>)
-                                {
-                                    land = new LandData();
-                                    land.FromKVP((Dictionary<string, object>)f);
-                                    break;
-                                }
-                                else
-                                    m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: GetParcelInfo {0} received invalid response type {1}",
-                                        InfoUUID, f.GetType());
-                            }
-                            // Success
-                            return land;
-                        }
-
-                        else
-                            m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: GetParcelInfo {0} received null response",
-                                InfoUUID);
-                    }
+                    LandData result = new LandData ();
+                    result.FromOSD (innerResults);
+                    return result;
                 }
             }
-            catch (Exception e)
-            {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
-            }
-
             return null;
         }
 
         public LandData[] GetParcelByOwner(UUID OwnerID)
         {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
-
-            sendData["OWNERID"] = OwnerID;
-            sendData["METHOD"] = "getparcelbyowner";
-
-            string reqString = WebUtils.BuildQueryString(sendData);
-            List<LandData> Land = new List<LandData>();
-            try
+            List<LandData> Land = new List<LandData> ();
+            OSDMap mess = new OSDMap ();
+            mess["Method"] = "getparcelbyowner";
+            mess["OwnerID"] = OwnerID;
+            List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf ("RemoteServerURI");
+            foreach (string m_ServerURI in m_ServerURIs)
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
+                OSDMap results = WebUtils.PostToService (m_ServerURI + "osd", mess, true, false);
+                OSDMap innerResults = (OSDMap)OSDParser.DeserializeJson (results["_RawResult"]);
+
+                OSDArray parcels = (OSDArray)innerResults["Parcels"];
+                foreach(OSD o in parcels)
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        foreach (object f in replyData)
-                        {
-                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
-                            if (value.Value is Dictionary<string, object>)
-                            {
-                                Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                                LandData land = new LandData();
-                                land.FromKVP(valuevalue);
-                                Land.Add(land);
-                            }
-                        }
-                    }
+                    LandData result = new LandData ();
+                    result.FromOSD ((OSDMap)o);
+                    Land.Add (result);
                 }
-                return Land.ToArray();
-            }
-            catch (Exception e)
-            {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
             }
             return Land.ToArray();
         }
