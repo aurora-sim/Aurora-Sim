@@ -130,7 +130,7 @@ namespace OpenSim.Services.RobustCompat
         private object ReleaseAgentHandler (string mod, object param)
         {
             object[] o = (object[])param;
-            CloseAgent(
+            CloseAgent ((GridRegion)o[1], (UUID)o[0]);
 
             return null;
         }
