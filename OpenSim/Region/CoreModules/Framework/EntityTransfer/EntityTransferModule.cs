@@ -607,7 +607,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                                 if (agent.PhysicsActor != null)
                                     agent.PhysicsActor.IsPhysical = true; //Fix the setting that we set earlier
                                 // In any case
-                                agent.NotInTransit();
+                                agent.FailedCrossingTransit(crossingRegion);
                                 return agent;
                             }
                         }
@@ -630,7 +630,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 m_log.Warn("[EntityTransferModule]: Exception in crossing: " + ex.ToString());
             }
             // In any case
-            agent.NotInTransit();
+            agent.SuccessfulTransit();
             return agent;
         }
 

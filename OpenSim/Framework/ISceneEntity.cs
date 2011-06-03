@@ -153,7 +153,9 @@ namespace OpenSim.Framework
         void DoAutoPilot (uint p, Vector3 pos, IClientAPI avatar);
         void TeleportWithMomentum (Vector3 value);
         void DoMoveToPosition (object iClientAPI, string p, List<string> coords);
-        void NotInTransit ();
+        void SuccessfulTransit ();
+        void FailedTransit ();
+        void FailedCrossingTransit (GridRegion failedCrossingRegion);
         void CrossSittingAgent (IClientAPI iClientAPI, OpenMetaverse.UUID uUID);
         void AddNewMovement (Vector3 jumpForce, Quaternion quaternion);
         void AddToPhysicalScene (bool m_flying, bool p);

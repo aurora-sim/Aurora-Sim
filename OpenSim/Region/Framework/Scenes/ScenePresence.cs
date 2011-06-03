@@ -809,7 +809,7 @@ namespace OpenSim.Region.Framework.Scenes
             //m_physicsActor.Position += m_savedVelocity * 0.25f;
             m_physicsActor.Velocity = m_savedVelocity * 0.25f;
             m_savedVelocity = Vector3.Zero;
-            NotInTransit();
+            SuccessfulTransit ();
 
             if (m_forceFly)
                 m_physicsActor.Flying = true;
@@ -860,7 +860,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void MakeChildAgent()
         {
-            NotInTransit();
+            SuccessfulTransit ();
             // It looks like m_animator is set to null somewhere, and MakeChild
             // is called after that. Probably in aborted teleports.
             if (m_animator == null)
@@ -2096,6 +2096,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Border Crossing Methods
 
+        private Dictionary<UUID, int> m_failedNeighborCrossing = new Dictionary<UUID, int> ();
+
         /// <summary>
         /// Checks to see if the avatar is in range of a border and calls CrossToNewRegion
         /// </summary>
@@ -2146,6 +2148,14 @@ namespace OpenSim.Region.Framework.Scenes
 
                         if (neighborRegion != null)
                         {
+                            if (m_failedNeighborCrossing.ContainsKey (neighborRegion.RegionID))
+                            {
+                                if (m_failedNeighborCrossing[neighborRegion.RegionID] - Util.UnixTimeSinceEpoch () > 10)
+                                    m_failedNeighborCrossing.Remove (neighborRegion.RegionID); //Only allow it to retry every 10 seconds
+                                else
+                                    return false;
+                            }
+                            
                             InTransit();
                             bool isFlying = false;
 
@@ -2160,8 +2170,8 @@ namespace OpenSim.Region.Framework.Scenes
 
                             return true;
                         }
-                        else
-                            m_log.Debug("[ScenePresence]: Could not find region for " + Name + " to cross into @ {" + TargetX / 256 + ", " + TargetY / 256 + "}");
+                        //else
+                        //    m_log.Debug("[ScenePresence]: Could not find region for " + Name + " to cross into @ {" + TargetX / 256 + ", " + TargetY / 256 + "}");
                     }
                 }
             }
@@ -2193,9 +2203,20 @@ namespace OpenSim.Region.Framework.Scenes
                 m_AgentControlFlags &= ~AgentManager.ControlFlags.AGENT_CONTROL_FLY;
         }
 
-        public void NotInTransit()
+        public void SuccessfulTransit()
         {
             m_inTransit = false;
+        }
+
+        public void FailedTransit ()
+        {
+            m_inTransit = false;
+        }
+
+        public void FailedCrossingTransit (GridRegion failedCrossingRegion)
+        {
+            m_inTransit = false;
+            m_failedNeighborCrossing[failedCrossingRegion.RegionID] = Util.UnixTimeSinceEpoch();
         }
 
         private void Reset()
@@ -2210,7 +2231,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_parentID = UUID.Zero;
             m_parentPosition = Vector3.Zero;
             ControllingClient.Reset();
-            NotInTransit();
+            SuccessfulTransit ();
         }
 
         #endregion
