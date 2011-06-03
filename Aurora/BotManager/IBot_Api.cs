@@ -40,7 +40,7 @@ namespace Aurora.BotManager
 {
     public interface IBot_Api
     {
-        void botSetMap(string keyOfBot, LSL_List positions, LSL_List movementType);
+        void botSetMap(string keyOfBot, LSL_List positions, LSL_List movementType, LSL_Integer flags);
         string botCreateBot (string FirstName, string LastName, string appearanceToClone);
         void botRemoveBot (string bot);
         void botPauseMovement (string bot);

@@ -212,12 +212,12 @@ namespace Aurora.BotManager
         /// <param name="Bot">ID of the bot</param>
         /// <param name="Positions">List of positions the bot will move to</param>
         /// <param name="mode">List of what the bot should be doing inbetween the positions</param>
-        public void SetBotMap(UUID Bot, List<Vector3> Positions, List<TravelMode> mode)
+        public void SetBotMap(UUID Bot, List<Vector3> Positions, List<TravelMode> mode, int flags)
         {
             Bot bot;
             //Find the bot
             if (m_bots.TryGetValue(Bot, out bot))
-                bot.SetPath (Positions, mode);
+                bot.SetPath (Positions, mode, flags);
         }
 
         /// <summary>

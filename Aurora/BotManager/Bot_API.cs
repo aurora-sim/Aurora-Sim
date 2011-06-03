@@ -173,7 +173,7 @@ namespace Aurora.BotManager
                manager.SetBotShouldFly (UUID.Parse(keyOfBot), ShouldFly == 1);
         }
 
-        public void botSetMap(string keyOfBot, LSL_List positions, LSL_List movementType)
+        public void botSetMap(string keyOfBot, LSL_List positions, LSL_List movementType, LSL_Integer flags)
         {
             ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botSetMap", m_host, "bot");
             List<Vector3> PositionsMap = new List<Vector3>();
@@ -191,7 +191,7 @@ namespace Aurora.BotManager
 
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
             if (manager != null)
-                manager.SetBotMap(UUID.Parse(keyOfBot), PositionsMap, TravelMap);
+                manager.SetBotMap(UUID.Parse(keyOfBot), PositionsMap, TravelMap, flags.value);
         }
 
         public void botRemoveBot (string bot)

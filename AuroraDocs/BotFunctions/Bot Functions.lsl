@@ -19,7 +19,10 @@ default
         //1 - Fly to the next target
         list types = [1,1,1];
         //Now tell the bot what to do
-        botSetMap(botID, positions, types);
+		//The last parameter is the Flags parameter
+		//You can pass through BOT_FOLLOW_FLAG_INDEFINITELY to make the bot follow indefinitely and continue to loop through all the positions
+		// Or you can pass through BOT_FOLLOW_FLAG_NONE to make the bot stop after going through all the positions given
+        botSetMap(botID, positions, types, BOT_FOLLOW_FLAG_INDEFINITELY);
     } 
     touch_start(integer number)
     {

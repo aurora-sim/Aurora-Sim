@@ -249,9 +249,13 @@ namespace Aurora.BotManager
 
         #region SetPath
 
-        public void SetPath (List<Vector3> Positions, List<TravelMode> modes)
+        public void SetPath (List<Vector3> Positions, List<TravelMode> modes, int flags)
         {
             m_nodeGraph.Clear ();
+            const int BOT_FOLLOW_FLAG_INDEFINITELY = 1;
+
+            m_nodeGraph.FollowIndefinitely = (flags & BOT_FOLLOW_FLAG_INDEFINITELY) == BOT_FOLLOW_INDEFINITELY;
+
             m_nodeGraph.AddRange (Positions, modes);
             GetNextDestination();
         }

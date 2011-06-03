@@ -40,6 +40,11 @@ namespace Aurora.BotManager
         private List<TravelMode> m_listOfStates = new List<TravelMode> ();
         private object m_lock = new object ();
         private DateTime m_lastChangedPosition = DateTime.MinValue;
+        /// <summary>
+        /// Loop through the current positions over and over
+        /// </summary>
+        public bool FollowIndefinitely = false;
+        private int CurrentPos = 0;
 
         public NodeGraph ()
         {
@@ -89,17 +94,18 @@ namespace Aurora.BotManager
                 position = Vector3.Zero;
                 state = TravelMode.None;
                 needsToTeleportToPosition = false;
-                if (m_listOfPositions.Count > 0)
+                if ((m_listOfPositions.Count - CurrentPos) > 0)
                 {
-                    position = m_listOfPositions[0];
-                    state = m_listOfStates[0];
+                    position = m_listOfPositions[CurrentPos];
+                    state = m_listOfStates[CurrentPos];
                     if (m_lastChangedPosition == DateTime.MinValue)
                         m_lastChangedPosition = DateTime.Now;
                     if (position.ApproxEquals (currentPos, closeToRange))
                     {
                         //Its close to a position, go look for the next pos
-                        m_listOfPositions.RemoveAt (0);
-                        m_listOfStates.RemoveAt (0);
+                        //m_listOfPositions.RemoveAt (0);
+                        //m_listOfStates.RemoveAt (0);
+                        CurrentPos++;
                         m_lastChangedPosition = DateTime.MinValue;
                         goto findNewTarget;
                     }
@@ -109,6 +115,11 @@ namespace Aurora.BotManager
                             needsToTeleportToPosition = true;
                     }
                     return true;
+                }
+                else if (FollowIndefinitely)
+                {
+                    CurrentPos = 0; //Reset the position to the beginning if we have run out of positions
+                    goto findNewTarget;
                 }
             }
             return found;

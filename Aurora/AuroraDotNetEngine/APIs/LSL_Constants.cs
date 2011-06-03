@@ -628,5 +628,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         public static readonly LSLInteger PROFILE_NONE = 0;
         public static readonly LSLInteger PROFILE_SCRIPT_MEMORY = 1;
+
+        public static readonly LSLInteger BOT_FOLLOW_FLAG_NONE = 0;
+        public static readonly LSLInteger BOT_FOLLOW_FLAG_INDEFINITELY = 1;
     }
 }
