@@ -76,25 +76,25 @@ namespace OpenSim.Services
             get { return "InventoryServerURI"; }
         }
 
-        public void AddExistingUrlForClient (string SessionID, ulong RegionHandle, string url, uint port)
+        public void AddExistingUrlForClient (string SessionID, string url, uint port)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-            server.AddStreamHandler(new XInventoryConnectorPostHandler(url, m_registry.RequestModuleInterface<IInventoryService>(), RegionHandle, m_registry));
+            server.AddStreamHandler (new XInventoryConnectorPostHandler (url, m_registry.RequestModuleInterface<IInventoryService> (), SessionID, m_registry));
         }
 
-        public string GetUrlForRegisteringClient (string SessionID, ulong RegionHandle, uint port)
+        public string GetUrlForRegisteringClient (string SessionID, uint port)
         {
             string url = "/xinventory" + UUID.Random();
 
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-            server.AddStreamHandler(new XInventoryConnectorPostHandler(url, m_registry.RequestModuleInterface<IInventoryService>(), RegionHandle, m_registry));
+            server.AddStreamHandler (new XInventoryConnectorPostHandler (url, m_registry.RequestModuleInterface<IInventoryService> (), SessionID, m_registry));
 
             return url;
         }
 
-        public void RemoveUrlForClient (ulong regionHandle, string sessionID, string url, uint port)
+        public void RemoveUrlForClient (string sessionID, string url, uint port)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             server.RemoveHTTPHandler("POST", url);
@@ -108,14 +108,14 @@ namespace OpenSim.Services
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IInventoryService m_InventoryService;
-        protected ulong m_regionHandle;
+        protected string m_SessionID;
         protected IRegistryCore m_registry;
 
-        public XInventoryConnectorPostHandler(string url, IInventoryService service, ulong regionHandle, IRegistryCore registry) :
+        public XInventoryConnectorPostHandler (string url, IInventoryService service, string SessionID, IRegistryCore registry) :
                 base("POST", url)
         {
             m_InventoryService = service;
-            m_regionHandle = regionHandle;
+            m_SessionID = SessionID;
             m_registry = registry;
         }
 
@@ -145,77 +145,77 @@ namespace OpenSim.Services
                 {
                     case "GETROOTFOLDER":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleGetRootFolder(request);
                     case "GETFOLDERFORTYPE":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleGetFolderForType(request);
                     case "GETFOLDERCONTENT":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleGetFolderContent(request);
                     case "GETFOLDERITEMS":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleGetFolderItems(request);
                     case "ADDFOLDER":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleAddFolder(request);
                     case "UPDATEFOLDER":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.High))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
                                 return FailureResult();
                         return HandleUpdateFolder(request);
                     case "MOVEFOLDER":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleMoveFolder(request);
                     case "DELETEFOLDERS":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.High))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
                                 return FailureResult();
                         return HandleDeleteFolders(request);
                     case "PURGEFOLDER":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.High))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
                                 return FailureResult();
                         return HandlePurgeFolder(request);
                     case "ADDITEM":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleAddItem(request);
                     case "UPDATEITEM":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.High))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
                                 return FailureResult();
                         return HandleUpdateItem(request);
                     case "MOVEITEMS":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleMoveItems(request);
                     case "DELETEITEMS":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.High))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
                                 return FailureResult();
                         return HandleDeleteItems(request);
                     case "GETITEM":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleGetItem(request);
                     case "GETFOLDER":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleGetFolder(request);
                 }

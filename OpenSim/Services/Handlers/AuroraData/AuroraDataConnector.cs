@@ -85,26 +85,26 @@ namespace OpenSim.Services
             get { return "RemoteServerURI"; }
         }
 
-        public void AddExistingUrlForClient (string SessionID, ulong RegionHandle, string url, uint port)
+        public void AddExistingUrlForClient (string SessionID, string url, uint port)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-            server.AddStreamHandler (new AuroraDataServerPostHandler (url, RegionHandle, m_registry));
-            server.AddStreamHandler (new AuroraDataServerPostOSDHandler (url + "osd", RegionHandle, m_registry));
+            server.AddStreamHandler (new AuroraDataServerPostHandler (url, SessionID, m_registry));
+            server.AddStreamHandler (new AuroraDataServerPostOSDHandler (url + "osd", SessionID, m_registry));
         }
 
-        public string GetUrlForRegisteringClient (string SessionID, ulong RegionHandle, uint port)
+        public string GetUrlForRegisteringClient (string SessionID, uint port)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             string url = "/auroradata" + UUID.Random ();
 
-            server.AddStreamHandler (new AuroraDataServerPostHandler (url, RegionHandle, m_registry));
-            server.AddStreamHandler (new AuroraDataServerPostOSDHandler (url + "osd", RegionHandle, m_registry));
+            server.AddStreamHandler (new AuroraDataServerPostHandler (url, SessionID, m_registry));
+            server.AddStreamHandler (new AuroraDataServerPostOSDHandler (url + "osd", SessionID, m_registry));
 
             return url;
         }
 
-        public void RemoveUrlForClient (ulong regionHandle, string sessionID, string url, uint port)
+        public void RemoveUrlForClient (string sessionID, string url, uint port)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             server.RemoveHTTPHandler("POST", url);

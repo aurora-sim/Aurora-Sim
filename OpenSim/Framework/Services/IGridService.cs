@@ -624,7 +624,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="SessionID"></param>
         /// <param name="RegionHandle"></param>
         /// <returns></returns>
-        OSDMap GetUrlForRegisteringClient(string SessionID, ulong RegionHandle);
+        OSDMap GetUrlForRegisteringClient(string SessionID);
 
         /// <summary>
         /// Registers a module that will be requested when GetUrlForRegisteringClient is called
@@ -637,17 +637,16 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="SessionID"></param>
         /// <param name="RegionHandle"></param>
-        void RemoveUrlsForClient(string SessionID, ulong RegionHandle);
+        void RemoveUrlsForClient(string SessionID);
 
         /// <summary>
         /// Checks that the given client can access the function that it is calling
         /// </summary>
         /// <param name="SessionID"></param>
-        /// <param name="RegionHandle"></param>
         /// <param name="function"></param>
         /// <param name="defaultThreatLevel"></param>
         /// <returns></returns>
-        bool CheckThreatLevel(string SessionID, ulong RegionHandle, string function, ThreatLevel defaultThreatLevel);
+        bool CheckThreatLevel(string SessionID, string function, ThreatLevel defaultThreatLevel);
     }
 
     /// <summary>
@@ -678,27 +677,24 @@ namespace OpenSim.Services.Interfaces
         /// Get the Url for the given sessionID
         /// </summary>
         /// <param name="SessionID"></param>
-        /// <param name="RegionHandle"></param>
         /// <param name="port"></param>
         /// <returns></returns>
-        string GetUrlForRegisteringClient (string SessionID, ulong RegionHandle, uint port);
+        string GetUrlForRegisteringClient (string SessionID, uint port);
 
         /// <summary>
         /// Adds an existing URL to the module for the given SessionID and RegionHandle
         /// </summary>
         /// <param name="SessionID"></param>
-        /// <param name="RegionHandle"></param>
         /// <param name="url"></param>
         /// <param name="port"></param>
-        void AddExistingUrlForClient (string SessionID, ulong RegionHandle, string url, uint port);
+        void AddExistingUrlForClient (string SessionID, string url, uint port);
 
         /// <summary>
         /// Removes the given region from the http server so that the URLs cannot be used anymore
         /// </summary>
-        /// <param name="regionHandle"></param>
         /// <param name="sessionID"></param>
         /// <param name="url"></param>
         /// <param name="port"></param>
-        void RemoveUrlForClient (ulong regionHandle, string sessionID, string url, uint port);
+        void RemoveUrlForClient (string sessionID, string url, uint port);
     }
 }

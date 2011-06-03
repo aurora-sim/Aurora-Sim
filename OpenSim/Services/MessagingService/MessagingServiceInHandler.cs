@@ -100,25 +100,25 @@ namespace OpenSim.Services.MessagingService
             get { return "MessagingServerURI"; }
         }
 
-        public void AddExistingUrlForClient(string SessionID, ulong RegionHandle, string url, uint port)
+        public void AddExistingUrlForClient(string SessionID, string url, uint port)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-            server.AddStreamHandler(new MessagingServiceInPostHandler(url, m_registry, this, RegionHandle));
+            server.AddStreamHandler (new MessagingServiceInPostHandler (url, m_registry, this, SessionID));
         }
 
-        public string GetUrlForRegisteringClient (string SessionID, ulong RegionHandle, uint port)
+        public string GetUrlForRegisteringClient (string SessionID, uint port)
         {
             string url = "/messagingservice" + UUID.Random();
 
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-            server.AddStreamHandler(new MessagingServiceInPostHandler(url, m_registry, this, RegionHandle));
+            server.AddStreamHandler (new MessagingServiceInPostHandler (url, m_registry, this, SessionID));
 
             return url;
         }
 
-        public void RemoveUrlForClient (ulong regionHandle, string sessionID, string url, uint port)
+        public void RemoveUrlForClient (string sessionID, string url, uint port)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             server.RemoveHTTPHandler("POST", url);

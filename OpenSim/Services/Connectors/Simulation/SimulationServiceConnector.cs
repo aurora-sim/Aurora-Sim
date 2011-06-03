@@ -179,7 +179,7 @@ namespace OpenSim.Services.Connectors.Simulation
                     args["destination_name"] = OSD.FromString(destination.RegionName);
                     args["destination_uuid"] = OSD.FromString(destination.RegionID.ToString());
 
-                    OSDMap result = WebUtils.PutToService(uri, args, true, true);
+                    OSDMap result = WebUtils.PutToService(uri, args, true, true, false);
                     if (!result["Success"].AsBoolean())
                     {
                         //add it to the blacklist
@@ -218,7 +218,7 @@ namespace OpenSim.Services.Connectors.Simulation
 
                 try
                 {
-                    OSDMap result = WebUtils.GetFromService(uri, true, false);
+                    OSDMap result = WebUtils.GetFromService(uri, true, false, false);
                     if (result["Success"].AsBoolean())
                     {
                         agent = new AgentData();
@@ -250,7 +250,7 @@ namespace OpenSim.Services.Connectors.Simulation
 
                 try
                 {
-                    WebUtils.ServiceOSDRequest(uri, null, "DELETE", 10000, false, false);
+                    WebUtils.ServiceOSDRequest(uri, null, "DELETE", 10000, false, false, false);
                 }
                 catch (Exception e)
                 {

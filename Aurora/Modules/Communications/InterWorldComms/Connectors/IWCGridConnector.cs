@@ -219,10 +219,10 @@ namespace Aurora.Modules
                 return r;
             InterWorldCommunications comms = m_registry.RequestModuleInterface<InterWorldCommunications>();
             r.Flags |= (int)Aurora.Framework.RegionFlags.Foreign;
-            if (r.GenericMap["GridUrl"] == "")
-                r.GenericMap["ThreatLevel"] = comms.m_untrustedConnectionsDefaultTrust.ToString();
-            else
-                r.GenericMap["ThreatLevel"] = comms.GetThreatLevelForUrl(r.GenericMap["GridUrl"]).ToString();
+            //if (r.GenericMap["GridUrl"] == "")
+            //    r.GenericMap["ThreatLevel"] = comms.m_untrustedConnectionsDefaultTrust.ToString();
+            //else
+            //    r.GenericMap["ThreatLevel"] = comms.GetThreatLevelForUrl(r.GenericMap["GridUrl"]).ToString();
             return r;
         }
 

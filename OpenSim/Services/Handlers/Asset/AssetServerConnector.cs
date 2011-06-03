@@ -75,30 +75,30 @@ namespace OpenSim.Services
             get { return "AssetServerURI"; }
         }
 
-        public void AddExistingUrlForClient (string SessionID, ulong RegionHandle, string url, uint port)
+        public void AddExistingUrlForClient (string SessionID, string url, uint port)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             
             IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService>();
-            server.AddStreamHandler(new AssetServerGetHandler(m_AssetService, url, RegionHandle, m_registry));
-            server.AddStreamHandler(new AssetServerPostHandler(m_AssetService, url, RegionHandle, m_registry));
-            server.AddStreamHandler(new AssetServerDeleteHandler(m_AssetService, m_allowDelete, url, RegionHandle, m_registry));
+            server.AddStreamHandler (new AssetServerGetHandler (m_AssetService, url, SessionID, m_registry));
+            server.AddStreamHandler (new AssetServerPostHandler (m_AssetService, url, SessionID, m_registry));
+            server.AddStreamHandler (new AssetServerDeleteHandler (m_AssetService, m_allowDelete, url, SessionID, m_registry));
         }
 
-        public string GetUrlForRegisteringClient (string SessionID, ulong RegionHandle, uint port)
+        public string GetUrlForRegisteringClient (string SessionID, uint port)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             string url = "/assets" + UUID.Random();
 
             IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService>();
-            server.AddStreamHandler(new AssetServerGetHandler(m_AssetService, url, RegionHandle, m_registry));
-            server.AddStreamHandler(new AssetServerPostHandler(m_AssetService, url, RegionHandle, m_registry));
-            server.AddStreamHandler(new AssetServerDeleteHandler(m_AssetService, m_allowDelete, url, RegionHandle, m_registry));
+            server.AddStreamHandler (new AssetServerGetHandler (m_AssetService, url, SessionID, m_registry));
+            server.AddStreamHandler (new AssetServerPostHandler (m_AssetService, url, SessionID, m_registry));
+            server.AddStreamHandler (new AssetServerDeleteHandler (m_AssetService, m_allowDelete, url, SessionID, m_registry));
 
             return url;
         }
 
-        public void RemoveUrlForClient (ulong regionHandle, string sessionID, string url, uint port)
+        public void RemoveUrlForClient (string sessionID, string url, uint port)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             server.RemoveHTTPHandler("POST", url);

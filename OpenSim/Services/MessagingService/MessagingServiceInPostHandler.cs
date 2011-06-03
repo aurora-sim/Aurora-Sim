@@ -47,13 +47,15 @@ namespace OpenSim.Services.MessagingService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private MessagingServiceInHandler m_handler;
+        private string m_SessionID;
         private ulong m_ourRegionHandle;
 
-        public MessagingServiceInPostHandler(string url, IRegistryCore registry, MessagingServiceInHandler handler, ulong handle) :
+        public MessagingServiceInPostHandler (string url, IRegistryCore registry, MessagingServiceInHandler handler, string SessionID) :
                 base("POST", url)
         {
             m_handler = handler;
-            m_ourRegionHandle = handle;
+            m_SessionID = SessionID;
+            ulong.TryParse (SessionID, out m_ourRegionHandle);
         }
 
         public override byte[] Handle(string path, Stream requestData,

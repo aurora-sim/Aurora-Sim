@@ -69,24 +69,24 @@ namespace OpenSim.Services
             get { return "UserAccountServerURI"; }
         }
 
-        public void AddExistingUrlForClient (string SessionID, ulong RegionHandle, string url, uint port)
+        public void AddExistingUrlForClient (string SessionID, string url, uint port)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-            server.AddStreamHandler(new UserAccountServerPostHandler(url, m_registry.RequestModuleInterface<IUserAccountService>(), RegionHandle, m_registry));
+            server.AddStreamHandler (new UserAccountServerPostHandler (url, m_registry.RequestModuleInterface<IUserAccountService> (), SessionID, m_registry));
         }
 
-        public string GetUrlForRegisteringClient (string SessionID, ulong RegionHandle, uint port)
+        public string GetUrlForRegisteringClient (string SessionID, uint port)
         {
             string url = "/accounts" + UUID.Random();
 
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-            server.AddStreamHandler(new UserAccountServerPostHandler(url, m_registry.RequestModuleInterface<IUserAccountService>(), RegionHandle, m_registry));
+            server.AddStreamHandler (new UserAccountServerPostHandler (url, m_registry.RequestModuleInterface<IUserAccountService> (), SessionID, m_registry));
             return url;
         }
 
-        public void RemoveUrlForClient (ulong regionHandle, string sessionID, string url, uint port)
+        public void RemoveUrlForClient (string sessionID, string url, uint port)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             server.RemoveHTTPHandler("POST", url);

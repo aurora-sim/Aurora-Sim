@@ -55,13 +55,13 @@ namespace OpenSim.Services
         private OfflineMessagesInfoHandler OfflineMessagesHandler = new OfflineMessagesInfoHandler ();
         private DirectoryInfoOSDHandler DirectoryHandler = new DirectoryInfoOSDHandler ();
         
-        protected ulong m_regionHandle;
+        protected string m_SessionID;
         protected IRegistryCore m_registry;
 
-        public AuroraDataServerPostOSDHandler(string url, ulong regionHandle, IRegistryCore registry) :
+        public AuroraDataServerPostOSDHandler(string url, string SessionID, IRegistryCore registry) :
             base("POST", url)
         {
-            m_regionHandle = regionHandle;
+            m_SessionID = SessionID;
             m_registry = registry;
         }
 
@@ -84,89 +84,94 @@ namespace OpenSim.Services
                     #region Profile
                     case "getprofile":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.None))
+                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.None))
                                 return FailureResult ();
                         return ProfileHandler.GetProfile (args);
                     case "updateprofile":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.High))
+                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.High))
                                 return FailureResult ();
                         return ProfileHandler.UpdateProfile (args);
                     case "getclassified":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.High))
+                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.High))
                                 return FailureResult ();
                         return ProfileHandler.GetClassifed (args);
                     case "getclassifieds":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.High))
+                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.High))
                                 return FailureResult ();
                         return ProfileHandler.GetClassifieds (args);
                     case "getpick":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.High))
+                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.High))
                                 return FailureResult ();
                         return ProfileHandler.GetPick (args);
                     case "getpicks":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.High))
+                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.High))
                                 return FailureResult ();
                         return ProfileHandler.GetPicks (args);
                     case "removepick":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.High))
+                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.High))
                                 return FailureResult ();
                         return ProfileHandler.RemovePick (args);
                     case "removeclassified":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.High))
+                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.High))
                                 return FailureResult ();
                         return ProfileHandler.RemoveClassified (args);
                     case "addclassified":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.High))
+                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.High))
                                 return FailureResult ();
                         return ProfileHandler.AddClassified (args);
                     case "addpick":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.High))
+                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.High))
                                 return FailureResult ();
                         return ProfileHandler.AddPick (args);
                     #endregion
                     #region Offline Messages
                     case "addofflinemessage":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.Low))
+                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult ();
                         return OfflineMessagesHandler.AddOfflineMessage (args);
                     case "getofflinemessages":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult ();
                         return OfflineMessagesHandler.GetOfflineMessages (args);
                     #endregion
                     #region Directory Messages
                     case "addlandobject":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.Low))
+                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult ();
                         return DirectoryHandler.AddLandObject (args);
                     case "removelandobject":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult ();
-                        int x,y;
-                        Util.UlongToInts(m_regionHandle, out x, out y);
-                        UUID regionID = this.m_registry.RequestModuleInterface<IGridService> ().GetRegionByPosition (UUID.Zero, x, y).RegionID;
-                        return DirectoryHandler.RemoveLandObject (m_regionHandle, regionID, args);
+                        ulong handle;
+                        if (ulong.TryParse (m_SessionID, out handle))
+                        {
+                            int x, y;
+                            Util.UlongToInts (handle, out x, out y);
+                            UUID regionID = this.m_registry.RequestModuleInterface<IGridService> ().GetRegionByPosition (UUID.Zero, x, y).RegionID;
+                            return DirectoryHandler.RemoveLandObject (handle, regionID, args);
+                        }
+                        break;
                     case "getparcelinfo":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.Low))
+                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult ();
                         return DirectoryHandler.GetParcelInfo (args);
                     case "getparcelbyowner":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel ("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult ();
                         return DirectoryHandler.GetParcelByOwner (args);
                     #endregion

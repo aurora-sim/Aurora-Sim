@@ -2634,7 +2634,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                         if (geom_name_map.ContainsKey(defect.Shell))
                                             AddAvatar(geom_name_map[defect.Shell], new Vector3(m_region.RegionSizeX / 2,
                                                 m_region.RegionSizeY / 2,
-                                                m_region.RegionSizeZ / 2), defect.Orientation, defect.Size, true, defect.LocalID);
+                                                m_region.RegionSizeZ / 2), defect.Orientation, defect.Size, true, defect.LocalID, defect.UUID);
                                         defect.Destroy();
                                     }
                                 }

@@ -47,14 +47,14 @@ namespace OpenSim.Services
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IAssetService m_AssetService;
-        protected ulong m_regionHandle;
+        protected string m_SessionID;
         protected IRegistryCore m_registry;
 
-        public AssetServerGetHandler(IAssetService service, string url, ulong regionHandle, IRegistryCore registry) :
+        public AssetServerGetHandler (IAssetService service, string url, string SessionID, IRegistryCore registry) :
                 base("GET", url)
         {
             m_AssetService = service;
-            m_regionHandle = regionHandle;
+            m_SessionID = SessionID;
             m_registry = registry;
         }
 
@@ -71,7 +71,7 @@ namespace OpenSim.Services
             IGridRegistrationService urlModule =
                             m_registry.RequestModuleInterface<IGridRegistrationService>();
             if (urlModule != null)
-                if (!urlModule.CheckThreatLevel("", m_regionHandle, "Asset_Get", ThreatLevel.Low))
+                if (!urlModule.CheckThreatLevel (m_SessionID, "Asset_Get", ThreatLevel.Low))
                     return new byte[0];
             if (p.Length > 1 && p[1] == "data")
             {

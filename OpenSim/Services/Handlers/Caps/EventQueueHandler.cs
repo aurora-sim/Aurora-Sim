@@ -84,26 +84,26 @@ namespace OpenSim.Services
             get { return "EventQueueServiceURI"; }
         }
 
-        public void AddExistingUrlForClient (string SessionID, ulong RegionHandle, string url, uint port)
+        public void AddExistingUrlForClient (string SessionID, string url, uint port)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
             server.AddStreamHandler (new EQMEventPoster (url, m_registry.RequestModuleInterface<IEventQueueService> ().InnerService,
-                    m_registry.RequestModuleInterface<ICapsService>(), RegionHandle, m_registry));
+                    m_registry.RequestModuleInterface<ICapsService> (), SessionID, m_registry));
         }
 
-        public string GetUrlForRegisteringClient (string SessionID, ulong RegionHandle, uint port)
+        public string GetUrlForRegisteringClient (string SessionID, uint port)
         {
             string url = "/CAPS/EQMPOSTER" + UUID.Random();
 
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
             server.AddStreamHandler (new EQMEventPoster (url, m_registry.RequestModuleInterface<IEventQueueService> ().InnerService,
-                    m_registry.RequestModuleInterface<ICapsService>(), RegionHandle, m_registry));
+                    m_registry.RequestModuleInterface<ICapsService> (), SessionID, m_registry));
             return url;
         }
 
-        public void RemoveUrlForClient (ulong regionHandle, string sessionID, string url, uint port)
+        public void RemoveUrlForClient (string sessionID, string url, uint port)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             server.RemoveHTTPHandler("POST", url);
@@ -118,15 +118,17 @@ namespace OpenSim.Services
 
         private IEventQueueService m_eventQueueService;
         private ICapsService m_capsService;
+        private string m_SessionID;
         private ulong m_ourRegionHandle;
         protected IRegistryCore m_registry;
 
-        public EQMEventPoster(string url, IEventQueueService handler, ICapsService capsService, ulong handle, IRegistryCore registry) :
+        public EQMEventPoster (string url, IEventQueueService handler, ICapsService capsService, string SessionID, IRegistryCore registry) :
             base("POST", url)
         {
             m_eventQueueService = handler;
             m_capsService = capsService;
-            m_ourRegionHandle = handle;
+            m_SessionID = SessionID;
+            ulong.TryParse (SessionID, out m_ourRegionHandle);
             m_registry = registry;
         }
 
@@ -141,7 +143,7 @@ namespace OpenSim.Services
             IGridRegistrationService urlModule =
                             m_registry.RequestModuleInterface<IGridRegistrationService>();
             if (urlModule != null)
-                if (!urlModule.CheckThreatLevel("", m_ourRegionHandle, "EQM_Post", ThreatLevel.None))
+                if (!urlModule.CheckThreatLevel (m_SessionID, "EQM_Post", ThreatLevel.None))
                     return new byte[0];
             
             OSDMap request = WebUtils.GetOSDMap(body);

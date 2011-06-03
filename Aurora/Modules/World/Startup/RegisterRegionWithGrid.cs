@@ -142,6 +142,7 @@ namespace Aurora.Modules
                 {
                     OSDMap map = new OSDMap();
                     map["Method"] = "RegisterHandlers";
+                    map["SessionID"] = scene.RegionInfo.RegionHandle.ToString ();
                     syncMessagePoster.Post(map, scene.RegionInfo.RegionHandle);
                 }
             }

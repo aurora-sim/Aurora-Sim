@@ -54,14 +54,14 @@ namespace OpenSim.Services
 
         private IAgentInfoService m_AgentInfoService;
         private IRegistryCore m_registry;
-        private ulong m_regionHandle;
+        private string m_SessionID;
 
-        public AgentInfoServerPostHandler(string url, IRegistryCore registry, IAgentInfoService service, ulong regionHandle) :
+        public AgentInfoServerPostHandler (string url, IRegistryCore registry, IAgentInfoService service, string SessionID) :
                 base("POST", url)
         {
             m_AgentInfoService = service;
             m_registry = registry;
-            m_regionHandle = regionHandle;
+            m_SessionID = SessionID;
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -86,21 +86,21 @@ namespace OpenSim.Services
                         if (map["Method"] == "GetUserInfo")
                         {
                             if (urlModule != null)
-                                if (!urlModule.CheckThreatLevel("", m_regionHandle, map["Method"], ThreatLevel.None))
+                                if (!urlModule.CheckThreatLevel(m_SessionID, map["Method"], ThreatLevel.None))
                                     return FailureResult();
                             return GetUserInfo(map);
                         }
                         if (map["Method"] == "GetUserInfos")
                         {
                             if (urlModule != null)
-                                if (!urlModule.CheckThreatLevel("", m_regionHandle, map["Method"], ThreatLevel.Low))
+                                if (!urlModule.CheckThreatLevel(m_SessionID, map["Method"], ThreatLevel.Low))
                                     return FailureResult();
                             return GetUserInfos(map);
                         }
                         if (map["Method"] == "GetAgentsLocations")
                         {
                             if (urlModule != null)
-                                if (!urlModule.CheckThreatLevel("", m_regionHandle, map["Method"], ThreatLevel.Low))
+                                if (!urlModule.CheckThreatLevel(m_SessionID, map["Method"], ThreatLevel.Low))
                                     return FailureResult();
                             return GetAgentsLocations(map);
                         }

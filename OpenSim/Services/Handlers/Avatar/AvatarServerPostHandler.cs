@@ -50,14 +50,14 @@ namespace OpenSim.Services
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IAvatarService m_AvatarService;
-        protected ulong m_regionHandle;
+        protected string m_SessionID;
         protected IRegistryCore m_registry;
 
-        public AvatarServerPostHandler(string url, IAvatarService service, ulong regionHandle, IRegistryCore registry) :
+        public AvatarServerPostHandler (string url, IAvatarService service, string SessionID, IRegistryCore registry) :
             base("POST", url)
         {
             m_AvatarService = service;
-            m_regionHandle = regionHandle;
+            m_SessionID = SessionID;
             m_registry = registry;
         }
 
@@ -87,32 +87,32 @@ namespace OpenSim.Services
                 {
                     case "getavatar":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult();
                         return GetAvatar(request);
                     case "setavatar":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.High))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
                                 return FailureResult();
                         return SetAvatar(request);
                     case "resetavatar":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.High))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
                                 return FailureResult();
                         return ResetAvatar(request);
                     case "setitems":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return SetItems(request);
                     case "removeitems":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return RemoveItems(request);
                     case "cachewearabledata":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return CacheWearableData(request);
                 }

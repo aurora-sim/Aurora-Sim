@@ -56,15 +56,15 @@ namespace OpenSim.Services
         private IRegionConnector TelehubConnector;
         private IRegistryCore m_registry;
         private bool m_secure = true;
-        private ulong m_regionHandle = 0;
-        
-        public GridServerPostHandler(string url, IRegistryCore registry, IGridService service, bool secure, ulong regionHandle) :
+        private string m_SessionID;
+
+        public GridServerPostHandler (string url, IRegistryCore registry, IGridService service, bool secure, string SessionID) :
                 base("POST", url)
         {
             m_secure = secure;
             m_GridService = service;
             m_registry = registry;
-            m_regionHandle = regionHandle;
+            m_SessionID = SessionID;
             TelehubConnector = DataManager.RequestPlugin<IRegionConnector>();
         }
 
@@ -113,91 +113,91 @@ namespace OpenSim.Services
                 {
                     case "register":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.None))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.None))
                                 return FailureResult();
                         return Register(request);
 
                     case "deregister":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.None))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.None))
                                 return FailureResult();
                         return Deregister(request);
 
                     case "get_region_by_uuid":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult();
                         return GetRegionByUUID(request);
 
                     case "get_region_by_position":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult();
                         return GetRegionByPosition(request);
 
                     case "get_region_by_name":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult();
                         return GetRegionByName(request);
 
                     case "get_regions_by_name":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult();
                         return GetRegionsByName(request);
 
                     case "get_region_range":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult();
                         return GetRegionRange(request);
 
                     case "get_default_regions":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return GetDefaultRegions(request);
 
                     case "get_fallback_regions":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return GetFallbackRegions(request);
 
                     case "get_safe_regions":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return GetSafeRegions(request);
 
                     case "get_region_flags":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult();
                         return GetRegionFlags(request);
 
                     case "getmapitems":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult();
                         return GetMapItems(request);
 
                     case "removetelehub":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return RemoveTelehub(request);
 
                     case "addtelehub":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Medium))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return AddTelehub(request);
 
                     case "findtelehub":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel("", m_regionHandle, method, ThreatLevel.Low))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult();
                         return FindTelehub(request);
                 }
@@ -326,11 +326,11 @@ namespace OpenSim.Services
             else
                 m_log.WarnFormat("[GRID HANDLER]: no sessionID in request to deregister region");
             GridRegion r = m_GridService.GetRegionByUUID(UUID.Zero, regionID);
-            if (r != null & m_regionHandle == r.RegionHandle)
+            if (r != null & m_SessionID == r.RegionHandle.ToString())
             {
-                bool result = m_GridService.DeregisterRegion (m_regionHandle, regionID, sessionID);
+                bool result = m_GridService.DeregisterRegion (r.RegionHandle, regionID, sessionID);
                 if (result)
-                    m_registry.RequestModuleInterface<IGridRegistrationService> ().RemoveUrlsForClient (sessionID.ToString (), r.RegionHandle);
+                    m_registry.RequestModuleInterface<IGridRegistrationService> ().RemoveUrlsForClient (sessionID.ToString ());
                 if (result)
                     return SuccessResult ();
                 else
@@ -689,11 +689,15 @@ namespace OpenSim.Services
             Dictionary<string, object> result = new Dictionary<string, object>();
 
             int RegionX, RegionY;
-            Util.UlongToInts(m_regionHandle, out RegionX, out RegionY);
-            GridRegion r = m_GridService.GetRegionByPosition(UUID.Zero, RegionX, RegionY);
-            if(r != null)
-                TelehubConnector.RemoveTelehub(r.RegionID, 0);
-            result["result"] = "Successful";
+            ulong handle;
+            if (ulong.TryParse (m_SessionID, out handle))
+            {
+                Util.UlongToInts (handle, out RegionX, out RegionY);
+                GridRegion r = m_GridService.GetRegionByPosition (UUID.Zero, RegionX, RegionY);
+                if (r != null)
+                    TelehubConnector.RemoveTelehub (r.RegionID, 0);
+                result["result"] = "Successful";
+            }
 
             string xmlString = WebUtils.BuildXmlResponse(result);
             UTF8Encoding encoding = new UTF8Encoding();
@@ -706,12 +710,16 @@ namespace OpenSim.Services
             telehub.FromKVP(request);
 
             int RegionX, RegionY;
-            Util.UlongToInts(m_regionHandle, out RegionX, out RegionY);
-            GridRegion r = m_GridService.GetRegionByPosition(UUID.Zero, RegionX, RegionY);
-            if (r != null)
+            ulong handle;
+            if (ulong.TryParse (m_SessionID, out handle))
             {
-                telehub.RegionID = r.RegionID;
-                TelehubConnector.AddTelehub(telehub, 0);
+                Util.UlongToInts (handle, out RegionX, out RegionY);
+                GridRegion r = m_GridService.GetRegionByPosition (UUID.Zero, RegionX, RegionY);
+                if (r != null)
+                {
+                    telehub.RegionID = r.RegionID;
+                    TelehubConnector.AddTelehub (telehub, 0);
+                }
             }
 
             return SuccessResult();

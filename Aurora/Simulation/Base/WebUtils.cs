@@ -283,26 +283,35 @@ namespace Aurora.Simulation.Base
         /// PUT JSON-encoded data to a web service that returns LLSD or
         /// JSON data
         /// </summary>
-        public static OSDMap PutToService(string url, OSDMap data, bool careAboutResponse, bool deserializeResponse)
+        public static OSDMap PutToService(string url, OSDMap data, bool careAboutResponse, bool deserializeResponse, bool returnRawResult)
         {
-            return ServiceOSDRequest (url, data, "PUT", m_defaultTimeout, careAboutResponse, deserializeResponse);
+            return ServiceOSDRequest (url, data, "PUT", m_defaultTimeout, careAboutResponse, deserializeResponse, returnRawResult);
         }
 
         /// <summary>
         /// POST URL-encoded form data to a web service that returns LLSD or
         /// JSON data
         /// </summary>
-        public static OSDMap PostToService(string url, OSDMap data, bool careAboutResponse, bool deserializeResponse)
+        public static OSDMap PostToService (string url, OSDMap data, bool careAboutResponse, bool deserializeResponse)
         {
-            return ServiceOSDRequest (url, data, "POST", m_defaultTimeout, careAboutResponse, deserializeResponse);
+            return ServiceOSDRequest (url, data, "POST", m_defaultTimeout, careAboutResponse, deserializeResponse, false);
         }
 
-        public static OSDMap GetFromService(string url, bool careAboutResponse, bool deserializeResponse)
+        /// <summary>
+        /// POST URL-encoded form data to a web service that returns LLSD or
+        /// JSON data
+        /// </summary>
+        public static OSDMap PostToService (string url, OSDMap data, bool careAboutResponse, bool deserializeResponse, bool returnRawResult)
         {
-            return ServiceOSDRequest(url, null, "GET", m_defaultTimeout, careAboutResponse, deserializeResponse);
+            return ServiceOSDRequest (url, data, "POST", m_defaultTimeout, careAboutResponse, deserializeResponse, returnRawResult);
         }
 
-        public static OSDMap ServiceOSDRequest(string url, OSDMap data, string method, int timeout, bool careAboutResponse, bool deserializeResponse)
+        public static OSDMap GetFromService (string url, bool careAboutResponse, bool deserializeResponse, bool returnRawResult)
+        {
+            return ServiceOSDRequest(url, null, "GET", m_defaultTimeout, careAboutResponse, deserializeResponse, returnRawResult);
+        }
+
+        public static OSDMap ServiceOSDRequest (string url, OSDMap data, string method, int timeout, bool careAboutResponse, bool deserializeResponse, bool returnRawResult)
         {
             int reqnum = m_requestNumber++;
             // m_log.DebugFormat("[WEB UTIL]: <{0}> start osd request for {1}, method {2}",reqnum,url,method);
@@ -359,7 +368,7 @@ namespace Aurora.Simulation.Base
                             string responseStr = null;
                             responseStr = responseStream.GetStreamString ();
                             // m_log.DebugFormat("[WEB UTIL]: <{0}> response is <{1}>",reqnum,responseStr);
-                            return CanonicalizeResults (responseStr, deserializeResponse);
+                            return CanonicalizeResults (responseStr, deserializeResponse, returnRawResult);
                         }
                         else
                             return new OSDMap ();
@@ -408,9 +417,17 @@ namespace Aurora.Simulation.Base
         ///     _RawResult == the raw string that came back
         ///     _Result == the OSD unpacked string
         /// </summary>
-        private static OSDMap CanonicalizeResults(string response, bool deserializeResponse)
+        private static OSDMap CanonicalizeResults (string response, bool deserializeResponse, bool returnRawResult)
         {
             OSDMap result = new OSDMap();
+
+            if (returnRawResult)
+            {
+                OSD responseOSD = OSDParser.Deserialize (response);
+                if (responseOSD.Type == OSDType.Map)
+                    result = (OSDMap)responseOSD;
+                return result;
+            }
 
             // Default values
             result["Success"] = OSD.FromBoolean(true);

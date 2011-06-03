@@ -71,7 +71,7 @@ namespace OpenSim.Services.RobustCompat
         {
             if ((presence.CallbackURI != null) && !presence.CallbackURI.Equals(""))
             {
-                WebUtils.ServiceOSDRequest(presence.CallbackURI, null, "DELETE", 10000, false, false);
+                WebUtils.ServiceOSDRequest(presence.CallbackURI, null, "DELETE", 10000, false, false, false);
                 presence.CallbackURI = null;
                 ICapsService service = m_scene.RequestModuleInterface<ICapsService>();
                 if (service != null)
