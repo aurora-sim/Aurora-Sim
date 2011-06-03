@@ -153,9 +153,6 @@ namespace OpenSim.Services.LLLoginService
         private ArrayList inventoryRoot;
         private ArrayList initialOutfit;
         private ArrayList agentInventory;
-        private static ArrayList inventoryLibraryOwner;
-        private static ArrayList inventoryLibRoot;
-        private static ArrayList inventoryLibrary;
         private ArrayList activeGestures;
         private ArrayList tutorial = new ArrayList();
 
@@ -213,8 +210,6 @@ namespace OpenSim.Services.LLLoginService
             inventoryRoot = new ArrayList();
             initialOutfit = new ArrayList();
             agentInventory = new ArrayList();
-            inventoryLibrary = new ArrayList();
-            inventoryLibraryOwner = new ArrayList();
             activeGestures = new ArrayList();
 
             SetDefaultValues();
@@ -291,11 +286,14 @@ namespace OpenSim.Services.LLLoginService
             // Inventory Library Section
             if (libService != null && (InventoryLibraryOwner == null || InventoryLibRoot == null || InventoryLibRoot == null))
             {
+                InventoryLibrary = new ArrayList ();
+                InventoryLibraryOwner = new ArrayList ();
+                InventoryLibRoot = new ArrayList ();
+
                 InventoryLibraryOwner = GetLibraryOwner(libService);
                 InventoryLibrary = GetInventoryLibrary(libService, invService);
                 Hashtable InventoryLibRootHash = new Hashtable();
                 InventoryLibRootHash["folder_id"] = "00000112-000f-0000-0000-000100bba000"; ;
-                InventoryLibRoot = new ArrayList();
                 InventoryLibRoot.Add(InventoryLibRootHash);
             }
         }
@@ -431,10 +429,10 @@ namespace OpenSim.Services.LLLoginService
                     responseData["inventory-skeleton"] = agentInventory;
                     responseData["inventory-root"] = inventoryRoot;
                 }
-                responseData["inventory-skel-lib"] = inventoryLibrary;
-                responseData["inventory-lib-root"] = inventoryLibRoot;
+                responseData["inventory-skel-lib"] = InventoryLibrary;
+                responseData["inventory-lib-root"] = InventoryLibRoot;
                 responseData["gestures"] = activeGestures;
-                responseData["inventory-lib-owner"] = inventoryLibraryOwner;
+                responseData["inventory-lib-owner"] = InventoryLibraryOwner;
                 responseData["initial-outfit"] = initialOutfit;
                 responseData["tutorial_setting"] = tutorial;
                 responseData["start_location"] = startLocation;
@@ -620,10 +618,10 @@ namespace OpenSim.Services.LLLoginService
 
                 map["inventory-skeleton"] = ArrayListToOSDArray(agentInventory);
 
-                map["inventory-skel-lib"] = ArrayListToOSDArray(inventoryLibrary);
+                map["inventory-skel-lib"] = ArrayListToOSDArray (InventoryLibrary);
                 map["inventory-root"] = ArrayListToOSDArray(inventoryRoot); ;
-                map["inventory-lib-root"] = ArrayListToOSDArray(inventoryLibRoot);
-                map["inventory-lib-owner"] = ArrayListToOSDArray(inventoryLibraryOwner);
+                map["inventory-lib-root"] = ArrayListToOSDArray (InventoryLibRoot);
+                map["inventory-lib-owner"] = ArrayListToOSDArray (InventoryLibraryOwner);
 
                 #endregion Inventory
 
@@ -1005,23 +1003,11 @@ namespace OpenSim.Services.LLLoginService
             set { agentInventory = value; }
         }
 
-        public ArrayList InventoryLibrary
-        {
-            get { return inventoryLibrary; }
-            set { inventoryLibrary = value; }
-        }
+        public static ArrayList InventoryLibrary;
 
-        public ArrayList InventoryLibraryOwner
-        {
-            get { return inventoryLibraryOwner; }
-            set { inventoryLibraryOwner = value; }
-        }
+        public static ArrayList InventoryLibraryOwner;
 
-        public ArrayList InventoryLibRoot
-        {
-            get { return inventoryLibRoot; }
-            set { inventoryLibRoot = value; }
-        }
+        public static ArrayList InventoryLibRoot;
 
         public ArrayList ActiveGestures
         {
