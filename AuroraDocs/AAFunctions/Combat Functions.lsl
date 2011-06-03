@@ -95,7 +95,7 @@ default
             // This will block or unblock the given user from walking
             string userFirst = llList2String(parsedMessage, 3);
             string userLast = llList2String(parsedMessage, 4);
-            int frozen = (int)llList2String(parsedMessage, 5);
+            int frozen = llList2Integer(parsedMessage, 5);
             // Find the UUID of the avatar they want to know about
             key userUUID = aaAvatarFullName2Key(userFirst + " " + userLast);
             // Now set it
@@ -119,7 +119,7 @@ default
             // This will block or unblock the given user from flying
             string userFirst = llList2String(parsedMessage, 3);
             string userLast = llList2String(parsedMessage, 4);
-            int frozen = (int)llList2String(parsedMessage, 5);
+            int frozen = llList2Integer(parsedMessage, 5);
             // Find the UUID of the avatar they want to know about
             key userUUID = aaAvatarFullName2Key(userFirst + " " + userLast);
             // Now set it
