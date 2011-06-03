@@ -420,7 +420,7 @@ namespace OpenSim.Services.GridService
             protected Dictionary<string, int> lastSetHost = new Dictionary<string, int>();
             protected Dictionary<string, int> lastSetPort = new Dictionary<string, int>();
             protected const uint m_defaultPort = 8002;
-            protected const string m_defaultHostname = "127.0.0.1";
+            protected string m_defaultHostname = "127.0.0.1";
             protected IConfig m_configurationConfig;
 
             public void SetConfig (IConfig config)
@@ -429,7 +429,8 @@ namespace OpenSim.Services.GridService
 
                 if (m_configurationConfig != null)
                 {
-                    SetDefaultUrls (m_configurationConfig.GetString ("HostNames", m_defaultHostname).Split (','));
+                    
+                    SetDefaultUrls ((m_defaultHostname = m_configurationConfig.GetString ("HostNames", m_defaultHostname)).Split (','));
                     SetDefaultPorts (m_configurationConfig.GetString ("Ports", m_defaultPort.ToString()).Split (','));
                 }
             }

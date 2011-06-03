@@ -85,7 +85,7 @@ namespace Aurora.Modules
         /// (Before sending the initial connection requests, 
         ///   this MAY contain connections that we do not currently have)
         /// </summary>
-        protected List<string> Connections;
+        protected List<string> Connections = new List<string>();
         /// <summary>
         /// The class that sends requests to other hosts
         /// </summary>
@@ -127,6 +127,8 @@ namespace Aurora.Modules
             Url = Url.EndsWith("/") ? Url + "iwcconnection" : Url + "/iwcconnection";
 
             bool success = this.OutgoingPublicComms.AttemptConnection (Url);
+            if (success)
+                Connections.Add (Url);
         }
 
         private void RemoveIWCConnection(string[] cmds)
