@@ -55,7 +55,15 @@ namespace OpenSim.Framework.Servers.HttpServer
         /// the request.  You'll want to make sure you deal with this as they're not uncommon</exception>
         public static string MakeRequest(string verb, string requestUrl, string obj)
         {
-            WebRequest request = WebRequest.Create(requestUrl);
+            WebRequest request;
+            try
+            {
+                request = WebRequest.Create (requestUrl);
+            }
+            catch
+            {
+                return "";
+            }
             request.Method = verb;
             request.Timeout = 10000;
             string respstring = String.Empty;

@@ -57,11 +57,11 @@ namespace OpenSim.Services.AssetService
             if (handlerConfig.GetString("AssetHandler", "") != Name)
                 return;
             Configure(config, registry);
-            m_registry = registry;
         }
 
         public void Configure(IConfigSource config, IRegistryCore registry)
         {
+            m_registry = registry;
             string dllName = String.Empty;
             string connString = String.Empty;
 
