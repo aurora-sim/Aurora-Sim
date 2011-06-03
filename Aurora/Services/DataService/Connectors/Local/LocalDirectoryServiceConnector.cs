@@ -123,31 +123,9 @@ namespace Aurora.Services.DataService
             Values.Add(args.SnapshotID);
             Values.Add(OSDParser.SerializeLLSDXmlString(args.Bitmap));
 
-            List<string> Keys = new List<string>();
-            Keys.Add("RegionID");
-            Keys.Add("ParcelID");
-            Keys.Add("LocalID");
-            Keys.Add("LandingX");
-            Keys.Add("LandingY");
-            Keys.Add("LandingZ");
-            Keys.Add("Name");
-            Keys.Add("Description");
-            Keys.Add("Flags");
-            Keys.Add("Dwell");
-            Keys.Add("InfoUUID");
-            Keys.Add("ForSale");
-            Keys.Add("SalePrice");
-            Keys.Add("Auction");
-            Keys.Add("Area");
-            Keys.Add("EstateID");
-            Keys.Add("Maturity");
-            Keys.Add("OwnerID");
-            Keys.Add("GroupID");
-            Keys.Add("ShowInSearch");
-            Keys.Add("SnapshotID");
-            Keys.Add("Bitmap");
-
-            GD.Replace("searchparcel", Keys.ToArray(), Values.ToArray());
+            //Remove the old one
+            GD.Delete ("searchparcel", new string[1] { "ParcelID" }, new object[1] { args.GlobalID });
+            GD.Insert ("searchparcel", Values.ToArray());
         }
 
         public void RemoveLandObject (UUID regionID, LandData args)
