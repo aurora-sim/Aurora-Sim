@@ -83,7 +83,7 @@ namespace OpenSim.Services
                 path = "/agent/";
             }
 
-            server.AddHTTPHandler(path, new AgentHandler(m_LocalSimulationService.GetInnerService(), secure).Handler);
+            server.AddHTTPHandler(path, new AgentHandler(m_LocalSimulationService.GetInnerService(), m_registry, secure).Handler);
             server.AddHTTPHandler("/object/", new ObjectHandler(m_LocalSimulationService.GetInnerService(), m_config).Handler);
             return null;
         }

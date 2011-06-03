@@ -52,11 +52,13 @@ namespace OpenSim.Services
 
         protected bool m_Proxy = false;
         protected bool m_secure = true;
+        protected IRegistryCore m_registry;
 
         public AgentHandler() { }
 
-        public AgentHandler(ISimulationService sim, bool secure)
+        public AgentHandler(ISimulationService sim, IRegistryCore registry, bool secure)
         {
+            m_registry = registry;
             m_SimulationService = sim;
             m_secure = secure;
         }
@@ -389,6 +391,11 @@ namespace OpenSim.Services
 
             if (action.Equals("release"))
             {
+                object[] o = new object[2];
+                o[0] = id;
+                o[1] = destination;
+                //This is an OpenSim event... fire an event so that the OpenSim compat handlers can grab it
+                m_registry.RequestModuleInterface<ISimulationBase> ().EventManager.FireGenericEventHandler ("ReleaseAgent", o);
             }
             else
                 m_SimulationService.CloseAgent(destination, id);

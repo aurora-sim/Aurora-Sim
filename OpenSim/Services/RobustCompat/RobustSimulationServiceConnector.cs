@@ -123,7 +123,16 @@ namespace OpenSim.Services.RobustCompat
             {
                 registry.RegisterModuleInterface<ISimulationService> (this);
                 m_localBackend = new LocalSimulationServiceConnector ();
+                m_registry.RequestModuleInterface<ISimulationBase> ().EventManager.RegisterEventHandler ("ReleaseAgent", ReleaseAgentHandler);
             }
+        }
+
+        private object ReleaseAgentHandler (string mod, object param)
+        {
+            object[] o = (object[])param;
+            CloseAgent(
+
+            return null;
         }
 
         #endregion
