@@ -1558,7 +1558,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                 {
                     //m_httpListener.Prefixes.Add("http://+:" + m_port + "/");
                     //m_httpListener.Prefixes.Add("http://10.1.1.5:" + m_port + "/");
-                    m_httpListener = HttpListener.Create (m_listenIPAddress, (int)m_port, httpserverlog);
+                    m_httpListener = HttpListener.Create (m_listenIPAddress, (int)m_port/*, httpserverlog*/);
                     m_httpListener.ExceptionThrown += httpServerException;
                     m_httpListener.LogWriter = httpserverlog;
 
