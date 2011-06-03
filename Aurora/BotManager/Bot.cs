@@ -254,7 +254,7 @@ namespace Aurora.BotManager
             m_nodeGraph.Clear ();
             const int BOT_FOLLOW_FLAG_INDEFINITELY = 1;
 
-            m_nodeGraph.FollowIndefinitely = (flags & BOT_FOLLOW_FLAG_INDEFINITELY) == BOT_FOLLOW_INDEFINITELY;
+            m_nodeGraph.FollowIndefinitely = (flags & BOT_FOLLOW_FLAG_INDEFINITELY) == BOT_FOLLOW_FLAG_INDEFINITELY;
 
             m_nodeGraph.AddRange (Positions, modes);
             GetNextDestination();
