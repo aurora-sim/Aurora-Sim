@@ -383,8 +383,9 @@ namespace OpenSim.Services.CapsService
                 events.Add("id", new OSDInteger(m_ids));
                 m_ids++;
             }
-            catch
+            catch (Exception ex)
             {
+                m_log.Warn ("[EQS]: Exception! " + ex.ToString ());
             }
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200;

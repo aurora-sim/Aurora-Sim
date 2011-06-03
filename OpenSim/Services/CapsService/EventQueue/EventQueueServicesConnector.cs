@@ -164,9 +164,7 @@ namespace OpenSim.Services.CapsService
                 {
                     bool success = result["success"].AsBoolean();
                     if (!success)
-                    {
                         m_log.Warn("[EventQueueServicesConnector]: Failed to post EQMessage for user " + avatarID);
-                    }
                     else
                         return success;
                 }

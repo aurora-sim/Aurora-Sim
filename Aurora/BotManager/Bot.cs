@@ -507,22 +507,30 @@ namespace Aurora.BotManager
             try
             {
                 m_frames.Stop ();
-                if(m_startTime.Enabled)
-                    m_startTime.Stop ();
+                if (m_startTime.SynchronizingObject != null)
+                {
+                    lock (m_startTime.SynchronizingObject)
+                        m_startTime.Stop ();
+                }
             }
             catch { }
             if (m_scenePresence == null)
                 return;
             Update();
+
             m_startTime.Start ();
             m_frames.Start ();
         }
 
         private void startTime_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            m_startTime.Stop ();
-            GetNextDestination ();
-            m_startTime.Start ();
+            if (m_startTime.SynchronizingObject != null)
+            {
+                lock (m_startTime.SynchronizingObject)
+                    m_startTime.Stop ();
+                GetNextDestination ();
+                m_startTime.Start ();
+            }
         }
 
         #endregion
