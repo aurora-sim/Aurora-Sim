@@ -176,6 +176,8 @@ namespace OpenSim.Services.ConfigurationService
 
         public virtual void RemoveUrls(string key)
         {
+            if (!m_allConfigs.ContainsKey (key))
+                return;
             OSDMap newAutoConfig = new OSDMap ();
             foreach (KeyValuePair<string, OSD> kvp in m_autoConfig)
             {
