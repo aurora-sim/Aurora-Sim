@@ -1250,7 +1250,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 }
             }
             if (shouldTaint || forceSendOfTerrainInfo)
+            {
+                m_scene.PhysicsScene.SetTerrain (m_channel.GetSerialised (m_scene));
                 m_scene.SimulationDataService.Tainted ();
+            }
 
             foreach (IScenePresence presence in m_scene.GetScenePresences ())
             {
@@ -1490,7 +1493,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             foreach (TerrainModule tmodule in m)
             {
                 tmodule.LoadFromFile(cmd[2], offsetX, offsetY);
-                tmodule.CheckForTerrainUpdates();
             }
         }
 
@@ -1505,7 +1507,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                          int.Parse(cmd[4]),
                          int.Parse(cmd[5]),
                          int.Parse(cmd[6]));
-                tmodule.CheckForTerrainUpdates();
             }
         }
 
