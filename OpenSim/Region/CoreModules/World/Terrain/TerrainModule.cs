@@ -1250,7 +1250,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 }
             }
             if (shouldTaint || forceSendOfTerrainInfo)
+            {
+                m_scene.PhysicsScene.SetTerrain (m_channel.GetSerialised (m_scene));
                 m_scene.SimulationDataService.Tainted ();
+            } 
 
             foreach (IScenePresence presence in m_scene.GetScenePresences ())
             {
