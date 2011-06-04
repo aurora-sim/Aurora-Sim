@@ -244,7 +244,7 @@ namespace Aurora.Modules
             {
                 module.RemoveUrlsForClient (host);
                 OSDMap callThem = module.GetUrlForRegisteringClient (host);
-                callThem["OurIdentifier"] = "asdfasdfasdf";
+                callThem["OurIdentifier"] = IWC.GetOurIP();
 
                 callThem["Method"] = "ConnectionRequest";
                 OSDMap result = WebUtils.PostToService (host, callThem, true, false, true);
@@ -307,10 +307,10 @@ namespace Aurora.Modules
             if (module != null)
             {
                 //Add our URLs for them so that they can connect too
-                module.RemoveUrlsForClient ("asdfasdfasdfasdf");
-                result = module.GetUrlForRegisteringClient ("asdfasdfasdfasdf");
-                result["OurIdentifier"] = "asdfasdfasdfasdf";
                 string theirIdent = args["OurIdentifier"];
+                module.RemoveUrlsForClient (theirIdent);
+                result = module.GetUrlForRegisteringClient (theirIdent);
+                result["OurIdentifier"] = IWC.GetOurIP();
                 m_log.Warn (theirIdent + " successfully connected to us");
                 IWC.AddNewConnectionFromRequest (args);
                 result["Success"] = true;
