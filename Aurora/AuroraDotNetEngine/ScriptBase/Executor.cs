@@ -254,9 +254,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 //
                 if (!(tie is EventAbortException) &&
                         !(tie is MinEventDelayException) &&
-                        (tie.InnerException != null && 
-                        !(tie.InnerException.Message.Contains("EventAbortException")) &&
-                        !(tie.InnerException.Message.Contains ("MinEventDelayException"))))
+                        !(tie.InnerException != null && 
+                        ((tie.InnerException.Message.Contains("EventAbortException")) ||
+                        (tie.InnerException.Message.Contains ("MinEventDelayException")))))
                     ex = tie;
                 if (Start != null)
                 {
