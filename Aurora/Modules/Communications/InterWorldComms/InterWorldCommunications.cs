@@ -308,12 +308,22 @@ namespace Aurora.Modules
             {
                 //Add our URLs for them so that they can connect too
                 string theirIdent = args["OurIdentifier"];
-                module.RemoveUrlsForClient (theirIdent);
-                result = module.GetUrlForRegisteringClient (theirIdent);
-                result["OurIdentifier"] = IWC.GetOurIP();
-                m_log.Warn (theirIdent + " successfully connected to us");
-                IWC.AddNewConnectionFromRequest (args);
-                result["Success"] = true;
+                ulong handle;
+                if (ulong.TryParse (theirIdent, out handle))
+                {
+                    //Fu**in hackers
+                    //No making region handle sessionIDs!
+                    result["Success"] = false;
+                }
+                else
+                {
+                    module.RemoveUrlsForClient (theirIdent);
+                    result = module.GetUrlForRegisteringClient (theirIdent);
+                    result["OurIdentifier"] = IWC.GetOurIP ();
+                    m_log.Warn (theirIdent + " successfully connected to us");
+                    IWC.AddNewConnectionFromRequest (args);
+                    result["Success"] = true;
+                }
             }
 
             string json = OSDParser.SerializeJsonString (result);
