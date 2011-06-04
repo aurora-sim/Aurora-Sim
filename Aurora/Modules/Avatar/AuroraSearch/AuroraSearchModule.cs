@@ -378,7 +378,7 @@ namespace Aurora.Modules
             mapItemReply mapitem = new mapItemReply();
             uint xstart = 0;
             uint ystart = 0;
-            OpenMetaverse.Utils.LongToUInts(remoteClient.Scene.RegionInfo.RegionHandle, out xstart, out ystart);
+            OpenMetaverse.Utils.LongToUInts (remoteClient.Scene.RegionInfo.RegionHandle, out xstart, out ystart);
             OpenSim.Services.Interfaces.GridRegion GR = m_Scenes[0].GridService.GetRegionByPosition(UUID.Zero, (int)xstart, (int)ystart);
 
             #region Telehub

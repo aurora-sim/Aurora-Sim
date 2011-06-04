@@ -164,6 +164,8 @@ namespace OpenSim.Services.ConfigurationService
                 {
                     string url = kvp.Value.AsString();
                     //Check to see whether the base URLs are the same (removes the UUID at the end)
+                    if (url.Length < 36)
+                        continue; //Not a URL
                     url = url.Remove(url.Length - 36, 36);
                     if(!m_autoConfig[kvp.Key].AsString().Contains(url))
                         m_autoConfig[kvp.Key] = m_autoConfig[kvp.Key] + "," + kvp.Value;
@@ -174,6 +176,25 @@ namespace OpenSim.Services.ConfigurationService
 
         public virtual void RemoveUrls(string key)
         {
+            OSDMap newAutoConfig = new OSDMap ();
+            foreach (KeyValuePair<string, OSD> kvp in m_autoConfig)
+            {
+                if (kvp.Value == "")
+                    continue;
+                if (m_autoConfig.ContainsKey (kvp.Key))
+                {
+                    string[] s = m_autoConfig[kvp.Key].AsString ().Split (',');
+                    List<string> newS = new List<string> ();
+                    foreach (string ss in s)
+                        if (ss == m_allConfigs[key][kvp.Key])
+                            continue;
+                        else
+                            newS.Add (ss);
+
+                    newAutoConfig[kvp.Key] = string.Join (",", newS.ToArray ());
+                }
+            }
+            m_autoConfig = newAutoConfig;
             m_allConfigs.Remove(key);
         }
 

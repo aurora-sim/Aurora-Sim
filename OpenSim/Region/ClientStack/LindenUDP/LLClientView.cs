@@ -5350,7 +5350,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             AddLocalPacketHandler(PacketType.ObjectOwner, HandleObjectOwner);
             AddLocalPacketHandler(PacketType.AgentFOV, HandleAgentFOV, false);
             AddLocalPacketHandler(PacketType.ViewerStats, HandleViewerStats);
-            AddLocalPacketHandler(PacketType.MapItemRequest, HandleMapItemRequest, false);
+            AddLocalPacketHandler(PacketType.MapItemRequest, HandleMapItemRequest, true);
             AddLocalPacketHandler(PacketType.TransferAbort, HandleTransferAbort, false);
             AddLocalPacketHandler(PacketType.MuteListRequest, HandleMuteListRequest, true);
             AddLocalPacketHandler(PacketType.UseCircuitCode, HandleUseCircuitCode);

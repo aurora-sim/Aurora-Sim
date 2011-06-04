@@ -208,6 +208,7 @@ namespace Aurora.Modules
             if (configService != null)
             {
                 //Add the URLs they sent us
+                configService.RemoveUrls (args["OurIdentifier"]);
                 configService.AddNewUrls (args["OurIdentifier"], args);
             }
         }
