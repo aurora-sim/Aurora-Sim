@@ -2650,7 +2650,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             m_host.Sound = KeyOrName(sound);
             m_host.SoundGain = volume;
-            m_host.SoundFlags = (int)SoundFlags.Loop;      // looping
+            m_host.SoundFlags = (byte)SoundFlags.Loop;      // looping
             m_host.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
             m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);

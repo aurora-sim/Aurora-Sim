@@ -339,9 +339,7 @@ namespace Aurora.Modules
                 return false; //NO!
             }
 
-            //If the user wants to force landing points on crossing, we act like they are not crossing, otherwise, check the child property
-            bool isCrossing = ForceLandingPointsOnCrossing ? false : Sp != null && Sp.IsChildAgent;
-
+            
             //Make sure that this user is inside the region as well
             if (Position.X < -2f || Position.Y < -2f || 
                 Position.X > scene.RegionInfo.RegionSizeX+2 || Position.Y > scene.RegionInfo.RegionSizeY+2)
@@ -489,6 +487,9 @@ namespace Aurora.Modules
             TeleportFlags allowableFlags = OpenMetaverse.TeleportFlags.ViaLandmark | OpenMetaverse.TeleportFlags.ViaHome |
                 OpenMetaverse.TeleportFlags.ViaLogin | OpenMetaverse.TeleportFlags.ViaLure | OpenMetaverse.TeleportFlags.ForceRedirect |
                 OpenMetaverse.TeleportFlags.Godlike | OpenMetaverse.TeleportFlags.NineOneOne;
+            
+            //If the user wants to force landing points on crossing, we act like they are not crossing, otherwise, check the child property and that the ViaRegionID is set
+            bool isCrossing = ForceLandingPointsOnCrossing ? false : Sp != null && Sp.IsChildAgent && ((tpflags & OpenMetaverse.TeleportFlags.ViaRegionID) == OpenMetaverse.TeleportFlags.ViaRegionID);
             //Move them to the nearest landing point
             if (!((tpflags & allowableFlags) != 0) && !isCrossing && !ES.AllowDirectTeleport)
             {

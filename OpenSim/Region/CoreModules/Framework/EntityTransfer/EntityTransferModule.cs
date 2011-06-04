@@ -578,6 +578,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     AgentCircuitData agentCircuit = agent.ControllingClient.RequestClientInfo();
                     agentCircuit.startpos = pos;
                     agentCircuit.child = false;
+                    agentCircuit.teleportFlags = (uint)TeleportFlags.ViaRegionID;
                     IAvatarAppearanceModule appearance = agent.RequestModuleInterface<IAvatarAppearanceModule>();
                     if (appearance != null)
                         agentCircuit.Appearance = appearance.Appearance;
