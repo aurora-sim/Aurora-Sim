@@ -377,18 +377,6 @@ namespace Aurora.Modules
                     Position.Y = scene.RegionInfo.RegionSizeY - Position.Y;
             }
 
-            //Check that we are not underground as well
-            ITerrainChannel chan = scene.RequestModuleInterface<ITerrainChannel>();
-            if (chan != null)
-            {
-                float posZLimit = chan[(int)Position.X, (int)Position.Y] + (float)1.25;
-
-                if (posZLimit >= (Position.Z) && !(Single.IsInfinity(posZLimit) || Single.IsNaN(posZLimit)))
-                {
-                    Position.Z = posZLimit;
-                }
-            }
-
             IAgentConnector AgentConnector = DataManager.DataManager.RequestPlugin<IAgentConnector>();
             IAgentInfo agentInfo = null;
             if (AgentConnector != null)
@@ -484,8 +472,8 @@ namespace Aurora.Modules
 
             EstateSettings ES = scene.RegionInfo.EstateSettings;
             TeleportFlags tpflags = (TeleportFlags)TeleportFlags;
-            TeleportFlags allowableFlags = OpenMetaverse.TeleportFlags.ViaLandmark | OpenMetaverse.TeleportFlags.ViaHome |
-                OpenMetaverse.TeleportFlags.ViaLogin | OpenMetaverse.TeleportFlags.ViaLure | OpenMetaverse.TeleportFlags.ForceRedirect |
+            TeleportFlags allowableFlags = OpenMetaverse.TeleportFlags.ViaLandmark | OpenMetaverse.TeleportFlags.ViaHome | 
+                OpenMetaverse.TeleportFlags.ViaLure | OpenMetaverse.TeleportFlags.ForceRedirect |
                 OpenMetaverse.TeleportFlags.Godlike | OpenMetaverse.TeleportFlags.NineOneOne;
             
             //If the user wants to force landing points on crossing, we act like they are not crossing, otherwise, check the child property and that the ViaRegionID is set
@@ -603,6 +591,18 @@ namespace Aurora.Modules
                 {
                     reason = "You may not enter this region.";
                     return false;
+                }
+            }
+
+            //Check that we are not underground as well
+            ITerrainChannel chan = scene.RequestModuleInterface<ITerrainChannel> ();
+            if (chan != null)
+            {
+                float posZLimit = chan[(int)newPosition.X, (int)newPosition.Y] + (float)1.25;
+
+                if (posZLimit >= (newPosition.Z) && !(Single.IsInfinity (posZLimit) || Single.IsNaN (posZLimit)))
+                {
+                    newPosition.Z = posZLimit;
                 }
             }
 

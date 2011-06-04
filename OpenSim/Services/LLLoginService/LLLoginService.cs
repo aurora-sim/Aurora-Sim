@@ -578,13 +578,13 @@ namespace OpenSim.Services.LLLoginService
                 string where = string.Empty;
                 Vector3 position = Vector3.Zero;
                 Vector3 lookAt = Vector3.Zero;
-                GridRegion destination = FindDestination(account, scopeID, guinfo, session, startLocation, home, out where, out position, out lookAt);
+                TeleportFlags tpFlags = TeleportFlags.ViaLogin;
+                GridRegion destination = FindDestination (account, scopeID, guinfo, session, startLocation, home, ref tpFlags, out where, out position, out lookAt);
                 if (destination == null)
                 {
                     m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: destination not found");
                     return LLFailedLoginResponse.DeadRegionProblem;
                 }
-
                 if (!GridUserInfoFound || guinfo.HomeRegionID == UUID.Zero) //Give them a default home and last
                 {
                     List<GridRegion> DefaultRegions = m_GridService.GetDefaultRegions(account.ScopeID);
@@ -680,7 +680,7 @@ namespace OpenSim.Services.LLLoginService
                 // Instantiate/get the simulation interface and launch an agent at the destination
                 //
                 string reason = string.Empty;
-                AgentCircuitData aCircuit = LaunchAgentAtGrid(destination, account, avappearance, session, secureSession, position, where,
+                AgentCircuitData aCircuit = LaunchAgentAtGrid (destination, tpFlags, account, avappearance, session, secureSession, position, where,
                     clientIP, out where, out reason, out destination);
 
                 if (aCircuit == null)
@@ -756,7 +756,7 @@ namespace OpenSim.Services.LLLoginService
             return "";
         }
 
-        protected GridRegion FindDestination(UserAccount account, UUID scopeID, UserInfo pinfo, UUID sessionID, string startLocation, GridRegion home, out string where, out Vector3 position, out Vector3 lookAt)
+        protected GridRegion FindDestination (UserAccount account, UUID scopeID, UserInfo pinfo, UUID sessionID, string startLocation, GridRegion home, ref TeleportFlags tpFlags, out string where, out Vector3 position, out Vector3 lookAt)
         {
             where = "home";
             position = new Vector3(128, 128, 25);
@@ -767,6 +767,7 @@ namespace OpenSim.Services.LLLoginService
 
             if (startLocation.Equals("home"))
             {
+                tpFlags |= TeleportFlags.ViaLandmark;
                 // logging into home region
                 if (pinfo == null)
                     return null;
@@ -835,6 +836,7 @@ namespace OpenSim.Services.LLLoginService
             }
             else if (startLocation.Equals("last"))
             {
+                tpFlags |= TeleportFlags.ViaLandmark;
                 // logging into last visited region
                 where = "last";
 
@@ -996,7 +998,7 @@ namespace OpenSim.Services.LLLoginService
             }
         }
 
-        protected AgentCircuitData LaunchAgentAtGrid(GridRegion destination, UserAccount account, AvatarAppearance appearance,
+        protected AgentCircuitData LaunchAgentAtGrid(GridRegion destination, TeleportFlags tpFlags, UserAccount account, AvatarAppearance appearance,
             UUID session, UUID secureSession, Vector3 position, string currentWhere,
             IPEndPoint clientIP, out string where, out string reason, out GridRegion dest)
         {
@@ -1012,9 +1014,12 @@ namespace OpenSim.Services.LLLoginService
 
             circuitCode = (uint)Util.RandomClass.Next(); ;
             aCircuit = MakeAgent(destination, account, appearance, session, secureSession, circuitCode, position, clientIP.Address.ToString());
+            aCircuit.teleportFlags = (uint)tpFlags;
             success = LaunchAgentDirectly(m_SimulationService, destination, aCircuit, out reason);
             if (!success && m_GridService != null)
             {
+                //Remove the landmark flag (landmark is used for ignoring the landing points in the region)
+                aCircuit.teleportFlags &= (uint)TeleportFlags.ViaLandmark;
                 m_GridService.SetRegionUnsafe(destination.RegionID);
 
                 // Make sure the client knows this isn't where they wanted to land
@@ -1131,7 +1136,7 @@ namespace OpenSim.Services.LLLoginService
             }
             aCircuit.teleportFlags = (uint)TeleportFlags.ViaLogin;
             // As we are creating the agent, we must also initialize the CapsService for the agent
-            bool success = simConnector.CreateAgent(region, ref aCircuit, (int)TeleportFlags.ViaLogin, null, out reason);
+            bool success = simConnector.CreateAgent (region, ref aCircuit, aCircuit.teleportFlags, null, out reason);
             if (!success) // If it failed, do not set up any CapsService for the client
             {
                 if (reason != "")
