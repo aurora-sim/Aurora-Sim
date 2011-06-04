@@ -59,7 +59,8 @@ namespace OpenSim.Framework
         public event OnCollisionEvent OnCollisionEvent;
         public void FireCollisionEvent (PhysicsActor actor, PhysicsActor collidedActor, ContactPoint contact)
         {
-            OnCollisionEvent (actor, collidedActor, contact);
+            if(OnCollisionEvent != null)
+                OnCollisionEvent (actor, collidedActor, contact);
         }
 
         public abstract void Initialise(IMesher meshmerizer, RegionInfo region);
