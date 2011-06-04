@@ -116,7 +116,7 @@ namespace OpenSim.Services.MessagingService
                 return;
             m_locked = true;
             OSDMap message = CreateWebRequest();
-            List<string> serverURIs = m_scenes[0].RequestModuleInterface<IConfigurationService>().FindValueOf(m_scenes[0].RegionInfo.RegionHandle.ToString(), "MessagingServerURI");
+            List<string> serverURIs = m_scenes[0].RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
             foreach (string host in serverURIs)
             {
                 OSDMap retval = WebUtils.PostToService (host, message, true, false);
