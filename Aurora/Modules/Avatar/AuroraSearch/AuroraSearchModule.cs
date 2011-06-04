@@ -379,7 +379,12 @@ namespace Aurora.Modules
             uint xstart = 0;
             uint ystart = 0;
             OpenMetaverse.Utils.LongToUInts (remoteClient.Scene.RegionInfo.RegionHandle, out xstart, out ystart);
-            OpenSim.Services.Interfaces.GridRegion GR = m_Scenes[0].GridService.GetRegionByPosition(UUID.Zero, (int)xstart, (int)ystart);
+            OpenSim.Services.Interfaces.GridRegion GR = null;
+
+            if (regionhandle == 0)
+                GR = new OpenSim.Services.Interfaces.GridRegion (remoteClient.Scene.RegionInfo);
+            else
+                GR = m_Scenes[0].GridService.GetRegionByPosition (UUID.Zero, (int)xstart, (int)ystart);
 
             #region Telehub
             if (itemtype == (uint)OpenMetaverse.GridItemType.Telehub)

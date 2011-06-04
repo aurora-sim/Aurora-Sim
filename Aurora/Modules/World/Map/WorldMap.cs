@@ -355,7 +355,7 @@ namespace Aurora.Modules
                     }
                     else
                     {
-                        remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, 0);
+                        remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
                     }
                 }
             }
