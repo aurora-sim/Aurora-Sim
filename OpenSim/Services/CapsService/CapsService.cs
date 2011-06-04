@@ -122,6 +122,16 @@ namespace OpenSim.Services.CapsService
         {
             //Check for all or full to show child agents
             bool showChildAgents = cmd.Length == 3 ? cmd[2] == "all" ? true : cmd[2] == "full" ? true : false : false;
+            int count = 0;
+            foreach (IRegionCapsService regionCaps in m_RegionCapsServices.Values)
+            {
+                foreach (IRegionClientCapsService clientCaps in regionCaps.GetClients ())
+                {
+                    if ((clientCaps.RootAgent || showChildAgents))
+                        count++;
+                }
+            }
+            m_log.WarnFormat ("{0} agents found: ", count);
             foreach (IRegionCapsService regionCaps in m_RegionCapsServices.Values)
             {
                 foreach (IRegionClientCapsService clientCaps in regionCaps.GetClients())
