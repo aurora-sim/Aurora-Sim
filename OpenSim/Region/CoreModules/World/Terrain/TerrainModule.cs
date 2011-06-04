@@ -86,6 +86,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private ITerrainChannel m_revert;
         private ITerrainChannel m_waterRevert;
         private Scene m_scene;
+        private long m_queueNextSave = 0;
+        private int m_savetime = 2; // seconds to wait before saving terrain
+        private Timer m_queueTimer = new Timer(); 
 
         public ITerrainChannel TerrainMap
         {
@@ -165,6 +168,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_scene.AuroraEventManager.RegisterEventHandler ("DrawDistanceChanged", AuroraEventManager_OnGenericEvent);
             m_scene.AuroraEventManager.RegisterEventHandler ("SignficantCameraMovement", AuroraEventManager_OnGenericEvent);
             m_scene.EventManager.OnNewPresence += OnNewPresence;
+
+            m_queueTimer.Enabled = false;
+            m_queueTimer.AutoReset = true;
+            m_queueTimer.Interval = m_savetime * 1000;
+            m_queueTimer.Elapsed += TerrainUpdateTimer; 
         }
 
         public void RegionLoaded(Scene scene)
@@ -205,6 +213,26 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         #endregion
 
         #region ITerrainModule Members
+
+        public void TerrainUpdateTimer (object sender, EventArgs ea)
+        {
+            long now = DateTime.Now.Ticks;
+
+            if (m_queueNextSave > 0 && m_queueNextSave < now)
+            {
+                m_queueNextSave = 0;
+                m_scene.PhysicsScene.SetTerrain (m_channel.GetSerialised (m_scene));
+
+                if (m_queueNextSave == 0)
+                    m_queueTimer.Stop ();
+            }
+        }
+
+        public void QueueTerrainUpdate ()
+        {
+            m_queueNextSave = DateTime.Now.Ticks + Convert.ToInt64 (m_savetime * 1000 * 10000);
+            m_queueTimer.Start ();
+        }
 
         public void UpdateWaterHeight(double height)
         {
@@ -1251,7 +1279,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
             if (shouldTaint || forceSendOfTerrainInfo)
             {
-                m_scene.PhysicsScene.SetTerrain (m_channel.GetSerialised (m_scene));
+                QueueTerrainUpdate ();
                 m_scene.SimulationDataService.Tainted ();
             }
 
