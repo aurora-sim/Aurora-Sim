@@ -121,7 +121,8 @@ namespace OpenSim.Services.CapsService
 
                 request.Add("Events", events);
 
-                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(avatarID.ToString(), regionHandle.ToString(), "EventQueueServiceURI");
+                IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
+                List<string> serverURIs = configService.FindValueOf ("EventQueueServiceURI");
                 foreach (string serverURI in serverURIs)
                 {
                     if (runasync)
