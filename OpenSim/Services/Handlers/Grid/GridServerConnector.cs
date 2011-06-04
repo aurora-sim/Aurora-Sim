@@ -62,14 +62,14 @@ namespace OpenSim.Services
             string url = "/grid";
 
             IGridRegistrationService gridRegService = m_registry.RequestModuleInterface<IGridRegistrationService> ();
+            gridRegService.RegisterModule (this);
+
             uint port = handlerConfig.GetUInt ("RegistrationHandlerPort", 8003);
 
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (port);
 
             GridServerPostHandler handler = new GridServerPostHandler(url, registry, registry.RequestModuleInterface<IGridService>().InnerService, false, "");
             server.AddStreamHandler(handler);
-
-            gridRegService.RegisterModule (this);
         }
 
         public void RemoveUrlForClient (string sessionID, string url, uint port)

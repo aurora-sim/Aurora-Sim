@@ -104,8 +104,17 @@ namespace Aurora.Modules
         public string[] GetAgentsLocations(string[] userIDs)
         {
             string[] info = m_localService.GetAgentsLocations(userIDs);
+            string[] info2 = m_remoteService.GetAgentsLocations (userIDs);
             if (info == null)
-                info = m_remoteService.GetAgentsLocations(userIDs);
+                info = info2;
+            else
+            {
+                for (int i = 0; i < userIDs.Length; i++)
+                {
+                    if(info[i] == "NotOnline")
+                        info[i] = info2[i];
+                }
+            }
             return info;
         }
 

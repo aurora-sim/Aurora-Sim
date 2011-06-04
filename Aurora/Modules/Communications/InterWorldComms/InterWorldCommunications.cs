@@ -241,6 +241,7 @@ namespace Aurora.Modules
             IGridRegistrationService module = IWC.Registry.RequestModuleInterface<IGridRegistrationService> ();
             if (module != null)
             {
+                module.RemoveUrlsForClient (host);
                 OSDMap callThem = module.GetUrlForRegisteringClient (host);
                 callThem["OurIdentifier"] = "asdfasdfasdf";
 
@@ -305,6 +306,7 @@ namespace Aurora.Modules
             if (module != null)
             {
                 //Add our URLs for them so that they can connect too
+                module.RemoveUrlsForClient ("asdfasdfasdfasdf");
                 result = module.GetUrlForRegisteringClient ("asdfasdfasdfasdf");
                 result["OurIdentifier"] = "asdfasdfasdfasdf";
                 string theirIdent = args["OurIdentifier"];

@@ -221,6 +221,9 @@ namespace OpenSim.Services.GridService
 
             foreach (GridRegistrationURLs url in urls)
             {
+                ulong e;
+                if (!ulong.TryParse (url.SessionID, out e))
+                    continue;
                 if(url.HostNames == null || url.Ports == null || url.URLS == null)
                 {
                     RemoveUrlsForClient(url.SessionID.ToString());
@@ -312,7 +315,13 @@ namespace OpenSim.Services.GridService
                 {
                     if (!urls.URLS.ContainsKey(module.UrlName))
                         continue;
-                    module.RemoveUrlForClient (urls.SessionID, urls.URLS[module.UrlName], urls.Ports[module.UrlName]);
+                    try
+                    {
+                        module.RemoveUrlForClient (urls.SessionID, urls.URLS[module.UrlName], urls.Ports[module.UrlName]);
+                    }
+                    catch
+                    {
+                    }
                 }
                 //Remove from the database so that they don't pop up later
                 m_genericsConnector.RemoveGeneric (UUID.Zero, "GridRegistrationUrls", SessionID.ToString ());
@@ -429,7 +438,6 @@ namespace OpenSim.Services.GridService
 
                 if (m_configurationConfig != null)
                 {
-                    
                     SetDefaultUrls ((m_defaultHostname = m_configurationConfig.GetString ("HostNames", m_defaultHostname)).Split (','));
                     SetDefaultPorts (m_configurationConfig.GetString ("Ports", m_defaultPort.ToString()).Split (','));
                 }
