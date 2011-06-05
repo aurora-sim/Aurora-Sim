@@ -35,6 +35,7 @@ using System.Text;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using OpenSim.Region.Framework.Scenes;
 
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -379,6 +380,15 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
+            if (m_localBackend != null)
+            {
+                SceneManager man = registry.RequestModuleInterface<SceneManager> ();
+                if (man != null)
+                {
+                    man.OnAddedScene += Init;
+                    man.OnCloseScene += RemoveScene;
+                }
+            }
         }
 
         public void FinishedStartup()

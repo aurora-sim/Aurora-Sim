@@ -99,7 +99,7 @@ namespace Aurora.DataManager.MySQL
             }
             catch (Exception e)
             {
-                m_log.Debug ("[MySQLDataLoader] ExecuteNonQuery", e);
+                m_log.Info ("[MySQLDataLoader] ExecuteNonQuery", e);
             }
         }
 
