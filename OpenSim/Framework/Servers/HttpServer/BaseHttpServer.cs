@@ -1574,7 +1574,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                     //m_httpListener.Prefixes.Add("http://+:" + m_port + "/");
                     System.Security.Cryptography.X509Certificates.X509Certificate2 cert =
                         new System.Security.Cryptography.X509Certificates.X509Certificate2("SineWaveCert.pfx", "123");
-                    m_httpListener = HttpListener.Create (IPAddress.Any, (int)m_port, cert, httpserverlog);
+                    m_httpListener = HttpListener.Create (IPAddress.Any, (int)m_port, cert/*, httpserverlog*/);
                     m_httpListener.ExceptionThrown += httpServerException;
                     m_httpListener.LogWriter = httpserverlog;
                 }
