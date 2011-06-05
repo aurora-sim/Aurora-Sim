@@ -223,7 +223,10 @@ namespace OpenSim.Services.GridService
             {
                 ulong e;
                 if (!ulong.TryParse (url.SessionID, out e))
+                {
+                    //Don't load links (yet)
                     continue;
+                }
                 if(url.HostNames == null || url.Ports == null || url.URLS == null)
                 {
                     RemoveUrlsForClient(url.SessionID.ToString());
@@ -255,9 +258,9 @@ namespace OpenSim.Services.GridService
             OSDMap retVal = new OSDMap();
             if (urls != null)
             {
-                if(urls.HostNames == null || urls.Ports == null || urls.URLS == null)
+                if(urls.HostNames == null || urls.Ports == null || urls.URLS == null || urls.SessionID != SessionID)
                 {
-                    RemoveUrlsForClient(urls.SessionID.ToString());
+                    RemoveUrlsForClient(SessionID.ToString());
                 }
                 else
                 {
@@ -268,8 +271,8 @@ namespace OpenSim.Services.GridService
                         //Build the URL
                         retVal[module.Key] = urls.HostNames[module.Key] + ":" + urls.Ports[module.Key] + module.Value.AsString ();
                     }
+                    return retVal;
                 }
-                return retVal;
             }
             OSDMap databaseSave = new OSDMap();
             OSDMap ports = new OSDMap();

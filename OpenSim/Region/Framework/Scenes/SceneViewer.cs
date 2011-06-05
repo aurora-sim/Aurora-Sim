@@ -136,7 +136,11 @@ namespace OpenSim.Region.Framework.Scenes
 
         void m_drawDistanceChangedTimer_Elapsed (object sender, ElapsedEventArgs e)
         {
-            m_drawDistanceChangedTimer.Stop ();
+            try
+            {
+                m_drawDistanceChangedTimer.Stop ();
+            }
+            catch { }
             SignificantClientMovement (m_presence.ControllingClient);
         }
 
