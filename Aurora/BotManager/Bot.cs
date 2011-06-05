@@ -95,6 +95,7 @@ namespace Aurora.BotManager
                 m_currentState = value;
             }
         }
+        private bool lastFlying = false;
 
         #region Jump Settings
 
@@ -280,6 +281,7 @@ namespace Aurora.BotManager
             {
                 walkTo(destination);
                 State = BotState.Walking;
+                lastFlying = true;
             }
         }
 
@@ -290,6 +292,7 @@ namespace Aurora.BotManager
             {
                 flyTo (destination);
                 State = BotState.Flying;
+                lastFlying = true;
             }
             else
             {
@@ -545,7 +548,7 @@ namespace Aurora.BotManager
 
             if (m_paused)
             {
-                StopMoving (State == BotState.Flying);
+                StopMoving (lastFlying);
                 return;
             }
 
@@ -562,7 +565,7 @@ namespace Aurora.BotManager
                     m_scenePresence.Teleport (pos);
             }
             else
-                StopMoving (State == BotState.Flying);
+                StopMoving (lastFlying);
         }
 
         public void PauseMovement ()
@@ -971,7 +974,7 @@ namespace Aurora.BotManager
             else
             {
                 //Stop the bot then
-                StopMoving (State == BotState.Flying);
+                StopMoving (lastFlying);
             }
         }
 
