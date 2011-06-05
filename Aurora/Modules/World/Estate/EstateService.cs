@@ -100,43 +100,63 @@ namespace Aurora.Modules
             }
         }
 
-        protected void BanUser(string[] cmdparams)
+        protected void BanUser (string[] cmdparams)
         {
             if (cmdparams.Length < 4)
             {
-                m_log.Warn("Not enough parameters!");
+                m_log.Warn ("Not enough parameters!");
                 return;
             }
 
-            IScenePresence SP = ((Scene)MainConsole.Instance.ConsoleScene).SceneGraph.GetScenePresence(cmdparams[2], cmdparams[3]);
-            if(SP == null)
+            IScenePresence SP = ((Scene)MainConsole.Instance.ConsoleScene).SceneGraph.GetScenePresence (cmdparams[2], cmdparams[3]);
+            if (SP == null)
             {
-                m_log.Warn("Could not find user");
+                m_log.Warn ("Could not find user");
                 return;
             }
-            EstateSettings ES = ((Scene)MainConsole.Instance.ConsoleScene).RegionInfo.EstateSettings;
-            ES.AddBan(new EstateBan()
+            EstateSettings ES = MainConsole.Instance.ConsoleScene.RegionInfo.EstateSettings;
+            AgentCircuitData circuitData = ((Scene)MainConsole.Instance.ConsoleScene).AuthenticateHandler.GetAgentCircuitData(SP.UUID);
+
+            ES.AddBan (new EstateBan ()
             {
-                BannedHostAddress = "",
-                BannedHostIPMask = "",
-                BannedHostNameMask = "",
+                BannedHostAddress = circuitData.IPAddress,
+                BannedHostIPMask = circuitData.IPAddress,
+                BannedHostNameMask = circuitData.IPAddress,
                 BannedUserID = SP.UUID,
                 EstateID = ES.EstateID
             });
-            ES.Save();
+            ES.Save ();
             string alert = null;
             if (cmdparams.Length > 4)
-                alert = String.Format("\n{0}\n", String.Join(" ", cmdparams, 4, cmdparams.Length - 4));
+                alert = String.Format ("\n{0}\n", String.Join (" ", cmdparams, 4, cmdparams.Length - 4));
 
             if (alert != null)
-                SP.ControllingClient.Kick(alert);
+                SP.ControllingClient.Kick (alert);
             else
-                SP.ControllingClient.Kick("\nThe Aurora manager banned and kicked you out.\n");
-            
+                SP.ControllingClient.Kick ("\nThe Aurora manager banned and kicked you out.\n");
+
             // kick client...
             IEntityTransferModule transferModule = SP.Scene.RequestModuleInterface<IEntityTransferModule> ();
             if (transferModule != null)
                 transferModule.IncomingCloseAgent (SP.Scene, SP.UUID);
+        }
+
+        protected void UnBanUser (string[] cmdparams)
+        {
+            if (cmdparams.Length < 4)
+            {
+                m_log.Warn ("Not enough parameters!");
+                return;
+            }
+            UserAccount account = MainConsole.Instance.ConsoleScene.UserAccountService.GetUserAccount (UUID.Zero, Util.CombineParams (cmdparams, 2));
+            if (account == null)
+            {
+                m_log.Warn ("Could not find user");
+                return;
+            }
+            EstateSettings ES = MainConsole.Instance.ConsoleScene.RegionInfo.EstateSettings;
+            ES.RemoveBan (account.PrincipalID);
+            ES.Save ();
         }
 
         protected void SetRegionInfoOption(string[] cmdparams)
@@ -932,6 +952,8 @@ namespace Aurora.Modules
 
                 MainConsole.Instance.Commands.AddCommand (
                     "ban user", "ban user", "Bans a user from the current estate", BanUser);
+                MainConsole.Instance.Commands.AddCommand (
+                    "unban user", "unban user", "Bans a user from the current estate", UnBanUser);
                 MainConsole.Instance.Commands.AddCommand (
                         "login enable",
                         "login enable",

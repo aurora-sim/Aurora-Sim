@@ -591,10 +591,10 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
                                     item.BannedUserID = user;
                                     item.EstateID = estate.EstateID;
-                                    item.BannedHostAddress = "0.0.0.0";
                                     IScenePresence SP = m_scene.GetScenePresence (user);
+                                    item.BannedHostAddress = (SP != null) ? ((System.Net.IPEndPoint)SP.ControllingClient.GetClientEP ()).Address.ToString () : "0.0.0.0";
                                     item.BannedHostIPMask = (SP != null) ? ((System.Net.IPEndPoint)SP.ControllingClient.GetClientEP ()).Address.ToString () : "0.0.0.0";
-
+                                    item.BannedHostNameMask = (SP != null) ? ((System.Net.IPEndPoint)SP.ControllingClient.GetClientEP ()).Address.ToString () : "0.0.0.0";
                                     estate.AddBan (item);
                                     estate.Save ();
                                 }
