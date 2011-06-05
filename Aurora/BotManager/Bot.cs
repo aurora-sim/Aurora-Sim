@@ -522,15 +522,13 @@ namespace Aurora.BotManager
             m_frames.Start ();
         }
 
-        private void startTime_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void startTime_Elapsed (object sender, System.Timers.ElapsedEventArgs e)
         {
             if (m_startTime.SynchronizingObject != null)
-            {
                 lock (m_startTime.SynchronizingObject)
                     m_startTime.Stop ();
-                GetNextDestination ();
-                m_startTime.Start ();
-            }
+            GetNextDestination ();
+            m_startTime.Start ();
         }
 
         #endregion
