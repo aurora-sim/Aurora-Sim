@@ -57,6 +57,12 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+            SceneManager man = registry.RequestModuleInterface<SceneManager>() ;
+            if (man != null)
+            {
+                man.OnAddedScene += Init;
+                man.OnCloseScene += RemoveScene;
+            }
         }
 
         public void FinishedStartup()
