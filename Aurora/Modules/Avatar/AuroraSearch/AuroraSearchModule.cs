@@ -385,6 +385,11 @@ namespace Aurora.Modules
                 GR = new OpenSim.Services.Interfaces.GridRegion (remoteClient.Scene.RegionInfo);
             else
                 GR = m_Scenes[0].GridService.GetRegionByPosition (UUID.Zero, (int)xstart, (int)ystart);
+            if (GR == null)
+            {
+                //No region???
+                return;
+            }
 
             #region Telehub
             if (itemtype == (uint)OpenMetaverse.GridItemType.Telehub)

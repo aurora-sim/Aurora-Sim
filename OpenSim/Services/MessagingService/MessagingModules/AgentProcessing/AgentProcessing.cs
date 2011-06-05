@@ -631,14 +631,19 @@ namespace OpenSim.Services.MessagingService
             return result;
         }
 
+        private int CloseNeighborCall = 0;
         private void CloseNeighborAgents(GridRegion oldRegion, GridRegion destination, UUID AgentID)
         {
             if (!m_useCallbacks)
                 return;
+            CloseNeighborCall++;
+            int CloseNeighborCallNum = CloseNeighborCall;
             Util.FireAndForget(delegate(object o)
             {
                 //Sleep for 5 seconds to give the agents a chance to cross and get everything right
                 Thread.Sleep(5000);
+                if (CloseNeighborCall != CloseNeighborCallNum)
+                    return; //Another was enqueued, kill this one
                 //Now do a sanity check on the avatar
                 IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
                 if (clientCaps == null)
@@ -650,7 +655,7 @@ namespace OpenSim.Services.MessagingService
                 if (ourRegionCaps == null)
                     return;
                 //If they handles arn't the same, the agent moved, and we can't be sure that we should close these agents
-                if (rootRegionCaps.RegionHandle != ourRegionCaps.RegionHandle)
+                if (rootRegionCaps.RegionHandle != ourRegionCaps.RegionHandle && !clientCaps.InTeleport)
                     return;
 
                 IGridService service = m_registry.RequestModuleInterface<IGridService> ();
@@ -686,14 +691,11 @@ namespace OpenSim.Services.MessagingService
             //Close all agents that we've been given regions for
             foreach (GridRegion region in regionsToClose)
             {
-                m_log.Debug("[AgentProcessing]: Closing child agent in " + region.RegionName);
+                m_log.Info("[AgentProcessing]: Closing child agent in " + region.RegionName);
                 m_registry.RequestModuleInterface<ISimulationService>().CloseAgent(region, agentID);
                 IRegionClientCapsService regionClientCaps = clientCaps.GetCapsService(region.RegionHandle);
                 if (regionClientCaps != null)
-                {
-                    regionClientCaps.Close();
                     clientCaps.RemoveCAPS(region.RegionHandle);
-                }
             }
         }
 

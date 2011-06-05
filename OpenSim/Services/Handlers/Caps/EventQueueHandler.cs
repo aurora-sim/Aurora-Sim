@@ -176,19 +176,23 @@ namespace OpenSim.Services
                 IClientCapsService clientCaps = m_capsService.GetClientCapsService(agentID);
                 if (clientCaps != null)
                 {
-                    IRegionClientCapsService regionClient = clientCaps.GetCapsService(regionHandle);
+                    IRegionClientCapsService regionClient = clientCaps.GetCapsService (regionHandle);
                     if (regionClient != null)
                     {
                         bool enqueueResult = false;
                         foreach (OSD ev in OSDEvents)
                         {
-                            enqueueResult = m_eventQueueService.Enqueue(ev, agentID, regionHandle);
+                            enqueueResult = m_eventQueueService.Enqueue (ev, agentID, regionHandle);
                             if (!enqueueResult) //Break if one fails
                                 break;
                         }
                         response["success"] = enqueueResult;
                     }
+                    else
+                        m_log.Error ("[EQMHandler]: ERROR IN THE HANDLER, FAILED TO FIND CLIENT'S REGION");
                 }
+                else
+                    m_log.Error ("[EQMHandler]: ERROR IN THE HANDLER, FAILED TO FIND CLIENT");
             }
             catch(Exception ex)
             {
