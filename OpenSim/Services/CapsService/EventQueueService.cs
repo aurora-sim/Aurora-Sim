@@ -329,9 +329,9 @@ namespace OpenSim.Services.CapsService
                 OSD element;
                 lock (queue)
                 {
-                    if (queue.Count == 0)
+                     if (queue.Count == 0)
                         return NoEvents(requestID, pAgentId);
-                    element = queue.Dequeue(); // 15s timeout
+                     element = queue.Dequeue();
                 }
 
                 OSDArray array = new OSDArray();
@@ -357,6 +357,7 @@ namespace OpenSim.Services.CapsService
                     }
                 }
 
+                int removeAt = -1;
                 //Look for disable Simulator EQMs so that we can disable ourselves safely
                 foreach (OSD ev in array)
                 {
@@ -367,9 +368,10 @@ namespace OpenSim.Services.CapsService
                             OSDMap map = (OSDMap)ev;
                             if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
                             {
+                                m_log.Warn ("[EQService]: Sim Request to Disable Simulator " + m_service.RegionHandle);
+                                removeAt = array.IndexOf(ev);
                                 //This will be the last bunch of EQMs that go through, so we can safely die now
-                                m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
-                                m_log.Warn("[EQService]: Disabling Simulator " + m_service.RegionHandle);
+                                //m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
                             }
                         }
                     }
@@ -377,6 +379,8 @@ namespace OpenSim.Services.CapsService
                     {
                     }
                 }
+                if(removeAt != -1)
+                    array.RemoveAt (removeAt);
 
                 events.Add("events", array);
 
@@ -428,7 +432,7 @@ namespace OpenSim.Services.CapsService
             lock (queue)
             {
                 if (queue.Count != 0)
-                    element = queue.Dequeue(); // 15s timeout
+                    element = queue.Dequeue(); 
             }
 
             Hashtable responsedata = new Hashtable();
@@ -448,6 +452,11 @@ namespace OpenSim.Services.CapsService
                     OSD item = queue.Dequeue();
                     if (item != null)
                     {
+                        OSDMap map = (OSDMap)item;
+                        if (map.ContainsKey ("message") && map["message"] == "DisableSimulator")
+                        {
+                            continue;
+                        }
                         array.Add(item);
                         m_ids++;
                     }
@@ -461,6 +470,7 @@ namespace OpenSim.Services.CapsService
                     OSDMap map = (OSDMap)ev;
                     if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
                     {
+                        //Disabled above
                         //This will be the last bunch of EQMs that go through, so we can safely die now
                         m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
                     }

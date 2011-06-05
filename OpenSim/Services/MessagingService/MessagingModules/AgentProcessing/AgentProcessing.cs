@@ -640,10 +640,11 @@ namespace OpenSim.Services.MessagingService
             int CloseNeighborCallNum = CloseNeighborCall;
             Util.FireAndForget(delegate(object o)
             {
-                //Sleep for 5 seconds to give the agents a chance to cross and get everything right
-                Thread.Sleep(5000);
+                //Sleep for 15 seconds to give the agents a chance to cross and get everything right
+                Thread.Sleep(15000);
                 if (CloseNeighborCall != CloseNeighborCallNum)
                     return; //Another was enqueued, kill this one
+
                 //Now do a sanity check on the avatar
                 IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
                 if (clientCaps == null)

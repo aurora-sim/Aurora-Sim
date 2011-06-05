@@ -93,7 +93,7 @@ namespace OpenSim.Framework
         IScenePresence GetScenePresence (uint localID);
         bool TryGetScenePresence (UUID agentID, out IScenePresence scenePresence);
         bool TryGetAvatarByName (string p, out IScenePresence NewSP);
-        bool RemoveAgent (IScenePresence presence);
+        bool RemoveAgent (IScenePresence presence, bool forceClose);
 
         #endregion
 

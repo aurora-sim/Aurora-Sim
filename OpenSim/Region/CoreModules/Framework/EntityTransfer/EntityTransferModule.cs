@@ -996,8 +996,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 //Tell everyone about it
                 scene.AuroraEventManager.FireGenericEventHandler ("AgentIsAZombie", sp.UUID);
                 //Send the killing message (DisableSimulator)
-                sp.ControllingClient.Stop ();
-                scene.RemoveAgent (sp);
+                scene.RemoveAgent (sp, true);
                 sp = null;
             }
 
@@ -1153,7 +1152,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             IScenePresence presence = scene.GetScenePresence (agentID);
             if (presence != null)
             {
-                bool RetVal = scene.RemoveAgent (presence);
+                bool RetVal = scene.RemoveAgent (presence, true);
 
                 ISyncMessagePosterService syncPoster = scene.RequestModuleInterface<ISyncMessagePosterService> ();
                 if (syncPoster != null)
