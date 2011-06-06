@@ -74,13 +74,17 @@ namespace Aurora.Modules
 
         public GridInstantMessage[] GetOfflineMessages (UUID agentID)
         {
-            List<GridInstantMessage> messages = new List<GridInstantMessage> (m_localService.GetOfflineMessages (agentID));
-            messages.AddRange (m_remoteService.GetOfflineMessages (agentID));
-            return messages.ToArray ();
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (agentID.ToString (), "FriendsServerURI");
+            if (serverURIs.Count > 0) //Remote user... or should be
+                return m_remoteService.GetOfflineMessages (agentID);
+            return m_localService.GetOfflineMessages (agentID);
         }
 
         public bool AddOfflineMessage (GridInstantMessage message)
         {
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (message.toAgentID.ToString (), "FriendsServerURI");
+            if (serverURIs.Count > 0) //Remote user... or should be
+                return m_remoteService.AddOfflineMessage (message);
             return m_localService.AddOfflineMessage (message);
         }
 

@@ -36,6 +36,7 @@ using Aurora.Framework;
 using Aurora.Simulation.Base;
 using Aurora.Services.DataService;
 using OpenSim.Framework;
+using OpenSim.Services.Interfaces;
 using OpenSim.Services.AvatarService;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
@@ -74,29 +75,44 @@ namespace Aurora.Modules
 
         public MuteList[] GetMuteList (UUID AgentID)
         {
-            List<MuteList> list = new List<MuteList>(m_localService.GetMuteList (AgentID));
-            list.AddRange (m_remoteService.GetMuteList (AgentID));
-            return list.ToArray ();
+            List<MuteList> list = new List<MuteList> ();
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (AgentID.ToString (), "FriendsServerURI");
+            if (serverURIs.Count > 0) //Remote user... or should be
+                return m_remoteService.GetMuteList (AgentID);
+            return m_localService.GetMuteList (AgentID);
         }
 
         public void UpdateMute (MuteList mute, UUID AgentID)
         {
-            m_localService.UpdateMute (mute, AgentID);
-            m_remoteService.UpdateMute (mute, AgentID);
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (AgentID.ToString (), "FriendsServerURI");
+            if (serverURIs.Count > 0) //Remote user... or should be
+                m_remoteService.UpdateMute (mute, AgentID);
+            else
+                m_localService.UpdateMute (mute, AgentID);
         }
 
         public void DeleteMute (UUID muteID, UUID AgentID)
         {
-            m_localService.DeleteMute (muteID, AgentID);
-            m_remoteService.DeleteMute (muteID, AgentID);
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (AgentID.ToString (), "FriendsServerURI");
+            if (serverURIs.Count > 0) //Remote user... or should be
+                m_remoteService.DeleteMute (muteID, AgentID);
+            else
+                m_localService.DeleteMute (muteID, AgentID);
         }
 
         public bool IsMuted (UUID AgentID, UUID PossibleMuteID)
         {
-            if (!m_localService.IsMuted (AgentID, PossibleMuteID))
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (AgentID.ToString (), "FriendsServerURI");
+            if (serverURIs.Count > 0) //Remote user... or should be
                 if (!m_remoteService.IsMuted (AgentID, PossibleMuteID))
                     return false;
-            return true;
+                else
+                    return true;
+            else
+                if (!m_localService.IsMuted (AgentID, PossibleMuteID))
+                    return false;
+                else
+                    return true;
         }
 
         #endregion

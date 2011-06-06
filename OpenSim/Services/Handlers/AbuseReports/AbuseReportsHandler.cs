@@ -43,7 +43,7 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenMetaverse;
 
 
-namespace OpenSim.Server.Handlers.AbuseReports
+namespace OpenSim.Services.Handlers.AbuseReports
 {
     public class AbuseReportsHandler : BaseStreamHandler
     {
