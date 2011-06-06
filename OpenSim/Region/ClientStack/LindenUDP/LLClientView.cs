@@ -5800,22 +5800,26 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if (OnChatFromClient != null)
             {
-                OSChatMessage args = new OSChatMessage();
+                OSChatMessage args = new OSChatMessage ();
                 args.Channel = channel;
                 args.From = fromName;
-                args.Message = Utils.BytesToString(message);
+                args.Message = Utils.BytesToString (message);
                 args.Type = (ChatTypeEnum)type;
                 args.Position = fromPos;
 
                 args.Scene = Scene;
                 args.Sender = this;
                 args.SenderUUID = this.AgentId;
-
-                ChatMessage handlerChatFromClient = OnChatFromClient;
-                if (handlerChatFromClient != null)
-                    handlerChatFromClient(this, args);
+                HandleChatFromClient (args);
             }
             return true;
+        }
+
+        public void HandleChatFromClient (OSChatMessage args)
+        {
+            ChatMessage handlerChatFromClient = OnChatFromClient;
+            if (handlerChatFromClient != null)
+                handlerChatFromClient (this, args);
         }
 
         private bool HandlerAvatarPropertiesUpdate(IClientAPI sender, Packet Pack)

@@ -141,7 +141,8 @@ namespace OpenSim.Region.Framework.Scenes
                 m_drawDistanceChangedTimer.Stop ();
             }
             catch { }
-            SignificantClientMovement (m_presence.ControllingClient);
+            if(m_presence != null)
+                SignificantClientMovement (m_presence.ControllingClient);
         }
 
         #endregion

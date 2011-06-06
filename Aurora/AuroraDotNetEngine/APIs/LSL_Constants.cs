@@ -631,5 +631,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         public static readonly LSLInteger BOT_FOLLOW_FLAG_NONE = 0;
         public static readonly LSLInteger BOT_FOLLOW_FLAG_INDEFINITELY = 1;
+
+        public static readonly LSLInteger BOT_FOLLOW_WALK = 0;
+        public static readonly LSLInteger BOT_FOLLOW_FLY = 1;
+        public static readonly LSLInteger BOT_FOLLOW_TELEPORT = 2;
+        public static readonly LSLInteger BOT_FOLLOW_WAIT = 3;
     }
 }

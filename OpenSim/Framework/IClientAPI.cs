@@ -1475,5 +1475,7 @@ namespace OpenSim.Framework
         void StopFlying (IEntity presence);
 
         void Reset();
+
+        void HandleChatFromClient (OSChatMessage args);
     }
 }

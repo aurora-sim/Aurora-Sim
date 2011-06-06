@@ -40,6 +40,7 @@ namespace Aurora.BotManager
         private List<TravelMode> m_listOfStates = new List<TravelMode> ();
         private object m_lock = new object ();
         private DateTime m_lastChangedPosition = DateTime.MinValue;
+        private DateTime m_waitingSince = DateTime.MinValue;
         /// <summary>
         /// Loop through the current positions over and over
         /// </summary>
@@ -78,6 +79,7 @@ namespace Aurora.BotManager
         {
             lock (m_lock)
             {
+                CurrentPos = 0;
                 m_listOfPositions.Clear ();
                 m_listOfStates.Clear ();
             }
@@ -98,9 +100,7 @@ namespace Aurora.BotManager
                 {
                     position = m_listOfPositions[CurrentPos];
                     state = m_listOfStates[CurrentPos];
-                    if (m_lastChangedPosition == DateTime.MinValue)
-                        m_lastChangedPosition = DateTime.Now;
-                    if (position.ApproxEquals (currentPos, closeToRange))
+                    if (state != TravelMode.Wait && position.ApproxEquals (currentPos, closeToRange))
                     {
                         //Its close to a position, go look for the next pos
                         //m_listOfPositions.RemoveAt (0);
@@ -111,8 +111,27 @@ namespace Aurora.BotManager
                     }
                     else
                     {
-                        if ((DateTime.Now - m_lastChangedPosition).Seconds > secondsBeforeForcedTeleport)
-                            needsToTeleportToPosition = true;
+                        if (state == TravelMode.Wait)
+                        {
+                            if (m_waitingSince == DateTime.MinValue)
+                                m_waitingSince = DateTime.Now;
+                            else
+                            {
+                                if ((DateTime.Now - m_waitingSince).Seconds > position.X)
+                                {
+                                    m_waitingSince = DateTime.MinValue;
+                                    CurrentPos++;
+                                    m_lastChangedPosition = DateTime.MinValue;
+                                    goto findNewTarget;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            m_lastChangedPosition = DateTime.Now;
+                            if ((DateTime.Now - m_lastChangedPosition).Seconds > secondsBeforeForcedTeleport)
+                                needsToTeleportToPosition = true;
+                        }
                     }
                     return true;
                 }

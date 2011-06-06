@@ -52,6 +52,7 @@ namespace Aurora.BotManager
         Walk,
         Fly,
         Teleport,
+        Wait,
         None
     };
 
@@ -2535,6 +2536,10 @@ namespace Aurora.BotManager
         }
 
         public void Reset ()
+        {
+        }
+
+        public void HandleChatFromClient (OSChatMessage args)
         {
         }
 

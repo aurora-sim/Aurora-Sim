@@ -149,6 +149,11 @@ namespace Aurora.BotManager
             return "";
         }
 
+        public LSL_Vector botGetWaitingTime (LSL_Integer waitTime)
+        {
+            return new LSL_Vector (waitTime, 0, 0);
+        }
+
         public void botPauseMovement (string bot)
         {
             ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botPauseMovement", m_host, "bot");
