@@ -51,7 +51,7 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace Aurora.Modules
 {
-    public class InterWorldCommunications : IService
+    public class InterWorldCommunications : IService, ICommunicationService
     {
         #region Declares
 
@@ -216,6 +216,40 @@ namespace Aurora.Modules
         public string GetOurIP ()
         {
             return "http://" + Utilities.GetExternalIp () + ":" + Registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (0).Port;
+        }
+
+        public GridRegion GetRegionForGrid (string regionName, string url)
+        {
+            bool found = Connections.Contains (url);
+            if (found)
+            {
+                //If we are already connected, the grid services are together, so we already know of the region if it exists, therefore, it does not exist
+                return null;
+            }
+            else
+            {
+                bool success = this.OutgoingPublicComms.AttemptConnection (url);
+                if (success)
+                {
+                    IGridService service = m_registry.RequestModuleInterface<IGridService> ();
+                    if (service != null)
+                        return service.GetRegionByName (UUID.Zero, regionName);
+                }
+            }
+            return null;
+        }
+
+        public OSDMap GetUrlsForUser (GridRegion region, UUID userID)
+        {
+            string host = userID.ToString ();
+            IGridRegistrationService module = Registry.RequestModuleInterface<IGridRegistrationService> ();
+            if (module != null)
+            {
+                module.RemoveUrlsForClient (host);
+                return module.GetUrlForRegisteringClient (host);
+            }
+
+            return null;
         }
     }
 

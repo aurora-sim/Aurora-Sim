@@ -96,7 +96,7 @@ namespace OpenSim.Services.MessagingService
                         if (clientCaps != null)
                         {
                             //Find the root agent
-                            IRegionClientCapsService regionClientCaps = clientCaps.GetRootCapsService();
+                            IRegionClientCapsService regionClientCaps = clientCaps.GetRootCapsService ();
                             if (regionClientCaps != null)
                             {
                                 OnlineFriends.Add (FriendToInform);
@@ -107,6 +107,22 @@ namespace OpenSim.Services.MessagingService
                             {
                                 //If they don't have a root agent, wtf happened?
                                 capsService.RemoveCAPS (clientCaps.AgentID);
+                            }
+                        }
+                        else
+                        {
+                            IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService> ();
+                            if (agentInfoService != null)
+                            {
+                                UserInfo friendinfo = agentInfoService.GetUserInfo (FriendToInform.ToString ());
+                                if (friendinfo != null && friendinfo.IsOnline)
+                                {
+                                    OnlineFriends.Add (FriendToInform);
+                                    //Post!
+                                    GridRegion r = gridService.GetRegionByUUID (UUID.Zero, friendinfo.CurrentRegionID);
+                                    if(r != null)
+                                        asyncPoster.Post (r.RegionHandle, SyncMessageHelper.AgentStatusChange (us, FriendToInform, isOnline));
+                                }
                             }
                         }
                     }

@@ -122,7 +122,7 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("FriendsServerURI");
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(), "FriendsServerURI");
                 foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
