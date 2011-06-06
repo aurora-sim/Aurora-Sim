@@ -11665,7 +11665,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             bool checkTerrain = true;
             for (float i = 0; i <= distance; i += 0.1f)
             {
-                posToCheck += (dir * (i / (float)distance));
+                posToCheck = startvector  + (dir * (i / (float)distance));
                 if (checkTerrain && channel[(int)(posToCheck.X + startvector.X), (int)(posToCheck.Y + startvector.Y)] < posToCheck.Z)
                 {
                     ContactResult result = new ContactResult();
@@ -11676,9 +11676,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     results.Add(result);
                     checkTerrain = false;
                 }
-                for(int presenceCount = 0; i < presences.Count; i++)
+                for (int presenceCount = 0; presenceCount < presences.Count; presenceCount++)
                 {
                     IScenePresence sp = presences[presenceCount];
+                    MainConsole.Instance.Output (posToCheck + ", " + sp.AbsolutePosition);
                     if (sp.AbsolutePosition.ApproxEquals(posToCheck, sp.PhysicsActor.Size.X * 2))
                     {
                         ContactResult result = new ContactResult();
@@ -11688,7 +11689,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         result.Pos = posToCheck;
                         results.Add(result);
                         presences.RemoveAt(presenceCount);
-                        i--; //Reset its position since we removed this one
+                        if(presenceCount > 0)
+                            presenceCount--; //Reset its position since we removed this one
                     }
                 }
             }
