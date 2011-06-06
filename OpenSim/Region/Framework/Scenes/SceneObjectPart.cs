@@ -3882,7 +3882,9 @@ namespace OpenSim.Region.Framework.Scenes
         {
             PostUpdateFlags = UpdateFlags;
             //If its not a terse update, we need to make sure to add the text, media, etc pieces on, otherwise the client will forget about them
-            if (!IsTerse(UpdateFlags))
+            if (!IsTerse(UpdateFlags) && m_parentGroup.RootPart.SitTargetAvatar.Count > 0)
+                UpdateFlags = PrimUpdateFlags.ForcedFullUpdate; //Force send full updates on sitting avatars if the update isn't a terse update
+            else if (!IsTerse(UpdateFlags))
             {
                 //If it is find best, we add the defaults
                 if (UpdateFlags == PrimUpdateFlags.FindBest)
