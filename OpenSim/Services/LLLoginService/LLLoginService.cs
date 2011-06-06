@@ -954,6 +954,11 @@ namespace OpenSim.Services.LLLoginService
 
                             regionName = parts[0];
                             string domainLocator = parts[1];
+
+                            //Try now that we removed the domain locator
+                            List<GridRegion> regions = m_GridService.GetRegionsByName (scopeID, regionName, 1);
+                            if ((regions == null) || (regions != null && regions.Count == 0))
+                                return regions[0];
                             ICommunicationService service = m_registry.RequestModuleInterface<ICommunicationService>();
                             if(service != null)
                             {

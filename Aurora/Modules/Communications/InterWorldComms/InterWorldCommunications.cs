@@ -162,6 +162,7 @@ namespace Aurora.Modules
                 m_allowUntrustedConnections = m_config.GetBoolean("AllowUntrustedConnections", m_allowUntrustedConnections);
                 m_untrustedConnectionsDefaultTrust = (ThreatLevel)Enum.Parse(typeof(ThreatLevel), m_config.GetString("UntrustedConnectionsDefaultTrust", m_untrustedConnectionsDefaultTrust.ToString()));
                 registry.RegisterModuleInterface<InterWorldCommunications>(this);
+                registry.StackModuleInterface<ICommunicationService> (this);
                 m_registry = registry;
             }
         }
@@ -228,6 +229,9 @@ namespace Aurora.Modules
             }
             else
             {
+                //Be user friendly, add the http:// if needed as well as the final /
+                url = (url.StartsWith ("http://") || url.StartsWith ("https://")) ? url : "http://" + url;
+                url = url.EndsWith ("/") ? url + "iwcconnection" : url + "/iwcconnection";
                 bool success = this.OutgoingPublicComms.AttemptConnection (url);
                 if (success)
                 {

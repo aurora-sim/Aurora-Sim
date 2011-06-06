@@ -136,6 +136,8 @@ namespace OpenSim.Services.Connectors
                         {
                             bool success = false;
                             Boolean.TryParse (replyData["Result"].ToString (), out success);
+                            if (replyData["Result"].ToString () == "Success")
+                                return true;
                             if(success)
                                 return success;
                         }
@@ -180,7 +182,9 @@ namespace OpenSim.Services.Connectors
                         if ((replyData != null) && replyData.ContainsKey("Result") && (replyData["Result"] != null))
                         {
                             bool success = false;
-                            Boolean.TryParse(replyData["Result"].ToString(), out success);
+                            Boolean.TryParse (replyData["Result"].ToString (), out success);
+                            if (replyData["Result"].ToString () == "Success")
+                                return true;
                             if(success)
                                 return success;
                         }

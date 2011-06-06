@@ -45,6 +45,7 @@ namespace Aurora.Modules
     {
         protected FriendsService m_localService;
         protected FriendsServicesConnector m_remoteService;
+        protected IRegistryCore m_registry;
         #region IService Members
 
         public string Name
@@ -68,6 +69,7 @@ namespace Aurora.Modules
             m_remoteService = new FriendsServicesConnector ();
             m_remoteService.Initialize(config, registry);
             registry.RegisterModuleInterface<IFriendsService> (this);
+            m_registry = registry;
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -96,6 +98,12 @@ namespace Aurora.Modules
 
         public bool StoreFriend (UUID PrincipalID, string Friend, int flags)
         {
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(), "FriendsServerURI");
+            if (serverURIs.Count > 0) //Remote user... or should be
+            {
+                if(m_remoteService.StoreFriend (PrincipalID, Friend, flags))
+                    return true;
+            }
             bool success = m_localService.StoreFriend (PrincipalID, Friend, flags);
             if (!success)
                 success = m_remoteService.StoreFriend (PrincipalID, Friend, flags);
@@ -104,6 +112,12 @@ namespace Aurora.Modules
 
         public bool Delete (UUID PrincipalID, string Friend)
         {
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (PrincipalID.ToString (), "FriendsServerURI");
+            if (serverURIs.Count > 0) //Remote user... or should be
+            {
+                if (m_remoteService.Delete (PrincipalID, Friend))
+                    return true;
+            }
             bool success = m_localService.Delete (PrincipalID, Friend);
             if (!success)
                 success = m_remoteService.Delete (PrincipalID, Friend);
