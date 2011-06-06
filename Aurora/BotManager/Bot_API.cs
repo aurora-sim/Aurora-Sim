@@ -140,12 +140,12 @@ namespace Aurora.BotManager
             get { return m_host.ParentEntity.Scene; }
         }
 
-        public string botCreateBot(string FirstName, string LastName, string appearanceToClone)
+        public string botCreateBot(string FirstName, string LastName, string appearanceToClone, LSL_Vector startPos)
         {
             ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botCreateBot", m_host, "bot");
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
             if (manager != null)
-                return manager.CreateAvatar(FirstName, LastName, m_host.ParentEntity.Scene, UUID.Parse(appearanceToClone), m_host.OwnerID).ToString();
+                return manager.CreateAvatar (FirstName, LastName, m_host.ParentEntity.Scene, UUID.Parse (appearanceToClone), m_host.OwnerID, new Vector3 ((float)startPos.x, (float)startPos.y, (float)startPos.z)).ToString ();
             return "";
         }
 

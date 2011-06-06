@@ -42,7 +42,7 @@ namespace Aurora.BotManager
     {
         LSL_Vector botGetWaitingTime (LSL_Integer waitTime);
         void botSetMap(string keyOfBot, LSL_List positions, LSL_List movementType, LSL_Integer flags);
-        string botCreateBot (string FirstName, string LastName, string appearanceToClone);
+        string botCreateBot (string FirstName, string LastName, string appearanceToClone, LSL_Vector startPos);
         void botRemoveBot (string bot);
         void botPauseMovement (string bot);
         void botResumeMovement (string bot);

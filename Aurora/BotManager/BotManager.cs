@@ -117,7 +117,7 @@ namespace Aurora.BotManager
         /// <param name="LastName"></param>
         /// <param name="cloneAppearanceFrom">UUID of the avatar whos appearance will be copied to give this bot an appearance</param>
         /// <returns>ID of the bot</returns>
-        public UUID CreateAvatar (string FirstName, string LastName, IScene s, UUID cloneAppearanceFrom, UUID creatorID)
+        public UUID CreateAvatar (string FirstName, string LastName, IScene s, UUID cloneAppearanceFrom, UUID creatorID, Vector3 startPos)
         {
             Scene scene = (Scene)s;
             AgentCircuitData m_aCircuitData = new AgentCircuitData ();
@@ -158,7 +158,8 @@ namespace Aurora.BotManager
             m_character.Initialize ();
             IScenePresence SP = scene.GetScenePresence (m_character.AgentId);
             SP.MakeRootAgent (m_character.StartPos, false);
-
+            //Move them
+            SP.Teleport (startPos);
 
             IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule> ();
             appearance.Appearance.SetAppearance (appearance.Appearance.Texture, appearance.Appearance.VisualParams);
