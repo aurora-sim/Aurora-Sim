@@ -56,6 +56,7 @@ namespace OpenSim.Services.CapsService
         private IGridService m_gridService;
         private List<MapBlockData> m_mapLayer = new List<MapBlockData>();
         private bool m_allowCapsMessage = true;
+        private const int m_mapDistance = 100;
 
         public void RegisterCaps(IRegionClientCapsService service)
         {
@@ -96,10 +97,10 @@ namespace OpenSim.Services.CapsService
         public string MapLayerRequest(string request, string path, string param,
                                       OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID agentID)
         {
-            int bottom = (m_service.RegionY / Constants.RegionSize) - 100;
-            int top = (int)(m_service.RegionY / Constants.RegionSize) + 100;
-            int left = (int)(m_service.RegionX / Constants.RegionSize) - 100;
-            int right = (int)(m_service.RegionX / Constants.RegionSize) + 100;
+            int bottom = (m_service.RegionY / Constants.RegionSize) - m_mapDistance;
+            int top = (int)(m_service.RegionY / Constants.RegionSize) + m_mapDistance;
+            int left = (int)(m_service.RegionX / Constants.RegionSize) - m_mapDistance;
+            int right = (int)(m_service.RegionX / Constants.RegionSize) + m_mapDistance;
 
             OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 

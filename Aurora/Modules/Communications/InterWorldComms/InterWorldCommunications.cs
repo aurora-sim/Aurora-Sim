@@ -245,6 +245,8 @@ namespace Aurora.Modules
 
         public OSDMap GetUrlsForUser (GridRegion region, UUID userID)
         {
+            if (((Aurora.Framework.RegionFlags)region.Flags & Aurora.Framework.RegionFlags.Foreign) == Framework.RegionFlags.Foreign)
+                return null;
             string host = userID.ToString ();
             IGridRegistrationService module = Registry.RequestModuleInterface<IGridRegistrationService> ();
             if (module != null)

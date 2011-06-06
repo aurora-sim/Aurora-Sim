@@ -441,7 +441,9 @@ namespace OpenSim.Services.MessagingService
                 ICommunicationService commsService = m_registry.RequestModuleInterface<ICommunicationService>();
                 if (commsService != null)
                 {
-                    circuitData.OtherInformation["UserUrls"] = commsService.GetUrlsForUser(neighbor, circuitData.AgentID);
+                    OSDMap urls = commsService.GetUrlsForUser (neighbor, circuitData.AgentID);
+                    if (urls != null)
+                        circuitData.OtherInformation["UserUrls"] = urls;
                 }
 
                 bool regionAccepted = SimulationService.CreateAgent(neighbor, ref circuitData,
