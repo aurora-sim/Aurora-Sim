@@ -282,7 +282,7 @@ namespace Aurora.BotManager
             {
                 walkTo(destination);
                 State = BotState.Walking;
-                lastFlying = true;
+                lastFlying = false;
             }
         }
 

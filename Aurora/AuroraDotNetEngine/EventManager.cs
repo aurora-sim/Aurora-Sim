@@ -228,7 +228,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             string functionName = "touch_start";
-            object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
+            object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count - 1) };
 
             foreach (ScriptData ID in datas)
             {
@@ -267,7 +267,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             string functionName = "touch";
-            object[] param = new Object[] { new LSL_Types.LSLInteger(1) };
+            object[] param = new Object[] { new LSL_Types.LSLInteger (det.Count - 1) };
 
             foreach (ScriptData ID in datas)
             {
@@ -303,7 +303,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return; 
             
             string functionName = "touch_end";
-            object[] param = new Object[] { new LSL_Types.LSLInteger(1) };
+            object[] param = new Object[] { new LSL_Types.LSLInteger (det.Count - 1) };
 
             foreach (ScriptData ID in datas)
             {
@@ -369,7 +369,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         return;
                 }
                 string functionName = "collision_start";
-                object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
+                object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count - 1) };
 
                 foreach (ScriptData ID in datas)
                 {
@@ -404,7 +404,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         return;
                 }
                 string functionName = "collision";
-                object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
+                object[] param = new Object[] { new LSL_Types.LSLInteger (det.Count - 1) };
 
                 foreach (ScriptData ID in datas)
                 {
@@ -439,7 +439,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         return;
                 }
                 string functionName = "collision_end";
-                object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
+                object[] param = new Object[] { new LSL_Types.LSLInteger (det.Count - 1) };
 
                 foreach (ScriptData ID in datas)
                 {

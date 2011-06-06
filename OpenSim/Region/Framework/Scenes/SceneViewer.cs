@@ -74,6 +74,7 @@ namespace OpenSim.Region.Framework.Scenes
         private Vector3 m_lastUpdatePos;
         private int m_numberOfLoops = 0;
         private Timer m_drawDistanceChangedTimer;
+        private object m_drawDistanceTimerLock = new object ();
         private const int NUMBER_OF_LOOPS_TO_WAIT = 30;
 
         private const float PresenceSendPercentage = 0.60f;
@@ -118,12 +119,15 @@ namespace OpenSim.Region.Framework.Scenes
                 //Draw Distance chagned, force a cull check
                 m_forceCullCheck = true;
                 //Don't do this immediately as the viewer may keep changing the draw distance
-                if (m_drawDistanceChangedTimer != null)
-                    m_drawDistanceChangedTimer.Stop (); //Stop any old timers
-                m_drawDistanceChangedTimer = new Timer (); //Fire this again in 3 seconds so that we do send prims to children agents
-                m_drawDistanceChangedTimer.Interval = 3000;
-                m_drawDistanceChangedTimer.Elapsed += m_drawDistanceChangedTimer_Elapsed;
-                m_drawDistanceChangedTimer.Start ();
+                lock (m_drawDistanceTimerLock)
+                {
+                    if (m_drawDistanceChangedTimer != null)
+                        m_drawDistanceChangedTimer.Stop (); //Stop any old timers
+                    m_drawDistanceChangedTimer = new Timer (); //Fire this again in 3 seconds so that we do send prims to children agents
+                    m_drawDistanceChangedTimer.Interval = 3000;
+                    m_drawDistanceChangedTimer.Elapsed += m_drawDistanceChangedTimer_Elapsed;
+                    m_drawDistanceChangedTimer.Start ();
+                }
                 //SignificantClientMovement (m_presence.ControllingClient);
             }
             else if (FunctionName == "SignficantCameraMovement")
@@ -136,11 +140,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         void m_drawDistanceChangedTimer_Elapsed (object sender, ElapsedEventArgs e)
         {
-            try
-            {
+            lock(m_drawDistanceTimerLock)
                 m_drawDistanceChangedTimer.Stop ();
-            }
-            catch { }
             if(m_presence != null)
                 SignificantClientMovement (m_presence.ControllingClient);
         }
