@@ -11,7 +11,7 @@ bool resetNext = false;
 public void state_entry()
 {
     userToDuplicate = llGetOwner();
-    botID = botCreateBot(first, last, userToDuplicate);
+    botID = botCreateBot(first, last, userToDuplicate, llGetPos());
     botFollowAvatar(botID, llGetOwner(), 2.5, 2.5);
 
     IScenePresence SP = Scene.GetScenePresence(UUID.Parse(botID));

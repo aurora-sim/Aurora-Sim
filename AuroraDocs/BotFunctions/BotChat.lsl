@@ -18,7 +18,8 @@ default
         //On startup, we'll generate a new bot, then make it move when we touch it
         //Create the bot with the given first/last name and the user whose appearance it will duplicate
         userToDuplicate = llGetOwner();
-        botID = botCreateBot(first, last, userToDuplicate);
+		vector startPos = llGetPos();
+        botID = botCreateBot(first, last, userToDuplicate, startPos);
     }
     touch_start(integer number)
     {
