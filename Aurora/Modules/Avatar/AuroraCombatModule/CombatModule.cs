@@ -419,7 +419,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                     }
                 }
 
-                m_SP.Scene.AuroraEventManager.FireGenericEventHandler ("OnAvatarDeath", null);
+                m_SP.Scene.AuroraEventManager.FireGenericEventHandler ("OnAvatarDeath", m_SP);
             }
 
             #endregion

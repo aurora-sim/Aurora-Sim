@@ -11679,8 +11679,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 for (int presenceCount = 0; presenceCount < presences.Count; presenceCount++)
                 {
                     IScenePresence sp = presences[presenceCount];
-                    MainConsole.Instance.Output (posToCheck + ", " + sp.AbsolutePosition);
-                    if (sp.AbsolutePosition.ApproxEquals(posToCheck, sp.PhysicsActor.Size.X * 2))
+                    if (sp.AbsolutePosition.ApproxEquals(posToCheck, sp.PhysicsActor.Size.X))
                     {
                         ContactResult result = new ContactResult();
                         result.ConsumerID = sp.LocalId;
