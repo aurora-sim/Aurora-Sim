@@ -234,7 +234,9 @@ namespace Aurora.Modules
         public List<GridRegion> GetNeighbors (GridRegion r)
         {
             List<GridRegion> neighbors = m_localService.GetNeighbors (r);
-            neighbors.AddRange (m_remoteService.GetNeighbors (r));
+            List<GridRegion> remoteNeighbors = m_remoteService.GetNeighbors (r);
+            UpdateGridRegionsForIWC(ref remoteNeighbors);
+            neighbors.AddRange (remoteNeighbors);
             return neighbors;
         }
 
