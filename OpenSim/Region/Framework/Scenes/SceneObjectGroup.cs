@@ -363,10 +363,13 @@ namespace OpenSim.Region.Framework.Scenes
 
         public List<ISceneChildEntity> ChildrenEntities ()
         {
-            return new List<ISceneChildEntity> (m_partsList.ConvertAll<ISceneChildEntity> (delegate (SceneObjectPart part)
-                {
-                    return part;
-                }));
+            lock (m_partsList)
+            {
+                return new List<ISceneChildEntity> (m_partsList.ConvertAll<ISceneChildEntity> (delegate (SceneObjectPart part)
+                    {
+                        return part;
+                    }));
+            }
         }
 
         /// <value>

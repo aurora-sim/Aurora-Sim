@@ -329,6 +329,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         void EventManager_OnSignificantClientMovement(IClientAPI remote_client)
         {
             IScenePresence presence = m_scene.GetScenePresence (remote_client.AgentId);
+            if (presence == null)
+                return;
             if (Vector3.DistanceSquared (presence.AbsolutePosition, m_previousCheckedPosition) > 16 * 16)
             {
                 m_previousCheckedPosition = presence.AbsolutePosition;
