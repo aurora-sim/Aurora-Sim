@@ -36,6 +36,7 @@ using Aurora.Framework;
 using Aurora.Simulation.Base;
 using Aurora.Services.DataService;
 using OpenSim.Framework;
+using OpenSim.Services.Interfaces;
 using OpenSim.Services.AvatarService;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 

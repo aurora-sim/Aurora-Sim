@@ -32,7 +32,7 @@ using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework;
 
-namespace OpenSim.Server.Handlers.AbuseReports
+namespace OpenSim.Services.Handlers.AbuseReports
 {
     public class AbuseReportsConnector : IService
     {
