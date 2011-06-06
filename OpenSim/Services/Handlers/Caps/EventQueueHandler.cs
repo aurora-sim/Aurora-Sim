@@ -128,7 +128,12 @@ namespace OpenSim.Services
             m_eventQueueService = handler;
             m_capsService = capsService;
             m_SessionID = SessionID;
-            ulong.TryParse (SessionID, out m_ourRegionHandle);
+            if (!ulong.TryParse (SessionID, out m_ourRegionHandle))
+            {
+                string[] split = SessionID.Split ('|');
+                if (split.Length == 2)
+                    ulong.TryParse (split[1], out m_ourRegionHandle);
+            }
             m_registry = registry;
         }
 

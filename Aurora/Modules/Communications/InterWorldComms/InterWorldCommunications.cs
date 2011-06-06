@@ -252,7 +252,8 @@ namespace Aurora.Modules
             if (module != null)
             {
                 module.RemoveUrlsForClient (host);
-                return module.GetUrlForRegisteringClient (host);
+                module.RemoveUrlsForClient (host + "|" + region.RegionHandle);
+                return module.GetUrlForRegisteringClient (host + "|" + region.RegionHandle);
             }
 
             return null;
