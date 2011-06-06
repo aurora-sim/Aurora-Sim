@@ -261,6 +261,46 @@ namespace OpenSim.Services.ConfigurationService
             return FindValueOf(key);
         }
 
+        public virtual List<string> FindValueOf (string userID, string key, bool returnAll)
+        {
+            if (!returnAll)
+                return FindValueOf (userID, key);
+
+            RemoveDupsList urls = new RemoveDupsList ();
+            if (m_knownUsers.ContainsKey (userID))
+            {
+                urls.AddRange (FindValueOfFromOSDMap (key, m_knownUsers[userID]));
+            }
+            if (m_allConfigs.ContainsKey (userID))
+            {
+                urls.AddRange (FindValueOfFromOSDMap (key, m_allConfigs[userID]));
+            }
+            foreach (string name in m_allConfigs.Keys)
+            {
+                if (m_allConfigs[name].ContainsKey (key) && m_allConfigs[name][key] != "")
+                {
+                    urls.AddRange (FindValueOfFromOSDMap (key, m_allConfigs[name]));
+                }
+            }
+            urls.AddRange(FindValueOf (key));
+
+            return urls.Urls;
+        }
+
+        private class RemoveDupsList
+        {
+            public List<string> Urls = new List<string> ();
+
+            public void AddRange (IEnumerable<string> e)
+            {
+                foreach (string ee in e)
+                {
+                    if (!Urls.Contains (ee))
+                        Urls.Add (ee);
+                }
+            }
+        }
+
         public virtual List<string> FindValueOf(string userID, string regionID, string key)
         {
             if (m_knownUsers.ContainsKey(userID))
