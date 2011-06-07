@@ -11664,7 +11664,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             Vector3 posToCheck = startvector;
             ITerrainChannel channel = World.RequestModuleInterface<ITerrainChannel>();
             List<IScenePresence> presences = new List<IScenePresence>(World.Entities.GetPresences(startvector, (float)distance));
-            bool checkTerrain = true;
+            bool checkTerrain = !((rejectTypes & ScriptBaseClass.RC_REJECT_LAND) == ScriptBaseClass.RC_REJECT_LAND);
+            bool checkAgents = !((rejectTypes & ScriptBaseClass.RC_REJECT_AGENTS) == ScriptBaseClass.RC_REJECT_AGENTS);
+            bool checkNonPhysical = !((rejectTypes & ScriptBaseClass.RC_REJECT_NONPHYSICAL) == ScriptBaseClass.RC_REJECT_NONPHYSICAL);
+            bool checkPhysical = !((rejectTypes & ScriptBaseClass.RC_REJECT_PHYSICAL) == ScriptBaseClass.RC_REJECT_PHYSICAL);
             for (float i = 0; i <= distance; i += 0.1f)
             {
                 posToCheck = startvector  + (dir * (i / (float)distance));
@@ -11678,20 +11681,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     results.Add(result);
                     checkTerrain = false;
                 }
-                for (int presenceCount = 0; presenceCount < presences.Count; presenceCount++)
+                if (checkAgents)
                 {
-                    IScenePresence sp = presences[presenceCount];
-                    if (sp.AbsolutePosition.ApproxEquals(posToCheck, sp.PhysicsActor.Size.X))
+                    for (int presenceCount = 0; presenceCount < presences.Count; presenceCount++)
                     {
-                        ContactResult result = new ContactResult();
-                        result.ConsumerID = sp.LocalId;
-                        result.Depth = 0;
-                        result.Normal = Vector3.Zero;
-                        result.Pos = posToCheck;
-                        results.Add(result);
-                        presences.RemoveAt(presenceCount);
-                        if(presenceCount > 0)
-                            presenceCount--; //Reset its position since we removed this one
+                        IScenePresence sp = presences[presenceCount];
+                        if (sp.AbsolutePosition.ApproxEquals (posToCheck, sp.PhysicsActor.Size.X))
+                        {
+                            ContactResult result = new ContactResult ();
+                            result.ConsumerID = sp.LocalId;
+                            result.Depth = 0;
+                            result.Normal = Vector3.Zero;
+                            result.Pos = posToCheck;
+                            results.Add (result);
+                            presences.RemoveAt (presenceCount);
+                            if (presenceCount > 0)
+                                presenceCount--; //Reset its position since we removed this one
+                        }
                     }
                 }
             }
@@ -11718,6 +11724,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 /*if (detectPhantom == 0 && intersection.obj is ISceneChildEntity &&
                     ((ISceneChildEntity)intersection.obj).PhysActor == null)
                     continue;*/ //Can't do this ATM, physics engine knows only of non phantom objects
+
+                if (((ISceneChildEntity)entity).PhysActor != null && ((ISceneChildEntity)entity).PhysActor.IsPhysical)
+                    if (!checkPhysical)
+                        continue;
+                else
+                    if (!checkNonPhysical)
+                        continue;
 
                 if ((dataFlags & ScriptBaseClass.RC_GET_ROOT_KEY) == ScriptBaseClass.RC_GET_ROOT_KEY && entity is ISceneChildEntity)
                     list.Add(((ISceneChildEntity)entity).ParentEntity.UUID);

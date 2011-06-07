@@ -141,6 +141,8 @@ namespace Aurora.Modules
         {
             if (userAccount == null)
                 return userAccount;
+            if (userAccount.Name.Contains ("@"))
+                return userAccount;//If it already has this added, don't mess with it
             userAccount.Name = userAccount.FirstName + " " + userAccount.LastName + "@" + userAccount.GenericData["GridURL"];
             return userAccount;
         }

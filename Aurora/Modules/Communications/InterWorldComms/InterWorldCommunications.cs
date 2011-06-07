@@ -422,7 +422,7 @@ namespace Aurora.Modules
                     IWC.IsGettingUrlsForIWCConnection = false;
                     result["OurIdentifier"] = IWC.GetOurIP ();
                     m_log.Warn (theirIdent + " successfully connected to us");
-                    IWC.AddNewConnectionFromRequest (args["OurIdentifier"], args);
+                    IWC.AddNewConnectionFromRequest (theirIdent, args);
                     result["Success"] = true;
                 }
             }
