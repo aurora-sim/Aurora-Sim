@@ -153,7 +153,7 @@ namespace OpenSim.Region.CoreModules
                     m_zombieAgents.Remove (client.AgentId);
                     return; //They are a known zombie, just clear them out and go on with life!
                 }
-                client.Scene.RequestModuleInterface<ISyncMessagePosterService>().Get(SyncMessageHelper.AgentLoggedOut(client.AgentId, client.Scene.RegionInfo.RegionHandle), client.Scene.RegionInfo.RegionHandle);
+                client.Scene.RequestModuleInterface<ISyncMessagePosterService> ().Get (SyncMessageHelper.AgentLoggedOut (client.AgentId, client.Scene.RegionInfo.RegionHandle), client.AgentId, client.Scene.RegionInfo.RegionHandle);
             }
         }
     }

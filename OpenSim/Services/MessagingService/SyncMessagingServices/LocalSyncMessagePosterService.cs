@@ -35,6 +35,7 @@ using Aurora.Framework;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using Nini.Config;
+using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.MessagingService
@@ -73,9 +74,9 @@ namespace OpenSim.Services.MessagingService
             m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(request);
         }
 
-        public OSDMap Get(OSDMap request, ulong RegionHandle)
+        public OSDMap Get (OSDMap request, UUID userID, ulong RegionHandle)
         {
-            return m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(request);
+            return m_registry.RequestModuleInterface<IAsyncMessageRecievedService> ().FireMessageReceived (request);
         }
 
         private OSDMap CreateWebRequest(OSDMap request)

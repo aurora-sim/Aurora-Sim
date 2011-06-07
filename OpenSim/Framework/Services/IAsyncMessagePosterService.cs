@@ -55,7 +55,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        OSDMap Get(OSDMap request, ulong RegionHandle);
+        OSDMap Get(OSDMap request, UUID userID, ulong RegionHandle);
     }
 
     public delegate OSDMap MessageReceived(OSDMap message);

@@ -307,7 +307,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     //  messages if they need to be called and deals with the callback
                     OSDMap map = syncPoster.Get(SyncMessageHelper.TeleportAgent((int)sp.DrawDistance,
                         agentCircuit, agent, teleportFlags, finalDestination, sp.Scene.RegionInfo.RegionHandle), 
-                        sp.Scene.RegionInfo.RegionHandle);
+                        sp.UUID, sp.Scene.RegionInfo.RegionHandle);
                     bool result = false;
                     if(map != null)
                         result = map["Success"].AsBoolean();
@@ -593,7 +593,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         {
                             OSDMap map = syncPoster.Get(SyncMessageHelper.CrossAgent(crossingRegion, pos,
                                 agent.Velocity, agentCircuit, cAgent, agent.Scene.RegionInfo.RegionHandle),
-                                agent.Scene.RegionInfo.RegionHandle);
+                                agent.UUID, agent.Scene.RegionInfo.RegionHandle);
                             bool result = false;
                             if (map != null)
                                 result = map["Success"].AsBoolean();

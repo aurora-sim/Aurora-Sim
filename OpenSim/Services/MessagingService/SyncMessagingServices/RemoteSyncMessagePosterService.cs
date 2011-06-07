@@ -35,6 +35,7 @@ using Aurora.Framework;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using Nini.Config;
+using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.MessagingService
@@ -80,11 +81,11 @@ namespace OpenSim.Services.MessagingService
             }
         }
 
-        public OSDMap Get(OSDMap request, ulong RegionHandle)
+        public OSDMap Get (OSDMap request, UUID userID, ulong RegionHandle)
         {
             OSDMap retval = null;
             OSDMap message = CreateWebRequest(request);
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(RegionHandle.ToString(), "MessagingServerURI");
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(userID.ToString(), RegionHandle.ToString(), "MessagingServerURI");
             foreach (string host in serverURIs)
             {
                 retval = WebUtils.PostToService (host, message, true, false);
