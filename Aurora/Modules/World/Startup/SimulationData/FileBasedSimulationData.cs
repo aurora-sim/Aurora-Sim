@@ -77,6 +77,7 @@ namespace Aurora.Modules.FileBasedSimulationData
         protected bool m_keepOldSave = true;
         protected bool m_oldSaveHasBeenSaved = false;
         protected string m_oldSaveDirectory = "Backups";
+        protected string m_saveDirectory = "";
         protected string m_loadDirectory = "";
         protected bool m_requiresSave = true;
         protected bool m_hasShownFileBasedWarning = false;
@@ -114,6 +115,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                 m_keepOldSave = config.GetBoolean ("SavePreviousBackup", m_keepOldSave);
                 m_oldSaveDirectory = config.GetString ("PreviousBackupDirectory", m_oldSaveDirectory);
                 m_loadDirectory = config.GetString ("LoadBackupDirectory", m_loadDirectory);
+                m_saveDirectory = config.GetString ("SaveBackupDirectory", m_saveDirectory);
                 m_saveBackupChanges = config.GetBoolean ("SaveTimedPreviousBackup", m_keepOldSave);
                 m_timeBetweenBackupSaves = config.GetInt ("TimeBetweenBackupSaves", m_timeBetweenBackupSaves);
             }
@@ -150,7 +152,7 @@ namespace Aurora.Modules.FileBasedSimulationData
             {
                 m_saveTimer.Stop ();
                 m_requiresSave = false;
-                SaveBackup ("");
+                SaveBackup (m_saveDirectory + "/");
                 m_saveTimer.Start (); //Restart it as we just did a backup
             }
             return null;
@@ -166,7 +168,7 @@ namespace Aurora.Modules.FileBasedSimulationData
             if (m_requiresSave)
             {
                 m_saveTimer.Stop ();
-                SaveBackup ("");
+                SaveBackup (m_saveDirectory + "/");
                 m_requiresSave = false;
                 m_saveTimer.Start (); //Restart it as we just did a backup
             }
@@ -481,7 +483,7 @@ More configuration options and info can be found in the Configuration/Data/FileB
         public virtual void Shutdown ()
         {
             //The sim is shutting down, we need to save one last backup
-            SaveBackup ("");
+            SaveBackup (m_saveDirectory + "/");
         }
 
         public virtual void Tainted ()

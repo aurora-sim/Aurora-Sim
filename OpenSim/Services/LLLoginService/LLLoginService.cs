@@ -834,7 +834,7 @@ namespace OpenSim.Services.LLLoginService
 
                 return region;
             }
-            else if (startLocation.Equals("last"))
+            else if (startLocation.Equals ("last"))
             {
                 tpFlags |= TeleportFlags.ViaLandmark;
                 // logging into last visited region
@@ -845,9 +845,9 @@ namespace OpenSim.Services.LLLoginService
 
                 GridRegion region = null;
 
-                if (pinfo.CurrentRegionID.Equals(UUID.Zero) || (region = m_GridService.GetRegionByUUID(scopeID, pinfo.CurrentRegionID)) == null)
+                if (pinfo.CurrentRegionID.Equals (UUID.Zero) || (region = m_GridService.GetRegionByUUID (scopeID, pinfo.CurrentRegionID)) == null)
                 {
-                    List<GridRegion> defaults = m_GridService.GetDefaultRegions(scopeID);
+                    List<GridRegion> defaults = m_GridService.GetDefaultRegions (scopeID);
                     if (defaults != null && defaults.Count > 0)
                     {
                         region = defaults[0];
@@ -855,7 +855,7 @@ namespace OpenSim.Services.LLLoginService
                     }
                     else
                     {
-                        defaults = m_GridService.GetFallbackRegions(scopeID, 0, 0);
+                        defaults = m_GridService.GetFallbackRegions (scopeID, 0, 0);
                         if (defaults != null && defaults.Count > 0)
                         {
                             region = defaults[0];
@@ -863,7 +863,7 @@ namespace OpenSim.Services.LLLoginService
                         }
                         else
                         {
-                            defaults = m_GridService.GetSafeRegions(scopeID, 0, 0);
+                            defaults = m_GridService.GetSafeRegions (scopeID, 0, 0);
                             if (defaults != null && defaults.Count > 0)
                             {
                                 region = defaults[0];
@@ -886,29 +886,29 @@ namespace OpenSim.Services.LLLoginService
                 // free uri form
                 // e.g. New Moon&135&46  New Moon@osgrid.org:8002&153&34
                 where = "url";
-                Regex reURI = new Regex(@"^uri:(?<region>[^&]+)&(?<x>\d+)&(?<y>\d+)&(?<z>\d+)$");
-                Match uriMatch = reURI.Match(startLocation);
+                Regex reURI = new Regex (@"^uri:(?<region>[^&]+)&(?<x>\d+)&(?<y>\d+)&(?<z>\d+)$");
+                Match uriMatch = reURI.Match (startLocation);
                 if (uriMatch == null)
                 {
-                    m_log.InfoFormat("[LLLOGIN SERVICE]: Got Custom Login URI {0}, but can't process it", startLocation);
+                    m_log.InfoFormat ("[LLLOGIN SERVICE]: Got Custom Login URI {0}, but can't process it", startLocation);
                     return null;
                 }
                 else
                 {
-                    position = new Vector3(float.Parse(uriMatch.Groups["x"].Value, Culture.NumberFormatInfo),
-                                           float.Parse(uriMatch.Groups["y"].Value, Culture.NumberFormatInfo),
-                                           float.Parse(uriMatch.Groups["z"].Value, Culture.NumberFormatInfo));
+                    position = new Vector3 (float.Parse (uriMatch.Groups["x"].Value, Culture.NumberFormatInfo),
+                                           float.Parse (uriMatch.Groups["y"].Value, Culture.NumberFormatInfo),
+                                           float.Parse (uriMatch.Groups["z"].Value, Culture.NumberFormatInfo));
 
-                    string regionName = uriMatch.Groups["region"].ToString();
+                    string regionName = uriMatch.Groups["region"].ToString ();
                     if (regionName != null)
                     {
-                        if (!regionName.Contains("@"))
+                        if (!regionName.Contains ("@"))
                         {
-                            List<GridRegion> regions = m_GridService.GetRegionsByName(scopeID, regionName, 1);
+                            List<GridRegion> regions = m_GridService.GetRegionsByName (scopeID, regionName, 1);
                             if ((regions == null) || (regions != null && regions.Count == 0))
                             {
-                                m_log.InfoFormat("[LLLOGIN SERVICE]: Got Custom Login URI {0}, can't locate region {1}. Trying defaults.", startLocation, regionName);
-                                regions = m_GridService.GetDefaultRegions(scopeID);
+                                m_log.InfoFormat ("[LLLOGIN SERVICE]: Got Custom Login URI {0}, can't locate region {1}. Trying defaults.", startLocation, regionName);
+                                regions = m_GridService.GetDefaultRegions (scopeID);
                                 if (regions != null && regions.Count > 0)
                                 {
                                     where = "safe";
@@ -916,7 +916,7 @@ namespace OpenSim.Services.LLLoginService
                                 }
                                 else
                                 {
-                                    List<GridRegion> fallbacks = m_GridService.GetFallbackRegions(account.ScopeID, 0, 0);
+                                    List<GridRegion> fallbacks = m_GridService.GetFallbackRegions (account.ScopeID, 0, 0);
                                     if (fallbacks != null && fallbacks.Count > 0)
                                     {
                                         where = "safe";
@@ -925,7 +925,7 @@ namespace OpenSim.Services.LLLoginService
                                     else
                                     {
                                         //Try to find any safe region
-                                        List<GridRegion> safeRegions = m_GridService.GetSafeRegions(account.ScopeID, 0, 0);
+                                        List<GridRegion> safeRegions = m_GridService.GetSafeRegions (account.ScopeID, 0, 0);
                                         if (safeRegions != null && safeRegions.Count > 0)
                                         {
                                             where = "safe";
@@ -933,7 +933,7 @@ namespace OpenSim.Services.LLLoginService
                                         }
                                         else
                                         {
-                                            m_log.InfoFormat("[LLLOGIN SERVICE]: Got Custom Login URI {0}, Grid does not have any available regions.", startLocation);
+                                            m_log.InfoFormat ("[LLLOGIN SERVICE]: Got Custom Login URI {0}, Grid does not have any available regions.", startLocation);
                                             return null;
                                         }
                                     }
@@ -944,10 +944,10 @@ namespace OpenSim.Services.LLLoginService
                         else
                         {
                             //This is so that you can login to other grids via IWC (or HG), example"RegionTest@testingserver.com:8002". All this really needs to do is inform the other grid that we have a user who wants to connect. IWC allows users to login by default to other regions (without the host names), but if one is provided and we don't have a link, we need to create one here.
-                            string[] parts = regionName.Split(new char[] { '@' });
+                            string[] parts = regionName.Split (new char[] { '@' });
                             if (parts.Length < 2)
                             {
-                                m_log.InfoFormat("[LLLOGIN SERVICE]: Got Custom Login URI {0}, can't locate region {1}", startLocation, regionName);
+                                m_log.InfoFormat ("[LLLOGIN SERVICE]: Got Custom Login URI {0}, can't locate region {1}", startLocation, regionName);
                                 return null;
                             }
                             // Valid specification of a remote grid
@@ -959,47 +959,47 @@ namespace OpenSim.Services.LLLoginService
                             GridRegion region = m_GridService.GetRegionByName (scopeID, regionName);
                             if (region != null && region.RegionName == regionName)//Make sure the region name is right too... it could just be a similar name
                                 return region;
-                            ICommunicationService service = m_registry.RequestModuleInterface<ICommunicationService>();
-                            if(service != null)
+                            ICommunicationService service = m_registry.RequestModuleInterface<ICommunicationService> ();
+                            if (service != null)
                             {
-                                region = service.GetRegionForGrid(regionName, domainLocator);
+                                region = service.GetRegionForGrid (regionName, domainLocator);
 
                                 if (region != null)
                                     return region;
                             }
                         }
                     }
-                    List<GridRegion> defaults = m_GridService.GetDefaultRegions(scopeID);
-                        if (defaults != null && defaults.Count > 0)
+                    List<GridRegion> defaults = m_GridService.GetDefaultRegions (scopeID);
+                    if (defaults != null && defaults.Count > 0)
+                    {
+                        where = "safe";
+                        return defaults[0];
+                    }
+                    else
+                    {
+                        List<GridRegion> fallbacks = m_GridService.GetFallbackRegions (account.ScopeID, 0, 0);
+                        if (fallbacks != null && fallbacks.Count > 0)
                         {
                             where = "safe";
-                            return defaults[0];
+                            return fallbacks[0];
                         }
                         else
                         {
-                            List<GridRegion> fallbacks = m_GridService.GetFallbackRegions(account.ScopeID, 0, 0);
-                            if (fallbacks != null && fallbacks.Count > 0)
+                            //Try to find any safe region
+                            List<GridRegion> safeRegions = m_GridService.GetSafeRegions (account.ScopeID, 0, 0);
+                            if (safeRegions != null && safeRegions.Count > 0)
                             {
                                 where = "safe";
-                                return fallbacks[0];
+                                return safeRegions[0];
                             }
                             else
                             {
-                                //Try to find any safe region
-                                List<GridRegion> safeRegions = m_GridService.GetSafeRegions(account.ScopeID, 0, 0);
-                                if (safeRegions != null && safeRegions.Count > 0)
-                                {
-                                    where = "safe";
-                                    return safeRegions[0];
-                                }
-                                else
-                                {
-                                    m_log.InfoFormat("[LLLOGIN SERVICE]: Got Custom Login URI {0}, Grid does not have any available regions.", startLocation);
-                                    return null;
-                                }
+                                m_log.InfoFormat ("[LLLOGIN SERVICE]: Got Custom Login URI {0}, Grid does not have any available regions.", startLocation);
+                                return null;
                             }
                         }
                     }
+                }
             }
         }
 
