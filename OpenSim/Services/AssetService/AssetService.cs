@@ -51,6 +51,11 @@ namespace OpenSim.Services.AssetService
             get { return GetType().Name; }
         }
 
+        public IAssetService InnerService
+        {
+            get { return this; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];

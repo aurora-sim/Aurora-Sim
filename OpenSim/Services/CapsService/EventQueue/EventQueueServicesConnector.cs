@@ -99,9 +99,7 @@ namespace OpenSim.Services.CapsService
         public override bool Enqueue(OSD ev, UUID avatarID, ulong regionHandle)
         {
             //Do this async so that we don't kill the sim while waiting for this to be sent
-            AddToQueue(ev, avatarID, regionHandle, true);
-
-            return true;
+            return AddToQueue(ev, avatarID, regionHandle, true);
         }
 
         private bool AddToQueue(OSD ev, UUID avatarID, ulong regionHandle, bool runasync)

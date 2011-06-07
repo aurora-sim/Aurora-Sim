@@ -197,7 +197,17 @@ namespace OpenSim.Services
                         m_log.Error ("[EQMHandler]: ERROR IN THE HANDLER, FAILED TO FIND CLIENT'S REGION");
                 }
                 else
-                    m_log.Error ("[EQMHandler]: ERROR IN THE HANDLER, FAILED TO FIND CLIENT");
+                {
+                    m_log.Error ("[EQMHandler]: ERROR IN THE HANDLER, FAILED TO FIND CLIENT, IWC?");
+                    bool enqueueResult = false;
+                    foreach (OSD ev in OSDEvents)
+                    {
+                        enqueueResult = m_eventQueueService.Enqueue (ev, agentID, regionHandle);
+                        if (!enqueueResult) //Break if one fails
+                            break;
+                    }
+                    response["success"] = enqueueResult;
+                }
             }
             catch(Exception ex)
             {

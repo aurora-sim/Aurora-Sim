@@ -80,9 +80,9 @@ namespace OpenSim.Services
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             
             IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService>();
-            server.AddStreamHandler (new AssetServerGetHandler (m_AssetService, url, SessionID, m_registry));
-            server.AddStreamHandler (new AssetServerPostHandler (m_AssetService, url, SessionID, m_registry));
-            server.AddStreamHandler (new AssetServerDeleteHandler (m_AssetService, m_allowDelete, url, SessionID, m_registry));
+            server.AddStreamHandler (new AssetServerGetHandler (m_AssetService.InnerService, url, SessionID, m_registry));
+            server.AddStreamHandler (new AssetServerPostHandler (m_AssetService.InnerService, url, SessionID, m_registry));
+            server.AddStreamHandler (new AssetServerDeleteHandler (m_AssetService.InnerService, m_allowDelete, url, SessionID, m_registry));
         }
 
         public string GetUrlForRegisteringClient (string SessionID, uint port)
@@ -91,9 +91,9 @@ namespace OpenSim.Services
             string url = "/assets" + UUID.Random();
 
             IAssetService m_AssetService = m_registry.RequestModuleInterface<IAssetService>();
-            server.AddStreamHandler (new AssetServerGetHandler (m_AssetService, url, SessionID, m_registry));
-            server.AddStreamHandler (new AssetServerPostHandler (m_AssetService, url, SessionID, m_registry));
-            server.AddStreamHandler (new AssetServerDeleteHandler (m_AssetService, m_allowDelete, url, SessionID, m_registry));
+            server.AddStreamHandler (new AssetServerGetHandler (m_AssetService.InnerService, url, SessionID, m_registry));
+            server.AddStreamHandler (new AssetServerPostHandler (m_AssetService.InnerService, url, SessionID, m_registry));
+            server.AddStreamHandler (new AssetServerDeleteHandler (m_AssetService.InnerService, m_allowDelete, url, SessionID, m_registry));
 
             return url;
         }

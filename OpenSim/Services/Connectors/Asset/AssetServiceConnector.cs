@@ -48,6 +48,11 @@ namespace OpenSim.Services.Connectors
         private IRegistryCore m_registry;
         protected IImprovedAssetCache m_Cache = null;
 
+        public IAssetService InnerService
+        {
+            get { return this; }
+        }
+
         protected void SetCache(IImprovedAssetCache cache)
         {
             m_Cache = cache;

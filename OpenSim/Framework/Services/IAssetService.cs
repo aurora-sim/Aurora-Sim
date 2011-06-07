@@ -103,6 +103,14 @@ namespace OpenSim.Services.Interfaces
         /// <param name="id"></param>
         /// <returns></returns>
         bool Delete(string id);
+
+        /// <summary>
+        /// Get the local service (if applicable)
+        /// </summary>
+        IAssetService InnerService
+        {
+            get;
+        }
     }
 
     public interface IAssetDataPlugin

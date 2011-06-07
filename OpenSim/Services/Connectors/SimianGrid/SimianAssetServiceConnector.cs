@@ -81,6 +81,11 @@ namespace OpenSim.Services.Connectors.SimianGrid
         }
 
         #endregion
+
+        public IAssetService InnerService
+        {
+            get { return this; }
+        }
         
         private void CommonInit(IConfigSource source)
         {

@@ -247,7 +247,7 @@ namespace Aurora.Modules
 
         public OSDMap GetUrlsForUser (GridRegion region, UUID userID)
         {
-            if (((Aurora.Framework.RegionFlags)region.Flags & Aurora.Framework.RegionFlags.Foreign) == Framework.RegionFlags.Foreign)
+            if ((((Aurora.Framework.RegionFlags)region.Flags) & Aurora.Framework.RegionFlags.Foreign) != Framework.RegionFlags.Foreign)
                 return null;
             string host = userID.ToString ();
             IGridRegistrationService module = Registry.RequestModuleInterface<IGridRegistrationService> ();
@@ -258,6 +258,14 @@ namespace Aurora.Modules
                 IsGettingUrlsForIWCConnection = true;
                 OSDMap map = module.GetUrlForRegisteringClient (host + "|" + region.RegionHandle);
                 IsGettingUrlsForIWCConnection = false;
+
+                string url = region.GenericMap["URL"];
+                if(url == "")
+                    return null;//What the hell? Its a foreign region, it better have a URL!
+                //Remove the /Grid.... stuff
+                url = url.Remove(url.Length - 5 - 36);
+                OutgoingPublicComms.InformOfURLs (url + "/iwcconnection", map);
+                
                 return map;
             }
 
@@ -306,6 +314,17 @@ namespace Aurora.Modules
             }
             return false;
         }
+
+        public bool InformOfURLs (string url, OSDMap urls)
+        {
+            urls["OurIdentifier"] = IWC.GetOurIP ();
+
+            urls["Method"] = "NewURLs";
+            OSDMap result = WebUtils.PostToService (url, urls, true, false, true);
+            if (result["Success"])
+                return true;
+            return false;
+        }
     }
 
     /// <summary>
@@ -343,9 +362,21 @@ namespace Aurora.Modules
                     string Method = args["Method"].AsString ();
                     if (Method == "ConnectionRequest")
                         return ConnectionRequest (args);
+                    if (Method == "NewURLs")
+                        return NewURLs (args);
                 }
             }
             return new byte[0];
+        }
+
+        private byte[] NewURLs (OSDMap args)
+        {
+            IWC.AddNewConnectionFromRequest (args);
+            OSDMap result = new OSDMap ();
+            result["Success"] = true;
+            string json = OSDParser.SerializeJsonString (result);
+            UTF8Encoding enc = new UTF8Encoding ();
+            return enc.GetBytes (json);
         }
 
         private byte[] ConnectionRequest (OSDMap args)

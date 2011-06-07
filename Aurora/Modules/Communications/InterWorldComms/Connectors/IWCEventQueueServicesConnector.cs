@@ -80,6 +80,7 @@ namespace Aurora.Modules
             m_remoteService = new EventQueueServicesConnector ();
             m_remoteService.Initialize(config, registry);
             registry.RegisterModuleInterface<IEventQueueService> (this);
+            m_registry = registry;
         }
 
         public override void Start (IConfigSource config, IRegistryCore registry)

@@ -102,6 +102,11 @@ namespace Flotsam.RegionModules.AssetCache
 
         private bool m_DeepScanBeforePurge;
 
+        public IAssetService InnerService
+        {
+            get { return this; }
+        }
+
         public FlotsamAssetCache()
         {
             m_InvalidChars.AddRange(Path.GetInvalidPathChars());
