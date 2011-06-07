@@ -139,6 +139,8 @@ namespace Aurora.Modules
 
         private UserAccount FixRemoteAccount (UserAccount userAccount)
         {
+            if (userAccount == null)
+                return userAccount;
             userAccount.Name = userAccount.FirstName + " " + userAccount.LastName + "@" + userAccount.GenericData["GridURL"];
             return userAccount;
         }
