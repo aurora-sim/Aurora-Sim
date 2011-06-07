@@ -8776,7 +8776,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             RequestMapName handlerMapNameRequest = OnMapNameRequest;
             if (handlerMapNameRequest != null)
             {
-                handlerMapNameRequest(this, mapName);
+                handlerMapNameRequest (this, mapName, map.AgentData.Flags);
             }
             return true;
         }

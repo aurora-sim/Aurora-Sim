@@ -130,7 +130,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             client.OnMapNameRequest -= OnMapNameRequest;
         }
 
-        private void OnMapNameRequest(IClientAPI remoteClient, string mapName)
+        private void OnMapNameRequest(IClientAPI remoteClient, string mapName, uint flags)
         {
             if (mapName.Length < 3)
             {
@@ -140,19 +140,10 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             
             // try to fetch from GridServer
             List<GridRegion> regionInfos = m_scene.GridService.GetRegionsByName(UUID.Zero, mapName, 20);
-            if (regionInfos == null)
-            {
-                m_log.Warn("[MAPSEARCHMODULE]: RequestNamedRegions returned null. Old gridserver?");
-                // service wasn't available; maybe still an old GridServer. Try the old API, though it will return only one region
-                regionInfos = new List<GridRegion>();
-                GridRegion info = m_scene.GridService.GetRegionByName(UUID.Zero, mapName);
-                if (info != null) regionInfos.Add(info);
-            }
-
             List<MapBlockData> blocks = new List<MapBlockData>();
 
             MapBlockData data;
-            if (regionInfos.Count > 0)
+            if (regionInfos != null && regionInfos.Count > 0)
             {
                 foreach (GridRegion info in regionInfos)
                 {
@@ -183,15 +174,5 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             remoteClient.SendMapBlock(blocks, 2);
         }
-
-//        private Scene GetClientScene(IClientAPI client)
-//        {
-//            foreach (Scene s in m_scenes)
-//            {
-//                if (client.Scene.RegionInfo.RegionHandle == s.RegionInfo.RegionHandle)
-//                    return s;
-//            }
-//            return m_scene;
-//        }
     }
 }

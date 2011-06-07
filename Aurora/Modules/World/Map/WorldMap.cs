@@ -554,7 +554,10 @@ namespace Aurora.Modules
             }
             block.Access = r.Access;
             block.MapImageID = r.TerrainImage;
-            block.Name = r.RegionName;
+            if ((r.Access & (byte)SimAccess.Down) == (byte)SimAccess.Down)
+                block.Name = r.RegionName + " (offline)";
+            else
+                block.Name = r.RegionName;
             block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
             block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
             return block;
@@ -573,7 +576,10 @@ namespace Aurora.Modules
             }
             block.Access = r.Access;
             block.MapImageID = r.TerrainImage;
-            block.Name = r.RegionName;
+            if ((r.Access & (byte)SimAccess.Down) == (byte)SimAccess.Down)
+                block.Name = r.RegionName + " (offline)";
+            else
+                block.Name = r.RegionName;
             block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
             block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
             blocks.Add(block);
@@ -598,7 +604,7 @@ namespace Aurora.Modules
             return blocks;
         }
 
-        private void OnMapNameRequest(IClientAPI remoteClient, string mapName)
+        private void OnMapNameRequest (IClientAPI remoteClient, string mapName, uint flags)
         {
             if (mapName.Length < 1)
             {
@@ -613,6 +619,8 @@ namespace Aurora.Modules
             string[] splitSearch = mapName.Split(',');
             if (splitSearch.Length != 1)
             {
+                if (splitSearch[1].StartsWith (" "))
+                    splitSearch[1] = splitSearch[1].Remove (0, 1);
                 if (int.TryParse(splitSearch[0], out XCoord) && int.TryParse(splitSearch[1], out YCoord))
                     TryCoordsSearch = true;
             }
@@ -623,22 +631,38 @@ namespace Aurora.Modules
             if (TryCoordsSearch)
             {
                 GridRegion region = m_scene.GridService.GetRegionByPosition(m_scene.RegionInfo.ScopeID, (int)(XCoord * Constants.RegionSize), (int)(YCoord * Constants.RegionSize));
-                if(region != null)
-                    regionInfos.Add(region);
+                if (region != null)
+                {
+                    region.RegionName = mapName + " - " + region.RegionName;
+                    regionInfos.Add (region);
+                }
             }
+            List<GridRegion> allRegions = new List<GridRegion> ();
             foreach (GridRegion region in regionInfos)
             {
                 //Add the found in search region first
-                blocks.Add(SearchMapBlockFromGridRegion(region));
-                //Then send surrounding regions
-                List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
-                            (region.RegionLocX - (4 * (int)Constants.RegionSize)),
-                            (region.RegionLocX + (4 * (int)Constants.RegionSize)),
-                            (region.RegionLocY - (4 * (int)Constants.RegionSize)),
-                            (region.RegionLocY + (4 * (int)Constants.RegionSize)));
-                foreach (GridRegion r in regions)
+                if (!allRegions.Contains (region))
                 {
-                    blocks.Add(SearchMapBlockFromGridRegion(r));
+                    allRegions.Add (region);
+                    blocks.Add (SearchMapBlockFromGridRegion (region));
+                }
+                //Then send surrounding regions
+                List<GridRegion> regions = m_scene.GridService.GetRegionRange (m_scene.RegionInfo.ScopeID,
+                    (region.RegionLocX - (4 * (int)Constants.RegionSize)),
+                    (region.RegionLocX + (4 * (int)Constants.RegionSize)),
+                    (region.RegionLocY - (4 * (int)Constants.RegionSize)),
+                    (region.RegionLocY + (4 * (int)Constants.RegionSize)));
+                if (regions != null)
+                {
+                    foreach (GridRegion r in regions)
+                    {
+                        if (!allRegions.Contains (region))
+                        {
+                            allRegions.Add (region);
+                            blocks.Add (SearchMapBlockFromGridRegion (r));
+
+                        }
+                    }
                 }
             }
 
@@ -654,12 +678,18 @@ namespace Aurora.Modules
             data.Y = 0;
             blocks.Add(data);
 
-            remoteClient.SendMapBlock(blocks, 0);
+            remoteClient.SendMapBlock (blocks, flags);
         }
 
         protected MapBlockData SearchMapBlockFromGridRegion(GridRegion r)
         {
-            MapBlockData block = new MapBlockData();
+            MapBlockData block = new MapBlockData ();
+            if (r == null)
+            {
+                block.Access = (byte)SimAccess.Down;
+                block.MapImageID = UUID.Zero;
+                return block;
+            }
             block.Access = r.Access;
             if ((r.Access & (byte)SimAccess.Down) == (byte)SimAccess.Down)
                 block.Name = r.RegionName + " (offline)";
@@ -683,7 +713,10 @@ namespace Aurora.Modules
             }
             block.Access = r.Access;
             block.MapImageID = r.TerrainMapImage;
-            block.Name = r.RegionName;
+            if ((r.Access & (byte)SimAccess.Down) == (byte)SimAccess.Down)
+                block.Name = r.RegionName + " (offline)";
+            else
+                block.Name = r.RegionName;
             block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
             block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
             return block;
