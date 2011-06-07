@@ -4614,6 +4614,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     return;
 
                 parentPrim.DelinkFromGroup(childPrim, true);
+                childPrim.ParentEntity.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                 parentPrim.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                 parentPrim.TriggerScriptChangedEvent(Changed.LINK);
             }
@@ -4634,6 +4635,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 parentPrim.DelinkFromGroup(part, true);
                 parentPrim.TriggerScriptChangedEvent(Changed.LINK);
+                part.ParentEntity.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
             }
             parentPrim.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
         }
