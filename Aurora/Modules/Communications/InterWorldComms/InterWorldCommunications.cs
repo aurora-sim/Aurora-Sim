@@ -257,7 +257,10 @@ namespace Aurora.Modules
         public OSDMap GetUrlsForUser (GridRegion region, UUID userID)
         {
             if ((((Aurora.Framework.RegionFlags)region.Flags) & Aurora.Framework.RegionFlags.Foreign) != Framework.RegionFlags.Foreign)
+            {
+                m_log.Debug ("[IWC]: Not a foreign region");
                 return null;
+            }
             string host = userID.ToString ();
             IGridRegistrationService module = Registry.RequestModuleInterface<IGridRegistrationService> ();
             if (module != null)
@@ -269,8 +272,11 @@ namespace Aurora.Modules
                 IsGettingUrlsForIWCConnection = false;
 
                 string url = region.GenericMap["URL"];
-                if(url == "")
+                if (url == "")
+                {
+                    m_log.Warn ("[IWC]: Foreign region with no URL");
                     return null;//What the hell? Its a foreign region, it better have a URL!
+                }
                 //Remove the /Grid.... stuff
                 url = url.Remove(url.Length - 5 - 36);
                 OutgoingPublicComms.InformOfURLs (url + "/iwcconnection", map, userID, region.RegionHandle);
