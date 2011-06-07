@@ -155,9 +155,7 @@ namespace OpenSim.Services.Connectors
                     if (replyData != null)
                     {
                         if (replyData.ContainsKey("result") && replyData.ContainsKey("result").ToString() == "null")
-                        {
                             continue;
-                        }
 
                         Dictionary<string, object>.ValueCollection accountList = replyData.Values;
                         //m_log.DebugFormat("[ACCOUNTS CONNECTOR]: GetAgents returned {0} elements", pinfosList.Count);
@@ -167,6 +165,7 @@ namespace OpenSim.Services.Connectors
                             {
                                 UserAccount pinfo = new UserAccount((Dictionary<string, object>)acc);
                                 m_cache.Cache(pinfo.PrincipalID, pinfo);
+                                pinfo.GenericData["GridURL"] = m_ServerURI;
                                 accounts.Add(pinfo);
                             }
                             else
@@ -242,7 +241,8 @@ namespace OpenSim.Services.Connectors
                     {
                         if (replyData["result"] is Dictionary<string, object>)
                         {
-                            account = new UserAccount((Dictionary<string, object>)replyData["result"]);
+                            account = new UserAccount ((Dictionary<string, object>)replyData["result"]);
+                            account.GenericData["GridURL"] = m_ServerURI;
                             return account;
                         }
                     }

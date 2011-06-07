@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using Aurora.Framework;
 
@@ -71,6 +72,7 @@ namespace OpenSim.Services.Interfaces
         public int UserLevel;
         public int UserFlags;
         public string UserTitle;
+        public OSDMap GenericData = new OSDMap ();
 
         public Dictionary<string, object> ServiceURLs;
 

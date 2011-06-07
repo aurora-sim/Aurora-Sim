@@ -100,7 +100,7 @@ namespace Aurora.Modules
         {
             UserAccount account = m_localService.GetUserAccount(scopeID, userID);
             if (account == null)
-                account = m_remoteService.GetUserAccount(scopeID, userID);
+                account = FixRemoteAccount(m_remoteService.GetUserAccount(scopeID, userID));
             return account;
         }
 
@@ -108,7 +108,7 @@ namespace Aurora.Modules
         {
             UserAccount account = m_localService.GetUserAccount(scopeID, FirstName, LastName);
             if (account == null)
-                account = m_remoteService.GetUserAccount(scopeID, FirstName, LastName);
+                account = FixRemoteAccount(m_remoteService.GetUserAccount(scopeID, FirstName, LastName));
             return account;
         }
 
@@ -116,15 +116,31 @@ namespace Aurora.Modules
         {
             UserAccount account = m_localService.GetUserAccount(scopeID, Name);
             if (account == null)
-                account = m_remoteService.GetUserAccount(scopeID, Name);
+                account = FixRemoteAccount(m_remoteService.GetUserAccount(scopeID, Name));
             return account;
         }
 
         public List<UserAccount> GetUserAccounts(UUID scopeID, string query)
         {
             List<UserAccount> accounts = m_localService.GetUserAccounts(scopeID, query);
-            accounts.AddRange(m_remoteService.GetUserAccounts(scopeID, query));
+            accounts.AddRange(FixRemoteAccounts(m_remoteService.GetUserAccounts(scopeID, query)));
             return accounts;
+        }
+
+        private IEnumerable<UserAccount> FixRemoteAccounts (List<UserAccount> list)
+        {
+            List<UserAccount> accounts = new List<UserAccount> ();
+            foreach (UserAccount account in list)
+            {
+                accounts.Add (FixRemoteAccount (account));
+            }
+            return accounts;
+        }
+
+        private UserAccount FixRemoteAccount (UserAccount userAccount)
+        {
+            userAccount.Name = userAccount.FirstName + " " + userAccount.LastName + "@" + userAccount.GenericData["GridURL"];
+            return userAccount;
         }
 
         public bool StoreUserAccount(UserAccount data)
