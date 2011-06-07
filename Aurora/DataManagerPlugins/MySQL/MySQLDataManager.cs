@@ -713,21 +713,21 @@ namespace Aurora.DataManager.MySQL
             {
                 foreach (ColumnDefinition column in addedColumns.Values)
                 {
-                    string addedColumnsQuery = "add " + column.Name + " " + GetColumnTypeStringSymbol (column.Type) + " ";
+                    string addedColumnsQuery = "add `" + column.Name + "` " + GetColumnTypeStringSymbol (column.Type) + " ";
                     string query = string.Format ("alter table " + table + " " + addedColumnsQuery);
 
                     ExecuteNonQuery (query, new Dictionary<string, object> ());
                 }
                 foreach (ColumnDefinition column in modifiedColumns.Values)
                 {
-                    string modifiedColumnsQuery = "modify column " + column.Name + " " + GetColumnTypeStringSymbol (column.Type) + " ";
+                    string modifiedColumnsQuery = "modify column `" + column.Name + "` " + GetColumnTypeStringSymbol (column.Type) + " ";
                     string query = string.Format ("alter table " + table + " " + modifiedColumnsQuery);
 
                     ExecuteNonQuery (query, new Dictionary<string, object> ());
                 }
                 foreach (ColumnDefinition column in removedColumns.Values)
                 {
-                    string droppedColumnsQuery = "drop " + column.Name + " ";
+                    string droppedColumnsQuery = "drop `" + column.Name + "` ";
                     string query = string.Format ("alter table " + table + " " + droppedColumnsQuery);
 
                     ExecuteNonQuery (query, new Dictionary<string, object> ());
