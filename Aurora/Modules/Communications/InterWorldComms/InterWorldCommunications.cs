@@ -239,7 +239,16 @@ namespace Aurora.Modules
                 {
                     IGridService service = m_registry.RequestModuleInterface<IGridService> ();
                     if (service != null)
-                        return service.GetRegionByName (UUID.Zero, regionName);
+                    {
+                        List<GridRegion> regions = service.GetRegionsByName (UUID.Zero, regionName, 3);
+                        for (int i = 0; i < regions.Count; i++)
+                        {
+                            if (regions[i].RegionName == regionName)
+                                return regions[i];
+                        }
+                        if (regions.Count > 0)
+                            return regions[0];
+                    }
                 }
             }
             return null;
