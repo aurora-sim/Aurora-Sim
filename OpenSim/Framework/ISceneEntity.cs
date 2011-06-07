@@ -175,6 +175,8 @@ namespace OpenSim.Framework
         UUID SittingOnUUID { get; }
 
         void ClearSavedVelocity ();
+
+        void HandleAgentRequestSit (IClientAPI remoteClient, UUID targetID, Vector3 offset);
     }
 
     public interface IAvatarAppearanceModule

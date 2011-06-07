@@ -6586,7 +6586,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 AgentRequestSit handlerAgentRequestSit = OnAgentRequestSit;
                 if (handlerAgentRequestSit != null)
-                    handlerAgentRequestSit(this, agentRequestSit.AgentData.AgentID,
+                    handlerAgentRequestSit(this,
                                            agentRequestSit.TargetObject.TargetID, agentRequestSit.TargetObject.Offset);
             }
             return true;

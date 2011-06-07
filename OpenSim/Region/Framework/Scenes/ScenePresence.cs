@@ -1735,7 +1735,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.Warn("Sit requested on unknown object: " + targetID);
         }
 
-        public void HandleAgentRequestSit(IClientAPI remoteClient, UUID agentID, UUID targetID, Vector3 offset)
+        public void HandleAgentRequestSit(IClientAPI remoteClient, UUID targetID, Vector3 offset)
         {
             if (m_parentID != UUID.Zero)
                 StandUp();

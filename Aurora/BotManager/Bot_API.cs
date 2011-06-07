@@ -247,5 +247,35 @@ namespace Aurora.BotManager
             if (manager != null)
                 manager.SendChatMessage (UUID.Parse (bot), message, sayType, channel);
         }
+
+        public void botTouchObject (string bot, string objectID)
+        {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botTouchObject", m_host, "bot");
+            SurfaceTouchEventArgs touchArgs = new SurfaceTouchEventArgs();
+            
+            IScenePresence sp = World.GetScenePresence(UUID.Parse(bot));
+            if(sp == null)
+                return;
+            ISceneChildEntity child = World.GetSceneObjectPart(UUID.Parse(objectID));
+            if(child == null)
+                throw new Exception("Failed to find entity to touch");
+
+            World.EventManager.TriggerObjectGrab (child, child, Vector3.Zero, sp.ControllingClient, touchArgs);
+            World.EventManager.TriggerObjectGrabbing (child, child, Vector3.Zero, sp.ControllingClient, touchArgs);
+            World.EventManager.TriggerObjectDeGrab (child, child, sp.ControllingClient, touchArgs);
+        }
+
+        public void botSitObject (string bot, string objectID, LSL_Vector offset)
+        {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botTouchObject", m_host, "bot");
+            IScenePresence sp = World.GetScenePresence (UUID.Parse (bot));
+            if (sp == null)
+                return;
+            ISceneChildEntity child = World.GetSceneObjectPart (UUID.Parse (objectID));
+            if (child == null)
+                throw new Exception ("Failed to find entity to touch");
+
+            sp.HandleAgentRequestSit (sp.ControllingClient, child.UUID, new Vector3((float)offset.x, (float)offset.y, (float)offset.z));
+        }
     }
 }

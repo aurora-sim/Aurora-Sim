@@ -153,7 +153,7 @@ namespace OpenSim.Framework
 
     public delegate void UpdateAgent(IClientAPI remoteClient, AgentUpdateArgs agentData);
 
-    public delegate void AgentRequestSit(IClientAPI remoteClient, UUID agentID, UUID targetID, Vector3 offset);
+    public delegate void AgentRequestSit(IClientAPI remoteClient, UUID targetID, Vector3 offset);
 
     public delegate void AgentSit(IClientAPI remoteClient, UUID agentID);
 
