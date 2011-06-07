@@ -204,15 +204,15 @@ namespace Aurora.Modules
 
         #endregion
 
-        internal void AddNewConnectionFromRequest (OSDMap args)
+        internal void AddNewConnectionFromRequest (string identifer, OSDMap args)
         {
             //Add the other servers IP to our connections=
             IConfigurationService configService = Registry.RequestModuleInterface<IConfigurationService> ();
             if (configService != null)
             {
                 //Add the URLs they sent us
-                configService.RemoveUrls (args["OurIdentifier"]);
-                configService.AddNewUrls (args["OurIdentifier"], args);
+                configService.RemoveUrls (identifer);
+                configService.AddNewUrls (identifer, args);
             }
         }
 
@@ -273,7 +273,7 @@ namespace Aurora.Modules
                     return null;//What the hell? Its a foreign region, it better have a URL!
                 //Remove the /Grid.... stuff
                 url = url.Remove(url.Length - 5 - 36);
-                OutgoingPublicComms.InformOfURLs (url + "/iwcconnection", map);
+                OutgoingPublicComms.InformOfURLs (url + "/iwcconnection", map, userID, region.RegionHandle);
                 
                 return map;
             }
@@ -317,16 +317,18 @@ namespace Aurora.Modules
                 {
                     //Add their URLs back again
                     m_log.Warn ("Successfully Connected to " + host);
-                    IWC.AddNewConnectionFromRequest (result);
+                    IWC.AddNewConnectionFromRequest (result["OurIdentifier"], result);
                     return true;
                 }
             }
             return false;
         }
 
-        public bool InformOfURLs (string url, OSDMap urls)
+        public bool InformOfURLs (string url, OSDMap urls, UUID userID, ulong regionHandle)
         {
             urls["OurIdentifier"] = IWC.GetOurIP ();
+            urls["UserID"] = userID;
+            urls["RegionHandle"] = regionHandle;
 
             urls["Method"] = "NewURLs";
             OSDMap result = WebUtils.PostToService (url, urls, true, false, true);
@@ -380,7 +382,10 @@ namespace Aurora.Modules
 
         private byte[] NewURLs (OSDMap args)
         {
-            IWC.AddNewConnectionFromRequest (args);
+            UUID userID = args["UserID"];
+            ulong regionhandle = args["RegionHandle"];
+            string ident = userID + "|" + regionhandle;
+            IWC.AddNewConnectionFromRequest (ident, args);
             OSDMap result = new OSDMap ();
             result["Success"] = true;
             string json = OSDParser.SerializeJsonString (result);
@@ -411,7 +416,7 @@ namespace Aurora.Modules
                     IWC.IsGettingUrlsForIWCConnection = false;
                     result["OurIdentifier"] = IWC.GetOurIP ();
                     m_log.Warn (theirIdent + " successfully connected to us");
-                    IWC.AddNewConnectionFromRequest (args);
+                    IWC.AddNewConnectionFromRequest (args["OurIdentifier"], args);
                     result["Success"] = true;
                 }
             }

@@ -307,9 +307,13 @@ namespace OpenSim.Services.ConfigurationService
             {
                 return FindValueOfFromOSDMap(key, m_knownUsers[userID]);
             }
-            else if (m_allConfigs.ContainsKey(userID))
+            else if (m_allConfigs.ContainsKey (userID))
             {
-                return FindValueOfFromOSDMap(key, m_allConfigs[userID]);
+                return FindValueOfFromOSDMap (key, m_allConfigs[userID]);
+            }
+            else if (m_allConfigs.ContainsKey (userID + "|" + regionID))
+            {
+                return FindValueOfFromOSDMap (key, m_allConfigs[userID + "|" + regionID]);
             }
             else
             {
