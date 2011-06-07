@@ -86,6 +86,8 @@ namespace Aurora.Services.DataService
                     if (response["_Result"].Type == OSDType.Map)
                     {
                         OSDMap responsemap = (OSDMap)response["_Result"];
+                        if (responsemap.Count == 0)
+                            continue;
                         IUserProfileInfo info = new IUserProfileInfo ();
                         info.FromOSD (responsemap);
                         return info;
