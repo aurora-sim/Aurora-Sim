@@ -567,7 +567,9 @@ namespace OpenSim.Services.GridService
                 neighbors = FindNewNeighbors (region);
                 m_KnownNeighbors[region.RegionID] = neighbors;
             }
-            return neighbors;
+            GridRegion[] regions = new GridRegion[neighbors.Count];
+            neighbors.CopyTo (regions);
+            return new List<GridRegion>(regions);
         }
 
         private void FixNeighbors (GridRegion regionInfos, List<GridRegion> neighbors, bool down)
