@@ -91,6 +91,8 @@ namespace Aurora.Modules
         /// </summary>
         public IWCOutgoingConnections OutgoingPublicComms;
 
+        public bool IsGettingUrlsForIWCConnection = false;
+
         public IRegistryCore Registry
         {
             get { return m_registry; }
@@ -253,7 +255,10 @@ namespace Aurora.Modules
             {
                 module.RemoveUrlsForClient (host);
                 module.RemoveUrlsForClient (host + "|" + region.RegionHandle);
-                return module.GetUrlForRegisteringClient (host + "|" + region.RegionHandle);
+                IsGettingUrlsForIWCConnection = true;
+                OSDMap map = module.GetUrlForRegisteringClient (host + "|" + region.RegionHandle);
+                IsGettingUrlsForIWCConnection = false;
+                return map;
             }
 
             return null;
@@ -284,7 +289,9 @@ namespace Aurora.Modules
             if (module != null)
             {
                 module.RemoveUrlsForClient (host);
+                IWC.IsGettingUrlsForIWCConnection = true;
                 OSDMap callThem = module.GetUrlForRegisteringClient (host);
+                IWC.IsGettingUrlsForIWCConnection = false;
                 callThem["OurIdentifier"] = IWC.GetOurIP();
 
                 callThem["Method"] = "ConnectionRequest";
@@ -359,7 +366,9 @@ namespace Aurora.Modules
                 else
                 {
                     module.RemoveUrlsForClient (theirIdent);
+                    IWC.IsGettingUrlsForIWCConnection = true;
                     result = module.GetUrlForRegisteringClient (theirIdent);
+                    IWC.IsGettingUrlsForIWCConnection = false;
                     result["OurIdentifier"] = IWC.GetOurIP ();
                     m_log.Warn (theirIdent + " successfully connected to us");
                     IWC.AddNewConnectionFromRequest (args);

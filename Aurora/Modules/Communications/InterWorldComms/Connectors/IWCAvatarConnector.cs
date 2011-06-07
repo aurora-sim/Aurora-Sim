@@ -45,6 +45,7 @@ namespace Aurora.Modules
     {
         protected AvatarService m_localService;
         protected AvatarServicesConnector m_remoteService;
+        protected IRegistryCore m_registry;
 
         #region IService Members
 
@@ -55,7 +56,15 @@ namespace Aurora.Modules
 
         public virtual IAvatarService InnerService
         {
-            get { return m_localService; }
+            get
+            {
+                //If we are getting URls for an IWC connection, we don't want to be calling other things, as they are calling us about only our info
+                //If we arn't, its ar region we are serving, so give it everything we know
+                if (m_registry.RequestModuleInterface<InterWorldCommunications> ().IsGettingUrlsForIWCConnection)
+                    return m_localService;
+                else
+                    return this;
+            }
         }
 
         public void Initialize (IConfigSource config, IRegistryCore registry)
@@ -69,6 +78,7 @@ namespace Aurora.Modules
             m_remoteService = new AvatarServicesConnector ();
             m_remoteService.Initialize (config, registry);
             registry.RegisterModuleInterface<IAvatarService> (this);
+            m_registry = registry;
         }
 
         public void Start (IConfigSource config, IRegistryCore registry)

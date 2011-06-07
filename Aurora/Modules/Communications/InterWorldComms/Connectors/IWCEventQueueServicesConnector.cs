@@ -44,7 +44,10 @@ namespace Aurora.Modules
 {
     public class IWCEventQueueServicesConnector : EventQueueMasterService, IEventQueueService, IService
     {
+        protected EventQueueMasterService m_localService;
         protected EventQueueServicesConnector m_remoteService;
+        protected IRegistryCore m_registry;
+
         #region IService Members
 
         public override string Name
@@ -54,7 +57,15 @@ namespace Aurora.Modules
 
         public override IEventQueueService InnerService
         {
-            get { return this; }
+            get
+            {
+                //If we are getting URls for an IWC connection, we don't want to be calling other things, as they are calling us about only our info
+                //If we arn't, its ar region we are serving, so give it everything we know
+                if (m_registry.RequestModuleInterface<InterWorldCommunications> ().IsGettingUrlsForIWCConnection)
+                    return m_localService;
+                else
+                    return this;
+            }
         }
 
         public override void Initialize (IConfigSource config, IRegistryCore registry)
@@ -64,6 +75,8 @@ namespace Aurora.Modules
                 return;
 
             base.Initialize(config, registry);
+            m_localService = new EventQueueMasterService ();
+            m_localService.Initialize (config, registry);
             m_remoteService = new EventQueueServicesConnector ();
             m_remoteService.Initialize(config, registry);
             registry.RegisterModuleInterface<IEventQueueService> (this);
@@ -74,6 +87,7 @@ namespace Aurora.Modules
             if (m_remoteService != null)
             {
                 base.Start (config, registry);
+                m_localService.Start (config, registry);
                 m_remoteService.Start (config, registry);
             }
         }

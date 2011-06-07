@@ -44,6 +44,8 @@ namespace Aurora.Modules
     {
         protected UserAccountService m_localService;
         protected UserAccountServicesConnector m_remoteService;
+        protected IRegistryCore m_registry;
+
         #region IService Members
 
         public string Name
@@ -53,7 +55,15 @@ namespace Aurora.Modules
 
         public IUserAccountService InnerService
         {
-            get { return m_localService; }
+            get
+            {
+                //If we are getting URls for an IWC connection, we don't want to be calling other things, as they are calling us about only our info
+                //If we arn't, its ar region we are serving, so give it everything we know
+                if (m_registry.RequestModuleInterface<InterWorldCommunications> ().IsGettingUrlsForIWCConnection)
+                    return m_localService;
+                else
+                    return this;
+            }
         }
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
@@ -66,7 +76,8 @@ namespace Aurora.Modules
             m_localService.Configure(config, registry);
             m_remoteService = new UserAccountServicesConnector();
             m_remoteService.Initialize(config, registry);
-            registry.RegisterModuleInterface<IUserAccountService>(this);
+            registry.RegisterModuleInterface<IUserAccountService> (this);
+            m_registry = registry;
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
