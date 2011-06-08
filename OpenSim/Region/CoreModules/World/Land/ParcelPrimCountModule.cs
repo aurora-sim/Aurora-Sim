@@ -198,7 +198,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             // Normal Calculations
             return (int)Math.Round(((float)thisObject.LandData.Area / 
-                (m_Scene.RegionInfo.RegionSizeX * m_Scene.RegionInfo.RegionSizeY)) *
+                (256 * 256)) *
                 (float)m_Scene.RegionInfo.ObjectCapacity *
                 (float)m_Scene.RegionInfo.RegionSettings.ObjectBonus);
         }
