@@ -194,6 +194,8 @@ namespace Aurora.Modules.FileBasedSimulationData
         {
             if (!m_saveChanges)
                 return;
+            if (appendedFilePath == "/")
+                appendedFilePath = "";
             IBackupModule backupModule = m_scene.RequestModuleInterface<IBackupModule> ();
             if (backupModule != null && backupModule.LoadingPrims) //Something is changing lots of prims
                 return;
