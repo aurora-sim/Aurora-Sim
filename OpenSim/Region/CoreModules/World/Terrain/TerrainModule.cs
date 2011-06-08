@@ -876,8 +876,15 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                     if ((channel.Width) > m_channel.Width ||
                                             (channel.Height) > m_channel.Height)
                                     {
-                                        m_log.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
-                                        return;
+                                        for (int x = 0; x < m_channel.Width; x++)
+                                        {
+                                            for (int y = 0; y < m_channel.Height; y++)
+                                            {
+                                                m_channel[x, y] = channel[x, y];
+                                            }
+                                        }
+                                        //m_log.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
+                                        //return;
                                     }
                                     else
                                     {
@@ -965,8 +972,23 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                     update.Width == channel.Width))
                                 {
                                     if (m_scene.RegionInfo.RegionSizeX != channel.Width ||
-                                        m_scene.RegionInfo.RegionSizeY != channel.Height)
+                                           m_scene.RegionInfo.RegionSizeY != channel.Height)
+                                    {
+                                        if ((channel.Width) > m_scene.RegionInfo.RegionSizeX ||
+                                            (channel.Height) > m_scene.RegionInfo.RegionSizeY)
+                                        {
+                                            TerrainChannel c = new TerrainChannel (true, m_scene);
+                                            for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
+                                            {
+                                                for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
+                                                {
+                                                    c[x, y] = channel[x, y];
+                                                }
+                                            }
+                                            return c;
+                                        }
                                         return null;
+                                    }
                                 }
                                 else
                                 {
