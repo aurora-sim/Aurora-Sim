@@ -405,7 +405,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             QueueItemStruct QIS;
 
-            if (ID == null || ID.IgnoreNew)
+            if (ID == null || ID.Script == null || ID.IgnoreNew)
                 return;
 
             if (!ID.SetEventParams(FunctionName, qParams)) // check events delay rules
@@ -439,7 +439,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void AddEventSchQIS(QueueItemStruct QIS)
         {
-            if (QIS.ID == null || QIS.ID.IgnoreNew)
+            if (QIS.ID == null || QIS.ID.Script == null || QIS.ID.IgnoreNew)
                 return;
 
             if (!QIS.ID.SetEventParams(QIS.functionName, QIS.llDetectParams)) // check events delay rules
