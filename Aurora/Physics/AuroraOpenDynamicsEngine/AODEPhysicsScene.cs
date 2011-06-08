@@ -3016,11 +3016,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 ourResults = new ContactResult[results.Count];
                 results.CopyTo(ourResults, 0);
             };
+            int waitTime = 0;
             m_rayCastManager.QueueRequest(position, direction, length, Count, retMethod);
-            while (ourResults == null)
+            while (ourResults == null && waitTime < 1000)
             {
-                Thread.Sleep(10);
+                Thread.Sleep(1);
+                waitTime++;
             }
+            if (ourResults == null)
+                return new List<ContactResult> ();
             return new List<ContactResult>(ourResults);
         }
 

@@ -276,7 +276,7 @@ namespace OpenSim.Region.Physics.Meshing
 
                     OSD meshOsd = null;
 
-                    if (primShape.SculptData.Length <= 0)
+                    if (primShape.SculptData == null || primShape.SculptData.Length <= 0)
                     {
                         m_log.Error("[MESH]: asset data is zero length");
                         return null;
