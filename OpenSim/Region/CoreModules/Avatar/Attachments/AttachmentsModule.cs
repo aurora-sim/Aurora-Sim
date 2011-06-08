@@ -855,6 +855,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     asset.Data = Utils.StringToBytes(sceneObjectXml);
                     m_scene.AssetService.Store(asset);
 
+                    if (item.Folder == UUID.Zero)
+                        item.Folder = m_scene.InventoryService.GetFolderForType (remoteClient.AgentId, AssetType.Object).ID;
+
                     item.AssetID = asset.FullID;
                     item.Description = asset.Description;
                     item.Name = asset.Name;
