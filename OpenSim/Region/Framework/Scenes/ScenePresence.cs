@@ -1078,6 +1078,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             #region Inputs
 
+            if (Frozen)
+                return; //Do nothing, just end
+
             AgentManager.ControlFlags flags = (AgentManager.ControlFlags)agentData.ControlFlags;
             Quaternion bodyRotation = agentData.BodyRotation;
 

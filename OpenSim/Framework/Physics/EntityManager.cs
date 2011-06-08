@@ -49,10 +49,10 @@ namespace OpenSim.Framework
             get { return m_objectEntities.Count + this.GetPresenceCount(); }
         }
 
-        public void Add (IEntity entity)
+        public bool Add (IEntity entity)
         {
             if (entity.LocalId == 0)
-                return;
+                return false;
 
             try
             {
@@ -81,7 +81,9 @@ namespace OpenSim.Framework
             catch (Exception e)
             {
                 m_log.ErrorFormat ("Add Entity failed: {0}", e.Message);
+                return false;
             }
+            return true;
         }
 
         public void Clear ()

@@ -148,10 +148,10 @@ namespace Aurora.Framework
         {
             lock (m_lock)
             {
-                if (Dictionary1.ContainsKey(key1))
-                    throw new ArgumentException("Key is already in the dictionary");
+                if (Dictionary1.ContainsKey (key1))
+                    throw new ArgumentException ("Key1 is already in the dictionary");
                 if (Dictionary2.ContainsKey(key2))
-                    throw new ArgumentException("Key is already in the dictionary");
+                    throw new ArgumentException("Key2 is already in the dictionary");
 
                 Dictionary1.Add(key1, value);
                 Dictionary2.Add(key2, value);

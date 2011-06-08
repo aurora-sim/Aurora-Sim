@@ -2170,8 +2170,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         private bool AddEntity (IEntity entity, bool AllowUpdate)
         {
-            Entities.Add(entity);
-            return true;
+            return Entities.Add(entity);
         }
 
         /// <summary>
