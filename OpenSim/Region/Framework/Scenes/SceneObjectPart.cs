@@ -5368,6 +5368,11 @@ namespace OpenSim.Region.Framework.Scenes
                     PhysActor.VolumeDetect = true;
                     AddFlag(PrimFlags.Phantom); // We set this flag also if VD is active
                     this.VolumeDetectActive = true;
+                    if(!PhysActor.SubscribedEvents())
+                    {
+                        PhysActor.OnCollisionUpdate += PhysicsCollision;
+                        PhysActor.SubscribeEvents (1000);
+                    }
                 }
             }
             else

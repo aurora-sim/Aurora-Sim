@@ -1080,37 +1080,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // If we're colliding against terrain
                     if (p1.PhysicsActorType == (int)ActorTypes.Ground)
                     {
-                        /*
-                                                if (p2.PhysicsActorType == (int)ActorTypes.Agent)
-                                                    {
-                                                    if (Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f)
-                                                        {
-                                                        // Use the movement terrain contact
-                                                        AvatarMovementTerrainContact.geom = curContact;
-                                                        if (m_filterCollisions)
-                                                            _perloopContact.Add(curContact);
-                                                        if (m_global_contactcount < maxContactsbeforedeath)
-                                                            {
-                                                            joint = d.JointCreateContact(world, contactgroup, ref AvatarMovementTerrainContact);
-                                                            m_global_contactcount++;
-                                                            }
-                                                        }
-                                                    else
-                                                        {
-                                                        // Use the non moving terrain contact
-                                                        TerrainContact.geom = curContact;
-                                                        if (m_filterCollisions)
-                                                            _perloopContact.Add(curContact);
-                                                        if (m_global_contactcount < maxContactsbeforedeath)
-                                                            {
-                                                            joint = d.JointCreateContact(world, contactgroup, ref TerrainContact);
-                                                            m_global_contactcount++;
-                                                            }
-                                                        }
-                                                    }
-
-                                                else
-                         */
                         if (p2.PhysicsActorType == (int)ActorTypes.Prim)
                         {
                             // prim terrain contact
