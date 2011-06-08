@@ -165,8 +165,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="shouldbackup">Should we back up this script and fire state_exit?</param>
         public void CloseAndDispose(bool shouldbackup)
         {
-
-// this is still broken ?
             m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this,true);
 
             if (shouldbackup)
@@ -239,6 +237,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 Script = null;
             }
 
+            m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Closed Script " + InventoryItem.Name + " in " + Part.Name);
             if (AppDomain == null)
                 return;
 
@@ -246,7 +245,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_ScriptEngine.AppDomainManager.UnloadScriptAppDomain(AppDomain);
             AppDomain = null;
 
-            m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Closed Script " + InventoryItem.Name + " in " + Part.Name);
         }
 
         /// <summary>
@@ -343,6 +341,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue (this, false);
                 m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew (this, false); // accept new events
+                //Fire state_exist after we switch over all the removing of events so that it gets the new versionID
                 m_ScriptEngine.MaintenanceThread.AddEventSchQueue (this, "state_exit",
                     new DetectParams[0], EventPriority.FirstStart, new object[0] { });
 
