@@ -64,6 +64,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 
         void aaJoinCombatTeam(LSL_Key id, LSL_String team);
 
+        void aaRequestCombatPermission (string ID);
+
+        void aaThawAvatar (string ID);
+
+        void aaFreezeAvatar (string ID);
+
         LSL_List aaGetTeamMembers(LSL_String team);
 
         LSL_String aaGetLastOwner();
