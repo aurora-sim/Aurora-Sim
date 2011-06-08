@@ -795,6 +795,8 @@ namespace Aurora.BotManager
         public void StopFollowAvatar ()
         {
             EventManager.UnregisterEventHandler ("Update", FollowingUpdate);
+            if(FollowSP != null)
+                FollowSP.PhysicsActor.OnRequestTerseUpdate -= EventManager_OnClientMovement;
             FollowSP = null; //null out everything
             FollowUUID = UUID.Zero;
         }
