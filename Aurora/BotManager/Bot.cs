@@ -508,29 +508,14 @@ namespace Aurora.BotManager
 
         private void frames_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            try
-            {
-                m_frames.Stop ();
-                if (m_startTime.SynchronizingObject != null)
-                {
-                    lock (m_startTime.SynchronizingObject)
-                        m_startTime.Stop ();
-                }
-            }
-            catch { }
             if (m_scenePresence == null)
                 return;
             Update();
-
-            m_startTime.Start ();
-            m_frames.Start ();
         }
 
         private void startTime_Elapsed (object sender, System.Timers.ElapsedEventArgs e)
         {
-            if (m_startTime.SynchronizingObject != null)
-                lock (m_startTime.SynchronizingObject)
-                    m_startTime.Stop ();
+            m_startTime.Stop ();
             GetNextDestination ();
             m_startTime.Start ();
         }
@@ -1263,9 +1248,9 @@ namespace Aurora.BotManager
 
         private void ClearOutInSignificantPositions (bool checkPositions)
         {
-            Vector3[] sigPos = new Vector3[m_significantAvatarPositions.Count];
             int closestPosition = 0;
             double closestDistance = 0;
+            Vector3[] sigPos = new Vector3[m_significantAvatarPositions.Count];
             m_significantAvatarPositions.CopyTo (sigPos);
 
             for (int i = 0; i < sigPos.Length; i++)
