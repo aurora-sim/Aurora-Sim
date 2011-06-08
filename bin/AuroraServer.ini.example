@@ -85,6 +85,32 @@
     ;; Blocks all user names in this list from being used as display names. Names are NOT case sensitive. Seperate names by commas.
     ;; Example "Linden,Admin"
     BannedUserNames = "Linden"
+	
+[Startup]
+    ;; Set this to true if you want to log crashes to disk
+    ;; this can be useful when submitting bug reports.
+    save_crashes = false
+
+    ;; Directory to save crashes to if above is enabled
+    ;; (default is /bin/crashes/*.txt or C:\bin\crashes\*.txt)
+    crash_dir = ./crashes
+
+    ;; Place to create a PID file
+    ;PIDFile = /tmp/my.pid
+
+    ;; Commands to be run on startup are in the given file
+    startup_console_commands_file = startup_commands.txt
+
+    ;; Commands to be run on shutdown are in the given file
+    shutdown_console_commands_file = shutdown_commands.txt
+
+    ;; To run a script every X minutes, set the script filename here
+    ;timer_Script = filename
+    ;; Time between each timer to run (in minutes)
+    ;timer_time = 20
+
+    ;; Should we restart Aurora if the sim crashes?
+    AutoRestartOnCrash = false
     
 [VoiceIncludes]
     ;; If you would like to set up voice for the entire grid, select one of these includes depending on which voice module you wish to set up
