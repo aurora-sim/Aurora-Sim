@@ -11701,6 +11701,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
             }
+            int refcount = 0;
             foreach (ContactResult result in results)
             {
                 if ((rejectTypes & ScriptBaseClass.RC_REJECT_LAND) == ScriptBaseClass.RC_REJECT_LAND &&
@@ -11725,13 +11726,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     ((ISceneChildEntity)intersection.obj).PhysActor == null)
                     continue;*/ //Can't do this ATM, physics engine knows only of non phantom objects
 
-                if (((ISceneChildEntity)entity).PhysActor != null && ((ISceneChildEntity)entity).PhysActor.IsPhysical)
+                if (entity is ISceneChildEntity && ((ISceneChildEntity)entity).PhysActor != null && ((ISceneChildEntity)entity).PhysActor.IsPhysical)
+                {
                     if (!checkPhysical)
                         continue;
-                else
+                }
+                else if (entity is ISceneChildEntity)
                     if (!checkNonPhysical)
                         continue;
 
+                refcount++;
                 if ((dataFlags & ScriptBaseClass.RC_GET_ROOT_KEY) == ScriptBaseClass.RC_GET_ROOT_KEY && entity is ISceneChildEntity)
                     list.Add(((ISceneChildEntity)entity).ParentEntity.UUID);
                 else
@@ -11748,7 +11752,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     list.Add(result.Normal);
             }
 
-            list.Add(results.Count); //The status code, either the # of contacts, RCERR_SIM_PERF_LOW, or RCERR_CAST_TIME_EXCEEDED
+            list.Add (refcount); //The status code, either the # of contacts, RCERR_SIM_PERF_LOW, or RCERR_CAST_TIME_EXCEEDED
 
             return list;
         }
