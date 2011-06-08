@@ -1,3 +1,4 @@
+key savedID = NULL_KEY;
 default
 {
     state_entry()
@@ -11,7 +12,7 @@ default
     listen( integer channel, string name, key id, string message )
     {
         // Split the message by " " so that we can pull out commands
-        list parsedMessage = llParseString2List(message,[" "]);
+        list parsedMessage = llParseString2List(message,[" "], []);
         if(message == "leave")
         {
             // This allows the avatar to leave combat.
@@ -28,6 +29,7 @@ default
             //  for combat, otherwise they could run around and do things that
             //  are not allowed in this combat situation.
             aaRequestCombatPermission(id);
+            savedID = id;
         }
         else if(message == "get health")
         {
@@ -46,7 +48,7 @@ default
             // Find the team members of the current team of the av.
             list teamMembers = aaGetTeamMembers(aaGetTeam(id));
             aaSayTo(id, "Your team is: " + aaGetTeam(id) + 
-                    " and your team members are " + teamMembers);
+                    " and your team members are " + (string)teamMembers);
         }
         else if(llList2String(parsedMessage, 0) == "join" &&
             llList2String(parsedMessage, 1) == "team")
@@ -64,7 +66,7 @@ default
             // Find the UUID of the avatar they want to freeze
             key userUUID = aaAvatarFullName2Key(userToFreezeFirst + " " + userToFreezeLast);
             // Now freeze the avatar
-            aaFreezeAvatar(id, userUUID);
+            aaFreezeAvatar(id);
         }
         else if(llList2String(parsedMessage, 0) == "thaw" &&
             llList2String(parsedMessage, 1) == "user")
@@ -75,7 +77,7 @@ default
             // Find the UUID of the avatar they want to thaw
             key userUUID = aaAvatarFullName2Key(userToThawFirst + " " + userToThawLast);
             // Now thaw the avatar
-            aaThawAvatar(id, userUUID);
+            aaThawAvatar(userUUID);
         }
         else if(llList2String(parsedMessage, 0) == "get" &&
             llList2String(parsedMessage, 1) == "walk" &&
@@ -95,11 +97,11 @@ default
             // This will block or unblock the given user from walking
             string userFirst = llList2String(parsedMessage, 3);
             string userLast = llList2String(parsedMessage, 4);
-            int frozen = llList2Integer(parsedMessage, 5);
+            integer frozen = llList2Integer(parsedMessage, 5);
             // Find the UUID of the avatar they want to know about
             key userUUID = aaAvatarFullName2Key(userFirst + " " + userLast);
             // Now set it
-            aaSetWalkDisabled(userUUID, frozen);
+            aaSetWalkDisabled(userUUID, userUUID);
         }
         else if(llList2String(parsedMessage, 0) == "get" &&
             llList2String(parsedMessage, 1) == "fly" &&
@@ -119,7 +121,7 @@ default
             // This will block or unblock the given user from flying
             string userFirst = llList2String(parsedMessage, 3);
             string userLast = llList2String(parsedMessage, 4);
-            int frozen = llList2Integer(parsedMessage, 5);
+            integer frozen = llList2Integer(parsedMessage, 5);
             // Find the UUID of the avatar they want to know about
             key userUUID = aaAvatarFullName2Key(userFirst + " " + userLast);
             // Now set it
@@ -133,7 +135,7 @@ default
         if (perm & PERMISSION_COMBAT == PERMISSION_COMBAT) //The special combat permission
         {
             // They accepted it, allow them into the combat now
-            aaJoinCombat(id);
+            aaJoinCombat(savedID);
         }
     }
 }
