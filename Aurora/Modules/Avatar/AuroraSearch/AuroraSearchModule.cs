@@ -437,7 +437,7 @@ namespace Aurora.Modules
                 foreach (DirLandReplyData landDir in Landdata)
                 {
                     LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
-                    if (landdata.Maturity != 0)
+                    if (landdata == null || landdata.Maturity != 0)
                         continue; //Not a PG land 
                     foreach (Scene scene in m_Scenes)
                     {
