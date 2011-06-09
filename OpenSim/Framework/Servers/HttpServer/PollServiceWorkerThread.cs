@@ -61,6 +61,7 @@ namespace OpenSim.Framework.Servers.HttpServer
 
         public void ThreadStart(object o)
         {
+            Culture.SetCurrentCulture ();
             Run();
         }
 

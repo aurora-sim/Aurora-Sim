@@ -670,6 +670,7 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
 
         public void SendRequest()
         {
+            Culture.SetCurrentCulture ();
             Hashtable param = new Hashtable();
 
             // Check if channel is an UUID

@@ -1522,7 +1522,11 @@ namespace OpenSim.Framework
                         m_ThreadPool.QueueWorkItem(SmartThreadPoolCallback, new object[] { callback, obj });
                     break;
                 case FireAndForgetMethod.Thread:
-                    Thread thread = new Thread(delegate(object o) { callback(o); });
+                    Thread thread = new Thread (delegate (object o)
+                    {
+                        Culture.SetCurrentCulture ();
+                        callback (o);
+                    });
                     thread.Start(obj);
                     break;
 #if NET_4_0

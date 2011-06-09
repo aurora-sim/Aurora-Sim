@@ -232,6 +232,7 @@ namespace Aurora.Modules
 
         public void ThreadProcARGUI()
         {
+            Culture.SetCurrentCulture ();
             Application.Run (new Abuse (m_SceneList[0].AssetService, m_SceneList[0].RequestModuleInterface<IJ2KDecoder>()));
         }
 

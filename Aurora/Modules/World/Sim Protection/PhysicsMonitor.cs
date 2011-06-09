@@ -207,6 +207,7 @@ namespace Aurora.Modules
 
         private void StartThread(object scenes)
         {
+            Culture.SetCurrentCulture ();
             try
             {
                 List<Scene> scenesToRun = (List<Scene>)scenes;

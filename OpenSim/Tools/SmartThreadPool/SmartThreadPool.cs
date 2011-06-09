@@ -529,6 +529,7 @@ namespace Amib.Threading
         /// </summary>
         private void ProcessQueuedItems()
         {
+            Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo ("en-US", false);
             // Initialize the _smartThreadPool variable
             _smartThreadPool = this;
 

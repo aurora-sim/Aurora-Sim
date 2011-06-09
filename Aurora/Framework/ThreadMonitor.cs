@@ -31,6 +31,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using OpenSim.Framework;
 
 namespace Aurora.Framework
 {
@@ -86,6 +87,7 @@ namespace Aurora.Framework
         /// </summary>
         protected internal void Run()
         {
+            Culture.SetCurrentCulture ();
             try
             {
                 List<InternalHeartbeat> hbToRemove = null;

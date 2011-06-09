@@ -425,6 +425,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
 
         public void SendRequest()
         {
+            Culture.SetCurrentCulture ();
             HttpWebResponse response = null;
             StringBuilder sb = new StringBuilder();
             byte[] buf = new byte[8192];

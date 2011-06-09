@@ -71,6 +71,7 @@ namespace Aurora.Framework
 
         private void ThreadStart(object number)
         {
+            Culture.SetCurrentCulture ();
             int OurSleepTime = 0;
 
             int[] numbers = number as int[];

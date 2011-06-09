@@ -359,7 +359,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         protected string m_firstName;
         protected string m_lastName;
         protected string m_Name;
-        protected Thread m_clientThread;
         protected Vector3 m_startpos;
         protected EndPoint m_userEndPoint;
         protected UUID m_activeGroupID;

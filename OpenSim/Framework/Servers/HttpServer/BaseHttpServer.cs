@@ -358,7 +358,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                 // m_log.DebugFormat("[BASE HTTP SERVER]: <{0}> handle request for {1}",reqnum,request.RawUrl);
 
                 //Fix the current Culture
-                Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US", true);
+                Culture.SetCurrentCulture ();
 
                 //response.KeepAlive = true;
                 response.SendChunked = false;
