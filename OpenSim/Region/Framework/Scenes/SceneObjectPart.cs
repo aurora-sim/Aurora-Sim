@@ -2652,6 +2652,7 @@ namespace OpenSim.Region.Framework.Scenes
                         Velocity = new Vector3(0, 0, 0);
                         Acceleration = new Vector3(0, 0, 0);
                         AngularVelocity = new Vector3(0, 0, 0);
+                        this.m_lastAngularVelocity = Vector3.Zero;
                         PhysActor.RotationalVelocity = new Vector3 (0, 0, 0);
                     }
 

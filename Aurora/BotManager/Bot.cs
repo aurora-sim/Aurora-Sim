@@ -715,7 +715,7 @@ namespace Aurora.BotManager
 
         #endregion
 
-        #region Following Code 
+        #region Following Code
 
         #region Following declares
 
@@ -1410,8 +1410,10 @@ namespace Aurora.BotManager
                 IScenePresence sp = m_scene.GetScenePresence (kvp.Key);
                 if (sp != null)
                 {
-                    if (llCastRay (sp.AbsolutePosition, m_scenePresence.AbsolutePosition).Count == 0)
-                        m_LineOfSightEvents[kvp.Key] (kvp.Key, m_scenePresence.UUID);
+                    List<ISceneChildEntity> entities = llCastRay (sp.AbsolutePosition, m_scenePresence.AbsolutePosition);
+                    if (entities.Count == 0)
+                        if(m_scenePresence.AbsolutePosition.ApproxEquals(sp.AbsolutePosition, m_LineOfSight[kvp.Key]))
+                            m_LineOfSightEvents[kvp.Key] (kvp.Key, m_scenePresence.UUID);
                 }
             }
             return null;
