@@ -156,15 +156,22 @@ namespace OpenSim.Services.Connectors
                 request["userIDs"] = requestArray;
                 request["Method"] = "GetAgentsLocations";
                 OSDMap result = WebUtils.PostToService(url, request, true, false);
-                OSD r = OSDParser.DeserializeJson(result["_RawResult"]);
-                if (r is OSDMap)
+                try
                 {
-                    OSDMap innerresult = (OSDMap)r;
-                    OSDArray resultArray = (OSDArray)innerresult["Result"];
-                    foreach (OSD o in resultArray)
+                    OSD r = OSDParser.DeserializeJson (result["_RawResult"]);
+                    if (r is OSDMap)
                     {
-                        retVal.Add(o.AsString());
+                        OSDMap innerresult = (OSDMap)r;
+                        OSDArray resultArray = (OSDArray)innerresult["Result"];
+                        foreach (OSD o in resultArray)
+                        {
+                            retVal.Add (o.AsString ());
+                        }
                     }
+                }
+                catch
+                {
+                    //Bad request, just leave it
                 }
             }
             return retVal.ToArray();
