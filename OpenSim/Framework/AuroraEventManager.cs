@@ -93,16 +93,22 @@ namespace Aurora.Framework
         /// </summary>
         public void RegisterEventHandler (string functionName, OnGenericEventHandler handler)
         {
-            if (!m_events.ContainsKey (functionName))
-                m_events.Add (functionName, new List<OnGenericEventHandler> ());
-            m_events[functionName].Add (handler);
+            lock (m_events)
+            {
+                if (!m_events.ContainsKey (functionName))
+                    m_events.Add (functionName, new List<OnGenericEventHandler> ());
+                m_events[functionName].Add (handler);
+            }
         }
 
         public void UnregisterEventHandler (string functionName, OnGenericEventHandler handler)
         {
-            if (!m_events.ContainsKey (functionName))
-                return;
-            m_events[functionName].Remove (handler);
+            lock (m_events)
+            {
+                if (!m_events.ContainsKey (functionName))
+                    return;
+                m_events[functionName].Remove (handler);
+            }
         }
 
         /// <summary>
@@ -110,18 +116,21 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="FunctionName">Name of event to trigger</param>
         /// <param name="Param">Any parameters to pass along with the event</param>
-        public List<object> FireGenericEventHandler(string FunctionName, object Param)
+        public List<object> FireGenericEventHandler (string FunctionName, object Param)
         {
-            List<object> retVal = new List<object>();
-            //If not null, fire for all
-            List<OnGenericEventHandler> events;
-            if (m_events.TryGetValue (FunctionName, out events))
+            List<object> retVal = new List<object> ();
+            lock (m_events)
             {
-                foreach (OnGenericEventHandler handler in events)
+                //If not null, fire for all
+                List<OnGenericEventHandler> events;
+                if (m_events.TryGetValue (FunctionName, out events))
                 {
-                    object param = handler (FunctionName, Param);
-                    if (param != null)
-                        retVal.Add (param);
+                    foreach (OnGenericEventHandler handler in events)
+                    {
+                        object param = handler (FunctionName, Param);
+                        if (param != null)
+                            retVal.Add (param);
+                    }
                 }
             }
             return retVal;
