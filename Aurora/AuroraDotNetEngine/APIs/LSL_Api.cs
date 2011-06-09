@@ -4840,7 +4840,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 InventoryItemBase agentItem = null;
                 ILLClientInventory inventoryModule = World.RequestModuleInterface<ILLClientInventory>();
                 if(inventoryModule != null)
-                    agentItem = inventoryModule.MoveTaskInventoryItemToUserInventory(destId, UUID.Zero, m_host, objId);
+                    agentItem = inventoryModule.MoveTaskInventoryItemToUserInventory(destId, UUID.Zero, m_host, objId, true);
 
                 if (agentItem == null)
                     return DateTime.Now;

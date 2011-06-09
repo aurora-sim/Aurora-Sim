@@ -112,7 +112,8 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </param>
         /// <param name="part"></param>
         /// <param name="itemID"></param>
-        InventoryItemBase MoveTaskInventoryItemToUserInventory (UUID destId, UUID uUID, ISceneChildEntity m_host, UUID objId);
+        /// <param name="checkPermissions"></param>
+        InventoryItemBase MoveTaskInventoryItemToUserInventory (UUID destId, UUID uUID, ISceneChildEntity m_host, UUID objId, bool checkPermissions);
 
         /// <summary>
         /// Move the given items from the object task inventory to the agent's inventory

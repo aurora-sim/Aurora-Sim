@@ -935,7 +935,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return;
             }
 
-            MoveTaskInventoryItemToUserInventory(remoteClient, folderId, part, itemId);
+            MoveTaskInventoryItemToUserInventory(remoteClient, folderId, part, itemId, true);
         }
 
         /// <summary>
@@ -945,14 +945,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="folderID"></param>
         /// <param name="part"></param>
         /// <param name="itemID"></param>
-        protected InventoryItemBase MoveTaskInventoryItemToUserInventory (IClientAPI remoteClient, UUID folderId, ISceneChildEntity part, UUID itemId)
+        protected InventoryItemBase MoveTaskInventoryItemToUserInventory (IClientAPI remoteClient, UUID folderId, ISceneChildEntity part, UUID itemId, bool checkPermissions)
         {
             m_log.DebugFormat(
                 "[PRIM INVENTORY]: Adding item {0} from {1} to folder {2} for {3}",
                 itemId, part.Name, folderId, remoteClient.Name);
 
             InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(remoteClient.AgentId, part, itemId);
-            if (m_scene.Permissions.CanCopyObjectInventory(itemId, part.UUID, remoteClient.AgentId))
+            if (!checkPermissions || m_scene.Permissions.CanCopyObjectInventory(itemId, part.UUID, remoteClient.AgentId))
             {
 
                 if (agentItem == null)
@@ -1858,13 +1858,13 @@ namespace OpenSim.Region.Framework.Scenes
         /// </param>
         /// <param name="part"></param>
         /// <param name="itemID"></param>
-        public InventoryItemBase MoveTaskInventoryItemToUserInventory (UUID avatarId, UUID folderId, ISceneChildEntity part, UUID itemId)
+        public InventoryItemBase MoveTaskInventoryItemToUserInventory (UUID avatarId, UUID folderId, ISceneChildEntity part, UUID itemId, bool checkPermissions)
         {
             IScenePresence avatar;
 
             if (m_scene.TryGetScenePresence(avatarId, out avatar))
             {
-                return MoveTaskInventoryItemToUserInventory(avatar.ControllingClient, folderId, part, itemId);
+                return MoveTaskInventoryItemToUserInventory (avatar.ControllingClient, folderId, part, itemId, checkPermissions);
             }
             else
             {
