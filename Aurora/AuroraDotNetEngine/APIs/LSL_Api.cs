@@ -4831,16 +4831,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 throw new Exception(String.Format("The inventory object '{0}' could not be found", inventory));
             }
 
-            UserInfo info = m_host.ParentEntity.Scene.RequestModuleInterface<IAgentInfoService> ().GetUserInfo (destId.ToString ());
-
             // check if destination is an avatar
-            if ((info != null && info.IsOnline) || World.GetScenePresence(destId) != null)
+            if (World.GetScenePresence(destId) != null || m_host.ParentEntity.Scene.RequestModuleInterface<IAgentInfoService> ().GetUserInfo (destId.ToString ()) != null)
             {
                 // destination is an avatar
                 InventoryItemBase agentItem = null;
                 ILLClientInventory inventoryModule = World.RequestModuleInterface<ILLClientInventory>();
                 if(inventoryModule != null)
-                    agentItem = inventoryModule.MoveTaskInventoryItemToUserInventory(destId, UUID.Zero, m_host, objId, true);
+                    agentItem = inventoryModule.MoveTaskInventoryItemToUserInventory(destId, UUID.Zero, m_host, objId, false);
 
                 if (agentItem == null)
                     return DateTime.Now;

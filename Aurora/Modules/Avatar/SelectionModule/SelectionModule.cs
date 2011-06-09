@@ -277,7 +277,7 @@ namespace Aurora.Modules
 
         protected void ProcessViewerEffect(IClientAPI remoteClient, List<ViewerEffectEventHandlerArg> args)
         {
-            Scene scene = ((Scene)remoteClient.Scene);
+            IScene scene = remoteClient.Scene;
             // TODO: don't create new blocks if recycling an old packet
             ViewerEffectPacket.EffectBlock[] effectBlockArray = new ViewerEffectPacket.EffectBlock[args.Count];
             IScenePresence SP;
