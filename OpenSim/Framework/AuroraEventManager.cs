@@ -87,6 +87,8 @@ namespace Aurora.Framework
         ///      param is an object[], with o[0] the OSDMap which will be sent to the new region, o[1] the SessionID, o[2] the GridRegion that registered
         /// Backup - The 'backup' console command was triggered, everything should backup
         ///      no params
+        /// AssetRequested - This is fired when the asset is requested by the client
+        ///      params are IClientAPI and TransferRequestPacket
         ///      
         /// </summary>
         public void RegisterEventHandler (string functionName, OnGenericEventHandler handler)

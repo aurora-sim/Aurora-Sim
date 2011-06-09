@@ -226,6 +226,9 @@ namespace OpenSim.Services.Interfaces
         List<InventoryItemBase> GetItems (string[] fields, string[] vals);
         OSDArray GetLLSDItems(string[] fields, string[] vals);
 
+        bool HasAssetForUser (UUID userID, UUID assetID);
+        string GetItemNameByAsset (UUID assetID);
+
         bool StoreFolder (InventoryFolderBase folder);
         bool StoreItem (InventoryItemBase item);
 

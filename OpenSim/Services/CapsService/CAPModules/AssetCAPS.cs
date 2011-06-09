@@ -257,7 +257,9 @@ namespace OpenSim.Services.CapsService
 
         private void WriteTextureData(OSHttpRequest request, OSHttpResponse response, AssetBase texture, string format)
         {
-            string range = request.Headers.GetOne("Range");
+            m_service.Registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler ("AssetRequested", new object[3] { this.m_service.Registry, texture, m_service.AgentID });
+
+            string range = request.Headers.GetOne ("Range");
             //m_log.DebugFormat("[GETTEXTURE]: Range {0}", range);
             if (!String.IsNullOrEmpty(range)) // JP2's only
             {

@@ -154,6 +154,23 @@ namespace Aurora.Services.DataService
             return null;
         }
 
+        public bool HasAssetForUser (UUID userID, UUID assetID)
+        {
+            List<string> q = GD.Query (new string[2] { "assetID", "avatarID" }, new object[2] { assetID, userID }, m_itemsrealm, "*");
+            if(q != null && q.Count > 0)
+                return true;
+            return false;
+        }
+
+        public string GetItemNameByAsset (UUID assetID)
+        {
+            List<string> q = GD.Query (new string[1] { "assetID" }, new object[1] { assetID }, m_itemsrealm, "inventoryName");
+            if (q != null && q.Count > 0)
+                return q[0];
+
+            return "";
+        }
+
         private OSDArray ParseLLSDInventoryItems(IDataReader retVal)
         {
             OSDArray array = new OSDArray();

@@ -12393,7 +12393,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             UUID requestID = UUID.Zero;
             byte source = (byte)SourceType.Asset;
-
             if (transferRequest.TransferInfo.SourceType == (int)SourceType.Asset)
             {
                 requestID = new UUID(transferRequest.TransferInfo.Params, 0);

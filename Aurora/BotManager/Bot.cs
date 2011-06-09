@@ -58,6 +58,12 @@ namespace Aurora.BotManager
 
     #endregion
 
+    #region Delegates
+
+    public delegate void FollowingEvent(UUID avatarID, UUID botID);
+
+    #endregion
+
     public class Bot : IClientAPI
     {
         #region Declares
@@ -865,7 +871,6 @@ namespace Aurora.BotManager
             float closeToPoint = m_toAvatar ? StartFollowDistance : StopFollowDistance;
             if (distance > 10) //Greater than 10 meters, give up
             {
-                m_log.Warn ("Target is out of range");
                 //Try direct then, since it is way out of range
                 DirectFollowing (raycastEntities);
             }
@@ -1343,7 +1348,76 @@ namespace Aurora.BotManager
 
         #endregion
 
+        #region Distance Event
 
+        private Dictionary<UUID, FollowingEvent> m_followDistanceEvents = new Dictionary<UUID, FollowingEvent> ();
+        private Dictionary<UUID, float> m_followDistance = new Dictionary<UUID, float> ();
+
+        public void AddDistanceEvent (UUID avatarID, float distance, FollowingEvent ev)
+        {
+            m_followDistanceEvents[avatarID] = ev;
+            m_followDistance[avatarID] = distance;
+            if (m_followDistanceEvents.Count == 1) //Only the first time
+                EventManager.RegisterEventHandler ("Update", DistanceFollowUpdate);
+        }
+
+        public void RemoveDistanceEvent (UUID avatarID)
+        {
+            m_followDistanceEvents.Remove(avatarID);
+            m_followDistance.Remove (avatarID);
+            if (m_followDistanceEvents.Count == 0) //Only the first time
+                EventManager.UnregisterEventHandler ("Update", DistanceFollowUpdate);
+        }
+
+        public object DistanceFollowUpdate (string funct, object param)
+        {
+            foreach (KeyValuePair<UUID, float> kvp in m_followDistance)
+            {
+                IScenePresence sp = m_scene.GetScenePresence (kvp.Key);
+                if (sp != null)
+                {
+                    if (Util.DistanceLessThan (sp.AbsolutePosition, m_scenePresence.AbsolutePosition, kvp.Value))
+                        m_followDistanceEvents[kvp.Key] (kvp.Key, m_scenePresence.UUID);
+                }
+            }
+            return null;
+        }
+
+
+        private Dictionary<UUID, FollowingEvent> m_LineOfSightEvents = new Dictionary<UUID, FollowingEvent> ();
+        private Dictionary<UUID, float> m_LineOfSight = new Dictionary<UUID, float> ();
+
+        public void AddLineOfSightEvent (UUID avatarID, float distance, FollowingEvent ev)
+        {
+            m_LineOfSightEvents[avatarID] = ev;
+            m_LineOfSight[avatarID] = distance;
+            if (m_followDistanceEvents.Count == 1) //Only the first time
+                EventManager.RegisterEventHandler ("Update", LineOfSightUpdate);
+        }
+
+        public void RemoveLineOfSightEvent (UUID avatarID)
+        {
+            m_LineOfSightEvents.Remove (avatarID);
+            m_LineOfSight.Remove (avatarID);
+            if (m_followDistanceEvents.Count == 0) //Only the first time
+                EventManager.UnregisterEventHandler ("Update", LineOfSightUpdate);
+        }
+
+        public object LineOfSightUpdate (string funct, object param)
+        {
+            foreach (KeyValuePair<UUID, float> kvp in m_LineOfSight)
+            {
+                IScenePresence sp = m_scene.GetScenePresence (kvp.Key);
+                if (sp != null)
+                {
+                    if (llCastRay (sp.AbsolutePosition, m_scenePresence.AbsolutePosition).Count == 0)
+                        m_LineOfSightEvents[kvp.Key] (kvp.Key, m_scenePresence.UUID);
+                }
+            }
+            return null;
+        }
+
+        #endregion
 
 
 
