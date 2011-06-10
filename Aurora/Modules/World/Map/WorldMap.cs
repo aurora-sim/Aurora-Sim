@@ -65,13 +65,10 @@ namespace Aurora.Modules
         protected Scene m_scene;
         private byte[] myMapImageJPEG;
         protected bool m_Enabled = false;
-        private List<UUID> m_rootAgents = new List<UUID>();
         private IConfigSource m_config;
-        //private ExpiringCache<ulong, MapBlockData> m_mapRegionCache = new ExpiringCache<ulong, MapBlockData>();
         private ExpiringCache<ulong, List< mapItemReply>> m_mapItemCache = new ExpiringCache<ulong, List<mapItemReply>>();
-        //private ExpiringCache<string, List<MapBlockData>> m_terrainCache = new ExpiringCache<string, List<MapBlockData>>();
 
-        private List<MapItemRequester> m_itemsToRequest = new List<MapItemRequester>();
+        private Queue<MapItemRequester> m_itemsToRequest = new Queue<MapItemRequester> ();
         private bool itemRequesterIsRunning = false;
         private static AuroraThreadPool threadpool = null;
         private static AuroraThreadPool blockthreadpool = null;
@@ -230,17 +227,11 @@ namespace Aurora.Modules
 
             m_scene.EventManager.OnNewClient += OnNewClient;
             m_scene.EventManager.OnClosingClient += OnClosingClient;
-            m_scene.EventManager.OnClientClosed += ClientLoggedOut;
-            m_scene.EventManager.OnMakeChildAgent += MakeChildAgent;
-            m_scene.EventManager.OnMakeRootAgent += MakeRootAgent;
 		}
 
 		// this has to be called with a lock on m_scene
 		protected virtual void RemoveHandlers()
 		{
-            m_scene.EventManager.OnMakeRootAgent -= MakeRootAgent;
-            m_scene.EventManager.OnMakeChildAgent -= MakeChildAgent;
-            m_scene.EventManager.OnClientClosed -= ClientLoggedOut;
             m_scene.EventManager.OnNewClient -= OnNewClient;
             m_scene.EventManager.OnClosingClient -= OnClosingClient;
 
@@ -269,29 +260,13 @@ namespace Aurora.Modules
             client.OnMapNameRequest -= OnMapNameRequest;
         }
 
-		/// <summary>
-		/// Client logged out, check to see if there are any more root agents in the simulator
-		/// If not, stop the mapItemRequest Thread
-		/// Event handler
-		/// </summary>
-		/// <param name="AgentId">AgentID that logged out</param>
-		private void ClientLoggedOut(UUID AgentId, IScene scene)
-		{
-			lock (m_rootAgents)
-            {
-                m_rootAgents.Remove(AgentId);
-            }
-		}
 		#endregion
 
         public virtual void HandleMapItemRequest(IClientAPI remoteClient, uint flags,
             uint EstateID, bool godlike, uint itemtype, ulong regionhandle)
         {
-            lock (m_rootAgents)
-            {
-                if (!m_rootAgents.Contains(remoteClient.AgentId))
-                    return;
-            }
+            if (remoteClient.Scene.GetScenePresence (remoteClient.AgentId).IsChildAgent)
+                return;//No child agent requests
 
             uint xstart = 0;
             uint ystart = 0;
@@ -342,7 +317,7 @@ namespace Aurora.Modules
                     List<mapItemReply> reply;
                     if (!m_mapItemCache.TryGetValue(regionhandle, out reply))
                     {
-                        m_itemsToRequest.Add(new MapItemRequester()
+                        m_itemsToRequest.Enqueue(new MapItemRequester()
                         {
                             flags = flags,
                             itemtype = itemtype,
@@ -364,11 +339,20 @@ namespace Aurora.Modules
         private void GetMapItems()
         {
             itemRequesterIsRunning = true;
-            for (int i = 0; i < m_itemsToRequest.Count; i++)
+            while(true)
             {
-                MapItemRequester item = m_itemsToRequest[i];
+                MapItemRequester item = null;
+                try
+                {
+                    item = m_itemsToRequest.Dequeue ();
+                }
+                catch
+                {
+                    break;//No more things in the queue
+                }
                 if (item == null)
-                    continue;
+                    break; //Nothing in the queue
+
                 List<mapItemReply> mapitems = new List<mapItemReply>();
                 if (!m_mapItemCache.TryGetValue(item.regionhandle, out mapitems)) //try again, might have gotten picked up by this already
                 {
@@ -391,6 +375,7 @@ namespace Aurora.Modules
 
                 if(mapitems != null)
                     item.remoteClient.SendMapItemReply (mapitems.ToArray (), item.itemtype, item.flags);
+                Thread.Sleep (5);
             }
             itemRequesterIsRunning = false;
         }
@@ -427,7 +412,7 @@ namespace Aurora.Modules
 
         protected virtual void ClickedOnTile(IClientAPI remoteClient, int minX, int minY, int maxX, int maxY, uint flag)
         {
-            m_blockitemsToRequest.Add(new MapBlockRequester()
+            m_blockitemsToRequest.Enqueue (new MapBlockRequester ()
             {
                 maxX = maxX,
                 maxY = maxY,
@@ -442,13 +427,13 @@ namespace Aurora.Modules
 
         protected virtual void GetAndSendMapBlocks(IClientAPI remoteClient, int minX, int minY, int maxX, int maxY, uint flag)
         {
-            m_blockitemsToRequest.Add(new MapBlockRequester()
+            m_blockitemsToRequest.Enqueue(new MapBlockRequester()
             {
                 maxX = maxX,
                 maxY = maxY,
                 minX = minX,
                 minY = minY,
-                mapBlocks = 0,//Map
+                mapBlocks = flag,//Map
                 remoteClient = remoteClient
             });
             if (!blockRequesterIsRunning)
@@ -457,13 +442,13 @@ namespace Aurora.Modules
 
         protected virtual void GetAndSendTerrainBlocks(IClientAPI remoteClient, int minX, int minY, int maxX, int maxY, uint flag)
         {
-            m_blockitemsToRequest.Add(new MapBlockRequester()
+            m_blockitemsToRequest.Enqueue (new MapBlockRequester ()
             {
                 maxX = maxX,
                 maxY = maxY,
                 minX = minX,
                 minY = minY,
-                mapBlocks = 1,//Terrain
+                mapBlocks = flag,//Terrain
                 remoteClient = remoteClient
             });
             if (!blockRequesterIsRunning)
@@ -471,8 +456,7 @@ namespace Aurora.Modules
         }
 
         private bool blockRequesterIsRunning = false;
-        private List<MapBlockRequester> m_blockitemsToRequest = new List<MapBlockRequester>();
-        //private MapBlockData[,] mapBlockCache = new MapBlockData[10000, 10000];
+        private Queue<MapBlockRequester> m_blockitemsToRequest = new Queue<MapBlockRequester> ();
 
         private class MapBlockRequester
         {
@@ -489,27 +473,21 @@ namespace Aurora.Modules
             try
             {
                 blockRequesterIsRunning = true;
-                for (int i = 0; i < m_blockitemsToRequest.Count; i++)
+                while(true)
                 {
-                    MapBlockRequester item = m_blockitemsToRequest[i];
-                    if (item == null)
-                        continue;
-                    List<MapBlockData> mapBlocks = new List<MapBlockData>();
-                    //bool foundAll = true;
-
-                    /*for (int X = item.minX; i < item.maxX; i++)
+                    MapBlockRequester item = null;
+                    try
                     {
-                        for (int Y = item.minY; i < item.maxY; i++)
-                        {
-                            if (mapBlockCache[X, Y] != null)
-                            {
-                                mapBlocks.Add(mapBlockCache[X, Y]);
-                            }
-                            else foundAll = false;
-                        }
+                        item = m_blockitemsToRequest.Dequeue();
                     }
-                    if (!foundAll)
-                    {*/
+                    catch
+                    {
+                        break;
+                    }
+                    if (item == null)
+                        break;
+                    List<MapBlockData> mapBlocks = new List<MapBlockData>();
+
                     List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
                             (item.minX - 4) * (int)Constants.RegionSize,
                             (item.maxX + 4) * (int)Constants.RegionSize,
@@ -518,24 +496,17 @@ namespace Aurora.Modules
 
                     foreach (GridRegion region in regions)
                     {
-                        //mapBlockCache[region.RegionLocX / 256, region.RegionLocY / 256] = MapBlockFromGridRegion(region);
-                        if (item.mapBlocks == 0 || (item.mapBlocks & 0x10000) != 0)
+                        if ((item.mapBlocks & 0) == 0 || (item.mapBlocks & 0x10000) != 0)
                             mapBlocks.Add(MapBlockFromGridRegion(region));
-                        else if (item.mapBlocks == 1)
+                        else if ((item.mapBlocks & 1) == 1)
                             mapBlocks.Add(TerrainBlockFromGridRegion(region));
-                        else if (item.mapBlocks == 2) //V2 viewer, we need to deal with it a bit
+                        else if ((item.mapBlocks & 2) == 2) //V2 viewer, we need to deal with it a bit
                             mapBlocks.AddRange (Map2BlockFromGridRegion (region));
                     }
-                    /*}
-                    else
-                    {
-                    }*/
-                    //Fill in blank ones
-                    FillInMap(mapBlocks, item.minX, item.minY, item.maxX, item.maxY);
 
-                    item.remoteClient.SendMapBlock(mapBlocks, 2/*item.mapBlocks*/);
+                    item.remoteClient.SendMapBlock(mapBlocks, item.mapBlocks);
+                    Thread.Sleep (5);
                 }
-                m_blockitemsToRequest.Clear();
             }
             catch (Exception)
             {
@@ -885,25 +856,6 @@ namespace Aurora.Modules
                 m_scene.RegionInfo.RegionName, exportPath);
         }
 
-        private void MakeRootAgent(IScenePresence avatar)
-		{
-			lock (m_rootAgents)
-			{
-				if (!m_rootAgents.Contains(avatar.UUID))
-				{
-					m_rootAgents.Add(avatar.UUID);
-				}
-			}
-		}
-
-		private void MakeChildAgent(IScenePresence avatar)
-		{
-			lock (m_rootAgents)
-            {
-                m_rootAgents.Remove(avatar.UUID);
-            }
-        }
-
         private void OnUpdateRegion(object source, ElapsedEventArgs e)
         {
             if (m_scene != null)
@@ -984,27 +936,6 @@ namespace Aurora.Modules
             }
             Mapasset = null;
             Terrainasset = null;
-        }
-
-        private void FillInMap(List<MapBlockData> mapBlocks, int minX, int minY, int maxX, int maxY)
-        {
-            for (int x = minX; x <= maxX; x++)
-            {
-                for (int y = minY; y <= maxY; y++)
-                {
-                    MapBlockData mblock = mapBlocks.Find(delegate(MapBlockData mb) { return ((mb.X == x) && (mb.Y == y)); });
-                    if (mblock == null)
-                    {
-                        mblock = new MapBlockData();
-                        mblock.X = (ushort)x;
-                        mblock.Y = (ushort)y;
-                        mblock.Name = "";
-                        mblock.Access = (byte)SimAccess.NonExistent; // not here???
-                        mblock.MapImageID = UUID.Zero;
-                        mapBlocks.Add(mblock);
-                    }
-                }
-            }
         }
 
         #region Async map tile
