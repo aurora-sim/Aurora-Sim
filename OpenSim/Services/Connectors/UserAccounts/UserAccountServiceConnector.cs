@@ -146,10 +146,8 @@ namespace OpenSim.Services.Connectors
                         m_ServerURI,
                         reqString);
                     if (reply == null || (reply != null && reply == string.Empty))
-                    {
-                        m_log.DebugFormat("[ACCOUNT CONNECTOR]: GetUserAccounts received null or empty reply");
-                        return null;
-                    }
+                        continue;
+
                     Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
@@ -179,7 +177,7 @@ namespace OpenSim.Services.Connectors
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[ACCOUNT CONNECTOR]: Exception when contacting accounts server: {0}", e.Message);
+                m_log.InfoFormat("[ACCOUNT CONNECTOR]: Exception when contacting accounts server: {0}", e.Message);
             }
 
             return accounts;
@@ -224,17 +222,15 @@ namespace OpenSim.Services.Connectors
             UserAccount account = null;
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(avatarID.ToString(), "UserAccountServerURI");
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(avatarID.ToString(), "UserAccountServerURI", true);
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI,
                         reqString);
                     if (reply == null || (reply != null && reply == string.Empty))
-                    {
-                        m_log.DebugFormat("[ACCOUNT CONNECTOR]: GetUserAccount received null or empty reply");
-                        return null;
-                    }
+                        continue;
+
                     Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if ((replyData != null) && replyData.ContainsKey("result") && (replyData["result"] != null))
@@ -250,7 +246,7 @@ namespace OpenSim.Services.Connectors
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[ACCOUNT CONNECTOR]: Exception when contacting user account server: {0}", e.Message);
+                m_log.InfoFormat("[ACCOUNT CONNECTOR]: Exception when contacting user account server: {0}", e.Message);
             }
 
             return account;
