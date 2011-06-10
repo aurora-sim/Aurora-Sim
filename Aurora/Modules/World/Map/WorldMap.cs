@@ -72,7 +72,7 @@ namespace Aurora.Modules
         private bool itemRequesterIsRunning = false;
         private static AuroraThreadPool threadpool = null;
         private static AuroraThreadPool blockthreadpool = null;
-        private double minutes = 30;
+        private double minutes = 60 * 24;
         private double oneminute = 60000;
         private System.Timers.Timer UpdateMapImage;
         private System.Timers.Timer UpdateOnlineStatus;

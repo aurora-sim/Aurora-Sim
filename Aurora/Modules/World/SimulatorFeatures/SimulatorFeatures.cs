@@ -41,15 +41,15 @@ namespace Aurora.Modules.World
             OSDMap retVal = new OSDMap ();
             retVal["SimulatorFeatures"] = CapsUtil.CreateCAPS ("SimulatorFeatures", "");
 
-            server.AddStreamHandler (new RestHTTPHandler ("Get", retVal["SimulatorFeatures"],
+            server.AddStreamHandler (new RestHTTPHandler ("GET", retVal["SimulatorFeatures"],
                                                       delegate (Hashtable m_dhttpMethod)
                                                       {
-                                                          return SimulatorFeatures (m_dhttpMethod);
+                                                          return SimulatorFeaturesCAP (m_dhttpMethod);
                                                       }));
             return retVal;
         }
 
-        private Hashtable SimulatorFeatures (Hashtable mDhttpMethod)
+        private Hashtable SimulatorFeaturesCAP (Hashtable mDhttpMethod)
         {
             //OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
 
