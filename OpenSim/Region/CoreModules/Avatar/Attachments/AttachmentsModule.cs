@@ -107,6 +107,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         protected void MakeChildAgent (IScenePresence presence)
         {
+            //If its a root agent, we need to save all attachments as well
+            DetachAndSaveAllAttachments (presence.ControllingClient);
         }
 
         protected void SubscribeToClientEvents(IClientAPI client)
@@ -712,7 +714,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             }
 
             //Update the ItemID with the new item
-            group.SetFromItemID(item.ID);
+            group.SetFromItemID (itemID);
 
             //If we updated the attachment, we need to save the change
             IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
@@ -764,7 +766,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             // We can NOT use the dictionaries here, as we are looking
             // for an entity by the fromAssetID, which is NOT the prim UUID
             ISceneEntity[] attachments = GetAttachmentsForAvatar (remoteClient.AgentId);
-
+            m_scene.AuroraEventManager.FireGenericEventHandler ("DetachingAllAttachments", attachments);
             foreach (ISceneEntity group in attachments)
             {
                 DetachSingleAttachmentGroupToInventoryInternal (group.RootChild.FromUserInventoryItemID, remoteClient, false, group);

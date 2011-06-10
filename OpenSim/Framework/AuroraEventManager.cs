@@ -89,6 +89,8 @@ namespace Aurora.Framework
         ///      no params
         /// AssetRequested - This is fired when the asset is requested by the client
         ///      params are IClientAPI and TransferRequestPacket
+        /// DetachingAllAttachments - All attachments are being removed from the avatar (happens when the agent leaves a region)
+        ///      param is a ISceneEntity[] (all the attachments)
         ///      
         /// </summary>
         public void RegisterEventHandler (string functionName, OnGenericEventHandler handler)

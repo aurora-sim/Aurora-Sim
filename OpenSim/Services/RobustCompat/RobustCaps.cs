@@ -65,32 +65,54 @@ namespace OpenSim.Services.RobustCompat
             scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
             scene.AuroraEventManager.RegisterEventHandler ("NewUserConnection", OnGenericEvent);
             scene.AuroraEventManager.RegisterEventHandler ("UserStatusChange", OnGenericEvent);
+
+            scene.AuroraEventManager.RegisterEventHandler ("DetachingAllAttachments", DetachingAllAttachments);
+            scene.AuroraEventManager.RegisterEventHandler ("SendingAttachments", SendAttachments);
+        }
+
+        public object DetachingAllAttachments (string funct, object param)
+        {
+            ISceneEntity[] attachments = (ISceneEntity[])param;
+            foreach (ISceneEntity attachment in attachments)
+                m_scene.SimulationService.CreateObject (new Interfaces.GridRegion (m_scene.RegionInfo), (ISceneObject)attachment);
+            return null;
+        }
+
+        public object SendAttachments (string funct, object param)
+        {
+            object[] parameters = (object[])param;
+            IScenePresence sp = (IScenePresence)parameters[1];
+            OpenSim.Services.Interfaces.GridRegion dest = (OpenSim.Services.Interfaces.GridRegion)parameters[0];
+            IAttachmentsModule att = sp.Scene.RequestModuleInterface<IAttachmentsModule> ();
+            foreach (ISceneEntity attachment in att.GetAttachmentsForAvatar (sp.UUID))
+                m_scene.SimulationService.CreateObject (dest, (ISceneObject)attachment);
+            return null;
         }
 
         void OnMakeRootAgent (IScenePresence presence)
         {
-            if ((presence.CallbackURI != null) && !presence.CallbackURI.Equals(""))
+            ICapsService service = m_scene.RequestModuleInterface<ICapsService> ();
+            if (service != null)
             {
-                WebUtils.ServiceOSDRequest(presence.CallbackURI, null, "DELETE", 10000, false, false, false);
-                presence.CallbackURI = null;
-                ICapsService service = m_scene.RequestModuleInterface<ICapsService>();
-                if (service != null)
+                IClientCapsService clientCaps = service.GetClientCapsService (presence.UUID);
+                if (clientCaps != null)
                 {
-                    IClientCapsService clientCaps = service.GetClientCapsService (presence.UUID);
-                    if (clientCaps != null)
+                    IRegionClientCapsService regionCaps = clientCaps.GetCapsService (m_scene.RegionInfo.RegionHandle);
+                    if (regionCaps != null)
                     {
-                        IRegionClientCapsService regionCaps = clientCaps.GetCapsService (m_scene.RegionInfo.RegionHandle);
-                        if (regionCaps != null)
+                        regionCaps.RootAgent = true;
+                        foreach (IRegionClientCapsService regionClientCaps in clientCaps.GetCapsServices ())
                         {
-                            regionCaps.RootAgent = true;
-                            foreach (IRegionClientCapsService regionClientCaps in clientCaps.GetCapsServices ())
-                            {
-                                if (regionCaps.RegionHandle != regionClientCaps.RegionHandle)
-                                    regionClientCaps.RootAgent = false; //Reset any other agents that we might have
-                            }
+                            if (regionCaps.RegionHandle != regionClientCaps.RegionHandle)
+                                regionClientCaps.RootAgent = false; //Reset any other agents that we might have
                         }
                     }
                 }
+            }
+            if ((presence.CallbackURI != null) && !presence.CallbackURI.Equals (""))
+            {
+                WebUtils.ServiceOSDRequest (presence.CallbackURI, null, "DELETE", 10000, false, false, false);
+                presence.CallbackURI = null;
             }
         }
 
@@ -110,6 +132,7 @@ namespace OpenSim.Services.RobustCompat
                     }
                 }
             }
+
         }
 
         protected object OnGenericEvent(string FunctionName, object parameters)

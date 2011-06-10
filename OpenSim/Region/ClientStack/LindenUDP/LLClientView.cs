@@ -748,16 +748,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             mov.AgentData.SessionID = m_sessionId;
             mov.AgentData.AgentID = AgentId;
             mov.Data.RegionHandle = regInfo.RegionHandle;
-            mov.Data.Timestamp = (uint)Util.UnixTimeSinceEpoch();
-
-            if ((pos.X == 0) && (pos.Y == 0) && (pos.Z == 0))
-            {
-                mov.Data.Position = m_startpos;
-            }
-            else
-            {
-                mov.Data.Position = pos;
-            }
+            mov.Data.Timestamp = (uint)Util.UnixTimeSinceEpoch ();
+            mov.Data.Position = pos;
             mov.Data.LookAt = look;
 
             // Hack to get this out immediately and skip the throttles
