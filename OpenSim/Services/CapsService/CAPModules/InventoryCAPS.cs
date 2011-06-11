@@ -45,6 +45,8 @@ using Aurora.DataManager;
 using Aurora.Framework;
 using Aurora.Services.DataService;
 using OpenMetaverse.StructuredData;
+using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Services.CapsService
 {
@@ -334,7 +336,7 @@ namespace OpenSim.Services.CapsService
         {
             OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
             string asset_type = map["asset_type"].AsString();
-            m_log.Info("[CAPS]: NewAgentInventoryRequest Request is: " + map.ToString());
+            //m_log.Info("[CAPS]: NewAgentInventoryRequest Request is: " + map.ToString());
             //m_log.Debug("asset upload request via CAPS" + llsdRequest.inventory_type + " , " + llsdRequest.asset_type);
 
             if (asset_type == "texture" ||
@@ -472,6 +474,144 @@ namespace OpenSim.Services.CapsService
             {
                 inType = 15;
                 assType = 0;
+            }
+            else if (inventoryType == "object")
+            {
+                inType = (sbyte)InventoryType.Object;
+                assType = (sbyte)AssetType.Object;
+
+                List<Vector3> positions = new List<Vector3> ();
+                List<Quaternion> rotations = new List<Quaternion> ();
+                OSDMap request = (OSDMap)OSDParser.DeserializeLLSDXml (data);
+                OSDArray instance_list = (OSDArray)request["instance_list"];
+                OSDArray mesh_list = (OSDArray)request["mesh_list"];
+                OSDArray texture_list = (OSDArray)request["texture_list"];
+                SceneObjectGroup grp = null;
+
+                List<UUID> textures = new List<UUID> ();
+                for (int i = 0; i < texture_list.Count; i++)
+                {
+                    AssetBase textureAsset = new AssetBase (UUID.Random (), assetName, (sbyte)AssetType.Texture, m_service.AgentID.ToString ());
+                    textureAsset.Data = texture_list[i].AsBinary ();
+                    m_assetService.Store (textureAsset);
+                    textures.Add(textureAsset.FullID);
+                }
+                for (int i = 0; i < mesh_list.Count; i++)
+                {
+                    PrimitiveBaseShape pbs = PrimitiveBaseShape.CreateBox ();
+                    Primitive.TextureEntry textureEntry = new Primitive.TextureEntry (UUID.Parse ("89556747-24cb-43ed-920b-47caed15465f"));
+                    OSDMap inner_instance_list = (OSDMap)instance_list[i];
+
+                    OSDArray face_list = (OSDArray)inner_instance_list["face_list"];
+                    for (uint face = 0; face < face_list.Count; face++)
+                    {
+                        OSDMap faceMap = (OSDMap)face_list[(int)face];
+                        Primitive.TextureEntryFace f = pbs.Textures.CreateFace (face);
+                        f.Fullbright = faceMap["fullbright"].AsBoolean();
+                        f.RGBA = faceMap["diffuse_color"].AsColor4 ();
+
+                        int textureNum = faceMap["image"].AsInteger ();
+                        float imagerot = faceMap["imagerot"].AsInteger ();
+                        float offsets = (float)faceMap["offsets"].AsReal ();
+                        float offsett = (float)faceMap["offsett"].AsReal ();
+                        float scales = (float)faceMap["scales"].AsReal ();
+                        float scalet = (float)faceMap["scalet"].AsReal ();
+
+                        f.Rotation = imagerot;
+                        f.OffsetU = offsets;
+                        f.OffsetV = offsett;
+                        f.RepeatU = scales;
+                        f.RepeatV = scalet;
+                        if (textures.Count > textureNum)
+                            f.TextureID = textures[textureNum];
+                        textureEntry.FaceTextures[face] = f;
+                    }
+                    pbs.TextureEntry = textureEntry.GetBytes();
+
+                    AssetBase meshAsset = new AssetBase (UUID.Random (), assetName, (sbyte)AssetType.Mesh, m_service.AgentID.ToString ());
+                    meshAsset.Data = mesh_list[i].AsBinary ();
+                    m_assetService.Store (meshAsset);
+                    
+                    pbs.SculptEntry = true;
+                    pbs.SculptTexture = meshAsset.FullID;
+                    pbs.SculptType = (byte)SculptType.Mesh;
+                    pbs.SculptData = meshAsset.Data;
+
+                    Vector3 position = inner_instance_list["position"].AsVector3 ();
+                    Vector3 scale = inner_instance_list["scale"].AsVector3 ();
+                    Quaternion rotation = inner_instance_list["rotation"].AsQuaternion ();
+
+                    int physicsShapeType = inner_instance_list["physics_shape_type"].AsInteger ();
+                    int material = inner_instance_list["material"].AsInteger ();
+                    int mesh = inner_instance_list["mesh"].AsInteger ();//?
+
+                    OSDMap permissions = (OSDMap)inner_instance_list["permissions"];
+                    int base_mask = permissions["base_mask"].AsInteger ();
+                    int everyone_mask = permissions["everyone_mask"].AsInteger ();
+                    UUID creator_id = permissions["creator_id"].AsUUID ();
+                    UUID group_id = permissions["group_id"].AsUUID ();
+                    int group_mask = permissions["group_mask"].AsInteger ();
+                    bool is_owner_group = permissions["is_owner_group"].AsBoolean ();
+                    UUID last_owner_id = permissions["last_owner_id"].AsUUID ();
+                    int next_owner_mask = permissions["next_owner_mask"].AsInteger ();
+                    UUID owner_id = permissions["owner_id"].AsUUID ();
+                    int owner_mask = permissions["owner_mask"].AsInteger ();
+
+                    IScene fakeScene = new Scene ();
+                    fakeScene.AddModuleInterfaces (m_service.Registry.GetInterfaces ());
+
+                    SceneObjectPart prim = new SceneObjectPart (owner_id, pbs, position, Quaternion.Identity,
+                            Vector3.Zero, assetName, fakeScene);
+
+                    prim.Scale = scale;
+                    prim.AbsolutePosition = position;
+                    rotations.Add (rotation);
+                    positions.Add (position);
+                    prim.UUID = UUID.Random ();
+                    prim.CreatorID = creator_id;
+                    prim.OwnerID = owner_id;
+                    prim.GroupID = group_id;
+                    prim.LastOwnerID = prim.OwnerID;
+                    prim.CreationDate = Util.UnixTimeSinceEpoch ();
+                    prim.Name = assetName;
+                    prim.Description = "";
+                    prim.PhysicsType = (byte)physicsShapeType;
+
+                    prim.BaseMask = (uint)base_mask;
+                    prim.EveryoneMask = (uint)everyone_mask;
+                    prim.GroupMask = (uint)group_mask;
+                    prim.NextOwnerMask = (uint)next_owner_mask;
+                    prim.OwnerMask = (uint)owner_mask;
+
+                    if (grp == null)
+                        grp = new SceneObjectGroup (prim, fakeScene);
+                    else
+                        grp.AddChild (prim, i + 1);
+                    grp.RootPart.IsAttachment = false;
+                }
+                if(grp.ChildrenList.Count > 1)//Fix first link #
+                    grp.RootPart.LinkNum++;
+
+                Vector3 rootPos = positions[0];
+                grp.SetAbsolutePosition(false, rootPos);
+                for (int i = 0; i < positions.Count; i++)
+                {
+                    Vector3 offset = positions[i] - rootPos;
+                    grp.ChildrenList[i].SetOffsetPosition (offset);
+                    Vector3 abs = grp.ChildrenList[i].AbsolutePosition;
+                    Vector3 currentPos = positions[i];
+                    if (abs != currentPos)
+                    {
+                    }
+                }
+                //grp.Rotation = rotations[0];
+                for (int i = 0; i < rotations.Count; i++)
+                {
+                    if(i != 0)
+                        grp.ChildrenList[i].SetRotationOffset (false, rotations[i], false);
+                }
+                grp.UpdateGroupRotationR (rotations[0]);
+                data = ASCIIEncoding.ASCII.GetBytes(grp.ToXml2 ());
             }
             else if (inventoryType == "wearable")
             {
