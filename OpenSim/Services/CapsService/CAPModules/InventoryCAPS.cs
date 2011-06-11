@@ -499,7 +499,8 @@ namespace OpenSim.Services.CapsService
                 for (int i = 0; i < mesh_list.Count; i++)
                 {
                     PrimitiveBaseShape pbs = PrimitiveBaseShape.CreateBox ();
-                    Primitive.TextureEntry textureEntry = new Primitive.TextureEntry (UUID.Parse ("89556747-24cb-43ed-920b-47caed15465f"));
+
+                    Primitive.TextureEntry textureEntry = new Primitive.TextureEntry (Primitive.TextureEntry.WHITE_TEXTURE);
                     OSDMap inner_instance_list = (OSDMap)instance_list[i];
 
                     OSDArray face_list = (OSDArray)inner_instance_list["face_list"];
@@ -507,8 +508,10 @@ namespace OpenSim.Services.CapsService
                     {
                         OSDMap faceMap = (OSDMap)face_list[(int)face];
                         Primitive.TextureEntryFace f = pbs.Textures.CreateFace (face);
-                        f.Fullbright = faceMap["fullbright"].AsBoolean();
-                        f.RGBA = faceMap["diffuse_color"].AsColor4 ();
+                        if(faceMap.ContainsKey("fullbright"))
+                            f.Fullbright = faceMap["fullbright"].AsBoolean ();
+                        if (faceMap.ContainsKey ("diffuse_color"))
+                            f.RGBA = faceMap["diffuse_color"].AsColor4 ();
 
                         int textureNum = faceMap["image"].AsInteger ();
                         float imagerot = faceMap["imagerot"].AsInteger ();
@@ -517,13 +520,20 @@ namespace OpenSim.Services.CapsService
                         float scales = (float)faceMap["scales"].AsReal ();
                         float scalet = (float)faceMap["scalet"].AsReal ();
 
-                        f.Rotation = imagerot;
-                        f.OffsetU = offsets;
-                        f.OffsetV = offsett;
-                        f.RepeatU = scales;
-                        f.RepeatV = scalet;
+                        if(imagerot != 0)
+                            f.Rotation = imagerot;
+                        if(offsets != 0)
+                            f.OffsetU = offsets;
+                        if (offsett != 0)
+                            f.OffsetV = offsett;
+                        if (scales != 0)
+                            f.RepeatU = scales;
+                        if (scalet != 0)
+                            f.RepeatV = scalet;
                         if (textures.Count > textureNum)
                             f.TextureID = textures[textureNum];
+                        else
+                            f.TextureID = Primitive.TextureEntry.WHITE_TEXTURE;
                         textureEntry.FaceTextures[face] = f;
                     }
                     pbs.TextureEntry = textureEntry.GetBytes();
