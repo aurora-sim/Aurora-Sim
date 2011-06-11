@@ -65,6 +65,8 @@ Prebuild/Prebuild.sln
 TestResult.xml
 TAGS
 *~
+*.bak
+*.vshost.*
 Makefile.local
 bin/.version
 compile.bat
