@@ -3682,7 +3682,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 if (updateFlags.HasFlag (PrimUpdateFlags.FullUpdate))
                 {
-                    //canUseCompressed = false;
+                    canUseCompressed = false;
                     canUseImproved = false;
                 }
                 else if (updateFlags.HasFlag (PrimUpdateFlags.ForcedFullUpdate))
