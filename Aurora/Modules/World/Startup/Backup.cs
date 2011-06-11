@@ -600,6 +600,7 @@ namespace Aurora.Modules
                 if(archiver.AllowPrompting)
                     saveAssets = MainConsole.Instance.CmdPrompt ("Save assets? (Will not be able to load on other grids)", "false").Equals ("true", StringComparison.CurrentCultureIgnoreCase);
 
+                int count = 0;
                 foreach (ISceneEntity entity in entities)
                 {
                     try
@@ -611,6 +612,9 @@ namespace Aurora.Modules
                         byte[] xml = ((ISceneObject)entity).ToBinaryXml2 ();
                         writer.WriteFile ("entities/" + entity.UUID.ToString (), xml);
                         xml = null;
+                        count++;
+                        if (count % 5 == 0)
+                            Thread.Sleep (1);
                         //Get all the assets too
                         if (saveAssets)
                             assetGatherer.GatherAssetUuids (entity, assets, scene);
