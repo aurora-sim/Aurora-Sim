@@ -206,7 +206,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             try
             {
                 doc.LoadXml (xmlData);
-                
                 SceneObjectGroup grp = InternalFromXml2Format (doc, scene);
                 grp.XMLRepresentation = Encoding.UTF8.GetBytes(doc.OuterXml);
                 return grp;

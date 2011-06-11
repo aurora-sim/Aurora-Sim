@@ -1885,6 +1885,40 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public float Friction
+        {
+            get
+            {
+                OSD d = GetComponentState ("Friction");
+                if (d == null)
+                    d = 1;
+                return (float)d.AsReal ();
+            }
+            set
+            {
+                SetComponentState ("Friction", value);
+                if (PhysActor != null)
+                    PhysActor.Friction = value;
+            }
+        }
+
+        public float Restitution
+        {
+            get
+            {
+                OSD d = GetComponentState ("Restitution");
+                if (d == null)
+                    d = 1;
+                return (float)d.AsReal ();
+            }
+            set
+            {
+                SetComponentState ("Restitution", value);
+                if (PhysActor != null)
+                    PhysActor.Restitution = value;
+            }
+        }
+
         public float GravityMultiplier
         {
             get
@@ -3964,7 +3998,7 @@ namespace OpenSim.Region.Framework.Scenes
                     else
                     {
                         IMonitorModule m = ParentGroup.Scene.RequestModuleInterface<IMonitorModule>();
-                        if (m != null)
+                        if (m != null && ParentGroup.Scene.RegionInfo != null)
                             ((IObjectUpdateMonitor)m.GetMonitor(ParentGroup.Scene.RegionInfo.RegionID.ToString(), "PrimUpdates")).AddLimitedPrims(1);
                         return false;
                     }
@@ -5222,6 +5256,15 @@ namespace OpenSim.Region.Framework.Scenes
                     Density = block.Density;
                     ParentGroup.RebuildPhysicalRepresentation ();
                 }
+                if (Friction != block.Friction)
+                {
+                    Friction = block.Friction;
+                    ParentGroup.RebuildPhysicalRepresentation ();
+                }
+                if (Restitution != block.Restitution)
+                {
+                    Restitution = block.Restitution;
+                }
             }
 
             if ((UsePhysics == wasUsingPhysics) && (wasTemporary == IsTemporary) && (wasPhantom == IsPhantom) && (IsVD==wasVD))
@@ -5773,13 +5816,13 @@ namespace OpenSim.Region.Framework.Scenes
 
         internal void TriggerScriptMovingStartEvent()
         {
-            if (m_parentGroup != null && m_parentGroup.Scene != null)
+            if (m_parentGroup != null && m_parentGroup.Scene != null && m_parentGroup.Scene.EventManager != null)
                 m_parentGroup.Scene.EventManager.TriggerOnScriptMovingStartEvent(this);
         }
 
         internal void TriggerScriptMovingEndEvent()
         {
-            if (m_parentGroup != null && m_parentGroup.Scene != null)
+            if (m_parentGroup != null && m_parentGroup.Scene != null && m_parentGroup.Scene.EventManager != null)
                 m_parentGroup.Scene.EventManager.TriggerOnScriptMovingEndEvent(this);
         }
     }

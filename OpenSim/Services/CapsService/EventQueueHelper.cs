@@ -94,17 +94,27 @@ namespace OpenSim.Services.CapsService
         public static OSD ObjectPhysicsProperties (ISceneChildEntity[] entities)
         {
             ObjectPhysicsPropertiesMessage message = new ObjectPhysicsPropertiesMessage ();
-            message.ObjectPhysicsProperties = new Primitive.PhysicsProperties[entities.Length];
             int i = 0;
+            foreach (ISceneChildEntity entity in entities)
+            {
+                if (entity == null)
+                    continue;
+                i++;
+            }
+
+            message.ObjectPhysicsProperties = new Primitive.PhysicsProperties[i];
+            i = 0;
             foreach(ISceneChildEntity entity in entities)
             {
+                if (entity == null)
+                    continue;
                 message.ObjectPhysicsProperties[i] = new Primitive.PhysicsProperties ();
                 message.ObjectPhysicsProperties[i].Density = entity.Density;
-                message.ObjectPhysicsProperties[i].Friction = 1;
+                message.ObjectPhysicsProperties[i].Friction = entity.Friction;
                 message.ObjectPhysicsProperties[i].GravityMultiplier = entity.GravityMultiplier;
                 message.ObjectPhysicsProperties[i].LocalID = entity.LocalId;
                 message.ObjectPhysicsProperties[i].PhysicsShapeType = (PhysicsShapeType)entity.PhysicsType;
-                message.ObjectPhysicsProperties[i].Restitution = 1;
+                message.ObjectPhysicsProperties[i].Restitution = entity.Restitution;
                 i++;
             }
 

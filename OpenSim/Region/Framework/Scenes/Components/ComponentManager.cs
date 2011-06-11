@@ -162,6 +162,10 @@ namespace OpenSim.Region.Framework.Scenes.Components
             RegisterComponent (com);
             com = new DefaultComponents ("GravityMultiplier", 0);
             RegisterComponent (com);
+            com = new DefaultComponents ("Friction", 0);
+            RegisterComponent (com);
+            com = new DefaultComponents ("Restitution", 0);
+            RegisterComponent (com);
         }
 
         public void RemoveRegion(Scene scene)

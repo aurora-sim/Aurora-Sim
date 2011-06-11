@@ -682,6 +682,18 @@ namespace OpenSim.Framework
             set;
         }
 
+        float Friction
+        {
+            get;
+            set;
+        }
+
+        float Restitution
+        {
+            get;
+            set;
+        }
+
         float GravityMultiplier
         {
             get;
@@ -902,6 +914,18 @@ namespace OpenSim.Framework
         }
 
         public virtual float GravityMultiplier
+        {
+            get { return 1; }
+            set {}
+        }
+
+        public virtual float Friction
+        {
+            get { return 1; }
+            set {}
+        }
+
+        public virtual float Restitution
         {
             get { return 1; }
             set {}

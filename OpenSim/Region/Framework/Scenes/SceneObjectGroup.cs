@@ -2664,7 +2664,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void SetAbsolutePosition (bool UpdatePrimActor, Vector3 val)
         {
-            if (!IsAttachment && RootPart.Shape.State == 0)
+            if (!IsAttachment && RootPart.Shape.State == 0 && UpdatePrimActor)
             {
                 IBackupModule backup = Scene.RequestModuleInterface<IBackupModule> ();
                 if ((val.X < 0f || val.Y < 0f || val.Z < 0f ||
