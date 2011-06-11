@@ -1878,7 +1878,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     "terrain physics update", "Update the physics map", InterfaceSavePhysics);
 
                 MainConsole.Instance.Commands.AddCommand ("terrain load",
-                    "terrain load <FileName>", "Loads a terrain from a specified file. FileName: The file you wish to load from, the file extension determines the loader to be used. Supported extensions include: " +
+                    "terrain load <FileName> <OffsetX=> <OffsetY=>", "Loads a terrain from a specified file. FileName: The file you wish to load from, the file extension determines the loader to be used. Supported extensions include: " +
                                                 supportedFileExtensions, InterfaceLoadFile);
                 MainConsole.Instance.Commands.AddCommand ("terrain load-tile",
                     "terrain load-tile <file width> <file height> <minimum X tile> <minimum Y tile>",
