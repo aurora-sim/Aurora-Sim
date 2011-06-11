@@ -102,7 +102,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private const int maxContactsbeforedeath = 4000;
         private int m_currentmaxContactsbeforedeath = maxContactsbeforedeath;
 
-        private float contactsurfacelayer = 0.1f;
+        private float contactsurfacelayer = 0.001f;
 
         private int HashspaceLow = -3;  // current ODE limits
         private int HashspaceHigh = 10;
@@ -514,15 +514,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // Use this when an avatar comes in contact with a prim
             // and is moving
 
-            AvatarMovementprimContact.surface.mode = d.ContactFlags.Slip1;
+            /*AvatarMovementprimContact.surface.mode = d.ContactFlags.Slip1;
             AvatarMovementprimContact.surface.mu = nmAvatarObjectContactFriction;
             AvatarMovementprimContact.surface.bounce = nmAvatarObjectContactBounce;
             AvatarMovementprimContact.surface.slip1 = 0.001f;
             AvatarMovementprimContact.surface.soft_cfm = 0.0010f;
-            AvatarMovementprimContact.surface.soft_erp = 0.0010f;
-            //AvatarMovementprimContact.surface.mode |= d.ContactFlags.Bounce;
-            //AvatarMovementprimContact.surface.mu = mAvatarObjectContactFriction;
-            //AvatarMovementprimContact.surface.bounce = mAvatarObjectContactBounce;
+            AvatarMovementprimContact.surface.soft_erp = 0.0010f;*/
+            AvatarMovementprimContact.surface.mode = d.ContactFlags.Bounce;
+            AvatarMovementprimContact.surface.mu = mAvatarObjectContactFriction;
+            AvatarMovementprimContact.surface.bounce = mAvatarObjectContactBounce;
 
             AvatarFlyingprimContact.surface.mode = d.ContactFlags.Slip1 | d.ContactFlags.Motion1 | d.ContactFlags.Motion2 | d.ContactFlags.Approx1 | d.ContactFlags.Approx1_1 | d.ContactFlags.Approx1_2 | d.ContactFlags.Approx0;
             AvatarFlyingprimContact.surface.mu = nmAvatarObjectContactFriction;
