@@ -498,7 +498,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //    "[CLIENT]: Close has been called for {0} attached to scene {1}",
             //    Name, m_scene.RegionInfo.RegionName);
 
-            if (forceClose)
+            if (forceClose && !IsLoggingOut)//Don't send it to clients that are logging out
             {
                 // Send the STOP packet NOW, otherwise it doesn't get out in time
                 DisableSimulatorPacket disable = (DisableSimulatorPacket)PacketPool.Instance.GetPacket (PacketType.DisableSimulator);
