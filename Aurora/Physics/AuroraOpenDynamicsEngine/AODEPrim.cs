@@ -1731,6 +1731,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (Math.Abs (fz) < 0.01)
                         fz = 0;
 
+                    //Keep us out of terrain if possible
+                    float terrainHeight = _parent_scene.GetTerrainHeightAtXY (Position.X, Position.Y);
+                    float ourBasePos = (Position.Z - (Size.Z / 2));
+                    if (terrainHeight > ourBasePos)
+                    {
+                        //Scale it by surface - pos so that the object doesn't fly out of the terrain like a rocket
+                        fz += gravZ * -2.5f * (terrainHeight - ourBasePos);//Get us up, but don't shoot us up
+                    }
+
                     //m_log.Info("[OBJPID]: X:" + fx.ToString() + " Y:" + fy.ToString() + " Z:" + fz.ToString());
                     if (fx != 0 || fy != 0 || fz != 0 || newtorque.X != 0 || newtorque.Y != 0 || newtorque.Z != 0)
                     {
@@ -1751,9 +1760,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 d.BodyEnable (Body);
                             if (fx != 0 || fy != 0 || fz != 0)
                             {
-                                if (m_PreviousForce.X != fx &&
+                                if ((m_PreviousForce.X != fx &&
                                     m_PreviousForce.Y != fy &&
-                                    m_PreviousForce.Z != fz)
+                                    m_PreviousForce.Z != fz) ||
+                                    m_isSelected)
                                     m_previousForceIsSame = 0;
                                 else if (!m_isSelected)
                                     m_previousForceIsSame++;
@@ -2524,7 +2534,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_lastorientation = _orientation;
                         base.RequestPhysicsterseUpdate ();
 
-                        m_throttleUpdates = false;
+                        m_throttleUpdates = true;
                         throttleCounter = 0;
                         _zeroFlag = true;
                         m_frozen = true;
@@ -2564,7 +2574,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         && m_vehicle.Type == Vehicle.TYPE_NONE)
                     {
                         _zeroFlag = true;
-                        m_throttleUpdates = false;
                     }
                     else
                     {
@@ -2644,12 +2653,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         || (Math.Abs (_acceleration.Z) > 0.005)
                         ))
                     {
-                        if (!m_throttleUpdates || throttleCounter > _parent_scene.geomUpdatesPerThrottledUpdate)
+                        //if (!m_throttleUpdates || throttleCounter > _parent_scene.geomUpdatesPerThrottledUpdate)
                             needupdate = true;
-                        else
-                            throttleCounter++;
+                        //else
+                            throttleCounter+=7;
                     }
-                    else if((!_zeroFlag && !needupdate))
+                    else if((!_zeroFlag && !needupdate) && !m_isSelected)
                     {
                     }
 
