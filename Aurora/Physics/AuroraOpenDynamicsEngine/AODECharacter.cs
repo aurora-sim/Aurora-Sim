@@ -932,11 +932,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     if (!flying)
                     {
+                        // We're standing or walking on something
+                        if (_target_velocity.X != 0.0f)
+                            vec.X = (_target_velocity.X * movementmult - vel.X) * PID_D * 2;
+                        if (_target_velocity.Y != 0.0f)
+                            vec.Y = (_target_velocity.Y * movementmult - vel.Y) * PID_D * 2;
                         if (_target_velocity.Z != 0.0f)
                             vec.Z = (_target_velocity.Z * movementmult - vel.Z) * PID_D;// + (_zeroPosition.Z - tempPos.Z) * PID_P)) _zeropos maybe bad here
-                        // We're standing or walking on something
-                        vec.X = (_target_velocity.X * movementmult - vel.X) * PID_D * 2;
-                        vec.Y = (_target_velocity.Y * movementmult - vel.Y) * PID_D * 2;
                     }
                     else
                     {
@@ -1122,15 +1124,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (Math.Abs (vec.Z) < 0.001)
                         vec.Z = 0;
 
-                    //if (vec == Vector3.Zero) //if we arn't moving, STOP
-                    //    d.BodySetLinearVel(Body, vec.X, vec.Y, vec.Z);
-                    //else
+                    if (vec == Vector3.Zero) //if we arn't moving, STOP
+                        d.BodySetLinearVel(Body, vec.X, vec.Y, vec.Z);
+                    else
                         doForce (vec);
                      
-                    //if (!_zeroFlag)
-                    //{
+                    if (!_zeroFlag)
                         AlignAvatarTiltWithCurrentDirectionOfMovement (vec);
-                    //}
 
                     //When falling, we keep going faster and faster, and eventually, the client blue screens (blue is all you see).
                     // The speed that does this is slightly higher than -30, so we cap it here so we never do that during falling.
