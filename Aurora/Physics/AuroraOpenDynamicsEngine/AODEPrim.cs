@@ -1485,6 +1485,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             float fx = 0;
             float fy = 0;
             float fz = 0;
+            bool forceUpdate = false;
 
             if (m_isphysical && (Body != IntPtr.Zero) && !m_isSelected && !childPrim)        // KF: Only move root prims.
             {
@@ -1738,6 +1739,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         //Scale it by surface - pos so that the object doesn't fly out of the terrain like a rocket
                         fz += gravZ * -2.5f * (terrainHeight - ourBasePos);//Get us up, but don't shoot us up
+                        forceUpdate = true;
+                    }
+
+                    if (!forceUpdate && m_lastposition != Vector3.Zero && ((Math.Abs (m_lastposition.X - _position.X) > 0.1)
+                        || (Math.Abs (m_lastposition.Y - _position.Y) > 0.1)
+                        || (Math.Abs (m_lastposition.Z - _position.Z) > 0.1))
+                        //|| (Math.Abs (m_lastorientation.X - _orientation.X) > 0.1)
+                        //|| (Math.Abs (m_lastorientation.Y - _orientation.Y) > 0.1)
+                        //|| (Math.Abs (m_lastorientation.Z - _orientation.Z) > 0.1)
+                        )
+                    {
+                        forceUpdate = true;
                     }
 
                     //m_log.Info("[OBJPID]: X:" + fx.ToString() + " Y:" + fy.ToString() + " Z:" + fz.ToString());
@@ -1763,7 +1776,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 if ((m_PreviousForce.X != fx &&
                                     m_PreviousForce.Y != fy &&
                                     m_PreviousForce.Z != fz) ||
-                                    m_isSelected)
+                                    m_isSelected ||
+                                    forceUpdate)
                                     m_previousForceIsSame = 0;
                                 else if (!m_isSelected)
                                     m_previousForceIsSame++;
@@ -1779,6 +1793,249 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 d.BodyAddTorque (Body, newtorque.X, newtorque.Y, newtorque.Z);
                         }
                     }
+                }
+            }
+        }
+
+        public void UpdatePositionAndVelocity (float timestep)
+        {
+            if (m_frozen)
+                return;
+            //  no lock; called from Simulate() -- if you call this from elsewhere, gotta lock or do Monitor.Enter/Exit!
+            if (_parent == null)
+            {
+                if (Body != IntPtr.Zero && prim_geom != IntPtr.Zero)
+                {
+                    d.Vector3 cpos = d.BodyGetPosition (Body); // object position ( center of mass)
+                    d.Vector3 lpos = d.GeomGetPosition (prim_geom); // root position that is seem by rest of simulator
+                    d.Quaternion ori;
+                    d.GeomCopyQuaternion (prim_geom, out ori);
+                    d.Vector3 vel = d.BodyGetLinearVel (Body);
+                    d.Vector3 rotvel = d.BodyGetAngularVel (Body);
+
+                    #region Crossing failures
+
+                    if (cpos.X > ((int)_parent_scene.WorldExtents.X - 0.05f) ||
+                        cpos.X < 0f ||
+                        cpos.Y > ((int)_parent_scene.WorldExtents.Y - 0.05f) ||
+                        cpos.Y < 0f)
+                    {
+
+                        if (m_crossingfailures < _parent_scene.geomCrossingFailuresBeforeOutofbounds)
+                        {
+                            _position.X = (float)lpos.X;
+                            _position.Y = (float)lpos.Y;
+                            _position.Z = (float)lpos.Z;
+                            m_crossingfailures++;
+
+                            m_lastposition = _position;
+                            m_lastorientation = _orientation;
+
+                            base.RequestPhysicsterseUpdate ();
+                            return;
+                        }
+                        else
+                        {
+                            m_frozen = true;
+
+                            Vector3 l_position;
+                            l_position.X = (float)lpos.X;
+                            l_position.Y = (float)lpos.Y;
+                            l_position.Z = (float)lpos.Z;
+
+                            base.RaiseOutOfBounds (l_position);
+                            return;
+                        }
+                    }
+
+                    #endregion
+
+                    #region Out of bounds
+
+                    if (cpos.Z < 0 ||
+                        (cpos.Z > _parent_scene.m_flightCeilingHeight && _parent_scene.m_useFlightCeilingHeight))
+                    {
+                        // This is so prim that get lost underground don't fall forever and suck up
+                        //
+                        // Sim resources and memory.
+                        // Disables the prim's movement physics....
+                        // It's a hack and will generate a console message if it fails.
+
+                        //IsPhysical = false;
+                        base.RaiseOutOfBounds (_position);
+
+                        if (cpos.Z < 0)
+                            cpos.Z = 0;  // put it somewhere
+                        else
+                            cpos.Z = _parent_scene.m_flightCeilingHeight;
+
+                        _acceleration.X = 0;
+                        _acceleration.Y = 0;
+                        _acceleration.Z = 0;
+
+                        _velocity.X = 0;
+                        _velocity.Y = 0;
+                        _velocity.Z = 0;
+                        m_rotationalVelocity.X = 0;
+                        m_rotationalVelocity.Y = 0;
+                        m_rotationalVelocity.Z = 0;
+
+                        d.BodySetLinearVel (Body, 0, 0, 0); // stop it
+                        d.BodySetAngularVel (Body, 0, 0, 0); // stop it
+                        d.BodySetPosition (Body, cpos.X, cpos.Y, cpos.Z); // put it somewhere 
+
+                        m_lastposition = _position;
+                        m_lastorientation = _orientation;
+                        base.RequestPhysicsterseUpdate ();
+
+                        m_throttleUpdates = true;
+                        throttleCounter = 0;
+                        _zeroFlag = true;
+                        m_frozen = true;
+                        return;
+                    }
+                    #endregion
+
+                    if (m_vehicle.Type == Vehicle.TYPE_NONE)
+                    {
+                        m_lastVelocity = _velocity; // for acelaration
+                        _position.X = (float)lpos.X;
+                        _position.Y = (float)lpos.Y;
+                        _position.Z = (float)lpos.Z;
+                    }
+                    _orientation.X = (float)ori.X;
+                    _orientation.Y = (float)ori.Y;
+                    _orientation.Z = (float)ori.Z;
+                    _orientation.W = (float)ori.W;
+
+                    if (
+                        //                        (Math.Abs(m_lastposition.X - lpos.X) < 0.001)
+                        //                        && (Math.Abs(m_lastposition.Y - lpos.Y) < 0.001)
+                        //                        && (Math.Abs(m_lastposition.Z - lpos.Z) < 0.001)
+                        //                        && (Math.Abs(m_lastorientation.X - ori.X) < 0.001)
+                        //                        && (Math.Abs(m_lastorientation.Y - ori.Y) < 0.001)
+                        //                        && (Math.Abs(m_lastorientation.Z - ori.Z) < 0.001)
+                        //                        &&
+                        ((Math.Abs (vel.X) < 0.01)
+                        && (Math.Abs (vel.Y) < 0.01)
+                        && (Math.Abs (vel.Z) < 0.01)
+                        && (Math.Abs (rotvel.X) < 0.001)
+                        && (Math.Abs (rotvel.Y) < 0.001)
+                        && (Math.Abs (rotvel.Z) < 0.001) ||
+                        m_previousForceIsSame > previousForceSameMax)
+                        && m_vehicle.Type == Vehicle.TYPE_NONE)
+                    {
+                        _zeroFlag = true;
+                    }
+                    else
+                    {
+                        _zeroFlag = false;
+                        m_lastUpdateSent = 1;
+                    }
+
+                    bool needupdate = false;
+                    bool forceupdate = false;
+
+                    if (_zeroFlag)
+                    {
+                        _velocity.X = 0.0f;
+                        _velocity.Y = 0.0f;
+                        _velocity.Z = 0.0f;
+
+                        _acceleration.X = 0;
+                        _acceleration.Y = 0;
+                        _acceleration.Z = 0;
+
+                        m_rotationalVelocity.X = 0;
+                        m_rotationalVelocity.Y = 0;
+                        m_rotationalVelocity.Z = 0;
+
+                        // better let ode keep dealing with small values --Ubit
+                        //ODE doesn't deal with them though, it just keeps adding them, never stopping the movement of the prim..
+                        d.BodySetLinearVel (Body, 0, 0, 0);
+                        d.BodySetAngularVel (Body, 0, 0, 0);
+                        if (d.BodyIsEnabled (Body))
+                            d.BodyDisable (Body);
+
+                        if (m_lastUpdateSent > 0)
+                        {
+                            if (throttleCounter > 25 || m_lastUpdateSent >= 2)
+                            {
+                                needupdate = true;
+                                forceupdate = true;
+                                m_lastUpdateSent--;
+                                throttleCounter = 0;
+                            }
+                            else
+                                throttleCounter++;
+                        }
+                    }
+                    else
+                    {
+                        if (m_vehicle.Type == Vehicle.TYPE_NONE)
+                        {
+                            _velocity.X = (float)vel.X;
+                            _velocity.Y = (float)vel.Y;
+                            _velocity.Z = (float)vel.Z;
+
+                            _acceleration = ((_velocity - m_lastVelocity) / timestep);
+                            //m_log.Info("[PHYSICS]: V1: " + _velocity + " V2: " + m_lastVelocity + " Acceleration: " + _acceleration.ToString());
+
+                            m_rotationalVelocity.X = (float)rotvel.X;
+                            m_rotationalVelocity.Y = (float)rotvel.Y;
+                            m_rotationalVelocity.Z = (float)rotvel.Z;
+                        }
+                    }
+
+                    // slow down updates
+                    m_UpdateTimecntr += timestep;
+                    if (!forceupdate && m_UpdateTimecntr < m_UpdateFPScntr)
+                        return;
+                    m_UpdateTimecntr = 0;
+
+                    if (!_zeroFlag && !needupdate && (
+                         (Math.Abs (m_lastposition.X - _position.X) > 0.001)
+                        || (Math.Abs (m_lastposition.Y - _position.Y) > 0.001)
+                        || (Math.Abs (m_lastposition.Z - _position.Z) > 0.001)
+                        || (Math.Abs (m_lastorientation.X - _orientation.X) > 0.0001)
+                        || (Math.Abs (m_lastorientation.Y - _orientation.Y) > 0.0001)
+                        || (Math.Abs (m_lastorientation.Z - _orientation.Z) > 0.0001)
+                        || (Math.Abs (_acceleration.X) > 0.005)
+                        || (Math.Abs (_acceleration.Y) > 0.005)
+                        || (Math.Abs (_acceleration.Z) > 0.005)
+                        ))
+                    {
+                        //if (!m_throttleUpdates || throttleCounter > _parent_scene.geomUpdatesPerThrottledUpdate)
+                        needupdate = true;
+                        //else
+                        throttleCounter += 7;
+                    }
+
+
+                    if (needupdate)
+                    {
+                        throttleCounter = 0;
+                        m_lastposition = _position;
+                        m_lastorientation = _orientation;
+                        base.RequestPhysicsterseUpdate ();
+                    }
+                }
+                else
+                {
+                    // Not a body..   so Make sure the client isn't interpolating
+                    _velocity.X = 0;
+                    _velocity.Y = 0;
+                    _velocity.Z = 0;
+
+                    _acceleration.X = 0;
+                    _acceleration.Y = 0;
+                    _acceleration.Z = 0;
+
+                    m_rotationalVelocity.X = 0;
+                    m_rotationalVelocity.Y = 0;
+                    m_rotationalVelocity.Z = 0;
+                    _zeroFlag = true;
+                    m_frozen = true;
                 }
             }
         }
@@ -2443,252 +2700,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             else
             {
                 m_log.Warn ("[PHYSICS]: Got NaN locking axis from Scene on Object");
-            }
-        }
-
-        public void UpdatePositionAndVelocity (float timestep)
-        {
-            if (m_frozen)
-                return;
-            //  no lock; called from Simulate() -- if you call this from elsewhere, gotta lock or do Monitor.Enter/Exit!
-            if (_parent == null)
-            {
-                if (Body != IntPtr.Zero && prim_geom != IntPtr.Zero)
-                {
-                    d.Vector3 cpos = d.BodyGetPosition (Body); // object position ( center of mass)
-                    d.Vector3 lpos = d.GeomGetPosition (prim_geom); // root position that is seem by rest of simulator
-                    d.Quaternion ori;
-                    d.GeomCopyQuaternion (prim_geom, out ori);
-                    d.Vector3 vel = d.BodyGetLinearVel (Body);
-                    d.Vector3 rotvel = d.BodyGetAngularVel (Body);
-
-
-                    if (cpos.X > ((int)_parent_scene.WorldExtents.X - 0.05f) ||
-                        cpos.X < 0f ||
-                        cpos.Y > ((int)_parent_scene.WorldExtents.Y - 0.05f) ||
-                        cpos.Y < 0f)
-                    {
-
-                        if (m_crossingfailures < _parent_scene.geomCrossingFailuresBeforeOutofbounds)
-                        {
-                            _position.X = (float)lpos.X;
-                            _position.Y = (float)lpos.Y;
-                            _position.Z = (float)lpos.Z;
-                            m_crossingfailures++;
-
-                            m_lastposition = _position;
-                            m_lastorientation = _orientation;
-
-                            base.RequestPhysicsterseUpdate ();
-                            return;
-                        }
-                        else
-                        {
-                            m_frozen = true;
-
-                            Vector3 l_position;
-                            l_position.X = (float)lpos.X;
-                            l_position.Y = (float)lpos.Y;
-                            l_position.Z = (float)lpos.Z;
-
-                            base.RaiseOutOfBounds (l_position);
-                            return;
-                        }
-                    }
-
-                    #region Out of bounds
-
-                    if (cpos.Z < 0 ||
-                        (cpos.Z > _parent_scene.m_flightCeilingHeight && _parent_scene.m_useFlightCeilingHeight))
-                    {
-                        // This is so prim that get lost underground don't fall forever and suck up
-                        //
-                        // Sim resources and memory.
-                        // Disables the prim's movement physics....
-                        // It's a hack and will generate a console message if it fails.
-
-                        //IsPhysical = false;
-                        base.RaiseOutOfBounds (_position);
-
-                        if (cpos.Z < 0)
-                            cpos.Z = 0;  // put it somewhere
-                        else
-                            cpos.Z = _parent_scene.m_flightCeilingHeight;
-
-                        _acceleration.X = 0;
-                        _acceleration.Y = 0;
-                        _acceleration.Z = 0;
-
-                        _velocity.X = 0;
-                        _velocity.Y = 0;
-                        _velocity.Z = 0;
-                        m_rotationalVelocity.X = 0;
-                        m_rotationalVelocity.Y = 0;
-                        m_rotationalVelocity.Z = 0;
-
-                        d.BodySetLinearVel (Body, 0, 0, 0); // stop it
-                        d.BodySetAngularVel (Body, 0, 0, 0); // stop it
-                        d.BodySetPosition (Body, cpos.X, cpos.Y, cpos.Z); // put it somewhere 
-
-                        m_lastposition = _position;
-                        m_lastorientation = _orientation;
-                        base.RequestPhysicsterseUpdate ();
-
-                        m_throttleUpdates = true;
-                        throttleCounter = 0;
-                        _zeroFlag = true;
-                        m_frozen = true;
-                        return;
-                    }
-                    #endregion
-
-                    if (m_vehicle.Type == Vehicle.TYPE_NONE)
-                    {
-
-                        m_lastVelocity = _velocity; // for acelaration
-                        _position.X = (float)lpos.X;
-                        _position.Y = (float)lpos.Y;
-                        _position.Z = (float)lpos.Z;
-                    }
-                    _orientation.X = (float)ori.X;
-                    _orientation.Y = (float)ori.Y;
-                    _orientation.Z = (float)ori.Z;
-                    _orientation.W = (float)ori.W;
-
-                    if (
-                        //                        (Math.Abs(m_lastposition.X - lpos.X) < 0.001)
-                        //                        && (Math.Abs(m_lastposition.Y - lpos.Y) < 0.001)
-                        //                        && (Math.Abs(m_lastposition.Z - lpos.Z) < 0.001)
-                        //                        && (Math.Abs(m_lastorientation.X - ori.X) < 0.001)
-                        //                        && (Math.Abs(m_lastorientation.Y - ori.Y) < 0.001)
-                        //                        && (Math.Abs(m_lastorientation.Z - ori.Z) < 0.001)
-                        //                        &&
-                        ((Math.Abs (vel.X) < 0.01)
-                        && (Math.Abs (vel.Y) < 0.01)
-                        && (Math.Abs (vel.Z) < 0.01)
-                        && (Math.Abs (rotvel.X) < 0.001)
-                        && (Math.Abs (rotvel.Y) < 0.001)
-                        && (Math.Abs (rotvel.Z) < 0.001) || 
-                        m_previousForceIsSame > previousForceSameMax)
-
-                        && m_vehicle.Type == Vehicle.TYPE_NONE)
-                    {
-                        _zeroFlag = true;
-                    }
-                    else
-                    {
-                        _zeroFlag = false;
-                        m_lastUpdateSent = 1;
-                    }
-
-                    bool needupdate = false;
-                    bool forceupdate = false;
-
-                    if (_zeroFlag)
-                    {
-                        _velocity.X = 0.0f;
-                        _velocity.Y = 0.0f;
-                        _velocity.Z = 0.0f;
-
-                        _acceleration.X = 0;
-                        _acceleration.Y = 0;
-                        _acceleration.Z = 0;
-
-                        m_rotationalVelocity.X = 0;
-                        m_rotationalVelocity.Y = 0;
-                        m_rotationalVelocity.Z = 0;
-
-                        // better let ode keep dealing with small values --Ubit
-                        //ODE doesn't deal with them though, it just keeps adding them, never stopping the movement of the prim..
-                        d.BodySetLinearVel(Body, 0, 0, 0);
-                        d.BodySetAngularVel(Body, 0, 0, 0);
-                        if(d.BodyIsEnabled(Body))
-                            d.BodyDisable (Body);
-
-                        if (m_lastUpdateSent > 0)
-                        {
-                            if (throttleCounter > 100 || m_lastUpdateSent >= 2)
-                            {
-                                needupdate = true;
-                                forceupdate = true;
-                                m_lastUpdateSent--;
-                                throttleCounter = 0;
-                            }
-                            else
-                                throttleCounter += 4;
-                        }
-                    }
-                    else
-                    {
-                        if (m_vehicle.Type == Vehicle.TYPE_NONE)
-                        {
-                            _velocity.X = (float)vel.X;
-                            _velocity.Y = (float)vel.Y;
-                            _velocity.Z = (float)vel.Z;
-
-                            _acceleration = ((_velocity - m_lastVelocity) / timestep);
-                            //m_log.Info("[PHYSICS]: V1: " + _velocity + " V2: " + m_lastVelocity + " Acceleration: " + _acceleration.ToString());
-
-                            m_rotationalVelocity.X = (float)rotvel.X;
-                            m_rotationalVelocity.Y = (float)rotvel.Y;
-                            m_rotationalVelocity.Z = (float)rotvel.Z;
-                        }
-                    }
-
-                    // slow down updates
-                    m_UpdateTimecntr += timestep;
-                    if (!forceupdate && m_UpdateTimecntr < m_UpdateFPScntr)
-                        return;
-                    m_UpdateTimecntr = 0;
-
-                    if (!_zeroFlag && !needupdate && (
-                         (Math.Abs (m_lastposition.X - _position.X) > 0.001)
-                        || (Math.Abs (m_lastposition.Y - _position.Y) > 0.001)
-                        || (Math.Abs (m_lastposition.Z - _position.Z) > 0.001)
-                        || (Math.Abs (m_lastorientation.X - _orientation.X) > 0.0001)
-                        || (Math.Abs (m_lastorientation.Y - _orientation.Y) > 0.0001)
-                        || (Math.Abs (m_lastorientation.Z - _orientation.Z) > 0.0001)
-                        || (Math.Abs (_acceleration.X) > 0.005)
-                        || (Math.Abs (_acceleration.Y) > 0.005)
-                        || (Math.Abs (_acceleration.Z) > 0.005)
-                        ))
-                    {
-                        //if (!m_throttleUpdates || throttleCounter > _parent_scene.geomUpdatesPerThrottledUpdate)
-                            needupdate = true;
-                        //else
-                            throttleCounter+=7;
-                    }
-                    else if((!_zeroFlag && !needupdate) && !m_isSelected)
-                    {
-                    }
-
-
-                    if (needupdate)
-                    {
-                        throttleCounter = 0;
-                        m_lastposition = _position;
-                        m_lastorientation = _orientation;
-                        base.RequestPhysicsterseUpdate ();
-                    }
-
-                }
-                else
-                {
-                    // Not a body..   so Make sure the client isn't interpolating
-                    _velocity.X = 0;
-                    _velocity.Y = 0;
-                    _velocity.Z = 0;
-
-                    _acceleration.X = 0;
-                    _acceleration.Y = 0;
-                    _acceleration.Z = 0;
-
-                    m_rotationalVelocity.X = 0;
-                    m_rotationalVelocity.Y = 0;
-                    m_rotationalVelocity.Z = 0;
-                    _zeroFlag = true;
-                    m_frozen = true;
-                }
             }
         }
 

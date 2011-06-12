@@ -707,8 +707,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.JointSetAMotorParam (Amotor, (int)dParam.HiStop, xTiltComponent); // must be same as lowstop, else a different, spurious tilt is introduced
             d.JointSetAMotorParam (Amotor, (int)dParam.LoStop2, yTiltComponent);
             d.JointSetAMotorParam (Amotor, (int)dParam.HiStop2, yTiltComponent); // same as lowstop
-            d.JointSetAMotorParam (Amotor, (int)dParam.LoStop3, 0f);
-            d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, 0f); // same as lowstop
+            d.JointSetAMotorParam (Amotor, (int)dParam.LoStop3, 0);
+            d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, 0); // same as lowstop
         }
       
         /// <summary>
