@@ -1032,19 +1032,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        [XmlIgnore]
-        public bool PassTouches //Needed for compat, otherwise assets break!
-        {
-            get { return PassTouch == 1 || PassTouch == 2; }
-            set
-            {
-                if (value)
-                    PassTouch = 1;
-                else
-                    PassTouch = 0;
-           }
-        }
-
         public int PassTouch
         {
             get { return m_passTouches; }
@@ -1057,19 +1044,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         private int m_passCollision;
-
-        [XmlIgnore]
-        public bool PassCollision //Needed for compat, otherwise assets break!
-        {
-            get { return m_passCollision == 1 || m_passCollision == 2; }
-            set
-            {
-                if (value)
-                    m_passCollision = 1;
-                else
-                    m_passCollision = 0;
-            }
-        }
 
         public int PassCollisions
         {
