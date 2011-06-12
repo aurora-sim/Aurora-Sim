@@ -954,15 +954,6 @@ namespace OpenSim.Framework
             set { return; }
         }
 
-        // For RotLookAt
-        public virtual Quaternion APIDTarget { set { return; } }
-
-        public virtual bool APIDActive { set { return; } }
-
-        public virtual float APIDStrength { set { return; } }
-
-        public virtual float APIDDamping { set { return; } }
-
         public abstract Vector3 Acceleration { get; }
         public abstract void AddAngularForce(Vector3 force, bool pushforce);
     }

@@ -1717,16 +1717,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
         }
-        
-        public void stopLookAt()
-        {
-            SceneObjectPart rootpart = m_rootPart;
-            if (rootpart != null)
-            {
-                rootpart.APIDEnabled = false;
-            }
-        
-        }
 
         /// <summary>
         /// Uses a PID to attempt to clamp the object on the Z axis at the given height over tau seconds.
