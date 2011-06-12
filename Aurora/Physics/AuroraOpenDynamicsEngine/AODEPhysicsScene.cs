@@ -511,24 +511,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // Use this when an avatar comes in contact with a prim
             // and is moving
 
-            /*AvatarMovementprimContact.surface.mode = d.ContactFlags.Slip1;
-            AvatarMovementprimContact.surface.mu = nmAvatarObjectContactFriction;
-            AvatarMovementprimContact.surface.bounce = nmAvatarObjectContactBounce;
-            AvatarMovementprimContact.surface.slip1 = 0.001f;
-            AvatarMovementprimContact.surface.soft_cfm = 0.0010f;
-            AvatarMovementprimContact.surface.soft_erp = 0.0010f;*/
-            AvatarMovementprimContact.surface.mode = d.ContactFlags.Bounce;
             AvatarMovementprimContact.surface.mu = mAvatarObjectContactFriction;
             AvatarMovementprimContact.surface.bounce = mAvatarObjectContactBounce;
 
-            AvatarFlyingprimContact.surface.mode = d.ContactFlags.Slip1 | d.ContactFlags.Motion1 | d.ContactFlags.Motion2 | d.ContactFlags.Approx1 | d.ContactFlags.Approx1_1 | d.ContactFlags.Approx1_2 | d.ContactFlags.Approx0;
-            AvatarFlyingprimContact.surface.mu = nmAvatarObjectContactFriction;
-            AvatarFlyingprimContact.surface.bounce = nmAvatarObjectContactBounce;
-            AvatarFlyingprimContact.surface.slip1 = 1f;
-            AvatarFlyingprimContact.surface.motion1 = 1f;
-            AvatarFlyingprimContact.surface.motion2 = 1f;
-            AvatarFlyingprimContact.surface.soft_cfm = 0.0010f;
-            AvatarFlyingprimContact.surface.soft_erp = 0.0010f;
+            AvatarFlyingprimContact.surface.mu = mAvatarObjectContactFriction;
+            AvatarFlyingprimContact.surface.bounce = mAvatarObjectContactBounce;
 
             /*
                 <summary></summary>
@@ -1092,28 +1079,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 material = ((AuroraODEPrim)p2).m_material;
 
                             //m_log.DebugFormat("Material: {0}", material);
-                            m_materialContacts[material, movintYN].geom = curContact;
-                            if (m_filterCollisions)
-                                _perloopContact.Add(curContact);
-
-                            if (m_global_contactcount < m_currentmaxContactsbeforedeath)
-                            {
-                                joint = d.JointCreateContact(world, contactgroup, ref m_materialContacts[material, movintYN]);
-                                m_global_contactcount++;
-                            }
-                        }
-                        else
-                        {
-                            int movintYN = 0;
-                            // unknown terrain contact
-                            if (Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f)
-                                movintYN = 1;
-
-                            int material = (int)Material.Wood;
-
-                            if (p2 is AuroraODEPrim)
-                                material = ((AuroraODEPrim)p2).m_material;
-
                             m_materialContacts[material, movintYN].geom = curContact;
                             if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
