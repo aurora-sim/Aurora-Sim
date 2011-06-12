@@ -507,10 +507,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             contact.surface.soft_erp = 0.010f;
 
             // Prim contact friction and bounce
-            // This is the *non* moving version of friction and bounce
+            // THis is the *non* moving version of friction and bounce
             // Use this when an avatar comes in contact with a prim
             // and is moving
-
             AvatarMovementprimContact.surface.mu = mAvatarObjectContactFriction;
             AvatarMovementprimContact.surface.bounce = mAvatarObjectContactBounce;
 
@@ -1097,7 +1096,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         // check if we're moving
                         if ((p2.PhysicsActorType == (int)ActorTypes.Agent))
                         {
-                            if ((Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f))
+                            /*if ((Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f))
                             {
                                 if (p2.Flying)
                                 {
@@ -1124,7 +1123,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                     }
                                 }
                             }
-                            else
+                            else*/
                             {
                                 // Use the non movement contact
                                 contact.geom = curContact;
