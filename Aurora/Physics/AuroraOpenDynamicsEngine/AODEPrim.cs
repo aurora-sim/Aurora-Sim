@@ -2645,11 +2645,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         ))
                     {
                         if (!m_throttleUpdates || throttleCounter > _parent_scene.geomUpdatesPerThrottledUpdate)
-                        {
                             needupdate = true;
-                        }
                         else
-                            throttleCounter += 4;
+                            throttleCounter++;
+                    }
+                    else if((!_zeroFlag && !needupdate))
+                    {
                     }
 
 
