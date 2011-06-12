@@ -336,21 +336,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             set
             {
-
-
                 // This only makes the object not collidable if the object
                 // is physical or the object is modified somehow *IN THE FUTURE*
                 // without this, if an avatar selects prim, they can walk right
                 // through it while it's selected
                 m_collisionscore = 0;
                 if ((IsPhysical && !_zeroFlag) || !value)
-                {
                     AddChange (changes.Selected, (object)value);
-                }
                 else
-                {
                     m_isSelected = value;
-                }
                 if (m_isSelected)
                     disableBodySoft ();
             }
@@ -1421,7 +1415,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         myrot.W = _orientation.W;
                         d.GeomSetQuaternion (prim_geom, ref myrot);
                     }
-                    _parent_scene.geom_name_map[prim_geom] = this.m_primName;
                     _parent_scene.actor_name_map[prim_geom] = (PhysicsActor)this;
                 }
             }
@@ -1921,8 +1914,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void changeprimsizeshape ()
         {
-
-            _parent_scene.geom_name_map.Remove (prim_geom);
             _parent_scene.actor_name_map.Remove (prim_geom);
 
             bool chp = childPrim;
@@ -2002,7 +1993,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         d.GeomSetQuaternion (prim_geom, ref myrot);
                     }
 
-                    _parent_scene.geom_name_map[prim_geom] = this.m_primName;
                     _parent_scene.actor_name_map[prim_geom] = (PhysicsActor)this;
                 }
             }

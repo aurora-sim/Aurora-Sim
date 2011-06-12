@@ -1371,6 +1371,7 @@ namespace Aurora.BotManager
 
         public object DistanceFollowUpdate (string funct, object param)
         {
+            return null;
             foreach (KeyValuePair<UUID, float> kvp in m_followDistance)
             {
                 IScenePresence sp = m_scene.GetScenePresence (kvp.Key);
@@ -1405,6 +1406,7 @@ namespace Aurora.BotManager
 
         public object LineOfSightUpdate (string funct, object param)
         {
+            return null;
             foreach (KeyValuePair<UUID, float> kvp in m_LineOfSight)
             {
                 IScenePresence sp = m_scene.GetScenePresence (kvp.Key);

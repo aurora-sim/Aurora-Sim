@@ -167,7 +167,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private readonly List<d.ContactGeom> _perloopContact = new List<d.ContactGeom>();
         private readonly List<PhysicsActor> _collisionEventPrim = new List<PhysicsActor>();
         private readonly HashSet<AuroraODECharacter> _badCharacter = new HashSet<AuroraODECharacter>();
-        public Dictionary<IntPtr, String> geom_name_map = new Dictionary<IntPtr, String>();
         public Dictionary<IntPtr, PhysicsActor> actor_name_map = new Dictionary<IntPtr, PhysicsActor>();
         private bool m_NINJA_physics_joints_enabled = false;
         private d.ContactGeom[] contacts;
@@ -1875,32 +1874,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         prim.DestroyBody();
                         prim.IsPhysical = false;
-
-                        // we don't want to remove the main space
-
-                        // If the geometry is in the targetspace, remove it from the target space
-                        //m_log.Warn(prim.m_targetSpace);
-
-                        //if (prim.m_targetSpace != IntPtr.Zero)
-                        //{
-                        //if (d.SpaceQuery(prim.m_targetSpace, prim.prim_geom))
-                        //{
-
-                        //if (d.GeomIsSpace(prim.m_targetSpace))
-                        //{
-                        //waitForSpaceUnlock(prim.m_targetSpace);
-                        //d.SpaceRemove(prim.m_targetSpace, prim.prim_geom);
                         prim.m_targetSpace = IntPtr.Zero;
-                        //}
-                        //else
-                        //{
-                        // m_log.Info("[Physics]: Invalid Scene passed to 'removeprim from scene':" +
-                        //((OdePrim)prim).m_targetSpace.ToString());
-                        //}
-
-                        //}
-                        //}
-                        //m_log.Warn(prim.prim_geom);
                         try
                         {
                             if (prim.prim_geom != IntPtr.Zero)
@@ -1919,28 +1893,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                         lock (_prims)
                             _prims.Remove(prim);
-
-                        //If there are no more geometries in the sub-space, we don't need it in the main space anymore
-                        //if (d.SpaceGetNumGeoms(prim.m_targetSpace) == 0)
-                        //{
-                        //if (prim.m_targetSpace != null)
-                        //{
-                        //if (d.GeomIsSpace(prim.m_targetSpace))
-                        //{
-                        //waitForSpaceUnlock(prim.m_targetSpace);
-                        //d.SpaceRemove(space, prim.m_targetSpace);
-                        // free up memory used by the space.
-                        //d.SpaceDestroy(prim.m_targetSpace);
-                        //int[] xyspace = calculateSpaceArrayItemFromPos(prim.Position);
-                        //resetSpaceArrayItemToZero(xyspace[0], xyspace[1]);
-                        //}
-                        //else
-                        //{
-                        //m_log.Info("[Physics]: Invalid Scene passed to 'removeprim from scene':" +
-                        //((OdePrim) prim).m_targetSpace.ToString());
-                        //}
-                        //}
-                        //}
                     }
                 }
             }
@@ -2437,36 +2389,24 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 int nodesteps = 0;
 
                 // Figure out the Frames Per Second we're going at.
-                //(step_time == 0.004f, there's 250 of those per second.   Times the step time/step size
-
                 fps = (step_time / ODE_STEPSIZE) * 1000;
                 
-                //step_time = 0.09375f;
-
                 while (step_time > 0.0f)
                 {
-                    //lock (ode)
-                    //{
-                    //if (!ode.lockquery())
-                    //{
-                    // ode.dlock(world);
                     try
                     {
                         int PhysicsTaintTime = Util.EnvironmentTickCount();
 
                         // Insert, remove Characters
-                        bool processedtaints = false;
-
                         lock (_taintedActors)
                         {
                             if (_taintedActors.Count > 0)
                             {
+                                bool processedtaints = false;
                                 foreach (AuroraODECharacter character in _taintedActors)
                                 {
                                     character.ProcessTaints(timeElapsed);
-
                                     processedtaints = true;
-                                    //character.m_collisionscore = 0;
                                 }
 
                                 if (processedtaints)
@@ -2474,12 +2414,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             }
                         }
 
-                        // Modify other objects in the scene.
-                        processedtaints = false;
-
-                        int tlimit = 500;
+                        int tlimit = 50;
                         AODEchangeitem item;
-
                         while (GetNextChange(out item))
                         {
                             if (item.prim != null)
@@ -2497,6 +2433,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                         if (ChangesQueue.Count == 0 && !m_hasSetUpPrims)
                         {
+                            //Tell the mesher that we are done with the initialization 
+                            //  of prim meshes and that it can clear it's in memory cache
                             m_hasSetUpPrims = true;
                             mesher.FinishedMeshing ();
                         }
@@ -2521,10 +2459,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                     foreach (AuroraODECharacter defect in defects)
                                     {
                                         RemoveCharacter(defect);
-                                        if (geom_name_map.ContainsKey(defect.Shell))
-                                            AddAvatar(geom_name_map[defect.Shell], new Vector3(m_region.RegionSizeX / 2,
-                                                m_region.RegionSizeY / 2,
-                                                m_region.RegionSizeZ / 2), defect.Orientation, defect.Size, true, defect.LocalID, defect.UUID);
+                                        AddAvatar(defect.Name, new Vector3(m_region.RegionSizeX / 2,
+                                            m_region.RegionSizeY / 2,
+                                            m_region.RegionSizeZ / 2), defect.Orientation, defect.Size, true, defect.LocalID, defect.UUID);
                                         defect.Destroy();
                                     }
                                 }
@@ -2548,14 +2485,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                         m_StatPhysicsMoveTime = Util.EnvironmentTickCountSubtract(PhysicsMoveTime);
 
+
                         int CollisionOptimizedTime = Util.EnvironmentTickCount();
-
                         collision_optimized(timeElapsed);
-
                         m_StatCollisionOptimizedTime = Util.EnvironmentTickCountSubtract(CollisionOptimizedTime);
 
-                        int SendCollisionsTime = Util.EnvironmentTickCount();
 
+                        int SendCollisionsTime = Util.EnvironmentTickCount();
                         if (!DisableCollisions)
                         {
                             lock (_collisionEventPrim)
@@ -2584,7 +2520,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 }
                             }
                         }
-
                         m_StatSendCollisionsTime = Util.EnvironmentTickCountSubtract(SendCollisionsTime);
 
                         m_global_contactcount = 0;
@@ -2779,7 +2714,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 TerrainHeightFieldlimits.Remove (RegionTerrain);
 
                 actor_name_map.Remove (RegionTerrain);
-                geom_name_map.Remove (RegionTerrain);
 
                 const float scale = (1f / (float)Constants.TerrainCompression);
                 const float offset = 0.0f;
@@ -2799,8 +2733,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.GeomSetCategoryBits (RegionTerrain, (int)(CollisionCategories.Land));
                     d.GeomSetCollideBits (RegionTerrain, (int)(CollisionCategories.Space));
                 }
-
-                geom_name_map[RegionTerrain] = "Terrain";
 
                 NullObjectPhysicsActor terrainActor = new NullObjectPhysicsActor()
                 {

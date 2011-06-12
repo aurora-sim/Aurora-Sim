@@ -119,18 +119,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             set { iscolliding = value; }
         }
 
-        public override bool CollidingGround
-        {
-            get { return false; }
-            set { return; }
-        }
-
-        public override bool CollidingObj
-        {
-            get { return false; }
-            set { return; }
-        }
-
         public override Vector3 Position
         {
             get { return _position; }
@@ -279,18 +267,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
             get { return iscolliding; }
             set { iscolliding = value; }
-        }
-
-        public override bool CollidingGround
-        {
-            get { return false; }
-            set { return; }
-        }
-
-        public override bool CollidingObj
-        {
-            get { return false; }
-            set { return; }
         }
 
         public override Vector3 Position

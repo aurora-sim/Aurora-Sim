@@ -88,7 +88,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private bool m_iscolliding = false;
 
         int m_colliderfilter = 0;
-        int m_colliderObjectfilter = 0;
 
         private bool m_alwaysRun = false;
         private int m_requestedUpdateFrequency = 0;
@@ -112,6 +111,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private float m_buoyancy = 0f;
 
         private string m_name = String.Empty;
+        public string Name
+        {
+            get { return m_name; }
+            set { m_name = value; }
+        }
 
         // Default we're a Character
         private CollisionCategories m_collisionCategories = (CollisionCategories.Character);
@@ -764,7 +768,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (Shell != IntPtr.Zero)
                 {
                     d.GeomDestroy (Shell);
-                    _parent_scene.geom_name_map.Remove (Shell);
                     Shell = IntPtr.Zero;
                 }
                 return;
@@ -1137,7 +1140,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (Shell != IntPtr.Zero)
                 {
                     d.GeomDestroy (Shell);
-                    _parent_scene.geom_name_map.Remove (Shell);
                     Shell = IntPtr.Zero;
                 }
             }
@@ -1534,22 +1536,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     AvatarGeomAndBodyCreation(_position.X, _position.Y, _position.Z);//, _parent_scene.avStandupTensor);
                     
-                    _parent_scene.geom_name_map[Shell] = m_name;
                     _parent_scene.actor_name_map[Shell] = (PhysicsActor)this;
                     _parent_scene.AddCharacter(this);
                 }
                 else
                 {
                     _parent_scene.RemoveCharacter(this);
-                    // destroy avatar capsule and related ODE data
-/*
-                    if (Amotor != IntPtr.Zero)
-                    {
-                        // Kill the Amotor
-                        d.JointDestroy(Amotor);
-                        Amotor = IntPtr.Zero;
-                    }
- */
                     //kill the Geometry
                     _parent_scene.waitForSpaceUnlock(_parent_scene.space);
 
@@ -1564,7 +1556,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (Shell != IntPtr.Zero)
                     {
                         d.GeomDestroy(Shell);
-                        _parent_scene.geom_name_map.Remove(Shell);
                         Shell = IntPtr.Zero;
                     }
 
@@ -1580,7 +1571,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     m_pidControllerActive = true;
                     // no lock needed on _parent_scene.OdeLock because we are called from within the thread lock in OdePlugin's simulate()
- //                   d.JointDestroy(Amotor);
                     float prevCapsule = CAPSULE_LENGTH;
                     CAPSULE_LENGTH = m_tainted_CAPSULE_LENGTH;
                     //m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
@@ -1590,7 +1580,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                       _position.Z + (CAPSULE_LENGTH - prevCapsule));//, _parent_scene.avStandupTensor);
                     Velocity = Vector3.Zero;
 
-                    _parent_scene.geom_name_map[Shell] = m_name;
                     _parent_scene.actor_name_map[Shell] = (PhysicsActor)this;
                 }
                 else
@@ -1599,7 +1588,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         + (Shell==IntPtr.Zero ? "Shell ":"")
                         + (Body==IntPtr.Zero ? "Body ":"")
                         );
-                        //+ (Amotor==IntPtr.Zero ? "Amotor ":""));
                 }
             }
 
@@ -1614,9 +1602,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     _position.Z = m_taintPosition.Z;
                 }
             }
-
-            //_orientation = m_taintRotation; // just keep in sync with rest of simutator
-
+            d.Quaternion q = new d.Quaternion();
+            q.W = m_taintRotation.W;
+            q.X = m_taintRotation.X;
+            q.Y = m_taintRotation.Y;
+            q.Z = m_taintRotation.Z;
+            d.BodySetQuaternion (Body, ref q); // just keep in sync with rest of simutator
         }
 
         internal void AddCollisionFrameTime(int p)

@@ -97,10 +97,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         public float m_density = 60f;
         private bool m_flying = false;
         private bool m_iscolliding = false;
-        private bool m_iscollidingGround = false;
         private bool m_wascolliding = false;
-        private bool m_wascollidingGround = false;
-        private bool m_iscollidingObj = false;
         private bool m_alwaysRun = false;
         private bool m_hackSentFall = false;
         private bool m_hackSentFly = false;
