@@ -208,11 +208,9 @@ namespace OpenSim.Framework
             set { return; }
         }
 
-        int type = (int)ActorTypes.Unknown;
         public override int PhysicsActorType
         {
-            get { return type; }
-            set { type = value; }
+            get { return (int)ActorTypes.Ground; }
         }
 
         public override void AddForce(Vector3 force, bool pushforce)
@@ -358,11 +356,9 @@ namespace OpenSim.Framework
             set { return; }
         }
 
-        int type = (int)ActorTypes.Unknown;
         public override int PhysicsActorType
         {
-            get { return type; }
-            set { type = value; }
+            get { return (int)ActorTypes.Unknown; }
         }
 
         public override void AddForce(Vector3 force, bool pushforce)

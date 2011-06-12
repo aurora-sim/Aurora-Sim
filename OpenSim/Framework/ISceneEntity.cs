@@ -1051,7 +1051,7 @@ namespace OpenSim.Framework
         public abstract Vector3 Torque { get; set; }
         public abstract float CollisionScore { get; set; }
         public abstract Quaternion Orientation { get; set; }
-        public abstract int PhysicsActorType { get; set; }
+        public abstract int PhysicsActorType { get; }
         public abstract bool IsPhysical { get; set; }
         public abstract bool Flying { get; set; }
         public abstract bool SetAlwaysRun { get; set; }

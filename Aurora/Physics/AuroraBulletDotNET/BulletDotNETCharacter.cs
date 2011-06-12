@@ -360,7 +360,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         public override int PhysicsActorType
         {
             get { return (int)ActorTypes.Agent; }
-            set { return; }
         }
 
         public override bool IsPhysical

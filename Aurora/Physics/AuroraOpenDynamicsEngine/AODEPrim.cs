@@ -289,10 +289,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 return (int)ActorTypes.Prim;
             }
-            set
-            {
-                return;
-            }
         }
 
         public override bool SetAlwaysRun
@@ -362,8 +358,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 d.GeomGetAABB (prim_geom, out IntAABB);
             }
 
-
-
             if (childPrim)
             {
                 if (_parent != null && _parent is AuroraODEPrim)
@@ -375,8 +369,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             //m_log.Warn("Setting Geom to: " + prim_geom);
         }
-
-
 
         public void enableBodySoft ()
         {
@@ -938,8 +930,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return returnMass;
         }// end CalculateMass
 
-        #endregion
-
         public void calcdMass ()
         {
             // very aproximated handling of tortured prims
@@ -968,6 +958,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 IntCMOffset.Y,
                                 IntCMOffset.Z);
         }
+
+        #endregion
+
 
 
         private static Dictionary<IMesh, IntPtr> m_MeshToTriMeshMap = new Dictionary<IMesh, IntPtr> ();
@@ -1121,7 +1114,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             MakeBody ();
         }
 
-
         private void UpdateChildsfromgeom ()
         {
             if (childrenPrim.Count > 0)
@@ -1248,7 +1240,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (newsel)
             {
-
                 m_collisionCategories = CollisionCategories.Selected;
                 m_collisionFlags = (CollisionCategories.Sensor | CollisionCategories.Space);
 
@@ -1326,8 +1317,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_isSelected = newsel;
         }//end changeSelectedStatus
 
-
-
         public void CreateGeom (IntPtr m_targetSpace, IMesh _mesh)
         {
             //Console.WriteLine("CreateGeom:");
@@ -1369,6 +1358,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
         }
+
         public void changeadd ()
         {
             //            int[] iprimspaceArrItem = _parent_scene.calculateSpaceArrayItemFromPos(_position);
@@ -1489,10 +1479,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (m_frozen)
                 return;
+
             float fx = 0;
             float fy = 0;
             float fz = 0;
-
 
             if (m_isphysical && (Body != IntPtr.Zero) && !m_isSelected && !childPrim)        // KF: Only move root prims.
             {
@@ -1593,11 +1583,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             //fy = (_target_velocity.Y - vel.Y) * (PID_D) + (_zeroPosition.Y - pos.Y) * (PID_P * 2);
                             //fz = fz + (_target_velocity.Z - vel.Z) * (PID_D) + (_zeroPosition.Z - pos.Z) * PID_P;
                             d.BodySetPosition (Body, m_PIDTarget.X, m_PIDTarget.Y, m_PIDTarget.Z);
-                            if (!m_angularlock.ApproxEquals (Vector3.One, 0.003f) &&
-                                Amotor != IntPtr.Zero)
-                            {
-
-                            }
                             d.BodySetLinearVel (Body, 0, 0, 0);
                             d.BodyAddForce (Body, 0, 0, fz);
 
@@ -1710,7 +1695,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     m_force = Vector3.Zero;
 
-                    # region drag and forces accumulators
+                    #region drag and forces accumulators
 
                     float drag = -m_mass * 0.2f;
 
@@ -1757,51 +1742,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, 0.0001f);
                             d.JointSetAMotorParam (Amotor, (int)dParam.HiStop2, 0.0001f);
                         }
-                        /*
-                                                if (vel.Z < -30)
-                                                    {
-                                                    vel.Z = -30;
-                                                    }
-                        */
-                        bool disabled = false;
-                        /*
-                                                if (_parent_scene.m_DisableSlowPrims)
-                                                    {
-                                                    if (((float)fz == (float)(_parent_scene.gravityz * m_mass)) &&
-                                                        (Math.Abs(vel.X) < 0.01 || Math.Abs(vel.Y) < 0.01 || Math.Abs(vel.Z) < 0.0001))
-                                                        {
-                                                        if (Math.Abs(vel.X) < 0.0001 || Math.Abs(vel.Y) < 0.0001 || Math.Abs(vel.Z) < 0.0001)
-                                                            {
-                                                            Vector3 angvelocity = new Vector3((float)angvel.X, (float)angvel.Y, (float)angvel.Z);
 
-                                                            if (angvelocity.ApproxEquals(Vector3.Zero, 0.005f) &&
-                                                                vel.X != 0 && vel.Y != 0 && vel.Z != 0)
-                                                                {
-                                                                if (d.BodyIsEnabled(Body))
-                                                                    {
-                                                                    d.BodySetLinearVel(Body, 0, 0, 0);
-                                                                    d.BodySetForce(Body, 0, 0, 0);
-                                                                    d.BodyDisable(Body);
-                                                                    disabled = true;
-                                                                    }
-                                                                }
-                                                            else
-                                                                {
-                                                                if (!d.BodyIsEnabled(Body))
-                                                                    d.BodyEnable(Body);
-                                                                }
-                                                            }
-                                                        else
-                                                            {
-                                                            if (!d.BodyIsEnabled(Body))
-                                                                {
-                                                                d.BodyEnable(Body);
-                                                                fz = 100 * m_mass;
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                        */
+                        bool disabled = false;
                         if (!disabled)
                         {
                             if (!d.BodyIsEnabled (Body))
@@ -1811,17 +1753,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                             d.BodyAddForce (Body, fx, fy, fz);
                             d.BodyAddTorque (Body, newtorque.X, newtorque.Y, newtorque.Z);
-
                         }
                     }
                 }
-            }
-            else
-            {    // is not physical, or is not a body or is selected
-                //  _zeroPosition = d.BodyGetPosition(Body);
-                return;
-                //Console.WriteLine("Nothing " +  m_primName);
-
             }
         }
 

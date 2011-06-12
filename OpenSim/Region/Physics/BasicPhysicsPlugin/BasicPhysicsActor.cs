@@ -63,7 +63,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override int PhysicsActorType
         {
             get { return (int) ActorTypes.Agent; }
-            set { return; }
         }
 
         public override Vector3 RotationalVelocity
@@ -213,7 +212,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override int PhysicsActorType
         {
             get { return (int)ActorTypes.Agent; }
-            set { return; }
         }
 
         public override Vector3 RotationalVelocity

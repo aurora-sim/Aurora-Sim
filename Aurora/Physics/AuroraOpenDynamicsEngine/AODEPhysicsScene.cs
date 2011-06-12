@@ -2734,10 +2734,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.GeomSetCollideBits (RegionTerrain, (int)(CollisionCategories.Space));
                 }
 
-                NullObjectPhysicsActor terrainActor = new NullObjectPhysicsActor()
-                {
-                    PhysicsActorType = (int)ActorTypes.Ground
-                };
+                NullObjectPhysicsActor terrainActor = new NullObjectPhysicsActor ();
 
                 actor_name_map[RegionTerrain] = terrainActor;
 

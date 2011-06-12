@@ -215,7 +215,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public override int PhysicsActorType
         {
             get { return (int) ActorTypes.Agent; }
-            set { return; }
         }
 
         /// <summary>
