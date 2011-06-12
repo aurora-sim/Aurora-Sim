@@ -1028,9 +1028,7 @@ namespace OpenSim.Region.Framework.Scenes
                     ParentGroup.HasGroupChanged = true;
                 m_material = (Material)value;
                 if (PhysActor != null)
-                {
                     PhysActor.SetMaterial(value);
-                }
             }
         }
 
