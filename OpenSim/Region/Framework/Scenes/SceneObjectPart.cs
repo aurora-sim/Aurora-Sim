@@ -1860,7 +1860,7 @@ namespace OpenSim.Region.Framework.Scenes
             get
             {
                 OSD d = GetComponentState ("PhysicsType");
-                if (d == null)
+                if (d == null || d.Type == OSDType.Unknown)
                     d = 0;
                 return (byte)d.AsInteger ();
             }
@@ -1875,7 +1875,7 @@ namespace OpenSim.Region.Framework.Scenes
             get
             {
                 OSD d = GetComponentState ("Density");
-                if (d == null)
+                if (d == null || d.Type == OSDType.Unknown)
                     d = 1000;
                 return (float)d.AsReal ();
             }
@@ -1890,7 +1890,7 @@ namespace OpenSim.Region.Framework.Scenes
             get
             {
                 OSD d = GetComponentState ("Friction");
-                if (d == null)
+                if (d == null || d.Type == OSDType.Unknown)
                     d = 1;
                 return (float)d.AsReal ();
             }
@@ -1907,7 +1907,7 @@ namespace OpenSim.Region.Framework.Scenes
             get
             {
                 OSD d = GetComponentState ("Restitution");
-                if (d == null)
+                if (d == null || d.Type == OSDType.Unknown)
                     d = 1;
                 return (float)d.AsReal ();
             }
@@ -1928,7 +1928,7 @@ namespace OpenSim.Region.Framework.Scenes
                 else
                 {
                     OSD d = GetComponentState ("GravityMultiplier");
-                    if (d == null)
+                    if (d == null || d.Type == OSDType.Unknown)
                         d = 1;
                     return (float)d.AsReal ();
                 }

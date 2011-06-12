@@ -429,8 +429,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return;
             Body = d.BodyCreate (_parent_scene.world);
 
+            CalculatePrimMass ();
             calcdMass (); // compute inertia on local frame
-
             DMassDup (ref primdMass, out objdmass);
 
             // rotate inertia
@@ -1717,22 +1717,29 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     #endregion
 
+                    // 35n times the mass per second applied maximum.
+                    float nmax = 35f * m_mass;
+                    float nmin = -35f * m_mass;
+
+                    if (fx > nmax)
+                        fx = nmax;
+                    if (fx < nmin)
+                        fx = nmin;
+                    if (fy > nmax)
+                        fy = nmax;
+                    if (fy < nmin)
+                        fy = nmin;
+
+                    if (Math.Abs (fx) < 0.01)
+                        fx = 0;
+                    if (Math.Abs (fy) < 0.01)
+                        fy = 0;
+                    if (Math.Abs (fz) < 0.01)
+                        fz = 0;
+
                     //m_log.Info("[OBJPID]: X:" + fx.ToString() + " Y:" + fy.ToString() + " Z:" + fz.ToString());
                     if (fx != 0 || fy != 0 || fz != 0 || newtorque.X != 0 || newtorque.Y != 0 || newtorque.Z != 0)
                     {
-                        // 35n times the mass per second applied maximum.
-                        float nmax = 35f * m_mass;
-                        float nmin = -35f * m_mass;
-
-                        if (fx > nmax)
-                            fx = nmax;
-                        if (fx < nmin)
-                            fx = nmin;
-                        if (fy > nmax)
-                            fy = nmax;
-                        if (fy < nmin)
-                            fy = nmin;
-
                         if (Amotor != IntPtr.Zero && !m_angularlock.ApproxEquals (Vector3.One, 0.003f))
                         {
                             d.JointSetAMotorParam (Amotor, (int)dParam.LowStop, -0.001f);
@@ -1743,14 +1750,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             d.JointSetAMotorParam (Amotor, (int)dParam.HiStop2, 0.0001f);
                         }
 
-                        bool disabled = false;
-                        if (!disabled)
+                        if (Body != IntPtr.Zero)
                         {
-                            if (!d.BodyIsEnabled (Body))
-                            {
-                                enableBodySoft ();
-                            }
-
                             d.BodyAddForce (Body, fx, fy, fz);
                             d.BodyAddTorque (Body, newtorque.X, newtorque.Y, newtorque.Z);
                         }

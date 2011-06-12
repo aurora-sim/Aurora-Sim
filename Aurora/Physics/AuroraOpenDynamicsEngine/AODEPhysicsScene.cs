@@ -359,7 +359,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 contactgroup = d.JointGroupCreate(0);
                 //contactgroup
 
-                d.WorldSetAutoDisableFlag(world, false);
+                d.WorldSetAutoDisableFlag(world, true);
 #if USE_DRAWSTUFF
                 
                 Thread viewthread = new Thread(new ParameterizedThreadStart(startvisualization));
@@ -642,7 +642,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
            
 
             // Set the gravity,, don't disable things automatically (we set it explicitly on some things)
-
             d.WorldSetGravity(world, gravityx, gravityy, gravityz);
             d.WorldSetContactSurfaceLayer(world, contactsurfacelayer);
 
@@ -1743,8 +1742,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         }
 
-        private PhysicsObject AddPrim(String name, Vector3 position, Vector3 size, Quaternion rotation,
-                                     IMesh mesh, PrimitiveBaseShape pbs, bool isphysical, float Density)
+        public override PhysicsObject AddPrimShape(String name, PrimitiveBaseShape pbs, Vector3 position, Vector3 size,
+            Quaternion rotation, bool isphysical, float Density)
         {
 
             Vector3 pos = position;
@@ -1752,7 +1751,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             Quaternion rot = rotation;
 
             AuroraODEPrim newPrim;
-            newPrim = new AuroraODEPrim (name, this, pos, siz, rot, mesh, pbs, isphysical, ode, Density);
+            newPrim = new AuroraODEPrim (name, this, pos, siz, rot, null, pbs, isphysical, ode, Density);
 
             lock (_prims)
                 _prims.Add(newPrim);
@@ -1770,12 +1769,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //else
                 //  m_log.Warn("[PHYSICS]: Double Entry in _activeprims detected, potential crash immenent");
             }
-        }
-
-        public override PhysicsObject AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
-                                                  Vector3 size, Quaternion rotation, bool isPhysical, float Density)
-        {
-            return AddPrim (primName, position, size, rotation, null, pbs, isPhysical, Density);
         }
 
         public override float TimeDilation
