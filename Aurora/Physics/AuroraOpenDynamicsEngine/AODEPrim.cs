@@ -1475,7 +1475,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         private Vector3 m_PreviousForce = Vector3.Zero;
-        private const int previousForceSameMax = 1000;
+        private const int previousForceSameMax = 100;
         private int m_previousForceIsSame = 0;
         public void Move (float timestep)
         {
@@ -1753,20 +1753,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             {
                                 if (m_PreviousForce.X != fx &&
                                     m_PreviousForce.Y != fy &&
-                                    m_PreviousForce.Z != fz ||
-                                    m_previousForceIsSame < previousForceSameMax)
+                                    m_PreviousForce.Z != fz)
+                                    m_previousForceIsSame = 0;
+                                else if (!m_isSelected)
+                                    m_previousForceIsSame++;
+
+                                if (m_previousForceIsSame < previousForceSameMax)
                                 {
-                                    if (m_PreviousForce.X != fx &&
-                                        m_PreviousForce.Y != fy &&
-                                        m_PreviousForce.Z != fz)
-                                        m_previousForceIsSame = 0;
-                                    else if (!m_isSelected)
-                                        m_previousForceIsSame++;
                                     m_PreviousForce = new Vector3 (fx, fy, fz);
                                     d.BodyAddForce (Body, fx, fy, fz);
                                 }
-                                else if(!m_isSelected)
-                                    m_previousForceIsSame++;
                             }
 
                             if(newtorque.X != 0 || newtorque.Y != 0 || newtorque.Z != 0)
