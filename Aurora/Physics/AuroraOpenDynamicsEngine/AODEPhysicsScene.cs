@@ -501,13 +501,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // Centeral contact friction and bounce
             // ckrinke 11/10/08 Enabling soft_erp but not soft_cfm until I figure out why
             // an avatar falls through in Z but not in X or Y when walking on a prim.
-            contact.surface.mode = (d.ContactFlags.Slip1 | d.ContactFlags.Bounce | d.ContactFlags.Slip2);
+            contact.surface.mode |= d.ContactFlags.SoftERP;
             contact.surface.mu = nmAvatarObjectContactFriction;
             contact.surface.bounce = nmAvatarObjectContactBounce;
-            contact.surface.soft_cfm = 0.00010f;
-            contact.surface.soft_erp = 0.00010f;
-            contact.surface.slip1 = 0.1f;
-            contact.surface.slip2 = 0.1f;
+            contact.surface.soft_cfm = 0.010f;
+            contact.surface.soft_erp = 0.010f;
 
             // Prim contact friction and bounce
             // This is the *non* moving version of friction and bounce
@@ -1216,51 +1214,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (!DisableCollisions)
             {
                 bool p2col = false;
-                bool p2colgnd = false;
-                bool p2colobj = false;
 
                 // We only need to test p2 for 'jump crouch purposes'
                 if (p2 is AuroraODECharacter && p1.PhysicsActorType == (int)ActorTypes.Prim)
                 {
                     // Testing if the collision is at the feet of the avatar
-
-                    //m_log.DebugFormat("[PHYSICS]: {0} - {1} - {2} - {3}", curContact.pos.Z, p2.Position.Z, (p2.Position.Z - curContact.pos.Z), (p2.Size.Z * 0.6f));
                     if ((p2.Position.Z - maxDepthContact.Position.Z) > (p2.Size.Z * 0.6f))
                         p2col = true;
                 }
                 else
-                {
                     p2col = true;
-                }
 
-                if (p2col)
-                    {
-                    switch (p1.PhysicsActorType)
-                        {
-                        case (int)ActorTypes.Agent:
-                            p2colobj = true;
-                            break;
-                        case (int)ActorTypes.Prim:
-                            p2colobj = true;
-                            break;
-                        default:
-                            //This is required for some really weird reason... the heightmap collides every time...
-//                            float terrainHeight = GetTerrainHeightAtXY(p2.Position.X, p2.Position.Y);
-//                            if (terrainHeight + 1 >= (p2.Position.Z - p2.Size.Z / 2))
-                              p2colgnd = true;
-                            break;
-                        }
-                    }
-
-                //These get cleared out before we start colliding...
-                // if we set them here just as near comes in,
-                // we have issues, since they overwrite each other.
-//                if(!p2.CollidingObj)
-                    p2.CollidingObj = p2colobj;
-//                if (!p2.CollidingGround)
-                    p2.CollidingGround = p2colgnd;
-//                if (!p2.IsColliding)
-                    p2.IsColliding = p2col;
+                p2.IsColliding = p2col;
 
                 if (count > geomContactPointsStartthrottle)
                 {
@@ -1450,7 +1415,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     m_currentmaxContactsbeforedeath = Math.Max(100, (int)(maxContactsbeforedeath * TimeDilation));
                     contacts = new d.ContactGeom[Math.Max(5, (int)(m_timeDilation * contactsPerCollision))];
-                    //m_log.WarnFormat("[ODE]: AutoConfig: changing contact amount to {0}, {1}%", contacts.Length, (m_timeDilation * contactsPerCollision) / contactsPerCollision * 100);
+                    m_log.WarnFormat("[ODE]: AutoConfig: changing contact amount to {0}, {1}%", contacts.Length, (m_timeDilation * contactsPerCollision) / contactsPerCollision * 100);
                 }
             }
 
@@ -1470,8 +1435,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         continue;
 
                     chr.IsColliding = false;
-                    chr.CollidingGround = false;
-                    chr.CollidingObj = false;
 
                     // test the avatar's geometry for collision with the space
                     // This will return near and the space that they are the closest to
@@ -1499,8 +1462,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         //Fix colliding atributes!
                         chr.IsColliding = false;
-                        chr.CollidingGround = false;
-                        chr.CollidingObj = false;
 
                         try
                         {
@@ -2540,46 +2501,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             mesher.FinishedMeshing ();
                         }
 
-                        // process changes
-                        /*
-                        
-                                                if (ChangesQueue.Count > 0)
-                                                    {
-                                                    int tlimit = ChangesQueue.Count;
-                                                    if (tlimit > 500)
-                                                        tlimit = 500;
-                                                    while (tlimit-- > 0)
-                                                        {
-                                                        AODEchangeitem item = GetNextChange();
-                                                        if (item.prim != null)
-                                                            {
-                                                            try
-                                                                {
-                                                                if (item.prim.DoAChange(item.what, item.arg))
-                                                                    RemovePrimThreadLocked(item.prim);
-                                                                }
-                                                            catch { };
-                                                            }
-                                                        }
-                                                    }
-                         */
-                        /*
-                                                lock (_taintedPrimLock)
-                                                {
-                                                    foreach (AuroraODEPrim prim in _taintedPrimL)
-                                                    {
-                                                        if (prim.ProcessTaints(timeElapsed))
-                                                            RemovePrimThreadLocked(prim);
-                                                        processedtaints = true;
-                                                        prim.m_collisionscore = 0;
-                                                    }
-                            
-                                                    if (processedtaints)
-                                                        //Console.WriteLine("Simulate calls Clear of _taintedPrim list");
-                                                        _taintedPrimH.Clear();
-                                                    _taintedPrimL.Clear();
-                                                }
-                        */
                         m_StatPhysicsTaintTime = Util.EnvironmentTickCountSubtract(PhysicsTaintTime);
 
                         int PhysicsMoveTime = Util.EnvironmentTickCount();
@@ -2621,7 +2542,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                             if (m_rayCastManager != null)
                             {
-                                //int RayCastTimeMS = m_rayCastManager.ProcessQueuedRequests();
                                 m_rayCastManager.ProcessQueuedRequests();
                             }
                         }
@@ -2730,8 +2650,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
 
                 m_StatPrimUpdatePosAndVelocity = Util.EnvironmentTickCountSubtract(PrimUpdatePosAndVelocity);
-
-                //DumpJointInfo();
 
                 // Finished with all sim stepping. If requested, dump world state to file for debugging.
                 // This overwrites all dump files in-place. Should this be a growing logfile, or separate snapshots?

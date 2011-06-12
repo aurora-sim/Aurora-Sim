@@ -360,7 +360,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         public override float Mass
         {
             get { return CalculateMass(); }
-            set { }
         }
 
         public override Vector3 Force
@@ -495,18 +494,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         {
             get { return iscolliding; }
             set { iscolliding = value; }
-        }
-
-        public override bool CollidingGround
-        {
-            get { return false; }
-            set { return; }
-        }
-
-        public override bool CollidingObj
-        {
-            get { return false; }
-            set { return; }
         }
 
         public override bool FloatOnWater

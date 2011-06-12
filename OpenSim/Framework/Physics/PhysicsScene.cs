@@ -104,7 +104,10 @@ namespace OpenSim.Framework
 
         public abstract bool DisableCollisions { get; set; }
 
-        public abstract bool UseUnderWaterPhysics { get; }
+        public virtual bool UseUnderWaterPhysics
+        {
+            get { return false; }
+        }
 
         public virtual int StatPhysicsTaintTime
         {

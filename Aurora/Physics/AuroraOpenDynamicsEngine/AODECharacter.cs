@@ -86,8 +86,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float CAPSULE_LENGTH = 2.140599f;
         private bool flying = false;
         private bool m_iscolliding = false;
-        private bool m_iscollidingGround = false;
-        private bool m_iscollidingObj = false;
 
         int m_colliderfilter = 0;
         int m_colliderObjectfilter = 0;
@@ -299,76 +297,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         /// <summary>
-        /// Returns if an avatar is colliding with the ground
-        /// </summary>
-        public override bool CollidingGround
-        {
-            get { return m_iscollidingGround; }
-            set
-            {
-                m_iscollidingGround = value;
-                /*
-                if (value)
-                {
-                    m_colliderGroundfilter += 2;
-                    if (m_colliderGroundfilter > 2)
-                        m_colliderGroundfilter = 2;
-                }
-                else
-                {
-                    m_colliderGroundfilter--;
-                    if (m_colliderGroundfilter < 0)
-                        m_colliderGroundfilter = 0;
-                }
-
-                if (m_colliderGroundfilter == 0)
-                    m_iscollidingGround = false;
-                else
-                    m_iscollidingGround = true;*/
-            }
-        }
-
-
-        /// <summary>
-        /// Returns if the avatar is colliding with an object
-        /// </summary>
-        public override bool CollidingObj
-            {
-            get { return m_iscollidingObj; }
-
-            set
-                {
-                if (value)
-                    {
-                    m_colliderObjectfilter += 2; // there are 2 falses per false
-                    if (m_colliderObjectfilter > 2)
-                        m_colliderObjectfilter = 2;
-                    }
-                else
-                    {
-                    m_colliderObjectfilter--;
-                    if (m_colliderObjectfilter < 0)
-                        m_colliderObjectfilter = 0;
-                    }
-
-                if (m_colliderObjectfilter == 0)
-                    m_iscollidingObj = false;
-                else
-                    m_iscollidingObj = true;
-
-                //            if (m_iscollidingObj)
-                //                m_log.Warn("colobj");
-                /*
-                                m_iscollidingObj = value;
-                                if (m_iscollidingObj)
-                                    m_pidControllerActive = false;
-                                else
-                                    m_pidControllerActive = true;
-                 */
-                }
-            }
-
-        /// <summary>
         /// turn the PID controller on or off.
         /// The PID Controller will turn on all by itself in many situations
         /// </summary>
@@ -471,7 +399,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 return m_mass;
             }
-            set { }
         }
 
         public override Vector3 Force
@@ -902,7 +829,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (tempPos.Z - AvatarHalfsize - groundHeight < 0.12f)
                 {
                     m_iscolliding = true;
-                    m_iscollidingGround = true;
                     flying = false; // ground the avatar
                     ContactPoint point = new ContactPoint ();
                     point.PenetrationDepth = vel.Z;
@@ -912,11 +838,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     //0 is the ground localID
                     this.AddCollisionEvent (0, point);
                 }
-                else
-                    m_iscollidingGround = false;
             }
-            else
-                m_iscollidingGround = true;//Assume that they are crossing, and keep them from falling down
 
             #endregion
 
@@ -950,7 +872,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             //  if velocity is zero, use position control; otherwise, velocity control
             if (_target_velocity == Vector3.Zero &&
-                Math.Abs (vel.X) < 0.05 && Math.Abs (vel.Y) < 0.05 && Math.Abs (vel.Z) < 0.05 && (this.m_iscollidingGround || this.m_iscollidingObj || this.flying))
+                Math.Abs (vel.X) < 0.05 && Math.Abs (vel.Y) < 0.05 && Math.Abs (vel.Z) < 0.05 && (this.m_iscolliding || this.flying))
             //This is so that if we get moved by something else, it will update us in the client
             {
                 m_isJumping = false;

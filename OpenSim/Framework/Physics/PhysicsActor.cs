@@ -129,18 +129,6 @@ namespace OpenSim.Framework
             set { return; }
         }
 
-        public override bool CollidingGround
-        {
-            get { return false; }
-            set { return; }
-        }
-
-        public override bool CollidingObj
-        {
-            get { return false; }
-            set { return; }
-        }
-
         public override Vector3 Size
         {
             get { return Vector3.Zero; }
@@ -150,7 +138,6 @@ namespace OpenSim.Framework
         public override float Mass
         {
             get { return 0f; }
-            set { }
         }
 
         public override Vector3 Force
@@ -301,18 +288,6 @@ namespace OpenSim.Framework
             set { return; }
         }
 
-        public override bool CollidingGround
-        {
-            get { return false; }
-            set { return; }
-        }
-
-        public override bool CollidingObj
-        {
-            get { return false; }
-            set { return; }
-        }
-
         public override Vector3 Size
         {
             get { return Vector3.Zero; }
@@ -322,7 +297,6 @@ namespace OpenSim.Framework
         public override float Mass
         {
             get { return 0f; }
-            set { }
         }
 
         public override Vector3 Force

@@ -149,7 +149,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override float Mass
         {
             get { return 0f; }
-            set { }
         }
 
         public override Vector3 Force
@@ -313,7 +312,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override float Mass
         {
             get { return 0f; }
-            set { }
         }
 
         public override Vector3 Force

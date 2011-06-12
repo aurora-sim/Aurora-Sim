@@ -1043,7 +1043,7 @@ namespace OpenSim.Framework
         }
 
         public abstract Vector3 Position { get; set; }
-        public abstract float Mass { get; set; }
+        public abstract float Mass { get; }
         public abstract Vector3 Force { get; set; }
 
         public abstract Vector3 CenterOfMass { get; }
@@ -1057,8 +1057,6 @@ namespace OpenSim.Framework
         public abstract bool SetAlwaysRun { get; set; }
         public abstract bool ThrottleUpdates { get; set; }
         public abstract bool IsColliding { get; set; }
-        public abstract bool CollidingGround { get; set; }
-        public abstract bool CollidingObj { get; set; }
         public abstract bool FloatOnWater { set; }
         public abstract Vector3 RotationalVelocity { get; set; }
         public abstract float Buoyancy { get; set; }
