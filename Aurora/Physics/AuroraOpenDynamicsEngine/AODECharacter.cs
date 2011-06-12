@@ -583,21 +583,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_taintPosition.Z = _position.Z;
 
             d.BodySetMass(Body, ref ShellMass);
-/*
+
             d.Matrix3 m_caprot;
             // 90 Stand up on the cap of the capped cyllinder
-            if (_parent_scene.IsAvCapsuleTilted)
-            {
-                d.RFromAxisAndAngle(out m_caprot, 1, 0, 1, (float)(Math.PI / 2));
-            }
-            else
-            {
-                m_taintRotation = new Quaternion(0,0,1,(float)(Math.PI / 2));
-                d.RFromAxisAndAngle(out m_caprot, m_taintRotation.X, m_taintRotation.Y, m_taintRotation.Z, m_taintRotation.W);
-            }
-*/
+            m_taintRotation = new Quaternion(0,0,1,(float)(Math.PI / 2));
+            d.RFromAxisAndAngle(out m_caprot, m_taintRotation.X, m_taintRotation.Y, m_taintRotation.Z, m_taintRotation.W);
+
             d.GeomSetBody(Shell, Body);
-//            d.GeomSetRotation(Shell, ref m_caprot);          
+            d.GeomSetRotation(Shell, ref m_caprot);          
 
 
             // The purpose of the AMotor here is to keep the avatar's physical
@@ -612,7 +605,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.JointSetAMotorAxis(Amotor, 2, 1, 0, 0, 1);
 
             // These lowstops and high stops are effectively (no wiggle room)
-            if (false)
+            if (true)
             {
                 d.JointSetAMotorAngle(Amotor, 0, 0);
                 d.JointSetAMotorAngle(Amotor, 1, 0);
@@ -1152,15 +1145,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (Math.Abs (vec.Z) < 0.001)
                         vec.Z = 0;
 
-                    if (vec == Vector3.Zero) //if we arn't moving, STOP
-                        d.BodySetLinearVel(Body, vec.X, vec.Y, vec.Z);
-                    else
+                    //if (vec == Vector3.Zero) //if we arn't moving, STOP
+                    //    d.BodySetLinearVel(Body, vec.X, vec.Y, vec.Z);
+                    //else
                         doForce (vec);
                      
-                    if (!_zeroFlag)
-                    {
+                    //if (!_zeroFlag)
+                    //{
                         AlignAvatarTiltWithCurrentDirectionOfMovement (vec);
-                    }
+                    //}
 
                     //When falling, we keep going faster and faster, and eventually, the client blue screens (blue is all you see).
                     // The speed that does this is slightly higher than -30, so we cap it here so we never do that during falling.
