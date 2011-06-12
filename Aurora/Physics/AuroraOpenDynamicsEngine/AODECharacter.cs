@@ -1124,6 +1124,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (Math.Abs (vec.Z) < 0.001)
                         vec.Z = 0;
 
+                    //ODE autodisables not moving prims, accept it and reenable when we need to
+                    if (!d.BodyIsEnabled (Body))
+                        d.BodyEnable (Body);
+
                     if (vec == Vector3.Zero) //if we arn't moving, STOP
                         d.BodySetLinearVel(Body, vec.X, vec.Y, vec.Z);
                     else

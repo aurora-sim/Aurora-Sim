@@ -429,7 +429,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return;
             Body = d.BodyCreate (_parent_scene.world);
 
-            CalculatePrimMass ();
             calcdMass (); // compute inertia on local frame
             DMassDup (ref primdMass, out objdmass);
 
@@ -1475,6 +1474,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             resetCollisionAccounting ();
         }
 
+        private Vector3 m_PreviousForce = Vector3.Zero;
+        private const int previousForceSameMax = 1000;
+        private int m_previousForceIsSame = 0;
         public void Move (float timestep)
         {
             if (m_frozen)
@@ -1506,20 +1508,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // would come from SceneObjectPart.cs, public void SetBuoyancy(float fvalue) , PhysActor.Buoyancy = fvalue; ??
                     // m_buoyancy: (unlimited value) <0=Falls fast; 0=1g; 1=0g; >1 = floats up 
                     // gravityz multiplier = 1 - m_buoyancy
+                    float gravZ = _parent_scene.gravityz * (1.0f - m_buoyancy) * GravityMultiplier;
                     if (!_parent_scene.UsePointGravity)
                     {
-                        if (!testRealGravity)
-                        {
-                            fx = _parent_scene.gravityx * (1.0f - m_buoyancy) * GravityMultiplier;
-                            fy = _parent_scene.gravityy * (1.0f - m_buoyancy) * GravityMultiplier;
-                            fz = _parent_scene.gravityz * (1.0f - m_buoyancy) * GravityMultiplier;
-                        }
-                        else
-                        {
-                            fx = _parent_scene.gravityx * -1 * (1.0f - m_buoyancy);
-                            fy = _parent_scene.gravityy * -1 * (1.0f - m_buoyancy);
-                            fz = _parent_scene.gravityz * -1 * (1.0f - m_buoyancy);
-                        }
+                        fx = _parent_scene.gravityx * (1.0f - m_buoyancy) * GravityMultiplier;
+                        fy = _parent_scene.gravityy * (1.0f - m_buoyancy) * GravityMultiplier;
+                        fz = gravZ;
                     }
                     else
                     {
@@ -1752,8 +1746,31 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                         if (Body != IntPtr.Zero)
                         {
-                            d.BodyAddForce (Body, fx, fy, fz);
-                            d.BodyAddTorque (Body, newtorque.X, newtorque.Y, newtorque.Z);
+                            //ODE autodisables not moving prims, accept it and reenable when we need to
+                            if (!d.BodyIsEnabled (Body))
+                                d.BodyEnable (Body);
+                            if (fx != 0 || fy != 0 || fz != 0)
+                            {
+                                if (m_PreviousForce.X != fx &&
+                                    m_PreviousForce.Y != fy &&
+                                    m_PreviousForce.Z != fz ||
+                                    m_previousForceIsSame < previousForceSameMax)
+                                {
+                                    if (m_PreviousForce.X != fx &&
+                                        m_PreviousForce.Y != fy &&
+                                        m_PreviousForce.Z != fz)
+                                        m_previousForceIsSame = 0;
+                                    else if (!m_isSelected)
+                                        m_previousForceIsSame++;
+                                    m_PreviousForce = new Vector3 (fx, fy, fz);
+                                    d.BodyAddForce (Body, fx, fy, fz);
+                                }
+                                else if(!m_isSelected)
+                                    m_previousForceIsSame++;
+                            }
+
+                            if(newtorque.X != 0 || newtorque.Y != 0 || newtorque.Z != 0)
+                                d.BodyAddTorque (Body, newtorque.X, newtorque.Y, newtorque.Z);
                         }
                     }
                 }
@@ -2430,7 +2447,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             //  no lock; called from Simulate() -- if you call this from elsewhere, gotta lock or do Monitor.Enter/Exit!
             if (_parent == null)
             {
-                if (Body != IntPtr.Zero && prim_geom != IntPtr.Zero) // FIXME -> or if it is a joint
+                if (Body != IntPtr.Zero && prim_geom != IntPtr.Zero)
                 {
                     d.Vector3 cpos = d.BodyGetPosition (Body); // object position ( center of mass)
                     d.Vector3 lpos = d.GeomGetPosition (prim_geom); // root position that is seem by rest of simulator
@@ -2540,12 +2557,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         //                        && (Math.Abs(m_lastorientation.Y - ori.Y) < 0.001)
                         //                        && (Math.Abs(m_lastorientation.Z - ori.Z) < 0.001)
                         //                        &&
-                        (Math.Abs (vel.X) < 0.001)
-                        && (Math.Abs (vel.Y) < 0.001)
-                        && (Math.Abs (vel.Z) < 0.001)
-                        && (Math.Abs (rotvel.X) < 0.0001)
-                        && (Math.Abs (rotvel.Y) < 0.0001)
-                        && (Math.Abs (rotvel.Z) < 0.0001)
+                        ((Math.Abs (vel.X) < 0.01)
+                        && (Math.Abs (vel.Y) < 0.01)
+                        && (Math.Abs (vel.Z) < 0.01)
+                        && (Math.Abs (rotvel.X) < 0.001)
+                        && (Math.Abs (rotvel.Y) < 0.001)
+                        && (Math.Abs (rotvel.Z) < 0.001) || 
+                        m_previousForceIsSame > previousForceSameMax)
 
                         && m_vehicle.Type == Vehicle.TYPE_NONE)
                     {
@@ -2575,9 +2593,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_rotationalVelocity.Y = 0;
                         m_rotationalVelocity.Z = 0;
 
-                        // better let ode keep dealing with small values
-                        //                        d.BodySetLinearVel(Body, 0, 0, 0);
-                        //                        d.BodySetAngularVel(Body, 0, 0, 0);
+                        // better let ode keep dealing with small values --Ubit
+                        //ODE doesn't deal with them though, it just keeps adding them, never stopping the movement of the prim..
+                        d.BodySetLinearVel(Body, 0, 0, 0);
+                        d.BodySetAngularVel(Body, 0, 0, 0);
+                        if(d.BodyIsEnabled(Body))
+                            d.BodyDisable (Body);
 
                         if (m_lastUpdateSent > 0)
                         {
@@ -2615,7 +2636,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         return;
                     m_UpdateTimecntr = 0;
 
-                    if (//!_zeroFlag && !needupdate && (
+                    if (!_zeroFlag && !needupdate && (
                          (Math.Abs (m_lastposition.X - _position.X) > 0.001)
                         || (Math.Abs (m_lastposition.Y - _position.Y) > 0.001)
                         || (Math.Abs (m_lastposition.Z - _position.Z) > 0.001)
@@ -2625,7 +2646,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         || (Math.Abs (_acceleration.X) > 0.005)
                         || (Math.Abs (_acceleration.Y) > 0.005)
                         || (Math.Abs (_acceleration.Z) > 0.005)
-                        )//)
+                        ))
                     {
                         if (!m_throttleUpdates || throttleCounter > _parent_scene.geomUpdatesPerThrottledUpdate)
                         {
@@ -2638,6 +2659,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     if (needupdate)
                     {
+                        throttleCounter = 0;
                         m_lastposition = _position;
                         m_lastorientation = _orientation;
                         base.RequestPhysicsterseUpdate ();
