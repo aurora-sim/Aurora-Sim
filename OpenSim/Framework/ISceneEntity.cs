@@ -699,6 +699,48 @@ namespace OpenSim.Framework
             get;
             set;
         }
+
+        float PIDTau
+        {
+            get;
+            set;
+        }
+
+        Vector3 PIDTarget
+        {
+            get;
+            set;
+        }
+
+        bool PIDActive
+        {
+            get;
+            set;
+        }
+
+        float PIDHoverTau
+        {
+            get;
+            set;
+        }
+
+        float PIDHoverHeight
+        {
+            get;
+            set;
+        }
+
+        bool PIDHoverActive
+        {
+            get;
+            set;
+        }
+
+        PIDHoverType PIDHoverType
+        {
+            get;
+            set;
+        }
     }
 
     public interface ISceneGraph
@@ -905,50 +947,6 @@ namespace OpenSim.Framework
         public virtual void VehicleRotationParam(int param, Quaternion rotation) { }
         public virtual void VehicleFlags(int param, bool remove) { }
         public virtual void SetCameraPos(Vector3 CameraRotation) { }
-
-        // Used for MoveTo
-        public virtual Vector3 PIDTarget
-        {
-            get { return Vector3.Zero; }
-            set { return; }
-        }
-
-        public virtual float GravityMultiplier
-        {
-            get { return 1; }
-            set {}
-        }
-
-        public virtual float Friction
-        {
-            get { return 1; }
-            set {}
-        }
-
-        public virtual float Restitution
-        {
-            get { return 1; }
-            set {}
-        }
-
-        public virtual bool PIDActive
-        {
-            get { return false; }
-            set { return; }
-        }
-
-        public virtual float PIDTau
-        {
-            get { return 0; }
-            set { return; }
-        }
-
-        // Used for llSetHoverHeight and maybe vehicle height
-        // Hover Height will override MoveTo target's Z
-        public virtual float PIDHoverHeight { set { return; } }
-        public virtual bool PIDHoverActive { set { return; } }
-        public virtual PIDHoverType PIDHoverType { set { return; } }
-        public virtual float PIDHoverTau { set { return; } }
 
         public virtual bool VolumeDetect
         {

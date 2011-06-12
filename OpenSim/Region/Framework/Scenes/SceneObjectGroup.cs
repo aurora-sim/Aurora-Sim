@@ -1546,12 +1546,6 @@ namespace OpenSim.Region.Framework.Scenes
                 part.PhysActor.UUID = part.UUID;
                 //Set physical and etc up correctly
                 part.DoPhysicsPropertyUpdate (usePhysics, true);
-                if (oldActor != null)
-                {
-                    part.PhysActor.PIDTarget = oldActor.PIDTarget;
-                    part.PhysActor.PIDTau = oldActor.PIDTau;
-                    part.PhysActor.PIDActive = oldActor.PIDActive;
-                }
 
                 part.PhysActor.VolumeDetect = part.VolumeDetectActive;
 
@@ -1729,10 +1723,7 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectPart rootpart = m_rootPart;
             if (rootpart != null)
             {
-                if (rootpart.PhysActor != null)
-                {
-                    rootpart.PhysActor.APIDActive = false;
-                }
+                rootpart.APIDEnabled = false;
             }
         
         }
@@ -1752,14 +1743,14 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (height != 0f)
                     {
-                        rootpart.PhysActor.PIDHoverHeight = height;
-                        rootpart.PhysActor.PIDHoverType = hoverType;
-                        rootpart.PhysActor.PIDTau = tau;
-                        rootpart.PhysActor.PIDHoverActive = true;
+                        rootpart.PIDHoverHeight = height;
+                        rootpart.PIDHoverType = hoverType;
+                        rootpart.PIDTau = tau;
+                        rootpart.PIDHoverActive = true;
                     }
                     else
                     {
-                        rootpart.PhysActor.PIDHoverActive = false;
+                        rootpart.PIDHoverActive = false;
                     }
                 }
             }

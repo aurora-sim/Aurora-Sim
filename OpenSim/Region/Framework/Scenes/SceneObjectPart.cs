@@ -307,8 +307,6 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("PIDTarget", value);
-                if (PhysActor != null)
-                    PhysActor.PIDTarget = value;
             }
         }
 
@@ -330,8 +328,6 @@ namespace OpenSim.Region.Framework.Scenes
                         s.EventManager.OnFrame -= UpdateLookAt;
                 }
                 SetComponentState("PIDActive", value);
-                if(PhysActor != null)
-                    PhysActor.PIDActive = value;
             }
         }
 
@@ -345,8 +341,54 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("PIDTau", value);
-                if (PhysActor != null)
-                    PhysActor.PIDTau = value;
+            }
+        }
+
+        public float PIDHoverHeight
+        {
+            get
+            {
+                return (float)GetComponentState ("PIDHoverHeight").AsReal ();
+            }
+            set
+            {
+                SetComponentState ("PIDHoverHeight", value);
+            }
+        }
+
+        public float PIDHoverTau
+        {
+            get
+            {
+                return (float)GetComponentState ("PIDHoverTau").AsReal ();
+            }
+            set
+            {
+                SetComponentState ("PIDHoverTau", value);
+            }
+        }
+
+        public bool PIDHoverActive
+        {
+            get
+            {
+                return GetComponentState ("PIDHoverActive").AsBoolean ();
+            }
+            set
+            {
+                SetComponentState ("PIDHoverActive", value);
+            }
+        }
+
+        public PIDHoverType PIDHoverType
+        {
+            get
+            {
+                return (PIDHoverType)GetComponentState ("PIDHoverType").AsInteger ();
+            }
+            set
+            {
+                SetComponentState ("PIDHoverType", (int)value);
             }
         }
         
@@ -1095,12 +1137,23 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return (float)GetComponentState("APIDStrength").AsReal();
+                return (float)GetComponentState ("APIDStrength").AsReal ();
             }
-            set 
+            set
             {
-                SetComponentState("APIDStrength", value);
-                m_APIDStrength = value; 
+                SetComponentState ("APIDStrength", value);
+                m_APIDStrength = value;
+            }
+        }
+        public bool APIDEnabled
+        {
+            get
+            {
+                return GetComponentState ("APIDEnabled").AsBoolean ();
+            }
+            set
+            {
+                SetComponentState ("APIDEnabled", value);
             }
         }
 
@@ -1897,8 +1950,6 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState ("Friction", value);
-                if (PhysActor != null)
-                    PhysActor.Friction = value;
             }
         }
 
@@ -1914,8 +1965,6 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState ("Restitution", value);
-                if (PhysActor != null)
-                    PhysActor.Restitution = value;
             }
         }
 
@@ -1923,21 +1972,14 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                if (PhysActor != null)
-                    return PhysActor.GravityMultiplier;
-                else
-                {
-                    OSD d = GetComponentState ("GravityMultiplier");
-                    if (d == null || d.Type == OSDType.Unknown)
-                        d = 1;
-                    return (float)d.AsReal ();
-                }
+                OSD d = GetComponentState ("GravityMultiplier");
+                if (d == null || d.Type == OSDType.Unknown)
+                    d = 1;
+                return (float)d.AsReal ();
             }
             set
             {
                 SetComponentState ("GravityMultiplier", value);
-                if (PhysActor != null)
-                    PhysActor.GravityMultiplier = value;
             }
         }
 
@@ -3800,6 +3842,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
+                APIDEnabled = true;
                 APIDDamp = damping;
                 APIDStrength = strength;
                 APIDTarget = target;
@@ -3808,6 +3851,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void startLookAt(Quaternion rot, float damp, float strength)
         {
+            APIDEnabled = true;
             APIDDamp = damp;
             APIDStrength = strength;
             APIDTarget = rot;
@@ -3815,7 +3859,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void stopLookAt()
         {
-            APIDTarget = Quaternion.Identity;
+            APIDEnabled = false;
         }
 
         /// <summary>
@@ -4549,8 +4593,7 @@ namespace OpenSim.Region.Framework.Scenes
         
         public void StopLookAt()
         {
-            m_parentGroup.stopLookAt();
-
+            m_parentGroup.RootPart.stopLookAt();
             m_parentGroup.ScheduleGroupTerseUpdate();
         }
         
@@ -5748,11 +5791,11 @@ namespace OpenSim.Region.Framework.Scenes
                     //Reset the PID attributes
 
                 }
-                if (APIDTarget != Quaternion.Identity)
+                if (APIDEnabled)
                 {
                     if (Single.IsNaN(APIDTarget.W) == true)
                     {
-                        APIDTarget = Quaternion.Identity;
+                        APIDEnabled = false;
                         return;
                     }
                     Quaternion rot = RotationOffset;

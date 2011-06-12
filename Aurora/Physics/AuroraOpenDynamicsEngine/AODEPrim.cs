@@ -82,20 +82,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public IntPtr Amotor = IntPtr.Zero;
         public d.Matrix3 AmotorRotation = new d.Matrix3 ();
 
-        private Vector3 m_PIDTarget;
-        private float m_PIDTau;
         private float PID_D = 35f;
         private float PID_G = 25f;
-        private bool m_usePID;
 
         // KF: These next 7 params apply to llSetHoverHeight(float height, integer water, float tau),
         // and are for non-VEHICLES only.
 
-        private float m_PIDHoverHeight;
-        private float m_PIDHoverTau;
-        private bool m_useHoverPID;
-        private PIDHoverType m_PIDHoverType = PIDHoverType.Ground;
-        private float m_targetHoverHeight;
         private float m_groundHeight;
         private float m_waterHeight;
         private float m_buoyancy;                //KF: m_buoyancy should be set by llSetBuoyancy() for non-vehicle. 
@@ -145,19 +137,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private PhysicsObject _parent;
 
         private List<AuroraODEPrim> childrenPrim = new List<AuroraODEPrim> ();
-        private float m_GravityMultiplier = 1;
-
-        public override float GravityMultiplier
-        {
-            get
-            {
-                return m_GravityMultiplier;
-            }
-            set
-            {
-                m_GravityMultiplier = value;
-            }
-        }
 
         private bool iscolliding;
         private bool m_isphysical;
@@ -177,7 +156,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private int m_crossingfailures;
 
         public bool outofBounds;
-        private float m_density = 10.000006836f; // Aluminum g/cm3;
 
         public bool _zeroFlag;
         private int m_lastUpdateSent = 0;
@@ -213,7 +191,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             PID_D /= (parent_scene.ODE_STEPSIZE * 50f); // original ode fps of 50
             PID_G /= (parent_scene.ODE_STEPSIZE * 50f);
 
-            m_density = entity.Density / 100;
             // m_tensor = parent_scene.bodyMotorJointMaxforceTensor;
             body_autodisable_frames = parent_scene.bodyFramesAutoDisable;
 
@@ -879,7 +856,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             profileEnd = 1.0f - (float)_pbs.ProfileEnd * 2.0e-5f;
             volume *= (profileEnd - profileBegin);
 
-            returnMass = m_density * volume;
+            returnMass = (_parent_entity.Density / 100) * volume;//Divide by 100 as its a bit high for ODE....
 
             if (returnMass <= 0)
                 returnMass = 0.0001f;//ckrinke: Mass must be greater then zero.
@@ -1475,11 +1452,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // would come from SceneObjectPart.cs, public void SetBuoyancy(float fvalue) , PhysActor.Buoyancy = fvalue; ??
                     // m_buoyancy: (unlimited value) <0=Falls fast; 0=1g; 1=0g; >1 = floats up 
                     // gravityz multiplier = 1 - m_buoyancy
-                    float gravZ = _parent_scene.gravityz * (1.0f - m_buoyancy) * GravityMultiplier;
+                    float gravZ = _parent_scene.gravityz * (1.0f - m_buoyancy) * _parent_entity.GravityMultiplier;
                     if (!_parent_scene.UsePointGravity)
                     {
-                        fx = _parent_scene.gravityx * (1.0f - m_buoyancy) * GravityMultiplier;
-                        fy = _parent_scene.gravityy * (1.0f - m_buoyancy) * GravityMultiplier;
+                        fx = _parent_scene.gravityx * (1.0f - m_buoyancy) * _parent_entity.GravityMultiplier;
+                        fy = _parent_scene.gravityy * (1.0f - m_buoyancy) * _parent_entity.GravityMultiplier;
                         fz = gravZ;
                     }
                     else
@@ -1496,7 +1473,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
 
                     #region PID
-                    if (m_usePID)
+                    if (_parent_entity.PIDActive)
                     {
                         //Console.WriteLine("PID " +  m_primName);
                         // KF - this is for object move? eg. llSetPos() ?
@@ -1511,23 +1488,23 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         // If the PID Controller isn't active then we set our force
                         // calculating base velocity to the current position
 
-                        if ((m_PIDTau < 1) && (m_PIDTau != 0))
+                        if ((_parent_entity.PIDTau < 1) && (_parent_entity.PIDTau != 0))
                         {
                             //PID_G = PID_G / m_PIDTau;
-                            m_PIDTau = 1;
+                            _parent_entity.PIDTau = 1;
                         }
 
-                        if ((PID_G - m_PIDTau) <= 0)
+                        if ((PID_G - _parent_entity.PIDTau) <= 0)
                         {
-                            PID_G = m_PIDTau + 1;
+                            PID_G = _parent_entity.PIDTau + 1;
                         }
                         //PidStatus = true;
 
                         // PhysicsVector vec = new PhysicsVector();
 
-                        _target_velocity.X = (float)(m_PIDTarget.X - dcpos.X) * ((/*PID_G - */m_PIDTau) * timestep);
-                        _target_velocity.Y = (float)(m_PIDTarget.Y - dcpos.Y) * ((/*PID_G - */m_PIDTau) * timestep);
-                        _target_velocity.Z = (float)(m_PIDTarget.Z - dcpos.Z) * ((/*PID_G - */m_PIDTau) * timestep);
+                        _target_velocity.X = (float)(_parent_entity.PIDTarget.X - dcpos.X) * ((/*PID_G - */_parent_entity.PIDTau) * timestep);
+                        _target_velocity.Y = (float)(_parent_entity.PIDTarget.Y - dcpos.Y) * ((/*PID_G - */_parent_entity.PIDTau) * timestep);
+                        _target_velocity.Z = (float)(_parent_entity.PIDTarget.Z - dcpos.Z) * ((/*PID_G - */_parent_entity.PIDTau) * timestep);
 
                         //  if velocity is zero, use position control; otherwise, velocity control
 
@@ -1543,7 +1520,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             //fx = (_target_velocity.X - vel.X) * (PID_D) + (_zeroPosition.X - pos.X) * (PID_P * 2);
                             //fy = (_target_velocity.Y - vel.Y) * (PID_D) + (_zeroPosition.Y - pos.Y) * (PID_P * 2);
                             //fz = fz + (_target_velocity.Z - vel.Z) * (PID_D) + (_zeroPosition.Z - pos.Z) * PID_P;
-                            d.BodySetPosition (Body, m_PIDTarget.X, m_PIDTarget.Y, m_PIDTarget.Z);
+                            d.BodySetPosition (Body, _parent_entity.PIDTarget.X, _parent_entity.PIDTarget.Y, _parent_entity.PIDTarget.Z);
                             d.BodySetLinearVel (Body, 0, 0, 0);
                             d.BodyAddForce (Body, 0, 0, fz);
 
@@ -1565,7 +1542,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     #endregion
                     #region Hover PID
                     // Hover PID Controller needs to be mutually exlusive to MoveTo PID controller
-                    if (m_useHoverPID && !m_usePID)
+                    if (_parent_entity.PIDHoverActive && !_parent_entity.PIDActive)
                     {
                         //Console.WriteLine("Hover " +  m_primName);
 
@@ -1579,37 +1556,37 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         // If the PID Controller isn't active then we set our force
                         // calculating base velocity to the current position
 
-                        if ((m_PIDTau < 1))
+                        if ((_parent_entity.PIDTau < 1))
                         {
-                            PID_G = PID_G / m_PIDTau;
+                            PID_G = PID_G / _parent_entity.PIDTau;
                         }
 
-                        if ((PID_G - m_PIDTau) <= 0)
+                        if ((PID_G - _parent_entity.PIDTau) <= 0)
                         {
-                            PID_G = m_PIDTau + 1;
+                            PID_G = _parent_entity.PIDTau + 1;
                         }
 
 
                         // Where are we, and where are we headed?
-
+                        float m_targetHoverHeight = 0;
                         //    Non-Vehicles have a limited set of Hover options.
                         // determine what our target height really is based on HoverType
-                        switch (m_PIDHoverType)
+                        switch (_parent_entity.PIDHoverType)
                         {
                             case PIDHoverType.Ground:
                                 m_groundHeight = _parent_scene.GetTerrainHeightAtXY ((float)dcpos.X, (float)dcpos.Y);
-                                m_targetHoverHeight = m_groundHeight + m_PIDHoverHeight;
+                                m_targetHoverHeight = m_groundHeight + _parent_entity.PIDHoverHeight;
                                 break;
                             case PIDHoverType.GroundAndWater:
                                 m_groundHeight = _parent_scene.GetTerrainHeightAtXY ((float)dcpos.X, (float)dcpos.Y);
                                 m_waterHeight = (float)_parent_scene.GetWaterLevel ((float)dcpos.X, (float)dcpos.Y);
                                 if (m_groundHeight > m_waterHeight)
                                 {
-                                    m_targetHoverHeight = m_groundHeight + m_PIDHoverHeight;
+                                    m_targetHoverHeight = m_groundHeight + _parent_entity.PIDHoverHeight;
                                 }
                                 else
                                 {
-                                    m_targetHoverHeight = m_waterHeight + m_PIDHoverHeight;
+                                    m_targetHoverHeight = m_waterHeight + _parent_entity.PIDHoverHeight;
                                 }
                                 break;
 
@@ -1618,7 +1595,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                         _target_velocity.X = 0;
                         _target_velocity.Y = 0;
-                        _target_velocity.Z = (float)(m_targetHoverHeight - dcpos.Z) * ((PID_G - m_PIDHoverTau) * timestep);
+                        _target_velocity.Z = (float)(m_targetHoverHeight - dcpos.Z) * ((PID_G - _parent_entity.PIDHoverTau) * timestep);
 
                         //  if velocity is zero, use position control; otherwise, velocity control
 
@@ -2676,108 +2653,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 AddChange (changes.CollidesWater, (object)value);
             }
         }
-
-        public override Vector3 PIDTarget
-        {
-            get
-            {
-                return m_PIDTarget;
-            }
-            set
-            {
-                if (value.IsFinite ())
-                {
-                    m_PIDTarget = value;
-                }
-                else
-                    m_log.Warn ("[PHYSICS]: Got NaN PIDTarget from Scene on Object");
-            }
-        }
-        public override bool PIDActive
-        {
-            get
-            {
-                return m_usePID;
-            }
-            set
-            {
-                m_usePID = value;
-            }
-        }
-        public override float PIDTau
-        {
-            get
-            {
-                return m_PIDTau;
-            }
-            set
-            {
-                m_PIDTau = value;
-            }
-        }
-
-        public override float PIDHoverHeight
-        {
-            set
-            {
-                m_PIDHoverHeight = value;
-                ;
-            }
-        }
-        public override bool PIDHoverActive
-        {
-            set
-            {
-                m_useHoverPID = value;
-            }
-        }
-        public override PIDHoverType PIDHoverType
-        {
-            set
-            {
-                m_PIDHoverType = value;
-            }
-        }
-        public override float PIDHoverTau
-        {
-            set
-            {
-                m_PIDHoverTau = value;
-            }
-        }
-
-        public override Quaternion APIDTarget
-        {
-            set
-            {
-                return;
-            }
-        }
-
-        public override bool APIDActive
-        {
-            set
-            {
-                return;
-            }
-        }
-
-        public override float APIDStrength
-        {
-            set
-            {
-                return;
-            }
-        }
-
-        public override float APIDDamping
-        {
-            set
-            {
-                return;
-            }
-        }
-
 
         private void createAMotor (Vector3 axis)
         {
