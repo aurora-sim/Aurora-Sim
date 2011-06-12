@@ -2407,7 +2407,7 @@ namespace OpenSim.Region.Framework.Scenes
                 isPhantom = false;
 
             // Added clarification..   since A rigid body is an object that you can kick around, etc.
-            bool RigidBody = isPhysical && !isPhantom;
+            bool NonRigidBody = isPhysical && !isPhantom;
 
             // The only time the physics scene shouldn't know about the prim is if it's phantom or an attachment, which is phantom by definition
             // or flexible
@@ -2415,14 +2415,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 Vector3 tmp = GetWorldPosition();
                 Quaternion qtmp = GetWorldRotation();
-                PhysActor = m_parentGroup.Scene.PhysicsScene.AddPrimShape(
-                    string.Format("{0}/{1}", Name, UUID),
-                    Shape,
-                    tmp,
-                    Scale,
-                    qtmp,
-                    RigidBody,
-                    Density);
+                PhysActor = m_parentGroup.Scene.PhysicsScene.AddPrimShape(this);
 
                 // Basic Physics returns null..  joy joy joy.
                 if (PhysActor != null)
@@ -2431,7 +2424,7 @@ namespace OpenSim.Region.Framework.Scenes
                     PhysActor.SOPDescription = this.Description;
                     PhysActor.LocalID = LocalId;
                     PhysActor.UUID = UUID;
-                    DoPhysicsPropertyUpdate(RigidBody, true);
+                    DoPhysicsPropertyUpdate(NonRigidBody, true);
                     PhysActor.VolumeDetect = VolumeDetectActive;
                     if (OnAddPhysics != null)
                         OnAddPhysics();
@@ -5349,14 +5342,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // It's not phantom anymore. So make sure the physics engine get's knowledge of it
                     Vector3 tmp = GetWorldPosition();
                     Quaternion qtmp = GetWorldRotation();
-                    PhysActor = m_parentGroup.Scene.PhysicsScene.AddPrimShape(
-                        string.Format("{0}/{1}", Name, UUID),
-                        Shape,
-                        tmp,
-                        Scale,
-                        qtmp,
-                        UsePhysics,
-                        Density);
+                    PhysActor = m_parentGroup.Scene.PhysicsScene.AddPrimShape(this);
 
                     pa = PhysActor;
                     if (pa != null)

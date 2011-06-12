@@ -1742,16 +1742,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         }
 
-        public override PhysicsObject AddPrimShape(String name, PrimitiveBaseShape pbs, Vector3 position, Vector3 size,
-            Quaternion rotation, bool isphysical, float Density)
+        public override PhysicsObject AddPrimShape(ISceneChildEntity entity)
         {
-
-            Vector3 pos = position;
-            Vector3 siz = size;
-            Quaternion rot = rotation;
-
+            bool isPhysical = ((entity.ParentEntity.RootChild.Flags & PrimFlags.Physics) != 0);
+            bool isPhantom = ((entity.ParentEntity.RootChild.Flags & PrimFlags.Phantom) != 0);
+            bool physical = isPhysical & !isPhantom;
             AuroraODEPrim newPrim;
-            newPrim = new AuroraODEPrim (name, this, pos, siz, rot, null, pbs, isphysical, ode, Density);
+            newPrim = new AuroraODEPrim (entity, this, physical, ode);
 
             lock (_prims)
                 _prims.Add(newPrim);

@@ -72,8 +72,7 @@ namespace OpenSim.Framework
 
         public abstract void RemovePrim(PhysicsObject prim);
     
-        public abstract PhysicsObject AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
-                                                  Vector3 size, Quaternion rotation, bool isPhysical, float density);
+        public abstract PhysicsObject AddPrimShape(ISceneChildEntity entity);
 
         public virtual float TimeDilation
         {
@@ -249,10 +248,8 @@ namespace OpenSim.Framework
                     }
         */
 
-        public override PhysicsObject AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
-                                                  Vector3 size, Quaternion rotation, bool isPhysical, float Density)
+        public override PhysicsObject AddPrimShape(ISceneChildEntity entity)
         {
-            m_log.InfoFormat ("[PHYSICS]: NullPhysicsScene : AddPrim({0},{1})", position, size);
             return new NullObjectPhysicsActor ();
         }
 

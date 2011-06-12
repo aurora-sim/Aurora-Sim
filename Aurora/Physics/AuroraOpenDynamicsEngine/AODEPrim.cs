@@ -136,6 +136,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private IMesh _mesh;
         private PrimitiveBaseShape _pbs;
         private AuroraODEPhysicsScene _parent_scene;
+        private ISceneChildEntity _parent_entity;
         public IntPtr m_targetSpace = IntPtr.Zero;
         public IntPtr prim_geom;
         public IntPtr prev_geom;
@@ -182,7 +183,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private int m_lastUpdateSent = 0;
 
         public IntPtr Body = IntPtr.Zero;
-        public String m_primName;
         private Vector3 _target_velocity;
         public d.Mass primdMass;
         float primMass; // prim own mass
@@ -200,20 +200,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         internal int m_material = (int)Material.Wood;
 
-        public AuroraODEPrim (String primName, AuroraODEPhysicsScene parent_scene, Vector3 pos, Vector3 size,
-                       Quaternion rotation, IMesh mesh, PrimitiveBaseShape pbs, bool pisPhysical, CollisionLocker dode, float Density)
+        public AuroraODEPrim (ISceneChildEntity entity, AuroraODEPhysicsScene parent_scene, bool pisPhysical, CollisionLocker dode)
         {
             m_vehicle = new AuroraODEDynamics ();
             //gc = GCHandle.Alloc(prim_geom, GCHandleType.Pinned);
             ode = dode;
-            if (!pos.IsFinite ())
-            {
-                pos = new Vector3 ((parent_scene.Region.RegionSizeX * 0.5f), (parent_scene.Region.RegionSizeY * 0.5f),
-                    parent_scene.GetTerrainHeightAtXY ((parent_scene.Region.RegionSizeX * 0.5f), (parent_scene.Region.RegionSizeY * 0.5f)));
-                m_log.Warn ("[PHYSICS]: Got nonFinite Object create Position");
-            }
-            _position = pos;
-            fakepos = false;
 
             PID_D = parent_scene.bodyPIDD;
             PID_G = parent_scene.bodyPIDG;
@@ -222,7 +213,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             PID_D /= (parent_scene.ODE_STEPSIZE * 50f); // original ode fps of 50
             PID_G /= (parent_scene.ODE_STEPSIZE * 50f);
 
-            m_density = Density / 100;
+            m_density = entity.Density / 100;
             // m_tensor = parent_scene.bodyMotorJointMaxforceTensor;
             body_autodisable_frames = parent_scene.bodyFramesAutoDisable;
 
@@ -230,47 +221,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             prim_geom = IntPtr.Zero;
             prev_geom = IntPtr.Zero;
 
-            if (!size.IsFinite ())
-            {
-                size = new Vector3 (0.5f, 0.5f, 0.5f);
-                m_log.Warn ("[PHYSICS]: Got nonFinite Object create Size");
-            }
-
-            if (size.X <= 0)
-                size.X = 0.01f;
-            if (size.Y <= 0)
-                size.Y = 0.01f;
-            if (size.Z <= 0)
-                size.Z = 0.01f;
-
-            _size = size;
-
-            if (!QuaternionIsFinite (rotation))
-            {
-                rotation = Quaternion.Identity;
-                m_log.Warn ("[PHYSICS]: Got nonFinite Object create Rotation");
-            }
-
-            _orientation = rotation;
+            _size = entity.Scale;
+            _position = entity.AbsolutePosition;
+            fakepos = false;
+            _orientation = entity.RotationOffset;
             fakeori = false;
-
-            _mesh = mesh;
-            _pbs = pbs;
+            _pbs = entity.Shape;
+            _parent_entity = entity;
 
             _parent_scene = parent_scene;
             m_targetSpace = (IntPtr)0;
 
-            if (pos.Z < 0)
-                m_isphysical = false;
-            else
-            {
-                m_isphysical = pisPhysical;
-                // If we're physical, we need to be in the master space for now.
-                // linksets *should* be in a space together..  but are not currently
-                if (m_isphysical)
-                    m_targetSpace = _parent_scene.space;
-            }
-            m_primName = primName;
+            m_isphysical = pisPhysical;
+            // If we're physical, we need to be in the master space for now.
+            // linksets *should* be in a space together..  but are not currently
+            if (m_isphysical)
+                m_targetSpace = _parent_scene.space;
 
             m_forceacc = Vector3.Zero;
             m_angularforceacc = Vector3.Zero;
@@ -1373,7 +1339,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (_parent_scene.needsMeshing (_pbs))
                 {
                     // Don't need to re-enable body..   it's done in SetMesh
-                    _mesh = _parent_scene.mesher.CreateMesh (m_primName, _pbs, _size, _parent_scene.meshSculptLOD, IsPhysical);
+                    _mesh = _parent_scene.mesher.CreateMesh (_parent_entity.Name, _pbs, _size, _parent_scene.meshSculptLOD, IsPhysical);
                     // createmesh returns null when it's a shape that isn't a cube.
                     // m_log.Debug(m_localID);
                 }
@@ -2178,7 +2144,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (IsPhysical)
                     meshlod = _parent_scene.MeshSculptphysicalLOD;
 
-                IMesh mesh = _parent_scene.mesher.CreateMesh (m_primName, _pbs, _size, meshlod, IsPhysical);
+                IMesh mesh = _parent_scene.mesher.CreateMesh (_parent_entity.Name, _pbs, _size, meshlod, IsPhysical);
                 // createmesh returns null when it doesn't mesh.
                 CreateGeom (m_targetSpace, mesh);
             }
@@ -2660,7 +2626,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else if (m_crossingfailures == _parent_scene.geomCrossingFailuresBeforeOutofbounds)
             {
-                m_log.Warn ("[PHYSICS]: Too many crossing failures for: " + m_primName);
+                m_log.Warn ("[PHYSICS]: Too many crossing failures for: " + _parent_entity.Name + " @ " + _parent_entity.AbsolutePosition);
             }
         }
 

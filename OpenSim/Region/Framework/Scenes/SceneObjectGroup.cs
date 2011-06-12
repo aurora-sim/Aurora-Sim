@@ -1539,15 +1539,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 bool usePhysics = (RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics;
                 //Now readd the physics actor to the physics scene
-                part.PhysActor
-                    = m_scene.PhysicsScene.AddPrimShape (
-                        string.Format ("{0}/{1}", part.Name, part.UUID),
-                        pbs,
-                        part.AbsolutePosition,
-                        part.Scale,
-                        part.RotationOffset,
-                        usePhysics,
-                        part.Density);
+                part.PhysActor = m_scene.PhysicsScene.AddPrimShape (part);
 
                 //Fix the localID!
                 part.PhysActor.LocalID = part.LocalId;
