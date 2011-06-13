@@ -2836,6 +2836,42 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public override void SetMaterial (int pMaterial)
         {
             m_material = pMaterial;
+            Material m = (Material)pMaterial;
+            //Fix restitution and friction values as well
+            switch (m)
+            {
+                case Material.Flesh:
+                    _parent_entity.Friction = 0.9f;
+                    _parent_entity.Restitution = 0.3f;
+                    break;
+                case Material.Glass:
+                    _parent_entity.Friction = 0.2f;
+                    _parent_entity.Restitution = 0.7f;
+                    break;
+                case Material.Metal:
+                    _parent_entity.Friction = 0.3f;
+                    _parent_entity.Restitution = 0.4f;
+                    break;
+                case Material.Plastic:
+                    _parent_entity.Friction = 0.4f;
+                    _parent_entity.Restitution = 0.7f;
+                    break;
+                case Material.Rubber:
+                    _parent_entity.Friction = 0.9f;
+                    _parent_entity.Restitution = 0.9f;
+                    break;
+                case Material.Stone:
+                    _parent_entity.Friction = 0.8f;
+                    _parent_entity.Restitution = 0.4f;
+                    break;
+                case Material.Wood:
+                    _parent_entity.Friction = 0.6f;
+                    _parent_entity.Restitution = 0.5f;
+                    break;
+                default:
+                    //?????
+                    break;
+            }
         }
 
         private static void DMassDup (ref d.Mass src, out d.Mass dst)
