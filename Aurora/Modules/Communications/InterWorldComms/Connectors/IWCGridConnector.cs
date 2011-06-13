@@ -149,12 +149,16 @@ namespace Aurora.Modules
             return r;
         }
 
-        public List<GridRegion> GetRegionsByName(UUID scopeID, string name, int maxNumber)
+        public List<GridRegion> GetRegionsByName (UUID scopeID, string name, int maxNumber)
         {
-            List<GridRegion> r = m_localService.GetRegionsByName(scopeID, name, maxNumber);
-            List<GridRegion> remoteRegions = m_remoteService.GetRegionsByName(scopeID, name, maxNumber);
-            UpdateGridRegionsForIWC(ref remoteRegions);
-            r.AddRange(remoteRegions);
+            List<GridRegion> r = m_localService.GetRegionsByName (scopeID, name, maxNumber);
+            List<GridRegion> remoteRegions = m_remoteService.GetRegionsByName (scopeID, name, maxNumber);
+            UpdateGridRegionsForIWC (ref remoteRegions);
+            r.AddRange (remoteRegions);
+            //Sort to find the region with the exact name that was given
+            r.Sort (new OpenSim.Services.GridService.GridService.RegionDataComparison (name));
+            //Results are backwards... so it needs reversed
+            r.Reverse ();
             return r;
         }
 
