@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/
+ * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -5238,28 +5238,36 @@ namespace OpenSim.Region.Framework.Scenes
             if (blocks != null && blocks.Length != 0)
             {
                 ObjectFlagUpdatePacket.ExtraPhysicsBlock block = blocks[0];
+                //These 2 are static properties, and do require rebuilding the entire physical representation
                 if (PhysicsType != block.PhysicsShapeType)
                 {
                     PhysicsType = block.PhysicsShapeType;
                     ParentGroup.RebuildPhysicalRepresentation ();
+                    //Fix selection
+                    foreach (SceneObjectPart part in ParentGroup.ChildrenList)
+                    {
+                        if (IsSelected)
+                            part.PhysActor.Selected = IsSelected;
+                    }
                 }
-                if (this.PhysActor != null)
-                    GravityMultiplier = block.GravityMultiplier;
-
                 if (Density != block.Density)
                 {
                     Density = block.Density;
                     ParentGroup.RebuildPhysicalRepresentation ();
+                    //Fix selection
+                    foreach (SceneObjectPart part in ParentGroup.ChildrenList)
+                    {
+                        if (IsSelected)
+                            part.PhysActor.Selected = IsSelected;
+                    }
                 }
+                //These 3 are dynamic properties, and don't require rebuilding the physics representation
                 if (Friction != block.Friction)
-                {
                     Friction = block.Friction;
-                    ParentGroup.RebuildPhysicalRepresentation ();
-                }
                 if (Restitution != block.Restitution)
-                {
                     Restitution = block.Restitution;
-                }
+                if (this.PhysActor != null)
+                    GravityMultiplier = block.GravityMultiplier;
             }
 
             if ((UsePhysics == wasUsingPhysics) && (wasTemporary == IsTemporary) && (wasPhantom == IsPhantom) && (IsVD==wasVD))
