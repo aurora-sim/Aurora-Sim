@@ -282,7 +282,7 @@ namespace OpenSim.Framework
 
         void ForcePersistence ();
 
-        void RebuildPhysicalRepresentation ();
+        void RebuildPhysicalRepresentation (bool keepSelectedStatus);
 
         void ScheduleGroupTerseUpdate ();
 

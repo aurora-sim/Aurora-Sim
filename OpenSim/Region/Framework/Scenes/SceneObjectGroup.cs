@@ -813,7 +813,7 @@ namespace OpenSim.Region.Framework.Scenes
             //Trigger our event
             Scene.EventManager.TriggerObjectBeingAddedToScene(this);
 
-            RebuildPhysicalRepresentation ();
+            RebuildPhysicalRepresentation (false);
 
             m_ValidgrpOOB = false;
         }
@@ -1259,7 +1259,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_rootPart.SetParentLocalId(0);
             SetAttachmentPoint((byte)0);
-            RebuildPhysicalRepresentation ();
+            RebuildPhysicalRepresentation (false);
             HasGroupChanged = true;
             m_ValidgrpOOB = false;
             RootPart.Rezzed = DateTime.UtcNow;
@@ -1486,18 +1486,21 @@ namespace OpenSim.Region.Framework.Scenes
         /// Rebuild the physical representation of all the prims.
         /// This is used after copying the prim so that all of the object is readded to the physics scene.
         /// </summary>
-        public void RebuildPhysicalRepresentation ()
+        public void RebuildPhysicalRepresentation (bool keepSelectedStatuses)
         {
             foreach (SceneObjectPart part in m_partsList)
             {
                 PhysicsObject oldActor = part.PhysActor;
                 PrimitiveBaseShape pbs = part.Shape;
+                part.AngularVelocity = Vector3.Zero;
                 if (part.PhysActor != null)
                 {
+                    part.PhysActor.RotationalVelocity = Vector3.Zero;
                     //Remove the old one so that we don't have more than we should,
                     //  as when we copy, it readds it to the PhysicsScene somehow
                     m_scene.PhysicsScene.RemovePrim (part.PhysActor);
                 }
+                part.AngularVelocity = Vector3.Zero;
 
                 if (RootPart.PhysicsType == (byte)PhysicsShapeType.None)
                 {
@@ -1527,7 +1530,10 @@ namespace OpenSim.Region.Framework.Scenes
                 part.PhysActor.VolumeDetect = part.VolumeDetectActive;
 
                 //Force deselection here so that it isn't stuck forever
-                part.PhysActor.Selected = false;
+                if (keepSelectedStatuses)
+                    part.PhysActor.Selected = false;
+                else
+                    part.PhysActor.Selected = IsSelected;
 
                 part.PhysActor.OnCollisionUpdate += part.PhysicsCollision;
                 part.PhysActor.SubscribeEvents (1000);
@@ -2395,10 +2401,9 @@ namespace OpenSim.Region.Framework.Scenes
                             part.UpdatePrimFlags (UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, null);
                         else
                             needsPhysicalRebuild = part.UpdatePrimFlags (UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, null);
-                            
                 }
                 if (needsPhysicalRebuild)
-                    RebuildPhysicalRepresentation ();
+                    RebuildPhysicalRepresentation (true);
             }
         }
 

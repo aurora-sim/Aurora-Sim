@@ -1057,7 +1057,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                             bool wasVD = group.RootChild.VolumeDetectActive;
                             bool needsPhysicalRebuild = ((SceneObjectPart)group.RootChild).UpdatePrimFlags (false, wasTemporary, wasPhantom, wasVD, null);
                             if (needsPhysicalRebuild)
-                                group.RebuildPhysicalRepresentation ();
+                                group.RebuildPhysicalRepresentation (true);
                         }
                         //Send an update so that all clients see it
                         group.ScheduleGroupTerseUpdate();
