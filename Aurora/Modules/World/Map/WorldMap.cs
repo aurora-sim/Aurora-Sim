@@ -433,7 +433,7 @@ namespace Aurora.Modules
                 maxY = maxY,
                 minX = minX,
                 minY = minY,
-                mapBlocks = flag,//Map
+                mapBlocks = 0,//Map
                 remoteClient = remoteClient
             });
             if (!blockRequesterIsRunning)
@@ -448,7 +448,7 @@ namespace Aurora.Modules
                 maxY = maxY,
                 minX = minX,
                 minY = minY,
-                mapBlocks = flag,//Terrain
+                mapBlocks = 1,//Terrain
                 remoteClient = remoteClient
             });
             if (!blockRequesterIsRunning)
