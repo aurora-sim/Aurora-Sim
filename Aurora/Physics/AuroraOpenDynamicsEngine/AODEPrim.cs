@@ -3052,12 +3052,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public void UpdateContactPoint (ref d.Contact contact)
         {
             contact.surface.bounce = _parent_entity.Restitution;//Its about 1:1 surprisingly, even though this constant was for havok
-            contact.surface.bounce_vel = (_parent_entity.Restitution - 0.3f) * 2; //give it a good amount of bounce
+            contact.surface.bounce_vel = 0.05f * _parent_entity.Restitution; //give it a good amount of bounce
             contact.surface.mode |= d.ContactFlags.Bounce; //Add bounce
-
-            if (contact.surface.mu == float.PositiveInfinity)
-                contact.surface.mu = 75;//Default to something good enough
-            contact.surface.mu *= ((_parent_entity.Friction * 15) - 7.5f);//Wood is 0.5 in the client, so we take that as '1' and offset the rest
+            contact.surface.mu *= ((_parent_entity.Friction * 1500) - 750f);//Wood is 0.5 in the client, so we take that as '1' and offset the rest
+            contact.surface.mu2 = contact.surface.mu;
         }
 
         #endregion
