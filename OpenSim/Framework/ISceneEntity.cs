@@ -924,9 +924,6 @@ namespace OpenSim.Framework
 
     public abstract class PhysicsObject : PhysicsActor
     {
-        public string SOPName;
-        public string SOPDescription;
-
         public virtual void link(PhysicsObject obj) { }
 
         public virtual void delink() { }

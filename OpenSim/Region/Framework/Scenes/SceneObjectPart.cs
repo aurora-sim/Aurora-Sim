@@ -1009,10 +1009,6 @@ namespace OpenSim.Region.Framework.Scenes
                     if (ParentGroup != null)
                         ParentGroup.HasGroupChanged = true;
                     m_name = value;
-                    if (PhysActor != null)
-                    {
-                        PhysActor.SOPName = value;
-                    }
                 }
             }
         }
@@ -1403,11 +1399,6 @@ namespace OpenSim.Region.Framework.Scenes
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
                 m_description = value;
-                PhysicsObject actor = PhysActor;
-                if (actor != null)
-                {
-                    actor.SOPDescription = value;
-                }
             }
         }
         #region Only used for serialization as Color cannot be serialized
@@ -2434,18 +2425,12 @@ namespace OpenSim.Region.Framework.Scenes
                 // Basic Physics returns null..  joy joy joy.
                 if (PhysActor != null)
                 {
-                    PhysActor.SOPName = this.Name; // save object name and desc into the PhysActor so ODE internals know the joint/body info
-                    PhysActor.SOPDescription = this.Description;
                     PhysActor.LocalID = LocalId;
                     PhysActor.UUID = UUID;
                     DoPhysicsPropertyUpdate(NonRigidBody, true);
                     PhysActor.VolumeDetect = VolumeDetectActive;
                     if (OnAddPhysics != null)
                         OnAddPhysics();
-                }
-                else
-                {
-                    //m_log.DebugFormat("[SOP]: physics actor is null for {0} with parent {1}", UUID, this.ParentGroup.UUID);
                 }
             }
         }
