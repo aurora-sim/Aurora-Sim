@@ -1909,7 +1909,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 OSD d = GetComponentState ("Friction");
                 if (d == null || d.Type == OSDType.Unknown)
-                    d = 1;
+                    d = 0.6f;
                 return (float)d.AsReal ();
             }
             set
@@ -1924,7 +1924,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 OSD d = GetComponentState ("Restitution");
                 if (d == null || d.Type == OSDType.Unknown)
-                    d = 1;
+                    d = 0.5f;
                 return (float)d.AsReal ();
             }
             set

@@ -437,6 +437,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
 
+            if (prim_geom == IntPtr.Zero)
+            {
+                m_log.Warn ("[PHYSICS]: Unable to link the linkset.  No geom yet");
+                return;
+            }
             d.GeomClearOffset (prim_geom); // make sure we don't have a hidden offset
             // associate root geom with body
             d.GeomSetBody (prim_geom, Body);
