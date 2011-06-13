@@ -1499,8 +1499,10 @@ namespace OpenSim.Region.Framework.Scenes
                     part.Velocity = Vector3.Zero;
                     part.Acceleration = Vector3.Zero;
                     part.AngularVelocity = Vector3.Zero;
+                    int vehicleType = 0;
                     if (part.PhysActor != null)
                     {
+                        vehicleType = part.PhysActor.VehicleType;
                         part.PhysActor.RotationalVelocity = Vector3.Zero;
                         part.PhysActor.UnSubscribeEvents ();
                         part.PhysActor.OnCollisionUpdate -= part.PhysicsCollision;
@@ -1543,6 +1545,7 @@ namespace OpenSim.Region.Framework.Scenes
                     part.PhysActor.VolumeDetect = part.VolumeDetectActive;
 
                     part.PhysActor.IsPhysical = usePhysics;
+                    part.PhysActor.VehicleType = vehicleType;
 
                     //Force deselection here so that it isn't stuck forever
                     if (!keepSelectedStatuses)
