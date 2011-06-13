@@ -3057,7 +3057,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (contact.surface.mu == float.PositiveInfinity)
                 contact.surface.mu = 75;//Default to something good enough
-            contact.surface.mu *= ((_parent_entity.Friction * 5) - 1f);//Wood is 0.5 in the client, so we take that as '1' and offset the rest
+            contact.surface.mu *= ((_parent_entity.Friction * 15) - 7.5f);//Wood is 0.5 in the client, so we take that as '1' and offset the rest
         }
 
         #endregion

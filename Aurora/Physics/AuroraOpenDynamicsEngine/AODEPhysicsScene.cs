@@ -1088,6 +1088,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 m_materialContacts[material, moving].surface = original;
                                 m_global_contactcount++;
                             }
+                            else
+                                m_materialContacts[material, moving].surface = original;
                         }
                     }
 
@@ -1162,6 +1164,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 m_materialContacts[material, moving].surface = original;
                                 m_global_contactcount++;
                             }
+                            else
+                                m_materialContacts[material, moving].surface = original;
                         }
                     }
 
