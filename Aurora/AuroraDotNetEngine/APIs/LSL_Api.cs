@@ -1391,9 +1391,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (group == null)
                         return;
                     bool allow = true;
-                    foreach (ISceneChildEntity part in group.ChildrenEntities())
+                    foreach (ISceneChildEntity part in group.ChildrenEntities ())
                     {
-                        IOpenRegionSettingsModule WSModule = group.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
+                        IOpenRegionSettingsModule WSModule = group.Scene.RequestModuleInterface<IOpenRegionSettingsModule> ();
                         if (WSModule != null)
                         {
                             Vector3 tmp = part.Scale;
@@ -1409,10 +1409,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     if (!allow)
                         return;
-                    m_host.ScriptSetPhysicsStatus(true);
+                    ((SceneObjectGroup)m_host.ParentEntity).ScriptSetPhysicsStatus (true);
                 }
                 else
-                    m_host.ScriptSetPhysicsStatus(false);
+                {
+                    ((SceneObjectGroup)m_host.ParentEntity).ScriptSetPhysicsStatus (false);
+                }
             }
 
             if ((status & ScriptBaseClass.STATUS_PHANTOM) == ScriptBaseClass.STATUS_PHANTOM)
@@ -8518,17 +8520,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if (remain < 1)
                         return;
-                    if (!(part is SceneObjectPart))
+                    if (!(part is ISceneChildEntity))
                         return;
                     string phy = rules.Data[idx++].ToString();
-                    bool physics;
 
-                    if (phy.Equals("1"))
-                        physics = true;
+                    if (phy.Equals ("1"))
+                        ((SceneObjectGroup)m_host.ParentEntity).ScriptSetPhysicsStatus (true);
                     else
-                        physics = false;
-
-                    (part as SceneObjectPart).ScriptSetPhysicsStatus(physics);
+                        ((SceneObjectGroup)m_host.ParentEntity).ScriptSetPhysicsStatus (false);
                 }
                 else if (code == (int)ScriptBaseClass.PRIM_TEMP_ON_REZ)
                 {

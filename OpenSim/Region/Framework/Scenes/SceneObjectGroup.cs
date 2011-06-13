@@ -1492,13 +1492,25 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 PhysicsObject oldActor = part.PhysActor;
                 PrimitiveBaseShape pbs = part.Shape;
+                //Reset any old data that we have
+                part.Velocity = Vector3.Zero;
+                part.Acceleration = Vector3.Zero;
                 part.AngularVelocity = Vector3.Zero;
                 if (part.PhysActor != null)
                 {
                     part.PhysActor.RotationalVelocity = Vector3.Zero;
+                    part.PhysActor.UnSubscribeEvents ();
+                    part.PhysActor.OnCollisionUpdate -= part.PhysicsCollision;
+                    part.PhysActor.OnRequestTerseUpdate -= part.PhysicsRequestingTerseUpdate;
+                    part.PhysActor.OnSignificantMovement -= part.ParentGroup.CheckForSignificantMovement;
+                    part.PhysActor.OnOutOfBounds -= part.PhysicsOutOfBounds;
+
+                    part.PhysActor.delink ();
                     //Remove the old one so that we don't have more than we should,
                     //  as when we copy, it readds it to the PhysicsScene somehow
                     m_scene.PhysicsScene.RemovePrim (part.PhysActor);
+
+                    part.FireOnRemovedPhysics ();
                 }
                 part.AngularVelocity = Vector3.Zero;
 
@@ -1524,9 +1536,6 @@ namespace OpenSim.Region.Framework.Scenes
                 //Fix the localID!
                 part.PhysActor.LocalID = part.LocalId;
                 part.PhysActor.UUID = part.UUID;
-                //Set physical and etc up correctly
-                part.DoPhysicsPropertyUpdate (usePhysics, true);
-
                 part.PhysActor.VolumeDetect = part.VolumeDetectActive;
 
                 //Force deselection here so that it isn't stuck forever
@@ -1535,14 +1544,22 @@ namespace OpenSim.Region.Framework.Scenes
                 else
                     part.PhysActor.Selected = IsSelected;
 
+                //Add collision updates
                 part.PhysActor.OnCollisionUpdate += part.PhysicsCollision;
+                part.PhysActor.OnRequestTerseUpdate += part.PhysicsRequestingTerseUpdate;
+                part.PhysActor.OnSignificantMovement += part.ParentGroup.CheckForSignificantMovement;
+                part.PhysActor.OnOutOfBounds += part.PhysicsOutOfBounds;
                 part.PhysActor.SubscribeEvents (1000);
-                if (part.IsRoot)
-                    CheckSculptAndLoad ();
 
-                part.ScriptSetPhysicsStatus (usePhysics);
+                if (part.IsRoot) //Check for meshes and stuff
+                    CheckSculptAndLoad ();
+                else //Link the prim then
+                    part.PhysActor.link (RootPart.PhysActor);
+                Scene.PhysicsScene.AddPhysicsActorTaint (part.PhysActor);
+
                 part.FireOnAddedPhysics ();
             }
+            Scene.AuroraEventManager.FireGenericEventHandler ("ObjectChangedPhysicalStatus", this);
         }
 
         #endregion
@@ -2704,7 +2721,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (Util.GetDistanceTo (RootPart.StatusSandboxPos, val) > 10)
                 {
-                    RootPart.ScriptSetPhysicsStatus (false);
+                    ScriptSetPhysicsStatus (false);
                     IChatModule chatModule = Scene.RequestModuleInterface<IChatModule> ();
                     if (chatModule != null)
                         chatModule.SimChat ("Hit Sandbox Limit",
@@ -2751,7 +2768,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (Util.GetDistanceTo(RootPart.StatusSandboxPos, pos) > 10)
                     {
-                        RootPart.ScriptSetPhysicsStatus(false);
+                        ScriptSetPhysicsStatus(false);
                         pos = AbsolutePosition;
                         IChatModule chatModule = Scene.RequestModuleInterface<IChatModule>();
                         if (chatModule != null)

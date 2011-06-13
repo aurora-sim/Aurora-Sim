@@ -552,8 +552,6 @@ namespace OpenSim.Framework
 
         void ScriptSetVolumeDetect (bool p);
 
-        void ScriptSetPhysicsStatus (bool p);
-
         void SetForce (Vector3 vector3);
 
         int PassCollisions { get; set; }
