@@ -1066,24 +1066,26 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         {
                             // prim terrain contact
                             // int pj294950 = 0;
-                            int movintYN = 0;
-                            int material = (int)Material.Wood;
+                            int moving = 0;
+                            int material = ((AuroraODEPrim)p2).m_material;
 
                             // prim terrain contact
                             if (Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f)
-                                movintYN = 1;
-
-                            if (p2 is AuroraODEPrim)
-                                material = ((AuroraODEPrim)p2).m_material;
+                                moving = 1;
 
                             //m_log.DebugFormat("Material: {0}", material);
-                            m_materialContacts[material, movintYN].geom = curContact;
+                            m_materialContacts[material, moving].geom = curContact;
                             if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
 
+                            //Add restitution and friction changes
+                            d.SurfaceParameters original = CopyContact(m_materialContacts[material, moving].surface);
+                            ((AuroraODEPrim)p2).UpdateContactPoint (ref m_materialContacts[material, moving]);
+
                             if (m_global_contactcount < m_currentmaxContactsbeforedeath)
                             {
-                                joint = d.JointCreateContact(world, contactgroup, ref m_materialContacts[material, movintYN]);
+                                joint = d.JointCreateContact (world, contactgroup, ref m_materialContacts[material, moving]);
+                                m_materialContacts[material, moving].surface = original;
                                 m_global_contactcount++;
                             }
                         }
@@ -1095,7 +1097,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         // check if we're moving
                         if ((p2.PhysicsActorType == (int)ActorTypes.Agent))
                         {
-                            /*if ((Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f))
+                            if ((Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f))
                             {
                                 if (p2.Flying)
                                 {
@@ -1122,7 +1124,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                     }
                                 }
                             }
-                            else*/
+                            else
                             {
                                 // Use the non movement contact
                                 contact.geom = curContact;
@@ -1139,19 +1141,25 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         else if (p2.PhysicsActorType == (int)ActorTypes.Prim)
                         {
                             //p1.PhysicsActorType
-                            int material = (int)Material.Wood;
+                            int material = ((AuroraODEPrim)p2).m_material;
+                            int moving = 0;
+                            if (Math.Abs (p2.Velocity.X) > 0.01f || Math.Abs (p2.Velocity.Y) > 0.01f)
+                                moving = 1;
 
-                            if (p2 is AuroraODEPrim)
-                                material = ((AuroraODEPrim)p2).m_material;
 
                             //m_log.DebugFormat("Material: {0}", material);
-                            m_materialContacts[material, 0].geom = curContact;
+                            m_materialContacts[material, moving].geom = curContact;
                             if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
 
+                            //Add restitution and friction changes
+                            d.SurfaceParameters original = CopyContact (m_materialContacts[material, moving].surface);
+                            ((AuroraODEPrim)p2).UpdateContactPoint (ref m_materialContacts[material, moving]);
+
                             if (m_global_contactcount < m_currentmaxContactsbeforedeath)
                             {
-                                joint = d.JointCreateContact(world, contactgroup, ref m_materialContacts[material, 0]);
+                                joint = d.JointCreateContact (world, contactgroup, ref m_materialContacts[material, moving]);
+                                m_materialContacts[material, moving].surface = original;
                                 m_global_contactcount++;
                             }
                         }
@@ -1200,6 +1208,24 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 collision_accounting_events(p1, p2, maxDepthContact);
             }
             m_StatCollisionAccountingTime = Util.EnvironmentTickCountSubtract(CollisionAccountingTime);
+        }
+
+        private d.SurfaceParameters CopyContact (d.SurfaceParameters surfaceParameters)
+        {
+            d.SurfaceParameters p = new d.SurfaceParameters ();
+            p.bounce = surfaceParameters.bounce;
+            p.bounce_vel = surfaceParameters.bounce_vel;
+            p.mode = surfaceParameters.mode;
+            p.motion1 = surfaceParameters.motion1;
+            p.motion2 = surfaceParameters.motion2;
+            p.motionN = surfaceParameters.motionN;
+            p.mu = surfaceParameters.mu;
+            p.mu2 = surfaceParameters.mu2;
+            p.slip1 = surfaceParameters.slip1;
+            p.slip2 = surfaceParameters.slip2;
+            p.soft_cfm = surfaceParameters.soft_cfm;
+            p.soft_erp = surfaceParameters.soft_erp;
+            return p;
         }
 
         private bool checkDupe(d.ContactGeom contactGeom, int atype)
