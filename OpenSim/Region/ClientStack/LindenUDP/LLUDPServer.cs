@@ -846,7 +846,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 UUID agentID = ((UseCircuitCodePacket)packet).CircuitCode.ID;
                 // Acknowledge the UseCircuitCode packet
+                //Make sure to acknowledge with the newest packet! So use the queue so that it knows all of the newest ones
                 SendAckImmediate (remoteEndPoint, m_inQueueCircuitCodes[agentID]);
+                //And remove it
+                m_inQueueCircuitCodes.Remove (agentID);
 
                 m_log.InfoFormat(
                     "[LLUDPSERVER]: Handling UseCircuitCode request from {0} took {1}ms",
