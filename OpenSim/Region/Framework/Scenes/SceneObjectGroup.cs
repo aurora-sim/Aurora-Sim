@@ -1520,15 +1520,13 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     part.AngularVelocity = Vector3.Zero;
 
-                    if (RootPart.PhysicsType == (byte)PhysicsShapeType.None)
+                    if (RootPart.PhysicsType == (byte)PhysicsShapeType.None ||
+                        part.PhysicsType == (byte)PhysicsShapeType.None ||
+                        (part.Flags & PrimFlags.Phantom) == PrimFlags.Phantom ||
+                        (RootPart.Flags & PrimFlags.Phantom) == PrimFlags.Phantom)
                     {
                         part.PhysActor = null;
                         continue; //Don't rebuild! All phantom if the root is phantom
-                    }
-                    if (part.PhysicsType == (byte)PhysicsShapeType.None)
-                    {
-                        part.PhysActor = null;
-                        continue; //Don't rebuild!
                     }
                     bool usePhysics = (RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics;
 
