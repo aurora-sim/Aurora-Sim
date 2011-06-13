@@ -1505,10 +1505,11 @@ namespace OpenSim.Region.Framework.Scenes
                     part.PhysActor.OnSignificantMovement -= part.ParentGroup.CheckForSignificantMovement;
                     part.PhysActor.OnOutOfBounds -= part.PhysicsOutOfBounds;
 
-                    part.PhysActor.delink ();
+                    //part.PhysActor.delink ();
                     //Remove the old one so that we don't have more than we should,
                     //  as when we copy, it readds it to the PhysicsScene somehow
-                    m_scene.PhysicsScene.RemovePrim (part.PhysActor);
+                    if(part.IsRoot)//The root removes all children
+                        m_scene.PhysicsScene.RemovePrim (part.PhysActor);
 
                     part.FireOnRemovedPhysics ();
                 }
@@ -1538,8 +1539,10 @@ namespace OpenSim.Region.Framework.Scenes
                 part.PhysActor.UUID = part.UUID;
                 part.PhysActor.VolumeDetect = part.VolumeDetectActive;
 
+                part.PhysActor.IsPhysical = usePhysics;
+
                 //Force deselection here so that it isn't stuck forever
-                if (keepSelectedStatuses)
+                if (!keepSelectedStatuses)
                     part.PhysActor.Selected = false;
                 else
                     part.PhysActor.Selected = IsSelected;
