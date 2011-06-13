@@ -97,10 +97,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         public float m_density = 60f;
         private bool m_flying = false;
         private bool m_iscolliding = false;
-        private bool m_iscollidingGround = false;
         private bool m_wascolliding = false;
-        private bool m_wascollidingGround = false;
-        private bool m_iscollidingObj = false;
         private bool m_alwaysRun = false;
         private bool m_hackSentFall = false;
         private bool m_hackSentFly = false;
@@ -310,7 +307,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 float AVvolume = (float)(Math.PI * Math.Pow(CAPSULE_RADIUS, 2) * CAPSULE_LENGTH);
                 return m_density * AVvolume;
             }
-            set { }
         }
 
         public override Vector3 Force
@@ -364,7 +360,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         public override int PhysicsActorType
         {
             get { return (int)ActorTypes.Agent; }
-            set { return; }
         }
 
         public override bool IsPhysical
@@ -441,76 +436,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                     //base.SendCollisionUpdate(new CollisionEventUpdate());
                 }
                 m_wascolliding = m_iscolliding;
-            }
-        }
-
-        /// <summary>
-        /// Returns if an avatar is colliding with the ground
-        /// </summary>
-        public override bool CollidingGround
-        {
-            get { return m_iscollidingGround; }
-            set
-            {
-                // Collisions against the ground are not really reliable
-                // So, to get a consistant value we have to average the current result over time
-                // Currently we use 1 second = 10 calls to this.
-                int i;
-                int truecount = 0;
-                int falsecount = 0;
-
-                if (m_colliderGroundarr.Length >= 10)
-                {
-                    for (i = 0; i < 10; i++)
-                    {
-                        m_colliderGroundarr[i] = m_colliderGroundarr[i + 1];
-                    }
-                }
-                m_colliderGroundarr[10] = value;
-
-                for (i = 0; i < 11; i++)
-                {
-                    if (m_colliderGroundarr[i])
-                    {
-                        truecount++;
-                    }
-                    else
-                    {
-                        falsecount++;
-                    }
-                }
-
-                // Equal truecounts and false counts means we're colliding with something.
-
-                if (falsecount > 1.2 * truecount)
-                {
-                    m_iscollidingGround = false;
-                }
-                else
-                {
-                    m_iscollidingGround = true;
-                }
-                if (m_wascollidingGround != m_iscollidingGround)
-                {
-                    //base.SendCollisionUpdate(new CollisionEventUpdate());
-                }
-                m_wascollidingGround = m_iscollidingGround;
-            }
-        }
-
-        /// <summary>
-        /// Returns if the avatar is colliding with an object
-        /// </summary>
-        public override bool CollidingObj
-        {
-            get { return m_iscollidingObj; }
-            set
-            {
-                m_iscollidingObj = value;
-                if (value)
-                    m_pidControllerActive = false;
-                else
-                    m_pidControllerActive = true;
             }
         }
 

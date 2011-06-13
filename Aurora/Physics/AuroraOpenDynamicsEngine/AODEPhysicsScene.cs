@@ -102,7 +102,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private const int maxContactsbeforedeath = 4000;
         private int m_currentmaxContactsbeforedeath = maxContactsbeforedeath;
 
-        private float contactsurfacelayer = 0.1f;
+        private float contactsurfacelayer = 0.001f;
 
         private int HashspaceLow = -3;  // current ODE limits
         private int HashspaceHigh = 10;
@@ -167,7 +167,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private readonly List<d.ContactGeom> _perloopContact = new List<d.ContactGeom>();
         private readonly List<PhysicsActor> _collisionEventPrim = new List<PhysicsActor>();
         private readonly HashSet<AuroraODECharacter> _badCharacter = new HashSet<AuroraODECharacter>();
-        public Dictionary<IntPtr, String> geom_name_map = new Dictionary<IntPtr, String>();
         public Dictionary<IntPtr, PhysicsActor> actor_name_map = new Dictionary<IntPtr, PhysicsActor>();
         private bool m_NINJA_physics_joints_enabled = false;
         private d.ContactGeom[] contacts;
@@ -360,7 +359,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 contactgroup = d.JointGroupCreate(0);
                 //contactgroup
 
-                d.WorldSetAutoDisableFlag(world, false);
+                d.WorldSetAutoDisableFlag(world, true);
 #if USE_DRAWSTUFF
                 
                 Thread viewthread = new Thread(new ParameterizedThreadStart(startvisualization));
@@ -501,37 +500,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // Centeral contact friction and bounce
             // ckrinke 11/10/08 Enabling soft_erp but not soft_cfm until I figure out why
             // an avatar falls through in Z but not in X or Y when walking on a prim.
-            contact.surface.mode = (d.ContactFlags.Slip1 | d.ContactFlags.Bounce | d.ContactFlags.Slip2);
+            contact.surface.mode |= d.ContactFlags.SoftERP;
             contact.surface.mu = nmAvatarObjectContactFriction;
             contact.surface.bounce = nmAvatarObjectContactBounce;
-            contact.surface.soft_cfm = 0.00010f;
-            contact.surface.soft_erp = 0.00010f;
-            contact.surface.slip1 = 0.1f;
-            contact.surface.slip2 = 0.1f;
+            contact.surface.soft_cfm = 0.010f;
+            contact.surface.soft_erp = 0.010f;
 
             // Prim contact friction and bounce
-            // This is the *non* moving version of friction and bounce
+            // THis is the *non* moving version of friction and bounce
             // Use this when an avatar comes in contact with a prim
             // and is moving
+            AvatarMovementprimContact.surface.mu = mAvatarObjectContactFriction;
+            AvatarMovementprimContact.surface.bounce = mAvatarObjectContactBounce;
 
-            AvatarMovementprimContact.surface.mode = d.ContactFlags.Slip1;
-            AvatarMovementprimContact.surface.mu = nmAvatarObjectContactFriction;
-            AvatarMovementprimContact.surface.bounce = nmAvatarObjectContactBounce;
-            AvatarMovementprimContact.surface.slip1 = 0.001f;
-            AvatarMovementprimContact.surface.soft_cfm = 0.0010f;
-            AvatarMovementprimContact.surface.soft_erp = 0.0010f;
-            //AvatarMovementprimContact.surface.mode |= d.ContactFlags.Bounce;
-            //AvatarMovementprimContact.surface.mu = mAvatarObjectContactFriction;
-            //AvatarMovementprimContact.surface.bounce = mAvatarObjectContactBounce;
-
-            AvatarFlyingprimContact.surface.mode = d.ContactFlags.Slip1 | d.ContactFlags.Motion1 | d.ContactFlags.Motion2 | d.ContactFlags.Approx1 | d.ContactFlags.Approx1_1 | d.ContactFlags.Approx1_2 | d.ContactFlags.Approx0;
-            AvatarFlyingprimContact.surface.mu = nmAvatarObjectContactFriction;
-            AvatarFlyingprimContact.surface.bounce = nmAvatarObjectContactBounce;
-            AvatarFlyingprimContact.surface.slip1 = 1f;
-            AvatarFlyingprimContact.surface.motion1 = 1f;
-            AvatarFlyingprimContact.surface.motion2 = 1f;
-            AvatarFlyingprimContact.surface.soft_cfm = 0.0010f;
-            AvatarFlyingprimContact.surface.soft_erp = 0.0010f;
+            AvatarFlyingprimContact.surface.mu = mAvatarObjectContactFriction;
+            AvatarFlyingprimContact.surface.bounce = mAvatarObjectContactBounce;
 
             /*
                 <summary></summary>
@@ -659,7 +642,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
            
 
             // Set the gravity,, don't disable things automatically (we set it explicitly on some things)
-
             d.WorldSetGravity(world, gravityx, gravityy, gravityz);
             d.WorldSetContactSurfaceLayer(world, contactsurfacelayer);
 
@@ -1084,48 +1066,30 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         {
                             // prim terrain contact
                             // int pj294950 = 0;
-                            int movintYN = 0;
-                            int material = (int)Material.Wood;
+                            int moving = 0;
+                            int material = ((AuroraODEPrim)p2).m_material;
 
                             // prim terrain contact
                             if (Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f)
-                                movintYN = 1;
-
-                            if (p2 is AuroraODEPrim)
-                                material = ((AuroraODEPrim)p2).m_material;
+                                moving = 1;
 
                             //m_log.DebugFormat("Material: {0}", material);
-                            m_materialContacts[material, movintYN].geom = curContact;
+                            m_materialContacts[material, moving].geom = curContact;
                             if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
 
-                            if (m_global_contactcount < m_currentmaxContactsbeforedeath)
-                            {
-                                joint = d.JointCreateContact(world, contactgroup, ref m_materialContacts[material, movintYN]);
-                                m_global_contactcount++;
-                            }
-                        }
-                        else
-                        {
-                            int movintYN = 0;
-                            // unknown terrain contact
-                            if (Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f)
-                                movintYN = 1;
-
-                            int material = (int)Material.Wood;
-
-                            if (p2 is AuroraODEPrim)
-                                material = ((AuroraODEPrim)p2).m_material;
-
-                            m_materialContacts[material, movintYN].geom = curContact;
-                            if (m_filterCollisions)
-                                _perloopContact.Add(curContact);
+                            //Add restitution and friction changes
+                            d.SurfaceParameters original = CopyContact(m_materialContacts[material, moving].surface);
+                            ((AuroraODEPrim)p2).UpdateContactPoint (ref m_materialContacts[material, moving]);
 
                             if (m_global_contactcount < m_currentmaxContactsbeforedeath)
                             {
-                                joint = d.JointCreateContact(world, contactgroup, ref m_materialContacts[material, movintYN]);
+                                joint = d.JointCreateContact (world, contactgroup, ref m_materialContacts[material, moving]);
+                                m_materialContacts[material, moving].surface = original;
                                 m_global_contactcount++;
                             }
+                            else
+                                m_materialContacts[material, moving].surface = original;
                         }
                     }
 
@@ -1179,21 +1143,29 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         else if (p2.PhysicsActorType == (int)ActorTypes.Prim)
                         {
                             //p1.PhysicsActorType
-                            int material = (int)Material.Wood;
+                            int material = ((AuroraODEPrim)p2).m_material;
+                            int moving = 0;
+                            if (Math.Abs (p2.Velocity.X) > 0.01f || Math.Abs (p2.Velocity.Y) > 0.01f)
+                                moving = 1;
 
-                            if (p2 is AuroraODEPrim)
-                                material = ((AuroraODEPrim)p2).m_material;
 
                             //m_log.DebugFormat("Material: {0}", material);
-                            m_materialContacts[material, 0].geom = curContact;
+                            m_materialContacts[material, moving].geom = curContact;
                             if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
 
+                            //Add restitution and friction changes
+                            d.SurfaceParameters original = CopyContact (m_materialContacts[material, moving].surface);
+                            ((AuroraODEPrim)p2).UpdateContactPoint (ref m_materialContacts[material, moving]);
+
                             if (m_global_contactcount < m_currentmaxContactsbeforedeath)
                             {
-                                joint = d.JointCreateContact(world, contactgroup, ref m_materialContacts[material, 0]);
+                                joint = d.JointCreateContact (world, contactgroup, ref m_materialContacts[material, moving]);
+                                m_materialContacts[material, moving].surface = original;
                                 m_global_contactcount++;
                             }
+                            else
+                                m_materialContacts[material, moving].surface = original;
                         }
                     }
 
@@ -1216,51 +1188,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (!DisableCollisions)
             {
                 bool p2col = false;
-                bool p2colgnd = false;
-                bool p2colobj = false;
 
                 // We only need to test p2 for 'jump crouch purposes'
                 if (p2 is AuroraODECharacter && p1.PhysicsActorType == (int)ActorTypes.Prim)
                 {
                     // Testing if the collision is at the feet of the avatar
-
-                    //m_log.DebugFormat("[PHYSICS]: {0} - {1} - {2} - {3}", curContact.pos.Z, p2.Position.Z, (p2.Position.Z - curContact.pos.Z), (p2.Size.Z * 0.6f));
                     if ((p2.Position.Z - maxDepthContact.Position.Z) > (p2.Size.Z * 0.6f))
                         p2col = true;
                 }
                 else
-                {
                     p2col = true;
-                }
 
-                if (p2col)
-                    {
-                    switch (p1.PhysicsActorType)
-                        {
-                        case (int)ActorTypes.Agent:
-                            p2colobj = true;
-                            break;
-                        case (int)ActorTypes.Prim:
-                            p2colobj = true;
-                            break;
-                        default:
-                            //This is required for some really weird reason... the heightmap collides every time...
-//                            float terrainHeight = GetTerrainHeightAtXY(p2.Position.X, p2.Position.Y);
-//                            if (terrainHeight + 1 >= (p2.Position.Z - p2.Size.Z / 2))
-                              p2colgnd = true;
-                            break;
-                        }
-                    }
-
-                //These get cleared out before we start colliding...
-                // if we set them here just as near comes in,
-                // we have issues, since they overwrite each other.
-//                if(!p2.CollidingObj)
-                    p2.CollidingObj = p2colobj;
-//                if (!p2.CollidingGround)
-                    p2.CollidingGround = p2colgnd;
-//                if (!p2.IsColliding)
-                    p2.IsColliding = p2col;
+                p2.IsColliding = p2col;
 
                 if (count > geomContactPointsStartthrottle)
                 {
@@ -1273,6 +1212,24 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 collision_accounting_events(p1, p2, maxDepthContact);
             }
             m_StatCollisionAccountingTime = Util.EnvironmentTickCountSubtract(CollisionAccountingTime);
+        }
+
+        private d.SurfaceParameters CopyContact (d.SurfaceParameters surfaceParameters)
+        {
+            d.SurfaceParameters p = new d.SurfaceParameters ();
+            p.bounce = surfaceParameters.bounce;
+            p.bounce_vel = surfaceParameters.bounce_vel;
+            p.mode = surfaceParameters.mode;
+            p.motion1 = surfaceParameters.motion1;
+            p.motion2 = surfaceParameters.motion2;
+            p.motionN = surfaceParameters.motionN;
+            p.mu = surfaceParameters.mu;
+            p.mu2 = surfaceParameters.mu2;
+            p.slip1 = surfaceParameters.slip1;
+            p.slip2 = surfaceParameters.slip2;
+            p.soft_cfm = surfaceParameters.soft_cfm;
+            p.soft_erp = surfaceParameters.soft_erp;
+            return p;
         }
 
         private bool checkDupe(d.ContactGeom contactGeom, int atype)
@@ -1450,7 +1407,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     m_currentmaxContactsbeforedeath = Math.Max(100, (int)(maxContactsbeforedeath * TimeDilation));
                     contacts = new d.ContactGeom[Math.Max(5, (int)(m_timeDilation * contactsPerCollision))];
-                    //m_log.WarnFormat("[ODE]: AutoConfig: changing contact amount to {0}, {1}%", contacts.Length, (m_timeDilation * contactsPerCollision) / contactsPerCollision * 100);
+                    m_log.WarnFormat("[ODE]: AutoConfig: changing contact amount to {0}, {1}%", contacts.Length, (m_timeDilation * contactsPerCollision) / contactsPerCollision * 100);
                 }
             }
 
@@ -1470,8 +1427,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         continue;
 
                     chr.IsColliding = false;
-                    chr.CollidingGround = false;
-                    chr.CollidingObj = false;
 
                     // test the avatar's geometry for collision with the space
                     // This will return near and the space that they are the closest to
@@ -1499,8 +1454,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         //Fix colliding atributes!
                         chr.IsColliding = false;
-                        chr.CollidingGround = false;
-                        chr.CollidingObj = false;
 
                         try
                         {
@@ -1819,16 +1772,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         }
 
-        private PhysicsObject AddPrim(String name, Vector3 position, Vector3 size, Quaternion rotation,
-                                     IMesh mesh, PrimitiveBaseShape pbs, bool isphysical, float Density)
+        public override PhysicsObject AddPrimShape(ISceneChildEntity entity)
         {
-
-            Vector3 pos = position;
-            Vector3 siz = size;
-            Quaternion rot = rotation;
-
+            bool isPhysical = ((entity.ParentEntity.RootChild.Flags & PrimFlags.Physics) != 0);
+            bool isPhantom = ((entity.ParentEntity.RootChild.Flags & PrimFlags.Phantom) != 0);
+            bool physical = isPhysical & !isPhantom;
             AuroraODEPrim newPrim;
-            newPrim = new AuroraODEPrim (name, this, pos, siz, rot, mesh, pbs, isphysical, ode, Density);
+            newPrim = new AuroraODEPrim (entity, this, physical, ode);
 
             lock (_prims)
                 _prims.Add(newPrim);
@@ -1846,12 +1796,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //else
                 //  m_log.Warn("[PHYSICS]: Double Entry in _activeprims detected, potential crash immenent");
             }
-        }
-
-        public override PhysicsObject AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
-                                                  Vector3 size, Quaternion rotation, bool isPhysical, float Density)
-        {
-            return AddPrim (primName, position, size, rotation, null, pbs, isPhysical, Density);
         }
 
         public override float TimeDilation
@@ -1914,32 +1858,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         prim.DestroyBody();
                         prim.IsPhysical = false;
-
-                        // we don't want to remove the main space
-
-                        // If the geometry is in the targetspace, remove it from the target space
-                        //m_log.Warn(prim.m_targetSpace);
-
-                        //if (prim.m_targetSpace != IntPtr.Zero)
-                        //{
-                        //if (d.SpaceQuery(prim.m_targetSpace, prim.prim_geom))
-                        //{
-
-                        //if (d.GeomIsSpace(prim.m_targetSpace))
-                        //{
-                        //waitForSpaceUnlock(prim.m_targetSpace);
-                        //d.SpaceRemove(prim.m_targetSpace, prim.prim_geom);
                         prim.m_targetSpace = IntPtr.Zero;
-                        //}
-                        //else
-                        //{
-                        // m_log.Info("[Physics]: Invalid Scene passed to 'removeprim from scene':" +
-                        //((OdePrim)prim).m_targetSpace.ToString());
-                        //}
-
-                        //}
-                        //}
-                        //m_log.Warn(prim.prim_geom);
                         try
                         {
                             if (prim.prim_geom != IntPtr.Zero)
@@ -1958,28 +1877,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                         lock (_prims)
                             _prims.Remove(prim);
-
-                        //If there are no more geometries in the sub-space, we don't need it in the main space anymore
-                        //if (d.SpaceGetNumGeoms(prim.m_targetSpace) == 0)
-                        //{
-                        //if (prim.m_targetSpace != null)
-                        //{
-                        //if (d.GeomIsSpace(prim.m_targetSpace))
-                        //{
-                        //waitForSpaceUnlock(prim.m_targetSpace);
-                        //d.SpaceRemove(space, prim.m_targetSpace);
-                        // free up memory used by the space.
-                        //d.SpaceDestroy(prim.m_targetSpace);
-                        //int[] xyspace = calculateSpaceArrayItemFromPos(prim.Position);
-                        //resetSpaceArrayItemToZero(xyspace[0], xyspace[1]);
-                        //}
-                        //else
-                        //{
-                        //m_log.Info("[Physics]: Invalid Scene passed to 'removeprim from scene':" +
-                        //((OdePrim) prim).m_targetSpace.ToString());
-                        //}
-                        //}
-                        //}
                     }
                 }
             }
@@ -2476,36 +2373,24 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 int nodesteps = 0;
 
                 // Figure out the Frames Per Second we're going at.
-                //(step_time == 0.004f, there's 250 of those per second.   Times the step time/step size
-
                 fps = (step_time / ODE_STEPSIZE) * 1000;
                 
-                //step_time = 0.09375f;
-
                 while (step_time > 0.0f)
                 {
-                    //lock (ode)
-                    //{
-                    //if (!ode.lockquery())
-                    //{
-                    // ode.dlock(world);
                     try
                     {
                         int PhysicsTaintTime = Util.EnvironmentTickCount();
 
                         // Insert, remove Characters
-                        bool processedtaints = false;
-
                         lock (_taintedActors)
                         {
                             if (_taintedActors.Count > 0)
                             {
+                                bool processedtaints = false;
                                 foreach (AuroraODECharacter character in _taintedActors)
                                 {
                                     character.ProcessTaints(timeElapsed);
-
                                     processedtaints = true;
-                                    //character.m_collisionscore = 0;
                                 }
 
                                 if (processedtaints)
@@ -2513,12 +2398,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             }
                         }
 
-                        // Modify other objects in the scene.
-                        processedtaints = false;
-
-                        int tlimit = 500;
+                        int tlimit = 50;
                         AODEchangeitem item;
-
                         while (GetNextChange(out item))
                         {
                             if (item.prim != null)
@@ -2536,50 +2417,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                         if (ChangesQueue.Count == 0 && !m_hasSetUpPrims)
                         {
+                            //Tell the mesher that we are done with the initialization 
+                            //  of prim meshes and that it can clear it's in memory cache
                             m_hasSetUpPrims = true;
                             mesher.FinishedMeshing ();
                         }
 
-                        // process changes
-                        /*
-                        
-                                                if (ChangesQueue.Count > 0)
-                                                    {
-                                                    int tlimit = ChangesQueue.Count;
-                                                    if (tlimit > 500)
-                                                        tlimit = 500;
-                                                    while (tlimit-- > 0)
-                                                        {
-                                                        AODEchangeitem item = GetNextChange();
-                                                        if (item.prim != null)
-                                                            {
-                                                            try
-                                                                {
-                                                                if (item.prim.DoAChange(item.what, item.arg))
-                                                                    RemovePrimThreadLocked(item.prim);
-                                                                }
-                                                            catch { };
-                                                            }
-                                                        }
-                                                    }
-                         */
-                        /*
-                                                lock (_taintedPrimLock)
-                                                {
-                                                    foreach (AuroraODEPrim prim in _taintedPrimL)
-                                                    {
-                                                        if (prim.ProcessTaints(timeElapsed))
-                                                            RemovePrimThreadLocked(prim);
-                                                        processedtaints = true;
-                                                        prim.m_collisionscore = 0;
-                                                    }
-                            
-                                                    if (processedtaints)
-                                                        //Console.WriteLine("Simulate calls Clear of _taintedPrim list");
-                                                        _taintedPrimH.Clear();
-                                                    _taintedPrimL.Clear();
-                                                }
-                        */
                         m_StatPhysicsTaintTime = Util.EnvironmentTickCountSubtract(PhysicsTaintTime);
 
                         int PhysicsMoveTime = Util.EnvironmentTickCount();
@@ -2600,10 +2443,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                     foreach (AuroraODECharacter defect in defects)
                                     {
                                         RemoveCharacter(defect);
-                                        if (geom_name_map.ContainsKey(defect.Shell))
-                                            AddAvatar(geom_name_map[defect.Shell], new Vector3(m_region.RegionSizeX / 2,
-                                                m_region.RegionSizeY / 2,
-                                                m_region.RegionSizeZ / 2), defect.Orientation, defect.Size, true, defect.LocalID, defect.UUID);
+                                        AddAvatar(defect.Name, new Vector3(m_region.RegionSizeX / 2,
+                                            m_region.RegionSizeY / 2,
+                                            m_region.RegionSizeZ / 2), defect.Orientation, defect.Size, true, defect.LocalID, defect.UUID);
                                         defect.Destroy();
                                     }
                                 }
@@ -2621,21 +2463,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                             if (m_rayCastManager != null)
                             {
-                                //int RayCastTimeMS = m_rayCastManager.ProcessQueuedRequests();
                                 m_rayCastManager.ProcessQueuedRequests();
                             }
                         }
 
                         m_StatPhysicsMoveTime = Util.EnvironmentTickCountSubtract(PhysicsMoveTime);
 
+
                         int CollisionOptimizedTime = Util.EnvironmentTickCount();
-
                         collision_optimized(timeElapsed);
-
                         m_StatCollisionOptimizedTime = Util.EnvironmentTickCountSubtract(CollisionOptimizedTime);
 
-                        int SendCollisionsTime = Util.EnvironmentTickCount();
 
+                        int SendCollisionsTime = Util.EnvironmentTickCount();
                         if (!DisableCollisions)
                         {
                             lock (_collisionEventPrim)
@@ -2664,7 +2504,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 }
                             }
                         }
-
                         m_StatSendCollisionsTime = Util.EnvironmentTickCountSubtract(SendCollisionsTime);
 
                         m_global_contactcount = 0;
@@ -2730,8 +2569,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
 
                 m_StatPrimUpdatePosAndVelocity = Util.EnvironmentTickCountSubtract(PrimUpdatePosAndVelocity);
-
-                //DumpJointInfo();
 
                 // Finished with all sim stepping. If requested, dump world state to file for debugging.
                 // This overwrites all dump files in-place. Should this be a growing logfile, or separate snapshots?
@@ -2861,7 +2698,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 TerrainHeightFieldlimits.Remove (RegionTerrain);
 
                 actor_name_map.Remove (RegionTerrain);
-                geom_name_map.Remove (RegionTerrain);
 
                 const float scale = (1f / (float)Constants.TerrainCompression);
                 const float offset = 0.0f;
@@ -2882,12 +2718,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.GeomSetCollideBits (RegionTerrain, (int)(CollisionCategories.Space));
                 }
 
-                geom_name_map[RegionTerrain] = "Terrain";
-
-                NullObjectPhysicsActor terrainActor = new NullObjectPhysicsActor()
-                {
-                    PhysicsActorType = (int)ActorTypes.Ground
-                };
+                NullObjectPhysicsActor terrainActor = new NullObjectPhysicsActor ();
 
                 actor_name_map[RegionTerrain] = terrainActor;
 

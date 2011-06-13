@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/
+ * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -307,8 +307,6 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("PIDTarget", value);
-                if (PhysActor != null)
-                    PhysActor.PIDTarget = value;
             }
         }
 
@@ -330,8 +328,6 @@ namespace OpenSim.Region.Framework.Scenes
                         s.EventManager.OnFrame -= UpdateLookAt;
                 }
                 SetComponentState("PIDActive", value);
-                if(PhysActor != null)
-                    PhysActor.PIDActive = value;
             }
         }
 
@@ -345,8 +341,54 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("PIDTau", value);
-                if (PhysActor != null)
-                    PhysActor.PIDTau = value;
+            }
+        }
+
+        public float PIDHoverHeight
+        {
+            get
+            {
+                return (float)GetComponentState ("PIDHoverHeight").AsReal ();
+            }
+            set
+            {
+                SetComponentState ("PIDHoverHeight", value);
+            }
+        }
+
+        public float PIDHoverTau
+        {
+            get
+            {
+                return (float)GetComponentState ("PIDHoverTau").AsReal ();
+            }
+            set
+            {
+                SetComponentState ("PIDHoverTau", value);
+            }
+        }
+
+        public bool PIDHoverActive
+        {
+            get
+            {
+                return GetComponentState ("PIDHoverActive").AsBoolean ();
+            }
+            set
+            {
+                SetComponentState ("PIDHoverActive", value);
+            }
+        }
+
+        public PIDHoverType PIDHoverType
+        {
+            get
+            {
+                return (PIDHoverType)GetComponentState ("PIDHoverType").AsInteger ();
+            }
+            set
+            {
+                SetComponentState ("PIDHoverType", (int)value);
             }
         }
         
@@ -967,10 +1009,6 @@ namespace OpenSim.Region.Framework.Scenes
                     if (ParentGroup != null)
                         ParentGroup.HasGroupChanged = true;
                     m_name = value;
-                    if (PhysActor != null)
-                    {
-                        PhysActor.SOPName = value;
-                    }
                 }
             }
         }
@@ -987,22 +1025,9 @@ namespace OpenSim.Region.Framework.Scenes
                 m_material = (Material)value;
                 if (PhysActor != null)
                 {
-                    PhysActor.SetMaterial(value);
+                    PhysActor.SetMaterial (value);
                 }
             }
-        }
-
-        [XmlIgnore]
-        public bool PassTouches //Needed for compat, otherwise assets break!
-        {
-            get { return PassTouch == 1 || PassTouch == 2; }
-            set
-            {
-                if (value)
-                    PassTouch = 1;
-                else
-                    PassTouch = 0;
-           }
         }
 
         public int PassTouch
@@ -1017,19 +1042,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         private int m_passCollision;
-
-        [XmlIgnore]
-        public bool PassCollision //Needed for compat, otherwise assets break!
-        {
-            get { return m_passCollision == 1 || m_passCollision == 2; }
-            set
-            {
-                if (value)
-                    m_passCollision = 1;
-                else
-                    m_passCollision = 0;
-            }
-        }
 
         public int PassCollisions
         {
@@ -1095,12 +1107,23 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return (float)GetComponentState("APIDStrength").AsReal();
+                return (float)GetComponentState ("APIDStrength").AsReal ();
             }
-            set 
+            set
             {
-                SetComponentState("APIDStrength", value);
-                m_APIDStrength = value; 
+                SetComponentState ("APIDStrength", value);
+                m_APIDStrength = value;
+            }
+        }
+        public bool APIDEnabled
+        {
+            get
+            {
+                return GetComponentState ("APIDEnabled").AsBoolean ();
+            }
+            set
+            {
+                SetComponentState ("APIDEnabled", value);
             }
         }
 
@@ -1378,11 +1401,6 @@ namespace OpenSim.Region.Framework.Scenes
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
                 m_description = value;
-                PhysicsObject actor = PhysActor;
-                if (actor != null)
-                {
-                    actor.SOPDescription = value;
-                }
             }
         }
         #region Only used for serialization as Color cannot be serialized
@@ -1860,7 +1878,7 @@ namespace OpenSim.Region.Framework.Scenes
             get
             {
                 OSD d = GetComponentState ("PhysicsType");
-                if (d == null)
+                if (d == null || d.Type == OSDType.Unknown)
                     d = 0;
                 return (byte)d.AsInteger ();
             }
@@ -1875,7 +1893,7 @@ namespace OpenSim.Region.Framework.Scenes
             get
             {
                 OSD d = GetComponentState ("Density");
-                if (d == null)
+                if (d == null || d.Type == OSDType.Unknown)
                     d = 1000;
                 return (float)d.AsReal ();
             }
@@ -1890,15 +1908,13 @@ namespace OpenSim.Region.Framework.Scenes
             get
             {
                 OSD d = GetComponentState ("Friction");
-                if (d == null)
+                if (d == null || d.Type == OSDType.Unknown)
                     d = 1;
                 return (float)d.AsReal ();
             }
             set
             {
                 SetComponentState ("Friction", value);
-                if (PhysActor != null)
-                    PhysActor.Friction = value;
             }
         }
 
@@ -1907,15 +1923,13 @@ namespace OpenSim.Region.Framework.Scenes
             get
             {
                 OSD d = GetComponentState ("Restitution");
-                if (d == null)
+                if (d == null || d.Type == OSDType.Unknown)
                     d = 1;
                 return (float)d.AsReal ();
             }
             set
             {
                 SetComponentState ("Restitution", value);
-                if (PhysActor != null)
-                    PhysActor.Restitution = value;
             }
         }
 
@@ -1923,21 +1937,14 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                if (PhysActor != null)
-                    return PhysActor.GravityMultiplier;
-                else
-                {
-                    OSD d = GetComponentState ("GravityMultiplier");
-                    if (d == null)
-                        d = 1;
-                    return (float)d.AsReal ();
-                }
+                OSD d = GetComponentState ("GravityMultiplier");
+                if (d == null || d.Type == OSDType.Unknown)
+                    d = 1;
+                return (float)d.AsReal ();
             }
             set
             {
                 SetComponentState ("GravityMultiplier", value);
-                if (PhysActor != null)
-                    PhysActor.GravityMultiplier = value;
             }
         }
 
@@ -2407,7 +2414,7 @@ namespace OpenSim.Region.Framework.Scenes
                 isPhantom = false;
 
             // Added clarification..   since A rigid body is an object that you can kick around, etc.
-            bool RigidBody = isPhysical && !isPhantom;
+            bool NonRigidBody = isPhysical && !isPhantom;
 
             // The only time the physics scene shouldn't know about the prim is if it's phantom or an attachment, which is phantom by definition
             // or flexible
@@ -2415,30 +2422,17 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 Vector3 tmp = GetWorldPosition();
                 Quaternion qtmp = GetWorldRotation();
-                PhysActor = m_parentGroup.Scene.PhysicsScene.AddPrimShape(
-                    string.Format("{0}/{1}", Name, UUID),
-                    Shape,
-                    tmp,
-                    Scale,
-                    qtmp,
-                    RigidBody,
-                    Density);
+                PhysActor = m_parentGroup.Scene.PhysicsScene.AddPrimShape(this);
 
                 // Basic Physics returns null..  joy joy joy.
                 if (PhysActor != null)
                 {
-                    PhysActor.SOPName = this.Name; // save object name and desc into the PhysActor so ODE internals know the joint/body info
-                    PhysActor.SOPDescription = this.Description;
                     PhysActor.LocalID = LocalId;
                     PhysActor.UUID = UUID;
-                    DoPhysicsPropertyUpdate(RigidBody, true);
+                    DoPhysicsPropertyUpdate(NonRigidBody, true);
                     PhysActor.VolumeDetect = VolumeDetectActive;
                     if (OnAddPhysics != null)
                         OnAddPhysics();
-                }
-                else
-                {
-                    //m_log.DebugFormat("[SOP]: physics actor is null for {0} with parent {1}", UUID, this.ParentGroup.UUID);
                 }
             }
         }
@@ -3807,6 +3801,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
+                APIDEnabled = true;
                 APIDDamp = damping;
                 APIDStrength = strength;
                 APIDTarget = target;
@@ -3815,6 +3810,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void startLookAt(Quaternion rot, float damp, float strength)
         {
+            APIDEnabled = true;
             APIDDamp = damp;
             APIDStrength = strength;
             APIDTarget = rot;
@@ -3822,7 +3818,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void stopLookAt()
         {
-            APIDTarget = Quaternion.Identity;
+            APIDEnabled = false;
         }
 
         /// <summary>
@@ -4556,8 +4552,7 @@ namespace OpenSim.Region.Framework.Scenes
         
         public void StopLookAt()
         {
-            m_parentGroup.stopLookAt();
-
+            m_parentGroup.RootPart.stopLookAt();
             m_parentGroup.ScheduleGroupTerseUpdate();
         }
         
@@ -5243,28 +5238,36 @@ namespace OpenSim.Region.Framework.Scenes
             if (blocks != null && blocks.Length != 0)
             {
                 ObjectFlagUpdatePacket.ExtraPhysicsBlock block = blocks[0];
+                //These 2 are static properties, and do require rebuilding the entire physical representation
                 if (PhysicsType != block.PhysicsShapeType)
                 {
                     PhysicsType = block.PhysicsShapeType;
                     ParentGroup.RebuildPhysicalRepresentation ();
+                    //Fix selection
+                    foreach (SceneObjectPart part in ParentGroup.ChildrenList)
+                    {
+                        if (IsSelected)
+                            part.PhysActor.Selected = IsSelected;
+                    }
                 }
-                if (this.PhysActor != null)
-                    GravityMultiplier = block.GravityMultiplier;
-
                 if (Density != block.Density)
                 {
                     Density = block.Density;
                     ParentGroup.RebuildPhysicalRepresentation ();
+                    //Fix selection
+                    foreach (SceneObjectPart part in ParentGroup.ChildrenList)
+                    {
+                        if (IsSelected)
+                            part.PhysActor.Selected = IsSelected;
+                    }
                 }
+                //These 3 are dynamic properties, and don't require rebuilding the physics representation
                 if (Friction != block.Friction)
-                {
                     Friction = block.Friction;
-                    ParentGroup.RebuildPhysicalRepresentation ();
-                }
                 if (Restitution != block.Restitution)
-                {
                     Restitution = block.Restitution;
-                }
+                if (this.PhysActor != null)
+                    GravityMultiplier = block.GravityMultiplier;
             }
 
             if ((UsePhysics == wasUsingPhysics) && (wasTemporary == IsTemporary) && (wasPhantom == IsPhantom) && (IsVD==wasVD))
@@ -5349,14 +5352,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // It's not phantom anymore. So make sure the physics engine get's knowledge of it
                     Vector3 tmp = GetWorldPosition();
                     Quaternion qtmp = GetWorldRotation();
-                    PhysActor = m_parentGroup.Scene.PhysicsScene.AddPrimShape(
-                        string.Format("{0}/{1}", Name, UUID),
-                        Shape,
-                        tmp,
-                        Scale,
-                        qtmp,
-                        UsePhysics,
-                        Density);
+                    PhysActor = m_parentGroup.Scene.PhysicsScene.AddPrimShape(this);
 
                     pa = PhysActor;
                     if (pa != null)
@@ -5762,11 +5758,11 @@ namespace OpenSim.Region.Framework.Scenes
                     //Reset the PID attributes
 
                 }
-                if (APIDTarget != Quaternion.Identity)
+                if (APIDEnabled)
                 {
                     if (Single.IsNaN(APIDTarget.W) == true)
                     {
-                        APIDTarget = Quaternion.Identity;
+                        APIDEnabled = false;
                         return;
                     }
                     Quaternion rot = RotationOffset;

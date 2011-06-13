@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/
+ * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -699,6 +699,48 @@ namespace OpenSim.Framework
             get;
             set;
         }
+
+        float PIDTau
+        {
+            get;
+            set;
+        }
+
+        Vector3 PIDTarget
+        {
+            get;
+            set;
+        }
+
+        bool PIDActive
+        {
+            get;
+            set;
+        }
+
+        float PIDHoverTau
+        {
+            get;
+            set;
+        }
+
+        float PIDHoverHeight
+        {
+            get;
+            set;
+        }
+
+        bool PIDHoverActive
+        {
+            get;
+            set;
+        }
+
+        PIDHoverType PIDHoverType
+        {
+            get;
+            set;
+        }
     }
 
     public interface ISceneGraph
@@ -882,9 +924,6 @@ namespace OpenSim.Framework
 
     public abstract class PhysicsObject : PhysicsActor
     {
-        public string SOPName;
-        public string SOPDescription;
-
         public virtual void link(PhysicsObject obj) { }
 
         public virtual void delink() { }
@@ -906,64 +945,11 @@ namespace OpenSim.Framework
         public virtual void VehicleFlags(int param, bool remove) { }
         public virtual void SetCameraPos(Vector3 CameraRotation) { }
 
-        // Used for MoveTo
-        public virtual Vector3 PIDTarget
-        {
-            get { return Vector3.Zero; }
-            set { return; }
-        }
-
-        public virtual float GravityMultiplier
-        {
-            get { return 1; }
-            set {}
-        }
-
-        public virtual float Friction
-        {
-            get { return 1; }
-            set {}
-        }
-
-        public virtual float Restitution
-        {
-            get { return 1; }
-            set {}
-        }
-
-        public virtual bool PIDActive
-        {
-            get { return false; }
-            set { return; }
-        }
-
-        public virtual float PIDTau
-        {
-            get { return 0; }
-            set { return; }
-        }
-
-        // Used for llSetHoverHeight and maybe vehicle height
-        // Hover Height will override MoveTo target's Z
-        public virtual float PIDHoverHeight { set { return; } }
-        public virtual bool PIDHoverActive { set { return; } }
-        public virtual PIDHoverType PIDHoverType { set { return; } }
-        public virtual float PIDHoverTau { set { return; } }
-
         public virtual bool VolumeDetect
         {
             get { return false; }
             set { return; }
         }
-
-        // For RotLookAt
-        public virtual Quaternion APIDTarget { set { return; } }
-
-        public virtual bool APIDActive { set { return; } }
-
-        public virtual float APIDStrength { set { return; } }
-
-        public virtual float APIDDamping { set { return; } }
 
         public abstract Vector3 Acceleration { get; }
         public abstract void AddAngularForce(Vector3 force, bool pushforce);
@@ -1043,7 +1029,7 @@ namespace OpenSim.Framework
         }
 
         public abstract Vector3 Position { get; set; }
-        public abstract float Mass { get; set; }
+        public abstract float Mass { get; }
         public abstract Vector3 Force { get; set; }
 
         public abstract Vector3 CenterOfMass { get; }
@@ -1051,14 +1037,12 @@ namespace OpenSim.Framework
         public abstract Vector3 Torque { get; set; }
         public abstract float CollisionScore { get; set; }
         public abstract Quaternion Orientation { get; set; }
-        public abstract int PhysicsActorType { get; set; }
+        public abstract int PhysicsActorType { get; }
         public abstract bool IsPhysical { get; set; }
         public abstract bool Flying { get; set; }
         public abstract bool SetAlwaysRun { get; set; }
         public abstract bool ThrottleUpdates { get; set; }
         public abstract bool IsColliding { get; set; }
-        public abstract bool CollidingGround { get; set; }
-        public abstract bool CollidingObj { get; set; }
         public abstract bool FloatOnWater { set; }
         public abstract Vector3 RotationalVelocity { get; set; }
         public abstract float Buoyancy { get; set; }

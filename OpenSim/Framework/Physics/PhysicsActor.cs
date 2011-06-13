@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/
+ * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -129,18 +129,6 @@ namespace OpenSim.Framework
             set { return; }
         }
 
-        public override bool CollidingGround
-        {
-            get { return false; }
-            set { return; }
-        }
-
-        public override bool CollidingObj
-        {
-            get { return false; }
-            set { return; }
-        }
-
         public override Vector3 Size
         {
             get { return Vector3.Zero; }
@@ -150,7 +138,6 @@ namespace OpenSim.Framework
         public override float Mass
         {
             get { return 0f; }
-            set { }
         }
 
         public override Vector3 Force
@@ -221,11 +208,9 @@ namespace OpenSim.Framework
             set { return; }
         }
 
-        int type = (int)ActorTypes.Unknown;
         public override int PhysicsActorType
         {
-            get { return type; }
-            set { type = value; }
+            get { return (int)ActorTypes.Ground; }
         }
 
         public override void AddForce(Vector3 force, bool pushforce)
@@ -301,18 +286,6 @@ namespace OpenSim.Framework
             set { return; }
         }
 
-        public override bool CollidingGround
-        {
-            get { return false; }
-            set { return; }
-        }
-
-        public override bool CollidingObj
-        {
-            get { return false; }
-            set { return; }
-        }
-
         public override Vector3 Size
         {
             get { return Vector3.Zero; }
@@ -322,7 +295,6 @@ namespace OpenSim.Framework
         public override float Mass
         {
             get { return 0f; }
-            set { }
         }
 
         public override Vector3 Force
@@ -384,11 +356,9 @@ namespace OpenSim.Framework
             set { return; }
         }
 
-        int type = (int)ActorTypes.Unknown;
         public override int PhysicsActorType
         {
-            get { return type; }
-            set { type = value; }
+            get { return (int)ActorTypes.Unknown; }
         }
 
         public override void AddForce(Vector3 force, bool pushforce)

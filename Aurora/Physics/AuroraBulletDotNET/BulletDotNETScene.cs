@@ -289,7 +289,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         }
 
         private PhysicsObject AddPrim(String name, Vector3 position, Vector3 size, Quaternion rotation,
-                                    IMesh mesh, PrimitiveBaseShape pbs, bool isphysical, float Density)
+                                    IMesh mesh, PrimitiveBaseShape pbs, bool isphysical)
         {
 
             Vector3 pos = position;
@@ -316,27 +316,18 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             return newPrim;
         }
 
-        public override PhysicsObject AddPrimShape (string primName, PrimitiveBaseShape pbs, Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical, float Density)
+        public override PhysicsObject AddPrimShape (ISceneChildEntity entity)
         {
             PhysicsObject result;
             IMesh mesh = null;
+            bool isPhysical = ((entity.ParentEntity.RootChild.Flags & PrimFlags.Physics) != 0);
+            bool isPhantom = ((entity.ParentEntity.RootChild.Flags & PrimFlags.Phantom) != 0);
+            bool physical = isPhysical & !isPhantom;
 
-            //switch (pbs.ProfileShape)
-            //{
-            //    case ProfileShape.Square:
-            //         //support simple box & hollow box now; later, more shapes
-            //        if (needsMeshing(pbs))
-            //        {
-            //            mesh = mesher.CreateMesh(primName, pbs, size, 32f, isPhysical);
-            //        }
+            if (needsMeshing(entity.Shape))
+                mesh = mesher.CreateMesh (entity.Name, entity.Shape, entity.Scale, 32f, physical);
 
-            //        break;
-            //}
-
-            if (needsMeshing(pbs))
-                mesh = mesher.CreateMesh(primName, pbs, size, 32f, isPhysical);
-
-            result = AddPrim(primName, position, size, rotation, mesh, pbs, isPhysical, Density);
+            result = AddPrim (entity.Name, entity.AbsolutePosition, entity.Scale, entity.RotationOffset, mesh, entity.Shape, physical);
 
             return result;
         }

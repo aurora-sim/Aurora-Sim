@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/
+ * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -360,8 +360,9 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             m_SOPXmlProcessors.Add("UUID", ProcessUUID);
             m_SOPXmlProcessors.Add("LocalId", ProcessLocalId);
             m_SOPXmlProcessors.Add("Name", ProcessName);
-            m_SOPXmlProcessors.Add("Material", ProcessMaterial);
-            m_SOPXmlProcessors.Add("PassTouches", ProcessPassTouches);
+            m_SOPXmlProcessors.Add ("Material", ProcessMaterial);
+            m_SOPXmlProcessors.Add ("PassTouch", ProcessPassTouch);
+            m_SOPXmlProcessors.Add ("PassCollisions", ProcessPassCollisions);
             m_SOPXmlProcessors.Add("ScriptAccessPin", ProcessScriptAccessPin);
             m_SOPXmlProcessors.Add("GroupPosition", ProcessGroupPosition);
             m_SOPXmlProcessors.Add("OffsetPosition", ProcessOffsetPosition);
@@ -557,9 +558,14 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             obj.Material = (byte)reader.ReadElementContentAsInt("Material", String.Empty);
         }
 
-        private static void ProcessPassTouches(SceneObjectPart obj, XmlTextReader reader)
+        private static void ProcessPassCollisions (SceneObjectPart obj, XmlTextReader reader)
         {
-            obj.PassTouches = reader.ReadElementContentAsBoolean("PassTouches", String.Empty);
+            obj.PassCollisions = reader.ReadElementContentAsInt ("PassCollisions", String.Empty);
+        }
+
+        private static void ProcessPassTouch(SceneObjectPart obj, XmlTextReader reader)
+        {
+            obj.PassTouch = reader.ReadElementContentAsInt ("PassTouch", String.Empty);
         }
 
         private static void ProcessScriptAccessPin(SceneObjectPart obj, XmlTextReader reader)
@@ -1217,8 +1223,9 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             WriteUUID(writer, "UUID", sop.UUID, options);
             writer.WriteElementString("LocalId", sop.LocalId.ToString());
             writer.WriteElementString("Name", sop.Name);
-            writer.WriteElementString("Material", sop.Material.ToString());
-            writer.WriteElementString("PassTouches", sop.PassTouches.ToString().ToLower());
+            writer.WriteElementString ("Material", sop.Material.ToString ());
+            writer.WriteElementString ("PassTouch", sop.PassTouch.ToString ());
+            writer.WriteElementString ("PassCollisions", sop.PassCollisions.ToString ());
             writer.WriteElementString("ScriptAccessPin", sop.ScriptAccessPin.ToString());
 
             WriteVector(writer, "GroupPosition", sop.GroupPosition);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/
+ * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -89,8 +89,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         }
 */
 
-        public override PhysicsObject AddPrimShape(string primName, PrimitiveBaseShape pbs, Vector3 position,
-                                                  Vector3 size, Quaternion rotation, bool isPhysical, float Density)
+        public override PhysicsObject AddPrimShape(ISceneChildEntity entity)
         {
             return null;
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/
+ * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1437,6 +1437,11 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     ISceneChildEntity part = m_parentScene.GetSceneObjectPart (LocalID);
                     part.Material = Convert.ToByte(material);
+                    //Update the client here as well... we changed restitution and friction in the physics engine probably
+                    OpenSim.Services.Interfaces.IEventQueueService eqs = m_parentScene.RequestModuleInterface<OpenSim.Services.Interfaces.IEventQueueService> ();
+                    if (eqs != null)
+                        eqs.ObjectPhysicsProperties (new ISceneChildEntity[1] { part }, remoteClient.AgentId, m_parentScene.RegionInfo.RegionHandle);
+
                     ((ISceneEntity)group).ScheduleGroupUpdate (PrimUpdateFlags.ClickAction);
                 }
             }

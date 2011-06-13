@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/
+ * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,7 +63,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override int PhysicsActorType
         {
             get { return (int) ActorTypes.Agent; }
-            set { return; }
         }
 
         public override Vector3 RotationalVelocity
@@ -119,18 +118,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             set { iscolliding = value; }
         }
 
-        public override bool CollidingGround
-        {
-            get { return false; }
-            set { return; }
-        }
-
-        public override bool CollidingObj
-        {
-            get { return false; }
-            set { return; }
-        }
-
         public override Vector3 Position
         {
             get { return _position; }
@@ -149,7 +136,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override float Mass
         {
             get { return 0f; }
-            set { }
         }
 
         public override Vector3 Force
@@ -226,7 +212,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override int PhysicsActorType
         {
             get { return (int)ActorTypes.Agent; }
-            set { return; }
         }
 
         public override Vector3 RotationalVelocity
@@ -282,18 +267,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             set { iscolliding = value; }
         }
 
-        public override bool CollidingGround
-        {
-            get { return false; }
-            set { return; }
-        }
-
-        public override bool CollidingObj
-        {
-            get { return false; }
-            set { return; }
-        }
-
         public override Vector3 Position
         {
             get { return _position; }
@@ -313,7 +286,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override float Mass
         {
             get { return 0f; }
-            set { }
         }
 
         public override Vector3 Force
@@ -366,64 +338,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override void CrossingFailure()
         {
-        }
-
-        public override Vector3 PIDTarget
-        {
-            get { return Vector3.Zero; }
-            set { return; }
-        }
-
-        public override bool PIDActive
-        {
-            get { return false; }
-            set { return; }
-        }
-
-        public override float PIDTau
-        {
-            get { return 0; }
-            set { return; }
-        }
-
-        public override float PIDHoverHeight
-        {
-            set { return; }
-        }
-
-        public override bool PIDHoverActive
-        {
-            set { return; }
-        }
-
-        public override PIDHoverType PIDHoverType
-        {
-            set { return; }
-        }
-
-        public override float PIDHoverTau
-        {
-            set { return; }
-        }
-
-        public override Quaternion APIDTarget
-        {
-            set { return; }
-        }
-
-        public override bool APIDActive
-        {
-            set { return; }
-        }
-
-        public override float APIDStrength
-        {
-            set { return; }
-        }
-
-        public override float APIDDamping
-        {
-            set { return; }
         }
 
         public override void SubscribeEvents(int ms)

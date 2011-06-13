@@ -64,22 +64,14 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         private Vector3 m_taintAngularLock = Vector3.One;
         // private btGeneric6DofConstraint Amotor;
 
-        private Vector3 m_PIDTarget;
-        private float m_PIDTau;
-        private float m_PIDHoverHeight;
-        private float m_PIDHoverTau;
-        private bool m_useHoverPID;
-        private PIDHoverType m_PIDHoverType = PIDHoverType.Ground;
-        private float m_targetHoverHeight;
-        private float m_groundHeight;
-        private float m_waterHeight;
+        //private float m_targetHoverHeight;
+        //private float m_groundHeight;
+        //private float m_waterHeight;
         private float PID_D = 35f;
         private float PID_G = 25f;
         // private float m_tensor = 5f;
         // private int body_autodisable_frames = 20;
         private IMesh primMesh;
-
-        private bool m_usePID;
 
         private const CollisionCategories m_default_collisionFlags = (CollisionCategories.Geom
                                                         | CollisionCategories.Space
@@ -360,7 +352,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         public override float Mass
         {
             get { return CalculateMass(); }
-            set { }
         }
 
         public override Vector3 Force
@@ -463,7 +454,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         public override int PhysicsActorType
         {
             get { return (int)ActorTypes.Prim; }
-            set { return; }
         }
 
         public override bool IsPhysical
@@ -495,18 +485,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         {
             get { return iscolliding; }
             set { iscolliding = value; }
-        }
-
-        public override bool CollidingGround
-        {
-            get { return false; }
-            set { return; }
-        }
-
-        public override bool CollidingObj
-        {
-            get { return false; }
-            set { return; }
         }
 
         public override bool FloatOnWater
@@ -552,20 +530,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 	    	    m_isVolumeDetect = value;
 	        }
         }
-
-        public override Vector3 PIDTarget { get { return m_PIDTarget; } set { m_PIDTarget = value; } }
-        public override bool PIDActive { get { return m_usePID; } set { m_usePID = value; } }
-        public override float PIDTau { get { return m_PIDTau; } set { m_PIDTau = value; } }
-
-        public override float PIDHoverHeight { set { m_PIDHoverHeight = value; ; } }
-        public override bool PIDHoverActive { set { m_useHoverPID = value; } }
-        public override PIDHoverType PIDHoverType { set { m_PIDHoverType = value; } }
-        public override float PIDHoverTau { set { m_PIDHoverTau = value; } }
-
-        public override Quaternion APIDTarget { set { return; } }
-        public override bool APIDActive { set { return; } }
-        public override float APIDStrength { set { return; } }
-        public override float APIDDamping { set { return; } }
 
         public override void AddForce(Vector3 force, bool pushforce)
         {
@@ -907,7 +871,8 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                     if (IsPhysical)
                         meshlod = _parent_scene.MeshSculptphysicalLOD;
 
-                    IMesh mesh = _parent_scene.mesher.CreateMesh(SOPName, _pbs, _size, meshlod, IsPhysical);
+                    string ImplementMe = "Blank";
+                    IMesh mesh = _parent_scene.mesher.CreateMesh(ImplementMe, _pbs, _size, meshlod, IsPhysical);
                     // createmesh returns null when it doesn't mesh.
                     CreateGeom(IntPtr.Zero, mesh);
                 }
@@ -1062,7 +1027,8 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             if (IsPhysical)
                 meshlod = _parent_scene.MeshSculptphysicalLOD;
 
-            IMesh mesh = _parent_scene.mesher.CreateMesh(SOPName, _pbs, _size, meshlod, IsPhysical);
+            string ImplementMe = "Blank";
+            IMesh mesh = _parent_scene.mesher.CreateMesh (ImplementMe, _pbs, _size, meshlod, IsPhysical);
             _mesh = mesh; 
             if (!positionOffset.ApproxEquals(Vector3.Zero, 0.001f) || orientation != Quaternion.Identity)
             {
@@ -1478,7 +1444,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                         }
                     }
 
-                    if (m_usePID)
+                    /*if (m_usePID)
                     {
                         PID_D = 61f;
                         PID_G = 65f;
@@ -1525,7 +1491,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                             d.BodySetLinearVel(Body, 0, 0, 0);
                             d.BodyAddForce(Body, 0, 0, fz);
                             return;
-                            */
+                            
                         }
                         else
                         {
@@ -1604,7 +1570,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                             d.BodySetPosition(Body, pos.X, pos.Y, m_targetHoverHeight);
                             d.BodySetLinearVel(Body, vel.X, vel.Y, 0);
                             d.BodyAddForce(Body, 0, 0, fz);
-                            */
+                            
                             if (Body != null && Body.Handle != IntPtr.Zero)
                             {
                                 Body.setLinearVelocity(_parent_scene.VectorZero);
@@ -1619,7 +1585,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                             // We're flying and colliding with something
                             fz = fz + ((_target_velocity.Z - vel.Z) * (PID_D) * m_mass);
                         }
-                    }
+                    }*/
 
                     fx *= m_mass;
                     fy *= m_mass;

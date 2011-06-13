@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/
+ * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1539,27 +1539,13 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 bool usePhysics = (RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics;
                 //Now readd the physics actor to the physics scene
-                part.PhysActor
-                    = m_scene.PhysicsScene.AddPrimShape (
-                        string.Format ("{0}/{1}", part.Name, part.UUID),
-                        pbs,
-                        part.AbsolutePosition,
-                        part.Scale,
-                        part.RotationOffset,
-                        usePhysics,
-                        part.Density);
+                part.PhysActor = m_scene.PhysicsScene.AddPrimShape (part);
 
                 //Fix the localID!
                 part.PhysActor.LocalID = part.LocalId;
                 part.PhysActor.UUID = part.UUID;
                 //Set physical and etc up correctly
                 part.DoPhysicsPropertyUpdate (usePhysics, true);
-                if (oldActor != null)
-                {
-                    part.PhysActor.PIDTarget = oldActor.PIDTarget;
-                    part.PhysActor.PIDTau = oldActor.PIDTau;
-                    part.PhysActor.PIDActive = oldActor.PIDActive;
-                }
 
                 part.PhysActor.VolumeDetect = part.VolumeDetectActive;
 
@@ -1731,19 +1717,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
         }
-        
-        public void stopLookAt()
-        {
-            SceneObjectPart rootpart = m_rootPart;
-            if (rootpart != null)
-            {
-                if (rootpart.PhysActor != null)
-                {
-                    rootpart.PhysActor.APIDActive = false;
-                }
-            }
-        
-        }
 
         /// <summary>
         /// Uses a PID to attempt to clamp the object on the Z axis at the given height over tau seconds.
@@ -1760,14 +1733,14 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (height != 0f)
                     {
-                        rootpart.PhysActor.PIDHoverHeight = height;
-                        rootpart.PhysActor.PIDHoverType = hoverType;
-                        rootpart.PhysActor.PIDTau = tau;
-                        rootpart.PhysActor.PIDHoverActive = true;
+                        rootpart.PIDHoverHeight = height;
+                        rootpart.PIDHoverType = hoverType;
+                        rootpart.PIDTau = tau;
+                        rootpart.PIDHoverActive = true;
                     }
                     else
                     {
-                        rootpart.PhysActor.PIDHoverActive = false;
+                        rootpart.PIDHoverActive = false;
                     }
                 }
             }

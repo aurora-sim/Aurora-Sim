@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/
+ * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -265,12 +265,17 @@ namespace OpenSim.Region.Framework.Scenes.Components
         public OSD GetComponentState (ISceneChildEntity obj, string Name)
         {
             //Check whether a Component exists for this name
-            if (m_components.ContainsKey(Name))
+            if (m_components.ContainsKey (Name))
             {
                 //Return the State of the object
-                return m_components[Name].GetState(obj.UUID);
+                return m_components[Name].GetState (obj.UUID);
             }
-            return null;
+            else
+            {
+                DefaultComponents com = new DefaultComponents (Name, 0);
+                RegisterComponent (com);
+                return m_components[Name].GetState (obj.UUID);
+            }
         }
 
         /// <summary>
@@ -289,6 +294,12 @@ namespace OpenSim.Region.Framework.Scenes.Components
                 //Set the State
                 m_components[Name].SetState(obj.UUID, State);
             }
+            else
+            {
+                DefaultComponents com = new DefaultComponents (Name, 0);
+                RegisterComponent (com);
+                m_components[Name].SetState (obj.UUID, State);
+            }
         }
 
         public void RemoveComponentState (UUID obj, string name)
@@ -299,6 +310,12 @@ namespace OpenSim.Region.Framework.Scenes.Components
             if (m_components.ContainsKey (Name))
             {
                 //Set the State
+                m_components[Name].RemoveState (obj);
+            }
+            else
+            {
+                DefaultComponents com = new DefaultComponents (Name, 0);
+                RegisterComponent (com);
                 m_components[Name].RemoveState (obj);
             }
         }
