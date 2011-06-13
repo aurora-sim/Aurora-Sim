@@ -2129,11 +2129,7 @@ namespace OpenSim.Region.Framework.Scenes
             //Force the prim to backup now that it has been added
             entity.ForcePersistence();
             //Tell the entity that they are being added to a scene
-            IOpenRegionSettingsModule WSModule = m_parentScene.RequestModuleInterface<IOpenRegionSettingsModule>();
-            if (WSModule != null)
-                entity.ApplyPhysics(WSModule.AllowPhysicalPrims);
-            else
-                entity.ApplyPhysics(true);
+            entity.RebuildPhysicalRepresentation ();
             //Now save the entity that we have 
             AddEntity(entity, false);
         }

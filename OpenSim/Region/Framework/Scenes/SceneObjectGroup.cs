@@ -813,10 +813,7 @@ namespace OpenSim.Region.Framework.Scenes
             //Trigger our event
             Scene.EventManager.TriggerObjectBeingAddedToScene(this);
 
-            if (WSModule != null) 
-                ApplyPhysics(WSModule.AllowPhysicalPrims);
-            else
-                ApplyPhysics(true);
+            RebuildPhysicalRepresentation ();
 
             m_ValidgrpOOB = false;
         }
@@ -1262,11 +1259,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_rootPart.SetParentLocalId(0);
             SetAttachmentPoint((byte)0);
-            IOpenRegionSettingsModule WSModule = Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
-            if(WSModule != null)
-                m_rootPart.ApplyPhysics(m_rootPart.GetEffectiveObjectFlags(), m_rootPart.VolumeDetectActive, WSModule.AllowPhysicalPrims);
-            else
-                m_rootPart.ApplyPhysics(m_rootPart.GetEffectiveObjectFlags(), m_rootPart.VolumeDetectActive, true);
+            RebuildPhysicalRepresentation ();
             HasGroupChanged = true;
             m_ValidgrpOOB = false;
             RootPart.Rezzed = DateTime.UtcNow;
@@ -1405,27 +1398,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_rootPart.ScheduleUpdate(PrimUpdateFlags.Text);
         }
 
-        /// <summary>
-        /// Apply physics to this group
-        /// </summary>
-        /// <param name="m_physicalPrim"></param>
-        public void ApplyPhysics(bool m_physicalPrim)
-        {
-            m_rootPart.ApplyPhysics(m_rootPart.GetEffectiveObjectFlags(), m_rootPart.VolumeDetectActive, m_physicalPrim);
-
-            List<SceneObjectPart> m_parts = new List<SceneObjectPart>(m_partsList);
-            foreach (SceneObjectPart part in m_parts)
-            {
-                if (part.LocalId != m_rootPart.LocalId)
-                {
-                    part.ApplyPhysics(m_rootPart.GetEffectiveObjectFlags(), part.VolumeDetectActive, m_physicalPrim);
-                }
-            }
-
-            // Hack to get the physics scene geometries in the right spot
-            ResetChildPrimPhysicsPositions();
-        }
-
         public void SetOwnerId(UUID userId)
         {
             ForEachPart(delegate(SceneObjectPart part) { part.OwnerID = userId; });
@@ -1538,6 +1510,11 @@ namespace OpenSim.Region.Framework.Scenes
                     continue; //Don't rebuild!
                 }
                 bool usePhysics = (RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics;
+
+                IOpenRegionSettingsModule WSModule = Scene.RequestModuleInterface<IOpenRegionSettingsModule> ();
+                if (WSModule != null)
+                    if (!WSModule.AllowPhysicalPrims)
+                        usePhysics = false;
                 //Now readd the physics actor to the physics scene
                 part.PhysActor = m_scene.PhysicsScene.AddPrimShape (part);
 
@@ -1552,7 +1529,13 @@ namespace OpenSim.Region.Framework.Scenes
                 //Force deselection here so that it isn't stuck forever
                 part.PhysActor.Selected = false;
 
+                part.PhysActor.OnCollisionUpdate += part.PhysicsCollision;
+                part.PhysActor.SubscribeEvents (1000);
+                if (part.IsRoot)
+                    CheckSculptAndLoad ();
+
                 part.ScriptSetPhysicsStatus (usePhysics);
+                part.FireOnAddedPhysics ();
             }
         }
 
@@ -2404,12 +2387,18 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
 
-                ((SceneObjectPart)selectionPart).UpdatePrimFlags (UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, blocks);
+                bool needsPhysicalRebuild = ((SceneObjectPart)selectionPart).UpdatePrimFlags (UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, blocks);
                 foreach (SceneObjectPart part in m_partsList)
                 {
-                    if(selectionPart != part)
-                        part.UpdatePrimFlags (UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, null);
+                    if (selectionPart != part)
+                        if (needsPhysicalRebuild)
+                            part.UpdatePrimFlags (UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, null);
+                        else
+                            needsPhysicalRebuild = part.UpdatePrimFlags (UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, null);
+                            
                 }
+                if (needsPhysicalRebuild)
+                    RebuildPhysicalRepresentation ();
             }
         }
 

@@ -282,8 +282,7 @@ namespace OpenSim.Framework
 
         void ForcePersistence ();
 
-        void ApplyPhysics (bool allowPhysicalPrims);
-
+        void RebuildPhysicalRepresentation ();
 
         void ScheduleGroupTerseUpdate ();
 

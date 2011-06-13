@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/
+ * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1070,7 +1070,25 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID)
         {
-            return new List<GroupInviteInfo>();
+            Hashtable param = new Hashtable ();
+            param["AgentID"] = requestingAgentID.ToString ();
+            Hashtable respData = XmlRpcCall (requestingAgentID, "groups.getGroupInvites", param);
+            if (!respData.Contains ("error"))
+            {
+                List<GroupInviteInfo> GroupInvites = new List<GroupInviteInfo> ();
+                Hashtable results = (Hashtable)respData["results"];
+                foreach (Hashtable invite in results.Values)
+                {
+                    GroupInviteInfo data = new GroupInviteInfo ();
+                    data.AgentID = new UUID ((string)invite["AgentID"]);
+                    data.GroupID = new UUID ((string)invite["GroupID"]);
+                    data.InviteID = new UUID ((string)invite["InviteID"]);
+                    data.RoleID = new UUID ((string)invite["RoleID"]);
+                    GroupInvites.Add (data);
+                }
+                return GroupInvites;
+            }
+            return new List<GroupInviteInfo> ();
         }
 
         public void AddGroupProposal(UUID agentID, GroupProposalInfo info)
