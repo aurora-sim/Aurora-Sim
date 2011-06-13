@@ -1488,81 +1488,85 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void RebuildPhysicalRepresentation (bool keepSelectedStatuses)
         {
-            foreach (SceneObjectPart part in m_partsList)
+            //This is a heavy operation... it is really bad to lock this, but if we don't, we could have multiple threads in here... which would be baaad
+            lock (m_partsLock)
             {
-                PhysicsObject oldActor = part.PhysActor;
-                PrimitiveBaseShape pbs = part.Shape;
-                //Reset any old data that we have
-                part.Velocity = Vector3.Zero;
-                part.Acceleration = Vector3.Zero;
-                part.AngularVelocity = Vector3.Zero;
-                if (part.PhysActor != null)
+                foreach (SceneObjectPart part in m_partsList)
                 {
-                    part.PhysActor.RotationalVelocity = Vector3.Zero;
-                    part.PhysActor.UnSubscribeEvents ();
-                    part.PhysActor.OnCollisionUpdate -= part.PhysicsCollision;
-                    part.PhysActor.OnRequestTerseUpdate -= part.PhysicsRequestingTerseUpdate;
-                    part.PhysActor.OnSignificantMovement -= part.ParentGroup.CheckForSignificantMovement;
-                    part.PhysActor.OnOutOfBounds -= part.PhysicsOutOfBounds;
+                    PhysicsObject oldActor = part.PhysActor;
+                    PrimitiveBaseShape pbs = part.Shape;
+                    //Reset any old data that we have
+                    part.Velocity = Vector3.Zero;
+                    part.Acceleration = Vector3.Zero;
+                    part.AngularVelocity = Vector3.Zero;
+                    if (part.PhysActor != null)
+                    {
+                        part.PhysActor.RotationalVelocity = Vector3.Zero;
+                        part.PhysActor.UnSubscribeEvents ();
+                        part.PhysActor.OnCollisionUpdate -= part.PhysicsCollision;
+                        part.PhysActor.OnRequestTerseUpdate -= part.PhysicsRequestingTerseUpdate;
+                        part.PhysActor.OnSignificantMovement -= part.ParentGroup.CheckForSignificantMovement;
+                        part.PhysActor.OnOutOfBounds -= part.PhysicsOutOfBounds;
 
-                    //part.PhysActor.delink ();
-                    //Remove the old one so that we don't have more than we should,
-                    //  as when we copy, it readds it to the PhysicsScene somehow
-                    if(part.IsRoot)//The root removes all children
-                        m_scene.PhysicsScene.RemovePrim (part.PhysActor);
+                        //part.PhysActor.delink ();
+                        //Remove the old one so that we don't have more than we should,
+                        //  as when we copy, it readds it to the PhysicsScene somehow
+                        if (part.IsRoot)//The root removes all children
+                            m_scene.PhysicsScene.RemovePrim (part.PhysActor);
 
-                    part.FireOnRemovedPhysics ();
+                        part.FireOnRemovedPhysics ();
+                    }
+                    part.AngularVelocity = Vector3.Zero;
+
+                    if (RootPart.PhysicsType == (byte)PhysicsShapeType.None)
+                    {
+                        part.PhysActor = null;
+                        continue; //Don't rebuild! All phantom if the root is phantom
+                    }
+                    if (part.PhysicsType == (byte)PhysicsShapeType.None)
+                    {
+                        part.PhysActor = null;
+                        continue; //Don't rebuild!
+                    }
+                    bool usePhysics = (RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics;
+
+                    IOpenRegionSettingsModule WSModule = Scene.RequestModuleInterface<IOpenRegionSettingsModule> ();
+                    if (WSModule != null)
+                        if (!WSModule.AllowPhysicalPrims)
+                            usePhysics = false;
+                    //Now readd the physics actor to the physics scene
+                    part.PhysActor = m_scene.PhysicsScene.AddPrimShape (part);
+
+                    //Fix the localID!
+                    part.PhysActor.LocalID = part.LocalId;
+                    part.PhysActor.UUID = part.UUID;
+                    part.PhysActor.VolumeDetect = part.VolumeDetectActive;
+
+                    part.PhysActor.IsPhysical = usePhysics;
+
+                    //Force deselection here so that it isn't stuck forever
+                    if (!keepSelectedStatuses)
+                        part.PhysActor.Selected = false;
+                    else
+                        part.PhysActor.Selected = IsSelected;
+
+                    //Add collision updates
+                    part.PhysActor.OnCollisionUpdate += part.PhysicsCollision;
+                    part.PhysActor.OnRequestTerseUpdate += part.PhysicsRequestingTerseUpdate;
+                    part.PhysActor.OnSignificantMovement += part.ParentGroup.CheckForSignificantMovement;
+                    part.PhysActor.OnOutOfBounds += part.PhysicsOutOfBounds;
+                    part.PhysActor.SubscribeEvents (1000);
+
+                    if (part.IsRoot) //Check for meshes and stuff
+                        CheckSculptAndLoad ();
+                    else //Link the prim then
+                        part.PhysActor.link (RootPart.PhysActor);
+                    Scene.PhysicsScene.AddPhysicsActorTaint (part.PhysActor);
+
+                    part.FireOnAddedPhysics ();
                 }
-                part.AngularVelocity = Vector3.Zero;
-
-                if (RootPart.PhysicsType == (byte)PhysicsShapeType.None)
-                {
-                    part.PhysActor = null;
-                    continue; //Don't rebuild! All phantom if the root is phantom
-                }
-                if (part.PhysicsType == (byte)PhysicsShapeType.None)
-                {
-                    part.PhysActor = null;
-                    continue; //Don't rebuild!
-                }
-                bool usePhysics = (RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics;
-
-                IOpenRegionSettingsModule WSModule = Scene.RequestModuleInterface<IOpenRegionSettingsModule> ();
-                if (WSModule != null)
-                    if (!WSModule.AllowPhysicalPrims)
-                        usePhysics = false;
-                //Now readd the physics actor to the physics scene
-                part.PhysActor = m_scene.PhysicsScene.AddPrimShape (part);
-
-                //Fix the localID!
-                part.PhysActor.LocalID = part.LocalId;
-                part.PhysActor.UUID = part.UUID;
-                part.PhysActor.VolumeDetect = part.VolumeDetectActive;
-
-                part.PhysActor.IsPhysical = usePhysics;
-
-                //Force deselection here so that it isn't stuck forever
-                if (!keepSelectedStatuses)
-                    part.PhysActor.Selected = false;
-                else
-                    part.PhysActor.Selected = IsSelected;
-
-                //Add collision updates
-                part.PhysActor.OnCollisionUpdate += part.PhysicsCollision;
-                part.PhysActor.OnRequestTerseUpdate += part.PhysicsRequestingTerseUpdate;
-                part.PhysActor.OnSignificantMovement += part.ParentGroup.CheckForSignificantMovement;
-                part.PhysActor.OnOutOfBounds += part.PhysicsOutOfBounds;
-                part.PhysActor.SubscribeEvents (1000);
-
-                if (part.IsRoot) //Check for meshes and stuff
-                    CheckSculptAndLoad ();
-                else //Link the prim then
-                    part.PhysActor.link (RootPart.PhysActor);
-                Scene.PhysicsScene.AddPhysicsActorTaint (part.PhysActor);
-
-                part.FireOnAddedPhysics ();
+                Scene.AuroraEventManager.FireGenericEventHandler ("ObjectChangedPhysicalStatus", this);
             }
-            Scene.AuroraEventManager.FireGenericEventHandler ("ObjectChangedPhysicalStatus", this);
         }
 
         #endregion

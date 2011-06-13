@@ -1903,47 +1903,62 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        private float m_friction = 0;
         public float Friction
         {
             get
             {
+                if (m_friction != 0)
+                    return m_friction;
                 OSD d = GetComponentState ("Friction");
                 if (d == null || d.Type == OSDType.Unknown)
                     d = 0.6f;
-                return (float)d.AsReal ();
+                m_friction = (float)d.AsReal ();
+                return m_friction;
             }
             set
             {
+                m_friction = value;
                 SetComponentState ("Friction", value);
             }
         }
 
+        private float m_restitution = 0;
         public float Restitution
         {
             get
             {
+                if (m_restitution != 0)
+                    return m_restitution;
                 OSD d = GetComponentState ("Restitution");
                 if (d == null || d.Type == OSDType.Unknown)
                     d = 0.5f;
-                return (float)d.AsReal ();
+                m_restitution = (float)d.AsReal ();
+                return m_restitution;
             }
             set
             {
+                m_restitution = value;
                 SetComponentState ("Restitution", value);
             }
         }
 
+        private float m_gravityMultiplier = 0;
         public float GravityMultiplier
         {
             get
             {
+                if (m_gravityMultiplier != 0)
+                    return m_gravityMultiplier;
                 OSD d = GetComponentState ("GravityMultiplier");
                 if (d == null || d.Type == OSDType.Unknown)
                     d = 1;
-                return (float)d.AsReal ();
+                m_gravityMultiplier = (float)d.AsReal ();
+                return m_gravityMultiplier;
             }
             set
             {
+                m_gravityMultiplier = value;
                 SetComponentState ("GravityMultiplier", value);
             }
         }
