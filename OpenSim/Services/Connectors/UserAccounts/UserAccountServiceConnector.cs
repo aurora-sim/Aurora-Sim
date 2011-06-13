@@ -163,7 +163,7 @@ namespace OpenSim.Services.Connectors
                             {
                                 UserAccount pinfo = new UserAccount((Dictionary<string, object>)acc);
                                 m_cache.Cache(pinfo.PrincipalID, pinfo);
-                                pinfo.GenericData["GridURL"] = m_ServerURI.Remove(m_ServerURI.LastIndexOf('/')-1);
+                                pinfo.GenericData["GridURL"] = m_ServerURI.Remove(m_ServerURI.LastIndexOf('/'));
                                 accounts.Add(pinfo);
                             }
                             else
@@ -238,7 +238,7 @@ namespace OpenSim.Services.Connectors
                         if (replyData["result"] is Dictionary<string, object>)
                         {
                             account = new UserAccount ((Dictionary<string, object>)replyData["result"]);
-                            account.GenericData["GridURL"] = m_ServerURI.Remove (m_ServerURI.LastIndexOf ('/') - 1);
+                            account.GenericData["GridURL"] = m_ServerURI.Remove (m_ServerURI.LastIndexOf ('/'));
                             return account;
                         }
                     }
