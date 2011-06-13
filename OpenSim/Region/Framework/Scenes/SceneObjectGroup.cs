@@ -1511,7 +1511,7 @@ namespace OpenSim.Region.Framework.Scenes
                         //part.PhysActor.delink ();
                         //Remove the old one so that we don't have more than we should,
                         //  as when we copy, it readds it to the PhysicsScene somehow
-                        if (part.IsRoot)//The root removes all children
+                        //if (part.IsRoot)//The root removes all children
                             m_scene.PhysicsScene.RemovePrim (part.PhysActor);
 
                         part.FireOnRemovedPhysics ();
