@@ -34,13 +34,30 @@ namespace Aurora.BotManager
 {
     public interface IBotManager
     {
+        #region Create/Remove bot
+
         UUID CreateAvatar (string FirstName, string LastName, IScene scene, UUID cloneAppearanceFrom, UUID creatorID, Vector3 startPos);
+        void RemoveAvatar (UUID Bot, IScene iScene);
+
+        #endregion
+
+        #region Tag/Remove bots
+
+        void AddTagToBot (UUID Bot, string tag);
+        List<UUID> GetBotsWithTag (string tag);
+        void RemoveBots (string tag);
+
+        #endregion
+
+        #region Basic Movement
+
         void SetBotMap(UUID Bot, List<Vector3> Positions, List<TravelMode> mode, int flags);
         void SetMovementSpeedMod (UUID Bot, float modifier);
         void SetBotShouldFly (UUID botID, bool shouldFly);
         void PauseMovement (UUID botID);
         void ResumeMovement (UUID botID);
-        void RemoveAvatar (UUID Bot, IScene iScene);
+
+        #endregion
 
         #region Path following
 

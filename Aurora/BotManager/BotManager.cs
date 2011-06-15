@@ -46,7 +46,6 @@ namespace Aurora.BotManager
 
         private static readonly log4net.ILog m_log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         
-        private Scene m_scene;
         private Dictionary<UUID, Bot> m_bots = new Dictionary<UUID, Bot> ();
 
         public void Initialise(IConfigSource source)
@@ -65,7 +64,6 @@ namespace Aurora.BotManager
 
         public void RegionLoaded(Scene scene)
         {
-            m_scene = scene;
         }
 
         public void PostInitialise()
@@ -74,7 +72,6 @@ namespace Aurora.BotManager
 
         public void Close()
         {
-            m_scene = null;
             m_bots.Clear();
         }
 
@@ -98,16 +95,16 @@ namespace Aurora.BotManager
         /// <param name="target"></param>
         /// <param name="scene"></param>
         /// <returns></returns>
-        private AvatarAppearance GetAppearance(UUID target)
+        private AvatarAppearance GetAppearance(UUID target, IScene scene)
         {
-            IScenePresence sp = m_scene.GetScenePresence (target);
+            IScenePresence sp = scene.GetScenePresence (target);
             if (sp != null)
             {
                 IAvatarAppearanceModule aa = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
                 if (aa != null)
                     return aa.Appearance;
             }
-            return m_scene.AvatarService.GetAppearance (target);
+            return scene.AvatarService.GetAppearance (target);
         }
 
         /// <summary>
@@ -126,7 +123,7 @@ namespace Aurora.BotManager
             //Add the circuit data so they can login
             m_aCircuitData.circuitcode = (uint)Util.RandomClass.Next();
 
-            m_aCircuitData.Appearance = GetAppearance (cloneAppearanceFrom);//Sets up appearance
+            m_aCircuitData.Appearance = GetAppearance (cloneAppearanceFrom, s);//Sets up appearance
             if (m_aCircuitData.Appearance == null)
             {
                 m_aCircuitData.Appearance = new AvatarAppearance ();
@@ -242,6 +239,35 @@ namespace Aurora.BotManager
                 else
                     bot.EnableWalk ();
         }
+
+        #region Tag/Remove bots
+
+        private Dictionary<string, List<UUID>> m_botTags = new Dictionary<string, List<UUID>> ();
+        public void AddTagToBot (UUID Bot, string tag)
+        {
+            if (!m_botTags.ContainsKey (tag))
+                m_botTags.Add (tag, new List<UUID> ());
+            m_botTags[tag].Add (Bot);
+        }
+
+        public List<UUID> GetBotsWithTag (string tag)
+        {
+            if (!m_botTags.ContainsKey (tag))
+                return new List<UUID> ();
+            return m_botTags[tag];
+        }
+
+        public void RemoveBots (string tag)
+        {
+            List<UUID> bots = GetBotsWithTag(tag);
+            foreach(UUID bot in bots)
+            {
+                IScene s = m_bots[bot].Scene;
+                RemoveAvatar (bot, s);
+            }
+        }
+
+        #endregion
 
         #endregion
 

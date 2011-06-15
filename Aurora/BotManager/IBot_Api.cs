@@ -53,6 +53,10 @@ namespace Aurora.BotManager
         void botSendChatMessage (string bot, string message, int sayType, int channel);
         void botSetShouldFly (string keyOfBot, int ShouldFly);
         void botSitObject (string bot, string objectID, LSL_Vector offset);
+        void botStandUp (string bot);
         void botTouchObject (string bot, string objectID);
+        void botAddTag (string bot, string tag);
+        LSL_List botGetBotsWithTag (string tag);
+        void botRemoveBotsWithTag (string tag);
     }
 }
