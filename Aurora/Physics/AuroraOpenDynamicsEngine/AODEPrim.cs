@@ -1636,7 +1636,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     fy += m_force.Y;
                     fz += m_force.Z;
 
-                    m_force = Vector3.Zero;
+                    //This is for llSetForce and friends, we don't remove it... even if it seems weird
+                    //m_force = Vector3.Zero;
 
                     #region drag and forces accumulators
 
