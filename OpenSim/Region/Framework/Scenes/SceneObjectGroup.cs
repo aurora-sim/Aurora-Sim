@@ -1522,8 +1522,10 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (RootPart.PhysicsType == (byte)PhysicsShapeType.None ||
                         part.PhysicsType == (byte)PhysicsShapeType.None ||
-                        (part.Flags & PrimFlags.Phantom) == PrimFlags.Phantom ||
-                        (RootPart.Flags & PrimFlags.Phantom) == PrimFlags.Phantom)
+                        ((part.Flags & PrimFlags.Phantom) == PrimFlags.Phantom &&
+                        !part.VolumeDetectActive) ||
+                        ((RootPart.Flags & PrimFlags.Phantom) == PrimFlags.Phantom &&
+                        !RootPart.VolumeDetectActive))
                     {
                         part.PhysActor = null;
                         continue; //Don't rebuild! All phantom if the root is phantom
