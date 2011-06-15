@@ -41,6 +41,7 @@ namespace OpenSim.Services.Connectors
 
         private ExpiringCache<UUID, UserAccount> m_UUIDCache;
         private ExpiringCache<string, UUID> m_NameCache;
+        private const bool m_allowNullCaching = false;
 
         public UserAccountCache()
         {
@@ -50,6 +51,8 @@ namespace OpenSim.Services.Connectors
 
         public void Cache(UUID userID, UserAccount account)
         {
+            if (!m_allowNullCaching && account == null)
+                return;
             // Cache even null accounts
             m_UUIDCache.AddOrUpdate(userID, account, CACHE_EXPIRATION_SECONDS);
             if (account != null)
