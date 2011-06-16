@@ -4427,8 +4427,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_Integer llGetPermissions()
         {
-            
-
             lock (m_host.TaskInventory)
             {
                 foreach (TaskInventoryItem item in m_host.TaskInventory.Values)

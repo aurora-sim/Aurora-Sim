@@ -247,6 +247,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (ownerId != item.OwnerID)
                 {
                     item.LastOwnerID = item.OwnerID;
+                    item.OwnerChanged = true;
                     item.OwnerID = ownerId;
                     item.PermsMask = 0;
                     item.PermsGranter = UUID.Zero;
@@ -1142,10 +1143,10 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (engine != null)
                     {
+                        engine.ResumeScript (item.ItemID);
                         if (item.OwnerChanged)
                             engine.PostScriptEvent(item.ItemID, m_part.UUID, "changed", new Object[] { (int)Changed.OWNER });
                         item.OwnerChanged = false;
-                        engine.ResumeScript(item.ItemID);
                     }
                 }
             }
