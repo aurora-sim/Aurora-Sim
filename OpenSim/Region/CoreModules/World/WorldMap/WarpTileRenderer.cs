@@ -179,7 +179,12 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             RegionLightShareData rls = m_scene.RequestModuleInterface<Aurora.Framework.IWindLightSettingsModule> ().FindRegionWindLight ();
             
             AssetBase textureAsset = m_scene.AssetService.Get (rls.normalMapTexture.ToString ());
-            warp_Material waterColormaterial = new warp_Material (ConvertColor (WATER_COLOR));
+            warp_Material waterColormaterial;
+            if (rls != null)
+                waterColormaterial = new warp_Material (ConvertColor (new Color4 (rls.waterColor.X / 256, rls.waterColor.Y / 256, rls.waterColor.Z / 256, WATER_COLOR.A)));
+            else
+                waterColormaterial = new warp_Material (ConvertColor (WATER_COLOR));
+
             waterColormaterial.setTransparency ((byte)((1f - WATER_COLOR.A) * 255f) * 4);
             waterColormaterial.setReflectivity (0);
             renderer.Scene.addMaterial ("WaterColor", waterColormaterial);
