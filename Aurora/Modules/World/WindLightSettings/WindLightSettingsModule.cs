@@ -544,6 +544,15 @@ namespace Aurora.Modules
             return false;
         }
 
+        public RegionLightShareData FindRegionWindLight ()
+        {
+            foreach (RegionLightShareData parcelLSD in m_WindlightSettings.Values)
+            {
+                return parcelLSD;
+            }
+            return m_defaultWindLight;
+        }
+
         public RegionLightShareData FindRegionWindLight (IScenePresence presence)
         {
             foreach (RegionLightShareData parcelLSD in m_WindlightSettings.Values)

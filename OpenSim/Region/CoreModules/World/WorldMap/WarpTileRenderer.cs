@@ -45,6 +45,7 @@ using OpenMetaverse.StructuredData;
 using Rednettle.Warp3D;
 using OpenSim.Region.CoreModules.World.Warp3DMap;
 using WarpRenderer = global::Warp3D.Warp3D;
+using Aurora.Framework;
 
 namespace OpenSim.Region.CoreModules.World.WorldMap
 {
@@ -175,10 +176,31 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             renderer.AddPlane ("Water", 256f * 0.5f);
             renderer.Scene.sceneobject ("Water").setPos (127.5f, waterHeight, 127.5f);
 
-            renderer.AddMaterial ("WaterColor", ConvertColor (WATER_COLOR));
-            renderer.Scene.material ("WaterColor").setReflectivity (0); // match water color with standard map module thanks lkalif
-            renderer.Scene.material ("WaterColor").setTransparency ((byte)((1f - WATER_COLOR.A) * 255f));
+            RegionLightShareData rls = m_scene.RequestModuleInterface<Aurora.Framework.IWindLightSettingsModule> ().FindRegionWindLight ();
+            
+            AssetBase textureAsset = m_scene.AssetService.Get (rls.normalMapTexture.ToString ());
+            warp_Material waterColormaterial = new warp_Material (ConvertColor (WATER_COLOR));
+            waterColormaterial.setTransparency ((byte)((1f - WATER_COLOR.A) * 255f) * 4);
+            waterColormaterial.setReflectivity (0);
+            renderer.Scene.addMaterial ("WaterColor", waterColormaterial);
             renderer.SetObjectMaterial ("Water", "WaterColor");
+
+            if (textureAsset != null)
+            {
+                IJ2KDecoder decoder = m_scene.RequestModuleInterface<IJ2KDecoder> ();
+                Bitmap bitmap = (Bitmap)decoder.DecodeToImage (textureAsset.Data);
+
+                textureAsset = null;
+                warp_Texture texture = new warp_Texture (bitmap);
+                warp_Material waterTextmaterial = new warp_Material (texture);
+                waterTextmaterial.setTransparency ((byte)((1f - WATER_COLOR.A) * 255f) * 4);
+                waterTextmaterial.setReflectivity (0);
+                renderer.AddPlane ("Water2", 256f * 0.5f);
+                renderer.Scene.sceneobject ("Water2").setPos (127.5f, waterHeight-0.1f, 127.5f);
+                renderer.Scene.addMaterial ("WaterColor2", waterTextmaterial);
+                renderer.SetObjectMaterial ("Water2", "WaterColor2");
+            }
+
         }
 
         private warp_Object CreateTerrain (WarpRenderer renderer, bool textureTerrain)
@@ -393,7 +415,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     if (textureAsset != null)
                     {
                         int width, height;
-                        color = GetAverageColor (textureAsset.FullID, textureAsset.Data, out width, out height);
+                        color = GetAverageColor (textureAsset.FullID, textureAsset.Data, m_scene, out width, out height);
 
                         OSDMap data = new OSDMap { { "X-JPEG2000-RGBA", OSD.FromColor4 (color) } };
                         metadata = new AssetBase
@@ -464,79 +486,85 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             return c;
         }
 
-        public static Color4 GetAverageColor (UUID textureID, byte[] j2kData, out int width, out int height)
+        public static Color4 GetAverageColor (UUID textureID, byte[] j2kData, IScene scene, out int width, out int height)
         {
             ulong r = 0;
             ulong g = 0;
             ulong b = 0;
             ulong a = 0;
-
-            using (MemoryStream stream = new MemoryStream (j2kData))
+            Bitmap bitmap = null;
+            try
             {
-                try
+                IJ2KDecoder decoder = scene.RequestModuleInterface<IJ2KDecoder> ();
+
+                bitmap = (Bitmap)decoder.DecodeToImage (j2kData);
+                j2kData = null;
+                width = bitmap.Width;
+                height = bitmap.Height;
+
+                BitmapData bitmapData = bitmap.LockBits (new Rectangle (0, 0, width, height), ImageLockMode.ReadOnly, bitmap.PixelFormat);
+                int pixelBytes = (bitmap.PixelFormat == PixelFormat.Format24bppRgb) ? 3 : 4;
+
+                // Sum up the individual channels
+                unsafe
                 {
-                    Bitmap bitmap = (Bitmap)J2kImage.FromStream (stream);
-                    width = bitmap.Width;
-                    height = bitmap.Height;
-
-                    BitmapData bitmapData = bitmap.LockBits (new Rectangle (0, 0, width, height), ImageLockMode.ReadOnly, bitmap.PixelFormat);
-                    int pixelBytes = (bitmap.PixelFormat == PixelFormat.Format24bppRgb) ? 3 : 4;
-
-                    // Sum up the individual channels
-                    unsafe
+                    if (pixelBytes == 4)
                     {
-                        if (pixelBytes == 4)
+                        for (int y = 0; y < height; y++)
                         {
-                            for (int y = 0; y < height; y++)
-                            {
-                                byte* row = (byte*)bitmapData.Scan0 + (y * bitmapData.Stride);
+                            byte* row = (byte*)bitmapData.Scan0 + (y * bitmapData.Stride);
 
-                                for (int x = 0; x < width; x++)
-                                {
-                                    b += row[x * pixelBytes + 0];
-                                    g += row[x * pixelBytes + 1];
-                                    r += row[x * pixelBytes + 2];
-                                    a += row[x * pixelBytes + 3];
-                                }
-                            }
-                        }
-                        else
-                        {
-                            for (int y = 0; y < height; y++)
+                            for (int x = 0; x < width; x++)
                             {
-                                byte* row = (byte*)bitmapData.Scan0 + (y * bitmapData.Stride);
-
-                                for (int x = 0; x < width; x++)
-                                {
-                                    b += row[x * pixelBytes + 0];
-                                    g += row[x * pixelBytes + 1];
-                                    r += row[x * pixelBytes + 2];
-                                }
+                                b += row[x * pixelBytes + 0];
+                                g += row[x * pixelBytes + 1];
+                                r += row[x * pixelBytes + 2];
+                                a += row[x * pixelBytes + 3];
                             }
                         }
                     }
+                    else
+                    {
+                        for (int y = 0; y < height; y++)
+                        {
+                            byte* row = (byte*)bitmapData.Scan0 + (y * bitmapData.Stride);
 
-                    // Get the averages for each channel
-                    const decimal OO_255 = 1m / 255m;
-                    decimal totalPixels = (decimal)(width * height);
-
-                    decimal rm = ((decimal)r / totalPixels) * OO_255;
-                    decimal gm = ((decimal)g / totalPixels) * OO_255;
-                    decimal bm = ((decimal)b / totalPixels) * OO_255;
-                    decimal am = ((decimal)a / totalPixels) * OO_255;
-
-                    if (pixelBytes == 3)
-                        am = 1m;
-
-                    return new Color4 ((float)rm, (float)gm, (float)bm, (float)am);
+                            for (int x = 0; x < width; x++)
+                            {
+                                b += row[x * pixelBytes + 0];
+                                g += row[x * pixelBytes + 1];
+                                r += row[x * pixelBytes + 2];
+                            }
+                        }
+                    }
                 }
-                catch (Exception ex)
-                {
-                    m_log.WarnFormat ("[MAPTILE]: Error decoding JPEG2000 texture {0} ({1} bytes): {2}", textureID, j2kData.Length, ex.Message);
-                    width = 0;
-                    height = 0;
-                    return new Color4 (0.5f, 0.5f, 0.5f, 1.0f);
-                }
+
+                // Get the averages for each channel
+                const decimal OO_255 = 1m / 255m;
+                decimal totalPixels = (decimal)(width * height);
+
+                decimal rm = ((decimal)r / totalPixels) * OO_255;
+                decimal gm = ((decimal)g / totalPixels) * OO_255;
+                decimal bm = ((decimal)b / totalPixels) * OO_255;
+                decimal am = ((decimal)a / totalPixels) * OO_255;
+
+                if (pixelBytes == 3)
+                    am = 1m;
+
+                return new Color4 ((float)rm, (float)gm, (float)bm, (float)am);
+            }
+            catch (Exception ex)
+            {
+                m_log.WarnFormat ("[MAPTILE]: Error decoding JPEG2000 texture {0} ({1} bytes): {2}", textureID, j2kData.Length, ex.Message);
+                width = 0;
+                height = 0;
+                return new Color4 (0.5f, 0.5f, 0.5f, 1.0f);
+            }
+            finally
+            {
+                if (bitmap != null)
+                    bitmap.Dispose ();
+                bitmap = null;
             }
         }
 

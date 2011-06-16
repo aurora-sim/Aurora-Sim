@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using OpenMetaverse;
+using OpenSim.Framework;
 
 namespace Aurora.Framework
 {
@@ -37,7 +38,7 @@ namespace Aurora.Framework
     {
         void SendWindlightProfileTargeted(RegionLightShareData wl, UUID pUUID);
         void SaveWindLightSettings(float MinEffectiveAltitude, RegionLightShareData wl);
-        //RegionLightShareData WindLightSettings { get; }
+        RegionLightShareData FindRegionWindLight ();
         bool EnableWindLight { get; }
     }
 }
