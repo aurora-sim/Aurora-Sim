@@ -37,11 +37,17 @@ bin/ScriptEngines/*/*.state
 bin/*.maddin
 bin/*.exe
 bin/*.ini
+bin/*.log
+bin/*.abackup
 bin/j2kDecodeCache
 bin/Physics*
 bin/Terrain*
 bin/Regions/*
 bin/UserAssets
+bin/Backups
+bin/DefaultInventory
+bin/ObjectCache
+bin/assetcache
 bin/estate_settings.xml
 bin/config-include/CenomeCache.ini
 bin/config-include/FlotsamCache.ini
@@ -65,6 +71,8 @@ Prebuild/Prebuild.sln
 TestResult.xml
 TAGS
 *~
+*.bak
+*.vshost.*
 Makefile.local
 bin/.version
 compile.bat

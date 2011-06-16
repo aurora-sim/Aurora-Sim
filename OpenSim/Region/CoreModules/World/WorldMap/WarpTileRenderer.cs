@@ -314,7 +314,38 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 return;
 
             Primitive omvPrim = prim.Shape.ToOmvPrimitive (prim.OffsetPosition, prim.RotationOffset);
-            FacetedMesh renderMesh = m_primMesher.GenerateFacetedMesh (omvPrim, DetailLevel.Medium);
+            FacetedMesh renderMesh = null;
+
+            // Are we dealing with a sculptie or mesh?
+            if (omvPrim.Sculpt != null && omvPrim.Sculpt.SculptTexture != UUID.Zero)
+            {
+                // Try fetchinng the asset
+                AssetBase sculptAsset = m_scene.AssetService.Get(omvPrim.Sculpt.SculptTexture.ToString());
+                if (sculptAsset != null)
+                {
+                    // Is it a mesh?
+                    if (omvPrim.Sculpt.Type == SculptType.Mesh)
+                    {
+                        OpenMetaverse.Assets.AssetMesh meshAsset = new OpenMetaverse.Assets.AssetMesh(omvPrim.Sculpt.SculptTexture, sculptAsset.Data);
+                        FacetedMesh.TryDecodeFromAsset(omvPrim, meshAsset, DetailLevel.Highest, out renderMesh);
+                    }
+                    else  // It's sculptie
+                    {
+                        IJ2KDecoder imgDecoder = m_scene.RequestModuleInterface<IJ2KDecoder>();
+                        Image sculpt = imgDecoder.DecodeToImage(sculptAsset.Data);
+                        if (sculpt != null)
+                        {
+                            renderMesh = m_primMesher.GenerateFacetedSculptMesh(omvPrim, (Bitmap)sculpt, DetailLevel.Medium);
+                            sculpt.Dispose();
+                        }
+                    }
+                }
+            }
+            else // Prim
+            {
+                renderMesh = m_primMesher.GenerateFacetedMesh(omvPrim, DetailLevel.Medium);
+            }
+
             if (renderMesh == null)
                 return;
 
