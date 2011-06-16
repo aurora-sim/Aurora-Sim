@@ -280,7 +280,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 UserAccount account = m_Scenes[0].UserAccountService.GetUserAccount(client.Scene.RegionInfo.ScopeID, fromAgentID);
 
                 im.fromAgentID = fromAgentID;
-                im.fromAgentName = account.FirstName + " " + account.LastName;
+                im.fromAgentName = account.Name;
                 im.offline = 1;
                 im.imSessionID = im.fromAgentID;
 
@@ -372,10 +372,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
 
                 //Can't trust the incoming name for friend offers, so we have to find it ourselves.
                 UserAccount sender = m_Scenes[0].UserAccountService.GetUserAccount(UUID.Zero, principalID);
-                im.fromAgentName = sender.FirstName + " " + sender.LastName;
+                im.fromAgentName = sender.Name;
                 UserAccount reciever = m_Scenes[0].UserAccountService.GetUserAccount(UUID.Zero, friendID);
 
-                m_log.DebugFormat("[FRIENDS]: {0} offered friendship to {1}", sender.FirstName + " " + sender.LastName, reciever.FirstName + " " + reciever.LastName);
+                m_log.DebugFormat("[FRIENDS]: {0} offered friendship to {1}", sender.Name, reciever.Name);
                 // This user wants to be friends with the other user.
                 // Let's add the relation backwards, in case the other is not online
                 FriendsService.StoreFriend(friendID, principalID.ToString(), 0);
@@ -393,7 +393,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
 
             // Try the local sim
             UserAccount account = UserAccountService.GetUserAccount(m_Scenes[0].RegionInfo.ScopeID, agentID);
-            im.fromAgentName = (account == null) ? "Unknown" : account.FirstName + " " + account.LastName;
+            im.fromAgentName = (account == null) ? "Unknown" : account.Name;
             
             if (LocalFriendshipOffered(friendID, im))
                 return;
