@@ -1136,11 +1136,8 @@ namespace OpenSim.Services.LLLoginService
 
             ICommunicationService commsService = m_registry.RequestModuleInterface<ICommunicationService>();
             if (commsService != null)
-            {
-                OSDMap urls = commsService.GetUrlsForUser(region, aCircuit.AgentID);
-                if(urls != null)
-                    aCircuit.OtherInformation["UserUrls"] = urls;
-            }
+                commsService.GetUrlsForUser(region, aCircuit.AgentID);//Make sure that we make userURLs if we need to
+
             aCircuit.teleportFlags = (uint)TeleportFlags.ViaLogin;
             // As we are creating the agent, we must also initialize the CapsService for the agent
             bool success = simConnector.CreateAgent (region, ref aCircuit, aCircuit.teleportFlags, null, out reason);

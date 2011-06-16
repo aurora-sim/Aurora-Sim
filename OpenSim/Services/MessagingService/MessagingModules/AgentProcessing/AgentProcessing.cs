@@ -438,13 +438,9 @@ namespace OpenSim.Services.MessagingService
                     return result;
                 }
 
-                ICommunicationService commsService = m_registry.RequestModuleInterface<ICommunicationService>();
+                ICommunicationService commsService = m_registry.RequestModuleInterface<ICommunicationService> ();
                 if (commsService != null)
-                {
-                    OSDMap urls = commsService.GetUrlsForUser (neighbor, circuitData.AgentID);
-                    if (urls != null)
-                        circuitData.OtherInformation["UserUrls"] = urls;
-                }
+                    commsService.GetUrlsForUser (neighbor, circuitData.AgentID);//Make sure that we make userURLs if we need to
 
                 bool regionAccepted = SimulationService.CreateAgent(neighbor, ref circuitData,
                         TeleportFlags, agentData, out reason);

@@ -1002,13 +1002,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 sp = null;
             }
 
-            //Add possible Urls for the given agent
-            IConfigurationService configService = scene.RequestModuleInterface<IConfigurationService> ();
-            if (configService != null && agent.OtherInformation.ContainsKey ("UserUrls"))
-            {
-                configService.AddNewUser (agent.AgentID.ToString (), (OSDMap)agent.OtherInformation["UserUrls"]);
-            }
-
             OSDMap responseMap = new OSDMap ();
             responseMap["CapsUrls"] = scene.EventManager.TriggerOnRegisterCaps (agent.AgentID);
 
