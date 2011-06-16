@@ -3792,6 +3792,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                 if (((ISceneChildEntity)entity).ParentEntity.ChildrenEntities ().Count != 1)
                                     updateFlags |= PrimUpdateFlags.ParentID;
                         }
+
+                        if (updateFlags.HasFlag (PrimUpdateFlags.Text) && ((ISceneChildEntity)entity).ParentEntity.RootChild.Text == "")
+                            updateFlags &= ~PrimUpdateFlags.Text; //Remove the text flag if we don't have text!
+
                         if (updateFlags.HasFlag (PrimUpdateFlags.AngularVelocity))
                             Flags |= CompressedFlags.HasAngularVelocity;
                         if (updateFlags.HasFlag (PrimUpdateFlags.MediaURL))
