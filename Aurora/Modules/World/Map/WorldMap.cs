@@ -791,6 +791,8 @@ namespace Aurora.Modules
         /// <param name="fileName"></param>
         public void HandleUpdateWorldMapConsoleCommand(string[] cmdparams)
         {
+            if (m_scene != MainConsole.Instance.ConsoleScene)
+                return;
             CreateTerrainTexture();
         }
 

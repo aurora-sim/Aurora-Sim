@@ -73,7 +73,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             if (renderers.Count > 0)
             {
                 m_primMesher = RenderingLoader.LoadRenderer (renderers[0]);
-                m_log.Info ("[MAPTILE]: Loaded prim mesher " + m_primMesher.ToString ());
+                m_log.Debug ("[MAPTILE]: Loaded prim mesher " + m_primMesher.ToString ());
             }
             else
             {
