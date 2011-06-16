@@ -41,7 +41,7 @@ using log4net;
 using Nini.Config;
 using System.Reflection;
 using System.IO;
-using ComponentAce.Compression.Libs.zlib;
+using zlib;
 
 namespace OpenSim.Region.Physics.Meshing
 {

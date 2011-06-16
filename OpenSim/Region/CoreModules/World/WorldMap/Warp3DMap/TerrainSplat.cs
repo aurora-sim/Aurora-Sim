@@ -195,16 +195,19 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
 
             #region Layer Map
 
-            float[] layermap = new float[heightmap.Height * heightmap.Height];
+            int diff = (int)heightmap.Height / Constants.RegionSize;
+            float[] layermap = new float[Constants.RegionSize * Constants.RegionSize];
 
-            for (int y = 0; y < heightmap.Height; y++)
+            for (int y = 0; y < heightmap.Height; y += diff)
             {
-                for (int x = 0; x < heightmap.Height; x++)
+                for (int x = 0; x < heightmap.Height; x += diff)
                 {
-                    float height = heightmap[x, y];
+                    int newX = x / diff;
+                    int newY = y / diff;
+                    float height = heightmap[newX, newY];
 
-                    float pctX = (float)x / 255f;
-                    float pctY = (float)y / 255f;
+                    float pctX = (float)newX / 255f;
+                    float pctY = (float)newY / 255f;
 
                     // Use bilinear interpolation between the four corners of start height and
                     // height range to select the current values at this position
@@ -228,8 +231,8 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
                     // The magic values were taken from http://opensimulator.org/wiki/Terrain_Splatting
                     Vector3 vec = new Vector3
                     (
-                        ((float)regionPosition.X + x) * 0.20319f,
-                        ((float)regionPosition.Y + y) * 0.20319f,
+                        ((float)regionPosition.X + newX) * 0.20319f,
+                        ((float)regionPosition.Y + newY) * 0.20319f,
                         height * 0.25f
                     );
 
@@ -241,7 +244,7 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
                     float layer = ((height + noise - startHeight) / heightRange) * 4f;
                     if (Single.IsNaN (layer))
                         layer = 0f;
-                    layermap[y * heightmap.Height + x] = Utils.Clamp (layer, 0f, 3f);
+                    layermap[newY * Constants.RegionSize + newX] = Utils.Clamp (layer, 0f, 3f);
                 }
             }
 
@@ -271,11 +274,11 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
                     (datas[3].PixelFormat == PixelFormat.Format32bppArgb) ? 4 : 3
                 };
 
-                for (int y = 0; y < heightmap.Height; y++)
+                for (int y = 0; y < Constants.RegionSize; y++)
                 {
-                    for (int x = 0; x < heightmap.Height; x++)
+                    for (int x = 0; x < Constants.RegionSize; x++)
                     {
-                        float layer = layermap[y * heightmap.Height + x];
+                        float layer = layermap[y * Constants.RegionSize + x];
 
                         // Select two textures
                         int l0 = (int)Math.Floor (layer);
@@ -309,6 +312,7 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
                 }
             }
 
+            layermap = null;
             output.UnlockBits (outputData);
 
             // We generated the texture upside down, so flip it
