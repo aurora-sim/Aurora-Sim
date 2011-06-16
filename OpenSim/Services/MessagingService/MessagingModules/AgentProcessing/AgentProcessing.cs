@@ -485,7 +485,7 @@ namespace OpenSim.Services.MessagingService
                         requestingRegion);
 
                     if (!m_useCallbacks)
-                        Thread.Sleep (3000); //Give it a bit of time
+                        Thread.Sleep (3000); //Give it a bit of time, only for OpenSim...
 
                     m_log.Info("[AgentProcessing]: Completed inform client about neighbor " + neighbor.RegionName);
                 }
@@ -598,8 +598,10 @@ namespace OpenSim.Services.MessagingService
                         //Close the agent at the place we just created if it isn't a neighbor
                         if (IsOutsideView (regionCaps.RegionX, destination.RegionLocX, regionCaps.Region.RegionSizeX, destination.RegionSizeX,
                             regionCaps.RegionY, destination.RegionLocY, regionCaps.Region.RegionSizeY, destination.RegionSizeY))
+                        {
                             SimulationService.CloseAgent (destination, AgentID);
-                        clientCaps.RemoveCAPS (destination.RegionHandle);
+                            clientCaps.RemoveCAPS (destination.RegionHandle);
+                        }
                         if (!callWasCanceled)
                             reason = "The teleport timed out";
                         else
