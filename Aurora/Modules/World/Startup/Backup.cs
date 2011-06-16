@@ -752,7 +752,6 @@ namespace Aurora.Modules
                         parcelManagementModule.ResetSimLandObjects ();
                     m_parcels.Clear();
                 }
-                m_validUserUuids.Clear();
             }
 
             public void LoadModuleFromArchive(byte[] data, string filePath, TarArchiveReader.TarEntryType type, IScene scene)
@@ -845,30 +844,9 @@ namespace Aurora.Modules
                 }
             }
 
-            /// <summary>
-            /// Used to cache lookups for valid uuids.
-            /// </summary>
-            private IDictionary<UUID, bool> m_validUserUuids = new Dictionary<UUID, bool>();
-
-            private bool ResolveUserUuid(UUID uuid)
+            private bool ResolveUserUuid (UUID uuid)
             {
-                bool v;
-                if (!m_validUserUuids.TryGetValue(uuid, out v))
-                {
-                    UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, uuid);
-                    if (account != null)
-                    {
-                        m_validUserUuids.Add(uuid, true);
-                        return true;
-                    }
-                    else
-                    {
-                        m_validUserUuids.Add(uuid, false);
-                        return false;
-                    }
-                }
-
-                return v;
+                return m_scene.UserAccountService.GetUserAccount (m_scene.RegionInfo.ScopeID, uuid) != null;
             }
 
             #endregion

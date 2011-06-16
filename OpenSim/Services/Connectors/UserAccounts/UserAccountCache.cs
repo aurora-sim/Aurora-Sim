@@ -37,10 +37,11 @@ namespace OpenSim.Services.Connectors
 {
     public class UserAccountCache
     {
-        private const double CACHE_EXPIRATION_SECONDS = 120.0;
+        private const double CACHE_EXPIRATION_SECONDS = 6 * 60 * 1000; // 6 hour cache on useraccounts, since they should not change
 
         private ExpiringCache<UUID, UserAccount> m_UUIDCache;
         private ExpiringCache<string, UUID> m_NameCache;
+        private const bool m_allowNullCaching = true;
 
         public UserAccountCache()
         {
@@ -50,6 +51,8 @@ namespace OpenSim.Services.Connectors
 
         public void Cache(UUID userID, UserAccount account)
         {
+            if (!m_allowNullCaching && account == null)
+                return;
             // Cache even null accounts
             m_UUIDCache.AddOrUpdate(userID, account, CACHE_EXPIRATION_SECONDS);
             if (account != null)
@@ -61,10 +64,7 @@ namespace OpenSim.Services.Connectors
         public bool Get(UUID userID, out UserAccount account)
         {
             if (m_UUIDCache.TryGetValue(userID, out account))
-            {
-                //m_log.DebugFormat("[USER CACHE]: Account {0} {1} found in cache", account.FirstName, account.LastName);
                 return true;
-            }
 
             return false;
         }
@@ -72,15 +72,11 @@ namespace OpenSim.Services.Connectors
         public bool Get(string name, out UserAccount account)
         {
             account = null;
-            if (!m_NameCache.Contains(name))
-                return false;
 
             UUID uuid = UUID.Zero;
             if (m_NameCache.TryGetValue(name, out uuid))
                 if (m_UUIDCache.TryGetValue(uuid, out account))
-                {
                     return true;
-                }
 
             return false;
         }

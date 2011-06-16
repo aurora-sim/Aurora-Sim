@@ -130,14 +130,18 @@ namespace OpenSim.Services.Handlers.Map
                         (int)((regionY * (int)Constants.RegionSize) + (mapView * (int)Constants.RegionSize)));
                 List<AssetBase> textures = new List<AssetBase> ();
                 List<Image> bitImages = new List<Image> ();
-
+                List<GridRegion> badRegions = new List<GridRegion> ();
                 foreach (GridRegion r in regions)
                 {
                     AssetBase texAsset = m_registry.RequestModuleInterface<IAssetService> ().Get (r.TerrainImage.ToString ());
 
                     if (texAsset != null)
                         textures.Add (texAsset);
+                    else
+                        badRegions.Add (r);
                 }
+                foreach (GridRegion r in badRegions)
+                    regions.Remove (r);
 
                 foreach (AssetBase asset in textures)
                 {
@@ -180,7 +184,7 @@ namespace OpenSim.Services.Handlers.Map
             catch
             {
             }
-            if(jpeg.Length == 0)
+            if (jpeg.Length == 0 && splitUri.Length > 1 && splitUri[1].Length > 1)
             {
                 MemoryStream imgstream = new MemoryStream ();
                 GridRegion region = m_registry.RequestModuleInterface<IGridService> ().GetRegionByName (UUID.Zero, splitUri[1].Remove(4));

@@ -240,11 +240,11 @@ namespace OpenSim.Services.ConfigurationService
 
         public virtual List<string> FindValueOf(string userID, string key)
         {
-            if (m_knownUsers.ContainsKey(userID))
+            if (m_knownUsers.ContainsKey (userID) && m_knownUsers[userID][key] != "")
             {
                 return FindValueOfFromOSDMap(key, m_knownUsers[userID]);
             }
-            else if (m_allConfigs.ContainsKey(userID))
+            else if (m_allConfigs.ContainsKey (userID) && m_allConfigs[userID][key] != "")
             {
                 return FindValueOfFromOSDMap(key, m_allConfigs[userID]);
             }
@@ -267,11 +267,11 @@ namespace OpenSim.Services.ConfigurationService
                 return FindValueOf (userID, key);
 
             RemoveDupsList urls = new RemoveDupsList ();
-            if (m_knownUsers.ContainsKey (userID))
+            if (m_knownUsers.ContainsKey (userID) && m_knownUsers[userID][key] != "")
             {
                 urls.AddRange (FindValueOfFromOSDMap (key, m_knownUsers[userID]));
             }
-            if (m_allConfigs.ContainsKey (userID))
+            if (m_allConfigs.ContainsKey (userID) && m_allConfigs[userID][key] != "")
             {
                 urls.AddRange (FindValueOfFromOSDMap (key, m_allConfigs[userID]));
             }
@@ -295,6 +295,8 @@ namespace OpenSim.Services.ConfigurationService
             {
                 foreach (string ee in e)
                 {
+                    if (ee == "")
+                        continue;
                     if (!Urls.Contains (ee))
                         Urls.Add (ee);
                 }

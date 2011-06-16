@@ -519,6 +519,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         "Couldn't start script {0}, {1} at {2} in {3} since asset ID {4} could not be found",
                         InventoryItem.Name, InventoryItem.ItemID, Part.AbsolutePosition,
                         Part.ParentEntity.Scene.RegionInfo.RegionName, InventoryItem.AssetID);
+                        ScriptEngine.ScriptProtection.RemoveScript (this);
                     return false;
                 }
                 Source = Utils.BytesToString (asset.Data);
@@ -530,6 +531,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     "Couldn't start script {0}, {1} at {2} in {3} since asset ID {4} could not be found",
                     InventoryItem.Name, InventoryItem.ItemID, Part.AbsolutePosition,
                     Part.ParentEntity.Scene.RegionInfo.RegionName, InventoryItem.AssetID);
+                ScriptEngine.ScriptProtection.RemoveScript (this);
                 return false;
             }
 

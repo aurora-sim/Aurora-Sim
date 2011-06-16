@@ -813,10 +813,7 @@ namespace OpenSim.Region.Framework.Scenes
             //Trigger our event
             Scene.EventManager.TriggerObjectBeingAddedToScene(this);
 
-            if (WSModule != null) 
-                ApplyPhysics(WSModule.AllowPhysicalPrims);
-            else
-                ApplyPhysics(true);
+            RebuildPhysicalRepresentation (false);
 
             m_ValidgrpOOB = false;
         }
@@ -1262,11 +1259,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_rootPart.SetParentLocalId(0);
             SetAttachmentPoint((byte)0);
-            IOpenRegionSettingsModule WSModule = Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
-            if(WSModule != null)
-                m_rootPart.ApplyPhysics(m_rootPart.GetEffectiveObjectFlags(), m_rootPart.VolumeDetectActive, WSModule.AllowPhysicalPrims);
-            else
-                m_rootPart.ApplyPhysics(m_rootPart.GetEffectiveObjectFlags(), m_rootPart.VolumeDetectActive, true);
+            RebuildPhysicalRepresentation (false);
             HasGroupChanged = true;
             m_ValidgrpOOB = false;
             RootPart.Rezzed = DateTime.UtcNow;
@@ -1405,27 +1398,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_rootPart.ScheduleUpdate(PrimUpdateFlags.Text);
         }
 
-        /// <summary>
-        /// Apply physics to this group
-        /// </summary>
-        /// <param name="m_physicalPrim"></param>
-        public void ApplyPhysics(bool m_physicalPrim)
-        {
-            m_rootPart.ApplyPhysics(m_rootPart.GetEffectiveObjectFlags(), m_rootPart.VolumeDetectActive, m_physicalPrim);
-
-            List<SceneObjectPart> m_parts = new List<SceneObjectPart>(m_partsList);
-            foreach (SceneObjectPart part in m_parts)
-            {
-                if (part.LocalId != m_rootPart.LocalId)
-                {
-                    part.ApplyPhysics(m_rootPart.GetEffectiveObjectFlags(), part.VolumeDetectActive, m_physicalPrim);
-                }
-            }
-
-            // Hack to get the physics scene geometries in the right spot
-            ResetChildPrimPhysicsPositions();
-        }
-
         public void SetOwnerId(UUID userId)
         {
             ForEachPart(delegate(SceneObjectPart part) { part.OwnerID = userId; });
@@ -1514,45 +1486,89 @@ namespace OpenSim.Region.Framework.Scenes
         /// Rebuild the physical representation of all the prims.
         /// This is used after copying the prim so that all of the object is readded to the physics scene.
         /// </summary>
-        public void RebuildPhysicalRepresentation ()
+        public void RebuildPhysicalRepresentation (bool keepSelectedStatuses)
         {
-            foreach (SceneObjectPart part in m_partsList)
+            //This is a heavy operation... it is really bad to lock this, but if we don't, we could have multiple threads in here... which would be baaad
+            lock (m_partsLock)
             {
-                PhysicsObject oldActor = part.PhysActor;
-                PrimitiveBaseShape pbs = part.Shape;
-                if (part.PhysActor != null)
+                foreach (SceneObjectPart part in m_partsList)
                 {
-                    //Remove the old one so that we don't have more than we should,
-                    //  as when we copy, it readds it to the PhysicsScene somehow
-                    m_scene.PhysicsScene.RemovePrim (part.PhysActor);
+                    PhysicsObject oldActor = part.PhysActor;
+                    PrimitiveBaseShape pbs = part.Shape;
+                    //Reset any old data that we have
+                    part.Velocity = Vector3.Zero;
+                    part.Acceleration = Vector3.Zero;
+                    part.AngularVelocity = Vector3.Zero;
+                    int vehicleType = 0;
+                    if (part.PhysActor != null)
+                    {
+                        vehicleType = part.PhysActor.VehicleType;
+                        part.PhysActor.RotationalVelocity = Vector3.Zero;
+                        part.PhysActor.UnSubscribeEvents ();
+                        part.PhysActor.OnCollisionUpdate -= part.PhysicsCollision;
+                        part.PhysActor.OnRequestTerseUpdate -= part.PhysicsRequestingTerseUpdate;
+                        part.PhysActor.OnSignificantMovement -= part.ParentGroup.CheckForSignificantMovement;
+                        part.PhysActor.OnOutOfBounds -= part.PhysicsOutOfBounds;
+
+                        //part.PhysActor.delink ();
+                        //Remove the old one so that we don't have more than we should,
+                        //  as when we copy, it readds it to the PhysicsScene somehow
+                        //if (part.IsRoot)//The root removes all children
+                            m_scene.PhysicsScene.RemovePrim (part.PhysActor);
+
+                        part.FireOnRemovedPhysics ();
+                    }
+                    part.AngularVelocity = Vector3.Zero;
+
+                    if (RootPart.PhysicsType == (byte)PhysicsShapeType.None ||
+                        part.PhysicsType == (byte)PhysicsShapeType.None ||
+                        ((part.Flags & PrimFlags.Phantom) == PrimFlags.Phantom &&
+                        !part.VolumeDetectActive) ||
+                        ((RootPart.Flags & PrimFlags.Phantom) == PrimFlags.Phantom &&
+                        !RootPart.VolumeDetectActive))
+                    {
+                        part.PhysActor = null;
+                        continue; //Don't rebuild! All phantom if the root is phantom
+                    }
+                    bool usePhysics = (RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics;
+
+                    IOpenRegionSettingsModule WSModule = Scene.RequestModuleInterface<IOpenRegionSettingsModule> ();
+                    if (WSModule != null)
+                        if (!WSModule.AllowPhysicalPrims)
+                            usePhysics = false;
+                    //Now readd the physics actor to the physics scene
+                    part.PhysActor = m_scene.PhysicsScene.AddPrimShape (part);
+
+                    //Fix the localID!
+                    part.PhysActor.LocalID = part.LocalId;
+                    part.PhysActor.UUID = part.UUID;
+                    part.PhysActor.VolumeDetect = part.VolumeDetectActive;
+
+                    part.PhysActor.IsPhysical = usePhysics;
+                    part.PhysActor.VehicleType = vehicleType;
+
+                    //Force deselection here so that it isn't stuck forever
+                    if (!keepSelectedStatuses)
+                        part.PhysActor.Selected = false;
+                    else
+                        part.PhysActor.Selected = IsSelected;
+
+                    //Add collision updates
+                    part.PhysActor.OnCollisionUpdate += part.PhysicsCollision;
+                    part.PhysActor.OnRequestTerseUpdate += part.PhysicsRequestingTerseUpdate;
+                    part.PhysActor.OnSignificantMovement += part.ParentGroup.CheckForSignificantMovement;
+                    part.PhysActor.OnOutOfBounds += part.PhysicsOutOfBounds;
+                    part.PhysActor.SubscribeEvents (1000);
+
+                    if (part.IsRoot) //Check for meshes and stuff
+                        CheckSculptAndLoad ();
+                    else //Link the prim then
+                        part.PhysActor.link (RootPart.PhysActor);
+                    Scene.PhysicsScene.AddPhysicsActorTaint (part.PhysActor);
+
+                    part.FireOnAddedPhysics ();
                 }
-
-                if (RootPart.PhysicsType == (byte)PhysicsShapeType.None)
-                {
-                    part.PhysActor = null;
-                    continue; //Don't rebuild! All phantom if the root is phantom
-                }
-                if (part.PhysicsType == (byte)PhysicsShapeType.None)
-                {
-                    part.PhysActor = null;
-                    continue; //Don't rebuild!
-                }
-                bool usePhysics = (RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics;
-                //Now readd the physics actor to the physics scene
-                part.PhysActor = m_scene.PhysicsScene.AddPrimShape (part);
-
-                //Fix the localID!
-                part.PhysActor.LocalID = part.LocalId;
-                part.PhysActor.UUID = part.UUID;
-                //Set physical and etc up correctly
-                part.DoPhysicsPropertyUpdate (usePhysics, true);
-
-                part.PhysActor.VolumeDetect = part.VolumeDetectActive;
-
-                //Force deselection here so that it isn't stuck forever
-                part.PhysActor.Selected = false;
-
-                part.ScriptSetPhysicsStatus (usePhysics);
+                Scene.AuroraEventManager.FireGenericEventHandler ("ObjectChangedPhysicalStatus", this);
             }
         }
 
@@ -2404,12 +2420,17 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
 
-                ((SceneObjectPart)selectionPart).UpdatePrimFlags (UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, blocks);
+                bool needsPhysicalRebuild = ((SceneObjectPart)selectionPart).UpdatePrimFlags (UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, blocks);
                 foreach (SceneObjectPart part in m_partsList)
                 {
-                    if(selectionPart != part)
-                        part.UpdatePrimFlags (UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, null);
+                    if (selectionPart != part)
+                        if (needsPhysicalRebuild)
+                            part.UpdatePrimFlags (UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, null);
+                        else
+                            needsPhysicalRebuild = part.UpdatePrimFlags (UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, null);
                 }
+                if (needsPhysicalRebuild)
+                    RebuildPhysicalRepresentation (true);
             }
         }
 
@@ -2710,7 +2731,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (Util.GetDistanceTo (RootPart.StatusSandboxPos, val) > 10)
                 {
-                    RootPart.ScriptSetPhysicsStatus (false);
+                    ScriptSetPhysicsStatus (false);
                     IChatModule chatModule = Scene.RequestModuleInterface<IChatModule> ();
                     if (chatModule != null)
                         chatModule.SimChat ("Hit Sandbox Limit",
@@ -2757,7 +2778,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (Util.GetDistanceTo(RootPart.StatusSandboxPos, pos) > 10)
                     {
-                        RootPart.ScriptSetPhysicsStatus(false);
+                        ScriptSetPhysicsStatus(false);
                         pos = AbsolutePosition;
                         IChatModule chatModule = Scene.RequestModuleInterface<IChatModule>();
                         if (chatModule != null)

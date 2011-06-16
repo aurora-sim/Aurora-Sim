@@ -163,7 +163,7 @@ namespace OpenSim.Services.Connectors
                             {
                                 UserAccount pinfo = new UserAccount((Dictionary<string, object>)acc);
                                 m_cache.Cache(pinfo.PrincipalID, pinfo);
-                                pinfo.GenericData["GridURL"] = m_ServerURI.Remove(m_ServerURI.LastIndexOf('/')-1);
+                                pinfo.GenericData["GridURL"] = m_ServerURI.Remove(m_ServerURI.LastIndexOf('/'));
                                 accounts.Add(pinfo);
                             }
                             else
@@ -220,33 +220,33 @@ namespace OpenSim.Services.Connectors
             string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[ACCOUNTS CONNECTOR]: queryString = {0}", reqString);
             UserAccount account = null;
-            try
+            List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(avatarID.ToString(), "UserAccountServerURI", true);
+            foreach (string m_ServerURI in m_ServerURIs)
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(avatarID.ToString(), "UserAccountServerURI", true);
-                foreach (string m_ServerURI in m_ServerURIs)
+                try
                 {
-                    reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                    reply = SynchronousRestFormsRequester.MakeRequest ("POST",
                         m_ServerURI,
                         reqString);
-                    if (reply == null || (reply != null && reply == string.Empty))
+                    if (reply == string.Empty)
                         continue;
 
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse (reply);
 
-                    if ((replyData != null) && replyData.ContainsKey("result") && (replyData["result"] != null))
+                    if ((replyData != null) && replyData.ContainsKey ("result") && (replyData["result"] != null))
                     {
                         if (replyData["result"] is Dictionary<string, object>)
                         {
                             account = new UserAccount ((Dictionary<string, object>)replyData["result"]);
-                            account.GenericData["GridURL"] = m_ServerURI.Remove (m_ServerURI.LastIndexOf ('/') - 1);
+                            account.GenericData["GridURL"] = m_ServerURI.Remove (m_ServerURI.LastIndexOf ('/'));
                             return account;
                         }
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                m_log.InfoFormat("[ACCOUNT CONNECTOR]: Exception when contacting user account server: {0}", e.Message);
+                catch (Exception e)
+                {
+                    m_log.InfoFormat ("[ACCOUNT CONNECTOR]: Exception when contacting user account server: {0}", e.Message);
+                }
             }
 
             return account;

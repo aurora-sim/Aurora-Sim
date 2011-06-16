@@ -831,6 +831,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         #endregion BinaryStats
 
+        private Dictionary<UUID, uint> m_inQueueCircuitCodes = new Dictionary<UUID, uint> ();
         private void HandleUseCircuitCode(object o)
         {
             DateTime startTime = DateTime.Now;
@@ -843,8 +844,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // Begin the process of adding the client to the simulator
             if (AddNewClient((UseCircuitCodePacket)packet, remoteEndPoint))
             {
+                UUID agentID = ((UseCircuitCodePacket)packet).CircuitCode.ID;
                 // Acknowledge the UseCircuitCode packet
-                SendAckImmediate(remoteEndPoint, packet.Header.Sequence);
+                //Make sure to acknowledge with the newest packet! So use the queue so that it knows all of the newest ones
+                SendAckImmediate (remoteEndPoint, m_inQueueCircuitCodes[agentID]);
+                //And remove it
+                m_inQueueCircuitCodes.Remove (agentID);
 
                 m_log.InfoFormat(
                     "[LLUDPSERVER]: Handling UseCircuitCode request from {0} took {1}ms",
@@ -892,6 +897,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             AgentCircuitData sessionInfo;
             if (IsClientAuthorized(useCircuitCode, remoteEndPoint, out sessionInfo))
             {
+                if (m_inQueueCircuitCodes.ContainsKey (agentID))
+                {
+                    m_inQueueCircuitCodes[agentID] = useCircuitCode.Header.Sequence;
+                    return true;
+                }
+
+                m_inQueueCircuitCodes[agentID] = useCircuitCode.Header.Sequence;
                 return AddClient(circuitCode, agentID, sessionID, remoteEndPoint, sessionInfo);
             }
             else
@@ -906,7 +918,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         protected virtual bool AddClient(uint circuitCode, UUID agentID, UUID sessionID, IPEndPoint remoteEndPoint, AgentCircuitData sessionInfo)
         {
-            IScenePresence SP;
+            IScenePresence SP; 
             if (!m_scene.TryGetScenePresence(agentID, out SP))
             {
                 // Create the LLUDPClient

@@ -150,15 +150,15 @@ namespace OpenSim.Services.LLLoginService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
-            m_agentInfoService = registry.RequestModuleInterface<IAgentInfoService>();
+            m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>().InnerService;
+            m_agentInfoService = registry.RequestModuleInterface<IAgentInfoService>().InnerService;
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
             m_InventoryService = registry.RequestModuleInterface<IInventoryService>();
             m_GridService = registry.RequestModuleInterface<IGridService>();
-            m_AvatarService = registry.RequestModuleInterface<IAvatarService>();
+            m_AvatarService = registry.RequestModuleInterface<IAvatarService>().InnerService;
             m_FriendsService = registry.RequestModuleInterface<IFriendsService>();
             m_SimulationService = registry.RequestModuleInterface<ISimulationService>();
-            m_AssetService = registry.RequestModuleInterface<IAssetService>();
+            m_AssetService = registry.RequestModuleInterface<IAssetService> ().InnerService;
             m_LibraryService = registry.RequestModuleInterface<ILibraryService>();
             m_CapsService = registry.RequestModuleInterface<ICapsService>();
 
@@ -1136,11 +1136,8 @@ namespace OpenSim.Services.LLLoginService
 
             ICommunicationService commsService = m_registry.RequestModuleInterface<ICommunicationService>();
             if (commsService != null)
-            {
-                OSDMap urls = commsService.GetUrlsForUser(region, aCircuit.AgentID);
-                if(urls != null)
-                    aCircuit.OtherInformation["UserUrls"] = urls;
-            }
+                commsService.GetUrlsForUser(region, aCircuit.AgentID);//Make sure that we make userURLs if we need to
+
             aCircuit.teleportFlags = (uint)TeleportFlags.ViaLogin;
             // As we are creating the agent, we must also initialize the CapsService for the agent
             bool success = simConnector.CreateAgent (region, ref aCircuit, aCircuit.teleportFlags, null, out reason);

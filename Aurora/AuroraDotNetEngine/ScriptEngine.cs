@@ -936,6 +936,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             id.World = part.ParentEntity.Scene;
             id.RezzedFrom = RezzedFrom;
             ls.ID = id;
+            //WE MUST ADD THIS HERE, even though it hasn't compiled yet... 
+            //we need to add it so that if things go trying to add events before it fully compiles, we don't fail completely
+            ScriptEngine.ScriptProtection.AddNewScript (id);
             return ls;
         }
 

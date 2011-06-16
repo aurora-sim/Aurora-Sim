@@ -184,7 +184,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         {
             ITerrainChannel terrain = m_scene.RequestModuleInterface<ITerrainChannel>();
 
-            warp_Object obj = new warp_Object (m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeY, (m_scene.RegionInfo.RegionSizeX - 1) * (m_scene.RegionInfo.RegionSizeY - 1) * 2);
+            warp_Object obj = new warp_Object ((m_scene.RegionInfo.RegionSizeX) * (m_scene.RegionInfo.RegionSizeY), (m_scene.RegionInfo.RegionSizeX) * (m_scene.RegionInfo.RegionSizeY) * 2);
 
             for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
             {
@@ -252,7 +252,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out globalX, out globalY);
 
             Bitmap image = TerrainSplat.Splat(terrain, textureIDs, startHeights, heightRanges, new Vector3d(globalX, globalY, 0.0), m_scene.AssetService, textureTerrain);
-            warp_Texture texture = new warp_Texture(image);
+            warp_Texture texture = new warp_Texture (image);
             warp_Material material = new warp_Material(texture);
             material.setReflectivity(50);
             renderer.Scene.addMaterial("TerrainColor", material);
@@ -331,6 +331,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                 renderer.SetObjectMaterial(meshName, materialName);
             }
+            renderMesh.Faces.Clear ();
+            renderMesh = null;
         }
 
         private Color4 GetFaceColor(Primitive.TextureEntryFace face)

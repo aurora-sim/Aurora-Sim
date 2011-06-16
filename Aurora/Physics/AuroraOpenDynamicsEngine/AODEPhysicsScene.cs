@@ -164,8 +164,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 //        public Queue<AODEchangeitem> ChangesQueue = new Queue<AODEchangeitem>(500);
         public OpenSim.Framework.LocklessQueue<AODEchangeitem> ChangesQueue = new OpenSim.Framework.LocklessQueue<AODEchangeitem>();
-        private readonly List<d.ContactGeom> _perloopContact = new List<d.ContactGeom>();
-        private readonly List<PhysicsActor> _collisionEventPrim = new List<PhysicsActor>();
+        private readonly List<d.ContactGeom> _perloopContact = new List<d.ContactGeom> ();
+
+        private readonly List<PhysicsActor> _collisionEventPrimList = new List<PhysicsActor> ();
+        private readonly Dictionary<UUID, PhysicsActor> _collisionEventPrimDictionary = new Dictionary<UUID, PhysicsActor> ();
+        private readonly object _collisionEventListLock = new object ();
+
         private readonly HashSet<AuroraODECharacter> _badCharacter = new HashSet<AuroraODECharacter>();
         public Dictionary<IntPtr, PhysicsActor> actor_name_map = new Dictionary<IntPtr, PhysicsActor>();
         private bool m_NINJA_physics_joints_enabled = false;
@@ -1694,10 +1698,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                lock (_collisionEventPrim)
+                lock (_collisionEventListLock)
                 {
-                    if (!_collisionEventPrim.Contains(obj))
-                        _collisionEventPrim.Add(obj);
+                    if (!_collisionEventPrimDictionary.ContainsKey (obj.UUID))
+                    {
+                        _collisionEventPrimDictionary.Add (obj.UUID, obj);
+                        _collisionEventPrimList.Add (obj);
+                    }
                 }
             }
         }
@@ -1710,9 +1717,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                lock (_collisionEventPrim)
+                lock (_collisionEventListLock)
                 {
-                    _collisionEventPrim.Remove(obj);
+                    _collisionEventPrimList.Remove (obj);
+                    _collisionEventPrimDictionary.Remove (obj.UUID);
                 }
             }
         }
@@ -2478,9 +2486,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         int SendCollisionsTime = Util.EnvironmentTickCount();
                         if (!DisableCollisions)
                         {
-                            lock (_collisionEventPrim)
+                            lock (_collisionEventListLock)
                             {
-                                foreach (PhysicsActor obj in _collisionEventPrim)
+                                foreach (PhysicsActor obj in _collisionEventPrimList)
                                 {
                                     if (obj == null)
                                         continue;
@@ -2607,20 +2615,30 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             if (ActiveAddCollisionQueue.Count > 0)
             {
-                foreach (PhysicsActor actor in ActiveAddCollisionQueue)
+                lock (_collisionEventListLock)
                 {
-                    //add
-                    if (!_collisionEventPrim.Contains(actor))
-                        _collisionEventPrim.Add(actor);
+                    foreach (PhysicsActor obj in ActiveAddCollisionQueue)
+                    {
+                        //add
+                        if (!_collisionEventPrimDictionary.ContainsKey (obj.UUID))
+                        {
+                            _collisionEventPrimDictionary.Add (obj.UUID, obj);
+                            _collisionEventPrimList.Add (obj);
+                        }
+                    }
                 }
                 ActiveAddCollisionQueue.Clear();
             }
             if (ActiveRemoveCollisionQueue.Count > 0)
             {
-                foreach (PhysicsActor actor in ActiveRemoveCollisionQueue)
+                lock (_collisionEventListLock)
                 {
-                    //remove
-                    _collisionEventPrim.Remove(actor);
+                    foreach (PhysicsActor obj in ActiveRemoveCollisionQueue)
+                    {
+                        //remove
+                        _collisionEventPrimDictionary.Remove (obj.UUID);
+                        _collisionEventPrimList.Remove (obj);
+                    }
                 }
                 ActiveRemoveCollisionQueue.Clear();
             }

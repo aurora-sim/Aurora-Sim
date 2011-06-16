@@ -437,6 +437,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
 
+            if (prim_geom == IntPtr.Zero)
+            {
+                m_log.Warn ("[PHYSICS]: Unable to link the linkset.  No geom yet");
+                return;
+            }
             d.GeomClearOffset (prim_geom); // make sure we don't have a hidden offset
             // associate root geom with body
             d.GeomSetBody (prim_geom, Body);
@@ -1631,7 +1636,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     fy += m_force.Y;
                     fz += m_force.Z;
 
-                    m_force = Vector3.Zero;
+                    //This is for llSetForce and friends, we don't remove it... even if it seems weird
+                    //m_force = Vector3.Zero;
 
                     #region drag and forces accumulators
 
@@ -2231,7 +2237,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _velocity = (Vector3)arg;
             if (!m_isSelected)
             {
-                Thread.Sleep (20);
+                //What the HELL!
+                //Thread.Sleep (20);
                 if (IsPhysical)
                 {
                     if (Body != IntPtr.Zero)

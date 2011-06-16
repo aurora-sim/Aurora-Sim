@@ -277,5 +277,41 @@ namespace Aurora.BotManager
 
             sp.HandleAgentRequestSit (sp.ControllingClient, child.UUID, new Vector3((float)offset.x, (float)offset.y, (float)offset.z));
         }
+
+        public void botStandUp (string bot)
+        {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botStandUp", m_host, "bot");
+            botSitObject (bot, UUID.Zero.ToString (), new LSL_Vector ());
+        }
+
+        public void botAddTag (string bot, string tag)
+        {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botAddTag", m_host, "bot");
+            IBotManager manager = World.RequestModuleInterface<IBotManager> ();
+            if (manager != null)
+                manager.AddTagToBot (UUID.Parse (bot), tag);
+        }
+
+        public LSL_List botGetBotsWithTag (string tag)
+        {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botGetBotsWithTag", m_host, "bot");
+            IBotManager manager = World.RequestModuleInterface<IBotManager> ();
+            List<UUID> bots = new List<UUID> ();
+            if (manager != null)
+                bots = manager.GetBotsWithTag (tag);
+            List<object> b = new List<object> ();
+            foreach(UUID bot in bots)
+                b.Add(bot.ToString());
+
+            return new LSL_List (b);
+        }
+
+        public void botRemoveBotsWithTag (string tag)
+        {
+            ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botRemoveBotsWithTag", m_host, "bot");
+            IBotManager manager = World.RequestModuleInterface<IBotManager> ();
+            if (manager != null)
+                manager.RemoveBots (tag);
+        }
     }
 }

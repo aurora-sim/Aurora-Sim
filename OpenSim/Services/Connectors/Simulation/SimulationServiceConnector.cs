@@ -222,8 +222,11 @@ namespace OpenSim.Services.Connectors.Simulation
                     OSDMap result = WebUtils.GetFromService(uri, true, false, false);
                     if (result["Success"].AsBoolean())
                     {
+                        OSDMap r = (OSDMap)OSDParser.DeserializeJson (result["_RawResult"]);
+                        if (r["Result"] == "Not Found")
+                            return false;
                         agent = new AgentData();
-                        agent.Unpack((OSDMap)result["_Result"]);
+                        agent.Unpack(r);
                         return true;
                     }
                 }

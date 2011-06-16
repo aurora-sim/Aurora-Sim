@@ -282,8 +282,7 @@ namespace OpenSim.Framework
 
         void ForcePersistence ();
 
-        void ApplyPhysics (bool allowPhysicalPrims);
-
+        void RebuildPhysicalRepresentation (bool keepSelectedStatus);
 
         void ScheduleGroupTerseUpdate ();
 
@@ -552,8 +551,6 @@ namespace OpenSim.Framework
         void SetVehicleFlags (int flags, bool p);
 
         void ScriptSetVolumeDetect (bool p);
-
-        void ScriptSetPhysicsStatus (bool p);
 
         void SetForce (Vector3 vector3);
 

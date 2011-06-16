@@ -1262,9 +1262,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             UserAccount account = m_sceneList[0].UserAccountService.GetUserAccount(remoteClient.Scene.RegionInfo.ScopeID, ejecteeID);
             
             if ((groupInfo == null) || (account == null))
-            {
                 return;
-            }
 
             // Send Message to Ejectee
             GridInstantMessage msg = new GridInstantMessage();
@@ -1305,9 +1303,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             msg.timestamp = 0;
             msg.fromAgentName = remoteClient.Name;
             if (account != null)
-            {
                 msg.message = string.Format("{2} has been ejected from '{1}' by {0}.", remoteClient.Name, groupInfo.GroupName, account.FirstName + " " + account.LastName);
-            }
             else
             {
                 msg.message = string.Format("{2} has been ejected from '{1}' by {0}.", remoteClient.Name, groupInfo.GroupName, "Unknown member");
