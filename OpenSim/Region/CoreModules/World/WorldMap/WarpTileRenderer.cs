@@ -51,34 +51,34 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
     public class WarpTileRenderer : IMapTileTerrainRenderer
     {
         private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+            LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
 
         private IRendering m_primMesher;
         private Scene m_scene;
         private IConfigSource m_config;
-        private static readonly UUID TEXTURE_METADATA_MAGIC = new UUID("802dc0e0-f080-4931-8b57-d1be8611c4f3");
-        private static readonly Color4 WATER_COLOR = new Color4(29, 71, 95, 216);
-        private Dictionary<UUID, Color4> m_colors = new Dictionary<UUID, Color4>();
+        private static readonly UUID TEXTURE_METADATA_MAGIC = new UUID ("802dc0e0-f080-4931-8b57-d1be8611c4f3");
+        private static readonly Color4 WATER_COLOR = new Color4 (29, 72, 96, 216);
+        private Dictionary<UUID, Color4> m_colors = new Dictionary<UUID, Color4> ();
         private bool m_useAntiAliasing = true; // TODO: Make this a config option
 
-        public void Initialise(Scene scene, Nini.Config.IConfigSource config)
+        public void Initialise (Scene scene, Nini.Config.IConfigSource config)
         {
             m_scene = scene;
             m_config = config;
         }
 
-        public Bitmap TerrainToBitmap(System.Drawing.Bitmap mapbmp)
+        public Bitmap TerrainToBitmap (System.Drawing.Bitmap mapbmp)
         {
             mapbmp = new Bitmap (m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
-            List<string> renderers = RenderingLoader.ListRenderers(Util.ExecutingDirectory());
+            List<string> renderers = RenderingLoader.ListRenderers (Util.ExecutingDirectory ());
             if (renderers.Count > 0)
             {
-                m_primMesher = RenderingLoader.LoadRenderer(renderers[0]);
-                m_log.Info("[MAPTILE]: Loaded prim mesher " + m_primMesher.ToString());
+                m_primMesher = RenderingLoader.LoadRenderer (renderers[0]);
+                m_log.Info ("[MAPTILE]: Loaded prim mesher " + m_primMesher.ToString ());
             }
             else
             {
-                m_log.Info("[MAPTILE]: No prim mesher loaded, prim rendering will be disabled");
+                m_log.Info ("[MAPTILE]: No prim mesher loaded, prim rendering will be disabled");
             }
 
             bool drawPrimVolume = true;
@@ -87,18 +87,18 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             try
             {
                 IConfig startupConfig = m_config.Configs["Startup"];
-                drawPrimVolume = startupConfig.GetBoolean("DrawPrimOnMapTile", drawPrimVolume);
-                textureTerrain = startupConfig.GetBoolean("TextureOnMapTile", textureTerrain);
+                drawPrimVolume = startupConfig.GetBoolean ("DrawPrimOnMapTile", drawPrimVolume);
+                textureTerrain = startupConfig.GetBoolean ("TextureOnMapTile", textureTerrain);
             }
             catch
             {
-                m_log.Warn("[MAPTILE]: Failed to load StartupConfig");
+                m_log.Warn ("[MAPTILE]: Failed to load StartupConfig");
             }
 
-            m_colors.Clear();
+            m_colors.Clear ();
 
             Vector3 camPos = new Vector3 (m_scene.RegionInfo.RegionSizeX / 2, m_scene.RegionInfo.RegionSizeY / 2, 221.7025033688163f);
-            Viewport viewport = new Viewport(camPos, -Vector3.UnitZ, 1024f, 0.1f, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+            Viewport viewport = new Viewport (camPos, -Vector3.UnitZ, 1024f, 0.1f, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
 
             int width = viewport.Width;
             int height = viewport.Height;
@@ -109,18 +109,18 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 height *= 2;
             }
 
-            WarpRenderer renderer = new WarpRenderer();
-            renderer.CreateScene(width, height);
+            WarpRenderer renderer = new WarpRenderer ();
+            renderer.CreateScene (width, height);
             renderer.Scene.autoCalcNormals = false;
 
             #region Camera
 
-            warp_Vector pos = ConvertVector(viewport.Position);
+            warp_Vector pos = ConvertVector (viewport.Position);
             pos.z -= 0.001f; // Works around an issue with the Warp3D camera
-            warp_Vector lookat = warp_Vector.add(ConvertVector(viewport.Position), ConvertVector(viewport.LookDirection));
+            warp_Vector lookat = warp_Vector.add (ConvertVector (viewport.Position), ConvertVector (viewport.LookDirection));
 
-            renderer.Scene.defaultCamera.setPos(pos);
-            renderer.Scene.defaultCamera.lookAt(lookat);
+            renderer.Scene.defaultCamera.setPos (pos);
+            renderer.Scene.defaultCamera.lookAt (lookat);
 
             if (viewport.Orthographic)
             {
@@ -132,57 +132,58 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             {
                 float fov = viewport.FieldOfView;
                 fov *= 1.75f; // FIXME: ???
-                renderer.Scene.defaultCamera.setFov(fov);
+                renderer.Scene.defaultCamera.setFov (fov);
             }
 
             #endregion Camera
 
-            renderer.Scene.addLight("Light1", new warp_Light(new warp_Vector(0.2f, 0.2f, 1f), 0xffffff, 320, 80));
-            renderer.Scene.addLight("Light2", new warp_Light(new warp_Vector(-1f, -1f, 1f), 0xffffff, 100, 40));
+            renderer.Scene.addLight ("Light1", new warp_Light (new warp_Vector (1.0f, 0.5f, 1f), 0xffffff, 0, 320, 40));
+            renderer.Scene.addLight ("Light2", new warp_Light (new warp_Vector (-1f, -1f, 1f), 0xffffff, 0, 100, 40));
 
-            CreateWater(renderer);
-            CreateTerrain(renderer, textureTerrain);
+            CreateWater (renderer);
+            CreateTerrain (renderer, textureTerrain);
             if (drawPrimVolume && m_primMesher != null)
-                foreach(ISceneEntity ent in m_scene.Entities.GetEntities())
-                    foreach(ISceneChildEntity part in ent.ChildrenEntities())
+                foreach (ISceneEntity ent in m_scene.Entities.GetEntities ())
+                    foreach (ISceneChildEntity part in ent.ChildrenEntities ())
                         CreatePrim (renderer, part);
 
 
-            renderer.Render();
-            Bitmap bitmap = renderer.Scene.getImage();
+            renderer.Render ();
+            Bitmap bitmap = renderer.Scene.getImage ();
 
-            renderer.Scene.removeAllObjects();
+            renderer.Scene.removeAllObjects ();
             renderer = null;
             viewport = null;
             m_primMesher = null;
-            m_colors.Clear();
+            m_colors.Clear ();
 
             //Force GC to try to clean this mess up
-            GC.GetTotalMemory(true);
+            GC.GetTotalMemory (true);
 
             if (m_useAntiAliasing)
-                bitmap = ImageUtils.ResizeImage(bitmap, width / 2, height / 2);
+                bitmap = ImageUtils.ResizeImage (bitmap, width / 2, height / 2);
 
             return bitmap;
         }
 
         #region Rendering Methods
 
-        private void CreateWater(WarpRenderer renderer)
+        private void CreateWater (WarpRenderer renderer)
         {
             float waterHeight = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
 
-            renderer.AddPlane("Water", 256f * 0.5f);
-            renderer.Scene.sceneobject("Water").setPos(127.5f, waterHeight, 127.5f);
+            renderer.AddPlane ("Water", 256f * 0.5f);
+            renderer.Scene.sceneobject ("Water").setPos (127.5f, waterHeight, 127.5f);
 
-            renderer.AddMaterial("WaterColor", ConvertColor(WATER_COLOR));
-            renderer.Scene.material("WaterColor").setTransparency((byte)((1f - WATER_COLOR.A) * 255f));
-            renderer.SetObjectMaterial("Water", "WaterColor");
+            renderer.AddMaterial ("WaterColor", ConvertColor (WATER_COLOR));
+            renderer.Scene.material ("WaterColor").setReflectivity (0); // match water color with standard map module thanks lkalif
+            renderer.Scene.material ("WaterColor").setTransparency ((byte)((1f - WATER_COLOR.A) * 255f));
+            renderer.SetObjectMaterial ("Water", "WaterColor");
         }
 
-        private void CreateTerrain(WarpRenderer renderer, bool textureTerrain)
+        private void CreateTerrain (WarpRenderer renderer, bool textureTerrain)
         {
-            ITerrainChannel terrain = m_scene.RequestModuleInterface<ITerrainChannel>();
+            ITerrainChannel terrain = m_scene.RequestModuleInterface<ITerrainChannel> ();
 
             warp_Object obj = new warp_Object ((m_scene.RegionInfo.RegionSizeX) * (m_scene.RegionInfo.RegionSizeY), (m_scene.RegionInfo.RegionSizeX-1) * (m_scene.RegionInfo.RegionSizeY-1) * 2);
             short[] heightmap = terrain.GetSerialised (m_scene);
@@ -193,8 +194,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 {
                     float height = terrain[x, y];
 
-                    warp_Vector pos = ConvertVector(new Vector3(x, y, height));
-                    obj.addVertex (new warp_Vertex (pos, (float)x / (m_scene.RegionInfo.RegionSizeX - 1), (float)((m_scene.RegionInfo.RegionSizeX - 1) - y) / (m_scene.RegionInfo.RegionSizeX - 1)));
+                    warp_Vector pos = ConvertVector (new Vector3 (x, y, height));
+                    obj.addVertex (new warp_Vertex (pos, (float)x / (m_scene.RegionInfo.RegionSizeX), (float)((m_scene.RegionInfo.RegionSizeX) - y) / (m_scene.RegionInfo.RegionSizeX)));
                 }
             }
 
@@ -202,7 +203,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             {
                 for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
                 {
-                    if (x < m_scene.RegionInfo.RegionSizeX - 1 && y < m_scene.RegionInfo.RegionSizeY - 1)
+                    if (x < m_scene.RegionInfo.RegionSizeX -1 && y < m_scene.RegionInfo.RegionSizeY - 1)
                     {
                         int v = y * m_scene.RegionInfo.RegionSizeX + x;
 
@@ -215,13 +216,13 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         obj.vertex (v).n = norm;
 
                         // Triangle 1
-                        obj.addTriangle(
+                        obj.addTriangle (
                             (int)v,
                             (int)v + 1,
                             (int)v + m_scene.RegionInfo.RegionSizeX);
 
                         // Triangle 2
-                        obj.addTriangle(
+                        obj.addTriangle (
                             (int)v + m_scene.RegionInfo.RegionSizeX + 1,
                             (int)v + m_scene.RegionInfo.RegionSizeX,
                             (int)v + 1);
@@ -229,7 +230,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 }
             }
 
-            renderer.Scene.addObject("Terrain", obj);
+            renderer.Scene.addObject ("Terrain", obj);
 
             UUID[] textureIDs = new UUID[4];
             float[] startHeights = new float[4];
@@ -253,14 +254,14 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             heightRanges[3] = (float)regionInfo.Elevation2NE;
 
             uint globalX, globalY;
-            Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out globalX, out globalY);
+            Utils.LongToUInts (m_scene.RegionInfo.RegionHandle, out globalX, out globalY);
 
-            Bitmap image = TerrainSplat.Splat(terrain, textureIDs, startHeights, heightRanges, new Vector3d(globalX, globalY, 0.0), m_scene.AssetService, textureTerrain);
+            Bitmap image = TerrainSplat.Splat (terrain, textureIDs, startHeights, heightRanges, new Vector3d (globalX, globalY, 0.0), m_scene.AssetService, textureTerrain);
             warp_Texture texture = new warp_Texture (image);
-            warp_Material material = new warp_Material(texture);
-            material.setReflectivity(50);
-            renderer.Scene.addMaterial("TerrainColor", material);
-            renderer.SetObjectMaterial("Terrain", "TerrainColor");
+            warp_Material material = new warp_Material (texture);
+            material.setReflectivity (0); // reduces tile seams a bit thanks lkalif
+            renderer.Scene.addMaterial ("TerrainColor", material);
+            renderer.SetObjectMaterial ("Terrain", "TerrainColor");
         }
 
         private static Vector3 SurfaceNormal (Vector3 c1, Vector3 c2, Vector3 c3)
@@ -280,99 +281,104 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             if ((PCode)prim.Shape.PCode != PCode.Prim)
                 return;
-            if (prim.Scale.LengthSquared() < MIN_SIZE * MIN_SIZE)
+            if (prim.Scale.LengthSquared () < MIN_SIZE * MIN_SIZE)
                 return;
 
-            Primitive omvPrim = prim.Shape.ToOmvPrimitive(prim.OffsetPosition, prim.RotationOffset);
-            FacetedMesh renderMesh = m_primMesher.GenerateFacetedMesh(omvPrim, DetailLevel.Medium);
+            Primitive omvPrim = prim.Shape.ToOmvPrimitive (prim.OffsetPosition, prim.RotationOffset);
+            FacetedMesh renderMesh = m_primMesher.GenerateFacetedMesh (omvPrim, DetailLevel.Medium);
             if (renderMesh == null)
                 return;
 
-            warp_Vector primPos = ConvertVector(prim.GetWorldPosition());
-            warp_Quaternion primRot = ConvertQuaternion(prim.RotationOffset);
+            warp_Vector primPos = ConvertVector (prim.GetWorldPosition ());
+            warp_Quaternion primRot = ConvertQuaternion (prim.RotationOffset);
 
-            warp_Matrix m = warp_Matrix.quaternionMatrix(primRot);
+            warp_Matrix m = warp_Matrix.quaternionMatrix (primRot);
 
             if (prim.ParentID != 0)
             {
                 ISceneEntity group = m_scene.GetGroupByPrim (prim.LocalId);
                 if (group != null)
-                    m.transform(warp_Matrix.quaternionMatrix(ConvertQuaternion(group.RootChild.RotationOffset)));
+                    m.transform (warp_Matrix.quaternionMatrix (ConvertQuaternion (group.RootChild.RotationOffset)));
             }
 
-            warp_Vector primScale = ConvertVector(prim.Scale);
+            warp_Vector primScale = ConvertVector (prim.Scale);
 
-            string primID = prim.UUID.ToString();
+            string primID = prim.UUID.ToString ();
 
             // Create the prim faces
             for (int i = 0; i < renderMesh.Faces.Count; i++)
             {
                 Face face = renderMesh.Faces[i];
-                string meshName = primID + "-Face-" + i.ToString();
+                string meshName = primID + "-Face-" + i.ToString ();
 
-                warp_Object faceObj = new warp_Object(face.Vertices.Count, face.Indices.Count / 3);
+                warp_Object faceObj = new warp_Object (face.Vertices.Count, face.Indices.Count / 3);
 
                 for (int j = 0; j < face.Vertices.Count; j++)
                 {
                     Vertex v = face.Vertices[j];
 
-                    warp_Vector pos = ConvertVector(v.Position);
-                    warp_Vector norm = ConvertVector(v.Normal);
+                    warp_Vector pos = ConvertVector (v.Position);
+                    warp_Vector norm = ConvertVector (v.Normal);
 
                     if (prim.Shape.SculptTexture == UUID.Zero)
-                        norm = norm.reverse();
-                    warp_Vertex vert = new warp_Vertex(pos, norm, v.TexCoord.X, v.TexCoord.Y);
+                        norm = norm.reverse ();
+                    warp_Vertex vert = new warp_Vertex (pos, norm, v.TexCoord.X, v.TexCoord.Y);
 
-                    faceObj.addVertex(vert);
+                    faceObj.addVertex (vert);
                 }
 
                 for (int j = 0; j < face.Indices.Count; j += 3)
                 {
-                    faceObj.addTriangle(
+                    faceObj.addTriangle (
                         face.Indices[j + 0],
                         face.Indices[j + 1],
                         face.Indices[j + 2]);
                 }
 
-                Primitive.TextureEntryFace teFace = prim.Shape.Textures.GetFace((uint)i);
-                Color4 faceColor = GetFaceColor(teFace);
-                string materialName = GetOrCreateMaterial(renderer, faceColor);
+                Primitive.TextureEntryFace teFace = prim.Shape.Textures.GetFace ((uint)i);
+                Color4 faceColor = GetFaceColor (teFace);
+                string materialName = GetOrCreateMaterial (renderer, faceColor);
 
-                faceObj.transform(m);
-                faceObj.setPos(primPos);
-                faceObj.scaleSelf(primScale.x, primScale.y, primScale.z);
+                faceObj.transform (m);
+                faceObj.setPos (primPos);
+                faceObj.scaleSelf (primScale.x, primScale.y, primScale.z);
 
-                renderer.Scene.addObject(meshName, faceObj);
+                renderer.Scene.addObject (meshName, faceObj);
 
-                renderer.SetObjectMaterial(meshName, materialName);
+                renderer.SetObjectMaterial (meshName, materialName);
             }
             renderMesh.Faces.Clear ();
             renderMesh = null;
         }
 
-        private Color4 GetFaceColor(Primitive.TextureEntryFace face)
+        private Color4 GetFaceColor (Primitive.TextureEntryFace face)
         {
             Color4 color;
 
             if (face.TextureID == UUID.Zero)
                 return face.RGBA;
 
-            if (!m_colors.TryGetValue(face.TextureID, out color))
+            if (!m_colors.TryGetValue (face.TextureID, out color))
             {
                 bool fetched = false;
 
                 // Attempt to fetch the texture metadata
-                UUID metadataID = UUID.Combine(face.TextureID, TEXTURE_METADATA_MAGIC);
-                AssetBase metadata = m_scene.AssetService.GetCached(metadataID.ToString());
+                UUID metadataID = UUID.Combine (face.TextureID, TEXTURE_METADATA_MAGIC);
+                AssetBase metadata = m_scene.AssetService.GetCached (metadataID.ToString ());
                 if (metadata != null)
                 {
                     OSDMap map = null;
-                    try { map = OSDParser.Deserialize(metadata.Data) as OSDMap; }
-                    catch { }
+                    try
+                    {
+                        map = OSDParser.Deserialize (metadata.Data) as OSDMap;
+                    }
+                    catch
+                    {
+                    }
 
                     if (map != null)
                     {
-                        color = map["X-JPEG2000-RGBA"].AsColor4();
+                        color = map["X-JPEG2000-RGBA"].AsColor4 ();
                         fetched = true;
                     }
                 }
@@ -381,30 +387,30 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 {
                     // Fetch the texture, decode and get the average color,
                     // then save it to a temporary metadata asset
-                    AssetBase textureAsset = m_scene.AssetService.Get(face.TextureID.ToString());
+                    AssetBase textureAsset = m_scene.AssetService.Get (face.TextureID.ToString ());
                     if (textureAsset != null)
                     {
                         int width, height;
-                        color = GetAverageColor(textureAsset.FullID, textureAsset.Data, out width, out height);
+                        color = GetAverageColor (textureAsset.FullID, textureAsset.Data, out width, out height);
 
-                        OSDMap data = new OSDMap { { "X-JPEG2000-RGBA", OSD.FromColor4(color) } };
+                        OSDMap data = new OSDMap { { "X-JPEG2000-RGBA", OSD.FromColor4 (color) } };
                         metadata = new AssetBase
                         {
-                            Data = System.Text.Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(data)),
-                            Description = "Metadata for JPEG2000 texture " + face.TextureID.ToString(),
+                            Data = System.Text.Encoding.UTF8.GetBytes (OSDParser.SerializeJsonString (data)),
+                            Description = "Metadata for JPEG2000 texture " + face.TextureID.ToString (),
                             Flags = AssetFlags.Collectable,
                             FullID = metadataID,
-                            ID = metadataID.ToString(),
+                            ID = metadataID.ToString (),
                             Local = true,
                             Temporary = true,
                             Name = String.Empty,
                             Type = (sbyte)AssetType.Simstate // Make something up to get around OpenSim's myopic treatment of assets
                         };
-                        m_scene.AssetService.Store(metadata);
+                        m_scene.AssetService.Store (metadata);
                     }
                     else
                     {
-                        color = new Color4(0.5f, 0.5f, 0.5f, 1.0f);
+                        color = new Color4 (0.5f, 0.5f, 0.5f, 1.0f);
                     }
                 }
 
@@ -414,17 +420,17 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             return color * face.RGBA;
         }
 
-        private string GetOrCreateMaterial(WarpRenderer renderer, Color4 color)
+        private string GetOrCreateMaterial (WarpRenderer renderer, Color4 color)
         {
-            string name = color.ToString();
+            string name = color.ToString ();
 
-            warp_Material material = renderer.Scene.material(name);
+            warp_Material material = renderer.Scene.material (name);
             if (material != null)
                 return name;
 
-            renderer.AddMaterial(name, ConvertColor(color));
+            renderer.AddMaterial (name, ConvertColor (color));
             if (color.A < 1f)
-                renderer.Scene.material(name).setTransparency((byte)((1f - color.A) * 255f));
+                renderer.Scene.material (name).setTransparency ((byte)((1f - color.A) * 255f));
             return name;
         }
 
@@ -432,41 +438,41 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
         #region Static Helpers
 
-        private static warp_Vector ConvertVector(Vector3 vector)
+        private static warp_Vector ConvertVector (Vector3 vector)
         {
-            return new warp_Vector(vector.X, vector.Z, vector.Y);
+            return new warp_Vector (vector.X, vector.Z, vector.Y);
         }
 
-        private static warp_Quaternion ConvertQuaternion(Quaternion quat)
+        private static warp_Quaternion ConvertQuaternion (Quaternion quat)
         {
-            return new warp_Quaternion(quat.X, quat.Z, quat.Y, -quat.W);
+            return new warp_Quaternion (quat.X, quat.Z, quat.Y, -quat.W);
         }
 
-        private static int ConvertColor(Color4 color)
+        private static int ConvertColor (Color4 color)
         {
-            int c = warp_Color.getColor((byte)(color.R * 255f), (byte)(color.G * 255f), (byte)(color.B * 255f));
+            int c = warp_Color.getColor ((byte)(color.R * 255f), (byte)(color.G * 255f), (byte)(color.B * 255f));
             if (color.A < 1f)
                 c |= (byte)(color.A * 255f) << 24;
 
             return c;
         }
 
-        public static Color4 GetAverageColor(UUID textureID, byte[] j2kData, out int width, out int height)
+        public static Color4 GetAverageColor (UUID textureID, byte[] j2kData, out int width, out int height)
         {
             ulong r = 0;
             ulong g = 0;
             ulong b = 0;
             ulong a = 0;
 
-            using (MemoryStream stream = new MemoryStream(j2kData))
+            using (MemoryStream stream = new MemoryStream (j2kData))
             {
                 try
                 {
-                    Bitmap bitmap = (Bitmap)J2kImage.FromStream(stream);
+                    Bitmap bitmap = (Bitmap)J2kImage.FromStream (stream);
                     width = bitmap.Width;
                     height = bitmap.Height;
 
-                    BitmapData bitmapData = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadOnly, bitmap.PixelFormat);
+                    BitmapData bitmapData = bitmap.LockBits (new Rectangle (0, 0, width, height), ImageLockMode.ReadOnly, bitmap.PixelFormat);
                     int pixelBytes = (bitmap.PixelFormat == PixelFormat.Format24bppRgb) ? 3 : 4;
 
                     // Sum up the individual channels
@@ -515,14 +521,14 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     if (pixelBytes == 3)
                         am = 1m;
 
-                    return new Color4((float)rm, (float)gm, (float)bm, (float)am);
+                    return new Color4 ((float)rm, (float)gm, (float)bm, (float)am);
                 }
                 catch (Exception ex)
                 {
-                    m_log.WarnFormat("[MAPTILE]: Error decoding JPEG2000 texture {0} ({1} bytes): {2}", textureID, j2kData.Length, ex.Message);
+                    m_log.WarnFormat ("[MAPTILE]: Error decoding JPEG2000 texture {0} ({1} bytes): {2}", textureID, j2kData.Length, ex.Message);
                     width = 0;
                     height = 0;
-                    return new Color4(0.5f, 0.5f, 0.5f, 1.0f);
+                    return new Color4 (0.5f, 0.5f, 0.5f, 1.0f);
                 }
             }
         }
@@ -542,9 +548,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         /// <param name="xPercent">Interpolation value on the X axis, between 0.0 and 1.0</param>
         /// <param name="yPercent">Interpolation value on fht Y axis, between 0.0 and 1.0</param>
         /// <returns>The bilinearly interpolated result</returns>
-        public static float Bilinear(float v00, float v01, float v10, float v11, float xPercent, float yPercent)
+        public static float Bilinear (float v00, float v01, float v10, float v11, float xPercent, float yPercent)
         {
-            return Utils.Lerp(Utils.Lerp(v00, v01, xPercent), Utils.Lerp(v10, v11, xPercent), yPercent);
+            return Utils.Lerp (Utils.Lerp (v00, v01, xPercent), Utils.Lerp (v10, v11, xPercent), yPercent);
         }
 
         /// <summary>
@@ -554,18 +560,18 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         /// <param name="width">New width</param>
         /// <param name="height">New height</param>
         /// <returns>Resized image</returns>
-        public static Bitmap ResizeImage(Image image, int width, int height)
+        public static Bitmap ResizeImage (Image image, int width, int height)
         {
-            Bitmap result = new Bitmap(width, height);
+            Bitmap result = new Bitmap (width, height);
 
-            using (Graphics graphics = Graphics.FromImage(result))
+            using (Graphics graphics = Graphics.FromImage (result))
             {
                 graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
                 graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
                 graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
                 graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
 
-                graphics.DrawImage(image, 0, 0, result.Width, result.Height);
+                graphics.DrawImage (image, 0, 0, result.Width, result.Height);
             }
 
             return result;
