@@ -3056,8 +3056,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public void UpdateContactPoint (ref d.Contact contact)
+        public d.Contact GetContactPoint ()
         {
+            d.Contact contact = new d.Contact ();
+            //Defaults
+            contact.surface.mode |= d.ContactFlags.SoftERP;
+            contact.surface.soft_cfm = 0.010f;
+            contact.surface.soft_erp = 0.010f;
+
             float restSquared = _parent_entity.Restitution * _parent_entity.Restitution;
             contact.surface.bounce = _parent_entity.Restitution * (Velocity.Z * -(restSquared));//Its about 1:1 surprisingly, even though this constant was for havok
             if (contact.surface.bounce > 1.5f)
@@ -3066,6 +3072,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             contact.surface.mode |= d.ContactFlags.Bounce; //Add bounce
             contact.surface.mu *= ((_parent_entity.Friction * 1500) - 750f);//Wood is 0.5 in the client, so we take that as '1' and offset the rest
             contact.surface.mu2 = contact.surface.mu;
+
+            return contact;
         }
 
         #endregion

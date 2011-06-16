@@ -162,7 +162,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             public changes what;
             public Object arg;
         }
-//        public Queue<AODEchangeitem> ChangesQueue = new Queue<AODEchangeitem>(500);
         public OpenSim.Framework.LocklessQueue<AODEchangeitem> ChangesQueue = new OpenSim.Framework.LocklessQueue<AODEchangeitem>();
         private readonly List<d.ContactGeom> _perloopContact = new List<d.ContactGeom> ();
 
@@ -172,9 +171,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private readonly HashSet<AuroraODECharacter> _badCharacter = new HashSet<AuroraODECharacter>();
         public Dictionary<IntPtr, PhysicsActor> actor_name_map = new Dictionary<IntPtr, PhysicsActor>();
-        private bool m_NINJA_physics_joints_enabled = false;
         private d.ContactGeom[] contacts;
-         public IntPtr RegionTerrain;
+        public IntPtr RegionTerrain;
         private readonly Dictionary<IntPtr, short[]> TerrainHeightFieldHeights = new Dictionary<IntPtr, short[]> ();
         private readonly Dictionary<IntPtr, short[]> ODETerrainHeightFieldHeights = new Dictionary<IntPtr, short[]> ();
         private readonly Dictionary<IntPtr, float[]> TerrainHeightFieldlimits = new Dictionary<IntPtr, float[]>();
@@ -188,8 +186,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private d.Contact contact;
         private d.Contact AvatarMovementprimContact;
-        private d.Contact AvatarFlyingprimContact;
-        private d.Contact[,] m_materialContacts;
 
         private int m_physicsiterations = 10;
         private int m_timeBetweenRevertingAutoConfigIterations = 50;
@@ -492,7 +488,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_useFlightCeilingHeight = physicsconfig.GetBoolean("Use_Flight_Ceiling_Height_Max", m_useFlightCeilingHeight);
                     m_flightCeilingHeight = physicsconfig.GetFloat("Flight_Ceiling_Height_Max", m_flightCeilingHeight); //Rex
 
-                    m_NINJA_physics_joints_enabled = physicsconfig.GetBoolean("use_NINJA_physics_joints", false);
                     minimumGroundFlightOffset = physicsconfig.GetFloat("minimum_ground_flight_offset", 3f);
                     maximumMassObject = physicsconfig.GetFloat("maximum_mass_object", 100000.01f);
                 }
@@ -516,134 +511,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // and is moving
             AvatarMovementprimContact.surface.mu = mAvatarObjectContactFriction;
             AvatarMovementprimContact.surface.bounce = mAvatarObjectContactBounce;
-
-            AvatarFlyingprimContact.surface.mu = mAvatarObjectContactFriction;
-            AvatarFlyingprimContact.surface.bounce = mAvatarObjectContactBounce;
-
-            /*
-                <summary></summary>
-                Stone = 0,
-                /// <summary></summary>
-                Metal = 1,
-                /// <summary></summary>
-                Glass = 2,
-                /// <summary></summary>
-                Wood = 3,
-                /// <summary></summary>
-                Flesh = 4,
-                /// <summary></summary>
-                Plastic = 5,
-                /// <summary></summary>
-                Rubber = 6
-             */
-
-            m_materialContacts = new d.Contact[7, 2];
-
-            m_materialContacts[(int)Material.Stone, 0] = new d.Contact();
-            m_materialContacts[(int)Material.Stone, 0].surface.mode |= d.ContactFlags.SoftERP;
-            m_materialContacts[(int)Material.Stone, 0].surface.mu = nmAvatarObjectContactFriction;
-            m_materialContacts[(int)Material.Stone, 0].surface.bounce = nmAvatarObjectContactBounce;
-            m_materialContacts[(int)Material.Stone, 0].surface.soft_cfm = 0.010f;
-            m_materialContacts[(int)Material.Stone, 0].surface.soft_erp = 0.010f;
-
-            m_materialContacts[(int)Material.Stone, 1] = new d.Contact();
-            m_materialContacts[(int)Material.Stone, 1].surface.mode |= d.ContactFlags.SoftERP;
-            m_materialContacts[(int)Material.Stone, 1].surface.mu = mAvatarObjectContactFriction;
-            m_materialContacts[(int)Material.Stone, 1].surface.bounce = mAvatarObjectContactBounce;
-            m_materialContacts[(int)Material.Stone, 1].surface.soft_cfm = 0.010f;
-            m_materialContacts[(int)Material.Stone, 1].surface.soft_erp = 0.010f;
-
-            m_materialContacts[(int)Material.Metal, 0] = new d.Contact();
-            m_materialContacts[(int)Material.Metal, 0].surface.mode |= d.ContactFlags.SoftERP;
-            m_materialContacts[(int)Material.Metal, 0].surface.mu = nmAvatarObjectContactFriction;
-            m_materialContacts[(int)Material.Metal, 0].surface.bounce = nmAvatarObjectContactBounce;
-            m_materialContacts[(int)Material.Metal, 0].surface.soft_cfm = 0.010f;
-            m_materialContacts[(int)Material.Metal, 0].surface.soft_erp = 0.010f;
-
-            m_materialContacts[(int)Material.Metal, 1] = new d.Contact();
-            m_materialContacts[(int)Material.Metal, 1].surface.mode |= d.ContactFlags.SoftERP;
-            m_materialContacts[(int)Material.Metal, 1].surface.mu = mAvatarObjectContactFriction;
-            m_materialContacts[(int)Material.Metal, 1].surface.bounce = mAvatarObjectContactBounce;
-            m_materialContacts[(int)Material.Metal, 1].surface.soft_cfm = 0.010f;
-            m_materialContacts[(int)Material.Metal, 1].surface.soft_erp = 0.010f;
-
-            m_materialContacts[(int)Material.Glass, 0] = new d.Contact();
-            m_materialContacts[(int)Material.Glass, 0].surface.mode |= d.ContactFlags.SoftERP;
-            m_materialContacts[(int)Material.Glass, 0].surface.mu = 1f;
-            m_materialContacts[(int)Material.Glass, 0].surface.bounce = 0.5f;
-            m_materialContacts[(int)Material.Glass, 0].surface.soft_cfm = 0.010f;
-            m_materialContacts[(int)Material.Glass, 0].surface.soft_erp = 0.010f;
-
-            /*
-                private float nmAvatarObjectContactFriction = 250f;
-                private float nmAvatarObjectContactBounce = 0.1f;
-
-                private float mAvatarObjectContactFriction = 75f;
-                private float mAvatarObjectContactBounce = 0.1f;
-            */
-            m_materialContacts[(int)Material.Glass, 1] = new d.Contact();
-            m_materialContacts[(int)Material.Glass, 1].surface.mode |= d.ContactFlags.SoftERP;
-            m_materialContacts[(int)Material.Glass, 1].surface.mu = 1f;
-            m_materialContacts[(int)Material.Glass, 1].surface.bounce = 0.5f;
-            m_materialContacts[(int)Material.Glass, 1].surface.soft_cfm = 0.010f;
-            m_materialContacts[(int)Material.Glass, 1].surface.soft_erp = 0.010f;
-
-            m_materialContacts[(int)Material.Wood, 0] = new d.Contact();
-            m_materialContacts[(int)Material.Wood, 0].surface.mode |= d.ContactFlags.SoftERP;
-            m_materialContacts[(int)Material.Wood, 0].surface.mu = nmAvatarObjectContactFriction;
-            m_materialContacts[(int)Material.Wood, 0].surface.bounce = nmAvatarObjectContactBounce;
-            m_materialContacts[(int)Material.Wood, 0].surface.soft_cfm = 0.010f;
-            m_materialContacts[(int)Material.Wood, 0].surface.soft_erp = 0.010f;
-
-            m_materialContacts[(int)Material.Wood, 1] = new d.Contact();
-            m_materialContacts[(int)Material.Wood, 1].surface.mode |= d.ContactFlags.SoftERP;
-            m_materialContacts[(int)Material.Wood, 1].surface.mu = mAvatarObjectContactFriction;
-            m_materialContacts[(int)Material.Wood, 1].surface.bounce = mAvatarObjectContactBounce;
-            m_materialContacts[(int)Material.Wood, 1].surface.soft_cfm = 0.010f;
-            m_materialContacts[(int)Material.Wood, 1].surface.soft_erp = 0.010f;
-
-            m_materialContacts[(int)Material.Flesh, 0] = new d.Contact();
-            m_materialContacts[(int)Material.Flesh, 0].surface.mode |= d.ContactFlags.SoftERP;
-            m_materialContacts[(int)Material.Flesh, 0].surface.mu = nmAvatarObjectContactFriction;
-            m_materialContacts[(int)Material.Flesh, 0].surface.bounce = nmAvatarObjectContactBounce;
-            m_materialContacts[(int)Material.Flesh, 0].surface.soft_cfm = 0.010f;
-            m_materialContacts[(int)Material.Flesh, 0].surface.soft_erp = 0.010f;
-
-            m_materialContacts[(int)Material.Flesh, 1] = new d.Contact();
-            m_materialContacts[(int)Material.Flesh, 1].surface.mode |= d.ContactFlags.SoftERP;
-            m_materialContacts[(int)Material.Flesh, 1].surface.mu = mAvatarObjectContactFriction;
-            m_materialContacts[(int)Material.Flesh, 1].surface.bounce = mAvatarObjectContactBounce;
-            m_materialContacts[(int)Material.Flesh, 1].surface.soft_cfm = 0.010f;
-            m_materialContacts[(int)Material.Flesh, 1].surface.soft_erp = 0.010f;
-
-            m_materialContacts[(int)Material.Plastic, 0] = new d.Contact();
-            m_materialContacts[(int)Material.Plastic, 0].surface.mode |= d.ContactFlags.SoftERP;
-            m_materialContacts[(int)Material.Plastic, 0].surface.mu = nmAvatarObjectContactFriction;
-            m_materialContacts[(int)Material.Plastic, 0].surface.bounce = nmAvatarObjectContactBounce;
-            m_materialContacts[(int)Material.Plastic, 0].surface.soft_cfm = 0.010f;
-            m_materialContacts[(int)Material.Plastic, 0].surface.soft_erp = 0.010f;
-
-            m_materialContacts[(int)Material.Plastic, 1] = new d.Contact();
-            m_materialContacts[(int)Material.Plastic, 1].surface.mode |= d.ContactFlags.SoftERP;
-            m_materialContacts[(int)Material.Plastic, 1].surface.mu = mAvatarObjectContactFriction;
-            m_materialContacts[(int)Material.Plastic, 1].surface.bounce = mAvatarObjectContactBounce;
-            m_materialContacts[(int)Material.Plastic, 1].surface.soft_cfm = 0.010f;
-            m_materialContacts[(int)Material.Plastic, 1].surface.soft_erp = 0.010f;
-
-            m_materialContacts[(int)Material.Rubber, 0] = new d.Contact();
-            m_materialContacts[(int)Material.Rubber, 0].surface.mode |= d.ContactFlags.SoftERP;
-            m_materialContacts[(int)Material.Rubber, 0].surface.mu = nmAvatarObjectContactFriction;
-            m_materialContacts[(int)Material.Rubber, 0].surface.bounce = nmAvatarObjectContactBounce;
-            m_materialContacts[(int)Material.Rubber, 0].surface.soft_cfm = 0.010f;
-            m_materialContacts[(int)Material.Rubber, 0].surface.soft_erp = 0.010f;
-
-            m_materialContacts[(int)Material.Rubber, 1] = new d.Contact();
-            m_materialContacts[(int)Material.Rubber, 1].surface.mode |= d.ContactFlags.SoftERP;
-            m_materialContacts[(int)Material.Rubber, 1].surface.mu = mAvatarObjectContactFriction;
-            m_materialContacts[(int)Material.Rubber, 1].surface.bounce = mAvatarObjectContactBounce;
-            m_materialContacts[(int)Material.Rubber, 1].surface.soft_cfm = 0.010f;
-            m_materialContacts[(int)Material.Rubber, 1].surface.soft_erp = 0.010f;
-           
 
             // Set the gravity,, don't disable things automatically (we set it explicitly on some things)
             d.WorldSetGravity(world, gravityx, gravityy, gravityz);
@@ -1068,32 +935,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         if (p2.PhysicsActorType == (int)ActorTypes.Prim)
                         {
-                            // prim terrain contact
-                            // int pj294950 = 0;
-                            int moving = 0;
-                            int material = ((AuroraODEPrim)p2).m_material;
-
-                            // prim terrain contact
-                            if (Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f)
-                                moving = 1;
-
-                            //m_log.DebugFormat("Material: {0}", material);
-                            m_materialContacts[material, moving].geom = curContact;
                             if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
 
                             //Add restitution and friction changes
-                            d.SurfaceParameters original = CopyContact(m_materialContacts[material, moving].surface);
-                            ((AuroraODEPrim)p2).UpdateContactPoint (ref m_materialContacts[material, moving]);
+                            d.Contact contact = ((AuroraODEPrim)p2).GetContactPoint ();
+                            contact.geom = curContact;
 
                             if (m_global_contactcount < m_currentmaxContactsbeforedeath)
                             {
-                                joint = d.JointCreateContact (world, contactgroup, ref m_materialContacts[material, moving]);
-                                m_materialContacts[material, moving].surface = original;
+                                joint = d.JointCreateContact (world, contactgroup, ref contact);
                                 m_global_contactcount++;
                             }
-                            else
-                                m_materialContacts[material, moving].surface = original;
                         }
                     }
 
@@ -1103,31 +956,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         // check if we're moving
                         if ((p2.PhysicsActorType == (int)ActorTypes.Agent))
                         {
-                            if ((Math.Abs(p2.Velocity.X) > 0.01f || Math.Abs(p2.Velocity.Y) > 0.01f))
+                            if ((Math.Abs (p2.Velocity.X) > 0.01f || Math.Abs (p2.Velocity.Y) > 0.01f))
                             {
-                                if (p2.Flying)
+                                // Use the Movement prim contact
+                                AvatarMovementprimContact.geom = curContact;
+                                if (m_filterCollisions)
+                                    _perloopContact.Add (curContact);
+                                if (m_global_contactcount < m_currentmaxContactsbeforedeath)
                                 {
-                                    // Use the Movement prim contact
-                                    AvatarFlyingprimContact.geom = curContact;
-                                    if (m_filterCollisions)
-                                        _perloopContact.Add (curContact);
-                                    if (m_global_contactcount < m_currentmaxContactsbeforedeath)
-                                    {
-                                        joint = d.JointCreateContact (world, contactgroup, ref AvatarFlyingprimContact);
-                                        m_global_contactcount++;
-                                    }
-                                }
-                                else
-                                {
-                                    // Use the Movement prim contact
-                                    AvatarMovementprimContact.geom = curContact;
-                                    if (m_filterCollisions)
-                                        _perloopContact.Add (curContact);
-                                    if (m_global_contactcount < m_currentmaxContactsbeforedeath)
-                                    {
-                                        joint = d.JointCreateContact (world, contactgroup, ref AvatarMovementprimContact);
-                                        m_global_contactcount++;
-                                    }
+                                    joint = d.JointCreateContact (world, contactgroup, ref AvatarMovementprimContact);
+                                    m_global_contactcount++;
                                 }
                             }
                             else
@@ -1135,41 +973,29 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 // Use the non movement contact
                                 contact.geom = curContact;
                                 if (m_filterCollisions)
-                                    _perloopContact.Add(curContact);
+                                    _perloopContact.Add (curContact);
 
                                 if (m_global_contactcount < m_currentmaxContactsbeforedeath)
                                 {
-                                    joint = d.JointCreateContact(world, contactgroup, ref contact);
+                                    joint = d.JointCreateContact (world, contactgroup, ref contact);
                                     m_global_contactcount++;
                                 }
                             }
                         }
                         else if (p2.PhysicsActorType == (int)ActorTypes.Prim)
                         {
-                            //p1.PhysicsActorType
-                            int material = ((AuroraODEPrim)p2).m_material;
-                            int moving = 0;
-                            if (Math.Abs (p2.Velocity.X) > 0.01f || Math.Abs (p2.Velocity.Y) > 0.01f)
-                                moving = 1;
-
-
-                            //m_log.DebugFormat("Material: {0}", material);
-                            m_materialContacts[material, moving].geom = curContact;
                             if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
 
                             //Add restitution and friction changes
-                            d.SurfaceParameters original = CopyContact (m_materialContacts[material, moving].surface);
-                            ((AuroraODEPrim)p2).UpdateContactPoint (ref m_materialContacts[material, moving]);
+                            d.Contact contact = ((AuroraODEPrim)p2).GetContactPoint ();
+                            contact.geom = curContact;
 
                             if (m_global_contactcount < m_currentmaxContactsbeforedeath)
                             {
-                                joint = d.JointCreateContact (world, contactgroup, ref m_materialContacts[material, moving]);
-                                m_materialContacts[material, moving].surface = original;
+                                joint = d.JointCreateContact (world, contactgroup, ref contact);
                                 m_global_contactcount++;
                             }
-                            else
-                                m_materialContacts[material, moving].surface = original;
                         }
                     }
 
