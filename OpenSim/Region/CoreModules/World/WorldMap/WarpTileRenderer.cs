@@ -69,7 +69,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
         public Bitmap TerrainToBitmap (System.Drawing.Bitmap mapbmp)
         {
-            mapbmp = new Bitmap (m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
             List<string> renderers = RenderingLoader.ListRenderers (Util.ExecutingDirectory ());
             if (renderers.Count > 0)
             {
@@ -98,7 +97,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             m_colors.Clear ();
 
             Vector3 camPos = new Vector3 (m_scene.RegionInfo.RegionSizeX / 2, m_scene.RegionInfo.RegionSizeY / 2, 221.7025033688163f);
-            Viewport viewport = new Viewport (camPos, -Vector3.UnitZ, 1024f, 0.1f, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY, m_scene.RegionInfo.RegionSizeX-1, m_scene.RegionInfo.RegionSizeY-1);
+            Viewport viewport = new Viewport (camPos, -Vector3.UnitZ, 1024f, 0.1f, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY, m_scene.RegionInfo.RegionSizeX - 1, m_scene.RegionInfo.RegionSizeY - 1);
 
             int width = viewport.Width;
             int height = viewport.Height;
@@ -141,7 +140,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             renderer.Scene.addLight ("Light2", new warp_Light (new warp_Vector (-1f, -1f, 1f), 0xffffff, 0, 100, 40));
 
             CreateWater (renderer);
-            CreateTerrain (renderer, textureTerrain);
+            warp_Object terrainObj = CreateTerrain (renderer, textureTerrain);
             if (drawPrimVolume && m_primMesher != null)
                 foreach (ISceneEntity ent in m_scene.Entities.GetEntities ())
                     foreach (ISceneChildEntity part in ent.ChildrenEntities ())
@@ -150,18 +149,19 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             renderer.Render ();
             Bitmap bitmap = renderer.Scene.getImage ();
+            bitmap = ImageUtils.ResizeImage (bitmap, Constants.RegionSize, Constants.RegionSize);
 
             renderer.Scene.removeAllObjects ();
             renderer = null;
             viewport = null;
             m_primMesher = null;
+            terrainObj.fastvertex = null;
+            terrainObj.fasttriangle = null;
+            terrainObj = null;
             m_colors.Clear ();
 
             //Force GC to try to clean this mess up
             GC.GetTotalMemory (true);
-
-            if (m_useAntiAliasing)
-                bitmap = ImageUtils.ResizeImage (bitmap, width / 2, height / 2);
 
             return bitmap;
         }
@@ -181,36 +181,37 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             renderer.SetObjectMaterial ("Water", "WaterColor");
         }
 
-        private void CreateTerrain (WarpRenderer renderer, bool textureTerrain)
+        private warp_Object CreateTerrain (WarpRenderer renderer, bool textureTerrain)
         {
             ITerrainChannel terrain = m_scene.RequestModuleInterface<ITerrainChannel> ();
 
-            warp_Object obj = new warp_Object ((m_scene.RegionInfo.RegionSizeX) * (m_scene.RegionInfo.RegionSizeY), (m_scene.RegionInfo.RegionSizeX-1) * (m_scene.RegionInfo.RegionSizeY-1) * 2);
+            int diff = (int)m_scene.RegionInfo.RegionSizeY / Constants.RegionSize;
+            warp_Object obj = new warp_Object ((m_scene.RegionInfo.RegionSizeX / diff) * (m_scene.RegionInfo.RegionSizeY / diff), ((m_scene.RegionInfo.RegionSizeX / diff) - 1) * ((m_scene.RegionInfo.RegionSizeY / diff) - 1) * 2);
             short[] heightmap = terrain.GetSerialised (m_scene);
 
-            for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
+            for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y += diff)
             {
-                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
+                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x += diff)
                 {
-                    float height = terrain[x, y];
-
-                    warp_Vector pos = ConvertVector (new Vector3 (x, y, height));
+                    warp_Vector pos = ConvertVector (x, y, terrain[x, y]);
                     obj.addVertex (new warp_Vertex (pos, (float)x / (m_scene.RegionInfo.RegionSizeX), (float)((m_scene.RegionInfo.RegionSizeX) - y) / (m_scene.RegionInfo.RegionSizeX)));
                 }
             }
 
-            for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
+            for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y += diff)
             {
-                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
+                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x += diff)
                 {
-                    if (x < m_scene.RegionInfo.RegionSizeX -1 && y < m_scene.RegionInfo.RegionSizeY - 1)
+                    int newX = x / diff;
+                    int newY = y / diff;
+                    if (newX < Constants.RegionSize - 1 && newY < Constants.RegionSize - 1)
                     {
-                        int v = y * m_scene.RegionInfo.RegionSizeX + x;
+                        int v = newY * Constants.RegionSize + newX;
 
                         // Normal
-                        Vector3 v1 = new Vector3 (x, y, ((float)heightmap[y * m_scene.RegionInfo.RegionSizeX + x]) / (float)Constants.TerrainCompression);
-                        Vector3 v2 = new Vector3 (x + 1, y, ((float)heightmap[y * m_scene.RegionInfo.RegionSizeX + x + 1]) / (float)Constants.TerrainCompression);
-                        Vector3 v3 = new Vector3 (x, y + 1, ((float)heightmap[(y + 1) * m_scene.RegionInfo.RegionSizeX + x]) / (float)Constants.TerrainCompression);
+                        Vector3 v1 = new Vector3 (newX, newY, ((float)heightmap[newY * m_scene.RegionInfo.RegionSizeX + newX]) / (float)Constants.TerrainCompression);
+                        Vector3 v2 = new Vector3 (newX + 1, newY, ((float)heightmap[newY * m_scene.RegionInfo.RegionSizeX + newX + 1]) / (float)Constants.TerrainCompression);
+                        Vector3 v3 = new Vector3 (newX, newY + 1, ((float)heightmap[(newY + 1) * m_scene.RegionInfo.RegionSizeX + newX]) / (float)Constants.TerrainCompression);
                         warp_Vector norm = ConvertVector (SurfaceNormal (v1, v2, v3));
                         norm = norm.reverse ();
                         obj.vertex (v).n = norm;
@@ -219,12 +220,12 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         obj.addTriangle (
                             (int)v,
                             (int)v + 1,
-                            (int)v + m_scene.RegionInfo.RegionSizeX);
+                            (int)v + Constants.RegionSize);
 
                         // Triangle 2
                         obj.addTriangle (
-                            (int)v + m_scene.RegionInfo.RegionSizeX + 1,
-                            (int)v + m_scene.RegionInfo.RegionSizeX,
+                            (int)v + Constants.RegionSize + 1,
+                            (int)v + Constants.RegionSize,
                             (int)v + 1);
                     }
                 }
@@ -262,6 +263,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             material.setReflectivity (0); // reduces tile seams a bit thanks lkalif
             renderer.Scene.addMaterial ("TerrainColor", material);
             renderer.SetObjectMaterial ("Terrain", "TerrainColor");
+            return obj;
         }
 
         private static Vector3 SurfaceNormal (Vector3 c1, Vector3 c2, Vector3 c3)
@@ -438,6 +440,11 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
         #region Static Helpers
 
+        private static warp_Vector ConvertVector (float x, float y, float z)
+        {
+            return new warp_Vector (x, z, y);
+        }
+
         private static warp_Vector ConvertVector (Vector3 vector)
         {
             return new warp_Vector (vector.X, vector.Z, vector.Y);
@@ -573,6 +580,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                 graphics.DrawImage (image, 0, 0, result.Width, result.Height);
             }
+            image.Dispose ();
 
             return result;
         }
