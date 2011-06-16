@@ -208,9 +208,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         int v = y * m_scene.RegionInfo.RegionSizeX + x;
 
                         // Normal
-                        Vector3 v1 = new Vector3 (x, y, heightmap[y * m_scene.RegionInfo.RegionSizeX + x]);
-                        Vector3 v2 = new Vector3 (x + 1, y, heightmap[y * m_scene.RegionInfo.RegionSizeX + x + 1]);
-                        Vector3 v3 = new Vector3 (x, y + 1, heightmap[(y + 1) * m_scene.RegionInfo.RegionSizeX + x]);
+                        Vector3 v1 = new Vector3 (x, y, ((float)heightmap[y * m_scene.RegionInfo.RegionSizeX + x]) / (float)Constants.TerrainCompression);
+                        Vector3 v2 = new Vector3 (x + 1, y, ((float)heightmap[y * m_scene.RegionInfo.RegionSizeX + x + 1]) / (float)Constants.TerrainCompression);
+                        Vector3 v3 = new Vector3 (x, y + 1, ((float)heightmap[(y + 1) * m_scene.RegionInfo.RegionSizeX + x]) / (float)Constants.TerrainCompression);
                         warp_Vector norm = ConvertVector (SurfaceNormal (v1, v2, v3));
                         norm = norm.reverse ();
                         obj.vertex (v).n = norm;
