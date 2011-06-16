@@ -172,8 +172,10 @@ namespace Aurora.Services.DataService
         {
             //Split the InfoUUID so that we get the regions, we'll check for positions in a bit
             uint RegionX, RegionY;
-            Util.FakeParcelIDToGlobalPosition(InfoUUID, out RegionX, out RegionY);
-            OpenSim.Services.Interfaces.GridRegion r = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)RegionX, (int)RegionY);
+            Util.FakeParcelIDToGlobalPosition (InfoUUID, out RegionX, out RegionY);
+            RegionX = (uint)((float)RegionX / Constants.RegionSize);
+            RegionY = (uint)(RegionY / Constants.RegionSize);
+            OpenSim.Services.Interfaces.GridRegion r = m_registry.RequestModuleInterface<IGridService> ().GetRegionByPosition (UUID.Zero, (int)RegionX * Constants.RegionSize, (int)RegionY * Constants.RegionSize);
             if (r == null)
             {
                 m_log.Warn("[DirectoryService]: Could not find parcel for ParcelID: " + InfoUUID);
