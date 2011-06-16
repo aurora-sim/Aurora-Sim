@@ -403,7 +403,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     if (map != null)
                     {
                         color = map["X-JPEG2000-RGBA"].AsColor4 ();
-                        fetched = true;
+                        if (!(color.R == 0.5f && color.G == 0.5f && color.B == 0.5f && color.A == 1.0f))//If we failed, don't save it
+                            fetched = true;
                     }
                 }
 
@@ -416,21 +417,23 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     {
                         int width, height;
                         color = GetAverageColor (textureAsset.FullID, textureAsset.Data, m_scene, out width, out height);
-
-                        OSDMap data = new OSDMap { { "X-JPEG2000-RGBA", OSD.FromColor4 (color) } };
-                        metadata = new AssetBase
+                        if (!(color.R == 0.5f && color.G == 0.5f && color.B == 0.5f && color.A == 1.0f))//If we failed, don't save it
                         {
-                            Data = System.Text.Encoding.UTF8.GetBytes (OSDParser.SerializeJsonString (data)),
-                            Description = "Metadata for JPEG2000 texture " + face.TextureID.ToString (),
-                            Flags = AssetFlags.Collectable,
-                            FullID = metadataID,
-                            ID = metadataID.ToString (),
-                            Local = true,
-                            Temporary = true,
-                            Name = String.Empty,
-                            Type = (sbyte)AssetType.Simstate // Make something up to get around OpenSim's myopic treatment of assets
-                        };
-                        m_scene.AssetService.Store (metadata);
+                            OSDMap data = new OSDMap { { "X-JPEG2000-RGBA", OSD.FromColor4 (color) } };
+                            metadata = new AssetBase
+                            {
+                                Data = System.Text.Encoding.UTF8.GetBytes (OSDParser.SerializeJsonString (data)),
+                                Description = "Metadata for JPEG2000 texture " + face.TextureID.ToString (),
+                                Flags = AssetFlags.Collectable,
+                                FullID = metadataID,
+                                ID = metadataID.ToString (),
+                                Local = true,
+                                Temporary = true,
+                                Name = String.Empty,
+                                Type = (sbyte)AssetType.Simstate // Make something up to get around OpenSim's myopic treatment of assets
+                            };
+                            m_scene.AssetService.Store (metadata);
+                        }
                     }
                     else
                     {
