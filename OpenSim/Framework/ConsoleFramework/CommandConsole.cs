@@ -103,7 +103,12 @@ namespace OpenSim.Framework
                 if (commandPath.Length == 1 || !m_allowSubSets)
                 {
                     //Only one command after our path, its ours
-                    commands[info.command] = info;
+
+                    //Add commands together if there is more than one event hooked to one command
+                    if (commands.ContainsKey (info.command))
+                        commands[info.command].fn.AddRange (info.fn);
+                    else
+                        commands[info.command] = info;
                 }
                 else
                 {
