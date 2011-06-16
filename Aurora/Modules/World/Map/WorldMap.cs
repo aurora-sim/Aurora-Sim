@@ -718,23 +718,25 @@ namespace Aurora.Modules
 
                     // non-async because we know we have the asset immediately.
                     AssetBase mapasset = m_scene.AssetService.Get(m_scene.RegionInfo.RegionSettings.TerrainImageID.ToString());
-
-                    image = m_scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage (mapasset.Data);
-                    // Decode image to System.Drawing.Image
-                    if (image != null)
+                    if (mapasset != null)
                     {
-                        // Save to bitmap
-                        mapTexture = new Bitmap(image);
+                        image = m_scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage (mapasset.Data);
+                        // Decode image to System.Drawing.Image
+                        if (image != null)
+                        {
+                            // Save to bitmap
+                            mapTexture = new Bitmap (image);
 
-                        EncoderParameters myEncoderParameters = new EncoderParameters();
-                        myEncoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, 95L);
+                            EncoderParameters myEncoderParameters = new EncoderParameters ();
+                            myEncoderParameters.Param[0] = new EncoderParameter (Encoder.Quality, 95L);
 
-                        // Save bitmap to stream
-                        mapTexture.Save(imgstream, GetEncoderInfo("image/jpeg"), myEncoderParameters);
+                            // Save bitmap to stream
+                            mapTexture.Save (imgstream, GetEncoderInfo ("image/jpeg"), myEncoderParameters);
 
-                        // Write the stream to a byte array for output
-                        jpeg = imgstream.ToArray();
-                        myMapImageJPEG = jpeg;
+                            // Write the stream to a byte array for output
+                            jpeg = imgstream.ToArray ();
+                            myMapImageJPEG = jpeg;
+                        }
                     }
                 }
                 catch (Exception)
