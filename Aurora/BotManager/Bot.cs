@@ -135,7 +135,7 @@ namespace Aurora.BotManager
         private BotState m_previousState = BotState.Idle;
 
         private System.Timers.Timer m_frames;
-        private System.Timers.Timer m_startTime;
+        private int m_frame = 0;
 
         #region IClientAPI properties
 
@@ -212,10 +212,8 @@ namespace Aurora.BotManager
             m_scene = scene;
             
             m_circuitCode = UniqueId;
-            m_frames = new System.Timers.Timer(100);
-            m_frames.Elapsed += (frames_Elapsed);
-            m_startTime = new System.Timers.Timer(10);
-            m_startTime.Elapsed += (startTime_Elapsed);
+            m_frames = new System.Timers.Timer(10);
+            m_frames.Elapsed += (frame_Elapsed);
             
             UniqueId++;
         }
@@ -235,7 +233,6 @@ namespace Aurora.BotManager
                     break;
                 }
             }
-            m_startTime.Start ();
             m_frames.Start ();
         }
 
@@ -250,7 +247,6 @@ namespace Aurora.BotManager
             OnBotConnectionClosed();
 
             m_frames.Stop();
-            m_startTime.Stop ();
         }
 
         #endregion
@@ -512,18 +508,21 @@ namespace Aurora.BotManager
 
         #region Timers
 
-        private void frames_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void frame_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
+            m_frames.Stop ();
             if (m_scenePresence == null)
                 return;
-            Update();
-        }
 
-        private void startTime_Elapsed (object sender, System.Timers.ElapsedEventArgs e)
-        {
-            m_startTime.Stop ();
+            m_frame++;
             GetNextDestination ();
-            m_startTime.Start ();
+
+            if (m_frame % 10 == 0)//Only every 10 frames
+            {
+                m_frame = 0;
+                Update ();
+            }
+            m_frames.Start ();
         }
 
         #endregion
@@ -532,9 +531,6 @@ namespace Aurora.BotManager
 
         private void GetNextDestination()
         {
-            if (m_scenePresence == null)
-                return;
-
             //Fire the move event
             EventManager.FireGenericEventHandler ("Move", null);
 
@@ -578,7 +574,7 @@ namespace Aurora.BotManager
 
         public void Update ()
         {
-            if (m_scenePresence == null || m_paused)
+            if (m_paused)
                 return;
             //Tell any interested modules that we are ready to go
             EventManager.FireGenericEventHandler ("Update", null);
