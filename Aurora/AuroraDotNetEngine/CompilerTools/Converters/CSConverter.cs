@@ -170,6 +170,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public void Convert(string Script, out string CompiledScript, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)
         {
+            #region Reset
+
+            m_includedDefines.Clear ();
+            m_includedAssemblies.Clear ();
+            m_allowUnsafe = false;
+            m_addLSLAPI = false;
+
+            #endregion
+
             CompiledScript = CreateCompilerScript(Script);
             PositionMap = null;
         }
@@ -267,6 +276,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 line = line.Replace ("#include", "");
                 if (line.EndsWith (";"))
                     line = line.Remove (line.Length - 1);
+                line = line.TrimStart (' ');
                 m_includedDefines.Add (line); //TODO: Add a check here
             }
             else if (line.StartsWith ("#assembly"))
@@ -274,6 +284,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 line = line.Replace ("#assembly", "");
                 if (line.EndsWith (";"))
                     line = line.Remove (line.Length - 1);
+                line = line.TrimStart (' ');
                 m_includedAssemblies.Add (line); //TODO: Add a check here
             }
             else if (line.StartsWith ("#threaded"))
@@ -306,7 +317,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     "Aurora.BotManager.dll"));
             foreach (string line in m_includedAssemblies)
             {
-                parameters.ReferencedAssemblies.Add (Path.Combine (rootPath,
+                if(!parameters.ReferencedAssemblies.Contains(line))
+                    parameters.ReferencedAssemblies.Add (Path.Combine (rootPath,
                         line));
             }
             bool complete = false;

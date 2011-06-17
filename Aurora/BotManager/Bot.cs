@@ -1424,8 +1424,6 @@ namespace Aurora.BotManager
         #endregion
 
 
-
-
         #region Chat interface
 
         public void SendChatMessage (int sayType, string message, int channel)
