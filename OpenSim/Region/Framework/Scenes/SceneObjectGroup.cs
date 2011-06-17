@@ -807,8 +807,6 @@ namespace OpenSim.Region.Framework.Scenes
                     part.Scale = scale;
                 }
             }
-            //Check to make sure we have the sculpty info
-            CheckSculptAndLoad();
 
             //Trigger our event
             Scene.EventManager.TriggerObjectBeingAddedToScene(this);
@@ -1560,9 +1558,7 @@ namespace OpenSim.Region.Framework.Scenes
                     part.PhysActor.OnOutOfBounds += part.PhysicsOutOfBounds;
                     part.PhysActor.SubscribeEvents (1000);
 
-                    if (part.IsRoot) //Check for meshes and stuff
-                        CheckSculptAndLoad ();
-                    else //Link the prim then
+                    if (!part.IsRoot) //Link the prim then
                         part.PhysActor.link (RootPart.PhysActor);
                     Scene.PhysicsScene.AddPhysicsActorTaint (part.PhysActor);
 
@@ -1570,6 +1566,8 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 Scene.AuroraEventManager.FireGenericEventHandler ("ObjectChangedPhysicalStatus", this);
             }
+             //Check for meshes and stuff
+            CheckSculptAndLoad ();
         }
 
         #endregion
@@ -3280,26 +3278,29 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void CheckSculptAndLoad ()
         {
-            if (IsDeleted)
-                return;
-            if ((RootPart.GetEffectiveObjectFlags () & (uint)PrimFlags.Phantom) != 0)
-                return;
-
             foreach (SceneObjectPart part in m_partsList)
             {
                 if (part.Shape == null)
                     continue;
-                if (part.Shape.SculptEntry && part.Shape.SculptTexture != UUID.Zero)
+                if (!(RootPart.PhysicsType == (byte)PhysicsShapeType.None ||
+                        part.PhysicsType == (byte)PhysicsShapeType.None ||
+                        ((part.Flags & PrimFlags.Phantom) == PrimFlags.Phantom &&
+                        !part.VolumeDetectActive) ||
+                        ((RootPart.Flags & PrimFlags.Phantom) == PrimFlags.Phantom &&
+                        !RootPart.VolumeDetectActive)))
                 {
-                    // check if a previously decoded sculpt map has been cached
-                    if (File.Exists (System.IO.Path.Combine ("j2kDecodeCache", "smap_" + part.Shape.SculptTexture.ToString ())))
+                    if (part.Shape.SculptEntry && part.Shape.SculptTexture != UUID.Zero)
                     {
-                        part.SculptTextureCallback (part.Shape.SculptTexture, null);
-                    }
-                    else
-                    {
-                        m_scene.AssetService.Get (
-                            part.Shape.SculptTexture.ToString (), part, AssetReceived);
+                        // check if a previously decoded sculpt map has been cached
+                        if (File.Exists (System.IO.Path.Combine ("j2kDecodeCache", "smap_" + part.Shape.SculptTexture.ToString ())))
+                        {
+                            part.SculptTextureCallback (part.Shape.SculptTexture, null);
+                        }
+                        else
+                        {
+                            m_scene.AssetService.Get (
+                                part.Shape.SculptTexture.ToString (), part, AssetReceived);
+                        }
                     }
                 }
             }

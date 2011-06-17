@@ -278,7 +278,6 @@ namespace Aurora.Modules
                         ISceneChildEntity rootPart = group.GetChildPart(group.UUID);
                         rootPart.Flags &= ~PrimFlags.Scripted;
                         rootPart.TrimPermissions();
-                        group.CheckSculptAndLoad();
                     }
                     catch(Exception ex)
                     {

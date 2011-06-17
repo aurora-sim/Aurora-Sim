@@ -3947,13 +3947,16 @@ namespace OpenSim.Region.Framework.Scenes
                     if (PhysActor != null)
                     {
                         // Tricks physics engine into thinking we've changed the part shape.
-                        PrimitiveBaseShape m_newshape = m_shape.Copy();
+                        PrimitiveBaseShape m_newshape = m_shape.Copy ();
                         PhysActor.Shape = m_newshape;
                         m_shape = m_newshape;
 
-                        m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(PhysActor);
+                        m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint (PhysActor);
                     }
                 }
+            }
+            else
+            {
             }
         }
 

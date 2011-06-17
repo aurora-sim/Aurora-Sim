@@ -1963,6 +1963,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 #endif
                 return false;
             }
+            else if (pbs.SculptType != (byte)SculptType.None)
+                return true;
 
             // if it's a standard box or sphere with no cuts, hollows, twist or top shear, return false since ODE can use an internal representation for the prim
             if (!forceSimplePrimMeshing)
