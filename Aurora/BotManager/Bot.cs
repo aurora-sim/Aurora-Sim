@@ -1371,14 +1371,16 @@ namespace Aurora.BotManager
 
         public object DistanceFollowUpdate (string funct, object param)
         {
-            return null;
             foreach (KeyValuePair<UUID, float> kvp in m_followDistance)
             {
                 IScenePresence sp = m_scene.GetScenePresence (kvp.Key);
                 if (sp != null)
                 {
                     if (Util.DistanceLessThan (sp.AbsolutePosition, m_scenePresence.AbsolutePosition, kvp.Value))
+                    {
                         m_followDistanceEvents[kvp.Key] (kvp.Key, m_scenePresence.UUID);
+                        RemoveDistanceEvent (sp.UUID);
+                    }
                 }
             }
             return null;
@@ -1406,7 +1408,6 @@ namespace Aurora.BotManager
 
         public object LineOfSightUpdate (string funct, object param)
         {
-            return null;
             foreach (KeyValuePair<UUID, float> kvp in m_LineOfSight)
             {
                 IScenePresence sp = m_scene.GetScenePresence (kvp.Key);
@@ -1414,8 +1415,11 @@ namespace Aurora.BotManager
                 {
                     List<ISceneChildEntity> entities = llCastRay (sp.AbsolutePosition, m_scenePresence.AbsolutePosition);
                     if (entities.Count == 0)
-                        if(m_scenePresence.AbsolutePosition.ApproxEquals(sp.AbsolutePosition, m_LineOfSight[kvp.Key]))
+                        if (m_scenePresence.AbsolutePosition.ApproxEquals (sp.AbsolutePosition, m_LineOfSight[kvp.Key]))
+                        {
                             m_LineOfSightEvents[kvp.Key] (kvp.Key, m_scenePresence.UUID);
+                            RemoveLineOfSightEvent (sp.UUID);
+                        }
                 }
             }
             return null;
