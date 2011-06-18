@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) Contributors, http://aurora-sim.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -32,20 +32,21 @@ using Aurora.Simulation.Base;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
+using OpenSim.Services.MessagingService;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace OpenSim.Services.MessagingService
+namespace Aurora.Modules
 {
-    public class MessagingServiceInHandler : IService, IAsyncMessageRecievedService, IGridRegistrationUrlModule
+    public class IWCMessagingServiceInHandler : IService, IAsyncMessageRecievedService, IGridRegistrationUrlModule
     {
         protected bool m_enabled = false;
-        public void Initialize(IConfigSource config, IRegistryCore registry)
+        public void Initialize (IConfigSource config, IRegistryCore registry)
         {
-            registry.RegisterModuleInterface<IAsyncMessageRecievedService>(this);
+            registry.RegisterModuleInterface<IAsyncMessageRecievedService> (this);
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("MessagingServiceInHandler", "") != Name)
+            if (handlerConfig.GetString ("MessagingServiceInHandler", "") != Name)
                 return;
             m_enabled = true;
         }
@@ -53,21 +54,22 @@ namespace OpenSim.Services.MessagingService
         private IRegistryCore m_registry;
         public string Name
         {
-            get { return GetType().Name; }
+            get
+            {
+                return GetType ().Name;
+            }
         }
 
-        public void Start(IConfigSource config, IRegistryCore registry)
+        public void Start (IConfigSource config, IRegistryCore registry)
         {
             if (!m_enabled)
                 return;
-            IConfig handlerConfig = config.Configs["Handlers"];
 
             m_registry = registry;
-
-            m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
+            m_registry.RequestModuleInterface<IGridRegistrationService> ().RegisterModule (this);
         }
 
-        public void FinishedStartup()
+        public void FinishedStartup ()
         {
         }
 
@@ -80,16 +82,28 @@ namespace OpenSim.Services.MessagingService
         public OSDMap FireMessageReceived (string SessionID, OSDMap message)
         {
             OSDMap result = null;
-            if (OnMessageReceived != null)
+            ulong reg;
+            if (ulong.TryParse (SessionID, out reg))//Local region
             {
-                MessageReceived eventCopy = OnMessageReceived;
-                foreach (MessageReceived messagedelegate in eventCopy.GetInvocationList ())
+                if (OnMessageReceived != null)
                 {
-                    OSDMap r = messagedelegate(message);
-                    if (r != null)
-                        result = r;
+                    MessageReceived eventCopy = OnMessageReceived;
+                    foreach (MessageReceived messagedelegate in eventCopy.GetInvocationList ())
+                    {
+                        OSDMap r = messagedelegate (message);
+                        if (r != null)
+                            result = r;
+                    }
                 }
             }
+            else//IWC
+            {
+                string[] session = SessionID.Split('|');
+                ISyncMessagePosterService smps = m_registry.RequestModuleInterface<ISyncMessagePosterService> ();
+                //Forward it on
+                result = smps.Get (message, UUID.Parse(session[0]), ulong.Parse (session[1]));
+            }
+
             return result;
         }
 
@@ -97,21 +111,24 @@ namespace OpenSim.Services.MessagingService
 
         public string UrlName
         {
-            get { return "MessagingServerURI"; }
+            get
+            {
+                return "MessagingServerURI";
+            }
         }
 
-        public void AddExistingUrlForClient(string SessionID, string url, uint port)
+        public void AddExistingUrlForClient (string SessionID, string url, uint port)
         {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (port);
 
             server.AddStreamHandler (new MessagingServiceInPostHandler (url, m_registry, this, SessionID));
         }
 
         public string GetUrlForRegisteringClient (string SessionID, uint port)
         {
-            string url = "/messagingservice" + UUID.Random();
+            string url = "/messagingservice" + UUID.Random ();
 
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (port);
 
             server.AddStreamHandler (new MessagingServiceInPostHandler (url, m_registry, this, SessionID));
 
@@ -120,8 +137,8 @@ namespace OpenSim.Services.MessagingService
 
         public void RemoveUrlForClient (string sessionID, string url, uint port)
         {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-            server.RemoveHTTPHandler("POST", url);
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (port);
+            server.RemoveHTTPHandler ("POST", url);
         }
 
         #endregion

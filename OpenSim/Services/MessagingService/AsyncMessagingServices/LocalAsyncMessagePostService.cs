@@ -79,7 +79,7 @@ namespace OpenSim.Services.MessagingService
         /// <param name="request"></param>
         public void Post(ulong RegionHandle, OSDMap request)
         {
-            m_asyncReceiverService.FireMessageReceived(request);
+            m_asyncReceiverService.FireMessageReceived(RegionHandle.ToString(), request);
         }
     }
 }

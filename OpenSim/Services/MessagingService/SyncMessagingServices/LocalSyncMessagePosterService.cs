@@ -71,12 +71,12 @@ namespace OpenSim.Services.MessagingService
 
         public void Post(OSDMap request, ulong RegionHandle)
         {
-            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(request);
+            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(RegionHandle.ToString(), request);
         }
 
         public OSDMap Get (OSDMap request, UUID userID, ulong RegionHandle)
         {
-            return m_registry.RequestModuleInterface<IAsyncMessageRecievedService> ().FireMessageReceived (request);
+            return m_registry.RequestModuleInterface<IAsyncMessageRecievedService> ().FireMessageReceived (RegionHandle.ToString(), request);
         }
 
         private OSDMap CreateWebRequest(OSDMap request)

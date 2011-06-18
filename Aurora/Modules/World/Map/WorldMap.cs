@@ -342,14 +342,8 @@ namespace Aurora.Modules
             while(true)
             {
                 MapItemRequester item = null;
-                try
-                {
+                if(m_itemsToRequest.Count > 0)
                     item = m_itemsToRequest.Dequeue ();
-                }
-                catch
-                {
-                    break;//No more things in the queue
-                }
                 if (item == null)
                     break; //Nothing in the queue
 

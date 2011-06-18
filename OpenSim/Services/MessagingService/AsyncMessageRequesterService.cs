@@ -135,7 +135,7 @@ namespace OpenSim.Services.MessagingService
                             IAsyncMessageRecievedService service = GetScene(ulong.Parse(kvp.Key)).RequestModuleInterface<IAsyncMessageRecievedService>();
                             foreach (OSD asyncMessage in array)
                             {
-                                service.FireMessageReceived((OSDMap)asyncMessage);
+                                service.FireMessageReceived (kvp.Key, (OSDMap)asyncMessage);
                             }
                         }
                     }

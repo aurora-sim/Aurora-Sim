@@ -46,16 +46,21 @@ namespace OpenSim.Services.MessagingService
     public class MessagingServiceInPostHandler : BaseStreamHandler
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private MessagingServiceInHandler m_handler;
+        private IAsyncMessageRecievedService m_handler;
         private string m_SessionID;
         private ulong m_ourRegionHandle;
 
-        public MessagingServiceInPostHandler (string url, IRegistryCore registry, MessagingServiceInHandler handler, string SessionID) :
+        public MessagingServiceInPostHandler (string url, IRegistryCore registry, IAsyncMessageRecievedService handler, string SessionID) :
                 base("POST", url)
         {
             m_handler = handler;
             m_SessionID = SessionID;
-            ulong.TryParse (SessionID, out m_ourRegionHandle);
+            if (!ulong.TryParse (SessionID, out m_ourRegionHandle))
+            {
+                string[] s = SessionID.Split ('|');
+                if(s.Length == 2)
+                    ulong.TryParse (s[1], out m_ourRegionHandle);
+            }
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -72,9 +77,7 @@ namespace OpenSim.Services.MessagingService
             {
                 OSDMap map = WebUtils.GetOSDMap(body);
                 if (map != null)
-                {
                     return NewMessage(map);
-                }
             }
             catch (Exception e)
             {
@@ -89,7 +92,7 @@ namespace OpenSim.Services.MessagingService
             OSDMap message = (OSDMap)map["Message"];
             if(m_ourRegionHandle != 0)
                 ((OSDMap)message)["RegionHandle"] = m_ourRegionHandle;
-            OSDMap result = m_handler.FireMessageReceived(message);
+            OSDMap result = m_handler.FireMessageReceived(m_SessionID, message);
             if (result != null)
                 return ReturnResult(result);
             else
