@@ -380,8 +380,11 @@ namespace OpenSim.Services.GridService
                 //else, check it against the threat level that the region has
                 ThreatLevel regionThreatLevel = FindRegionThreatLevel (SessionID);
                 //Return whether the region threat level is higher than the function threat level
+                if(!(functionThreatLevel <= regionThreatLevel))
+                    m_log.Warn ("[GridRegService]: checkThreatLevel failed!");
                 return functionThreatLevel <= regionThreatLevel;
             }
+            m_log.Warn ("[GridRegService]: Could not find URLs for checkThreatLevel!");
             return false;
         }
 

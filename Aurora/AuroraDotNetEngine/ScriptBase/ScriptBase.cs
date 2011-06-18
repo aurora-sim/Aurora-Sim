@@ -60,10 +60,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         {
             get
             {
-                if (!m_useStateSaves)
-                    return false;
                 if (m_stateSaveRequired)
                     return true;
+                if (!m_useStateSaves)
+                    return false;
                 if (m_lastStateSaveValues == null)
                     m_lastStateSaveValues = m_InitialValues;
                 Dictionary<string, object> vars = GetVars ();
@@ -76,9 +76,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             }
             set
             {
+                m_stateSaveRequired = value;
                 if (!m_useStateSaves)
                     return;
-                m_stateSaveRequired = value;
                 //Besides setting the value, if we don't need one, save the vars we have for the last state save as well
                 if(!value)
                     m_lastStateSaveValues = GetVars ();
