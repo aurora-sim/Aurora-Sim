@@ -185,8 +185,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             else
                 waterColormaterial = new warp_Material (ConvertColor (WATER_COLOR));
 
-            waterColormaterial.setTransparency ((byte)((1f - WATER_COLOR.A) * 255f) * 4);
-            waterColormaterial.setReflectivity (0);
+            waterColormaterial.setTransparency ((byte)((1f - WATER_COLOR.A) * 255f) * 2);
+            waterColormaterial.setReflectivity (50);
             renderer.Scene.addMaterial ("WaterColor", waterColormaterial);
             renderer.SetObjectMaterial ("Water", "WaterColor");
 
