@@ -418,7 +418,7 @@ namespace Aurora.Modules
                 maxY = maxY,
                 minX = minX,
                 minY = minY,
-                mapBlocks = flag,
+                mapBlocks = (uint)(flag & ~0x10000),
                 remoteClient = remoteClient
             });
             if (!blockRequesterIsRunning)
@@ -476,14 +476,8 @@ namespace Aurora.Modules
                 while(true)
                 {
                     MapBlockRequester item = null;
-                    try
-                    {
+                    if(m_blockitemsToRequest.Count > 0)
                         item = m_blockitemsToRequest.Dequeue();
-                    }
-                    catch
-                    {
-                        break;
-                    }
                     if (item == null)
                         break;
                     List<MapBlockData> mapBlocks = new List<MapBlockData>();
