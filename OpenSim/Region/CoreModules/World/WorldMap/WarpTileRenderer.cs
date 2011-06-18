@@ -61,6 +61,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private static readonly Color4 WATER_COLOR = new Color4 (29, 72, 96, 216);
         private Dictionary<UUID, Color4> m_colors = new Dictionary<UUID, Color4> ();
         private bool m_useAntiAliasing = true; // TODO: Make this a config option
+        private bool m_texturePrims = false;
 
         public void Initialise (Scene scene, Nini.Config.IConfigSource config)
         {
@@ -95,6 +96,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 m_log.Warn ("[MAPTILE]: Failed to load StartupConfig");
             }
 
+            m_texturePrims = m_config.Configs["MapModule"].GetBoolean("WarpTexturePrims", false);
             m_colors.Clear ();
 
             Vector3 camPos = new Vector3 (m_scene.RegionInfo.RegionSizeX / 2, m_scene.RegionInfo.RegionSizeY / 2, 221.7025033688163f);
@@ -396,8 +398,17 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 }
 
                 Primitive.TextureEntryFace teFace = prim.Shape.Textures.GetFace ((uint)i);
-                Color4 faceColor = GetFaceColor (teFace);
-                string materialName = GetOrCreateMaterial (renderer, faceColor);
+                string materialName;
+                Color4 faceColor = GetFaceColor(teFace);
+
+                if (m_texturePrims && prim.Scale.LengthSquared() > 48 * 48)
+                {
+                    materialName = GetOrCreateMaterial(renderer, faceColor, teFace.TextureID);
+                }
+                else
+                {
+                    materialName = GetOrCreateMaterial(renderer, faceColor);
+                }
 
                 faceObj.transform (m);
                 faceObj.setPos (primPos);
@@ -483,7 +494,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             return color * face.RGBA;
         }
 
-        private string GetOrCreateMaterial (WarpRenderer renderer, Color4 color)
+        private string GetOrCreateMaterial(WarpRenderer renderer, Color4 color)
         {
             string name = color.ToString ();
 
@@ -495,6 +506,44 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             if (color.A < 1f)
                 renderer.Scene.material (name).setTransparency ((byte)((1f - color.A) * 255f));
             return name;
+        }
+
+        public string GetOrCreateMaterial(WarpRenderer renderer, Color4 faceColor, UUID textureID)
+        {
+            string materialName = "Color-" + faceColor.ToString() + "-Texture-" + textureID.ToString();
+
+            if (renderer.Scene.material(materialName) == null)
+            {
+                m_log.DebugFormat("Creating material {0}", materialName);
+                renderer.AddMaterial(materialName, ConvertColor(faceColor));
+                if (faceColor.A < 1f)
+                {
+                    renderer.Scene.material(materialName).setTransparency((byte)((1f - faceColor.A) * 255f));
+                }
+                warp_Texture texture = GetTexture(textureID);
+                if (texture != null)
+                {
+                    renderer.Scene.material(materialName).setTexture(texture);
+                }
+            }
+
+            return materialName;
+        }
+
+        private warp_Texture GetTexture(UUID id)
+        {
+            warp_Texture ret = null;
+            AssetBase asset = m_scene.AssetService.Get(id.ToString());
+            if (asset != null)
+            {
+                IJ2KDecoder imgDecoder = m_scene.RequestModuleInterface<IJ2KDecoder>();
+                Bitmap img = (Bitmap)imgDecoder.DecodeToImage(asset.Data);
+                if (img != null)
+                {
+                    return new warp_Texture(img);
+                }
+            }
+            return ret;
         }
 
         #endregion Rendering Methods
