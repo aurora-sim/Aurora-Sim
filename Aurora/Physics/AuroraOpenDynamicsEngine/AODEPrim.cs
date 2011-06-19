@@ -122,6 +122,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private CollisionLocker ode;
 
         private Vector3 m_force;
+        private Vector3 m_pushForce;
         private Vector3 m_forceacc;
         private Vector3 m_angularforceacc;
 
@@ -1639,8 +1640,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     fy += m_force.Y;
                     fz += m_force.Z;
 
+                    fx += m_pushForce.X;
+                    fy += m_pushForce.Y;
+                    fz += m_pushForce.Z;
+
                     //This is for llSetForce and friends, we don't remove it... even if it seems weird
                     //m_force = Vector3.Zero;
+
+                    //However, this is for things that only happen once, remove it
+                    m_pushForce = Vector3.Zero;
 
                     #region drag and forces accumulators
 
@@ -2369,7 +2377,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (value.IsFinite ())
                 {
-                    AddChange (changes.Force, (object)value);
+                    AddChange (changes.Force, new object[2] { value, false});
                 }
                 else
                 {
@@ -2556,7 +2564,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (force.IsFinite ())
             {
-                AddChange (changes.Force, (object)force);
+                AddChange (changes.Force, new object[2] { force, pushforce });
             }
             else
             {
@@ -2876,7 +2884,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private void changeforce (Object arg)
         {
-            m_force = (Vector3)arg;
+            object[] args = (object[])arg;
+            Vector3 force = (Vector3)args[0];
+            if ((bool)args[1])
+                m_pushForce = force;
+            else
+                m_force = force;
         }
 
         private void changevoldtc (Object arg)
