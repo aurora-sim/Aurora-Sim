@@ -41,51 +41,21 @@ using OpenMetaverse.StructuredData;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 
-namespace Aurora.Modules.World
+namespace OpenSim.Services.CapsService
 {
-    public class SimulatorFeatures : ISharedRegionModule
+    public class SimulatorFeatures : ICapsServiceConnector
     {
-        public void PostInitialise ()
-        {
-        }
-
-        public void Initialise (IConfigSource source)
-        {
-        }
-
-        public void AddRegion (Scene scene)
-        {
-            scene.EventManager.OnRegisterCaps += RegisterCaps;
-            scene.EventManager.OnDeregisterCaps += new EventManager.DeregisterCapsEvent (EventManager_OnDeregisterCaps);
-        }
-
-        void EventManager_OnDeregisterCaps (UUID agentID, IRegionClientCapsService caps)
-        {
-        }
-
-        public OSDMap RegisterCaps (UUID agentID, IHttpServer server)
-        {
-            OSDMap retVal = new OSDMap ();
-            retVal["SimulatorFeatures"] = CapsUtil.CreateCAPS ("SimulatorFeatures", "");
-
-            server.AddStreamHandler (new RestHTTPHandler ("GET", retVal["SimulatorFeatures"],
-                                                      delegate (Hashtable m_dhttpMethod)
-                                                      {
-                                                          return SimulatorFeaturesCAP (m_dhttpMethod);
-                                                      }));
-            return retVal;
-        }
+        private IRegionClientCapsService m_service;
 
         private Hashtable SimulatorFeaturesCAP (Hashtable mDhttpMethod)
         {
-            //OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
-
-
             OSDMap data = new OSDMap ();
             data["MeshRezEnabled"] = true;
             data["MeshUploadEnabled"] = true;
             data["MeshXferEnabled"] = true;
             data["PhysicsMaterialsEnabled"] = true;
+
+
             OSDMap typesMap = new OSDMap ();
 
             typesMap["convex"] = true;
@@ -94,6 +64,11 @@ namespace Aurora.Modules.World
 
             data["PhysicsShapeTypes"] = typesMap;
 
+
+
+            //Data URLS need sent as well
+            //Not yet...
+            //data["DataUrls"] = m_service.Registry.RequestModuleInterface<IGridRegistrationService> ().GetUrlForRegisteringClient (m_service.AgentID + "|" + m_service.RegionHandle);
 
             //Send back data
             Hashtable responsedata = new Hashtable ();
@@ -104,32 +79,23 @@ namespace Aurora.Modules.World
             return responsedata;
         }
 
-        public void RegionLoaded (Scene scene)
+        public void RegisterCaps (IRegionClientCapsService service)
+        {
+            m_service = service;
+
+            m_service.AddStreamHandler ("SimulatorFeatures", new RestHTTPHandler ("GET", m_service.CreateCAPS ("SimulatorFeatures", ""),
+                                                      delegate (Hashtable m_dhttpMethod)
+                                                      {
+                                                          return SimulatorFeaturesCAP (m_dhttpMethod);
+                                                      }));
+        }
+
+        public void DeregisterCaps ()
         {
         }
 
-        public void RemoveRegion (Scene scene)
+        public void EnteringRegion ()
         {
-        }
-
-        public void Close ()
-        {
-        }
-
-        public string Name
-        {
-            get
-            {
-                return "SimulatorFeatures";
-            }
-        }
-
-        public Type ReplaceableInterface
-        {
-            get
-            {
-                return null;
-            }
         }
     }
 }

@@ -359,7 +359,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 contactgroup = d.JointGroupCreate(0);
                 //contactgroup
 
-                d.WorldSetAutoDisableFlag(world, true);
+                d.WorldSetAutoDisableFlag(world, false);
 #if USE_DRAWSTUFF
                 
                 Thread viewthread = new Thread(new ParameterizedThreadStart(startvisualization));

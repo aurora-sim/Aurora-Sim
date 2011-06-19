@@ -1890,7 +1890,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     else
                     {
                         _zeroFlag = false;
-                        m_lastUpdateSent = 1;
+                        m_lastUpdateSent = 2;
                     }
 
                     bool needupdate = false;
@@ -1914,12 +1914,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         //ODE doesn't deal with them though, it just keeps adding them, never stopping the movement of the prim..
                         d.BodySetLinearVel (Body, 0, 0, 0);
                         d.BodySetAngularVel (Body, 0, 0, 0);
-                        if (d.BodyIsEnabled (Body))
-                            d.BodyDisable (Body);
+                        //Physical prims fall through things if this is set
+                        //if (d.BodyIsEnabled (Body))
+                        //    d.BodyDisable (Body);
 
                         if (m_lastUpdateSent > 0)
                         {
-                            if (throttleCounter > 25 || m_lastUpdateSent >= 2)
+                            if (throttleCounter > 5 || m_lastUpdateSent >= 3)
                             {
                                 needupdate = true;
                                 forceupdate = true;
