@@ -1733,8 +1733,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 d.BodyEnable (Body);
                             if (fx != 0 || fy != 0 || fz != 0)
                             {
-                                if ((m_PreviousForce.X != fx &&
-                                    m_PreviousForce.Y != fy &&
+                                if ((m_PreviousForce.X != fx ||
+                                    m_PreviousForce.Y != fy ||
                                     m_PreviousForce.Z != fz) ||
                                     m_isSelected ||
                                     forceUpdate)
@@ -2888,7 +2888,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             object[] args = (object[])arg;
             Vector3 force = (Vector3)args[0];
             if ((bool)args[1])
-                m_pushForce = force;
+                m_pushForce = force * 100;
             else
                 m_force = force;
         }
