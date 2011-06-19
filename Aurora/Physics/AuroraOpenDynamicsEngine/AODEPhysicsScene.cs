@@ -1953,7 +1953,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return true;
             // let simple spheres use ode sphere object
             if(pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte)Extrusion.Curve1
-                    && pbs.Scale.X == pbs.Scale.Y && pbs.Scale.X == pbs.Scale.Z)
+                    && pbs.Scale.X == pbs.Scale.Y && pbs.Scale.X == pbs.Scale.Z && pbs.ProfileHollow == 0)
                 return false;
 
             if (pbs.SculptEntry && !meshSculptedPrim)
