@@ -350,8 +350,6 @@ namespace OpenSim.Framework
         /// Prepares the object to be serialized
         /// </summary>
         void BackupPreparation();
-
-        void CheckSculptAndLoad ();
     }
 
     public interface IEntity

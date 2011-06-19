@@ -201,7 +201,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _size = entity.Scale;
             _position = entity.AbsolutePosition;
             fakepos = false;
-            _orientation = entity.RotationOffset;
+            if (!entity.IsRoot)
+                _orientation = entity.ParentEntity.Rotation + entity.RotationOffset;
+            else
+                _orientation = entity.RotationOffset;
+            _orientation.Normalize ();
             fakeori = false;
             _pbs = entity.Shape;
             _parent_entity = entity;
@@ -1346,10 +1350,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         d.GeomSetPosition (prim_geom, _position.X, _position.Y, _position.Z);
                         d.Quaternion myrot = new d.Quaternion ();
-                        myrot.X = _orientation.X;
-                        myrot.Y = _orientation.Y;
-                        myrot.Z = _orientation.Z;
-                        myrot.W = _orientation.W;
+                        Quaternion fake = _orientation;
+                        myrot.X = fake.X;
+                        myrot.Y = fake.Y;
+                        myrot.Z = fake.Z;
+                        myrot.W = fake.W;
                         d.GeomSetQuaternion (prim_geom, ref myrot);
                     }
                     _parent_scene.actor_name_map[prim_geom] = (PhysicsActor)this;
@@ -1373,10 +1378,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (newrot != _orientation)
                     {
                         d.Quaternion myrot = new d.Quaternion ();
-                        myrot.X = newrot.X;
-                        myrot.Y = newrot.Y;
-                        myrot.Z = newrot.Z;
-                        myrot.W = newrot.W;
+                        Quaternion fake = newrot;
+                        myrot.X = fake.X;
+                        myrot.Y = fake.Y;
+                        myrot.Z = fake.Z;
+                        myrot.W = fake.W;
                         d.GeomSetQuaternion (prim_geom, ref myrot);
                         if (Body != IntPtr.Zero && !m_angularlock.ApproxEquals (Vector3.One, 0f))
                             createAMotor (m_angularlock);
@@ -1401,10 +1407,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (newrot != _orientation)
                 {
                     d.Quaternion myrot = new d.Quaternion ();
-                    myrot.X = newrot.X;
-                    myrot.Y = newrot.Y;
-                    myrot.Z = newrot.Z;
-                    myrot.W = newrot.W;
+                    Quaternion fake = newrot;
+                    myrot.X = fake.X;
+                    myrot.Y = fake.Y;
+                    myrot.Z = fake.Z;
+                    myrot.W = fake.W;
+                    Quaternion a = _parent_entity.ParentEntity.Rotation + _parent_entity.RotationOffset;
+                    a.Normalize ();
                     d.GeomSetQuaternion (prim_geom, ref myrot);
                 }
                 d.GeomSetPosition (prim_geom, newpos.X, newpos.Y, newpos.Z);
@@ -2150,10 +2159,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         d.GeomSetPosition (prim_geom, _position.X, _position.Y, _position.Z);
                         d.Quaternion myrot = new d.Quaternion ();
-                        myrot.X = _orientation.X;
-                        myrot.Y = _orientation.Y;
-                        myrot.Z = _orientation.Z;
-                        myrot.W = _orientation.W;
+                        Quaternion fake = _orientation;
+                        myrot.X = fake.X;
+                        myrot.Y = fake.Y;
+                        myrot.Z = fake.Z;
+                        myrot.W = fake.W;
                         d.GeomSetQuaternion (prim_geom, ref myrot);
                     }
 

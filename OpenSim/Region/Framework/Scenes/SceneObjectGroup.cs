@@ -1486,7 +1486,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void RebuildPhysicalRepresentation (bool keepSelectedStatuses)
         {
-            //This is a heavy operation... it is really bad to lock this, but if we don't, we could have multiple threads in here... which would be baaad
+            Dictionary<SceneObjectPart, int> vehicleParams = new Dictionary<SceneObjectPart, int> ();
             lock (m_partsLock)
             {
                 foreach (SceneObjectPart part in m_partsList)
@@ -1497,10 +1497,9 @@ namespace OpenSim.Region.Framework.Scenes
                     part.Velocity = Vector3.Zero;
                     part.Acceleration = Vector3.Zero;
                     part.AngularVelocity = Vector3.Zero;
-                    int vehicleType = 0;
                     if (part.PhysActor != null)
                     {
-                        vehicleType = part.PhysActor.VehicleType;
+                        vehicleParams.Add(part, part.PhysActor.VehicleType);
                         part.PhysActor.RotationalVelocity = Vector3.Zero;
                         part.PhysActor.UnSubscribeEvents ();
                         part.PhysActor.OnCollisionUpdate -= part.PhysicsCollision;
@@ -1512,12 +1511,21 @@ namespace OpenSim.Region.Framework.Scenes
                         //Remove the old one so that we don't have more than we should,
                         //  as when we copy, it readds it to the PhysicsScene somehow
                         //if (part.IsRoot)//The root removes all children
-                            m_scene.PhysicsScene.RemovePrim (part.PhysActor);
+                        m_scene.PhysicsScene.RemovePrim (part.PhysActor);
 
                         part.FireOnRemovedPhysics ();
                     }
                     part.AngularVelocity = Vector3.Zero;
+                }
+            }
+            //Check for meshes and stuff
+            CheckSculptAndLoad ();
 
+            //This is a heavy operation... it is really bad to lock this, but if we don't, we could have multiple threads in here... which would be baaad
+            lock (m_partsLock)
+            {
+                foreach (SceneObjectPart part in m_partsList)
+                {
                     if (RootPart.PhysicsType == (byte)PhysicsShapeType.None ||
                         part.PhysicsType == (byte)PhysicsShapeType.None ||
                         ((part.Flags & PrimFlags.Phantom) == PrimFlags.Phantom &&
@@ -1543,7 +1551,8 @@ namespace OpenSim.Region.Framework.Scenes
                     part.PhysActor.VolumeDetect = part.VolumeDetectActive;
 
                     part.PhysActor.IsPhysical = usePhysics;
-                    part.PhysActor.VehicleType = vehicleType;
+                    if(vehicleParams.ContainsKey(part))
+                        part.PhysActor.VehicleType = vehicleParams[part];
 
                     //Force deselection here so that it isn't stuck forever
                     if (!keepSelectedStatuses)
@@ -1573,11 +1582,12 @@ namespace OpenSim.Region.Framework.Scenes
                         ((RootPart.Flags & PrimFlags.Phantom) == PrimFlags.Phantom &&
                         !RootPart.VolumeDetectActive)))
                         if (!part.IsRoot) //Link the prim then
-                            RootPart.PhysActor.link (part.PhysActor);
+                        {
+                            part.PhysActor.link (RootPart.PhysActor);
+                        }
                 }
             }
-            //Check for meshes and stuff
-            CheckSculptAndLoad ();
+            Thread.Sleep (5);
         }
 
         #endregion
@@ -3301,29 +3311,17 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (part.Shape.SculptEntry && part.Shape.SculptTexture != UUID.Zero)
                     {
-                        // check if a previously decoded sculpt map has been cached
-                        if (File.Exists (System.IO.Path.Combine ("j2kDecodeCache", "smap_" + part.Shape.SculptTexture.ToString ())))
+                        // If no sculpt data exists, we need to get the data
+                        //TODO: This is syncronous, really should be async and 
+                        //start loading up the physical pieces in the last thread to get assets
+                        if (part.Shape.SculptData == null || part.Shape.SculptData.Length == 24)//Why the hell 24? Don't look at me...
                         {
-                            part.SculptTextureCallback (part.Shape.SculptTexture, null);
-                        }
-                        else
-                        {
-                            m_scene.AssetService.Get (
-                                part.Shape.SculptTexture.ToString (), part, AssetReceived);
+                            AssetBase asset = m_scene.AssetService.Get (part.Shape.SculptTexture.ToString ());
+                            if(asset != null)
+                                part.Shape.SculptData = asset.Data;
                         }
                     }
                 }
-            }
-        }
-
-        protected void AssetReceived(string id, Object sender, AssetBase asset)
-        {
-            SceneObjectPart sop = (SceneObjectPart)sender;
-
-            if (sop != null)
-            {
-                if (asset != null)
-                    sop.SculptTextureCallback(asset.FullID, asset);
             }
         }
 

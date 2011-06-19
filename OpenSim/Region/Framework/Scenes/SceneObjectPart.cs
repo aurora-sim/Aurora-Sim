@@ -2560,7 +2560,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return dupe;
                 }
         */
-        public SceneObjectPart Copy(SceneObjectGroup parent,bool clonePhys)
+        public SceneObjectPart Copy(SceneObjectGroup parent, bool clonePhys)
         {
             SceneObjectPart dupe = (SceneObjectPart)MemberwiseClone();
             dupe.m_parentGroup = parent;
@@ -2602,10 +2602,7 @@ namespace OpenSim.Region.Framework.Scenes
             dupe.Shape.ExtraParams = extraP;
 
             dupe.m_scriptEvents = new Dictionary<UUID,scriptEvents>();
-            if (dupe.m_shape.SculptEntry && dupe.m_shape.SculptTexture != UUID.Zero)
-            {
-                m_parentGroup.Scene.AssetService.Get(dupe.m_shape.SculptTexture.ToString(), dupe, AssetReceived);
-            }
+            dupe.Shape.SculptData = this.Shape.SculptData;
 
             return dupe;
         }
@@ -2613,10 +2610,13 @@ namespace OpenSim.Region.Framework.Scenes
         protected void AssetReceived(string id, Object sender, AssetBase asset)
         {
             if (asset != null)
+                this.Shape.SculptData = asset.Data;//Set the asset data
+            if ((bool)sender)//Update physics
             {
-                SceneObjectPart sop = (SceneObjectPart)sender;
-                if (sop != null)
-                    sop.SculptTextureCallback(asset.FullID, asset);
+                //Get physics to update in a hackish way
+                PrimitiveBaseShape shape = Shape.Copy();
+                this.PhysActor.Shape = shape;
+                this.Shape = shape;
             }
         }
 
@@ -3926,34 +3926,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void ScriptSetVolumeDetect(bool SetVD)
         {
-
             if (m_parentGroup != null)
             {
                 m_parentGroup.ScriptSetVolumeDetect(SetVD);
-            }
-        }
-
-
-        public void SculptTextureCallback(UUID textureID, AssetBase texture)
-        {
-            if (m_shape.SculptEntry)
-            {
-                // commented out for sculpt map caching test - null could mean a cached sculpt map has been found
-                //if (texture != null)
-                {
-                    if (texture != null)
-                        m_shape.SculptData = texture.Data;
-
-                    if (PhysActor != null)
-                    {
-                        // Tricks physics engine into thinking we've changed the part shape.
-                        PrimitiveBaseShape m_newshape = m_shape.Copy ();
-                        PhysActor.Shape = m_newshape;
-                        m_shape = m_newshape;
-
-                        m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint (PhysActor);
-                    }
-                }
             }
         }
 
@@ -5010,9 +4985,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (type == 0x30)
             {
                 if (m_shape.SculptEntry && m_shape.SculptTexture != UUID.Zero)
-                {
-                    m_parentGroup.Scene.AssetService.Get(m_shape.SculptTexture.ToString(), this, AssetReceived);
-                }
+                    m_parentGroup.Scene.AssetService.Get(m_shape.SculptTexture.ToString(), true, AssetReceived);
             }
 
             ParentGroup.HasGroupChanged = true;
