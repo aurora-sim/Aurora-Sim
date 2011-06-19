@@ -1535,11 +1535,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                         //PidStatus = true;
 
-                        // PhysicsVector vec = new PhysicsVector();
-
-                        _target_velocity.X = (float)(_parent_entity.PIDTarget.X - dcpos.X) * ((/*PID_G - */_parent_entity.PIDTau) * timestep);
-                        _target_velocity.Y = (float)(_parent_entity.PIDTarget.Y - dcpos.Y) * ((/*PID_G - */_parent_entity.PIDTau) * timestep);
-                        _target_velocity.Z = (float)(_parent_entity.PIDTarget.Z - dcpos.Z) * ((/*PID_G - */_parent_entity.PIDTau) * timestep);
+                        _target_velocity.X = (float)(_parent_entity.PIDTarget.X - dcpos.X) * ((PID_G - _parent_entity.PIDTau) * timestep);
+                        _target_velocity.Y = (float)(_parent_entity.PIDTarget.Y - dcpos.Y) * ((PID_G - _parent_entity.PIDTau) * timestep);
+                        _target_velocity.Z = (float)(_parent_entity.PIDTarget.Z - dcpos.Z) * ((PID_G - _parent_entity.PIDTau) * timestep);
 
                         //  if velocity is zero, use position control; otherwise, velocity control
 

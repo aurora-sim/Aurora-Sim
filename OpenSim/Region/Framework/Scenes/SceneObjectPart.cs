@@ -5541,11 +5541,11 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                     }
                 }
-                else
+                /*else
                 {
                     //Reset the PID attributes
 
-                }
+                }*/
                 if (APIDEnabled)
                 {
                     if (Single.IsNaN(APIDTarget.W) == true)
