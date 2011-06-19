@@ -1438,7 +1438,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             float fy = 0;
             float fz = 0;
             bool forceUpdate = false;
-
             if (m_isphysical && (Body != IntPtr.Zero) && !m_isSelected && !childPrim)        // KF: Only move root prims.
             {
                 if (m_vehicle.Type != Vehicle.TYPE_NONE)
@@ -1555,8 +1554,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             //fz = fz + (_target_velocity.Z - vel.Z) * (PID_D) + (_zeroPosition.Z - pos.Z) * PID_P;
                             d.BodySetPosition (Body, _parent_entity.PIDTarget.X, _parent_entity.PIDTarget.Y, _parent_entity.PIDTarget.Z);
                             d.BodySetLinearVel (Body, 0, 0, 0);
-                            d.BodyAddForce (Body, 0, 0, fz);
-
+                            d.BodySetForce (Body, 0, 0, 0);
+                            d.BodySetAngularVel (Body, 0, 0, 0);
+                            d.BodySetTorque (Body, 0, 0, 0);
+                            //Fake physical....
+                            //IsPhysical = false;
+                            //m_isSelected = true;
+                            if (Amotor != IntPtr.Zero && !m_angularlock.ApproxEquals (Vector3.One, 0.003f))
+                            {
+                                /*d.JointSetAMotorParam (Amotor, (int)dParam.LowStop, -0.0000000001f);
+                                d.JointSetAMotorParam (Amotor, (int)dParam.LoStop3, -0.0000000001f);
+                                d.JointSetAMotorParam (Amotor, (int)dParam.LoStop2, -0.0000000001f);
+                                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop, 0.0000000001f);
+                                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, 0.0000000001f);
+                                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop2, 0.0000000001f);*/
+                            }
                             return;
                         }
                         else
@@ -1644,6 +1656,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             d.BodySetPosition (prim_geom, dcpos.X, dcpos.Y, m_targetHoverHeight);
                             d.BodySetLinearVel (Body, vel.X, vel.Y, 0);
                             d.BodyAddForce (Body, 0, 0, fz);
+                            if (Amotor != IntPtr.Zero && !m_angularlock.ApproxEquals (Vector3.One, 0.003f))
+                            {
+                                d.JointSetAMotorParam (Amotor, (int)dParam.LowStop, -0.0000000001f);
+                                d.JointSetAMotorParam (Amotor, (int)dParam.LoStop3, -0.0000000001f);
+                                d.JointSetAMotorParam (Amotor, (int)dParam.LoStop2, -0.0000000001f);
+                                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop, 0.0000000001f);
+                                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, 0.0000000001f);
+                                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop2, 0.0000000001f);
+                            }
                             return;
                         }
                         else
@@ -1740,15 +1761,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     //m_log.Info("[OBJPID]: X:" + fx.ToString() + " Y:" + fy.ToString() + " Z:" + fz.ToString());
                     if (fx != 0 || fy != 0 || fz != 0 || newtorque.X != 0 || newtorque.Y != 0 || newtorque.Z != 0)
                     {
-                        if (Amotor != IntPtr.Zero && !m_angularlock.ApproxEquals (Vector3.One, 0.003f))
+                        /*if (Amotor != IntPtr.Zero && !m_angularlock.ApproxEquals (Vector3.One, 0.003f))
                         {
-                            d.JointSetAMotorParam (Amotor, (int)dParam.LowStop, -0.001f);
-                            d.JointSetAMotorParam (Amotor, (int)dParam.LoStop3, -0.0001f);
-                            d.JointSetAMotorParam (Amotor, (int)dParam.LoStop2, -0.0001f);
-                            d.JointSetAMotorParam (Amotor, (int)dParam.HiStop, 0.0001f);
-                            d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, 0.0001f);
-                            d.JointSetAMotorParam (Amotor, (int)dParam.HiStop2, 0.0001f);
-                        }
+                            d.BodySetAngularVel (Body, 0, 0, 0);
+                            d.Quaternion lockedAxis = new d.Quaternion ();
+                            lockedAxis.X = _orientation.X;
+                            lockedAxis.Y = _orientation.Y;
+                            lockedAxis.Z = _orientation.Z;
+                            lockedAxis.W = _orientation.W;
+                            d.BodySetQuaternion (Body, ref lockedAxis);
+                            d.JointSetAMotorParam (Amotor, (int)dParam.LowStop, -0.0000000001f);
+                            d.JointSetAMotorParam (Amotor, (int)dParam.LoStop3, -0.0000000001f);
+                            d.JointSetAMotorParam (Amotor, (int)dParam.LoStop2, -0.0000000001f);
+                            d.JointSetAMotorParam (Amotor, (int)dParam.HiStop, 0.0000000001f);
+                            d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, 0.0000000001f);
+                            d.JointSetAMotorParam (Amotor, (int)dParam.HiStop2, 0.0000000001f);
+                        }*/
 
                         if (Body != IntPtr.Zero)
                         {
@@ -2715,6 +2743,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.JointAttach (Amotor, Body, IntPtr.Zero);
 
             d.JointSetAMotorMode (Amotor, 0);
+            
             d.JointSetAMotorNumAxes (Amotor, axisnum);
 
             // get current orientation to lock
@@ -2735,12 +2764,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // ODE should do this  with axis relative to body 1 but seems to fail
                 d.JointSetAMotorAxis (Amotor, 0, 0, ax.X, ax.Y, ax.Z);
                 d.JointSetAMotorAngle (Amotor, 0, 0);
-                d.JointSetAMotorParam (Amotor, (int)dParam.LowStop, -0.001f);
-                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop, 0.001f);
-                d.JointSetAMotorParam (Amotor, (int)dParam.Vel, 0);
-                d.JointSetAMotorParam (Amotor, (int)dParam.FudgeFactor, 0.1f);
-                d.JointSetAMotorParam (Amotor, (int)dParam.Bounce, 0f);
-                d.JointSetAMotorParam (Amotor, (int)dParam.FMax, 55000000);
+                d.JointSetAMotorParam (Amotor, (int)d.JointParam.LoStop, -0.000001f);
+                d.JointSetAMotorParam (Amotor, (int)d.JointParam.HiStop, 0.000001f);
+                d.JointSetAMotorParam (Amotor, (int)d.JointParam.Vel, 0);
+                d.JointSetAMotorParam (Amotor, (int)d.JointParam.FudgeFactor, 0.0001f);
+                d.JointSetAMotorParam (Amotor, (int)d.JointParam.Bounce, 0f);
+                d.JointSetAMotorParam (Amotor, (int)d.JointParam.FMax, 550000000);
                 i++;
                 j = 256; // aodeplugin.cs doesn't have all parameters so this moves to next axis set
             }
@@ -2750,12 +2779,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 ax = (new Vector3 (0, 1, 0)) * curr;
                 d.JointSetAMotorAxis (Amotor, i, 0, ax.X, ax.Y, ax.Z);
                 d.JointSetAMotorAngle (Amotor, i, 0);
-                d.JointSetAMotorParam (Amotor, j + (int)dParam.LowStop, -0.001f);
-                d.JointSetAMotorParam (Amotor, j + (int)dParam.HiStop, 0.001f);
-                d.JointSetAMotorParam (Amotor, j + (int)dParam.Vel, 0);
-                d.JointSetAMotorParam (Amotor, j + (int)dParam.FudgeFactor, 0.1f);
-                d.JointSetAMotorParam (Amotor, j + (int)dParam.Bounce, 0f);
-                d.JointSetAMotorParam (Amotor, j + (int)dParam.FMax, 55000000);
+                d.JointSetAMotorParam (Amotor, j + (int)d.JointParam.LoStop, -0.000001f);
+                d.JointSetAMotorParam (Amotor, j + (int)d.JointParam.HiStop, 0.000001f);
+                d.JointSetAMotorParam (Amotor, j + (int)d.JointParam.Vel, 0);
+                d.JointSetAMotorParam (Amotor, j + (int)d.JointParam.FudgeFactor, 0.0001f);
+                d.JointSetAMotorParam (Amotor, j + (int)d.JointParam.Bounce, 0f);
+                d.JointSetAMotorParam (Amotor, j + (int)d.JointParam.FMax, 550000000);
                 i++;
                 j += 256;
             }
@@ -2765,15 +2794,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 ax = (new Vector3 (0, 0, 1)) * curr;
                 d.JointSetAMotorAxis (Amotor, i, 0, ax.X, ax.Y, ax.Z);
                 d.JointSetAMotorAngle (Amotor, i, 0);
-                d.JointSetAMotorParam (Amotor, j + (int)dParam.LowStop, -0.001f);
-                d.JointSetAMotorParam (Amotor, j + (int)dParam.HiStop, 0.001f);
-                d.JointSetAMotorParam (Amotor, j + (int)dParam.Vel, 0);
-                d.JointSetAMotorParam (Amotor, j + (int)dParam.FudgeFactor, 0.1f);
-                d.JointSetAMotorParam (Amotor, j + (int)dParam.Bounce, 0f);
-                d.JointSetAMotorParam (Amotor, j + (int)dParam.FMax, 55000000);
+                d.JointSetAMotorParam (Amotor, j + (int)d.JointParam.LoStop, -0.000001f);
+                d.JointSetAMotorParam (Amotor, j + (int)d.JointParam.HiStop, 0.000001f);
+                d.JointSetAMotorParam (Amotor, j + (int)d.JointParam.Vel, 0);
+                d.JointSetAMotorParam (Amotor, j + (int)d.JointParam.FudgeFactor, 0.0001f);
+                d.JointSetAMotorParam (Amotor, j + (int)d.JointParam.Bounce, 0f);
+                d.JointSetAMotorParam (Amotor, j + (int)d.JointParam.FMax, 550000000);
             }
 
-            d.JointAddAMotorTorques (Amotor, 0, 0, 0);
+            d.JointAddAMotorTorques (Amotor, 0.001f, 0.001f, 0.001f);
         }
 
         public Matrix4 FromDMass (d.Mass pMass)

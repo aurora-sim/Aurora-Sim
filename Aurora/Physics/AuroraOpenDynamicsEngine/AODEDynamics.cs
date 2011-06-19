@@ -955,15 +955,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Limit Motor Up
 
-            /*if ((m_flags & (VehicleFlag.LIMIT_MOTOR_UP)) != 0) //if it isn't going up, don't apply the limiting force
+            if ((m_flags & (VehicleFlag.LIMIT_MOTOR_UP)) != 0) //if it isn't going up, don't apply the limiting force
             {
                 double Zchange = d.BodyGetLinearVel (Body).Z;
                 d.Quaternion rot = d.BodyGetQuaternion (Body);
                 Quaternion rotq = new Quaternion (rot.X, rot.Y, rot.Z, rot.W);    // rotq = rotation of object
-                //Requires idea of 'up', so use reference frame to rotate it
-                //Add to the X, because that will normally tilt the vehicle downward (if its rotated, it'll be rotated by the ref. frame
-                m_lastAngularVelocity += (new Vector3 (((float)Zchange * (pTimestep * 10)), 0, 0) * (rotq + m_referenceFrame));
-            }*/
+                if (Zchange > 0)
+                {
+                    //Requires idea of 'up', so use reference frame to rotate it
+                    //Add to the X, because that will normally tilt the vehicle downward (if its rotated, it'll be rotated by the ref. frame
+                    m_lastAngularVelocity += (new Vector3 (((float)Zchange * (pTimestep * 10)), 0, 0) * (rotq + m_referenceFrame));
+                }
+            }
 
             #endregion
 
