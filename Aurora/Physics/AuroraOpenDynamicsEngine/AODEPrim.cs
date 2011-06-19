@@ -1448,13 +1448,30 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.Vector3 vel = d.BodyGetLinearVel (Body);
                     m_lastVelocity = _velocity;
                     _velocity = new Vector3 ((float)vel.X, (float)vel.Y, (float)vel.Z);
-                    d.Vector3 pos = d.BodyGetPosition (Body);
+                    d.Vector3 pos = d.GeomGetPosition (prim_geom);
+                    m_lastposition = _position;
                     _position = new Vector3 ((float)pos.X, (float)pos.Y, (float)pos.Z);
+                    d.Quaternion ori;
+                    foreach (AuroraODEPrim child in childrenPrim)
+                    {
+                        pos = d.GeomGetPosition (child.prim_geom);
+                        child.m_lastposition = child._position;
+                        child._position = new Vector3 ((float)pos.X, (float)pos.Y, (float)pos.Z);
+                        d.GeomCopyQuaternion (child.prim_geom, out ori);
+                        child._orientation.X = ori.X;
+                        child._orientation.Y = ori.Y;
+                        child._orientation.Z = ori.Z;
+                        child._orientation.W = ori.W;
+                    }
                     _zeroFlag = false;
 
                     _acceleration = ((_velocity - m_lastVelocity) / timestep);
-                    //m_log.Info("[PHYSICS]: V1: " + _velocity + " V2: " + m_lastVelocity + " Acceleration: " + _acceleration.ToString());
-
+                    m_log.Info ("[PHYSICS]: P1: " + _position + " V2: " + m_lastposition + " Acceleration: " + _acceleration.ToString ());
+                    d.GeomCopyQuaternion (prim_geom, out ori);
+                    _orientation.X = ori.X;
+                    _orientation.Y = ori.Y;
+                    _orientation.Z = ori.Z;
+                    _orientation.W = ori.W;
                     d.Vector3 rotvel = d.BodyGetAngularVel (Body);
                     m_rotationalVelocity.X = (float)rotvel.X;
                     m_rotationalVelocity.Y = (float)rotvel.Y;
@@ -1867,7 +1884,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     if (m_vehicle.Type == Vehicle.TYPE_NONE)
                     {
-                        m_lastVelocity = _velocity; // for acelaration
+                        m_lastVelocity = _velocity; // for accelaration
                         _position.X = (float)lpos.X;
                         _position.Y = (float)lpos.Y;
                         _position.Z = (float)lpos.Z;
@@ -2401,9 +2418,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set
             {
                 if (m_vehicle.Type == Vehicle.TYPE_NONE)
-                {
                     m_vehicle.Enable (Body, this, _parent_scene);
-                }
+
                 m_vehicle.ProcessTypeChange ((Vehicle)value);
             }
         }
