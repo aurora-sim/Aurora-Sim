@@ -1558,7 +1558,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!keepSelectedStatuses)
                         part.PhysActor.Selected = false;
                     else
-                        part.PhysActor.Selected = IsSelected;
+                        part.PhysActor.Selected = part.IsSelected;
 
                     part.PhysActor.SetMaterial (part.Material);
                     //Add collision updates
