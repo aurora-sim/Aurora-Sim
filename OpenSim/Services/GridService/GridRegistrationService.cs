@@ -240,7 +240,7 @@ namespace OpenSim.Services.GridService
                     if (m_useSessionTime && url.Expiration.AddHours(m_timeBeforeTimeout / 8) < DateTime.Now) //Check to see whether the expiration is soon before updating
                     {
                         //Fix the expiration time
-                        url.Expiration = DateTime.Now.AddHours(m_timeBeforeTimeout);
+                        url.Expiration = DateTime.UtcNow.AddHours (m_timeBeforeTimeout);
                         InnerUpdateUrlsForClient(url);
                     }
                 }
@@ -260,11 +260,13 @@ namespace OpenSim.Services.GridService
             {
                 if(urls.HostNames == null || urls.Ports == null || urls.URLS == null || urls.SessionID != SessionID)
                 {
+                    m_log.Warn ("[GridRegService]: Null stuff in GetUrls, HostNames " + (urls.HostNames == null) + ", Ports " +
+                        (urls.Ports == null) + ", URLS " + (urls.URLS == null) + ", SessionID 1 " + SessionID + ", SessionID 2 " + urls.SessionID);
                     RemoveUrlsForClient(SessionID.ToString());
                 }
                 else
                 {
-                    urls.Expiration = DateTime.Now.AddHours(m_timeBeforeTimeout);
+                    urls.Expiration = DateTime.UtcNow.AddHours (m_timeBeforeTimeout);
                     urls.SessionID = SessionID;
                     foreach (KeyValuePair<string, OSD> module in urls.URLS)
                     {
@@ -297,7 +299,7 @@ namespace OpenSim.Services.GridService
             urls.SessionID = SessionID;
             urls.Ports = ports;
             urls.HostNames = hostnames;
-            urls.Expiration = DateTime.Now.AddHours(m_timeBeforeTimeout);
+            urls.Expiration = DateTime.UtcNow.AddHours (m_timeBeforeTimeout);
             m_genericsConnector.AddGeneric (UUID.Zero, "GridRegistrationUrls", SessionID.ToString (), urls.ToOSD ());
 
             return retVal;
@@ -345,7 +347,7 @@ namespace OpenSim.Services.GridService
         {
             if (urls != null)
             {
-                urls.Expiration = DateTime.Now.AddHours(m_timeBeforeTimeout);
+                urls.Expiration = DateTime.UtcNow.AddHours (m_timeBeforeTimeout);
                 m_genericsConnector.AddGeneric (UUID.Zero, "GridRegistrationUrls", urls.SessionID.ToString (), urls.ToOSD ());
                 m_log.WarnFormat ("[GridRegistrationService]: Updated URLs for {0}", urls.SessionID);
             }
@@ -369,8 +371,9 @@ namespace OpenSim.Services.GridService
             if (urls != null)
             {
                 //Past time for it to expire
-                if (m_useSessionTime && urls.Expiration < DateTime.Now)
+                if (m_useSessionTime && urls.Expiration < DateTime.UtcNow)
                 {
+                    m_log.Warn ("[GridRegService]: URLs expired for " + SessionID);
                     RemoveUrlsForClient(SessionID);
                     return false;
                 }
@@ -381,10 +384,10 @@ namespace OpenSim.Services.GridService
                 ThreatLevel regionThreatLevel = FindRegionThreatLevel (SessionID);
                 //Return whether the region threat level is higher than the function threat level
                 if(!(functionThreatLevel <= regionThreatLevel))
-                    m_log.Warn ("[GridRegService]: checkThreatLevel failed!");
+                    m_log.Warn ("[GridRegService]: checkThreatLevel failed for " + SessionID + "!");
                 return functionThreatLevel <= regionThreatLevel;
             }
-            m_log.Warn ("[GridRegService]: Could not find URLs for checkThreatLevel!");
+            m_log.Warn ("[GridRegService]: Could not find URLs for checkThreatLevel for " + SessionID + "!");
             return false;
         }
 

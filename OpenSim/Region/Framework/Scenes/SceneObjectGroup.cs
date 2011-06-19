@@ -1558,15 +1558,25 @@ namespace OpenSim.Region.Framework.Scenes
                     part.PhysActor.OnOutOfBounds += part.PhysicsOutOfBounds;
                     part.PhysActor.SubscribeEvents (1000);
 
-                    if (!part.IsRoot) //Link the prim then
-                        part.PhysActor.link (RootPart.PhysActor);
-                    Scene.PhysicsScene.AddPhysicsActorTaint (part.PhysActor);
-
                     part.FireOnAddedPhysics ();
                 }
                 Scene.AuroraEventManager.FireGenericEventHandler ("ObjectChangedPhysicalStatus", this);
             }
-             //Check for meshes and stuff
+            lock (m_partsLock)
+            {
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                    if (!(RootPart.PhysicsType == (byte)PhysicsShapeType.None ||
+                        part.PhysicsType == (byte)PhysicsShapeType.None ||
+                        ((part.Flags & PrimFlags.Phantom) == PrimFlags.Phantom &&
+                        !part.VolumeDetectActive) ||
+                        ((RootPart.Flags & PrimFlags.Phantom) == PrimFlags.Phantom &&
+                        !RootPart.VolumeDetectActive)))
+                        if (!part.IsRoot) //Link the prim then
+                            RootPart.PhysActor.link (part.PhysActor);
+                }
+            }
+            //Check for meshes and stuff
             CheckSculptAndLoad ();
         }
 
