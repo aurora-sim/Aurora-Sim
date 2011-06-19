@@ -3313,12 +3313,9 @@ namespace OpenSim.Region.Framework.Scenes
                         // If no sculpt data exists, we need to get the data
                         //TODO: This is syncronous, really should be async and 
                         //start loading up the physical pieces in the last thread to get assets
-                        if (part.Shape.SculptData == null || part.Shape.SculptData.Length == 24)//Why the hell 24? Don't look at me...
-                        {
-                            AssetBase asset = m_scene.AssetService.Get (part.Shape.SculptTexture.ToString ());
-                            if(asset != null)
-                                part.Shape.SculptData = asset.Data;
-                        }
+                        AssetBase asset = m_scene.AssetService.Get (part.Shape.SculptTexture.ToString ());
+                        if (asset != null)
+                            part.Shape.SculptData = asset.Data;
                     }
                 }
             }
