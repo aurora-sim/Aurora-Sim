@@ -201,11 +201,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _size = entity.Scale;
             _position = entity.AbsolutePosition;
             fakepos = false;
-            if (!entity.IsRoot)
-                _orientation = entity.ParentEntity.Rotation + entity.RotationOffset;
-            else
-                _orientation = entity.RotationOffset;
-            _orientation.Normalize ();
+            _orientation = entity.GetWorldRotation ();
             fakeori = false;
             _pbs = entity.Shape;
             _parent_entity = entity;
@@ -1412,8 +1408,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     myrot.Y = fake.Y;
                     myrot.Z = fake.Z;
                     myrot.W = fake.W;
-                    Quaternion a = _parent_entity.ParentEntity.Rotation + _parent_entity.RotationOffset;
-                    a.Normalize ();
                     d.GeomSetQuaternion (prim_geom, ref myrot);
                 }
                 d.GeomSetPosition (prim_geom, newpos.X, newpos.Y, newpos.Z);
@@ -1693,7 +1687,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     //Keep us out of terrain if possible
                     float terrainHeight = _parent_scene.GetTerrainHeightAtXY (Position.X, Position.Y);
                     float ourBasePos = (Position.Z - (Size.Z / 2));
-                    if (terrainHeight > ourBasePos)
+                    if (!_parent_entity.VolumeDetectActive && terrainHeight > ourBasePos)
                     {
                         //Scale it by surface - pos so that the object doesn't fly out of the terrain like a rocket
                         fz += gravZ * -2.5f * (terrainHeight - ourBasePos);//Get us up, but don't shoot us up
