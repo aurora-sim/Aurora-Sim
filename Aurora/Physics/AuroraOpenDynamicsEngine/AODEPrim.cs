@@ -2241,8 +2241,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _velocity = (Vector3)arg;
             if (!m_isSelected)
             {
-                //What the HELL!
-                //Thread.Sleep (20);
                 if (IsPhysical)
                 {
                     if (Body != IntPtr.Zero)

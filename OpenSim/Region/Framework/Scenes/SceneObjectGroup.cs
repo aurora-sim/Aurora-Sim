@@ -1560,6 +1560,7 @@ namespace OpenSim.Region.Framework.Scenes
                     else
                         part.PhysActor.Selected = IsSelected;
 
+                    part.PhysActor.SetMaterial (part.Material);
                     //Add collision updates
                     part.PhysActor.OnCollisionUpdate += part.PhysicsCollision;
                     part.PhysActor.OnRequestTerseUpdate += part.PhysicsRequestingTerseUpdate;
@@ -3311,7 +3312,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (part.Shape.SculptEntry && part.Shape.SculptTexture != UUID.Zero)
                     {
                         // If no sculpt data exists, we need to get the data
-                        //TODO: This is syncronous, really should be async and 
+                        //TODO: This is synchronous, really should be async and 
                         //start loading up the physical pieces in the last thread to get assets
                         AssetBase asset = m_scene.AssetService.Get (part.Shape.SculptTexture.ToString ());
                         if (asset != null)
