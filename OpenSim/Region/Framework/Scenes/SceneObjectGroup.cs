@@ -1587,7 +1587,6 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                 }
             }
-            Thread.Sleep (5);
         }
 
         #endregion

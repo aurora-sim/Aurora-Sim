@@ -112,6 +112,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             }
 
             WarpRenderer renderer = new WarpRenderer ();
+            warp_Object terrainObj = null;
             renderer.CreateScene (width, height);
             renderer.Scene.autoCalcNormals = false;
 
@@ -142,13 +143,19 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             renderer.Scene.addLight ("Light1", new warp_Light (new warp_Vector (1.0f, 0.5f, 1f), 0xffffff, 0, 320, 40));
             renderer.Scene.addLight ("Light2", new warp_Light (new warp_Vector (-1f, -1f, 1f), 0xffffff, 0, 100, 40));
 
-            CreateWater (renderer);
-            warp_Object terrainObj = CreateTerrain (renderer, textureTerrain);
-            if (drawPrimVolume && m_primMesher != null)
-                foreach (ISceneEntity ent in m_scene.Entities.GetEntities ())
-                    foreach (ISceneChildEntity part in ent.ChildrenEntities ())
-                        CreatePrim (renderer, part);
-
+            try
+            {
+                CreateWater (renderer);
+                terrainObj = CreateTerrain (renderer, textureTerrain);
+                if (drawPrimVolume && m_primMesher != null)
+                    foreach (ISceneEntity ent in m_scene.Entities.GetEntities ())
+                        foreach (ISceneChildEntity part in ent.ChildrenEntities ())
+                            CreatePrim (renderer, part);
+            }
+            catch(Exception ex)
+            {
+                m_log.Warn ("[Warp3D]: Exception in the map generation, " + ex.ToString ());
+            }
 
             renderer.Render ();
             Bitmap bitmap = renderer.Scene.getImage ();
@@ -196,16 +203,18 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             {
                 IJ2KDecoder decoder = m_scene.RequestModuleInterface<IJ2KDecoder> ();
                 Bitmap bitmap = (Bitmap)decoder.DecodeToImage (textureAsset.Data);
-
-                textureAsset = null;
-                warp_Texture texture = new warp_Texture (bitmap);
-                warp_Material waterTextmaterial = new warp_Material (texture);
-                waterTextmaterial.setTransparency ((byte)((1f - WATER_COLOR.A) * 255f) * 4);
-                waterTextmaterial.setReflectivity (0);
-                renderer.AddPlane ("Water2", 256f * 0.5f);
-                renderer.Scene.sceneobject ("Water2").setPos (127.5f, waterHeight-0.1f, 127.5f);
-                renderer.Scene.addMaterial ("WaterColor2", waterTextmaterial);
-                renderer.SetObjectMaterial ("Water2", "WaterColor2");
+                if (bitmap != null)
+                {
+                    textureAsset = null;
+                    warp_Texture texture = new warp_Texture (bitmap);
+                    warp_Material waterTextmaterial = new warp_Material (texture);
+                    waterTextmaterial.setTransparency ((byte)((1f - WATER_COLOR.A) * 255f) * 4);
+                    waterTextmaterial.setReflectivity (0);
+                    renderer.AddPlane ("Water2", 256f * 0.5f);
+                    renderer.Scene.sceneobject ("Water2").setPos (127.5f, waterHeight - 0.1f, 127.5f);
+                    renderer.Scene.addMaterial ("WaterColor2", waterTextmaterial);
+                    renderer.SetObjectMaterial ("Water2", "WaterColor2");
+                }
             }
 
         }
@@ -308,118 +317,125 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
         private void CreatePrim (WarpRenderer renderer, ISceneChildEntity prim)
         {
-            const float MIN_SIZE = 2f;
-
-            if ((PCode)prim.Shape.PCode != PCode.Prim)
-                return;
-            if (prim.Scale.LengthSquared () < MIN_SIZE * MIN_SIZE)
-                return;
-
-            Primitive omvPrim = prim.Shape.ToOmvPrimitive (prim.OffsetPosition, prim.RotationOffset);
-            FacetedMesh renderMesh = null;
-
-            // Are we dealing with a sculptie or mesh?
-            if (omvPrim.Sculpt != null && omvPrim.Sculpt.SculptTexture != UUID.Zero)
+            try
             {
-                // Try fetchinng the asset
-                AssetBase sculptAsset = m_scene.AssetService.Get(omvPrim.Sculpt.SculptTexture.ToString());
-                if (sculptAsset != null)
+                const float MIN_SIZE = 2f;
+
+                if ((PCode)prim.Shape.PCode != PCode.Prim)
+                    return;
+                if (prim.Scale.LengthSquared () < MIN_SIZE * MIN_SIZE)
+                    return;
+
+                Primitive omvPrim = prim.Shape.ToOmvPrimitive (prim.OffsetPosition, prim.RotationOffset);
+                FacetedMesh renderMesh = null;
+
+                // Are we dealing with a sculptie or mesh?
+                if (omvPrim.Sculpt != null && omvPrim.Sculpt.SculptTexture != UUID.Zero)
                 {
-                    // Is it a mesh?
-                    if (omvPrim.Sculpt.Type == SculptType.Mesh)
+                    // Try fetchinng the asset
+                    AssetBase sculptAsset = m_scene.AssetService.Get (omvPrim.Sculpt.SculptTexture.ToString ());
+                    if (sculptAsset != null)
                     {
-                        OpenMetaverse.Assets.AssetMesh meshAsset = new OpenMetaverse.Assets.AssetMesh(omvPrim.Sculpt.SculptTexture, sculptAsset.Data);
-                        FacetedMesh.TryDecodeFromAsset(omvPrim, meshAsset, DetailLevel.Highest, out renderMesh);
-                    }
-                    else  // It's sculptie
-                    {
-                        IJ2KDecoder imgDecoder = m_scene.RequestModuleInterface<IJ2KDecoder>();
-                        Image sculpt = imgDecoder.DecodeToImage(sculptAsset.Data);
-                        if (sculpt != null)
+                        // Is it a mesh?
+                        if (omvPrim.Sculpt.Type == SculptType.Mesh)
                         {
-                            renderMesh = m_primMesher.GenerateFacetedSculptMesh(omvPrim, (Bitmap)sculpt, DetailLevel.Medium);
-                            sculpt.Dispose();
+                            OpenMetaverse.Assets.AssetMesh meshAsset = new OpenMetaverse.Assets.AssetMesh (omvPrim.Sculpt.SculptTexture, sculptAsset.Data);
+                            FacetedMesh.TryDecodeFromAsset (omvPrim, meshAsset, DetailLevel.Highest, out renderMesh);
+                        }
+                        else  // It's sculptie
+                        {
+                            IJ2KDecoder imgDecoder = m_scene.RequestModuleInterface<IJ2KDecoder> ();
+                            Image sculpt = imgDecoder.DecodeToImage (sculptAsset.Data);
+                            if (sculpt != null)
+                            {
+                                renderMesh = m_primMesher.GenerateFacetedSculptMesh (omvPrim, (Bitmap)sculpt, DetailLevel.Medium);
+                                sculpt.Dispose ();
+                            }
                         }
                     }
                 }
+                else // Prim
+                {
+                    renderMesh = m_primMesher.GenerateFacetedMesh (omvPrim, DetailLevel.Medium);
+                }
+
+                if (renderMesh == null)
+                    return;
+
+                warp_Vector primPos = ConvertVector (prim.GetWorldPosition ());
+                warp_Quaternion primRot = ConvertQuaternion (prim.RotationOffset);
+
+                warp_Matrix m = warp_Matrix.quaternionMatrix (primRot);
+
+                if (prim.ParentID != 0)
+                {
+                    ISceneEntity group = m_scene.GetGroupByPrim (prim.LocalId);
+                    if (group != null)
+                        m.transform (warp_Matrix.quaternionMatrix (ConvertQuaternion (group.RootChild.RotationOffset)));
+                }
+
+                warp_Vector primScale = ConvertVector (prim.Scale);
+
+                string primID = prim.UUID.ToString ();
+
+                // Create the prim faces
+                for (int i = 0; i < renderMesh.Faces.Count; i++)
+                {
+                    Face face = renderMesh.Faces[i];
+                    string meshName = primID + "-Face-" + i.ToString ();
+
+                    warp_Object faceObj = new warp_Object (face.Vertices.Count, face.Indices.Count / 3);
+
+                    for (int j = 0; j < face.Vertices.Count; j++)
+                    {
+                        Vertex v = face.Vertices[j];
+
+                        warp_Vector pos = ConvertVector (v.Position);
+                        warp_Vector norm = ConvertVector (v.Normal);
+
+                        if (prim.Shape.SculptTexture == UUID.Zero)
+                            norm = norm.reverse ();
+                        warp_Vertex vert = new warp_Vertex (pos, norm, v.TexCoord.X, v.TexCoord.Y);
+
+                        faceObj.addVertex (vert);
+                    }
+
+                    for (int j = 0; j < face.Indices.Count; j += 3)
+                    {
+                        faceObj.addTriangle (
+                            face.Indices[j + 0],
+                            face.Indices[j + 1],
+                            face.Indices[j + 2]);
+                    }
+
+                    Primitive.TextureEntryFace teFace = prim.Shape.Textures.GetFace ((uint)i);
+                    string materialName;
+                    Color4 faceColor = GetFaceColor (teFace);
+
+                    if (m_texturePrims && prim.Scale.LengthSquared () > 48 * 48)
+                    {
+                        materialName = GetOrCreateMaterial (renderer, faceColor, teFace.TextureID);
+                    }
+                    else
+                    {
+                        materialName = GetOrCreateMaterial (renderer, faceColor);
+                    }
+
+                    faceObj.transform (m);
+                    faceObj.setPos (primPos);
+                    faceObj.scaleSelf (primScale.x, primScale.y, primScale.z);
+
+                    renderer.Scene.addObject (meshName, faceObj);
+
+                    renderer.SetObjectMaterial (meshName, materialName);
+                }
+                renderMesh.Faces.Clear ();
+                renderMesh = null;
             }
-            else // Prim
+            catch(Exception ex)
             {
-                renderMesh = m_primMesher.GenerateFacetedMesh(omvPrim, DetailLevel.Medium);
+                m_log.Warn ("[Warp3D]: Exception creating prim, " + ex.ToString ());
             }
-
-            if (renderMesh == null)
-                return;
-
-            warp_Vector primPos = ConvertVector (prim.GetWorldPosition ());
-            warp_Quaternion primRot = ConvertQuaternion (prim.RotationOffset);
-
-            warp_Matrix m = warp_Matrix.quaternionMatrix (primRot);
-
-            if (prim.ParentID != 0)
-            {
-                ISceneEntity group = m_scene.GetGroupByPrim (prim.LocalId);
-                if (group != null)
-                    m.transform (warp_Matrix.quaternionMatrix (ConvertQuaternion (group.RootChild.RotationOffset)));
-            }
-
-            warp_Vector primScale = ConvertVector (prim.Scale);
-
-            string primID = prim.UUID.ToString ();
-
-            // Create the prim faces
-            for (int i = 0; i < renderMesh.Faces.Count; i++)
-            {
-                Face face = renderMesh.Faces[i];
-                string meshName = primID + "-Face-" + i.ToString ();
-
-                warp_Object faceObj = new warp_Object (face.Vertices.Count, face.Indices.Count / 3);
-
-                for (int j = 0; j < face.Vertices.Count; j++)
-                {
-                    Vertex v = face.Vertices[j];
-
-                    warp_Vector pos = ConvertVector (v.Position);
-                    warp_Vector norm = ConvertVector (v.Normal);
-
-                    if (prim.Shape.SculptTexture == UUID.Zero)
-                        norm = norm.reverse ();
-                    warp_Vertex vert = new warp_Vertex (pos, norm, v.TexCoord.X, v.TexCoord.Y);
-
-                    faceObj.addVertex (vert);
-                }
-
-                for (int j = 0; j < face.Indices.Count; j += 3)
-                {
-                    faceObj.addTriangle (
-                        face.Indices[j + 0],
-                        face.Indices[j + 1],
-                        face.Indices[j + 2]);
-                }
-
-                Primitive.TextureEntryFace teFace = prim.Shape.Textures.GetFace ((uint)i);
-                string materialName;
-                Color4 faceColor = GetFaceColor(teFace);
-
-                if (m_texturePrims && prim.Scale.LengthSquared() > 48 * 48)
-                {
-                    materialName = GetOrCreateMaterial(renderer, faceColor, teFace.TextureID);
-                }
-                else
-                {
-                    materialName = GetOrCreateMaterial(renderer, faceColor);
-                }
-
-                faceObj.transform (m);
-                faceObj.setPos (primPos);
-                faceObj.scaleSelf (primScale.x, primScale.y, primScale.z);
-
-                renderer.Scene.addObject (meshName, faceObj);
-
-                renderer.SetObjectMaterial (meshName, materialName);
-            }
-            renderMesh.Faces.Clear ();
-            renderMesh = null;
         }
 
         private Color4 GetFaceColor (Primitive.TextureEntryFace face)
@@ -586,6 +602,10 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 IJ2KDecoder decoder = scene.RequestModuleInterface<IJ2KDecoder> ();
 
                 bitmap = (Bitmap)decoder.DecodeToImage (j2kData);
+                width = 0;
+                height = 0;
+                if (bitmap == null)
+                    return new Color4 (0.5f, 0.5f, 0.5f, 1.0f);
                 j2kData = null;
                 width = bitmap.Width;
                 height = bitmap.Height;
