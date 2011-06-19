@@ -1611,6 +1611,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             bool isPhysical = ((entity.ParentEntity.RootChild.Flags & PrimFlags.Physics) != 0);
             bool isPhantom = ((entity.ParentEntity.RootChild.Flags & PrimFlags.Phantom) != 0);
             bool physical = isPhysical & !isPhantom;
+            /*IOpenRegionSettingsModule WSModule = entity.ParentEntity.Scene.RequestModuleInterface<IOpenRegionSettingsModule> ();
+            if (WSModule != null)
+                if (!WSModule.AllowPhysicalPrims)
+                    physical = false;*/
             AuroraODEPrim newPrim;
             newPrim = new AuroraODEPrim (entity, this, physical, ode);
 

@@ -1536,12 +1536,7 @@ namespace OpenSim.Region.Framework.Scenes
                         part.PhysActor = null;
                         continue; //Don't rebuild! All phantom if the root is phantom
                     }
-                    bool usePhysics = (RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics;
-
-                    IOpenRegionSettingsModule WSModule = Scene.RequestModuleInterface<IOpenRegionSettingsModule> ();
-                    if (WSModule != null)
-                        if (!WSModule.AllowPhysicalPrims)
-                            usePhysics = false;
+                    
                     //Now readd the physics actor to the physics scene
                     part.PhysActor = m_scene.PhysicsScene.AddPrimShape (part);
 
@@ -1550,7 +1545,6 @@ namespace OpenSim.Region.Framework.Scenes
                     part.PhysActor.UUID = part.UUID;
                     part.PhysActor.VolumeDetect = part.VolumeDetectActive;
 
-                    part.PhysActor.IsPhysical = usePhysics;
                     if(vehicleParams.ContainsKey(part))
                         part.PhysActor.VehicleType = vehicleParams[part];
 

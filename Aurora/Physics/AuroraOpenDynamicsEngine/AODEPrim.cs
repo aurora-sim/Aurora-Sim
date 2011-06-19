@@ -527,9 +527,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 createAMotor (m_angularlock);
             }
             if (m_vehicle.Type != Vehicle.TYPE_NONE)
-            {
                 m_vehicle.Enable (Body, this, _parent_scene);
-            }
+
             _parent_scene.addActivePrim (this);
 
             /*            d.Mass mtmp;
@@ -1357,6 +1356,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     _parent_scene.actor_name_map[prim_geom] = (PhysicsActor)this;
                 }
             }
+            
             changeSelectedStatus (m_isSelected);
         }
 
@@ -1446,10 +1446,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // 'VEHICLES' are dealt with in ODEDynamics.cs
                     m_vehicle.Step (Body, timestep, _parent_scene, this);
                     d.Vector3 vel = d.BodyGetLinearVel (Body);
+                    m_lastVelocity = _velocity;
                     _velocity = new Vector3 ((float)vel.X, (float)vel.Y, (float)vel.Z);
-                    d.Vector3 pos = d.GeomGetPosition (prim_geom);
+                    d.Vector3 pos = d.BodyGetPosition (Body);
                     _position = new Vector3 ((float)pos.X, (float)pos.Y, (float)pos.Z);
                     _zeroFlag = false;
+
+                    _acceleration = ((_velocity - m_lastVelocity) / timestep);
+                    //m_log.Info("[PHYSICS]: V1: " + _velocity + " V2: " + m_lastVelocity + " Acceleration: " + _acceleration.ToString());
+
+                    d.Vector3 rotvel = d.BodyGetAngularVel (Body);
+                    m_rotationalVelocity.X = (float)rotvel.X;
+                    m_rotationalVelocity.Y = (float)rotvel.Y;
+                    m_rotationalVelocity.Z = (float)rotvel.Z;
                 }
                 else
                 {
@@ -2206,13 +2215,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (IsPhysical)
                 {
                     if (m_vehicle.Type == Vehicle.TYPE_NONE)
-                    {
                         m_forceacc += (Vector3)arg * 100;
-                    }
                     else
-                    {
                         m_vehicle.ProcessForceTaint ((Vector3)arg);
-                    }
                 }
                 m_collisionscore = 0;
                 m_interpenetrationcount = 0;
@@ -2395,7 +2400,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             set
             {
-                if (m_vehicle.Type != Vehicle.TYPE_NONE)
+                if (m_vehicle.Type == Vehicle.TYPE_NONE)
                 {
                     m_vehicle.Enable (Body, this, _parent_scene);
                 }

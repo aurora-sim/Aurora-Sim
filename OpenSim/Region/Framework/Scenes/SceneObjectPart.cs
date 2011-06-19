@@ -5161,6 +5161,17 @@ namespace OpenSim.Region.Framework.Scenes
                 AddFlag(PrimFlags.Physics);
             else
                 RemFlag(PrimFlags.Physics);
+            if (PhysActor != null)
+            {
+                PhysActor.IsPhysical = UsePhysics;
+                if (!UsePhysics)
+                {
+                    //Clear out old data
+                    Velocity = Vector3.Zero;
+                    Acceleration = Vector3.Zero;
+                    AngularVelocity = Vector3.Zero;
+                }
+            }
 
 
             if (IsPhantom || IsAttachment || (Shape.PathCurve == (byte)Extrusion.Flexible)) // note: this may have been changed above in the case of joints
@@ -5170,8 +5181,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else // Not phantom
             {
-                RemFlag (PrimFlags.Phantom);
-                needsPhysicalRebuild = true;//Gotta rebuild now
+                if (wasPhantom)
+                {
+                    RemFlag (PrimFlags.Phantom);
+                    needsPhysicalRebuild = true;//Gotta rebuild now
+                }
             }
 
             if (IsVD && IsVD != VolumeDetectActive)
