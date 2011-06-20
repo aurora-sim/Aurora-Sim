@@ -272,7 +272,7 @@ namespace Aurora.BotManager
             if (sp == null)
                 return;
             ISceneChildEntity child = World.GetSceneObjectPart (UUID.Parse (objectID));
-            if (child == null)
+            if (UUID.Parse(objectID) != UUID.Zero && child == null)
                 throw new Exception ("Failed to find entity to touch");
 
             sp.HandleAgentRequestSit (sp.ControllingClient, child.UUID, new Vector3((float)offset.x, (float)offset.y, (float)offset.z));
