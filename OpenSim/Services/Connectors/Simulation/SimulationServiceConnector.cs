@@ -107,19 +107,22 @@ namespace OpenSim.Services.Connectors.Simulation
                         return true;
                     try
                     {
+                        //We send the CapsURLs through, so we need these
                         OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
                         if (responseMap.ContainsKey("Reason"))
                             reason = responseMap["Reason"].AsString();
-                        return responseMap["Success"].AsBoolean();
+                        return true;
                     }
                     catch
                     {
+                        //Force it blank
+                        reason = "";
                         //Not right... don't return true except for opensim combatibility :/
                         return true;
                     }
                 }
 
-                reason = result["Message"] != null ? result["Message"].AsString() : "error";
+                reason = result.ContainsKey("Message") ? result["Message"].AsString() : "error";
                 return false;
             }
             catch (Exception e)

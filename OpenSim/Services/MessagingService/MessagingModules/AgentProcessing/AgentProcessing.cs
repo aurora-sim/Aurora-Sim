@@ -457,6 +457,14 @@ namespace OpenSim.Services.MessagingService
                     }
                     else
                     {
+                        if (!m_useCallbacks)
+                        {
+                            //We failed, give up
+                            m_log.Error ("[AgentProcessing]: Failed to inform client about neighbor " + neighbor.RegionName + ", no response came back");
+                            clientCaps.RemoveCAPS (neighbor.RegionHandle);
+                            oldRegionService = null;
+                            return false;
+                        }
                         //We are assuming an OpenSim region now!
                         #region OpenSim teleport compatibility!
 
@@ -491,7 +499,7 @@ namespace OpenSim.Services.MessagingService
                 }
                 else
                 {
-                    clientCaps.RemoveCAPS (otherRegionService.RegionHandle);
+                    clientCaps.RemoveCAPS (neighbor.RegionHandle);
                     if (reason != "")
                     {
                         try
