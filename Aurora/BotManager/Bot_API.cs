@@ -299,11 +299,11 @@ namespace Aurora.BotManager
             List<UUID> bots = new List<UUID> ();
             if (manager != null)
                 bots = manager.GetBotsWithTag (tag);
-            List<object> b = new List<object> ();
+            LSL_List b = new LSL_List ();
             foreach(UUID bot in bots)
                 b.Add(bot.ToString());
 
-            return new LSL_List (b);
+            return b;
         }
 
         public void botRemoveBotsWithTag (string tag)
