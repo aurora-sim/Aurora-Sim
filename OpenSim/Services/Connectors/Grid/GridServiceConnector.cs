@@ -91,7 +91,6 @@ namespace OpenSim.Services.Connectors
                                 object[] o = new object[2];
                                 o[0] = regionInfo;
                                 o[1] = innerresult;
-                                m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("GridRegionRegistered", o);
                                 SessionID = innerresult["SecureSessionID"].AsUUID();
                                 m_registry.RequestModuleInterface<IConfigurationService>().AddNewUrls(regionInfo.RegionHandle.ToString(), (OSDMap)innerresult["URLs"]);
 
@@ -102,6 +101,7 @@ namespace OpenSim.Services.Connectors
                                     n.FromOSD((OSDMap)ar);
                                     neighbors.Add (n);
                                 }
+                                m_registry.RequestModuleInterface<ISimulationBase> ().EventManager.FireGenericEventHandler ("GridRegionRegistered", o);
                                 return "";
                             }
                             else

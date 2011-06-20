@@ -44,10 +44,10 @@ namespace Aurora.Modules
         protected bool m_enabled = false;
         public void Initialize (IConfigSource config, IRegistryCore registry)
         {
-            registry.RegisterModuleInterface<IAsyncMessageRecievedService> (this);
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString ("MessagingServiceInHandler", "") != Name)
                 return;
+            registry.RegisterModuleInterface<IAsyncMessageRecievedService> (this);
             m_enabled = true;
         }
 

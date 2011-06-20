@@ -155,7 +155,9 @@ namespace OpenSim.Services.GridService
 
         public void FinishedStartup()
         {
-            m_registry.RequestModuleInterface<IAsyncMessageRecievedService> ().OnMessageReceived += OnMessageReceived;
+            IAsyncMessageRecievedService service = m_registry.RequestModuleInterface<IAsyncMessageRecievedService> ();
+            if(service != null)
+                service.OnMessageReceived += OnMessageReceived;
             m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector> ();
             LoadFromDatabase ();
         }
@@ -174,7 +176,12 @@ namespace OpenSim.Services.GridService
             {
                 string SessionID = message["SessionID"];
                 if (CheckThreatLevel (SessionID, "RegisterHandlers", ThreatLevel.None))
-                    UpdateUrlsForClient(SessionID);
+                {
+                    UpdateUrlsForClient (SessionID);
+                    OSDMap resp = new OSDMap ();
+                    resp["Reregistered"] = true;//It was successful
+                    return resp;
+                }
             }
             return null;
         }
@@ -240,7 +247,6 @@ namespace OpenSim.Services.GridService
                     if (m_useSessionTime && url.Expiration.AddHours(m_timeBeforeTimeout / 8) < DateTime.Now) //Check to see whether the expiration is soon before updating
                     {
                         //Fix the expiration time
-                        url.Expiration = DateTime.UtcNow.AddHours (m_timeBeforeTimeout);
                         InnerUpdateUrlsForClient(url);
                     }
                 }
@@ -348,6 +354,8 @@ namespace OpenSim.Services.GridService
             if (urls != null)
             {
                 urls.Expiration = DateTime.UtcNow.AddHours (m_timeBeforeTimeout);
+                //Remove it first just to make sure it is replaced
+                m_genericsConnector.RemoveGeneric (UUID.Zero, "GridRegistrationUrls", urls.SessionID.ToString ());
                 m_genericsConnector.AddGeneric (UUID.Zero, "GridRegistrationUrls", urls.SessionID.ToString (), urls.ToOSD ());
                 m_log.WarnFormat ("[GridRegistrationService]: Updated URLs for {0}", urls.SessionID);
             }

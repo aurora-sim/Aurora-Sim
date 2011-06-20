@@ -46,7 +46,9 @@ namespace OpenSim.Framework
         /// Register this region with the grid service
         /// </summary>
         /// <param name="scene"></param>
-        void RegisterRegionWithGrid(IScene scene);
+        /// <param name="returnResultImmediately">If false, it will walk the user through how to fix potential issues</param>
+        /// <returns>Success</returns>
+        bool RegisterRegionWithGrid(IScene scene, bool returnResultImmediately);
 
         /// <summary>
         /// Add this generic info to all registering regions

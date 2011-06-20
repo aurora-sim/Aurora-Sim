@@ -72,7 +72,7 @@ namespace Aurora.Modules
             scene.RegisterModuleInterface<IGridRegisterModule>(this);
             openSimBase.EventManager.RegisterEventHandler("GridRegionRegistered", OnGenericEvent);
             //Now register our region with the grid
-            RegisterRegionWithGrid(scene);
+            RegisterRegionWithGrid(scene, false);
         }
 
         object OnGenericEvent(string FunctionName, object parameters)
@@ -85,7 +85,8 @@ namespace Aurora.Modules
                 {
                     m_timer = new Timer();
                     //Give it an extra minute after making hours into milliseconds
-                    m_timer.Interval = (map["TimeBeforeReRegister"].AsInteger () * 1000 * 60 * 60) - (1000 * 60);
+                    m_timer.Interval = (map["TimeBeforeReRegister"].AsInteger () * 1000 * 60 * 60);
+                    m_timer.Interval *= 0.8;//Make it shorter so that there isn't any chance that it'll have time to fail
                     m_timer.Elapsed += m_timer_Elapsed;
                     m_timer.Start();
                 }
@@ -138,12 +139,32 @@ namespace Aurora.Modules
             ISyncMessagePosterService syncMessagePoster = m_scenes[0].RequestModuleInterface<ISyncMessagePosterService>();
             if (syncMessagePoster != null)
             {
+                List<Scene> FailedScenes = new List<Scene> ();
                 foreach (Scene scene in m_scenes)
                 {
                     OSDMap map = new OSDMap();
                     map["Method"] = "RegisterHandlers";
                     map["SessionID"] = scene.RegionInfo.RegionHandle.ToString ();
-                    syncMessagePoster.Post(map, scene.RegionInfo.RegionHandle);
+                    OSDMap resp = syncMessagePoster.Get(map, UUID.Zero, scene.RegionInfo.RegionHandle);
+                    if (resp != null && resp["Reregistered"].AsBoolean ())
+                        m_log.Info ("[GridRegService]: Successfully reregistered with the grid service");
+                    else
+                    {
+                        //It failed
+                        m_log.Error ("[GridRegService]: Failed to successfully reregistered with the grid service");
+                        IGridService GridService = scene.RequestModuleInterface<IGridService>();
+                        if (!GridService.DeregisterRegion (scene.RegionInfo.RegionHandle, scene.RegionInfo.RegionID, scene.RegionInfo.GridSecureSessionID))
+                        {
+                            m_log.Error ("------------- REGION " + scene.RegionInfo.RegionName + " IS DEAD ---------------");
+                        }
+                        else
+                        {
+                            //Register again...
+                            m_log.Error ("[GridRegService]: Forcefully reregistered with the grid service... standby");
+                            if (!RegisterRegionWithGrid (scene, true))
+                                m_log.Error ("------------- REGION " + scene.RegionInfo.RegionName + " IS DEAD ---------------");
+                        }
+                    }
                 }
             }
             else
@@ -162,7 +183,7 @@ namespace Aurora.Modules
 
         public void PostFinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            scene.RequestModuleInterface<IAsyncMessageRecievedService> ().OnMessageReceived += new MessageReceived (RegisterRegionWithGridModule_OnMessageReceived);
+            scene.RequestModuleInterface<IAsyncMessageRecievedService> ().OnMessageReceived += RegisterRegionWithGridModule_OnMessageReceived;
         }
 
         public void StartupComplete()
@@ -212,7 +233,8 @@ namespace Aurora.Modules
         /// Register this region with the grid service
         /// </summary>
         /// <param name="scene"></param>
-        public void RegisterRegionWithGrid(IScene scene)
+        /// <param name="returnResponseFirstTime">Should we try to walk the user through what went wrong?</param>
+        public bool RegisterRegionWithGrid(IScene scene, bool returnResponseFirstTime)
         {
             GridRegion region = BuildGridRegion(scene.RegionInfo);
 
@@ -243,9 +265,16 @@ namespace Aurora.Modules
                 g.AddGeneric(scene.RegionInfo.RegionID, "GridSessionID", "GridSessionID", s.ToOSD());
 
                 m_knownNeighbors[scene.RegionInfo.RegionID] = neighbors;
+                return true;//Success
             }
             else
             {
+                if (returnResponseFirstTime)
+                {
+                    m_log.Error ("[RegisterRegionWithGrid]: Registration of region with grid failed - " + error);
+                    return false;
+                }
+
                 //Parse the error and try to do something about it if at all possible
                 if (error == "Region location is reserved")
                 {
@@ -331,23 +360,23 @@ namespace Aurora.Modules
                 }
                 if (error == "Wrong Session ID")
                 {
-                    m_log.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - Wrong Session ID for this region!");
+                    m_log.Error ("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - Wrong Session ID for this region!");
+                    m_log.Error ("This means that this region has failed to connect to the grid server and needs removed from it before it can connect again.");
+                    m_log.Error ("If you are running the Aurora.Server instance this region is connecting to, type \"clear grid region <RegionName>\" and then press enter on this console and it will work");
+                    m_log.Error ("If you are not running the Aurora.Server instance this region is connecting to, please contact your grid operator so that he can fix it");
+                    
                     string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to proceed, or type cancel to exit");
                     if (input == "cancel")
-                    {
                         Environment.Exit(0);
-                    }
                 }
                 else
                 {
                     m_log.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - " + error + "!");
                     string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to proceed, or type cancel to exit");
                     if (input == "cancel")
-                    {
                         Environment.Exit(0);
-                    }
                 }
-                RegisterRegionWithGrid(scene);
+                return RegisterRegionWithGrid(scene, true);
             }
         }
 
