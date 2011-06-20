@@ -651,15 +651,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (frcount > 100)
                 frcount = 0;
 
-            MoveLinear(pTimestep, pParentScene);
-            MoveAngular(pTimestep, pParentScene);
+            MoveLinear (pTimestep, pParentScene, parent);
+            MoveAngular (pTimestep, pParentScene, parent);
             LimitRotation(pTimestep);
 
             // WE deal with updates
             parent.RequestPhysicsterseUpdate();
         }   // end Step
 
-        private void MoveLinear(float pTimestep, AuroraODEPhysicsScene _pParentScene)
+        private void MoveLinear (float pTimestep, AuroraODEPhysicsScene _pParentScene, AuroraODEPrim parent)
         {
             if (!m_linearMotorDirection.ApproxEquals (Vector3.Zero, 0.01f))  // requested m_linearMotorDirection is significant
             {
@@ -708,7 +708,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.Mass objMass;
             d.BodyGetMass (Body, out objMass);
             // m_VehicleBuoyancy: -1=2g; 0=1g; 1=0g;
-            grav.Z = _pParentScene.gravityz * objMass.mass * (1f - m_VehicleBuoyancy);
+            grav.Z = _pParentScene.gravityz * objMass.mass * parent.ParentEntity.GravityMultiplier * (1f - m_VehicleBuoyancy);
             // Preserve the current Z velocity
             d.Vector3 vel_now = d.BodyGetLinearVel (Body);
             m_dir.Z = vel_now.Z;        // Preserve the accumulated falling velocity
@@ -804,49 +804,67 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //                pTimestep  is time since last frame,in secs
             }
 
-            if ((m_flags & (VehicleFlag.LIMIT_MOTOR_UP)) != 0)
-            {
-                //Start Experimental Values
-                if (Zchange > .3)
-                {
-                    grav.Z = (float)(grav.Z * 3);
-                }
-                if (Zchange > .15)
-                {
-                    grav.Z = (float)(grav.Z * 2);
-                }
-                if (Zchange > .75)
-                {
-                    grav.Z = (float)(grav.Z * 1.5);
-                }
-                if (Zchange > .05)
-                {
-                    grav.Z = (float)(grav.Z * 1.25);
-                }
-                if (Zchange > .025)
-                {
-                    grav.Z = (float)(grav.Z * 1.125);
-                }
-                float terraintemp = _pParentScene.GetTerrainHeightAtXY (pos.X, pos.Y);
-                float postemp = (pos.Z - terraintemp);
-                if (postemp > 2.5f)
-                {
-                    grav.Z = (float)(grav.Z * 1.037125);
-                }
-                //End Experimental Values
-            }
             if ((m_flags & (VehicleFlag.NO_X)) != 0)
-            {
                 m_dir.X = 0;
-            }
             if ((m_flags & (VehicleFlag.NO_Y)) != 0)
-            {
                 m_dir.Y = 0;
-            }
             if ((m_flags & (VehicleFlag.NO_Z)) != 0)
-            {
                 m_dir.Z = 0;
+
+            #region Limit Motor Up
+
+            if ((m_flags & (VehicleFlag.LIMIT_MOTOR_UP)) != 0) //if it isn't going up, don't apply the limiting force
+            {
+                if (Zchange > -0.1f)
+                {
+                    //Requires idea of 'up', so use reference frame to rotate it
+                    //Add to the X, because that will normally tilt the vehicle downward (if its rotated, it'll be rotated by the ref. frame
+                    grav += (new Vector3 (0, 0, ((float)Math.Abs (Zchange) * (pTimestep * -_pParentScene.PID_D * _pParentScene.PID_D))));
+
+                }
             }
+
+            #endregion
+
+            #region Deal with tainted forces
+
+            // KF: So far I have found no good method to combine a script-requested
+            // .Z velocity and gravity. Therefore only 0g will used script-requested
+            // .Z velocity. >0g (m_VehicleBuoyancy < 1) will used modified gravity only.
+            // m_VehicleBuoyancy: -1=2g; 0=1g; 1=0g;
+            Vector3 TaintedForce = new Vector3 ();
+            if (m_forcelist.Count != 0)
+            {
+                try
+                {
+                    for (int i = 0; i < m_forcelist.Count; i++)
+                    {
+                        TaintedForce = TaintedForce + (m_forcelist[i] * 100);
+                    }
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    TaintedForce = Vector3.Zero;
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    TaintedForce = Vector3.Zero;
+                }
+                m_forcelist = new List<Vector3> ();
+            }
+
+            #endregion
+
+            #region Deflection
+
+            //Forward is the prefered direction
+            Vector3 PreferredAxisOfMotion = new Vector3 (1 + 1 * (m_linearDeflectionEfficiency / m_linearDeflectionTimescale) * pTimestep * pTimestep * pTimestep, 1, 1);
+            PreferredAxisOfMotion *= m_referenceFrame;
+
+            //Multiply it so that it scales linearly
+            m_dir *= PreferredAxisOfMotion;
+
+            #endregion
 
             m_lastPositionVector = d.BodyGetPosition (Body);
 
@@ -861,9 +879,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_lastLinearVelocityVector -= m_lastLinearVelocityVector * decayamount;
         } // end MoveLinear()
 
-        private void MoveAngular(float pTimestep, AuroraODEPhysicsScene _pParentScene)
+        private void MoveAngular (float pTimestep, AuroraODEPhysicsScene _pParentScene, AuroraODEPrim parent)
         {
             d.Vector3 angularVelocity = d.BodyGetAngularVel (Body);
+            d.Quaternion rot = d.BodyGetQuaternion (Body);
+            Quaternion rotq = new Quaternion (rot.X, rot.Y, rot.Z, rot.W);
             //         Vector3 angularVelocity = Vector3.Zero;
 
             if (m_angularMotorApply > 0)
@@ -891,13 +911,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // Vertical attractor section
             Vector3 vertattr = Vector3.Zero;
+            Vector3 deflection = Vector3.Zero;
 
             if (m_verticalAttractionTimescale < 300)
             {
                 float VAservo = 0.2f / (m_verticalAttractionTimescale * pTimestep);
                 // get present body rotation
-                d.Quaternion rot = d.BodyGetQuaternion (Body);
-                Quaternion rotq = new Quaternion (rot.X, rot.Y, rot.Z, rot.W);
                 // make a vector pointing up
                 Vector3 verterr = Vector3.Zero;
                 verterr.Z = 1.0f;
@@ -932,10 +951,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             //        m_lastVertAttractor = vertattr;
 
             // Bank section tba
-            // Deflection section tba
+            
+            #region Deflection
+
+            //Forward is the prefered direction, but if the reference frame has changed, we need to take this into account as well
+            Vector3 PreferredAxisOfMotion = new Vector3 ((1 * (m_angularDeflectionEfficiency / m_angularDeflectionTimescale) * pTimestep), (1 * (m_angularDeflectionEfficiency / m_angularDeflectionTimescale) * pTimestep), 0);
+            PreferredAxisOfMotion *= m_referenceFrame;
+
+            //Multiply it so that it scales linearly
+            //deflection = PreferredAxisOfMotion;
+
+            //deflection = ((PreferredAxisOfMotion * m_angularDeflectionEfficiency) / (m_angularDeflectionTimescale / pTimestep));
+
+            #endregion
 
             // Sum velocities
-            m_lastAngularVelocity = m_angularMotorVelocity + vertattr; // + bank + deflection
+            m_lastAngularVelocity = m_angularMotorVelocity + vertattr + deflection; // + bank
 
             if ((m_flags & (VehicleFlag.NO_DEFLECTION_UP)) != 0)
             {
@@ -953,19 +984,31 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_lastAngularVelocity = Vector3.Zero; // Reduce small value to zero.
             }
 
-            #region Limit Motor Up
-
-            if ((m_flags & (VehicleFlag.LIMIT_MOTOR_UP)) != 0) //if it isn't going up, don't apply the limiting force
+            if ((m_flags & (VehicleFlag.LIMIT_MOTOR_UP)) != 0)
             {
-                double Zchange = d.BodyGetLinearVel (Body).Z;
-                d.Quaternion rot = d.BodyGetQuaternion (Body);
-                Quaternion rotq = new Quaternion (rot.X, rot.Y, rot.Z, rot.W);    // rotq = rotation of object
-                if (Zchange > 0)
-                {
-                    //Requires idea of 'up', so use reference frame to rotate it
-                    //Add to the X, because that will normally tilt the vehicle downward (if its rotated, it'll be rotated by the ref. frame
-                    m_lastAngularVelocity += (new Vector3 (((float)Zchange * (pTimestep * 10)), 0, 0) * (rotq + m_referenceFrame));
-                }
+                //m_lastAngularVelocity += new Vector3(1, 0, 0) * Quaternion.Add (rotq, m_RollreferenceFrame);
+            }
+
+            #region Linear Motor Offset
+
+            //Offset section
+            if (m_linearMotorOffset != Vector3.Zero)
+            {
+                //Offset of linear velocity doesn't change the linear velocity,
+                //   but causes a torque to be applied, for example...
+                //
+                //      IIIII     >>>   IIIII
+                //      IIIII     >>>    IIIII
+                //      IIIII     >>>     IIIII
+                //          ^
+                //          |  Applying a force at the arrow will cause the object to move forward, but also rotate
+                //
+                //
+                // The torque created is the linear velocity crossed with the offset
+
+                //Note: we use the motor, otherwise you will just spin around and we divide by 10 since otherwise we go crazy
+                Vector3 torqueFromOffset = (m_linearMotorDirectionLASTSET % m_linearMotorOffset) / 10;
+                d.BodyAddTorque (Body, torqueFromOffset.X, torqueFromOffset.Y, torqueFromOffset.Z);
             }
 
             #endregion

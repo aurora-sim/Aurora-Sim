@@ -130,6 +130,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private PrimitiveBaseShape _pbs;
         private AuroraODEPhysicsScene _parent_scene;
         private ISceneChildEntity _parent_entity;
+        public ISceneChildEntity ParentEntity
+        {
+            get { return _parent_entity; }
+        }
         public IntPtr m_targetSpace = IntPtr.Zero;
         public IntPtr prim_geom;
         public IntPtr prev_geom;
@@ -1465,7 +1469,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     _zeroFlag = false;
 
                     _acceleration = ((_velocity - m_lastVelocity) / timestep);
-                    m_log.Info ("[PHYSICS]: P1: " + _position + " V2: " + m_lastposition + " Acceleration: " + _acceleration.ToString ());
+                    //m_log.Info ("[PHYSICS]: P1: " + _position + " V2: " + m_lastposition + " Acceleration: " + _acceleration.ToString ());
                     d.GeomCopyQuaternion (prim_geom, out ori);
                     _orientation.X = ori.X;
                     _orientation.Y = ori.Y;
