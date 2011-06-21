@@ -1833,12 +1833,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             Primitive.TextureEntry tex = part.Shape.Textures;
             Color4 texcolor;
+            bool changed = false;
             if (face >= 0 && face < GetNumberOfSides(part))
             {
-                texcolor = tex.CreateFace((uint)face).RGBA;
+                texcolor = tex.CreateFace ((uint)face).RGBA;
+                if (texcolor.A != alpha)
+                    changed = true;
                 texcolor.A = Util.Clip((float)alpha, 0.0f, 1.0f);
                 tex.FaceTextures[face].RGBA = texcolor;
-                part.UpdateTexture(tex);
+                if(changed)
+                    part.UpdateTexture(tex);
             }
             else if (face == ScriptBaseClass.ALL_SIDES)
             {
@@ -1847,14 +1851,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (tex.FaceTextures[i] != null)
                     {
                         texcolor = tex.FaceTextures[i].RGBA;
+                        if (texcolor.A != alpha)
+                            changed = true;
                         texcolor.A = Util.Clip((float)alpha, 0.0f, 1.0f);
                         tex.FaceTextures[i].RGBA = texcolor;
                     }
                 }
                 texcolor = tex.DefaultTexture.RGBA;
+                if (texcolor.A != alpha)
+                    changed = true;
                 texcolor.A = Util.Clip((float)alpha, 0.0f, 1.0f);
                 tex.DefaultTexture.RGBA = texcolor;
-                part.UpdateTexture(tex);
+                if(changed)
+                    part.UpdateTexture(tex);
             }
             part.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }
@@ -2645,7 +2654,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llLoopSound(string sound, double volume)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
+
+            if (m_host.Sound == KeyOrName (sound))
+                return;
 
             if (m_host.Sound != UUID.Zero)
                 llStopSound();

@@ -210,6 +210,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 if (field.FieldType == typeof(LSL_Types.list)) // ref type, copy
                 {
                     LSL_Types.list v = (LSL_Types.list)field.GetValue(this);
+                    if (v == null)
+                        continue;//Broken... :/
                     Object[] data = new Object[v.Data.Length];
                     Array.Copy(v.Data, 0, data, 0, v.Data.Length);
                     LSL_Types.list c = new LSL_Types.list();

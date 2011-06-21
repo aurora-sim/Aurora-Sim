@@ -4181,14 +4181,20 @@ namespace OpenSim.Region.Framework.Scenes
                 texcolor.R = Util.Clip((float)color.X, 0.0f, 1.0f);
                 texcolor.G = Util.Clip((float)color.Y, 0.0f, 1.0f);
                 texcolor.B = Util.Clip((float)color.Z, 0.0f, 1.0f);
-                tex.FaceTextures[face].RGBA = texcolor;
-                UpdateTexture(tex);
+                if (!(tex.FaceTextures[face].RGBA.R == texcolor.R &&
+                    tex.FaceTextures[face].RGBA.G == texcolor.G &&
+                    tex.FaceTextures[face].RGBA.B == texcolor.B))
+                {
+                    tex.FaceTextures[face].RGBA = texcolor;
+                    UpdateTexture (tex);
+                }
 				//WRONG.... fixed with updateTexture
                 //TriggerScriptChangedEvent(Changed.COLOR);
                 return;
             }
             else if (face == ALL_SIDES)
             {
+                bool changed = false;
                 for (uint i = 0; i < GetNumberOfSides(); i++)
                 {
                     if (tex.FaceTextures[i] != null)
@@ -4196,16 +4202,25 @@ namespace OpenSim.Region.Framework.Scenes
                         texcolor = tex.FaceTextures[i].RGBA;
                         texcolor.R = Util.Clip((float)color.X, 0.0f, 1.0f);
                         texcolor.G = Util.Clip((float)color.Y, 0.0f, 1.0f);
-                        texcolor.B = Util.Clip((float)color.Z, 0.0f, 1.0f);
+                        texcolor.B = Util.Clip ((float)color.Z, 0.0f, 1.0f);
+                        if (!(tex.FaceTextures[i].RGBA.R == texcolor.R &&
+                            tex.FaceTextures[i].RGBA.G == texcolor.G &&
+                            tex.FaceTextures[i].RGBA.B == texcolor.B))
+                            changed = true;
                         tex.FaceTextures[i].RGBA = texcolor;
                     }
                     texcolor = tex.DefaultTexture.RGBA;
                     texcolor.R = Util.Clip((float)color.X, 0.0f, 1.0f);
                     texcolor.G = Util.Clip((float)color.Y, 0.0f, 1.0f);
                     texcolor.B = Util.Clip((float)color.Z, 0.0f, 1.0f);
+                    if (!(tex.DefaultTexture.RGBA.R == texcolor.R &&
+                            tex.DefaultTexture.RGBA.G == texcolor.G &&
+                            tex.DefaultTexture.RGBA.B == texcolor.B))
+                        changed = true;
                     tex.DefaultTexture.RGBA = texcolor;
                 }
-                UpdateTexture(tex);
+                if(changed)
+                    UpdateTexture(tex);
 				//WRONG.... fixed with updateTexture
                 //TriggerScriptChangedEvent(Changed.COLOR);
                 return;
