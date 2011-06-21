@@ -369,7 +369,7 @@ namespace OpenSim.Framework
             }
         }
 
-        private int _Maturity = 2;
+        private int _Maturity = 0;
         public int Maturity
         {
             get

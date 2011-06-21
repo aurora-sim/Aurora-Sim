@@ -2688,10 +2688,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             reply.Data.Desc = Utils.StringToBytes(land.Description);
             reply.Data.ActualArea = land.Area;
             reply.Data.BillableArea = land.Area; // TODO: what is this?
-
+            
             // Bit 0: Mature, bit 7: on sale, other bits: no idea
             reply.Data.Flags = (byte)(
-                (((Scene)this.Scene).RegionInfo.RegionSettings.Maturity > 0 ? (1 << 0) : 0) +
+                land.Maturity > 0 ? (1 << 0) : 0 +
                 ((land.Flags & (uint)ParcelFlags.ForSale) != 0 ? (1 << 7) : 0));
 
             Vector3 pos = land.UserLocation;
