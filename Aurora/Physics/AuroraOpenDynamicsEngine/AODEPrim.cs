@@ -1360,6 +1360,37 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     _parent_scene.actor_name_map[prim_geom] = (PhysicsActor)this;
                 }
             }
+
+            if (!childPrim)
+            {
+                if (m_isphysical == true)
+                {
+                    if (Body == IntPtr.Zero)
+                    {
+                        if (_pbs.SculptEntry && _parent_scene.meshSculptedPrim)
+                        {
+                            changeshape ((object)_pbs);
+                        }
+                        else
+                        {
+                            MakeBody ();
+                        }
+                    }
+                }
+                else
+                {
+                    if (Body != IntPtr.Zero)
+                    {
+                        UpdateChildsfromgeom ();
+                        if (_pbs.SculptEntry && _parent_scene.meshSculptedPrim)
+                        {
+                            changeshape ((object)_pbs);
+                        }
+                        else
+                            DestroyBody ();
+                    }
+                }
+            }
             
             changeSelectedStatus (m_isSelected);
         }
