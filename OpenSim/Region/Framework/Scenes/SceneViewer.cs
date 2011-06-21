@@ -643,8 +643,8 @@ namespace OpenSim.Region.Framework.Scenes
                                 m_objectUpdatesToSend.Insert (m_objectUpdatesToSend.Count, update.Entity.UUID, update);
                                 continue;
                             }
-                            updates.Add (update);
                             m_EntitiesInPacketQueue.Add (update.Entity.UUID);*/
+                            updates.Add (update);
                             m_objectUpdatesToSend.RemoveAt (0);
                         }
                     }
