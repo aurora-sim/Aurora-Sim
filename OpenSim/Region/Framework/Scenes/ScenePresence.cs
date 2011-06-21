@@ -121,9 +121,14 @@ namespace OpenSim.Region.Framework.Scenes
         private bool m_updateflag;
         private uint m_movementflag;
         private UUID m_requestedSitTargetUUID;
+        private bool m_sitting;
         public UUID SittingOnUUID
         {
             get { return m_requestedSitTargetUUID; }
+        }
+        public bool Sitting
+        {
+            get { return m_sitting; }
         }
 
         private bool m_enqueueSendChildAgentUpdate = false;
@@ -1485,9 +1490,9 @@ namespace OpenSim.Region.Framework.Scenes
                         m_autoPilotTarget = Vector3.Zero;
                         m_autopilotMoving = false;
                         SendSitResponse(ControllingClient, m_requestedSitTargetUUID, Vector3.Zero, Quaternion.Identity);
-                        m_requestedSitTargetUUID = UUID.Zero;
                     }
                     m_requestedSitTargetUUID = UUID.Zero;
+                    m_sitting = false;
                 }
             }
         }
@@ -1537,6 +1542,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (appearance != null)
                     appearance.SendAvatarDataToAllAgents ();
                 m_requestedSitTargetUUID = UUID.Zero;
+                m_sitting = false;
             }
 
             Animator.TrySetMovementAnimation("STAND");
@@ -1600,6 +1606,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_nextSitAnimation = part.SitAnimation;
             }
             m_requestedSitTargetUUID = targetID;
+            m_sitting = true;
 
             Vector3 sitTargetPos = part.SitTargetPosition;
             Quaternion sitTargetOrient = part.SitTargetOrientation;
@@ -1630,6 +1637,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             ISceneChildEntity part = FindNextAvailableSitTarget (targetID);
             m_requestedSitTargetUUID = part.UUID;
+            m_sitting = true;
             if (part != null)
             {
                 // UNTODO: determine position to sit at based on scene geometry; don't trust offset from client
@@ -1651,11 +1659,11 @@ namespace OpenSim.Region.Framework.Scenes
                        ));
 
                 m_requestedSitTargetUUID = part.UUID;
+                m_sitting = true;
                 part.SetAvatarOnSitTarget(UUID);
 
                 if (SitTargetisSet && SitTargetUnOccupied)
                 {
-                    m_requestedSitTargetUUID = part.UUID;
                     offset = new Vector3(avSitOffSet.X, avSitOffSet.Y, avSitOffSet.Z);
                     sitOrientation = avSitOrientation;
                     autopilot = false;
@@ -1754,6 +1762,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     m_nextSitAnimation = part.SitAnimation;
                 }
+                m_sitting = true;
                 m_requestedSitTargetUUID = targetID;
                 
                 //m_log.DebugFormat("[SIT]: Client requested Sit Position: {0}", offset);
@@ -1790,6 +1799,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (part != null)
             {
                 m_requestedSitTargetUUID = targetID;
+                m_sitting = true;
 
                 m_log.DebugFormat("[SIT]: Client requested Sit Position: {0}", offset);
 
@@ -1934,20 +1944,20 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void Update()
         {
-            //if (!IsChildAgent)
-            //{
-            //    if (m_parentID != UUID.Zero)
-            //    {
-            //        SceneObjectPart part = Scene.GetSceneObjectPart(m_parentID);
-            //        if (part != null)
-            //        {
-            //            if ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) == AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK)
-            //                part.SetPhysActorCameraPos(Lookat);
-            //            else
-            //                part.SetPhysActorCameraPos(Vector3.Zero);
-            //        }
-            //    }
-            //}
+            if (!IsChildAgent)
+            {
+                if (m_parentID != UUID.Zero)
+                {
+                    SceneObjectPart part = (SceneObjectPart)Scene.GetSceneObjectPart (m_parentID);
+                    if (part != null)
+                    {
+                        if ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) == AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK)
+                            part.SetPhysActorCameraPos (CameraRotation);
+                        else
+                            part.SetPhysActorCameraPos (Quaternion.Identity);
+                    }
+                }
+            }
             if (m_enqueueSendChildAgentUpdate &&
                 m_enqueueSendChildAgentUpdateTime != new DateTime () &&
                 DateTime.Now > m_enqueueSendChildAgentUpdateTime)

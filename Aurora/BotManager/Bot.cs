@@ -868,7 +868,7 @@ namespace Aurora.BotManager
             if (distance > 10) //Greater than 10 meters, give up
             {
                 //Try direct then, since it is way out of range
-                DirectFollowing (raycastEntities);
+                DirectFollowing ();
             }
             else if (distance < closeToPoint && raycastEntities.Count == 0)//If the raycastEntities isn't zero, there is something between us and the avatar, don't stop on the other side of walls, etc
             {
@@ -887,10 +887,10 @@ namespace Aurora.BotManager
             {
                 if (raycastEntities.Count == 0)
                     //Nothing between us and the target, go for it!
-                    DirectFollowing (raycastEntities);
+                    DirectFollowing ();
                 else
                     //if (!BestFitPathFollowing (raycastEntities))//If this doesn't work, try significant positions
-                        SignificantPositionFollowing (raycastEntities);
+                        SignificantPositionFollowing ();
             }
             ClearOutInSignificantPositions (false);
             //Tell any child followers about us
@@ -902,69 +902,59 @@ namespace Aurora.BotManager
 
         #region Direct Following code
 
-        private void DirectFollowing (List<ISceneChildEntity> raycastEntities)
+        private void DirectFollowing ()
         {
-            double distance = Util.GetDistanceTo (FollowSP.AbsolutePosition, m_scenePresence.AbsolutePosition);
             Vector3 diffAbsPos = FollowSP.AbsolutePosition - m_scenePresence.AbsolutePosition;
-            float closeToPoint = m_toAvatar ? StartFollowDistance : StopFollowDistance;
-            if (distance > closeToPoint || raycastEntities.Count > 0)
+            Vector3 targetPos = FollowSP.AbsolutePosition;
+            Vector3 ourPos = m_scenePresence.AbsolutePosition;
+            bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
+            if (!fly && (diffAbsPos.Z > 0.25 || jumpTry > 5))
             {
-                Vector3 targetPos = FollowSP.AbsolutePosition;
-                Vector3 ourPos = m_scenePresence.AbsolutePosition;
-                bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
-                if (!fly && (diffAbsPos.Z > 0.25 || jumpTry > 5))
+                if (jumpTry > 5 || diffAbsPos.Z > 3)
                 {
-                    if (jumpTry > 5 || diffAbsPos.Z > 3)
+                    if (jumpTry <= 5)
+                        jumpTry = 6;
+                    fly = true;
+                }
+                else
+                {
+                    if (!m_allowJump)
                     {
-                        if (jumpTry <= 5)
-                            jumpTry = 6;
-                        fly = true;
+                        jumpTry--;
+                        targetPos.Z = ourPos.Z + 0.15f;
                     }
-                    else
+                    else if (m_UseJumpDecisionTree)
                     {
-                        if (!m_allowJump)
+                        if (!JumpDecisionTree (m_scenePresence.AbsolutePosition, targetPos))
                         {
                             jumpTry--;
                             targetPos.Z = ourPos.Z + 0.15f;
                         }
-                        else if (m_UseJumpDecisionTree)
-                        {
-                            if (!JumpDecisionTree (m_scenePresence.AbsolutePosition, targetPos))
-                            {
-                                jumpTry--;
-                                targetPos.Z = ourPos.Z + 0.15f;
-                            }
-                            else
-                            {
-                                if (jumpTry < 0)
-                                    jumpTry = 0;
-                                jumpTry++;
-                            }
-                        }
                         else
-                            jumpTry--;
+                        {
+                            if (jumpTry < 0)
+                                jumpTry = 0;
+                            jumpTry++;
+                        }
                     }
+                    else
+                        jumpTry--;
                 }
-                else if (!fly)
-                {
-                    if (diffAbsPos.Z < -3)
-                    {
-                        //We should fly down to the avatar, rather than fall
-                        //We also know that because this is the old, we have no entities in our way
-                        //(unless this is > 10m, but that case is messed up anyway, needs dealt with later)
-                        //so we can assume that it is safe to fly
-                        fly = true;
-                    }
-                    jumpTry--;
-                }
-                m_nodeGraph.Clear ();
-                m_nodeGraph.Add (targetPos, fly ? TravelMode.Fly : TravelMode.Walk);
             }
-            else
+            else if (!fly)
             {
-                //Stop the bot then
-                StopMoving (lastFlying);
+                if (diffAbsPos.Z < -3)
+                {
+                    //We should fly down to the avatar, rather than fall
+                    //We also know that because this is the old, we have no entities in our way
+                    //(unless this is > 10m, but that case is messed up anyway, needs dealt with later)
+                    //so we can assume that it is safe to fly
+                    fly = true;
+                }
+                jumpTry--;
             }
+            m_nodeGraph.Clear ();
+            m_nodeGraph.Add (targetPos, fly ? TravelMode.Fly : TravelMode.Walk);
         }
 
         #endregion
@@ -1282,7 +1272,7 @@ namespace Aurora.BotManager
             m_significantAvatarPositions = vectors;
         }
 
-        private void SignificantPositionFollowing (List<ISceneChildEntity> raycastEntities)
+        private void SignificantPositionFollowing ()
         {
             //Do this first
             ClearOutInSignificantPositions (true);

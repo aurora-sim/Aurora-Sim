@@ -4158,7 +4158,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void SetPhysActorCameraPos(Vector3 CameraRotation)
+        public void SetPhysActorCameraPos(Quaternion CameraRotation)
         {
             if (PhysActor != null)
             {
@@ -5426,7 +5426,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // subscribe to physics updates.
             //We subscribe by default now... so 'shouldn't' need this
-            /*if ((((AggregateScriptEvents & scriptEvents.collision) != 0) ||
+            if ((((AggregateScriptEvents & scriptEvents.collision) != 0) ||
                 ((AggregateScriptEvents & scriptEvents.collision_end) != 0) ||
                 ((AggregateScriptEvents & scriptEvents.collision_start) != 0) ||
                 ((AggregateScriptEvents & scriptEvents.land_collision) != 0) ||
@@ -5435,8 +5435,10 @@ namespace OpenSim.Region.Framework.Scenes
                 ) && PhysActor != null)
             {
                 PhysActor.OnCollisionUpdate += PhysicsCollision;
-                PhysActor.SubscribeEvents(1000);
-            }*/
+                PhysActor.SubscribeEvents (1000);
+            }
+            else if(PhysActor != null)
+                PhysActor.OnCollisionUpdate -= PhysicsCollision;
 
             if (m_parentGroup == null)
             {

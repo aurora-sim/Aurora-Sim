@@ -164,7 +164,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //We need to check whether this presence is sitting on anything, so that we can check from the object's
                 // position, rather than the offset position of the object that the avatar is sitting on
                 IScenePresence pEntity = (IScenePresence)entity;
-                if (pEntity.SittingOnUUID != UUID.Zero)
+                if (pEntity.Sitting)
                 {
                     ISceneChildEntity sittingEntity = pEntity.Scene.GetSceneObjectPart (pEntity.SittingOnUUID);
                     if(sittingEntity != null)

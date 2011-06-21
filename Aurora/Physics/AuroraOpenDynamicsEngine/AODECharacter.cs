@@ -1507,9 +1507,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (m_eventsubscription > m_requestedUpdateFrequency)
             {
                 if (CollisionEventsThisFrame != null)
-                {
                     base.SendCollisionUpdate(CollisionEventsThisFrame);
-                }
+
                 CollisionEventsThisFrame = new CollisionEventUpdate();
                 m_eventsubscription = 0;
             }

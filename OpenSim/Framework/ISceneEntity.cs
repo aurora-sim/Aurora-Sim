@@ -174,6 +174,8 @@ namespace OpenSim.Framework
 
         UUID SittingOnUUID { get; }
 
+        bool Sitting { get; }
+
         void ClearSavedVelocity ();
 
         void HandleAgentRequestSit (IClientAPI remoteClient, UUID targetID, Vector3 offset);
@@ -938,7 +940,7 @@ namespace OpenSim.Framework
         public virtual void VehicleVectorParam(int param, Vector3 value) { }
         public virtual void VehicleRotationParam(int param, Quaternion rotation) { }
         public virtual void VehicleFlags(int param, bool remove) { }
-        public virtual void SetCameraPos(Vector3 CameraRotation) { }
+        public virtual void SetCameraPos(Quaternion CameraRotation) { }
 
         public virtual bool VolumeDetect
         {
@@ -1003,6 +1005,11 @@ namespace OpenSim.Framework
 
             if (handler != null)
                 handler (e);
+        }
+
+        public virtual bool SubscribedToCollisions ()
+        {
+            return OnCollisionUpdate != null;
         }
 
         public virtual void TriggerSignificantMovement ()

@@ -2300,12 +2300,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                     prim.Move(ODE_STEPSIZE);
                                 }
                             }
-
-                            if (m_rayCastManager != null)
-                            {
-                                m_rayCastManager.ProcessQueuedRequests();
-                            }
                         }
+                        if (m_rayCastManager != null)
+                            m_rayCastManager.ProcessQueuedRequests ();
 
                         m_StatPhysicsMoveTime = Util.EnvironmentTickCountSubtract(PhysicsMoveTime);
 

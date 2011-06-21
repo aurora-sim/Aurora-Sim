@@ -2474,7 +2474,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_vehicle.ProcessVehicleFlags (param, remove);
         }
 
-        public override void SetCameraPos (Vector3 CameraRotation)
+        public override void SetCameraPos (Quaternion CameraRotation)
         {
             m_vehicle.ProcessSetCameraPos (CameraRotation);
         }
@@ -2859,9 +2859,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void AddCollisionEvent (uint CollidedWith, ContactPoint contact)
         {
-            if (CollisionEventsThisFrame == null)
-                CollisionEventsThisFrame = new CollisionEventUpdate ();
-            CollisionEventsThisFrame.addCollider (CollidedWith, contact);
+            if (base.SubscribedToCollisions () && SubscribedEvents())//If we don't have anything that we are going to trigger, don't even add
+            {
+                if (CollisionEventsThisFrame == null)
+                    CollisionEventsThisFrame = new CollisionEventUpdate ();
+                CollisionEventsThisFrame.addCollider (CollidedWith, contact);
+            }
         }
 
         public void SendCollisions ()
