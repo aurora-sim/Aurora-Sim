@@ -2016,14 +2016,17 @@ namespace OpenSim.Region.CoreModules.World.Land
                 if (data != null)  // if we found some data, send it
                 {
                     GridRegion info;
-                    if (RegionHandle == m_scene.RegionInfo.RegionHandle)
+                    int RegionX, RegionY;
+                    Util.UlongToInts (RegionHandle, out RegionX, out RegionY);
+                    RegionX = (int)((float)RegionX / Constants.RegionSize);
+                    RegionY = (int)(RegionY / Constants.RegionSize);
+                    if (RegionX == m_scene.RegionInfo.RegionLocX && 
+                        RegionY == m_scene.RegionInfo.RegionLocY)
                     {
                         info = new GridRegion(m_scene.RegionInfo);
                     }
                     else
                     {
-                        int RegionX, RegionY;
-                        Util.UlongToInts(RegionHandle, out RegionX, out RegionY);
                         // most likely still cached from building the extLandData entry
                         info = m_scene.GridService.GetRegionByPosition(UUID.Zero, RegionX, RegionY);
                     }

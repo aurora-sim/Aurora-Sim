@@ -225,6 +225,8 @@ namespace Aurora.Services.DataService
             LandData = null;
             foreach (LandData land in Lands)
             {
+                if (land.Bitmap == null)
+                    continue;
                 bool[,] bitmap = ConvertBytesToLandBitmap(land.Bitmap);
                 if (bitmap[x / 64, y / 64])
                 {
