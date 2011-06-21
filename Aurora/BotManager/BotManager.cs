@@ -138,6 +138,7 @@ namespace Aurora.BotManager
             m_aCircuitData.Appearance.Owner = m_character.AgentId;
             List<AvatarAttachment> attachments = m_aCircuitData.Appearance.GetAttachments ();
 
+            m_aCircuitData.Appearance.ClearAttachments ();
             for (int i = 0; i < attachments.Count; i++)
             {
                 InventoryItemBase item = scene.InventoryService.GetItem (new InventoryItemBase (attachments[i].ItemID));
@@ -148,7 +149,7 @@ namespace Aurora.BotManager
                     item.Folder = UUID.Zero;
                     scene.InventoryService.AddItem (item);
                     //Now fix the ItemID
-                    attachments[i].ItemID = item.ID;
+                    m_aCircuitData.Appearance.SetAttachment (attachments[i].AttachPoint, item.ID, attachments[i].AssetID);
                 }
             }
 
