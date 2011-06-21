@@ -182,8 +182,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         {
             float waterHeight = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
 
-            renderer.AddPlane ("Water", 256f * 0.5f);
-            renderer.Scene.sceneobject ("Water").setPos (127.5f, waterHeight, 127.5f);
+            renderer.AddPlane ("Water", m_scene.RegionInfo.RegionSizeX * 0.5f);
+            renderer.Scene.sceneobject ("Water").setPos ((m_scene.RegionInfo.RegionSizeX / 2) - 0.5f, waterHeight, (m_scene.RegionInfo.RegionSizeY / 2) - 0.5f);
 
             RegionLightShareData rls = m_scene.RequestModuleInterface<Aurora.Framework.IWindLightSettingsModule> ().FindRegionWindLight ();
             
@@ -210,8 +210,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     warp_Material waterTextmaterial = new warp_Material (texture);
                     waterTextmaterial.setTransparency ((byte)((1f - WATER_COLOR.A) * 255f) * 4);
                     waterTextmaterial.setReflectivity (0);
-                    renderer.AddPlane ("Water2", 256f * 0.5f);
-                    renderer.Scene.sceneobject ("Water2").setPos (127.5f, waterHeight - 0.1f, 127.5f);
+                    renderer.AddPlane ("Water2", m_scene.RegionInfo.RegionSizeX * 0.5f);
+                    renderer.Scene.sceneobject ("Water2").setPos ((m_scene.RegionInfo.RegionSizeX / 2) - 0.5f, waterHeight, (m_scene.RegionInfo.RegionSizeY / 2) - 0.5f);
                     renderer.Scene.addMaterial ("WaterColor2", waterTextmaterial);
                     renderer.SetObjectMaterial ("Water2", "WaterColor2");
                 }
