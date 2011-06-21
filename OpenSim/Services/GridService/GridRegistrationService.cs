@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -120,7 +121,7 @@ namespace OpenSim.Services.GridService
             m_simulationBase.EventManager.RegisterEventHandler("GridRegionSuccessfullyRegistered", EventManager_OnGenericEvent);
 
             m_configurationConfig = config.Configs["Configuration"];
-            m_loadBalancer.SetConfig (m_configurationConfig);
+            m_loadBalancer.SetConfig (m_configurationConfig, this);
 
             if (m_configurationConfig != null)
                 m_useSessionTime = m_configurationConfig.GetBoolean ("UseSessionTime", m_useSessionTime);
@@ -448,7 +449,7 @@ namespace OpenSim.Services.GridService
         {
             protected Dictionary<string, List<string>> m_urls = new Dictionary<string, List<string>> ();
             protected Dictionary<string, List<uint>> m_ports = new Dictionary<string, List<uint>> ();
-            protected Dictionary<string, int> lastSet = new Dictionary<string, int>();
+            protected Dictionary<string, int> lastSet = new Dictionary<string, int> ();
             protected const uint m_defaultPort = 8003;
             protected string m_defaultHostname = "http://127.0.0.1";
             protected IConfig m_configurationConfig;
@@ -459,7 +460,7 @@ namespace OpenSim.Services.GridService
             protected List<string> m_remoteLoadBalancingInstances = new List<string> ();
             protected string m_remotePassword = "";
 
-            public void SetConfig (IConfig config)
+            public void SetConfig (IConfig config, GridRegistrationService gridRegService)
             {
                 m_configurationConfig = config;
 
@@ -469,6 +470,14 @@ namespace OpenSim.Services.GridService
                     m_remotePassword = m_configurationConfig.GetString ("RemotePassword", "");
                     m_remotePort = m_configurationConfig.GetUInt ("RemoteLoadBalancingPort", m_defaultPort);
                     SetRemoteUrls (m_configurationConfig.GetString ("RemoteLoadBalancingUrls", "").Split (','));
+                    if (m_configurationConfig.GetBoolean("UseRemoteLoadBalancing", false))
+                    {
+                        //Set up the external handlers
+                        IHttpServer server = gridRegService.m_registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (m_remotePort);
+
+                        RemoteLoadBalancingPostHandler handler = new RemoteLoadBalancingPostHandler ("/LoadBalancing", m_remotePassword, gridRegService);
+                        server.AddStreamHandler (handler);
+                    }
                 }
             }
 
@@ -553,7 +562,7 @@ namespace OpenSim.Services.GridService
                     else
                     {
                         //Get the external Info
-                        if (!GetExternalInfo (lastSet[name], name, out port, out hostName, out innerUrl))
+                        if (!GetExternalInfo (lastSet[name], name, SessionID, out port, out hostName, out innerUrl))
                         {
                             lastSet[name] = 0;//It went through all external, give up on them
                             GetHost (name, module, SessionID, out port, out hostName, out innerUrl);
@@ -585,7 +594,7 @@ namespace OpenSim.Services.GridService
                 }
             }
 
-            private bool GetExternalInfo (int lastSet, string name, out uint port, out string hostName, out string innerUrl)
+            private bool GetExternalInfo (int lastSet, string name, string SessionID, out uint port, out string hostName, out string innerUrl)
             {
                 port = 0;
                 hostName = "";
@@ -593,7 +602,7 @@ namespace OpenSim.Services.GridService
                 string externalURL = "";
                 int currentCount = m_urls.Count;//Start at the end of the urls
                 int i = 0;
-                for(i = 0; i < m_remoteLoadBalancingInstances.Count; i++)
+                for (i = 0; i < m_remoteLoadBalancingInstances.Count; i++)
                 {
                     if (currentCount + m_externalUrlCount[i] > lastSet)
                     {
@@ -602,13 +611,13 @@ namespace OpenSim.Services.GridService
                     }
                     currentCount += m_externalUrlCount[i];
                 }
-                if(externalURL == "")
+                if (externalURL == "")
                     return false;
 
-                OSDMap resp = MakeGenericCall (externalURL, "GetExternalInfo", name);
+                OSDMap resp = MakeGenericCall (externalURL, "GetExternalInfo", name, SessionID);
                 if (resp == null)
                     //Try again
-                    return GetExternalInfo ((currentCount + m_externalUrlCount[i]), name, out port, out hostName, out innerUrl);
+                    return GetExternalInfo ((currentCount + m_externalUrlCount[i]), SessionID, name, out port, out hostName, out innerUrl);
                 else
                 {
                     port = resp["Port"];
@@ -629,7 +638,7 @@ namespace OpenSim.Services.GridService
                 int count = 0;
                 foreach (string url in m_remoteLoadBalancingInstances)
                 {
-                    OSDMap resp = MakeGenericCall (url, "GetExternalCounts", name);
+                    OSDMap resp = MakeGenericCall (url, "GetExternalCounts", name, "");
                     if (resp != null)
                     {
                         m_externalUrlCountTotal += resp["Count"];
@@ -641,13 +650,70 @@ namespace OpenSim.Services.GridService
                 }
             }
 
-            private OSDMap MakeGenericCall (string url, string method, string param)
+            private OSDMap MakeGenericCall (string url, string method, string param, string param2)
             {
-                OSDMap request = new OSDMap();
+                OSDMap request = new OSDMap ();
                 request["Password"] = m_remotePassword;
                 request["Method"] = method;
                 request["Param"] = param;
-                return WebUtils.PostToService (url, request, true, false, true);
+                request["Param2"] = param2;
+                return WebUtils.PostToService (url + "/LoadBalancing", request, true, false, true);
+            }
+
+            #endregion
+
+            #region Remote Handlers
+
+            public class RemoteLoadBalancingPostHandler : BaseStreamHandler
+            {
+                private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
+
+                private GridRegistrationService m_service;
+                private string m_password;
+
+                public RemoteLoadBalancingPostHandler (string url, string password, GridRegistrationService gridReg) :
+                    base ("POST", url)
+                {
+                    m_password = password;
+                    m_service = gridReg;
+                }
+
+                public override byte[] Handle (string path, Stream requestData,
+                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                {
+                    StreamReader sr = new StreamReader (requestData);
+                    string body = sr.ReadToEnd ();
+                    sr.Close ();
+                    body = body.Trim ();
+                    OSDMap request = WebUtils.GetOSDMap (body);
+                    if(request["Password"] != m_password)
+                        return null;
+                    OSDMap response = new OSDMap ();
+
+                    switch (response["Method"].AsString())
+                    {
+                        case "GetExternalCounts":
+                            response["Count"] = m_service.m_loadBalancer.m_urls[request["Param"]].Count;
+                            break;
+                        case "GetExternalInfo":
+                            string moduleName = request["Param"];
+                            string SessionID = request["Param2"];
+                            uint port;
+                            string hostName, innerUrl;
+                            if (m_service.m_modules.ContainsKey (moduleName))
+                            {
+                                m_service.m_loadBalancer.GetHost (moduleName, m_service.m_modules[moduleName], SessionID, out port, out hostName, out innerUrl);
+                                response["HostName"] = hostName;
+                                response["InnerUrl"] = innerUrl;
+                                response["Port"] = port;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+
+                    return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString (response));
+                }
             }
 
             #endregion
