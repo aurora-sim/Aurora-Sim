@@ -548,7 +548,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
 
 
-            if (m_nextOnQueueEmpty != 0 && (Environment.TickCount & Int32.MaxValue) >= m_nextOnQueueEmpty)
+            if (m_nextOnQueueEmpty != 0 && Util.EnvironmentTickCountSubtract(m_nextOnQueueEmpty) >= 0)
             {
                 // Use a value of 0 to signal that FireQueueEmpty is running
                 m_nextOnQueueEmpty = 0;
@@ -556,9 +556,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 int ptmp = m_outbox.queues[MapCatsToPriority[(int)ThrottleOutPacketType.Task]].Count;
                 int atmp = m_outbox.queues[MapCatsToPriority[(int)ThrottleOutPacketType.AvatarInfo]].Count;
                 int ttmp = m_outbox.queues[MapCatsToPriority[(int)ThrottleOutPacketType.Texture]].Count;
-                int [] arg = {ptmp,atmp,ttmp};
-                Util.FireAndForget(FireQueueEmpty, arg);
-                }
+                int[] arg = { ptmp, atmp, ttmp };
+                Util.FireAndForget (FireQueueEmpty, arg);
+            }
 
             return packetSent;
         }
@@ -639,7 +639,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             QueueEmpty callback = OnQueueEmpty;
             
-            int start = Environment.TickCount & Int32.MaxValue;
+            int start = Util.EnvironmentTickCount();
 
             if (callback != null)
             {

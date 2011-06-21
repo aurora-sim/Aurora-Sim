@@ -62,13 +62,17 @@ namespace OpenSim.Region.Framework.Scenes
         protected Prioritizer m_prioritizer;
         protected Culler m_culler;
         protected bool m_forceCullCheck = false;
+        private object m_presenceUpdatesToSendLock = new object ();
+        private object m_presenceAnimationsToSendLock = new object ();
+        private object m_objectPropertiesToSendLock = new object ();
+        private object m_objectUpdatesToSendLock = new object ();
         private OrderedDictionary/*<UUID, EntityUpdate>*/ m_presenceUpdatesToSend = new OrderedDictionary/*<UUID, EntityUpdate>*/ ();
         private OrderedDictionary/*<UUID, AnimationGroup>*/ m_presenceAnimationsToSend = new OrderedDictionary/*<UUID, AnimationGroup>*/ ();
         private OrderedDictionary/*<UUID, EntityUpdate>*/ m_objectUpdatesToSend = new OrderedDictionary/*<UUID, EntityUpdate>*/ ();
         private OrderedDictionary/*<UUID, ISceneChildEntity>*/ m_objectPropertiesToSend = new OrderedDictionary/*<UUID, ISceneChildEntity>*/ ();
-        private List<UUID> m_EntitiesInPacketQueue = new List<UUID>();
+        /*private List<UUID> m_EntitiesInPacketQueue = new List<UUID>();
         private List<UUID> m_AnimationsInPacketQueue = new List<UUID>();
-        private List<UUID> m_PropertiesInPacketQueue = new List<UUID>();
+        private List<UUID> m_PropertiesInPacketQueue = new List<UUID>();*/
         private HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity> ();
         private HashSet<IScenePresence> lastPresencesInView = new HashSet<IScenePresence> ();
         private Dictionary<UUID, IScenePresence> lastPresencesDInView = new Dictionary<UUID, IScenePresence> ();
@@ -160,7 +164,8 @@ namespace OpenSim.Region.Framework.Scenes
                 lastPresencesDInView.Remove (presence.UUID);
                 return; // if 2 far ignore
             }
-            if ((!(m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeX &&
+            if (m_presence.DrawDistance != 0 && 
+                (!(m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeX &&
                     m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeY)) &&
                     !lastPresencesDInView.ContainsKey (presence.UUID))
             {
@@ -171,7 +176,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            lock (m_presenceUpdatesToSend)
+            lock (m_presenceUpdatesToSendLock)
             {
                 EntityUpdate o = (EntityUpdate)m_presenceUpdatesToSend[presence.UUID];
                 if (o == null)
@@ -190,10 +195,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_ourPresenceHasUpdate = true;
                     m_presenceUpdatesToSend.Insert(0, presence.UUID, o);
                 }
-                else if (m_ourPresenceHasUpdate) //If this is set, we start inserting at 1 so that our updates go first
-                    // We can also safely assume that 1 is fine, because there has to be 0 already there set by us
-                    m_presenceUpdatesToSend.Insert(m_presenceUpdatesToSend.Count, presence.UUID, o);
-                else //Set us at 0, no updates from us
+                else //Not us, set at the end
                     m_presenceUpdatesToSend.Insert(m_presenceUpdatesToSend.Count, presence.UUID, o);
             }
         }
@@ -208,7 +210,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return; // if 2 far ignore
             }
 
-            lock (m_presenceAnimationsToSend)
+            lock (m_presenceAnimationsToSendLock)
             {
                 m_presenceAnimationsToSend.Remove(animation.AvatarID);
                 //Insert at the end
@@ -241,7 +243,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void QueueEntityUpdate(EntityUpdate update)
         {
-            lock (m_objectUpdatesToSend)
+            lock (m_objectUpdatesToSendLock)
             {
                 EntityUpdate o = (EntityUpdate)m_objectUpdatesToSend[update.Entity.UUID];
                 if (o == null)
@@ -259,7 +261,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void QueuePartsForPropertiesUpdate(ISceneChildEntity[] entities)
         {
-            lock (m_objectPropertiesToSend)
+            lock (m_objectPropertiesToSendLock)
             {
                 foreach (ISceneChildEntity entity in entities)
                 {
@@ -436,14 +438,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="numUpdates">The number of updates to send</param>
         public void SendPrimUpdates (int numPrimUpdates, int numAvaUpdates)
         {
-            if (m_inUse || ((ScenePresence)m_presence).IsInTransit)
-                return;
-
             if (m_numberOfLoops < NUMBER_OF_LOOPS_TO_WAIT) //Wait for the client to finish connecting fully before sending out bunches of updates
             {
                 m_numberOfLoops++;
                 return;
             }
+
+            if (m_inUse || ((ScenePresence)m_presence).IsInTransit)
+                return;
 
             m_inUse = true;
             //This is for stats
@@ -458,12 +460,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!m_presence.IsChildAgent || (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor) && m_prioritizer != null)
                 {
                     m_SentInitialObjects = true;
-                    ISceneEntity[] entities = m_presence.Scene.Entities.GetEntities ();
-                    PriorityQueue<EntityUpdate, double> m_entsqueue = new PriorityQueue<EntityUpdate, double> (entities.Length, DoubleComparer);
+                    ISceneEntity[] allEntities = m_presence.Scene.Entities.GetEntities ();
+                    PriorityQueue<EntityUpdate, double> m_entsqueue = new PriorityQueue<EntityUpdate, double> (allEntities.Length, DoubleComparer);
                     List<ISceneEntity> NewGrpsInView = new List<ISceneEntity> ();
                     // build a prioritized list of things we need to send
 
-                    foreach (ISceneEntity e in entities)
+                    foreach (ISceneEntity e in allEntities)
                     {
                         if (e != null && e is SceneObjectGroup)
                         {
@@ -503,7 +505,7 @@ namespace OpenSim.Region.Framework.Scenes
                     //Merge the last seen lists
                     lastGrpsInView.UnionWith (NewGrpsInView);
                     NewGrpsInView.Clear ();
-                    entities = null;
+                    allEntities = null;
                     // send them 
                     SendQueued (m_entsqueue);
                 }
@@ -511,7 +513,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             int presenceNumToSend = numAvaUpdates;
             List<EntityUpdate> updates = new List<EntityUpdate> ();
-            lock (m_presenceUpdatesToSend)
+            lock (m_presenceUpdatesToSendLock)
             {
                 //Send the numUpdates of them if that many
                 // if we don't have that many, we send as many as possible, then switch to objects
@@ -523,14 +525,14 @@ namespace OpenSim.Region.Framework.Scenes
                         for (int i = 0; i < count; i++)
                         {
                             EntityUpdate update = ((EntityUpdate)m_presenceUpdatesToSend[0]);
-                            if (m_EntitiesInPacketQueue.Contains (update.Entity.UUID))
+                            /*if (m_EntitiesInPacketQueue.Contains (update.Entity.UUID))
                             {
                                 m_presenceUpdatesToSend.RemoveAt (0);
                                 m_presenceUpdatesToSend.Insert (m_presenceUpdatesToSend.Count, update.Entity.UUID, update);
                                 continue;
                             }
+                            m_EntitiesInPacketQueue.Add (update.Entity.UUID);*/
                             updates.Add (update);
-                            m_EntitiesInPacketQueue.Add (update.Entity.UUID);
                             m_presenceUpdatesToSend.RemoveAt (0);
                         }
                     }
@@ -551,7 +553,7 @@ namespace OpenSim.Region.Framework.Scenes
             updates.Clear ();
 
             List<AnimationGroup> animationsToSend = new List<AnimationGroup> ();
-            lock (m_presenceAnimationsToSend)
+            lock (m_presenceAnimationsToSendLock)
             {
                 //Send the numUpdates of them if that many
                 // if we don't have that many, we send as many as possible, then switch to objects
@@ -563,13 +565,13 @@ namespace OpenSim.Region.Framework.Scenes
                         for (int i = 0; i < count; i++)
                         {
                             AnimationGroup update = ((AnimationGroup)m_presenceAnimationsToSend[0]);
-                            if (m_AnimationsInPacketQueue.Contains (update.AvatarID))
+                            /*if (m_AnimationsInPacketQueue.Contains (update.AvatarID))
                             {
                                 m_presenceAnimationsToSend.RemoveAt (0);
                                 m_presenceAnimationsToSend.Insert (m_presenceAnimationsToSend.Count, update.AvatarID, update);
                                 continue;
                             }
-                            m_AnimationsInPacketQueue.Add (update.AvatarID);
+                            m_AnimationsInPacketQueue.Add (update.AvatarID);*/
                             m_presenceAnimationsToSend.RemoveAt (0);
                             animationsToSend.Add (update);
                         }
@@ -588,7 +590,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             int primsNumToSend = numPrimUpdates;
 
-            lock (m_objectPropertiesToSend)
+            List<IEntity> entities = new List<IEntity> ();
+            lock (m_objectPropertiesToSendLock)
             {
                 //Send the numUpdates of them if that many
                 // if we don't have that many, we send as many as possible, then switch to objects
@@ -596,25 +599,19 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     try
                     {
-                        List<IEntity> entities = new List<IEntity> ();
                         int count = m_objectPropertiesToSend.Count > primsNumToSend ? primsNumToSend : m_objectPropertiesToSend.Count;
                         for (int i = 0; i < count; i++)
                         {
                             ISceneChildEntity entity = ((ISceneChildEntity)m_objectPropertiesToSend[0]);
-                            if (m_PropertiesInPacketQueue.Contains (entity.UUID))
+                            /*if (m_PropertiesInPacketQueue.Contains (entity.UUID))
                             {
                                 m_objectPropertiesToSend.RemoveAt (0);
                                 m_objectPropertiesToSend.Insert (m_objectPropertiesToSend.Count, entity.UUID, entity);
                                 continue;
                             }
-                            m_PropertiesInPacketQueue.Add (entity.UUID);
+                            m_PropertiesInPacketQueue.Add (entity.UUID);*/
                             m_objectPropertiesToSend.RemoveAt (0);
                             entities.Add (entity);
-                        }
-                        if (entities.Count > 0)
-                        {
-                            primsNumToSend -= entities.Count;
-                            m_presence.ControllingClient.SendObjectPropertiesReply (entities);
                         }
                     }
                     catch (Exception ex)
@@ -623,9 +620,14 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
+            if (entities.Count > 0)
+            {
+                primsNumToSend -= entities.Count;
+                m_presence.ControllingClient.SendObjectPropertiesReply (entities);
+            }
 
             updates = new List<EntityUpdate> ();
-            lock (m_objectUpdatesToSend)
+            lock (m_objectUpdatesToSendLock)
             {
                 if (m_objectUpdatesToSend.Count != 0)
                 {
@@ -635,17 +637,16 @@ namespace OpenSim.Region.Framework.Scenes
                         for (int i = 0; i < count; i++)
                         {
                             EntityUpdate update = ((EntityUpdate)m_objectUpdatesToSend[0]);
-                            if (m_EntitiesInPacketQueue.Contains (update.Entity.UUID))
+                            /*if (m_EntitiesInPacketQueue.Contains (update.Entity.UUID))
                             {
                                 m_objectUpdatesToSend.RemoveAt (0);
                                 m_objectUpdatesToSend.Insert (m_objectUpdatesToSend.Count, update.Entity.UUID, update);
                                 continue;
                             }
                             updates.Add (update);
-                            m_EntitiesInPacketQueue.Add (update.Entity.UUID);
+                            m_EntitiesInPacketQueue.Add (update.Entity.UUID);*/
                             m_objectUpdatesToSend.RemoveAt (0);
                         }
-                        m_presence.ControllingClient.SendPrimUpdate (updates);
                     }
                     catch (Exception ex)
                     {
@@ -653,6 +654,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
+            m_presence.ControllingClient.SendPrimUpdate (updates);
 
             //Add the time to the stats tracker
             IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_presence.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_presence.Scene.RegionInfo.RegionID.ToString (), "Agent Update Count");
@@ -668,10 +670,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="ID"></param>
         public void FinishedEntityPacketSend(IEnumerable<EntityUpdate> updates)
         {
-            foreach (EntityUpdate update in updates)
+            /*foreach (EntityUpdate update in updates)
             {
                 m_EntitiesInPacketQueue.Remove(update.Entity.UUID);
-            }
+            }*/
         }
 
         /// <summary>
@@ -680,10 +682,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="ID"></param>
         public void FinishedPropertyPacketSend(IEnumerable<IEntity> updates)
         {
-            foreach (IEntity update in updates)
+            /*foreach (IEntity update in updates)
             {
                 m_PropertiesInPacketQueue.Remove(update.UUID);
-            }
+            }*/
         }
 
         /// <summary>
@@ -692,7 +694,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="ID"></param>
         public void FinishedAnimationPacketSend(AnimationGroup update)
         {
-            m_AnimationsInPacketQueue.Remove(update.AvatarID);
+            //m_AnimationsInPacketQueue.Remove(update.AvatarID);
         }
 
         private static int DoubleComparer (double x, double y)
