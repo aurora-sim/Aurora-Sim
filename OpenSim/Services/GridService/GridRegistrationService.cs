@@ -288,8 +288,13 @@ namespace OpenSim.Services.GridService
             //Get the URLs from all the modules that have registered with us
             foreach (IGridRegistrationUrlModule module in m_modules.Values)
             {
-                ports[module.UrlName] = m_loadBalancer.GetPort (module.UrlName);
-                hostnames[module.UrlName] = m_loadBalancer.GetHost (module.UrlName);
+                uint port;
+                string hostName;
+                bool needsHandlerAdded = m_loadBalancer.GetHost (module.UrlName, out port, out hostName);
+                ports[module.UrlName] = port;
+                hostnames[module.UrlName] = hostName;
+                if(!needsHandlerAdded)
+                    continue;//If it's external, don't add another handler for it
                 //Build the URL
                 databaseSave[module.UrlName] = module.GetUrlForRegisteringClient (SessionID, ports[module.UrlName]);
             }
@@ -442,11 +447,11 @@ namespace OpenSim.Services.GridService
         public class LoadBalancerUrls
         {
             protected Dictionary<string, List<string>> m_urls = new Dictionary<string, List<string>> ();
+            protected Dictionary<string, List<string>> m_externalurls = new Dictionary<string, List<string>> ();
             protected Dictionary<string, List<uint>> m_ports = new Dictionary<string, List<uint>> ();
-            protected Dictionary<string, int> lastSetHost = new Dictionary<string, int>();
-            protected Dictionary<string, int> lastSetPort = new Dictionary<string, int>();
+            protected Dictionary<string, int> lastSet = new Dictionary<string, int>();
             protected const uint m_defaultPort = 8002;
-            protected string m_defaultHostname = "127.0.0.1";
+            protected string m_defaultHostname = "http://127.0.0.1";
             protected IConfig m_configurationConfig;
 
             public void SetConfig (IConfig config)
@@ -454,18 +459,10 @@ namespace OpenSim.Services.GridService
                 m_configurationConfig = config;
 
                 if (m_configurationConfig != null)
-                {
-                    SetDefaultUrls ((m_defaultHostname = m_configurationConfig.GetString ("HostNames", m_defaultHostname)).Split (','));
-                    SetDefaultPorts (m_configurationConfig.GetString ("Ports", m_defaultPort.ToString()).Split (','));
-                }
+                    m_defaultHostname = m_configurationConfig.GetString ("HostName", m_defaultHostname);
             }
 
             #region Set accessors
-
-            protected void SetDefaultUrls (string[] urls)
-            {
-                SetUrls ("default", urls);
-            }
 
             protected void SetUrls (string name, string[] urls)
             {
@@ -482,12 +479,17 @@ namespace OpenSim.Services.GridService
                 m_urls[name] = new List<string> (urls);
             }
 
-            protected void SetDefaultPorts (string[] ports)
+            protected void AddExternalUrls (string name, string[] urls)
             {
-                SetPorts ("default", ports);
+                for (int i = 0; i < urls.Length; i++)
+                {
+                    if (urls[i].StartsWith (" "))
+                        urls[i] = urls[i].Remove (0, 1);
+                }
+                m_externalurls[name] = new List<string> (urls);
             }
 
-            protected void SetPorts (string name, string[] ports)
+            protected void AddPorts (string name, string[] ports)
             {
                 List<uint> uPorts = new List<uint> ();
                 for (int i = 0; i < ports.Length; i++)
@@ -496,53 +498,78 @@ namespace OpenSim.Services.GridService
                         ports[i] = ports[i].Remove (0, 1);
                     uPorts.Add (uint.Parse (ports[i]));
                 }
-                m_ports[name] = uPorts;
+                if (!m_ports.ContainsKey (name))
+                    m_ports[name] = new List<uint> ();
+                m_ports[name].AddRange (uPorts);
             }
 
             #endregion
 
             #region Get accessors
 
-            public string GetHost(string name)
+            /// <summary>
+            /// Gets a host and port for the given handler
+            /// </summary>
+            /// <param name="name"></param>
+            /// <param name="port"></param>
+            /// <param name="hostName"></param>
+            /// <returns>Whether we need to create a handler or whether it is an external URL</returns>
+            public bool GetHost (string name, out uint port, out string hostName)
             {
                 if (!m_urls.ContainsKey (name))
+                {
                     SetUrls (name, m_configurationConfig.GetString (name + "Hostnames", m_defaultHostname).Split (','));
-                if (!lastSetHost.ContainsKey (name))
-                    lastSetHost.Add (name, 0);
+                    AddPorts (name, m_configurationConfig.GetString (name + "InternalPorts", m_defaultPort.ToString ()).Split (','));
+                    AddExternalUrls (name, m_configurationConfig.GetString (name + "ExternalUrls", m_defaultPort.ToString ()).Split (','));
+                }
+                if (!lastSet.ContainsKey (name))
+                    lastSet.Add (name, 0);
 
+                //Add both internal and external hosts together for now
                 List<string> urls = m_urls[name];
-                if (lastSetHost[name] < urls.Count)
-                {
-                    string url = urls[lastSetHost[name]];
-                    lastSetHost[name]++;
-                    if (lastSetHost[name] == urls.Count)
-                        lastSetHost[name] = 0;
-                    return url;
-                }
-                else if (urls.Count > 0)
-                    return urls[0];
-                return GetHost("default");
-            }
+                urls.AddRange (m_externalurls[name]);
 
-            public uint GetPort (string name)
-            {
-                if (!m_ports.ContainsKey (name))
-                    SetPorts (name, m_configurationConfig.GetString (name + "Ports", m_defaultPort.ToString()).Split (','));
-                if (!lastSetPort.ContainsKey (name))
-                    lastSetPort.Add (name, 0);
-
-                List<uint> ports = m_ports[name];
-                if (lastSetPort[name] < ports.Count)
+                if (lastSet[name] < urls.Count)
                 {
-                    uint url = ports[lastSetPort[name]];
-                    lastSetPort[name]++;
-                    if (lastSetPort[name] == ports.Count)
-                        lastSetPort[name] = 0;
-                    return url;
+                    string url = urls[lastSet[name]];
+                    lastSet[name]++;
+                    if (lastSet[name] == urls.Count)
+                        lastSet[name] = 0;
+
+                    if (url.Contains (":"))
+                    {
+                        //External URL, split the port out of it
+
+                        port = uint.Parse (url.Split (':')[1]);
+                        hostName = url.Split (':')[0];
+                        return false;
+                    }
+                    else
+                    {
+                        port = m_ports[name][lastSet[name]];
+                        hostName = url;
+                        return true;
+                    }
                 }
-                else if (ports.Count > 0)
-                    return ports[0];
-                return GetPort ("default");
+                else
+                {
+                    //We don't have any urls for this name, return defaults
+                    if (m_ports[name].Count > 0)
+                    {
+                        port = m_ports[name][lastSet[name]];
+                        lastSet[name]++;
+                        if (lastSet[name] == urls.Count)
+                            lastSet[name] = 0;
+
+                        hostName = m_defaultHostname;
+                    }
+                    else
+                    {
+                        port = m_defaultPort;
+                        hostName = m_defaultHostname;
+                    }
+                    return true;
+                }
             }
 
             #endregion
