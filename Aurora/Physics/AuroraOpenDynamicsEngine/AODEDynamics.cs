@@ -885,7 +885,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.Quaternion rot = d.BodyGetQuaternion (Body);
             Quaternion rotq = new Quaternion (rot.X, rot.Y, rot.Z, rot.W);
             //         Vector3 angularVelocity = Vector3.Zero;
-
+            
+            /*if ((m_flags & VehicleFlag.MOUSELOOK_STEER) == VehicleFlag.MOUSELOOK_STEER)
+            {
+                if (m_userLookAt != Quaternion.Identity)
+                {
+                    Quaternion camrot = Quaternion.Subtract (m_userLookAt, rotq);
+                    camrot.Normalize ();
+                    m_angularMotorVelocity += Vector3.One * camrot;
+                    Console.WriteLine (Vector3.One * camrot);
+                }
+            }*/
             if (m_angularMotorApply > 0)
             {
                 // ramp up to new value
@@ -1083,8 +1093,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private List<Vector3> m_forcelist = new List<Vector3>();
         //Quaternion m_lastCameraRotation = Quaternion.Identity;
-        private Vector3 m_userLookAt = Vector3.Zero;
-        internal void ProcessSetCameraPos(Vector3 CameraRotation)
+        private Quaternion m_userLookAt = Quaternion.Identity;
+        internal void ProcessSetCameraPos (Quaternion CameraRotation)
         {
             //m_referenceFrame -= m_lastCameraRotation;
             //m_referenceFrame += CameraRotation;
