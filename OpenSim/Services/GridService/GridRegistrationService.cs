@@ -275,6 +275,7 @@ namespace OpenSim.Services.GridService
                 {
                     urls.Expiration = DateTime.UtcNow.AddHours (m_timeBeforeTimeout);
                     urls.SessionID = SessionID;
+                    InnerUpdateUrlsForClient (urls);
                     foreach (KeyValuePair<string, OSD> module in urls.URLS)
                     {
                         //Build the URL
@@ -469,7 +470,7 @@ namespace OpenSim.Services.GridService
                     m_defaultHostname = m_configurationConfig.GetString ("HostName", m_defaultHostname);
                     m_remotePassword = m_configurationConfig.GetString ("RemotePassword", "");
                     m_remotePort = m_configurationConfig.GetUInt ("RemoteLoadBalancingPort", m_defaultPort);
-                    SetRemoteUrls (m_configurationConfig.GetString ("RemoteLoadBalancingUrls", "").Split (','));
+                    SetRemoteUrls (m_configurationConfig.GetString ("RemoteLoadBalancingUrls", "").Split (new string[1] { "," }, StringSplitOptions.RemoveEmptyEntries));
                     if (m_configurationConfig.GetBoolean("UseRemoteLoadBalancing", false))
                     {
                         //Set up the external handlers
