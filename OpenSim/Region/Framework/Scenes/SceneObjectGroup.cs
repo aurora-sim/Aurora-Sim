@@ -190,11 +190,6 @@ namespace OpenSim.Region.Framework.Scenes
                     timeLastChanged = DateTime.Now;
                     if (!m_hasGroupChanged)
                     {
-                        if (XMLRepresentation != null)
-                            XMLRepresentation = null; //Reset this
-                        if (!HasGroupChanged) //First change then
-                            timeFirstChanged = DateTime.Now;
-
                         if (m_scene != null)
                         {
                             IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule> ();
@@ -202,6 +197,10 @@ namespace OpenSim.Region.Framework.Scenes
                             {
                                 if (m_isLoaded && !backup.LoadingPrims) //Do NOT add to backup while still loading prims
                                 {
+                                    if (XMLRepresentation != null)
+                                        XMLRepresentation = null; //Reset this
+                                    if (!HasGroupChanged) //First change then
+                                        timeFirstChanged = DateTime.Now;
                                     backup.AddPrimBackupTaint (this);
                                 }
                                 else if (m_scene == null)

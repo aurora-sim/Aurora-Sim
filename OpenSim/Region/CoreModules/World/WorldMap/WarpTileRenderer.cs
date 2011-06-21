@@ -470,6 +470,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         if (!(color.R == 0.5f && color.G == 0.5f && color.B == 0.5f && color.A == 1.0f))//If we failed, don't save it
                             fetched = true;
                     }
+                    map = null;
+                    metadata = null;
                 }
 
                 if (!fetched)
@@ -498,6 +500,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                             };
                             m_scene.AssetService.Store (metadata);
                         }
+                        textureAsset = null;
                     }
                     else
                     {

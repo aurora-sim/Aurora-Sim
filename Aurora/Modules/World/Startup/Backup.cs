@@ -539,6 +539,7 @@ namespace Aurora.Modules
                     {
                         OSDMap parcelMap = parcel.LandData.ToOSD();
                         writer.WriteFile("parcels/" + parcel.LandData.GlobalID.ToString(), OSDParser.SerializeLLSDBinary(parcelMap));
+                        parcelMap = null;
                     }
                 }
 
