@@ -269,7 +269,7 @@ namespace OpenSim.Services.GridService
                 {
                     m_log.Warn ("[GridRegService]: Null stuff in GetUrls, HostNames " + (urls.HostNames == null) + ", Ports " +
                         (urls.Ports == null) + ", URLS " + (urls.URLS == null) + ", SessionID 1 " + SessionID + ", SessionID 2 " + urls.SessionID);
-                    RemoveUrlsForClient(SessionID.ToString());
+                    RemoveUrlsForClient(urls.SessionID);
                 }
                 else
                 {

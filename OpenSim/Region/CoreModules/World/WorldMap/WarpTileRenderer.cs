@@ -99,8 +99,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             m_texturePrims = m_config.Configs["MapModule"].GetBoolean("WarpTexturePrims", false);
             m_colors.Clear ();
 
-            Vector3 camPos = new Vector3 (m_scene.RegionInfo.RegionSizeX / 2, m_scene.RegionInfo.RegionSizeY / 2, 221.7025033688163f);
-            Viewport viewport = new Viewport (camPos, -Vector3.UnitZ, 1024f, 0.1f, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY, m_scene.RegionInfo.RegionSizeX - 2, m_scene.RegionInfo.RegionSizeY - 2);
+            int scaledRemovalFactor = m_scene.RegionInfo.RegionSizeX / (Constants.RegionSize / 2);
+            Vector3 camPos = new Vector3 (m_scene.RegionInfo.RegionSizeX / 2 - 0.5f, m_scene.RegionInfo.RegionSizeY / 2 - 0.5f, 221.7025033688163f);
+            Viewport viewport = new Viewport (camPos, -Vector3.UnitZ, 1024f, 0.1f, m_scene.RegionInfo.RegionSizeX - scaledRemovalFactor, m_scene.RegionInfo.RegionSizeY - scaledRemovalFactor, m_scene.RegionInfo.RegionSizeX - scaledRemovalFactor, m_scene.RegionInfo.RegionSizeY - scaledRemovalFactor);
 
             int width = viewport.Width;
             int height = viewport.Height;
@@ -133,8 +134,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             }
             else
             {
-                float fov = viewport.FieldOfView;
-                fov *= 1.75f; // FIXME: ???
+                viewport.Orthographic = false;
+                float fov = 256;
+                //fov *= 1.75f; // FIXME: ???
                 renderer.Scene.defaultCamera.setFov (fov);
             }
 
@@ -199,7 +201,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             renderer.Scene.addMaterial ("WaterColor", waterColormaterial);
             renderer.SetObjectMaterial ("Water", "WaterColor");
 
-            if (textureAsset != null)
+            /*if (textureAsset != null)
             {
                 IJ2KDecoder decoder = m_scene.RequestModuleInterface<IJ2KDecoder> ();
                 Bitmap bitmap = (Bitmap)decoder.DecodeToImage (textureAsset.Data);
@@ -215,8 +217,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     renderer.Scene.addMaterial ("WaterColor2", waterTextmaterial);
                     renderer.SetObjectMaterial ("Water2", "WaterColor2");
                 }
-            }
-
+            }*/
         }
 
         private warp_Object CreateTerrain (WarpRenderer renderer, bool textureTerrain)
