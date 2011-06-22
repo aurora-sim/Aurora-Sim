@@ -47,6 +47,7 @@ namespace Aurora.Framework
         public int PermsMask;
         public double MinEventDelay;
         public string AssemblyName;
+        public bool Compiled = true;
         public UUID UserInventoryID;
         public bool TargetOmegaWasSet;
 
@@ -65,6 +66,8 @@ namespace Aurora.Framework
             AssemblyName = map["AssemblyName"].AsString ();
             UserInventoryID = map["UserInventoryID"].AsUUID ();
             TargetOmegaWasSet = map["TargetOmegaWasSet"].AsBoolean ();
+            if(map.ContainsKey("Compiled"))
+                Compiled = map["Compiled"].AsBoolean ();
         }
 
         public override OSDMap ToOSD ()
@@ -83,6 +86,7 @@ namespace Aurora.Framework
             map.Add ("AssemblyName", AssemblyName);
             map.Add ("UserInventoryID", UserInventoryID);
             map.Add ("TargetOmegaWasSet", TargetOmegaWasSet);
+            map.Add ("Compiled", Compiled);
             return map;
         }
 

@@ -149,6 +149,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private Dictionary<string, long> NextEventDelay = new Dictionary<string, long>();
         public bool MovingInQueue = false;
         public bool TargetOmegaWasSet = false;
+        public bool Compiled = false;
         /// <summary>
         /// This helps make sure that we clear out previous versions so that we don't have overlapping script versions running
         /// </summary>
@@ -328,7 +329,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             RemoveTouchEvents = true;
 
             //Fire state_entry
-            m_ScriptEngine.StateSave.SaveStateTo (this);
+            m_ScriptEngine.StateSave.SaveStateTo (this, true);
             m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew(this, false); // accept new events
             m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], EventPriority.FirstStart, new object[] { });
 
@@ -363,7 +364,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 m_ScriptEngine.MaintenanceThread.AddEventSchQueue (this, "state_entry",
                     new DetectParams[0], EventPriority.FirstStart, new object[0] { });
                 //Save a state save after a state change, its a large change in the script's function
-                m_ScriptEngine.StateSave.SaveStateTo (this);
+                m_ScriptEngine.StateSave.SaveStateTo (this, true);
                 Script.NeedsStateSaved = true;
             }
         }
@@ -580,6 +581,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             else
             {
+                Compiled = false;
+                //if (!reupload && Loading && LastStateSave != null && !LastStateSave.Compiled)
+                //    return false;//If we're trying to start up and we failed before, just give up
                 LastStateSave = null;
                 if (reupload)
                 {
@@ -614,6 +618,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             DisplayUserNotification (error, "compiling", reupload, true);
                             //It might have failed, but we still need to add it so that we can reuse this script data class later
                             ScriptEngine.ScriptProtection.AddNewScript (this);
+                            m_ScriptEngine.StateSave.SaveStateTo (this, true);
                             return false;
                         }
 
@@ -679,6 +684,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 ScriptEngine.ScriptProtection.AddNewScript (this);
                 return false;
             }
+            Compiled = true;//We compiled successfully
 
             //ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as MarshalByRefObject);
             //if (lease != null) //Its null if it is all running in the same app domain

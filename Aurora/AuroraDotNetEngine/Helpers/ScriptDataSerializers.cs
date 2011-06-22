@@ -115,6 +115,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             stateSave.UserInventoryID = script.UserInventoryItemID;
             //Allow for the full path to be put down, not just the assembly name itself
             stateSave.AssemblyName = script.AssemblyName;
+            stateSave.Compiled = script.Compiled;
             stateSave.Source = script.Source;
             if (script.InventoryItem != null)
             {

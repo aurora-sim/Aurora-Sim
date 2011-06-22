@@ -1091,7 +1091,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                     ScriptProtection.AddNewScript(SD);
 
-                    StateSave.SaveStateTo (SD);
+                    StateSave.SaveStateTo (SD, true);
                 }
             }
             catch
