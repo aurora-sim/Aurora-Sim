@@ -328,7 +328,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                             part.ParentEntity.Damage = m_combatModule.MaximumDamageToInflict;
 
                         // If the avatar is null, the person is not inworld, and not on a team
-                        if (m_combatModule.AllowTeams && OtherAvatarCP != null && OtherAvatarCP.Team == Team)
+                        if (m_combatModule.AllowTeams && OtherAvatarCP != null && otherAvatar.UUID != m_SP.UUID && OtherAvatarCP.Team == Team)
                         {
                             float Hits = 0;
                             if (!TeamHits.TryGetValue (otherAvatar.UUID, out Hits))
@@ -431,8 +431,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 //Regenerate health a bit every second
                 if (m_combatModule.m_regenHealth)
                 {
-                    if ((int)(Health + m_combatModule.RegenerateHealthSpeed) <= m_combatModule.MaximumHealth)
-                        Health += m_combatModule.RegenerateHealthSpeed;
+                    if ((Health + m_combatModule.RegenerateHealthSpeed) <= m_combatModule.MaximumHealth)
+                    {
+                        m_health += m_combatModule.RegenerateHealthSpeed;
+                        m_SP.ControllingClient.SendHealth (Health);
+                    }
                 }
             }
 
@@ -481,10 +484,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 {
                     if (damage > m_combatModule.MaximumDamageToInflict)
                         damage = m_combatModule.MaximumDamageToInflict;
-                    float health = Health;
-                    health -= (float)damage;
-                    m_SP.ControllingClient.SendHealth (health);
-                    if (health <= 0)
+                    m_health -= (float)damage;
+                    m_SP.ControllingClient.SendHealth (Health);
+                    if (Health <= 0)
                     {
                         KillAvatar (killingAvatar, "You killed " + m_SP.Name, "You died!", teleport, true);
                         return true;
@@ -512,12 +514,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                     return;
                 if (!this.HasLeftCombat || !m_combatModule.ForceRequireCombatPermission)
                 {
-                    float health = Health;
-                    health += (float)healing;
-                    if (health >= m_combatModule.MaximumHealth)
-                        health = m_combatModule.MaximumHealth;
+                    m_health += (float)healing;
+                    if (m_health >= m_combatModule.MaximumHealth)
+                        m_health = m_combatModule.MaximumHealth;
 
-                    m_SP.ControllingClient.SendHealth(health);
+                    m_SP.ControllingClient.SendHealth (m_health);
                 }
             }
 
