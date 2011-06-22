@@ -489,7 +489,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                             metadata = new AssetBase
                             {
                                 Data = System.Text.Encoding.UTF8.GetBytes (OSDParser.SerializeJsonString (data)),
-                                Description = "Metadata for JPEG2000 texture " + face.TextureID.ToString (),
+                                Description = "Avg Color-JPEG2000 texture " + face.TextureID.ToString (),
                                 Flags = AssetFlags.Collectable,
                                 FullID = metadataID,
                                 ID = metadataID.ToString (),
