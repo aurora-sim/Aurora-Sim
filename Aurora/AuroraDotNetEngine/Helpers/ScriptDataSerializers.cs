@@ -65,8 +65,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_module = module;
 
             m_manager = module.Worlds[0].RequestModuleInterface<IComponentManager> ();
-            DefaultComponents com = new DefaultComponents (m_componentName, null);
-            m_manager.RegisterComponent (com);
         }
 
         public void AddScene (Scene scene)
@@ -106,7 +104,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (!script.Script.NeedsStateSaved)
                     return; //If it doesn't need a state save, don't save one
             }
-            script.Script.NeedsStateSaved = false;
+            if (script.Script != null)
+                script.Script.NeedsStateSaved = false;
             StateSave stateSave = new StateSave ();
             stateSave.State = script.State;
             stateSave.ItemID = script.ItemID;
@@ -174,7 +173,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     if (!component.TryGetValue (script.InventoryItem.OldItemID.ToString (), out o))
                     {
-                        return null;
+                        if (!component.TryGetValue (script.InventoryItem.ItemID.ToString (), out o))
+                        {
+                            return null;
+                        }
                     }
                 }
                 StateSave save = new StateSave ();

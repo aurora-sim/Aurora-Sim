@@ -166,6 +166,8 @@ namespace OpenSim.Region.Framework.Scenes.Components
             RegisterComponent (com);
             com = new DefaultComponents ("Restitution", 0);
             RegisterComponent (com);
+            com = new DefaultComponents ("ScriptState", 0);
+            RegisterComponent (com);
         }
 
         public void RemoveRegion(Scene scene)
