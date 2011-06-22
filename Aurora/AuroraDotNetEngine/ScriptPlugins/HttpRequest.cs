@@ -83,7 +83,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     new LSL_Types.LSLString(info.ResponseBody)
                 };
 
-                    m_ScriptEngine.AddToObjectQueue (info.PrimID, "http_response", new DetectParams[0], -1, resobj);
+                    m_ScriptEngine.AddToObjectQueue (info.PrimID, "http_response", new DetectParams[0], resobj);
                     httpInfo = iHttpReq.GetNextCompletedRequest ();
                 }
                 didAnything = true;
