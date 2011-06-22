@@ -436,6 +436,8 @@ namespace Aurora.Modules
                 int locY = 0;
                 foreach (DirLandReplyData landDir in Landdata)
                 {
+                    if (landDir == null)
+                        continue;
                     LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
                     if (landdata == null || landdata.Maturity != 0)
                         continue; //Not a PG land 
