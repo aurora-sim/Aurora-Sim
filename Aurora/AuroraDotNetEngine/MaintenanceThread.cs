@@ -467,8 +467,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             int numberOfEmptyWork = 0;
             while (!m_ScriptEngine.ConsoleDisabled && !m_ScriptEngine.Disabled)
             {
+            processMoreScripts:
                 QueueItemStruct QIS = null;
-                
+
+                const int minNumScriptsToProcess = 50;
+                int numScriptsProcessed = 0;
                 //Check whether it is time, and then do the thread safety piece
                 if (Interlocked.CompareExchange (ref m_CheckingSleepers, 1, 0) == 0)
                 {
@@ -508,6 +511,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             Interlocked.Exchange (ref m_CheckingSleepers, 0);
                             //Execute the event
                             EventSchExec (QIS);
+                            numScriptsProcessed++;
                         }
                         else
                         {
@@ -544,9 +548,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         else
                             Interlocked.Exchange (ref m_CheckingEvents, 0);
                     }
-                    if(QIS != null)
+                    if (QIS != null)
+                    {
                         EventSchExec (QIS);
+                        numScriptsProcessed++;
+                    }
                 }
+                //Process a bunch each time
+                if (ScriptEventCount > 0 && numScriptsProcessed < minNumScriptsToProcess)
+                    goto processMoreScripts;
 
                 if (ScriptEventCount == 0 && NextSleepersTest.Ticks != DateTime.MaxValue.Ticks)
                     timeToSleep = (int)(NextSleepersTest - DateTime.Now).TotalMilliseconds;
@@ -630,7 +640,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     }
                 }
                 else
+                {
                     QIS.EventsProcData.State = ScriptEventsState.Running;
+                    lock (ScriptEvents)
+                    {
+                        this.ScriptEvents.Enqueue (QIS);
+                        ScriptEventCount++;
+                    }
+                }
             }
         }
 

@@ -53,8 +53,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         //List of all enabled APIs for scripts
         private List<string> EnabledAPIs = new List<string>();
         //Keeps track of whether the source has been compiled before
-        public Dictionary<string, string> PreviouslyCompiled = new Dictionary<string, string>();
-        public Dictionary<ThreatLevel, ThreatLevelDefinition> m_threatLevels = new Dictionary<ThreatLevel, ThreatLevelDefinition> ();
+        public Dictionary<string, string> PreviouslyCompiled = new Dictionary<string, string> ();
+        public ThreatLevelDefinition m_threatLevelNone;
+        public ThreatLevelDefinition m_threatLevelNuisance;
+        public ThreatLevelDefinition m_threatLevelVeryLow;
+        public ThreatLevelDefinition m_threatLevelLow;
+        public ThreatLevelDefinition m_threatLevelModerate;
+        public ThreatLevelDefinition m_threatLevelHigh;
+        public ThreatLevelDefinition m_threatLevelVeryHigh;
+        public ThreatLevelDefinition m_threatLevelSevere;
         
         public Dictionary<UUID, UUID> ScriptsItems = new Dictionary<UUID, UUID>();
         public Dictionary<UUID, Dictionary<UUID, ScriptData>> Scripts = new Dictionary<UUID, Dictionary<UUID, ScriptData>>();
@@ -79,14 +86,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             allowHTMLLinking = config.GetBoolean("AllowHTMLLinking", true);
 
-            m_threatLevels.Add (ThreatLevel.None, new ThreatLevelDefinition (ThreatLevel.None, UserSetHelpers.ParseUserSetConfigSetting (config, "NoneUserSet", UserSet.None), this));
-            m_threatLevels.Add (ThreatLevel.Nuisance, new ThreatLevelDefinition (ThreatLevel.Nuisance, UserSetHelpers.ParseUserSetConfigSetting (config, "NuisanceUserSet", UserSet.None), this));
-            m_threatLevels.Add (ThreatLevel.VeryLow, new ThreatLevelDefinition (ThreatLevel.VeryLow, UserSetHelpers.ParseUserSetConfigSetting (config, "VeryLowUserSet", UserSet.None), this));
-            m_threatLevels.Add (ThreatLevel.Low, new ThreatLevelDefinition (ThreatLevel.Low, UserSetHelpers.ParseUserSetConfigSetting (config, "LowUserSet", UserSet.None), this));
-            m_threatLevels.Add (ThreatLevel.Moderate, new ThreatLevelDefinition (ThreatLevel.Moderate, UserSetHelpers.ParseUserSetConfigSetting (config, "ModerateUserSet", UserSet.None), this));
-            m_threatLevels.Add (ThreatLevel.High, new ThreatLevelDefinition (ThreatLevel.High, UserSetHelpers.ParseUserSetConfigSetting (config, "HighUserSet", UserSet.None), this));
-            m_threatLevels.Add (ThreatLevel.VeryHigh, new ThreatLevelDefinition (ThreatLevel.VeryHigh, UserSetHelpers.ParseUserSetConfigSetting (config, "VeryHighUserSet", UserSet.None), this));
-            m_threatLevels.Add (ThreatLevel.Severe, new ThreatLevelDefinition (ThreatLevel.Severe, UserSetHelpers.ParseUserSetConfigSetting (config, "SevereUserSet", UserSet.None), this));
+            m_threatLevelNone = new ThreatLevelDefinition (ThreatLevel.None, UserSetHelpers.ParseUserSetConfigSetting (config, "NoneUserSet", UserSet.None), this);
+            m_threatLevelNuisance = new ThreatLevelDefinition (ThreatLevel.Nuisance, UserSetHelpers.ParseUserSetConfigSetting (config, "NuisanceUserSet", UserSet.None), this);
+            m_threatLevelVeryLow = new ThreatLevelDefinition (ThreatLevel.VeryLow, UserSetHelpers.ParseUserSetConfigSetting (config, "VeryLowUserSet", UserSet.None), this);
+            m_threatLevelLow = new ThreatLevelDefinition (ThreatLevel.Low, UserSetHelpers.ParseUserSetConfigSetting (config, "LowUserSet", UserSet.None), this);
+            m_threatLevelModerate = new ThreatLevelDefinition (ThreatLevel.Moderate, UserSetHelpers.ParseUserSetConfigSetting (config, "ModerateUserSet", UserSet.None), this);
+            m_threatLevelHigh = new ThreatLevelDefinition (ThreatLevel.High, UserSetHelpers.ParseUserSetConfigSetting (config, "HighUserSet", UserSet.None), this);
+            m_threatLevelVeryHigh = new ThreatLevelDefinition (ThreatLevel.VeryHigh, UserSetHelpers.ParseUserSetConfigSetting (config, "VeryHighUserSet", UserSet.None), this);
+            m_threatLevelSevere = new ThreatLevelDefinition (ThreatLevel.Severe, UserSetHelpers.ParseUserSetConfigSetting (config, "SevereUserSet", UserSet.None), this);
 		}
         
 		#endregion
@@ -151,7 +158,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 if (CheckUser (m_host))
                     return;
-
                 List<UUID> FunctionPerms = new List<UUID> ();
                 if (!m_FunctionPerms.TryGetValue (function, out FunctionPerms))
                 {
@@ -223,11 +229,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             {
                                 Dictionary<string, bool> cachedFunctions;
                                 //Check to see whether we have already evaluated this function for this user
-                                if(m_knownAllowedGroupFunctionsForAvatars.TryGetValue(m_host.OwnerID, out cachedFunctions))
+                                if (m_knownAllowedGroupFunctionsForAvatars.TryGetValue (m_host.OwnerID, out cachedFunctions))
                                 {
-                                    if(cachedFunctions.ContainsKey(function))
+                                    if (cachedFunctions.ContainsKey (function))
                                     {
-                                        if(cachedFunctions[function])
+                                        if (cachedFunctions[function])
                                             return;
                                         else
                                             m_scriptProtectionModule.Error ("Runtime Error: ",
@@ -236,7 +242,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                     }
                                 }
                                 else
-                                    cachedFunctions = new Dictionary<string,bool>();
+                                    cachedFunctions = new Dictionary<string, bool> ();
                                 IGroupsModule groupsModule = m_host.ParentEntity.Scene.RequestModuleInterface<IGroupsModule> ();
                                 if (groupsModule != null)
                                 {
@@ -272,13 +278,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (m_allowedUsers.Contains (host.OwnerID))
                     return true;
 
-                IScenePresence av = host.ParentEntity.Scene.GetScenePresence (host.OwnerID);
-                ILandObject lo = null;
-                if(av != null)
-                    lo = host.ParentEntity.Scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(av.AbsolutePosition.X, av.AbsolutePosition.Y);
-                if ((m_userSet == UserSet.Administrators && host.ParentEntity.Scene.Permissions.IsAdministrator (host.OwnerID)) ||
-                        (m_userSet == UserSet.ParcelOwners && host.ParentEntity.Scene.Permissions.GenericParcelPermission (host.OwnerID, lo, 0)))
+                if (m_userSet == UserSet.ParcelOwners)
+                {
+                    IScenePresence av = host.ParentEntity.Scene.GetScenePresence (host.OwnerID);
+                    ILandObject lo = null;
+                    if (av != null)
+                        lo = host.ParentEntity.Scene.RequestModuleInterface<IParcelManagementModule> ().GetLandObject (av.AbsolutePosition.X, av.AbsolutePosition.Y);
+                    if (host.ParentEntity.Scene.Permissions.GenericParcelPermission (host.OwnerID, lo, 0))
+                        return true;
+                }
+                else if ((m_userSet == UserSet.Administrators &&
+                    host.ParentEntity.Scene.Permissions.IsAdministrator (host.OwnerID)))
+                {
+                    m_allowedUsers.Add (host.OwnerID);//We don't need to lock as it blocks up above,
+                    //and we don't need to Contains() either as we already let all users in above
                     return true;
+                }
                 return false;
             }
 
@@ -291,7 +306,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public ThreatLevelDefinition GetThreatLevel ()
 		{
 			if(m_MaxThreatLevel != 0)
-				return m_threatLevels[m_MaxThreatLevel];
+				return GetDefinition(m_MaxThreatLevel);
             string risk = m_config.GetString("FunctionThreatLevel", "VeryLow");
 			switch (risk)
 			{
@@ -319,7 +334,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 				default:
 					break;
 			}
-            return m_threatLevels[m_MaxThreatLevel];
+            return GetDefinition(m_MaxThreatLevel);
 		}
 
         public bool CheckAPI(string Name)
@@ -331,7 +346,31 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 		
 		public void CheckThreatLevel(ThreatLevel level, string function, ISceneChildEntity m_host, string API)
         {
-            m_threatLevels[level].CheckThreatLevel (function, m_host, API);
+            GetDefinition(level).CheckThreatLevel (function, m_host, API);
+        }
+
+        public ThreatLevelDefinition GetDefinition (ThreatLevel level)
+        {
+            switch (level)
+            {
+                case ThreatLevel.None:
+                    return m_threatLevelNone;
+                case ThreatLevel.Nuisance:
+                    return m_threatLevelNuisance;
+                case ThreatLevel.VeryLow:
+                    return m_threatLevelVeryLow;
+                case ThreatLevel.Low:
+                    return m_threatLevelLow;
+                case ThreatLevel.Moderate:
+                    return m_threatLevelModerate;
+                case ThreatLevel.High:
+                    return m_threatLevelHigh;
+                case ThreatLevel.VeryHigh:
+                    return m_threatLevelVeryHigh;
+                case ThreatLevel.Severe:
+                    return m_threatLevelSevere;
+            }
+            return null;
         }
 
 		internal void Error(string surMessage, string msg)
