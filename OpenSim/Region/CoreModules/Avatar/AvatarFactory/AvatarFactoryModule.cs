@@ -599,6 +599,37 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
             AvatarAppearance avatAppearance = new AvatarAppearance (appearance.Appearance, false);
 
+            IOpenRegionSettingsModule module = m_scene.RequestModuleInterface<IOpenRegionSettingsModule> ();
+
+            bool NeedsRebake = false;
+            if (module != null && module.EnableTeenMode)
+            {
+                foreach (AvatarWearingArgs.Wearable wear in e.NowWearing)
+                {
+                    if (wear.Type == 10 & wear.ItemID == UUID.Zero && module.DefaultUnderpants != UUID.Zero)
+                    {
+                        NeedsRebake = true;
+                        wear.ItemID = module.DefaultUnderpants;
+                    }
+                    if (wear.Type == 11 && wear.ItemID == UUID.Zero && module.DefaultUndershirt != UUID.Zero)
+                    {
+                        NeedsRebake = true;
+                        wear.ItemID = module.DefaultUndershirt;
+                    }
+                }
+            }
+            if (NeedsRebake)
+            {
+                sp.ControllingClient.SendWearables (appearance.Appearance.Wearables, appearance.Appearance.Serial);
+                for (int i = 0; i < appearance.Appearance.Texture.FaceTextures.Length; i++)
+                {
+                    Primitive.TextureEntryFace face = (appearance.Appearance.Texture.FaceTextures[i]);
+
+                    if (face != null)
+                        sp.ControllingClient.SendRebakeAvatarTextures (face.TextureID);
+                }
+            }
+
             foreach (AvatarWearingArgs.Wearable wear in e.NowWearing)
             {
                 if (wear.Type < AvatarWearable.MAX_WEARABLES)
