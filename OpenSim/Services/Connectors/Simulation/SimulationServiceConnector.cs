@@ -100,29 +100,28 @@ namespace OpenSim.Services.Connectors.Simulation
                 if (results == null)
                     return false;
                 reason = results["reason"] != null ? results["reason"].AsString() : "";
-                if (result["Success"].AsBoolean())
+                if (result["Success"].AsBoolean ())
                 {
                     //Not right... don't return true except for opensim combatibility :/
                     if (reason == "")
                         return true;
+                    //We were able to contact the region
                     try
                     {
                         //We send the CapsURLs through, so we need these
-                        OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
-                        if (responseMap.ContainsKey("Reason"))
-                            reason = responseMap["Reason"].AsString();
-                        return true;
+                        OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson (reason);
+                        if (responseMap.ContainsKey ("Reason"))
+                            reason = responseMap["Reason"].AsString ();
+                        return results["success"].AsBoolean ();
                     }
                     catch
                     {
-                        //Force it blank
-                        reason = "";
-                        //Not right... don't return true except for opensim combatibility :/
-                        return true;
+                        //Something went wrong
+                        return false;
                     }
                 }
 
-                reason = result.ContainsKey("Message") ? result["Message"].AsString() : "error";
+                reason = result.ContainsKey("Message") ? result["Message"].AsString() : "Could not contact the region";
                 return false;
             }
             catch (Exception e)
