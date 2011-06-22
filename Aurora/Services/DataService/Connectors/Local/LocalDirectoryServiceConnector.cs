@@ -171,11 +171,14 @@ namespace Aurora.Services.DataService
         public LandData GetParcelInfo(UUID InfoUUID)
         {
             //Split the InfoUUID so that we get the regions, we'll check for positions in a bit
-            uint RegionX, RegionY;
-            Util.FakeParcelIDToGlobalPosition (InfoUUID, out RegionX, out RegionY);
-            RegionX = (uint)((float)RegionX / Constants.RegionSize);
-            RegionY = (uint)(RegionY / Constants.RegionSize);
-            OpenSim.Services.Interfaces.GridRegion r = m_registry.RequestModuleInterface<IGridService> ().GetRegionByPosition (UUID.Zero, (int)RegionX * Constants.RegionSize, (int)RegionY * Constants.RegionSize);
+            int RegionX, RegionY;
+            uint X, Y;
+            ulong RegionHandle;
+            Util.ParseFakeParcelID (InfoUUID, out RegionHandle, out X, out Y);
+
+            Util.UlongToInts (RegionHandle, out RegionX, out RegionY);
+
+            OpenSim.Services.Interfaces.GridRegion r = m_registry.RequestModuleInterface<IGridService> ().GetRegionByPosition (UUID.Zero, (int)RegionX, (int)RegionY);
             if (r == null)
             {
                 m_log.Warn("[DirectoryService]: Could not find parcel for ParcelID: " + InfoUUID);
@@ -219,16 +222,13 @@ namespace Aurora.Services.DataService
                 Lands.Add(LandData);
                 LandData = new LandData();
             }
-            ulong regionHandle;
-            uint x,y;
-            Util.ParseFakeParcelID(InfoUUID, out regionHandle, out x, out y);
             LandData = null;
             foreach (LandData land in Lands)
             {
                 if (land.Bitmap == null)
                     continue;
                 bool[,] bitmap = ConvertBytesToLandBitmap(land.Bitmap);
-                if (bitmap[x / 64, y / 64])
+                if (bitmap[X / 64, Y / 64])
                 {
                     LandData = land;
                     break;

@@ -2003,9 +2003,9 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (parcelID == UUID.Zero)
                 return;
             ulong RegionHandle = 0;
-            uint X, Y;
-            Util.ParseFakeParcelID(parcelID, out RegionHandle,
-                out X, out Y);
+            uint X, Y, Z;
+            Util.ParseFakeParcelID (parcelID, out RegionHandle,
+                out X, out Y, out Z);
             m_log.DebugFormat("[LAND] got parcelinfo request for regionHandle {0}, x/y {1}/{2}",
                                                                             RegionHandle, X, Y);
             IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
@@ -2018,8 +2018,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                     GridRegion info;
                     int RegionX, RegionY;
                     Util.UlongToInts (RegionHandle, out RegionX, out RegionY);
-                    RegionX = (int)((float)RegionX / Constants.RegionSize);
-                    RegionY = (int)(RegionY / Constants.RegionSize);
+                    RegionX = (int)((float)RegionX / Constants.RegionSize) * Constants.RegionSize;
+                    RegionY = (int)(RegionY / Constants.RegionSize) * Constants.RegionSize;
                     if (RegionX == m_scene.RegionInfo.RegionLocX && 
                         RegionY == m_scene.RegionInfo.RegionLocY)
                     {
@@ -2032,7 +2032,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     }
                     if (info == null)
                     {
-                        m_log.WarnFormat("[LAND]: Failed to find region having parcel {0} @ {1) {2}", parcelID, X, Y);
+                        m_log.WarnFormat("[LAND]: Failed to find region having parcel {0} @ {1} {2}", parcelID, X, Y);
                         return;
                     }
                     // we need to transfer the fake parcelID, not the one in landData, so the viewer can match it to the landmark.
