@@ -667,7 +667,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public List<IScenePresence> GetScenePresences ()
         {
-            return new List<IScenePresence> (m_sceneGraph.GetScenePresences ());
+            return m_sceneGraph.GetScenePresences ();
         }
 
         public int GetScenePresenceCount()

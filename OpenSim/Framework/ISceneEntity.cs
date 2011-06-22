@@ -662,6 +662,7 @@ namespace OpenSim.Framework
         byte[] TextureAnimation { get; set; }
 
         Vector3 GroupPosition { get; }
+        Vector3 GetGroupPosition ();
 
         Color Color { get; set; }
 

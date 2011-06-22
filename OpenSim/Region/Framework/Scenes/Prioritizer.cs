@@ -146,20 +146,22 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_cachedYOffset > scene.RegionInfo.RegionSizeY)
                     posToCheckFrom.Y = scene.RegionInfo.RegionSizeY - (scene.RegionInfo.RegionSizeY - (client.AbsolutePosition.Y + m_cachedYOffset));
             }
-            Vector3 entityPosToCheckFrom = entity.AbsolutePosition;
+            Vector3 entityPosToCheckFrom = Vector3.Zero;
             if (entity is ISceneEntity)
             {
                 //We need to check whether this object is an attachment, and if so, set it so that we check from the avatar's
                 // position, rather than from the offset of the attachment
                 ISceneEntity sEntity = (ISceneEntity)entity;
-                if (sEntity.IsAttachment)
+                if (sEntity.RootChild.IsAttachment)
                 {
                     IScenePresence attachedAvatar = sEntity.Scene.GetScenePresence (sEntity.RootChild.AttachedAvatar);
                     if (attachedAvatar != null)
                         entityPosToCheckFrom = attachedAvatar.AbsolutePosition;
                 }
+                else
+                    entityPosToCheckFrom = sEntity.RootChild.GetGroupPosition ();
             }
-            if (entity is IScenePresence)
+            else if (entity is IScenePresence)
             {
                 //We need to check whether this presence is sitting on anything, so that we can check from the object's
                 // position, rather than the offset position of the object that the avatar is sitting on
@@ -167,9 +169,11 @@ namespace OpenSim.Region.Framework.Scenes
                 if (pEntity.Sitting)
                 {
                     ISceneChildEntity sittingEntity = pEntity.Scene.GetSceneObjectPart (pEntity.SittingOnUUID);
-                    if(sittingEntity != null)
+                    if (sittingEntity != null)
                         entityPosToCheckFrom = sittingEntity.AbsolutePosition;
                 }
+                else
+                    entityPosToCheckFrom = pEntity.AbsolutePosition;
             }
             //If the distance is greater than the clients draw distance, its out of range
             if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom) >

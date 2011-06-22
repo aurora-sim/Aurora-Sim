@@ -106,8 +106,6 @@ namespace OpenSim.Region.Framework.Scenes
     /// </summary>
     public partial class SceneObjectGroup : EntityBase, ISceneObject //(ISceneObject implements ISceneEntity and IEntity)
     {
-        public DateTime timeFirstChanged;
-        public DateTime timeLastChanged;
         public bool m_isLoaded = false;
         private Vector3 m_lastSignificantPosition = Vector3.Zero;
         public Vector3 LastSignificantPosition
@@ -187,7 +185,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (value)
                 {
-                    timeLastChanged = DateTime.Now;
                     if (!m_hasGroupChanged)
                     {
                         if (m_scene != null)
@@ -199,12 +196,8 @@ namespace OpenSim.Region.Framework.Scenes
                                 {
                                     if (XMLRepresentation != null)
                                         XMLRepresentation = null; //Reset this
-                                    if (!HasGroupChanged) //First change then
-                                        timeFirstChanged = DateTime.Now;
                                     backup.AddPrimBackupTaint (this);
                                 }
-                                else if (m_scene == null)
-                                    m_log.Warn ("[SOG]: Scene is null in HasGroupChanged!");
                             }
                         }
                     }
@@ -247,10 +240,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                if (!IsDeleted)
-                    return m_rootPart.IsAttachment;
-                
-                return false;
+                return m_rootPart.IsAttachment;
             }
         }
 

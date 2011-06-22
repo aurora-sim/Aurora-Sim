@@ -3672,6 +3672,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                 ent.OwnerID != AgentId)
                             continue;
                     }
+                    if (ent.ParentEntity.RootChild.SitTargetAvatar.Count > 0)
+                    {
+                        isTerse = false;
+                        updateFlags = PrimUpdateFlags.ForcedFullUpdate;
+                    }
 
                     if (canUseCached && !isTerse && module != null)
                         canUseCached = module.UseCachedObject (AgentId, entity.LocalId, ent.CRC);
@@ -3757,19 +3762,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         //We are sending a compressed, which the client will save, add it to the cache
                         module.AddCachedObject (AgentId, entity.LocalId, ((ISceneChildEntity)entity).CRC);
                         CompressedFlags Flags = CompressedFlags.None;
-                        if (updateFlags == PrimUpdateFlags.FullUpdate)
+                        if (updateFlags == PrimUpdateFlags.FullUpdate || updateFlags == PrimUpdateFlags.FindBest)
                         {
                             //Add the defaults
                             updateFlags = PrimUpdateFlags.None;
-                            updateFlags |= PrimUpdateFlags.ClickAction;
-                            updateFlags |= PrimUpdateFlags.ExtraData;
-                            updateFlags |= PrimUpdateFlags.Shape;
-                            updateFlags |= PrimUpdateFlags.Material;
-                            updateFlags |= PrimUpdateFlags.Textures;
-                            updateFlags |= PrimUpdateFlags.Rotation;
-                            updateFlags |= PrimUpdateFlags.PrimFlags;
-                            updateFlags |= PrimUpdateFlags.Position;
-                            updateFlags |= PrimUpdateFlags.AngularVelocity;
 
                             //Must send these as well
                             if (((ISceneChildEntity)entity).Text != "")
@@ -3792,6 +3788,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                 if (((ISceneChildEntity)entity).ParentEntity.ChildrenEntities ().Count != 1)
                                     updateFlags |= PrimUpdateFlags.ParentID;
                         }
+                        updateFlags |= PrimUpdateFlags.ClickAction;
+                        updateFlags |= PrimUpdateFlags.ExtraData;
+                        updateFlags |= PrimUpdateFlags.Shape;
+                        updateFlags |= PrimUpdateFlags.Material;
+                        updateFlags |= PrimUpdateFlags.Textures;
+                        updateFlags |= PrimUpdateFlags.Rotation;
+                        updateFlags |= PrimUpdateFlags.PrimFlags;
+                        updateFlags |= PrimUpdateFlags.Position;
+                        updateFlags |= PrimUpdateFlags.AngularVelocity;
 
                         if (updateFlags.HasFlag (PrimUpdateFlags.Text) && ((ISceneChildEntity)entity).ParentEntity.RootChild.Text == "")
                             updateFlags &= ~PrimUpdateFlags.Text; //Remove the text flag if we don't have text!

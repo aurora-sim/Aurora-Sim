@@ -40,7 +40,8 @@ namespace OpenSim.Framework
         private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, ISceneEntity> m_objectEntities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, ISceneEntity> ();
         private object m_objectEntitiesLock = new object ();
         private readonly Dictionary<UUID, IScenePresence> m_presenceEntities = new Dictionary<UUID, IScenePresence> ();
-        private object m_presenceEntitiesLock = new object();
+        private readonly List<IScenePresence> m_presenceEntitiesList = new List<IScenePresence> ();
+        private object m_presenceEntitiesLock = new object ();
         private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID> m_child_2_parent_entities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID> ();
         private object m_child_2_parent_entitiesLock = new object ();
 
@@ -74,8 +75,11 @@ namespace OpenSim.Framework
                 {
                     IScenePresence presence = (IScenePresence)entity;
 
-                    lock(m_presenceEntitiesLock)
+                    lock (m_presenceEntitiesLock)
+                    {
+                        m_presenceEntitiesList.Add (presence);
                         m_presenceEntities.Add (presence.UUID, presence);
+                    }
                 }
             }
             catch (Exception e)
@@ -89,9 +93,12 @@ namespace OpenSim.Framework
         public void Clear ()
         {
             lock (m_objectEntitiesLock)
-            m_objectEntities.Clear ();
+                m_objectEntities.Clear ();
             lock (m_presenceEntitiesLock)
-            m_presenceEntities.Clear ();
+            {
+                m_presenceEntitiesList.Clear ();
+                m_presenceEntities.Clear ();
+            }
             lock (m_child_2_parent_entitiesLock)
                 m_child_2_parent_entities.Clear ();
         }
@@ -122,8 +129,11 @@ namespace OpenSim.Framework
                 }
                 else
                 {
-                    lock(m_presenceEntitiesLock)
+                    lock (m_presenceEntitiesLock)
+                    {
+                        m_presenceEntitiesList.Remove ((IScenePresence)entity);
                         m_presenceEntities.Remove (entity.UUID);
+                    }
                 }
                 return true;
             }
@@ -134,16 +144,14 @@ namespace OpenSim.Framework
             }
         }
 
-        public IScenePresence[] GetPresences()
+        public List<IScenePresence> GetPresences ()
         {
-            lock (m_presenceEntitiesLock)
-                return new List<IScenePresence> (m_presenceEntities.Values).ToArray ();
+            return m_presenceEntitiesList;
         }
 
         public int GetPresenceCount ()
         {
-            lock (m_presenceEntitiesLock)
-                return m_presenceEntities.Count;
+            return m_presenceEntitiesList.Count;
         }
 
         public IScenePresence[] GetPresences (Vector3 pos, float radius)

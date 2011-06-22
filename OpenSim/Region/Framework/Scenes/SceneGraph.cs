@@ -177,8 +177,8 @@ namespace OpenSim.Region.Framework.Scenes
             coarseLocations = new List<Vector3>();
             avatarUUIDs = new List<UUID>();
 
-            IScenePresence[] presences = GetScenePresences();
-            for (int i = 0; i < Math.Min(presences.Length, maxLocations); i++)
+            List<IScenePresence> presences = GetScenePresences ();
+            for (int i = 0; i < Math.Min(presences.Count, maxLocations); i++)
             {
                 IScenePresence sp = presences[i];
                 // If this presence is a child agent, we don't want its coarse locations
@@ -325,7 +325,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// pass a delegate to ForEachScenePresence.
         /// </summary>
         /// <returns></returns>
-        public IScenePresence[] GetScenePresences ()
+        public List<IScenePresence> GetScenePresences ()
         {
             return Entities.GetPresences ();
         }
@@ -351,7 +351,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>null if the presence was not found</returns>
         public IScenePresence GetScenePresence (string firstName, string lastName)
         {
-            IScenePresence[] presences = GetScenePresences ();
+            List<IScenePresence> presences = GetScenePresences ();
             foreach (IScenePresence presence in presences)
             {
                 if (presence.Firstname == firstName && presence.Lastname == lastName)
@@ -367,7 +367,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>null if the presence was not found</returns>
         public IScenePresence GetScenePresence (uint localID)
         {
-            IScenePresence[] presences = GetScenePresences ();
+            List<IScenePresence> presences = GetScenePresences ();
             foreach (IScenePresence presence in presences)
                 if (presence.LocalId == localID)
                     return presence;
@@ -444,7 +444,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             if (getAvatars)
             {
-                IScenePresence[] presenceList = Entities.GetPresences();
+                List<IScenePresence> presenceList = Entities.GetPresences();
                 foreach (IScenePresence ent in presenceList)
                 {
                     //Do rough approximation and keep the # of loops down
@@ -530,7 +530,7 @@ namespace OpenSim.Region.Framework.Scenes
             Parallel.ForEach<ScenePresence>(GetScenePresences(), protectedAction);
             */
             // For now, perform actions serially
-            IScenePresence[] presences = GetScenePresences ();
+            List<IScenePresence> presences = GetScenePresences ();
             foreach (IScenePresence sp in presences)
             {
                 try

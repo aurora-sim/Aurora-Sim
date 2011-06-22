@@ -200,15 +200,19 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        private UUID m_sound;
         [XmlIgnore]
         public UUID Sound
         {
             get
             {
-                return GetComponentState("Sound").AsUUID();
+                if(m_sound == null)
+                    m_sound = GetComponentState("Sound").AsUUID();
+                return m_sound; 
             }
             set
             {
+                m_sound = value;
                 SetComponentState("Sound", value);
             }
         }
@@ -1165,9 +1169,15 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_LoopSoundSlavePrims = value; }
         }
 
+        private byte[] m_textureAnimation;
         public Byte[] TextureAnimation
         {
-            get { return GetComponentState("TextureAnimation").AsBinary(); }
+            get
+            { 
+                if(m_textureAnimation == null)
+                    m_textureAnimation = GetComponentState("TextureAnimation").AsBinary();
+                return m_textureAnimation;
+            }
             set
             {
                 bool same = true;
@@ -1187,16 +1197,20 @@ namespace OpenSim.Region.Framework.Scenes
                     same = false;
                 if (same)
                     return;
+                m_textureAnimation = value;
                 SetComponentState("TextureAnimation", value);
             }
         }
 
+        private byte[] m_ParticleSystem;
         [XmlIgnore]
         public Byte[] ParticleSystem
         {
             get
             {
-                return GetComponentState("ParticleSystem").AsBinary();
+                if(m_ParticleSystem == null)
+                    m_ParticleSystem = GetComponentState("ParticleSystem").AsBinary();
+                return m_ParticleSystem;
             }
             set
             {
@@ -1217,6 +1231,7 @@ namespace OpenSim.Region.Framework.Scenes
                     same = false;
                 if (same)
                     return;
+                m_ParticleSystem = value;
                 //MUST set via the OSD
                 SetComponentState("ParticleSystem", OSD.FromBinary(value));
             }
@@ -1268,22 +1283,27 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                // If this is a linkset, we don't want the physics engine mucking up our group position here.
-                PhysicsObject actor = PhysActor;
-                if (actor != null && _parentID == 0)
-                {
-                    m_groupPosition = actor.Position;
-                }
-
-                if (IsAttachment)
-                {
-                    IScenePresence sp = m_parentGroup.Scene.GetScenePresence (AttachedAvatar);
-                    if (sp != null)
-                        return sp.AbsolutePosition;
-                }
-
-                return m_groupPosition;
+                return GetGroupPosition ();
             }
+        }
+
+        public Vector3 GetGroupPosition ()
+        {
+            // If this is a linkset, we don't want the physics engine mucking up our group position here.
+            PhysicsObject actor = PhysActor;
+            if (actor != null && _parentID == 0)
+            {
+                m_groupPosition = actor.Position;
+            }
+
+            if (IsAttachment)
+            {
+                IScenePresence sp = m_parentGroup.Scene.GetScenePresence (AttachedAvatar);
+                if (sp != null)
+                    return sp.AbsolutePosition;
+            }
+
+            return m_groupPosition;
         }
 
         public Vector3 OffsetPosition
@@ -3778,12 +3798,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="UpdateFlags"></param>
         public void ScheduleUpdate(PrimUpdateFlags UpdateFlags)
         {
-            PrimUpdateFlags PostUpdateFlags;
-            if (ShouldScheduleUpdate(UpdateFlags, out PostUpdateFlags))
+            if (!IsTerse (UpdateFlags) || ShouldScheduleUpdate(UpdateFlags))
             {
                 m_parentGroup.Scene.ForEachScenePresence (delegate (IScenePresence avatar)
                 {
-                    avatar.AddUpdateToAvatar(this, PostUpdateFlags);
+                    avatar.AddUpdateToAvatar (this, UpdateFlags);
                 });
             }
         }
@@ -3795,11 +3814,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="avatar"></param>
         public void ScheduleUpdateToAvatar (PrimUpdateFlags UpdateFlags, IScenePresence avatar)
         {
-            PrimUpdateFlags PostUpdateFlags;
-            if (ShouldScheduleUpdate(UpdateFlags, out PostUpdateFlags))
-            {
-                avatar.AddUpdateToAvatar(this, PostUpdateFlags);
-            }
+            if (!IsTerse(UpdateFlags) || ShouldScheduleUpdate(UpdateFlags))
+                avatar.AddUpdateToAvatar (this, UpdateFlags);
         }
 
         /// <summary>
@@ -3807,102 +3823,43 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="UpdateFlags"></param>
         /// <returns></returns>
-        protected bool ShouldScheduleUpdate(PrimUpdateFlags UpdateFlags, out PrimUpdateFlags PostUpdateFlags)
+        protected bool ShouldScheduleUpdate(PrimUpdateFlags UpdateFlags)
         {
-            PostUpdateFlags = UpdateFlags;
-            //If its not a terse update, we need to make sure to add the text, media, etc pieces on, otherwise the client will forget about them
-            if (!IsTerse(UpdateFlags) && m_parentGroup.RootPart.SitTargetAvatar.Count > 0)
-                UpdateFlags = PrimUpdateFlags.ForcedFullUpdate; //Force send full updates on sitting avatars if the update isn't a terse update
-            else if (!IsTerse(UpdateFlags))
+            // Check that the group was not deleted before the scheduled update
+            // FIXME: This is merely a temporary measure to reduce the incidence of failure when
+            // an object has been deleted from a scene before update was processed.
+            // A more fundamental overhaul of the update mechanism is required to eliminate all
+            // the race conditions.
+            if (ParentGroup != null && ParentGroup.Scene != null && !ParentGroup.IsDeleted)
             {
-                //If it is find best, we add the defaults
-                if (UpdateFlags == PrimUpdateFlags.FindBest)
+                const float ROTATION_TOLERANCE = 0.01f;
+                const float VELOCITY_TOLERANCE = 0.001f;
+                const float POSITION_TOLERANCE = 0.01f;
+
+                // Throw away duplicate or insignificant updates
+                if (!RotationOffset.ApproxEquals (m_lastRotation, ROTATION_TOLERANCE) ||
+                    !Acceleration.Equals (m_lastAcceleration) ||
+                    !Velocity.ApproxEquals (m_lastVelocity, VELOCITY_TOLERANCE) ||
+                    !Velocity.ApproxEquals (Vector3.Zero, VELOCITY_TOLERANCE) ||
+                    !AngularVelocity.ApproxEquals (m_lastAngularVelocity, VELOCITY_TOLERANCE) ||
+                    !OffsetPosition.ApproxEquals (m_lastPosition, POSITION_TOLERANCE) ||
+                    !GroupPosition.ApproxEquals (m_lastGroupPosition, POSITION_TOLERANCE))
                 {
-                    //Add the defaults
-                    UpdateFlags = PrimUpdateFlags.None;
-                    UpdateFlags |= PrimUpdateFlags.ClickAction;
-                    UpdateFlags |= PrimUpdateFlags.ExtraData;
-                    UpdateFlags |= PrimUpdateFlags.Shape;
-                    UpdateFlags |= PrimUpdateFlags.Material;
-                    UpdateFlags |= PrimUpdateFlags.Textures;
-                    UpdateFlags |= PrimUpdateFlags.Rotation;
-                    UpdateFlags |= PrimUpdateFlags.PrimFlags;
-                    UpdateFlags |= PrimUpdateFlags.Position;
-                    UpdateFlags |= PrimUpdateFlags.AngularVelocity;
+                    // Update the "last" values
+                    m_lastPosition = OffsetPosition;
+                    m_lastGroupPosition = GroupPosition;
+                    m_lastRotation = RotationOffset;
+                    m_lastVelocity = Velocity;
+                    m_lastAcceleration = Acceleration;
+                    m_lastAngularVelocity = AngularVelocity;
                 }
-
-                //Must send these as well
-                if (Text != "")
-                    UpdateFlags |= PrimUpdateFlags.Text;
-                if (AngularVelocity != Vector3.Zero)
-                    UpdateFlags |= PrimUpdateFlags.AngularVelocity;
-                if (TextureAnimation != null && TextureAnimation.Length != 0)
-                    UpdateFlags |= PrimUpdateFlags.TextureAnim;
-                if (Sound != UUID.Zero)
-                    UpdateFlags |= PrimUpdateFlags.Sound;
-                if (ParticleSystem != null && ParticleSystem.Length != 0)
-                    UpdateFlags |= PrimUpdateFlags.Particles;
-                if (MediaUrl != "" && MediaUrl != null)
-                    UpdateFlags |= PrimUpdateFlags.MediaURL;
-                if (ParentGroup.RootPart.IsAttachment)
-                    UpdateFlags |= PrimUpdateFlags.AttachmentPoint;
-
-                //Make sure that we send this! Otherwise, the client will only see one prim
-                if (m_parentGroup != null)
-                    if (ParentGroup.ChildrenList.Count != 1)
-                        UpdateFlags |= PrimUpdateFlags.ParentID;
-
-                //Increment the CRC code so that the client won't be sent a cached update for this
-                if (UpdateFlags != PrimUpdateFlags.PrimFlags)
-                    CRC++;
-            }
-
-            if (ParentGroup != null)
-            {
-                if (ParentGroup.Scene == null) // Need to check here as it's null during object creation
-                    return false;
-
-                // Check that the group was not deleted before the scheduled update
-                // FIXME: This is merely a temporary measure to reduce the incidence of failure when
-                // an object has been deleted from a scene before update was processed.
-                // A more fundamental overhaul of the update mechanism is required to eliminate all
-                // the race conditions.
-                if (ParentGroup.IsDeleted)
-                    return false;
-
-                if (IsTerse(UpdateFlags))
+                else
                 {
-                    const float ROTATION_TOLERANCE = 0.01f;
-                    const float VELOCITY_TOLERANCE = 0.001f;
-                    const float POSITION_TOLERANCE = 0.01f;
-
-                    // Throw away duplicate or insignificant updates
-                    if (!RotationOffset.ApproxEquals(m_lastRotation, ROTATION_TOLERANCE) ||
-                        !Acceleration.Equals(m_lastAcceleration) ||
-                        !Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
-                        !Velocity.ApproxEquals(Vector3.Zero, VELOCITY_TOLERANCE) ||
-                        !AngularVelocity.ApproxEquals(m_lastAngularVelocity, VELOCITY_TOLERANCE) ||
-                        !OffsetPosition.ApproxEquals(m_lastPosition, POSITION_TOLERANCE) ||
-                        !GroupPosition.ApproxEquals(m_lastGroupPosition, POSITION_TOLERANCE))
-                    {
-                        // Update the "last" values
-                        m_lastPosition = OffsetPosition;
-                        m_lastGroupPosition = GroupPosition;
-                        m_lastRotation = RotationOffset;
-                        m_lastVelocity = Velocity;
-                        m_lastAcceleration = Acceleration;
-                        m_lastAngularVelocity = AngularVelocity;
-                    }
-                    else
-                    {
-                        IMonitorModule m = ParentGroup.Scene.RequestModuleInterface<IMonitorModule>();
-                        if (m != null && ParentGroup.Scene.RegionInfo != null)
-                            ((IObjectUpdateMonitor)m.GetMonitor(ParentGroup.Scene.RegionInfo.RegionID.ToString(), "PrimUpdates")).AddLimitedPrims(1);
-                        return false;
-                    }
+                    IMonitorModule m = ParentGroup.Scene.RequestModuleInterface<IMonitorModule> ();
+                    if (m != null && ParentGroup.Scene.RegionInfo != null)
+                        ((IObjectUpdateMonitor)m.GetMonitor (ParentGroup.Scene.RegionInfo.RegionID.ToString (), "PrimUpdates")).AddLimitedPrims (1);
+                    return false;
                 }
-                //Reupdate so they get sent properly
-                PostUpdateFlags = UpdateFlags;
                 return true;
             }
             return false;
@@ -4450,7 +4407,11 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //No triggering Changed_Color, so not using Color
             //Color = ...
-            m_color = Color.FromArgb((int)(alpha * 0xff),
+            if(m_color.A != alpha ||
+                m_color.R != color.X ||
+                m_color.G != color.Y ||
+                m_color.B != color.Z)
+                m_color = Color.FromArgb((int)(alpha * 0xff),
                                    (int) (color.X*0xff),
                                    (int) (color.Y*0xff),
                                    (int) (color.Z*0xff));

@@ -929,7 +929,7 @@ namespace OpenSim.Region.Framework.Scenes
                         ((SceneObjectGroup)ent).ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                     }
                 }
-                IScenePresence[] presences = scene.Entities.GetPresences();
+                List<IScenePresence> presences = scene.Entities.GetPresences ();
                 foreach(IScenePresence presence in presences)
                 {
                     if(!presence.IsChildAgent)

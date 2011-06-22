@@ -84,10 +84,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private const float PresenceSendPercentage = 0.60f;
         private const float PrimSendPercentage = 0.40f;
-        /// <summary>
-        /// If this is set, we start inserting other presences updates at 1 so that our updates go before theirs
-        /// </summary>
-        private volatile bool m_ourPresenceHasUpdate = false;
 
         public IPrioritizer Prioritizer
         {
@@ -189,12 +185,8 @@ namespace OpenSim.Region.Framework.Scenes
                     m_presenceUpdatesToSend.Remove(presence.UUID);
                 }
 
-                if (m_presence.UUID == presence.UUID)
-                {
-                    //Its us, set us first!
-                    m_ourPresenceHasUpdate = true;
+                if (m_presence.UUID == presence.UUID) //Its us, set us first!
                     m_presenceUpdatesToSend.Insert(0, presence.UUID, o);
-                }
                 else //Not us, set at the end
                     m_presenceUpdatesToSend.Insert(m_presenceUpdatesToSend.Count, presence.UUID, o);
             }
@@ -265,7 +257,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 foreach (ISceneChildEntity entity in entities)
                 {
-                    if (Culler != null && !Culler.ShowEntityToClient(m_presence, entity))
+                    if (Culler != null && !Culler.ShowEntityToClient(m_presence, entity.ParentEntity))
                         continue; // if 2 far ignore
 
                     m_objectPropertiesToSend.Remove(entity.UUID);
@@ -380,7 +372,7 @@ namespace OpenSim.Region.Framework.Scenes
             HashSet<IScenePresence> NewPresencesInView = new HashSet<IScenePresence>();
 
             //Check for scenepresences as well
-            IScenePresence[] presences = m_presence.Scene.Entities.GetPresences();
+            List<IScenePresence> presences = m_presence.Scene.Entities.GetPresences ();
             foreach (IScenePresence presence in presences)
             {
                 if (presence != null && presence.UUID != m_presence.UUID)
@@ -545,9 +537,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (updates.Count != 0)
             {
                 presenceNumToSend -= updates.Count;
-                //Make sure we don't have an update for us
-                if (updates[0].Entity.UUID == m_presence.UUID)
-                    m_ourPresenceHasUpdate = false;
                 m_presence.ControllingClient.SendAvatarUpdate (updates);
             }
             updates.Clear ();
@@ -644,6 +633,12 @@ namespace OpenSim.Region.Framework.Scenes
                                 continue;
                             }
                             m_EntitiesInPacketQueue.Add (update.Entity.UUID);*/
+
+                            //Fix the CRC for this update
+                            //Increment the CRC code so that the client won't be sent a cached update for this
+                            if (update.Flags != PrimUpdateFlags.PrimFlags)
+                                ((ISceneChildEntity)update.Entity).CRC++;
+
                             updates.Add (update);
                             m_objectUpdatesToSend.RemoveAt (0);
                         }
