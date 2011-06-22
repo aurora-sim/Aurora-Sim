@@ -144,7 +144,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         public Executor m_Executor = null;
 
-        public long GetStateEventFlags(string state)
+        public virtual long GetStateEventFlags(string state)
         {
             return (long)m_Executor.GetStateEventFlags(state);
         }
@@ -597,6 +597,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         public void Dispose()
         {
+        }
+
+        public virtual IEnumerator FireEvent (string evName, object[] parameters)
+        {
+            yield break;
         }
     }
 }

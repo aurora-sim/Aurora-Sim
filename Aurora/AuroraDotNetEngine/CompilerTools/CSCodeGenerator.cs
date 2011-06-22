@@ -150,6 +150,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// </summary>
         private Dictionary<string, GlobalVar> MethodVariables = new Dictionary<string, GlobalVar>();
 
+        private Dictionary<string, List<ArgumentDeclarationList>> m_allMethods = new Dictionary<string, List<ArgumentDeclarationList>> ();
+
         private class VarRename
         {
             //public string NewVarName;
@@ -309,6 +311,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             IsaGlobalVar = false;
             MethodsToAdd.Clear();
             LocalMethodArguements.Clear();
+            m_allMethods.Clear ();
         }
 
         private string CreateCompilerScript(string ScriptClass)
@@ -411,12 +414,40 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             foreach (SYMBOL s in m_astRoot.kids)
                 returnstring += GenerateNode(s);
 
+            returnstring += GenerateFireEventMethod ();
+
             // Removes all carriage return characters which may be generated in Windows platform. 
             //Is there a cleaner way of doing this?
             returnstring = returnstring.Replace("\r", "");
 
             CheckEventCasts(returnstring);
             return CreateCompilerScript(returnstring);
+        }
+
+        private string GenerateFireEventMethod ()
+        {
+            StringBuilder retVal = new StringBuilder ();
+            retVal.AppendLine ("public override IEnumerator FireEvent (string evName, object[] parameters)");
+            retVal.AppendLine ("{");
+            foreach (KeyValuePair<string, List<ArgumentDeclarationList>> method in m_allMethods)
+            {
+                retVal.AppendLine ("if(evName == \"" + method.Key + "\")");// if(evName == "state_entry")
+                retVal.Append ("return " + method.Key + " (");
+                for (int i = 0; i < method.Value.Count; i++)
+                {
+                    for (int b = 0; b < method.Value[i].kids.Count; b++)
+                    {
+                        retVal.Append ("(" + ((Declaration)method.Value[i].kids[b]).Datatype + ")");
+                        retVal.Append ("parameters[" + b + "]");
+                        if (b != method.Value[i].kids.Count - 1)
+                            retVal.Append (", ");
+                    }
+                }
+                retVal.AppendLine (");");
+            }
+            retVal.AppendLine ("return null;");
+            retVal.AppendLine ("}");
+            return retVal.ToString ();
         }
 
         private string CheckFloatExponent(string script)
@@ -1566,11 +1597,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             IsParentEnumerable = true;
 
             // print the state arguments, if any
+            List<ArgumentDeclarationList> args = new List<ArgumentDeclarationList> ();
             foreach (SYMBOL kid in argumentDeclarationListKids)
             {
                 ArgumentDeclarationList ADL = (ArgumentDeclarationList)kid;
+                args.Add (ADL);
                 retstr.Append(GenerateArgumentDeclarationList(ADL));
             }
+            m_allMethods.Add (CheckName (gf.Name), args);
 
             retstr.Append(GenerateLine(")"));
 
@@ -1762,9 +1796,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             IsParentEnumerable = true;
 
             // print the state arguments, if any
+            List<ArgumentDeclarationList> args = new List<ArgumentDeclarationList> ();
             foreach (SYMBOL kid in argumentDeclarationListKids)
-                retstr.Append(GenerateArgumentDeclarationList((ArgumentDeclarationList)kid));
+            {
+                args.Add (((ArgumentDeclarationList)kid));
+                retstr.Append (GenerateArgumentDeclarationList ((ArgumentDeclarationList)kid));
+            }
 
+            m_allMethods.Add (String.Format ("{0}_event_{1}", parentStateName, se.Name), args);
             retstr.Append(GenerateLine(")"));
 
 

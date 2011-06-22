@@ -141,5 +141,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             get { return false; } 
             set { }
         }
+
+        public System.Collections.IEnumerator FireEvent (string evName, object[] parameters)
+        {
+            yield break;
+        }
     }
 }

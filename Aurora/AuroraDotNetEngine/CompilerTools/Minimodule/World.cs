@@ -209,10 +209,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         {
             get
             {
-                IScenePresence[] ents = m_internalScene.Entities.GetPresences();
-                IAvatar[] rets = new IAvatar[ents.Length];
+                List<IScenePresence> ents = m_internalScene.Entities.GetPresences ();
+                IAvatar[] rets = new IAvatar[ents.Count];
 
-                for (int i = 0; i < ents.Length; i++)
+                for (int i = 0; i < ents.Count; i++)
                 {
                     IScenePresence ent = ents[i];
                     rets[i] = new SPAvatar(m_internalScene, ent.UUID, m_security);

@@ -33,6 +33,7 @@ using System.Reflection.Emit;
 using System.Runtime.Remoting.Lifetime;
 using System.Threading;
 using OpenMetaverse;
+using OpenSim.Framework;
 using Aurora.ScriptEngine.AuroraDotNetEngine;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
@@ -89,15 +90,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         }
 
         // Cache functions by keeping a reference to them in a dictionary
-        private Dictionary<string, MethodInfo> Events = new Dictionary<string, MethodInfo>();
         private Dictionary<string, scriptEvents> m_stateEvents = new Dictionary<string, scriptEvents>();
         private Type m_scriptType;
 
         private bool InTimeSlice = false;
-        private DateTime TimeSliceEnd = new DateTime();
-        private DateTime TimeSliceStart = new DateTime();
+        private int TimeSliceEnd = 0;
 
-        private Double MaxTimeSlice = 60;    // script timeslice execution time in ms , hardwired for now
+        private Int32 MaxTimeSlice = 60;    // script timeslice execution time in ms , hardwired for now
   
 
         public Executor(IScript script)
@@ -109,14 +108,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         public scriptEvents GetStateEventFlags(string state)
         {
-            //m_log.Debug("Get event flags for " + state);
-
             // Check to see if we've already computed the flags for this state
             scriptEvents eventFlags = scriptEvents.None;
             if (m_stateEvents.TryGetValue(state, out eventFlags))
-            {
                 return eventFlags;
-            }
 
             if (m_scriptType == null)
                 m_scriptType = m_Script.GetType();
@@ -151,12 +146,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         public void OpenTimeSlice(EnumeratorInfo Start)
         {
-
-            TimeSliceStart = DateTime.Now;
             if(Start==null)
-                TimeSliceEnd = TimeSliceStart.AddMilliseconds(MaxTimeSlice);
+                TimeSliceEnd = Util.EnvironmentTickCountAdd (MaxTimeSlice);
             else
-                TimeSliceEnd = TimeSliceStart.AddMilliseconds(MaxTimeSlice/2);
+                TimeSliceEnd = Util.EnvironmentTickCountAdd (MaxTimeSlice/2);
             InTimeSlice = true;
         }
 
@@ -167,80 +160,33 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         public bool CheckSlice()
         {
-            return (DateTime.Now > TimeSliceEnd);
+            return Util.EnvironmentTickCountSubtract(TimeSliceEnd) > 0;
         }
 
         public EnumeratorInfo ExecuteEvent(string state, string FunctionName, object[] args, EnumeratorInfo Start, out Exception ex)
         {
             ex = null;
-            // IMPORTANT: Types and MemberInfo-derived objects require a LOT of memory.
-            // Instead use RuntimeTypeHandle, RuntimeFieldHandle and RunTimeHandle (IntPtr) instead!
-            string EventName = state + "_event_" + FunctionName;
-            if (state == "")
-                EventName = FunctionName;
+            string EventName = state == "" ? FunctionName : state + "_event_" + FunctionName;
 
-            //#if DEBUG
-            //m_log.Debug("ScriptEngine: Script event function name: " + EventName);
-            //#endif
-
-            #region Find Event
-            // not sure it's need
             if (InTimeSlice)
-            {
                 //OpenSim.Framework.Console.MainConsole.Instance.Output("ScriptEngine TimeSlice Overlap" + FunctionName);
                 return Start;
-            }
 
-            MethodInfo ev = null;
-            if (m_scriptType == null)
-                m_scriptType = m_Script.GetType();
-
-            if (!Events.TryGetValue(EventName, out ev))
-            {
-                // Not found, create
-                ev = m_scriptType.GetMethod(EventName);
-                Events.Add(EventName, ev);
-            }
-            if (ev == null) // No event by that event name!
-            {
-                //Attempt to find it just by name
-
-                if (!Events.TryGetValue(EventName, out ev))
-                {
-                    // Not found, create
-                    ev = m_scriptType.GetMethod(FunctionName);
-                    Events.Add(FunctionName, ev);
-                }
-                if (ev == null) // No event by that name!
-                {
-                    //m_log.Debug("ScriptEngine Can not find any event named:" + EventName);
-                    return null;
-                }
-            }
-            #endregion
-
-            return FireAsEnumerator(Start, ev, args, out ex);
-        }
-
-        public EnumeratorInfo FireAsEnumerator(EnumeratorInfo Start, MethodInfo ev, object[] args, out Exception ex)
-        {
             IEnumerator thread = null;
 
             OpenTimeSlice(Start);
             bool running = true;
-            ex = null;
 
             try
             {
                 if (Start != null)
                 {
                     lock (m_enumerators)
-                    {
-                        m_enumerators.TryGetValue(Start.Key, out thread);
-                    }
+                        m_enumerators.TryGetValue (Start.Key, out thread);
                 }
                 else
-                    thread = (IEnumerator)ev.Invoke(m_Script, args);
+                    thread = m_Script.FireEvent (EventName, args);
+
                 if (thread != null)
                     running = thread.MoveNext();
             }

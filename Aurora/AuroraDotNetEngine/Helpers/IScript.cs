@@ -73,5 +73,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// Whether this script needs a state save performed
         /// </summary>
         bool NeedsStateSaved { get; set; }
+
+        /// <summary>
+        /// Fires a generic event by the given name
+        /// </summary>
+        /// <param name="evName"></param>
+        /// <param name="parameters"></param>
+        System.Collections.IEnumerator FireEvent (string evName, object[] parameters);
     }
 }
