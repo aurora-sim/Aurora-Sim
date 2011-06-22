@@ -307,7 +307,7 @@ namespace Aurora.BotManager
         }
 
         // Makes the bot fly to the specified destination
-        private void StopMoving (bool fly)
+        private void StopMoving (bool fly, bool clearPath)
         {
             State = BotState.Idle;
             //Clear out any nodes
@@ -536,7 +536,7 @@ namespace Aurora.BotManager
 
             if (m_paused)
             {
-                StopMoving (lastFlying);
+                StopMoving (lastFlying, false);
                 return;
             }
 
@@ -553,7 +553,7 @@ namespace Aurora.BotManager
                     m_scenePresence.Teleport (pos);
             }
             else
-                StopMoving (lastFlying);
+                StopMoving (lastFlying, true);
         }
 
         public void PauseMovement ()
@@ -821,7 +821,7 @@ namespace Aurora.BotManager
                 }
                 m_toAvatar = true;
                 bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
-                StopMoving (fly);
+                StopMoving (fly, true);
                 return null;
             }
             else if (distance > m_followLoseAvatarDistance)
