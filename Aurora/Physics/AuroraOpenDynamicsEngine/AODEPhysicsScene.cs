@@ -1996,40 +1996,40 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (pbs.ProfileHollow != 0)
                 iPropertiesNotSupportedDefault++;
-
-            if ((pbs.PathTwistBegin != 0) || (pbs.PathTwist != 0))
+            else if ((pbs.PathTwistBegin != 0) || (pbs.PathTwist != 0))
                 iPropertiesNotSupportedDefault++;
-
-            if ((pbs.ProfileBegin != 0) || pbs.ProfileEnd != 0)
+            else if ((pbs.ProfileBegin != 0) || pbs.ProfileEnd != 0)
                 iPropertiesNotSupportedDefault++;
-
-            if(pbs.PathBegin != 0 || pbs.PathEnd != 0)
+            else if (pbs.PathBegin != 0 || pbs.PathEnd != 0)
                 iPropertiesNotSupportedDefault++;
-
-            if ((pbs.PathScaleX != 100) || (pbs.PathScaleY != 100))
+            else if ((pbs.PathScaleX != 100) || (pbs.PathScaleY != 100))
                 iPropertiesNotSupportedDefault++;
-
-            if ((pbs.PathShearX != 0) || (pbs.PathShearY != 0))
+            else if ((pbs.PathShearX != 0) || (pbs.PathShearY != 0))
                 iPropertiesNotSupportedDefault++;
-
-            if (pbs.ProfileShape == ProfileShape.Circle && pbs.PathCurve == (byte)Extrusion.Straight)
+            else if (pbs.ProfileShape == ProfileShape.Circle && pbs.PathCurve == (byte)Extrusion.Straight)
                 iPropertiesNotSupportedDefault++;
-
-            if (pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte)Extrusion.Curve1 && (pbs.Scale.X != pbs.Scale.Y || pbs.Scale.Y != pbs.Scale.Z || pbs.Scale.Z != pbs.Scale.X))
+            else if (pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte)Extrusion.Curve1 && (pbs.Scale.X != pbs.Scale.Y || pbs.Scale.Y != pbs.Scale.Z || pbs.Scale.Z != pbs.Scale.X))
                 iPropertiesNotSupportedDefault++;
-
-            if (pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte)Extrusion.Curve1)
+            else if (pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte)Extrusion.Curve1)
                 iPropertiesNotSupportedDefault++;
-
             // test for torus
-            if ((pbs.ProfileCurve & 0x07) == (byte)ProfileShape.Square)
+            else if ((pbs.ProfileCurve & 0x07) == (byte)ProfileShape.Square && pbs.PathCurve == (byte)Extrusion.Curve1)
+                    iPropertiesNotSupportedDefault++;
+            else if ((pbs.ProfileCurve & 0x07) == (byte)ProfileShape.HalfCircle && 
+                (pbs.PathCurve == (byte)Extrusion.Curve1 || pbs.PathCurve == (byte)Extrusion.Curve2))
+                    iPropertiesNotSupportedDefault++;
+            else if ((pbs.ProfileCurve & 0x07) == (byte)ProfileShape.EquilateralTriangle)
             {
-                if (pbs.PathCurve == (byte)Extrusion.Curve1)
+                if (pbs.PathCurve == (byte)Extrusion.Straight)
+                {
+                    iPropertiesNotSupportedDefault++;
+                }
+                else if (pbs.PathCurve == (byte)Extrusion.Curve1)
                 {
                     iPropertiesNotSupportedDefault++;
                 }
             }
-            else if ((pbs.ProfileCurve & 0x07) == (byte)ProfileShape.Circle)
+            if ((pbs.ProfileCurve & 0x07) == (byte)ProfileShape.Circle)
             {
                 if (pbs.PathCurve == (byte)Extrusion.Straight)
                 {
@@ -2037,24 +2037,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
 
                 // ProfileCurve seems to combine hole shape and profile curve so we need to only compare against the lower 3 bits
-                else if (pbs.PathCurve == (byte)Extrusion.Curve1)
-                {
-                    iPropertiesNotSupportedDefault++;
-                }
-            }
-            else if ((pbs.ProfileCurve & 0x07) == (byte)ProfileShape.HalfCircle)
-            {
-                if (pbs.PathCurve == (byte)Extrusion.Curve1 || pbs.PathCurve == (byte)Extrusion.Curve2)
-                {
-                    iPropertiesNotSupportedDefault++;
-                }
-            }
-            else if ((pbs.ProfileCurve & 0x07) == (byte)ProfileShape.EquilateralTriangle)
-            {
-                if (pbs.PathCurve == (byte)Extrusion.Straight)
-                {
-                    iPropertiesNotSupportedDefault++;
-                }
                 else if (pbs.PathCurve == (byte)Extrusion.Curve1)
                 {
                     iPropertiesNotSupportedDefault++;
