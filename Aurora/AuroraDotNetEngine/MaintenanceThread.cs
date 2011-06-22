@@ -562,13 +562,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     timeToSleep = (int)(NextSleepersTest - DateTime.Now).TotalMilliseconds;
                 if (timeToSleep < 5)
                     timeToSleep = 5;
-                if (timeToSleep > 100)
-                    timeToSleep = 100;
+                if (timeToSleep > 50)
+                    timeToSleep = 50;
 
                 if (SleepingScriptEventCount == 0 && ScriptEventCount == 0)
                 {
                     numberOfEmptyWork++;
-                    if (numberOfEmptyWork > EMPTY_WORK_KILL_THREAD_TIME) //Don't break immediately
+                    if (numberOfEmptyWork > EMPTY_WORK_KILL_THREAD_TIME) //Don't break immediately, otherwise we have to wait to spawn more threads
                     {
                         break; //No more events, end
                     }
@@ -579,7 +579,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     Interlocked.Read (ref scriptThreadpool.nthreads) > MaxScriptThreads)
                 {
                     numberOfEmptyWork++;
-                    if (numberOfEmptyWork > (EMPTY_WORK_KILL_THREAD_TIME / 3)) //Don't break immediately
+                    if (numberOfEmptyWork > (EMPTY_WORK_KILL_THREAD_TIME / 2)) //Don't break immediately
                     {
                         break; //Too many threads, kill some off
                     }

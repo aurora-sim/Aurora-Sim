@@ -260,9 +260,9 @@ namespace Aurora.BotManager
             if(child == null)
                 throw new Exception("Failed to find entity to touch");
 
-            World.EventManager.TriggerObjectGrab (child, child, Vector3.Zero, sp.ControllingClient, touchArgs);
-            World.EventManager.TriggerObjectGrabbing (child, child, Vector3.Zero, sp.ControllingClient, touchArgs);
-            World.EventManager.TriggerObjectDeGrab (child, child, sp.ControllingClient, touchArgs);
+            World.EventManager.TriggerObjectGrab (child.ParentEntity.RootChild, child, Vector3.Zero, sp.ControllingClient, touchArgs);
+            World.EventManager.TriggerObjectGrabbing (child.ParentEntity.RootChild, child, Vector3.Zero, sp.ControllingClient, touchArgs);
+            World.EventManager.TriggerObjectDeGrab (child.ParentEntity.RootChild, child, sp.ControllingClient, touchArgs);
         }
 
         public void botSitObject (string bot, string objectID, LSL_Vector offset)
@@ -275,7 +275,7 @@ namespace Aurora.BotManager
             if (UUID.Parse(objectID) != UUID.Zero && child == null)
                 throw new Exception ("Failed to find entity to touch");
 
-            sp.HandleAgentRequestSit (sp.ControllingClient, child.UUID, new Vector3((float)offset.x, (float)offset.y, (float)offset.z));
+            sp.HandleAgentRequestSit (sp.ControllingClient, UUID.Parse (objectID), new Vector3 ((float)offset.x, (float)offset.y, (float)offset.z));
         }
 
         public void botStandUp (string bot)
