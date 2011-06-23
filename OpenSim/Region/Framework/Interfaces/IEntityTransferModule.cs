@@ -69,6 +69,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="sog">The agent to cross</param>
         /// <param name="position">The position to put the object in the neighboring region</param>
         /// <param name="neighborRegion">The neighboring region to cross the agent into</param>
+        /// <returns>
         /// True if the object was added to the neighbor region, false if not
         /// </returns>
         bool CrossGroupToNewRegion(SceneObjectGroup sog, Vector3 position, GridRegion neighborRegion);
@@ -116,6 +117,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="regionID">The UUID of the region this object will be added to</param>
         /// <param name="userID">The user who will have this object attached to them</param>
         /// <param name="itemID">The itemID to attach to the user</param>
+        /// <returns>
         /// True if the object was added, false if not
         /// </returns>
         bool IncomingCreateObject(UUID regionID, UUID userID, UUID itemID);
@@ -125,6 +127,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="regionID">The UUID of the region this object will be added to</param>
         /// <param name="sog">The object to add</param>
+        /// <returns>
         /// True if the object was added, false if not
         /// </returns>
         bool IncomingCreateObject(UUID regionID, ISceneObject sog);
@@ -146,6 +149,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="scene">The region to update the agent</param>
         /// <param name="cAgentData">The agent information to update</param>
+        /// <returns>
         /// True if the user was updated, false if not
         /// </returns>
         bool IncomingChildAgentDataUpdate (IScene scene, AgentData cAgentData);
@@ -166,6 +170,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="scene">The region to get the agent information from</param>
         /// <param name="id">The id of the agent</param>
         /// <param name="agent">The information about the agent</param>
+        /// <returns>
         /// True if the user was found, false if not
         /// </returns>
         bool IncomingRetrieveRootAgent (IScene scene, UUID id, out IAgentData agent);
@@ -175,6 +180,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="scene">The region to close the agent in</param>
         /// <param name="agentID">The agent to close</param>
+        /// <returns>
         /// True if the user was closed, false if not
         /// </returns>
         bool IncomingCloseAgent (IScene scene, UUID agentID);

@@ -2374,6 +2374,8 @@ namespace OpenSim.Region.Framework.Scenes
                 SpeedModifier = cAgent.Speed;
                 DrawDistance = cAgent.DrawDistance;
                 m_setAlwaysRun = cAgent.AlwaysRun;
+                if(cAgent.IsCrossing)
+                    ((Scene)m_scene).AuthenticateHandler.GetAgentCircuitData (UUID).teleportFlags |= (uint)OpenMetaverse.TeleportFlags.ViaRegionID;
                 IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
                 if (appearance != null)
                 {

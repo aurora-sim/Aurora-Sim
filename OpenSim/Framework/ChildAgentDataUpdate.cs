@@ -246,6 +246,7 @@ namespace OpenSim.Framework
         public Animation[] Anims;
 
         public UUID GranterID;
+        public bool IsCrossing = false;
 
         // Appearance
         public AvatarAppearance Appearance;
@@ -308,6 +309,7 @@ namespace OpenSim.Framework
             args["agent_access"] = OSD.FromString(AgentAccess.ToString());
 
             args["active_group_id"] = OSD.FromUUID(ActiveGroupID);
+            args["IsCrossing"] = IsCrossing;
 
             if ((Groups != null) && (Groups.Length > 0))
             {
@@ -444,6 +446,9 @@ namespace OpenSim.Framework
 
             if (args["active_group_id"] != null)
                 ActiveGroupID = args["active_group_id"].AsUUID();
+
+            if (args["IsCrossing"] != null)
+                IsCrossing = args["IsCrossing"].AsBoolean ();
 
             if ((args["groups"] != null) && (args["groups"]).Type == OSDType.Array)
             {
