@@ -516,11 +516,11 @@ namespace Aurora.Services.DataService
                             {
                                 if (f is Dictionary<string, object>)
                                 {
-                                    group = new GroupRecord((Dictionary<string, object>)f);
+                                    group = new GroupRecord ((Dictionary<string, object>)f);
+                                    // Success
+                                    return group;
                                 }
                             }
-                            // Success
-                            return group;
                         }
                     }
                 }
@@ -564,11 +564,11 @@ namespace Aurora.Services.DataService
                             {
                                 if (f is Dictionary<string, object>)
                                 {
-                                    group = new GroupProfileData((Dictionary<string, object>)f);
+                                    group = new GroupProfileData ((Dictionary<string, object>)f);
+                                    // Success
+                                    return group;
                                 }
                             }
-                            // Success
-                            return group;
                         }
                     }
                 }

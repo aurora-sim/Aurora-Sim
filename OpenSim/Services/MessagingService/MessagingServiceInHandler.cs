@@ -58,12 +58,15 @@ namespace OpenSim.Services.MessagingService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            if (!m_enabled)
-                return;
-            IConfig handlerConfig = config.Configs["Handlers"];
-
             m_registry = registry;
-
+            if (!m_enabled)
+            {
+                IAsyncMessageRecievedService service = registry.RequestModuleInterface<IAsyncMessageRecievedService> ();
+                if(service == null)
+                    registry.RegisterModuleInterface<IAsyncMessageRecievedService> (this);//Register so that we have an internal message handler, but don't add the external handler
+                return;
+            }
+            IConfig handlerConfig = config.Configs["Handlers"];
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
 
