@@ -102,7 +102,7 @@ namespace Aurora.BotManager
             {
                 IAvatarAppearanceModule aa = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
                 if (aa != null)
-                    return aa.Appearance;
+                    return new AvatarAppearance(aa.Appearance);
             }
             return scene.AvatarService.GetAppearance (target);
         }
