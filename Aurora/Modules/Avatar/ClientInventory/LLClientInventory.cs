@@ -1369,7 +1369,12 @@ namespace OpenSim.Region.Framework.Scenes
         {
             InventoryItemBase item = new InventoryItemBase(itemId, senderId);
             item = m_scene.InventoryService.GetItem(item);
+            return InnerGiveInventoryItem (recipient, senderId, item, recipientFolderId);
+        }
 
+        public InventoryItemBase InnerGiveInventoryItem (
+            UUID recipient, UUID senderId, InventoryItemBase item, UUID recipientFolderId)
+        {
             if ((item != null) && (item.Owner == senderId))
             {
                 if (!m_scene.Permissions.BypassPermissions())
@@ -1530,7 +1535,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
                     {
                         List<UUID> items = new List<UUID>();
-                        items.Add(itemId);
+                        items.Add(item.ID);
                         m_scene.InventoryService.DeleteItems(senderId, items);
                     }
                 }
@@ -1539,7 +1544,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-                m_log.WarnFormat("[LLClientInventory]: Failed to find item {0} or item does not belong to giver ", itemId);
+                m_log.WarnFormat("[LLClientInventory]: Failed to find item {0} or item does not belong to giver ", item == null ? "Unknown Item" : item.ID.ToString());
                 return null;
             }
 
@@ -1600,7 +1605,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Give all the items
             foreach (InventoryItemBase item in contents.Items)
             {
-                GiveInventoryItem(recipientId, senderId, item.ID, newFolder.ID);
+                InnerGiveInventoryItem (recipientId, senderId, item, newFolder.ID);
             }
 
             return newFolder;

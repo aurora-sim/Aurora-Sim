@@ -4845,7 +4845,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_log.Warn("[LLClientView]: exception converting quaternion to bytes, using Quaternion.Identity. Exception: " + e.ToString());
                 OpenMetaverse.Quaternion.Identity.ToBytes(objectData, 36);
             }
-            data.AngularVelocity.ToBytes(objectData, 48);
+            data.AngularVelocity.ToBytes (objectData, 48);
 
             ObjectUpdatePacket.ObjectDataBlock update = new ObjectUpdatePacket.ObjectDataBlock();
             update.ClickAction = (byte)data.ClickAction;
@@ -4993,7 +4993,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if ((updateFlags & CompressedFlags.HasAngularVelocity) != 0)
             {
-                part.AngularVelocity.ToBytes(objectData, i);
+                part.AngularVelocity.ToBytes (objectData, i);
                 i += 12;
             }
             if ((updateFlags & CompressedFlags.HasParent) != 0)

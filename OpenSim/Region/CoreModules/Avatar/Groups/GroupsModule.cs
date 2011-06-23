@@ -658,12 +658,10 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             if ((im.dialog == (byte)InstantMessageDialog.GroupNoticeInventoryAccepted) || (im.dialog == (byte)InstantMessageDialog.GroupNoticeInventoryAccepted))
             {
                 UUID FolderID = new UUID(im.binaryBucket, 0);
-                InventoryItemBase item = new InventoryItemBase(GroupAttachmentCache[im.imSessionID]);
-                item = ((Scene)remoteClient.Scene).InventoryService.GetItem(item);
-                
+                InventoryItemBase item = null;
                 ILLClientInventory inventoryModule = remoteClient.Scene.RequestModuleInterface<ILLClientInventory>();
                 if (inventoryModule != null)
-                    item = inventoryModule.GiveInventoryItem(remoteClient.AgentId, item.Owner, GroupAttachmentCache[im.imSessionID], FolderID);
+                    item = inventoryModule.GiveInventoryItem (remoteClient.AgentId, GroupAttachmentCache[im.imSessionID], GroupAttachmentCache[im.imSessionID], FolderID);
 
                 if (item != null)
                     remoteClient.SendBulkUpdateInventory(item);
