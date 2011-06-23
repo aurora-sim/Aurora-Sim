@@ -429,11 +429,9 @@ namespace OpenSim.Services.MessagingService
                     //Note: if the agent is already there, send an agent update then
                     bool result = true;
                     if (agentData != null)
-                    {
                         result = SimulationService.UpdateAgent(neighbor, agentData);
-                        if (result)
-                            oldRegionService.Disabled = false;
-                    }
+                    if (result)
+                        oldRegionService.Disabled = false;
                     reason = "";
                     return result;
                 }
@@ -859,6 +857,8 @@ namespace OpenSim.Services.MessagingService
 
                         bool result = false;
 
+                        //We need to get it from the grid service again so that we can get the simulation service urls correctly
+                        // as regions don't get that info
                         crossingRegion = GridService.GetRegionByUUID(UUID.Zero, crossingRegion.RegionID);
                         if (!SimulationService.UpdateAgent(crossingRegion, cAgent))
                         {

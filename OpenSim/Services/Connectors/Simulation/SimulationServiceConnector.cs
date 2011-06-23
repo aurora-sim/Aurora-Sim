@@ -166,13 +166,14 @@ namespace OpenSim.Services.Connectors.Simulation
                 if (m_blackListedRegions.ContainsKey(uri))
                 {
                     //Check against time
-                    if(Util.EnvironmentTickCountSubtract(m_blackListedRegions[uri]) > 0)
+                    if(m_blackListedRegions[uri] > 3 && 
+                        Util.EnvironmentTickCountSubtract(m_blackListedRegions[uri]) > 0)
                     {
+                        m_log.Warn ("[SimServiceConnector]: Blacklisted region " + destination.RegionName + " requested");
                         //Still blacklisted
                         return false;
                     }
                 }
-
                 try
                 {
                     OSDMap args = cAgentData.Pack();
@@ -185,8 +186,13 @@ namespace OpenSim.Services.Connectors.Simulation
                     OSDMap result = WebUtils.PutToService(uri, args, true, true, false);
                     if (!result["Success"].AsBoolean())
                     {
-                        //add it to the blacklist
-                        m_blackListedRegions[uri] = Util.EnvironmentTickCount() + 60 * 1000; //60 seconds
+                        if (m_blackListedRegions[uri] == 3)
+                        {
+                            //add it to the blacklist as the request completely failed 3 times
+                            m_blackListedRegions[uri] = Util.EnvironmentTickCount () + 60 * 1000; //60 seconds
+                        }
+                        else if (m_blackListedRegions[uri] == 0)
+                            m_blackListedRegions[uri]++;
                         return result["Success"].AsBoolean();
                     }
                     //Clear out the blacklist if it went through
