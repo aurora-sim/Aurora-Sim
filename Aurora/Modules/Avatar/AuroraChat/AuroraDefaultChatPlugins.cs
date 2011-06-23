@@ -463,28 +463,32 @@ namespace Aurora.Modules.Avatar.AuroraChat
 
         public void OnClosingClient (UUID clientID, IScene scene)
         {
-            //Clear out the auth speakers list
-            lock (m_authorizedSpeakers)
+            IScenePresence client = scene.GetScenePresence (clientID);
+            if (!client.IsChildAgent)
             {
-                if (m_authorizedSpeakers.Contains(clientID))
-                    m_authorizedSpeakers.Remove(clientID);
-            }
-
-            IScenePresence presence = scene.GetScenePresence (clientID);
-            //Announce the closing agent if enabled
-            if (m_announceClosedAgents)
-            {
-                scene.ForEachScenePresence(delegate(IScenePresence SP)
+                //Clear out the auth speakers list
+                lock (m_authorizedSpeakers)
                 {
-                    if (SP.UUID != clientID && !SP.IsChildAgent)
-                    {
-                        IEntityCountModule entityCountModule = scene.RequestModuleInterface<IEntityCountModule>();
-                        if (entityCountModule != null)
-                            SP.ControllingClient.SendChatMessage(presence.Name + " has left the region. Total Agents: " + (entityCountModule.RootAgents - 1), 1, SP.AbsolutePosition, "System",
-                                                           UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
-                    }
+                    if (m_authorizedSpeakers.Contains (clientID))
+                        m_authorizedSpeakers.Remove (clientID);
                 }
-                );
+
+                IScenePresence presence = scene.GetScenePresence (clientID);
+                //Announce the closing agent if enabled
+                if (m_announceClosedAgents)
+                {
+                    scene.ForEachScenePresence (delegate (IScenePresence SP)
+                    {
+                        if (SP.UUID != clientID && !SP.IsChildAgent)
+                        {
+                            IEntityCountModule entityCountModule = scene.RequestModuleInterface<IEntityCountModule> ();
+                            if (entityCountModule != null)
+                                SP.ControllingClient.SendChatMessage (presence.Name + " has left the region. Total Agents: " + (entityCountModule.RootAgents - 1), 1, SP.AbsolutePosition, "System",
+                                                               UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
+                        }
+                    }
+                    );
+                }
             }
         }
 
