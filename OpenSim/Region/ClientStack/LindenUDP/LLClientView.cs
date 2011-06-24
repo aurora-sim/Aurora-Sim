@@ -3703,7 +3703,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     if (updateFlags.HasFlag (PrimUpdateFlags.Velocity) ||
                         updateFlags.HasFlag (PrimUpdateFlags.Acceleration) ||
                         updateFlags.HasFlag (PrimUpdateFlags.CollisionPlane) ||
-                        updateFlags.HasFlag (PrimUpdateFlags.Joint))
+                        updateFlags.HasFlag (PrimUpdateFlags.Joint) ||
+                        updateFlags.HasFlag (PrimUpdateFlags.AngularVelocity))
                     {
                         canUseCompressed = false;
                     }
@@ -3722,7 +3723,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         updateFlags.HasFlag (PrimUpdateFlags.Material) ||
                         updateFlags.HasFlag (PrimUpdateFlags.ClickAction) ||
                         updateFlags.HasFlag (PrimUpdateFlags.MediaURL) ||
-                        updateFlags.HasFlag (PrimUpdateFlags.Joint))
+                        updateFlags.HasFlag (PrimUpdateFlags.Joint) ||
+                        updateFlags.HasFlag (PrimUpdateFlags.FindBest))
                     {
                         canUseImproved = false;
                     }
