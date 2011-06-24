@@ -3758,36 +3758,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     else if (!canUseImproved)
                     {
+                        ISceneChildEntity cEntity = (ISceneChildEntity)entity;
                         compressedUpdates.Add (update);
                         //We are sending a compressed, which the client will save, add it to the cache
-                        module.AddCachedObject (AgentId, entity.LocalId, ((ISceneChildEntity)entity).CRC);
+                        module.AddCachedObject (AgentId, entity.LocalId, cEntity.CRC);
                         CompressedFlags Flags = CompressedFlags.None;
                         if (updateFlags == PrimUpdateFlags.FullUpdate || updateFlags == PrimUpdateFlags.FindBest)
                         {
                             //Add the defaults
                             updateFlags = PrimUpdateFlags.None;
-
-                            //Must send these as well
-                            if (((ISceneChildEntity)entity).Text != "")
-                                updateFlags |= PrimUpdateFlags.Text;
-                            if (((ISceneChildEntity)entity).AngularVelocity != Vector3.Zero)
-                                updateFlags |= PrimUpdateFlags.AngularVelocity;
-                            if (((ISceneChildEntity)entity).TextureAnimation != null && ((SceneObjectPart)entity).TextureAnimation.Length != 0)
-                                updateFlags |= PrimUpdateFlags.TextureAnim;
-                            if (((ISceneChildEntity)entity).Sound != UUID.Zero)
-                                updateFlags |= PrimUpdateFlags.Sound;
-                            if (((ISceneChildEntity)entity).ParticleSystem != null && ((SceneObjectPart)entity).ParticleSystem.Length != 0)
-                                updateFlags |= PrimUpdateFlags.Particles;
-                            if (((ISceneChildEntity)entity).MediaUrl != "" && ((SceneObjectPart)entity).MediaUrl != null)
-                                updateFlags |= PrimUpdateFlags.MediaURL;
-                            if (((ISceneChildEntity)entity).ParentEntity.RootChild.IsAttachment)
-                                updateFlags |= PrimUpdateFlags.AttachmentPoint;
-
-                            //Make sure that we send this! Otherwise, the client will only see one prim
-                            if (((ISceneChildEntity)entity).ParentEntity != null)
-                                if (((ISceneChildEntity)entity).ParentEntity.ChildrenEntities ().Count != 1)
-                                    updateFlags |= PrimUpdateFlags.ParentID;
                         }
+
                         updateFlags |= PrimUpdateFlags.ClickAction;
                         updateFlags |= PrimUpdateFlags.ExtraData;
                         updateFlags |= PrimUpdateFlags.Shape;
@@ -3798,7 +3779,28 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         updateFlags |= PrimUpdateFlags.Position;
                         updateFlags |= PrimUpdateFlags.AngularVelocity;
 
-                        if (updateFlags.HasFlag (PrimUpdateFlags.Text) && ((ISceneChildEntity)entity).ParentEntity.RootChild.Text == "")
+                        //Must send these as well
+                        if (cEntity.Text != "")
+                            updateFlags |= PrimUpdateFlags.Text;
+                        if (cEntity.AngularVelocity != Vector3.Zero)
+                            updateFlags |= PrimUpdateFlags.AngularVelocity;
+                        if (cEntity.TextureAnimation != null && cEntity.TextureAnimation.Length != 0)
+                            updateFlags |= PrimUpdateFlags.TextureAnim;
+                        if (cEntity.Sound != UUID.Zero)
+                            updateFlags |= PrimUpdateFlags.Sound;
+                        if (cEntity.ParticleSystem != null && cEntity.ParticleSystem.Length != 0)
+                            updateFlags |= PrimUpdateFlags.Particles;
+                        if (cEntity.MediaUrl != "" && cEntity.MediaUrl != null)
+                            updateFlags |= PrimUpdateFlags.MediaURL;
+                        if (cEntity.ParentEntity.RootChild.IsAttachment)
+                            updateFlags |= PrimUpdateFlags.AttachmentPoint;
+
+                        //Make sure that we send this! Otherwise, the client will only see one prim
+                        if (cEntity.ParentEntity != null)
+                            if (cEntity.ParentEntity.ChildrenEntities ().Count != 1)
+                                updateFlags |= PrimUpdateFlags.ParentID;
+
+                        if (updateFlags.HasFlag (PrimUpdateFlags.Text) && cEntity.Text == "")
                             updateFlags &= ~PrimUpdateFlags.Text; //Remove the text flag if we don't have text!
 
                         if (updateFlags.HasFlag (PrimUpdateFlags.AngularVelocity))
@@ -3815,7 +3817,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             Flags |= CompressedFlags.HasText;
                         if (updateFlags.HasFlag (PrimUpdateFlags.TextureAnim))
                             Flags |= CompressedFlags.TextureAnimation;
-                        if (updateFlags.HasFlag (PrimUpdateFlags.NameValue) || ((ISceneChildEntity)entity).IsAttachment)
+                        if (updateFlags.HasFlag (PrimUpdateFlags.NameValue) || cEntity.IsAttachment)
                             Flags |= CompressedFlags.HasNameValues;
 
                         compressedUpdates.Add (update);
