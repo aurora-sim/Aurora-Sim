@@ -186,13 +186,18 @@ namespace OpenSim.Services.Connectors.Simulation
                     OSDMap result = WebUtils.PutToService(uri, args, true, true, false);
                     if (!result["Success"].AsBoolean())
                     {
-                        if (m_blackListedRegions[uri] == 3)
+                        if (m_blackListedRegions.ContainsKey (uri))
                         {
-                            //add it to the blacklist as the request completely failed 3 times
-                            m_blackListedRegions[uri] = Util.EnvironmentTickCount () + 60 * 1000; //60 seconds
+                            if (m_blackListedRegions[uri] == 3)
+                            {
+                                //add it to the blacklist as the request completely failed 3 times
+                                m_blackListedRegions[uri] = Util.EnvironmentTickCount () + 60 * 1000; //60 seconds
+                            }
+                            else if (m_blackListedRegions[uri] == 0)
+                                m_blackListedRegions[uri]++;
                         }
-                        else if (m_blackListedRegions[uri] == 0)
-                            m_blackListedRegions[uri]++;
+                        else
+                            m_blackListedRegions[uri] = 0;
                         return result["Success"].AsBoolean();
                     }
                     //Clear out the blacklist if it went through

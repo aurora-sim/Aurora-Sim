@@ -530,7 +530,7 @@ namespace OpenSim.Region.Framework.Scenes
             Parallel.ForEach<ScenePresence>(GetScenePresences(), protectedAction);
             */
             // For now, perform actions serially
-            List<IScenePresence> presences = GetScenePresences ();
+            List<IScenePresence> presences = new List<IScenePresence>(GetScenePresences ());
             foreach (IScenePresence sp in presences)
             {
                 try

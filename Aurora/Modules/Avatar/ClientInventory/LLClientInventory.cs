@@ -1269,7 +1269,7 @@ namespace OpenSim.Region.Framework.Scenes
                     agentItem.CurrentPermissions = agentItem.BasePermissions & (((taskItem.CurrentPermissions & 7) << 13) | (taskItem.CurrentPermissions & (uint)PermissionMask.Move));
                 else
                     agentItem.CurrentPermissions = agentItem.BasePermissions & taskItem.CurrentPermissions;
-
+                
                 agentItem.CurrentPermissions |= 16; // Slam
                 agentItem.NextPermissions = taskItem.NextPermissions;
                 agentItem.EveryOnePermissions = taskItem.EveryonePermissions & (taskItem.NextPermissions | (uint)PermissionMask.Move);
