@@ -2574,10 +2574,12 @@ default
             }
             else
             {
-                retstr += GenerateNode((SYMBOL)be.kids.Pop());
-                retstr += Generate(String.Format(" {0} ", be.ExpressionSymbol), be);
+                retstr += "((LSL_Types.LSLInteger)(";
+                retstr += GenerateNode ((SYMBOL)be.kids.Pop ());
+                retstr += Generate (String.Format (" {0} ", be.ExpressionSymbol), be);
                 foreach (SYMBOL kid in be.kids)
-                    retstr += GenerateNode(kid);
+                    retstr += GenerateNode (kid);
+                retstr += "))";
             }
 
             return DumpFunc(marc) + retstr.ToString();
