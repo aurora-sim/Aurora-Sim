@@ -494,6 +494,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Find the inventory item
             Part.TaskInventory.TryGetValue(ItemID, out InventoryItem);
 
+            if (InventoryItem == null)
+            {
+                m_log.Warn ("[ADNE]: Could not find inventory item for script " + ItemID + ", part" + Part.Name + "@" + Part.AbsolutePosition);
+                return false;
+            }
+
             //Try to see if this was rezzed from someone's inventory
             UserInventoryItemID = Part.FromUserInventoryItemID;
 
