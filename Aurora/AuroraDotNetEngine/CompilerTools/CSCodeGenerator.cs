@@ -139,6 +139,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             public string Type;
             public string Value;
         }
+        private bool isAdditionExpression = false;
         private HashSet<string> DTFunctions = new HashSet<string>();
         //        public Dictionary<string, string> IenFunctions = new Dictionary<string, string>();
         public Dictionary<string, string> LocalMethods = new Dictionary<string, string>();
@@ -162,7 +163,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// This contains a list of variables that we need to rename because of some constraint
         /// </summary>
         private Dictionary<string, VarRename> VariablesToRename = new Dictionary<string, VarRename>();
-        private List<string> FuncCalls = new List<string>();
+        private List<string> FuncCalls = new List<string> ();
+        private List<string> AfterFuncCalls = new List<string> ();
         private List<string> MethodsToAdd = new List<string>();
         /// <summary>
         /// Param 1 - the API function name, Param 2 - the API name
@@ -2018,7 +2020,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             {
                             // this kids will not need to dump in current string position
                             // so save what we have in dump and let kids have their own then take it again
-                            retstr += DumpFunc(marc) + GenerateNode(kid);
+                                retstr += DumpFunc (marc) + GenerateNode (kid);
                             marc = FuncCallsMarc();
                             }
                         }
@@ -2033,7 +2035,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             if (printSemicolon)
                 retstr += GenerateLine(";");
 
-            return DumpFunc(marc) + retstr.ToString();
+            return DumpFunc (marc) + retstr.ToString () + DumpAfterFunc (marc);
         }
 
         /// <summary>
@@ -2048,14 +2050,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             bool marc = FuncCallsMarc();
             checkForMultipleAssignments(identifiers, a);
+            if (a.kids[a.kids.Count - 1] is ListConstant && isAdditionExpression)//Deal with the list memory hack
+            {
+                a.kids.Pop ();//Get rid of the first one
+                foreach (SYMBOL kid in a.kids)
+                    retstr += GenerateNode (kid);
+                return retstr;//If it is a list, and we are in an addition expression, we drop the assignment
+            }
 
-
-            retstr += GenerateNode((SYMBOL)a.kids.Pop());
-            retstr += Generate(String.Format(" {0} ", a.AssignmentType), a);
+            retstr += GenerateNode ((SYMBOL)a.kids.Pop ());
+            retstr += Generate (String.Format (" {0} ", a.AssignmentType), a);
             foreach (SYMBOL kid in a.kids)
-                retstr += GenerateNode(kid);
+                retstr += GenerateNode (kid);
+            //fCalls += ";";//Add a ; at the end.
+            //lock (AfterFuncCalls)
+            //    AfterFuncCalls.Add (fCalls);
 
-            return DumpFunc(marc) + retstr.ToString();
+            return DumpFunc (marc) + retstr.ToString () + DumpAfterFunc (marc);
         }
 
         // This code checks for LSL of the following forms, and generates a
@@ -2148,7 +2159,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     retstr += GenerateNode(kid);
             }
             if (dump)
-                return DumpFunc(dump) + retstr;
+                return DumpFunc (dump) + retstr + DumpAfterFunc (dump);
             return retstr.ToString();
         }
 
@@ -2263,7 +2274,7 @@ default
                 // if (indentHere) m_braceCount--;
             }
 
-            return retstr.ToString();
+            return retstr.ToString () + DumpAfterFunc (marc);
         }
 
         private string GenerateInnerIfStatement(SYMBOL child)
@@ -2401,7 +2412,7 @@ default
             if (IsParentEnumerable)
                 retstr += GenerateLine("}");
 
-            return retstr.ToString();
+            return retstr.ToString () + DumpAfterFunc (marc);
         }
 
         /// <summary>
@@ -2445,7 +2456,7 @@ default
 
             retstr += DumpFunc(marc) + tmpstr.ToString();
 
-            return retstr.ToString();
+            return retstr.ToString () + DumpAfterFunc (marc);
         }
 
         /// <summary>
@@ -2499,7 +2510,7 @@ default
             if (IsParentEnumerable)
                 retstr += GenerateLine("}");
 
-            return retstr.ToString();
+            return retstr.ToString () + DumpAfterFunc (marc);
         }
 
         /// <summary>
@@ -2583,21 +2594,30 @@ default
             }
             else
             {
-                ObjectList kids = new ObjectList ();
+                /*ObjectList kids = new ObjectList ();
                 for (int i = be.kids.Count-1; i >= 0; i--)
                 {
                     kids.Add(be.kids[i]);
-                    if (kids[i] is IdentExpression)
-                    {
-                    }
+                }*/
+                bool weSetTheAdditionExpression = false;
+                if (be.ExpressionSymbol == "+" && !isAdditionExpression)
+                {
+                    weSetTheAdditionExpression = true;
+                    isAdditionExpression = true;
                 }
-                retstr += GenerateNode ((SYMBOL)kids.Pop ());
-                retstr += Generate (String.Format (" {0} ", be.ExpressionSymbol), be);
-                foreach (SYMBOL kid in kids)
+                retstr += GenerateNode ((SYMBOL)be.kids.Pop ());
+                if (weSetTheAdditionExpression)
+                    isAdditionExpression = false;
+                if (!(retstr == "()" || retstr == ""))
+                    retstr += Generate (String.Format (" {0} ", be.ExpressionSymbol), be);
+                else
+                    //Something was removed, we need to remove the operator here!
+                    retstr = "";
+                foreach (SYMBOL kid in be.kids)
                     retstr += GenerateNode (kid);
             }
 
-            return DumpFunc(marc) + retstr.ToString();
+            return DumpFunc (marc) + retstr.ToString () + DumpAfterFunc (marc);
         }
 
         /// <summary>
@@ -2884,7 +2904,7 @@ default
             }
 
             //Function calls are first if needed
-            return DumpFunc(marc) + retstr.ToString();
+            return DumpFunc (marc) + retstr.ToString () + DumpAfterFunc (marc);
         }
 
         /// <summary>
@@ -3164,7 +3184,7 @@ default
             return builder;
         }
 
-        private string DumpFunc(bool marc)
+        private string DumpFunc (bool marc)
         {
             string ret = "";
 
@@ -3180,8 +3200,29 @@ default
             lock (FuncCalls)
             {
                 foreach (string s in FuncCalls)
-                    ret += GenerateIndentedLine(s);
-                FuncCalls.Clear();
+                    ret += GenerateIndentedLine (s);
+                FuncCalls.Clear ();
+            }
+            return ret;
+        }
+        private string DumpAfterFunc (bool marc)
+        {
+            string ret = "";
+
+            if (!marc)
+                return ret;
+
+            FuncCntr = false;
+
+            if (AfterFuncCalls.Count == 0)
+            {
+                return ret;
+            }
+            lock (FuncCalls)
+            {
+                foreach (string s in AfterFuncCalls)
+                    ret += GenerateIndentedLine (s);
+                AfterFuncCalls.Clear ();
             }
             return ret;
         }

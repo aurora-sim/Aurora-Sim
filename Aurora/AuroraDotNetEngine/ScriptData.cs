@@ -608,7 +608,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                         string[] compileerrors = m_ScriptEngine.Compiler.GetErrors();
 
-                        if (compileerrors != null && compileerrors.Length != 0)
+                        if (compileerrors.Length != 0)
                         {
                             string error = string.Empty;
                             foreach(string compileerror in compileerrors)
