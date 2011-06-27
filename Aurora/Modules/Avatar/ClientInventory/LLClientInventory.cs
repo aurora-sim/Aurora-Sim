@@ -1736,6 +1736,8 @@ namespace OpenSim.Region.Framework.Scenes
         public bool ReturnObjects(ISceneEntity[] returnobjects,
                 UUID AgentId)
         {
+            if (returnobjects.Length == 0)
+                return true;
             //AddReturns(returnobjects[0].OwnerID, returnobjects[0].Name, returnobjects.Length, returnobjects[0].AbsolutePosition, "parcel owner return");
             List<uint> IDs = new List<uint>();
             foreach (ISceneEntity grp in returnobjects)

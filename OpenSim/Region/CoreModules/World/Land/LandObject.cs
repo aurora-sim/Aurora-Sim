@@ -990,9 +990,20 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 if (obj.OwnerID == m_landData.OwnerID)
                 {
-                    if (flags == 4 && //Scripted
-                        (obj.RootChild.Flags & PrimFlags.Scripted) == PrimFlags.Scripted)
-                        continue;
+                    if (flags == 4)
+                    {
+                        bool containsScripts = false;
+                        foreach (ISceneChildEntity child in obj.ChildrenEntities())
+                        {
+                            if (child.Inventory.ContainsScripts ())
+                            {
+                                containsScripts = true;
+                                break;
+                            }
+                        }
+                        if (!containsScripts)
+                            continue;
+                    }
                     prims.Add(obj);
                 }
             }

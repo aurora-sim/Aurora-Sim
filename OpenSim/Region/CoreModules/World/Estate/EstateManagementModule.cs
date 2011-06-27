@@ -1195,8 +1195,9 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
         private enum SimWideDeletesFlags : int
         {
-            OthersLandNotUserOnly = 0,
-            AlwaysReturnObjects = 1,
+            ReturnObjectsOtherEstate = 1,
+            ReturnObjects = 2,
+            OthersLandNotUserOnly = 3,
             ScriptedPrimsOnly = 4
         }
 
@@ -1208,17 +1209,24 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
                 if (parcelManagement != null)
                 {
+                    int containsScript = (flags & (int)SimWideDeletesFlags.ScriptedPrimsOnly);
                     foreach (ILandObject selectedParcel in parcelManagement.AllParcels())
                     {
-                        if (selectedParcel.LandData.OwnerID == targetID &&
-                            (flags & (int)SimWideDeletesFlags.OthersLandNotUserOnly) ==
-                            (int)SimWideDeletesFlags.OthersLandNotUserOnly)
-                            prims.AddRange(selectedParcel.GetPrimsOverByOwner(targetID, (int)SimWideDeletesFlags.ScriptedPrimsOnly));
+                        if ((flags & (int)SimWideDeletesFlags.OthersLandNotUserOnly) == (int)SimWideDeletesFlags.OthersLandNotUserOnly)
+                        {
+                            if (selectedParcel.LandData.OwnerID != targetID)//Check to make sure it isn't their land
+                                prims.AddRange (selectedParcel.GetPrimsOverByOwner (targetID, containsScript));
+                        }
+                            //Other estates flag doesn't seem to get sent by the viewer, so don't touch it
+                        //else if ((flags & (int)SimWideDeletesFlags.ReturnObjectsOtherEstate) == (int)SimWideDeletesFlags.ReturnObjectsOtherEstate)
+                        //    prims.AddRange (selectedParcel.GetPrimsOverByOwner (targetID, containsScript));
+                        else// if ((flags & (int)SimWideDeletesFlags.ReturnObjects) == (int)SimWideDeletesFlags.ReturnObjects)//Return them all
+                            prims.AddRange (selectedParcel.GetPrimsOverByOwner (targetID, containsScript));
                     }
                 }
                 ILLClientInventory inventoryModule = m_scene.RequestModuleInterface<ILLClientInventory>();
                 if (inventoryModule != null)
-                    inventoryModule.ReturnObjects(prims.ToArray(), client.AgentId);
+                    inventoryModule.ReturnObjects(prims.ToArray(), UUID.Zero);
             }
             else
             {
