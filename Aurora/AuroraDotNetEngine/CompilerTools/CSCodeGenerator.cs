@@ -2563,16 +2563,16 @@ default
             if (be.ExpressionSymbol.Equals("&&") || be.ExpressionSymbol.Equals("||"))
             {
                 // special case handling for logical and/or, see Mantis 3174
-                retstr += "((bool)(";
+                retstr += "((LSL_Types.LSLInteger)((bool)(";
                 retstr += GenerateNode((SYMBOL)be.kids.Pop());
                 retstr += "))";
                 retstr += Generate(String.Format(" {0} ", be.ExpressionSymbol.Substring(0, 1)), be);
                 retstr += "((bool)(";
                 foreach (SYMBOL kid in be.kids)
                     retstr += GenerateNode(kid);
-                retstr += "))";
+                retstr += ")))";
             }
-            else
+            else if (be.ExpressionSymbol.Equals ("!=") || be.ExpressionSymbol.Equals ("=="))
             {
                 retstr += "((LSL_Types.LSLInteger)(";
                 retstr += GenerateNode ((SYMBOL)be.kids.Pop ());
@@ -2580,6 +2580,21 @@ default
                 foreach (SYMBOL kid in be.kids)
                     retstr += GenerateNode (kid);
                 retstr += "))";
+            }
+            else
+            {
+                ObjectList kids = new ObjectList ();
+                for (int i = be.kids.Count-1; i >= 0; i--)
+                {
+                    kids.Add(be.kids[i]);
+                    if (kids[i] is IdentExpression)
+                    {
+                    }
+                }
+                retstr += GenerateNode ((SYMBOL)kids.Pop ());
+                retstr += Generate (String.Format (" {0} ", be.ExpressionSymbol), be);
+                foreach (SYMBOL kid in kids)
+                    retstr += GenerateNode (kid);
             }
 
             return DumpFunc(marc) + retstr.ToString();
