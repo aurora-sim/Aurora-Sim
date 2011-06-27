@@ -791,17 +791,8 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (m_part.RemFlag(PrimFlags.Scripted))
                         m_part.ScheduleUpdate(PrimUpdateFlags.PrimFlags);
-
-                    return type;
                 }
-                else
-                {
-                    m_log.ErrorFormat(
-                        "[PRIM INVENTORY]: " +
-                        "Tried to remove item ID {0} from prim {1}, {2} at {3} in {4} but the item does not exist in this inventory",
-                        itemID, m_part.Name, m_part.UUID, 
-                        m_part.AbsolutePosition, m_part.ParentGroup.Scene.RegionInfo.RegionName);
-                }
+                return type;
             }
 
             return -1;
