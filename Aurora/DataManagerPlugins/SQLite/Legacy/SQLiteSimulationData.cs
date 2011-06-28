@@ -1399,19 +1399,19 @@ namespace OpenSim.Data.SQLite
                 switch (name)
                 {
                     case "UUID":
-                        prim.UUID = new UUID(o[i].ToString());
+                        prim.UUID = DBGuid.FromDB(o[i]);
                         break;
                     case "CreatorID":
-                        prim.CreatorID = new UUID(o[i].ToString());
+                        prim.CreatorID = DBGuid.FromDB (o[i].ToString ());
                         break;
                     case "OwnerID":
-                        prim.OwnerID = new UUID(o[i].ToString());
+                        prim.OwnerID = DBGuid.FromDB (o[i].ToString ());
                         break;
                     case "GroupID":
-                        prim.GroupID = new UUID(o[i].ToString());
+                        prim.GroupID = DBGuid.FromDB (o[i].ToString ());
                         break;
                     case "LastOwnerID":
-                        prim.LastOwnerID = new UUID(o[i].ToString());
+                        prim.LastOwnerID = DBGuid.FromDB (o[i].ToString ());
                         break;
                     case "CreationDate":
                         prim.CreationDate = Convert.ToInt32(o[i].ToString());
