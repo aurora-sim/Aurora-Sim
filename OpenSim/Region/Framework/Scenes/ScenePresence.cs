@@ -2354,7 +2354,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_pos = cAgent.Position;
                 Velocity = cAgent.Velocity;
                 m_CameraCenter = cAgent.Center;
-                //m_avHeight = cAgent.Size.Z;
+                SetHeight (cAgent.Size.Z);
                 m_CameraAtAxis = cAgent.AtAxis;
                 m_CameraLeftAxis = cAgent.LeftAxis;
                 m_CameraUpAxis = cAgent.UpAxis;
@@ -2368,9 +2368,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_bodyRot = cAgent.BodyRotation;
                 m_AgentControlFlags = (AgentManager.ControlFlags)cAgent.ControlFlags;
                 m_savedVelocity = cAgent.Velocity;
-
-                //if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
-                //    m_godLevel = cAgent.GodLevel;
+                 
                 SpeedModifier = cAgent.Speed;
                 DrawDistance = cAgent.DrawDistance;
                 m_setAlwaysRun = cAgent.AlwaysRun;
