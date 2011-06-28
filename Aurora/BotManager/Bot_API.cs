@@ -272,8 +272,8 @@ namespace Aurora.BotManager
             if (sp == null)
                 return;
             ISceneChildEntity child = World.GetSceneObjectPart (UUID.Parse (objectID));
-            if (UUID.Parse(objectID) != UUID.Zero && child == null)
-                throw new Exception ("Failed to find entity to touch");
+            if (child == null)
+                throw new Exception ("Failed to find entity to sit on");
 
             sp.HandleAgentRequestSit (sp.ControllingClient, UUID.Parse (objectID), new Vector3 ((float)offset.x, (float)offset.y, (float)offset.z));
         }
@@ -281,7 +281,10 @@ namespace Aurora.BotManager
         public void botStandUp (string bot)
         {
             ScriptProtection.CheckThreatLevel (ThreatLevel.Moderate, "botStandUp", m_host, "bot");
-            botSitObject (bot, UUID.Zero.ToString (), new LSL_Vector ());
+            IScenePresence sp = World.GetScenePresence (UUID.Parse (bot));
+            if (sp == null)
+                return;
+            sp.StandUp ();
         }
 
         public void botAddTag (string bot, string tag)

@@ -1793,7 +1793,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         if ((dcpos.Z - (size.Z / 2)) < groundHeight)
                         {
                             _target_velocity.Z = 0;
-                            fz = -vel.Z * PID_D * 2f + ((groundHeight - (dcpos.Z - size.Z / 2)) * _parent_scene.PID_P * 100.0f);
+                            fz = -vel.Z * PID_D * 2f + ((groundHeight - (dcpos.Z - size.Z / 2)) * _parent_scene.PID_P);
                         }
                         if (dcpos.Z - (size.Z / 2) - groundHeight < 0.12f)
                         {
