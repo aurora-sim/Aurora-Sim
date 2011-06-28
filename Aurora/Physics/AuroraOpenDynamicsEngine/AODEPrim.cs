@@ -3195,7 +3195,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 contact.surface.bounce = 0.75f; //Limit the bouncing please...
             contact.surface.bounce_vel = 0.05f * _parent_entity.Restitution * (-Velocity.Z * restSquared); //give it a good amount of bounce and have it depend on how much velocity is there too
             contact.surface.mode |= d.ContactFlags.Bounce; //Add bounce
-            contact.surface.mu *= ((_parent_entity.Friction * 1500) - 750f);//Wood is 0.5 in the client, so we take that as '1' and offset the rest
+            contact.surface.mu = 800;
+            if(actorType == ActorTypes.Prim)
+                contact.surface.mu *= _parent_entity.Friction;
             contact.surface.mu2 = contact.surface.mu;
 
             return contact;
