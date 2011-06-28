@@ -222,7 +222,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return (byte)GetComponentState("Sound").AsInteger();
+                return (byte)GetComponentState ("SoundFlags").AsInteger ();
             }
             set
             {
