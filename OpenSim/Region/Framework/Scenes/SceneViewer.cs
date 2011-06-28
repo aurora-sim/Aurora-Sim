@@ -227,6 +227,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 //This object entered our draw distance on its own, and we havn't seen it before
                 flags = PrimUpdateFlags.ForcedFullUpdate;
+                lastGrpsInView.Add (part.ParentEntity);
             }
 
             EntityUpdate o = new EntityUpdate (part, flags);

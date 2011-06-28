@@ -338,8 +338,8 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_basesimphysfps > m_basesimfps)
                 m_basesimphysfps = m_basesimfps;
 
-            m_updatetimespan = 1 / m_basesimfps;
-            m_physicstimespan = 1 / m_basesimphysfps;
+            m_updatetimespan = 1000 / m_basesimfps;
+            m_physicstimespan = 1000 / m_basesimphysfps;
 
             #region Startup Complete config
 
@@ -473,7 +473,6 @@ namespace OpenSim.Region.Framework.Scenes
                         m_eventManager.TriggerOnFrame();
 
                     int PhysicsSyncTime = Util.EnvironmentTickCount();
-                    TimeSpan SinceLastFrame = DateTime.UtcNow - m_lastphysupdate;
 
                     if ((m_frame % m_update_physics == 0) && !RegionInfo.RegionSettings.DisablePhysics)
                         m_sceneGraph.UpdatePreparePhysics();
@@ -484,21 +483,24 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (m_frame % m_update_physics == 0)
                     {
-                        if (!RegionInfo.RegionSettings.DisablePhysics && SinceLastFrame.TotalSeconds > m_physicstimespan)
+                        TimeSpan SinceLastFrame = DateTime.UtcNow - m_lastphysupdate;
+                        if (!RegionInfo.RegionSettings.DisablePhysics && SinceLastFrame.TotalMilliseconds > m_physicstimespan)
                         {
+                            if (SinceLastFrame.TotalMilliseconds == 0)
+                            {
+                            }
                             m_sceneGraph.UpdatePhysics(SinceLastFrame.TotalSeconds);
                             m_lastphysupdate = DateTime.UtcNow;
+                            int MonitorPhysicsUpdateTime = Util.EnvironmentTickCountSubtract (PhysicsUpdateTime) + MonitorPhysicsSyncTime;
+
+                            physicsFrameTimeMonitor.AddTime (MonitorPhysicsUpdateTime);
+                            physicsFrameMonitor.AddFPS (1);
+                            physicsSyncFrameMonitor.AddTime (MonitorPhysicsSyncTime);
+
+                            if (monitor != null)
+                                monitor.AddPhysicsStats (RegionInfo.RegionID, PhysicsScene);
                         }
                     }
-
-                    int MonitorPhysicsUpdateTime = Util.EnvironmentTickCountSubtract(PhysicsUpdateTime) + MonitorPhysicsSyncTime;
-
-                    physicsFrameTimeMonitor.AddTime(MonitorPhysicsUpdateTime);
-                    physicsFrameMonitor.AddFPS(1);
-                    physicsSyncFrameMonitor.AddTime(MonitorPhysicsSyncTime);
-
-                    if (monitor != null)
-                        monitor.AddPhysicsStats(RegionInfo.RegionID, PhysicsScene);
 
                     //Now fix the sim stats
                     int MonitorOtherFrameTime = Util.EnvironmentTickCountSubtract(OtherFrameTime);
@@ -507,9 +509,6 @@ namespace OpenSim.Region.Framework.Scenes
                     simFrameMonitor.AddFPS(1);
                     lastFrameMonitor.SetValue(MonitorLastCompletedFrame);
                     otherFrameMonitor.AddTime(MonitorOtherFrameTime);
-
-                    maintc = Util.EnvironmentTickCountSubtract(maintc);
-                    maintc = (int)(m_updatetimespan * 1000) - maintc;
                 }
                 catch (Exception e)
                 {
@@ -517,15 +516,62 @@ namespace OpenSim.Region.Framework.Scenes
                     return true;
                 }
 
-                int MonitorEndFrameTime = Util.EnvironmentTickCountSubtract(BeginningFrameTime) + maintc;
+                //Get the time between beginning and end
+                maintc = Util.EnvironmentTickCountSubtract (BeginningFrameTime);
+                //Beginning + (time between beginning and end) = end
+                int MonitorEndFrameTime = BeginningFrameTime + maintc;
 
-                if (maintc > 0 && maintc < 100)
-                    Thread.Sleep(maintc);
+                int getSleepTime = GetHeartbeatSleepTime (maintc);
+                if (getSleepTime > 0)
+                    Thread.Sleep (getSleepTime);
 
                 sleepFrameMonitor.AddTime(maintc);
 
                 totalFrameMonitor.AddFrameTime(MonitorEndFrameTime);
             }
+        }
+
+        private List<int> timeToBeat = new List<int> (50);
+        private int timeToBeatLastSet = 0;
+        private bool haveFilledBeatList = false;
+        private int GetHeartbeatSleepTime (int timeBeatTook)
+        {
+            //Add it to the list of the last 50 heartbeats
+            //if (timeBeatTook != 0)//Don't include 0 beats...
+            {
+                if (haveFilledBeatList)
+                    timeToBeat[timeToBeatLastSet] = timeBeatTook;
+                else
+                    timeToBeat.Add (timeBeatTook);
+                timeToBeatLastSet++;
+                if (timeToBeatLastSet >= 50)
+                {
+                    timeToBeatLastSet = 0;
+                    haveFilledBeatList = true;
+                }
+            }
+            //else
+            {
+            }
+
+            int avgHeartBeat = GetAverage (timeToBeat);
+
+            //The heartbeat sleep time if time dilation is 1
+            int normalHeartBeatSleepTime = (int)m_updatetimespan;
+            if (avgHeartBeat > normalHeartBeatSleepTime)
+                return 0;//It doesn't get any sleep
+            int newAvgSleepTime = normalHeartBeatSleepTime - avgHeartBeat;
+            //Console.WriteLine (newAvgSleepTime);
+            return newAvgSleepTime;
+        }
+
+        private int GetAverage (List<int> timeToBeat)
+        {
+            int avg = 0;
+            foreach (int a in timeToBeat)
+                avg += a;
+            avg /= timeToBeat.Count;
+            return avg;
         }
 
         #endregion
