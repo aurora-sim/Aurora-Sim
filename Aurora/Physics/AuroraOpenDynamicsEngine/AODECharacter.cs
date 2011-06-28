@@ -827,6 +827,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             movementmult *= 10;
             movementmult *= SpeedModifier;
+            movementmult *= 1 / _parent_scene.TimeDilation;
             if (flying)
                 movementmult *= _parent_scene.m_AvFlySpeed;
 
