@@ -884,7 +884,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (m_ispreJumping && m_preJumpCounter == _parent_scene.m_preJumpTime)
             {
                 m_ispreJumping = false;
-                _target_velocity += m_preJumpForce * _parent_scene.m_preJumpForceMultiplier;
+                if (m_iscolliding)//Ground collision, as we cleared it out before calling this, and the ground allows normal jumps
+                    _target_velocity += m_preJumpForce * _parent_scene.m_preJumpForceMultiplier;
+                else
+                {
+                    _target_velocity = m_preJumpForce * _parent_scene.m_preJumpForceMultiplier;
+                    vel.Z = -0.6f;
+                }
+                
                 m_preJumpCounter = 0;
                 m_isJumping = true;
             }
@@ -894,6 +901,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 TriggerMovementUpdate();
                 return;
             }
+            if (m_isJumping)
+                _target_velocity.Z = m_preJumpForce.Z * _parent_scene.m_preJumpForceMultiplier;
 
             #endregion
 

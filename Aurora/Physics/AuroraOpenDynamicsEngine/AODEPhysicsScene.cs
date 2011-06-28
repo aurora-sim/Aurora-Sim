@@ -493,78 +493,83 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
 
-            contacts = new d.ContactGeom[contactsPerCollision];
-
-
-            // Centeral contact friction and bounce
-            // ckrinke 11/10/08 Enabling soft_erp but not soft_cfm until I figure out why
-            // an avatar falls through in Z but not in X or Y when walking on a prim.
-            contact.surface.mode |= d.ContactFlags.SoftERP;
-            contact.surface.mu = nmAvatarObjectContactFriction;
-            contact.surface.bounce = nmAvatarObjectContactBounce;
-            contact.surface.soft_cfm = 0.010f;
-            contact.surface.soft_erp = 0.010f;
-
-            // Prim contact friction and bounce
-            // THis is the *non* moving version of friction and bounce
-            // Use this when an avatar comes in contact with a prim
-            // and is moving
-            AvatarMovementprimContact.surface.mu = mAvatarObjectContactFriction;
-            AvatarMovementprimContact.surface.bounce = mAvatarObjectContactBounce;
-
-            // Set the gravity,, don't disable things automatically (we set it explicitly on some things)
-            d.WorldSetGravity(world, gravityx, gravityy, gravityz);
-            d.WorldSetContactSurfaceLayer(world, contactsurfacelayer);
-
-            d.WorldSetLinearDamping(world, 256f);
-            d.WorldSetAngularDamping(world, 256f);
-            d.WorldSetAngularDampingThreshold(world, 256f);
-            d.WorldSetLinearDampingThreshold(world, 256f);
-            d.WorldSetMaxAngularSpeed(world, 256f);
-
-            // Set how many steps we go without running collision testing
-            // This is in addition to the step size.
-            // Essentially Steps * m_physicsiterations
-            d.WorldSetQuickStepNumIterations(world, m_physicsiterations);
-            //d.WorldSetContactMaxCorrectingVel(world, 1000.0f);
-
-            d.HashSpaceSetLevels(space, HashspaceLow, HashspaceHigh);
-
-            //  spaces grid for static objects
-
-            if(WorldExtents.X < WorldExtents.Y)
-            // // constant is 1/log(2),  -3 for division by 8 plus 0.5 for rounding
-                GridSpaceScaleBits = (int)(Math.Log((double)WorldExtents.X) * 1.4426950f - 2.5f);
-            else
-                GridSpaceScaleBits = (int)(Math.Log((double)WorldExtents.Y) * 1.4426950f - 2.5f);
-
-            if (GridSpaceScaleBits < 4) // no less than 16m side
-                GridSpaceScaleBits = 4;
-            else if (GridSpaceScaleBits > 10)
-                GridSpaceScaleBits = 10;   // no more than 1Km side
-
-            int nspacesPerSideX = (int)(WorldExtents.X) >> GridSpaceScaleBits;
-            int nspacesPerSideY = (int)(WorldExtents.Y) >> GridSpaceScaleBits;
-
-            if ((int)(WorldExtents.X) > nspacesPerSideX << GridSpaceScaleBits)
-                nspacesPerSideX++;
-            if ((int)(WorldExtents.Y) > nspacesPerSideY << GridSpaceScaleBits)
-                nspacesPerSideY++;
-
-            staticPrimspace = new IntPtr[nspacesPerSideX, nspacesPerSideY];
-
-            IntPtr aSpace;
-
-            for (int i = 0; i < nspacesPerSideX; i++)
+            lock (OdeLock)
             {
-                for (int j = 0; j < nspacesPerSideY; j++)
+                contacts = new d.ContactGeom[contactsPerCollision];
+
+                // Centeral contact friction and bounce
+                // ckrinke 11/10/08 Enabling soft_erp but not soft_cfm until I figure out why
+                // an avatar falls through in Z but not in X or Y when walking on a prim.
+                contact.surface.mode |= d.ContactFlags.SoftERP;
+                contact.surface.mu = nmAvatarObjectContactFriction;
+                contact.surface.bounce = nmAvatarObjectContactBounce;
+                contact.surface.soft_cfm = 0.010f;
+                contact.surface.soft_erp = 0.010f;
+
+                // Prim contact friction and bounce
+                // THis is the *non* moving version of friction and bounce
+                // Use this when an avatar comes in contact with a prim
+                // and is moving
+                AvatarMovementprimContact.surface.mu = mAvatarObjectContactFriction;
+                AvatarMovementprimContact.surface.bounce = mAvatarObjectContactBounce;
+
+                // Set the gravity,, don't disable things automatically (we set it explicitly on some things)
+                d.WorldSetGravity (world, gravityx, gravityy, gravityz);
+                d.WorldSetContactSurfaceLayer (world, contactsurfacelayer);
+
+                d.WorldSetLinearDamping (world, 256f);
+                d.WorldSetAngularDamping (world, 256f);
+                d.WorldSetAngularDampingThreshold (world, 256f);
+                d.WorldSetLinearDampingThreshold (world, 256f);
+                d.WorldSetMaxAngularSpeed (world, 256f);
+
+                // Set how many steps we go without running collision testing
+                // This is in addition to the step size.
+                // Essentially Steps * m_physicsiterations
+                d.WorldSetQuickStepNumIterations (world, m_physicsiterations);
+                //d.WorldSetContactMaxCorrectingVel(world, 1000.0f);
+
+                if (staticPrimspace != null)
+                    return;//Reloading config, don't mess with this stuff
+
+                d.HashSpaceSetLevels (space, HashspaceLow, HashspaceHigh);
+
+                //  spaces grid for static objects
+
+                if (WorldExtents.X < WorldExtents.Y)
+                    // // constant is 1/log(2),  -3 for division by 8 plus 0.5 for rounding
+                    GridSpaceScaleBits = (int)(Math.Log ((double)WorldExtents.X) * 1.4426950f - 2.5f);
+                else
+                    GridSpaceScaleBits = (int)(Math.Log ((double)WorldExtents.Y) * 1.4426950f - 2.5f);
+
+                if (GridSpaceScaleBits < 4) // no less than 16m side
+                    GridSpaceScaleBits = 4;
+                else if (GridSpaceScaleBits > 10)
+                    GridSpaceScaleBits = 10;   // no more than 1Km side
+
+                int nspacesPerSideX = (int)(WorldExtents.X) >> GridSpaceScaleBits;
+                int nspacesPerSideY = (int)(WorldExtents.Y) >> GridSpaceScaleBits;
+
+                if ((int)(WorldExtents.X) > nspacesPerSideX << GridSpaceScaleBits)
+                    nspacesPerSideX++;
+                if ((int)(WorldExtents.Y) > nspacesPerSideY << GridSpaceScaleBits)
+                    nspacesPerSideY++;
+
+                staticPrimspace = new IntPtr[nspacesPerSideX, nspacesPerSideY];
+
+                IntPtr aSpace;
+
+                for (int i = 0; i < nspacesPerSideX; i++)
                 {
-                    aSpace = d.HashSpaceCreate(IntPtr.Zero);
-                    staticPrimspace[i, j] = aSpace;
-                    d.GeomSetCategoryBits(aSpace, (int)CollisionCategories.Space);
-                    waitForSpaceUnlock(aSpace);
-                    d.SpaceSetSublevel(aSpace, 1);
-                    d.SpaceAdd(space, aSpace);
+                    for (int j = 0; j < nspacesPerSideY; j++)
+                    {
+                        aSpace = d.HashSpaceCreate (IntPtr.Zero);
+                        staticPrimspace[i, j] = aSpace;
+                        d.GeomSetCategoryBits (aSpace, (int)CollisionCategories.Space);
+                        waitForSpaceUnlock (aSpace);
+                        d.SpaceSetSublevel (aSpace, 1);
+                        d.SpaceAdd (space, aSpace);
+                    }
                 }
             }
         }
