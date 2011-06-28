@@ -65,6 +65,74 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
         #endregion
 
+        #region Default UnderClothes
+
+        private static UUID m_underShirtUUID = UUID.Zero;
+        private string m_defaultUnderShirt = @"LLWearable version 22
+New Undershirt
+
+	permissions 0
+	{
+		base_mask	7fffffff
+		owner_mask	7fffffff
+		group_mask	00000000
+		everyone_mask	00000000
+		next_owner_mask	00082000
+		creator_id	05948863-b678-433e-87a4-e44d17678d1d
+		owner_id	05948863-b678-433e-87a4-e44d17678d1d
+		last_owner_id	00000000-0000-0000-0000-000000000000
+		group_id	00000000-0000-0000-0000-000000000000
+	}
+	sale_info	0
+	{
+		sale_type	not
+		sale_price	10
+	}
+type 10
+parameters 7
+603 .4
+604 .85
+605 .84
+779 .84
+821 1
+822 1
+823 1
+textures 1
+16 5748decc-f629-461c-9a36-a35a221fe21f";
+
+        private static UUID m_underPantsUUID = UUID.Zero;
+        private string m_defaultUnderPants = @"LLWearable version 22
+New Underpants
+
+	permissions 0
+	{
+		base_mask	7fffffff
+		owner_mask	7fffffff
+		group_mask	00000000
+		everyone_mask	00000000
+		next_owner_mask	00082000
+		creator_id	05948863-b678-433e-87a4-e44d17678d1d
+		owner_id	05948863-b678-433e-87a4-e44d17678d1d
+		last_owner_id	00000000-0000-0000-0000-000000000000
+		group_id	00000000-0000-0000-0000-000000000000
+	}
+	sale_info	0
+	{
+		sale_type	not
+		sale_price	10
+	}
+type 11
+parameters 5
+619 .3
+624 .8
+824 1
+825 1
+826 1
+textures 1
+17 5748decc-f629-461c-9a36-a35a221fe21f";
+
+        #endregion
+
         #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
@@ -611,22 +679,53 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                         NeedsRebake = true;
                         wear.ItemID = module.DefaultUnderpants;
                     }
+                    else if (wear.Type == 10 & wear.ItemID == UUID.Zero)
+                    {
+                        NeedsRebake = true;
+                        InventoryItemBase item = new InventoryItemBase (UUID.Random ());
+                        item.InvType = (int)InventoryType.Wearable;
+                        item.AssetType = (int)AssetType.Clothing;
+                        item.Name = "Default Underpants";
+                        item.Folder = m_scene.InventoryService.GetFolderForType (client.AgentId, InventoryType.Wearable, AssetType.Clothing).ID;
+                        item.Owner = client.AgentId;
+                        item.CurrentPermissions = 0;//Locked
+                        if (m_underPantsUUID == UUID.Zero)
+                        {
+                            m_underPantsUUID = UUID.Random ();
+                            AssetBase asset = new AssetBase (m_underPantsUUID.ToString (), "Default Underpants", (sbyte)AssetType.Clothing, UUID.Zero.ToString ());
+                            asset.Data = Utils.StringToBytes (m_defaultUnderPants);
+                            m_scene.AssetService.Store (asset);
+                        }
+                        item.AssetID = m_underPantsUUID;
+                        m_scene.InventoryService.AddItem (item);
+                        wear.ItemID = item.ID;
+                    }
                     if (wear.Type == 11 && wear.ItemID == UUID.Zero && module.DefaultUndershirt != UUID.Zero)
                     {
                         NeedsRebake = true;
                         wear.ItemID = module.DefaultUndershirt;
                     }
-                }
-            }
-            if (NeedsRebake)
-            {
-                sp.ControllingClient.SendWearables (appearance.Appearance.Wearables, appearance.Appearance.Serial);
-                for (int i = 0; i < appearance.Appearance.Texture.FaceTextures.Length; i++)
-                {
-                    Primitive.TextureEntryFace face = (appearance.Appearance.Texture.FaceTextures[i]);
-
-                    if (face != null)
-                        sp.ControllingClient.SendRebakeAvatarTextures (face.TextureID);
+                    else if (wear.Type == 11 & wear.ItemID == UUID.Zero)
+                    {
+                        NeedsRebake = true;
+                        InventoryItemBase item = new InventoryItemBase (UUID.Random());
+                        item.InvType = (int)InventoryType.Wearable;
+                        item.AssetType = (int)AssetType.Clothing;
+                        item.Name = "Default Undershirt";
+                        item.Folder = m_scene.InventoryService.GetFolderForType (client.AgentId, InventoryType.Wearable, AssetType.Clothing).ID;
+                        item.Owner = client.AgentId;
+                        item.CurrentPermissions = 0;//Locked
+                        if (m_underShirtUUID == UUID.Zero)
+                        {
+                            m_underShirtUUID = UUID.Random ();
+                            AssetBase asset = new AssetBase (m_underShirtUUID.ToString (), "Default Undershirt", (sbyte)AssetType.Clothing, UUID.Zero.ToString ());
+                            asset.Data = Utils.StringToBytes (m_defaultUnderShirt);
+                            m_scene.AssetService.Store (asset);
+                        }
+                        item.AssetID = m_underShirtUUID;
+                        m_scene.InventoryService.AddItem (item);
+                        wear.ItemID = item.ID;
+                    }
                 }
             }
 
@@ -646,6 +745,19 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             // since the "iswearing" will trigger a new set of visual param and baked texture changes
             // when those complete, the new appearance will be sent
             appearance.Appearance = avatAppearance;
+            if (NeedsRebake)
+            {
+                //Tell the client about the new things it is wearing
+                sp.ControllingClient.SendWearables (appearance.Appearance.Wearables, appearance.Appearance.Serial);
+                //Then forcefully tell it to rebake
+                for (int i = 0; i < appearance.Appearance.Texture.FaceTextures.Length; i++)
+                {
+                    Primitive.TextureEntryFace face = (appearance.Appearance.Texture.FaceTextures[i]);
+
+                    if (face != null)
+                        sp.ControllingClient.SendRebakeAvatarTextures (face.TextureID);
+                }
+            }
             //Send the wearables HERE so that the client knows what it is wearing
             //sp.ControllingClient.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
             //Do not save or send the appearance! The client loops back and sends a bunch of SetAppearance
