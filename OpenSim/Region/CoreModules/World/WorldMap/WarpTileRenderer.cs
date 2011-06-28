@@ -226,8 +226,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             int diff = (int)m_scene.RegionInfo.RegionSizeY / Constants.RegionSize;
             warp_Object obj = new warp_Object ((m_scene.RegionInfo.RegionSizeX / diff) * (m_scene.RegionInfo.RegionSizeY / diff), ((m_scene.RegionInfo.RegionSizeX / diff) - 1) * ((m_scene.RegionInfo.RegionSizeY / diff) - 1) * 2);
-            short[] heightmap = terrain.GetSerialised (m_scene);
-
+            
             for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y += diff)
             {
                 for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x += diff)
@@ -248,9 +247,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         int v = newY * Constants.RegionSize + newX;
 
                         // Normal
-                        Vector3 v1 = new Vector3 (newX, newY, ((float)heightmap[newY * m_scene.RegionInfo.RegionSizeX + newX]) / (float)Constants.TerrainCompression);
-                        Vector3 v2 = new Vector3 (newX + 1, newY, ((float)heightmap[newY * m_scene.RegionInfo.RegionSizeX + newX + 1]) / (float)Constants.TerrainCompression);
-                        Vector3 v3 = new Vector3 (newX, newY + 1, ((float)heightmap[(newY + 1) * m_scene.RegionInfo.RegionSizeX + newX]) / (float)Constants.TerrainCompression);
+                        Vector3 v1 = new Vector3 (newX, newY, ((float)terrain[x, y]) / (float)Constants.TerrainCompression);
+                        Vector3 v2 = new Vector3 (newX + 1, newY, ((float)terrain[x + 1, y]) / (float)Constants.TerrainCompression);
+                        Vector3 v3 = new Vector3 (newX, newY + 1, ((float)terrain[x , (y + 1)]) / (float)Constants.TerrainCompression);
                         warp_Vector norm = ConvertVector (SurfaceNormal (v1, v2, v3));
                         norm = norm.reverse ();
                         obj.vertex (v).n = norm;
