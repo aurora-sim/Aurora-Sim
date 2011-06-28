@@ -556,7 +556,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             return false;
         }
 
-        public void AddCollision(uint collideWith, ContactPoint contact)
+        public override void AddCollisionEvent (uint collideWith, ContactPoint contact)
         {
             if (CollisionEventsThisFrame == null)
             {

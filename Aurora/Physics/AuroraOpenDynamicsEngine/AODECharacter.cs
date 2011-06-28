@@ -863,7 +863,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     point.SurfaceNormal = Vector3.Zero;
 
                     //0 is the ground localID
-                    this.AddCollisionEvent (0, point);
+                    AddCollisionEvent (0, point);
                 }
             }
 
@@ -1488,7 +1488,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _parent_scene.remCollisionEventReporting(this);
         }
 
-        public void AddCollisionEvent(uint CollidedWith, ContactPoint contact)
+        public override void AddCollisionEvent(uint CollidedWith, ContactPoint contact)
         {
             CollisionEventsThisFrame.addCollider(CollidedWith, contact);
         }

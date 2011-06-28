@@ -1010,11 +1010,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // create link
             if (_parent == null && newparent != null)
             {
-                if (newparent.PhysicsActorType == (int)ActorTypes.Prim)
-                {
-                    AuroraODEPrim obj = (AuroraODEPrim)newparent;
-                    obj.ParentPrim (this);
-                }
+                newparent.ParentPrim (this);
             }
             // If the newly set parent is null
             // destroy link
@@ -1781,6 +1777,38 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         fz += gravZ * -2.5f * (terrainHeight - ourBasePos);//Get us up, but don't shoot us up
                         forceUpdate = true;
                     }
+
+                    #region Check for underground
+
+                    /*if (!(Position.X < 0.25f || Position.Y < 0.25f ||
+                        Position.X > _parent_scene.Region.RegionSizeX - .25f ||
+                        Position.Y > _parent_scene.Region.RegionSizeY - .25f))
+                    {
+                        float groundHeight = _parent_scene.GetTerrainHeightAtXY (
+                                   dcpos.X + (dcpos.X == 0 ? dcpos.X : timestep * 0.75f * vel.X),
+                                   dcpos.Y + (dcpos.Y == 0 ? dcpos.Y : timestep * 0.75f * vel.Y));
+                        
+                        d.Quaternion rot = d.BodyGetQuaternion (Body);
+                        Vector3 size = Size * new Quaternion(rot.X, rot.Y, rot.Z, rot.W);
+                        if ((dcpos.Z - (size.Z / 2)) < groundHeight)
+                        {
+                            _target_velocity.Z = 0;
+                            fz = -vel.Z * PID_D * 2f + ((groundHeight - (dcpos.Z - size.Z / 2)) * _parent_scene.PID_P * 100.0f);
+                        }
+                        if (dcpos.Z - (size.Z / 2) - groundHeight < 0.12f)
+                        {
+                            iscolliding = true;
+                            ContactPoint point = new ContactPoint ();
+                            point.PenetrationDepth = vel.Z;
+                            point.Position = Position;
+                            point.SurfaceNormal = Vector3.Zero;
+
+                            //0 is the ground localID
+                            AddCollisionEvent (0, point);
+                        }
+                    }*/
+
+                    #endregion
 
                     if (!forceUpdate && m_lastposition != Vector3.Zero && ((Math.Abs (m_lastposition.X - _position.X) > 0.1)
                         || (Math.Abs (m_lastposition.Y - _position.Y) > 0.1)
@@ -2888,7 +2916,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_eventsubscription = false;
         }
 
-        public void AddCollisionEvent (uint CollidedWith, ContactPoint contact)
+        public override void AddCollisionEvent (uint CollidedWith, ContactPoint contact)
         {
             if (base.SubscribedToCollisions () && SubscribedEvents())//If we don't have anything that we are going to trigger, don't even add
             {
@@ -2910,7 +2938,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             return m_eventsubscription;
         }
-
 
         private static void DMassCopy (ref d.Mass src, ref d.Mass dst)
         {

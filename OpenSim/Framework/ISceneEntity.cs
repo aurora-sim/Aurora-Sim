@@ -1056,6 +1056,7 @@ namespace OpenSim.Framework
         public abstract bool SubscribedEvents ();
 
         public abstract void SendCollisions ();
+        public abstract void AddCollisionEvent (uint localID, ContactPoint contact);
     }
 
     public enum ScriptControlled : uint

@@ -483,7 +483,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             {
                 // Added collision event to the prim. This creates a pile of events
                 // that will be sent to any subscribed listeners.
-                bdnp.AddCollision(contWith, contact);
+                bdnp.AddCollisionEvent (contWith, contact);
                 if (!primsWithCollisions.Contains(bdnp))
                 {
                     primsWithCollisions.Add(bdnp);
@@ -495,7 +495,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 // if not a prim, maybe it's one of the characters
                 if (m_charactersLocalID.TryGetValue(cont, out bdnc))
                 {
-                    bdnc.AddCollision(contWith, contact);
+                    bdnc.AddCollisionEvent(contWith, contact);
                     if (!charactersWithCollisions.Contains(bdnc))
                     {
                         charactersWithCollisions.Add(bdnc);

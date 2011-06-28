@@ -244,6 +244,10 @@ namespace OpenSim.Framework
         public override void SendCollisions ()
         {
         }
+
+        public override void AddCollisionEvent (uint CollidedWith, ContactPoint contact)
+        {
+        }
     }
 
     public class NullCharacterPhysicsActor : PhysicsCharacter
@@ -389,6 +393,10 @@ namespace OpenSim.Framework
         }
 
         public override void SendCollisions ()
+        {
+        }
+
+        public override void AddCollisionEvent (uint CollidedWith, ContactPoint contact)
         {
         }
     }

@@ -193,6 +193,10 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override void SendCollisions ()
         {
         }
+
+        public override void AddCollisionEvent (uint CollidedWith, ContactPoint contact)
+        {
+        }
     }
 
     public class BasicObjectActor : PhysicsObject
@@ -358,6 +362,10 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         }
 
         public override void SendCollisions ()
+        {
+        }
+
+        public override void AddCollisionEvent (uint CollidedWith, ContactPoint contact)
         {
         }
     }

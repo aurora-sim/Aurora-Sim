@@ -691,19 +691,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             ContactPoint maxDepthContact = new ContactPoint();
             if (!DisableCollisions)
             {
-                if (p1.PhysicsActorType != 0)
-                {
-                    if (p1.CollisionScore + count >= float.MaxValue)
-                        p1.CollisionScore = 0;
-                    p1.CollisionScore += count;
-                }
+                if (p1.CollisionScore + count >= float.MaxValue)
+                    p1.CollisionScore = 0;
+                p1.CollisionScore += count;
 
-                if (p2.PhysicsActorType != 0)
-                {
-                    if (p2.CollisionScore + count >= float.MaxValue)
-                        p2.CollisionScore = 0;
-                    p2.CollisionScore += count;
-                }
+                if (p2.CollisionScore + count >= float.MaxValue)
+                    p2.CollisionScore = 0;
+                p2.CollisionScore += count;
             }
 
             int ContactLoopTime = Util.EnvironmentTickCount();
@@ -914,16 +908,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // appears to be phantom for the world
                 Boolean skipThisContact = false;
 
-                if (p1.PhysicsActorType == (int)ActorTypes.Prim && ((AuroraODEPrim)p1).VolumeDetect)
+                if (p1 is PhysicsObject && ((PhysicsObject)p1).VolumeDetect)
                     skipThisContact = true;   // No collision on volume detect prims
 
-                if (p2.PhysicsActorType == (int)ActorTypes.Prim && ((AuroraODEPrim)p2).VolumeDetect)
+                if (p2 is PhysicsObject && ((PhysicsObject)p2).VolumeDetect)
                     skipThisContact = true;   // No collision on volume detect prims
 
                 if (curContact.depth < 0f)
                     skipThisContact = true;
 
-                if (!skipThisContact && checkDupe(curContact, p2.PhysicsActorType))
+                if (!skipThisContact && 
+                    m_filterCollisions && 
+                    checkDupe (curContact, p2.PhysicsActorType))
                     skipThisContact = true;
 
                 joint = IntPtr.Zero;
@@ -948,8 +944,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 m_global_contactcount++;
                             }
                         }
+                        //Can't collide against anything else, agents do their own ground checks
                     }
-
                     else
                     {
                         // we're colliding with prim or avatar
@@ -1144,71 +1140,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return;
             FireCollisionEvent (p1, p2, contact);
 
-            switch ((ActorTypes)p2.PhysicsActorType)
-            {
-                case ActorTypes.Agent:
-                    cc2 = (AuroraODECharacter)p2;
-
-                    switch ((ActorTypes)p1.PhysicsActorType)
-                    {
-                        case ActorTypes.Agent:
-                            cc1 = (AuroraODECharacter)p1;
-                            obj2LocalID = cc1.m_localID;
-                            cc1.AddCollisionEvent(cc2.m_localID, contact);
-                            break;
-                        case ActorTypes.Prim:
-                            if (p1 is AuroraODEPrim)
-                            {
-                                cp1 = (AuroraODEPrim)p1;
-                                obj2LocalID = cp1.m_localID;
-                                cp1.AddCollisionEvent(cc2.m_localID, contact);
-                            }
-                            break;
-
-                        case ActorTypes.Ground:
-                        case ActorTypes.Unknown:
-                            obj2LocalID = 0;
-                            break;
-                    }
-
-                    cc2.AddCollisionEvent(obj2LocalID, contact);
-                    break;
-                case ActorTypes.Prim:
-
-                    if (p2 is AuroraODEPrim)
-                    {
-                        cp2 = (AuroraODEPrim)p2;
-
-                        switch ((ActorTypes)p1.PhysicsActorType)
-                        {
-                            case ActorTypes.Agent:
-                                if (p1 is AuroraODECharacter)
-                                {
-                                    cc1 = (AuroraODECharacter)p1;
-                                    obj2LocalID = cc1.m_localID;
-                                    cc1.AddCollisionEvent(cp2.m_localID, contact);
-                                }
-                                break;
-                            case ActorTypes.Prim:
-
-                                if (p1 is AuroraODEPrim)
-                                {
-                                    cp1 = (AuroraODEPrim)p1;
-                                    obj2LocalID = cp1.m_localID;
-                                    cp1.AddCollisionEvent(cp2.m_localID, contact);
-                                }
-                                break;
-
-                            case ActorTypes.Ground:
-                            case ActorTypes.Unknown:
-                                obj2LocalID = 0;
-                                break;
-                        }
-
-                        cp2.AddCollisionEvent(obj2LocalID, contact);
-                    }
-                    break;
-            }
+            p1.AddCollisionEvent (p2.LocalID, contact);
+            p2.AddCollisionEvent (p1.LocalID, contact);
         }
 
         public int TriCallback(IntPtr trimesh, IntPtr refObject, int triangleIndex)
