@@ -55,14 +55,25 @@ namespace Aurora.DataManager
                 if (((byte[])id).Length == 0)
                     return UUID.Zero;
                 else if (((byte[])id).Length == 16)
-                    return new UUID((byte[])id, 0);
+                    return new UUID ((byte[])id, 0);
+                else
+                {
+                    string sid = Utils.BytesToString (((byte[])id);
+                    string[] split = sid.Split (';');
+                    return new UUID (split[0]);//Old HyperGrid object
+                }
             }
             else if (id.GetType() == typeof(string))
             {
                 if (((string)id).Length == 0)
                     return UUID.Zero;
                 else if (((string)id).Length == 36)
-                    return new UUID((string)id);
+                    return new UUID ((string)id);
+                else
+                {
+                    string[] split = ((string)id).Split (';');
+                    return new UUID (split[0]);//Old HyperGrid object
+                }
             }
 
             throw new Exception("Failed to convert db value to UUID: " + id.ToString());

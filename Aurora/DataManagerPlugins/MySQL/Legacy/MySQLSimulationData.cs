@@ -1482,8 +1482,8 @@ namespace OpenSim.Data.MySQL
             }
             catch(Exception ex)
             {
-                m_log.Warn("[MySQL]: Exception loading a SceneObject, " + ex.ToString() + ", deleting..");
-                this.RemoveObject(prim.UUID, UUID.Zero);
+                m_log.Warn("[MySQL]: Exception loading a SceneObject, " + ex.ToString() + ", not loading..");
+                return null;
             }
             s.Scale = new Vector3(ScaleX, ScaleY, ScaleZ);
             prim.Shape = s;
