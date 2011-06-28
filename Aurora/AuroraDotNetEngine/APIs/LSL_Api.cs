@@ -10718,19 +10718,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetPayPrice(int price, LSL_List quick_pay_buttons)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            
-            if (quick_pay_buttons.Data.Length < 4)
-            {
-                LSLError("List must have at least 4 elements");
-                return;
-            }
             m_host.ParentEntity.RootChild.PayPrice[0] = price;
 
-            m_host.ParentEntity.RootChild.PayPrice[1] = (LSL_Integer)quick_pay_buttons.Data[0];
-            m_host.ParentEntity.RootChild.PayPrice[2] = (LSL_Integer)quick_pay_buttons.Data[1];
-            m_host.ParentEntity.RootChild.PayPrice[3] = (LSL_Integer)quick_pay_buttons.Data[2];
-            m_host.ParentEntity.RootChild.PayPrice[4] = (LSL_Integer)quick_pay_buttons.Data[3];
+            if (quick_pay_buttons.Data.Length > 0)
+                m_host.ParentEntity.RootChild.PayPrice[1] = (LSL_Integer)quick_pay_buttons.Data[0];
+            else
+                m_host.ParentEntity.RootChild.PayPrice[1] = (LSL_Integer)(-2);
+            if (quick_pay_buttons.Data.Length > 1)
+                m_host.ParentEntity.RootChild.PayPrice[2] = (LSL_Integer)quick_pay_buttons.Data[1];
+            else
+                m_host.ParentEntity.RootChild.PayPrice[2] = (LSL_Integer)(-2);
+            if (quick_pay_buttons.Data.Length > 2)
+                m_host.ParentEntity.RootChild.PayPrice[3] = (LSL_Integer)quick_pay_buttons.Data[2];
+            else
+                m_host.ParentEntity.RootChild.PayPrice[3] = (LSL_Integer)(-2);
+            if (quick_pay_buttons.Data.Length > 3)
+                m_host.ParentEntity.RootChild.PayPrice[4] = (LSL_Integer)quick_pay_buttons.Data[3];
+            else
+                m_host.ParentEntity.RootChild.PayPrice[4] = (LSL_Integer)(-2);
         }
 
         public LSL_Vector llGetCameraPos()
