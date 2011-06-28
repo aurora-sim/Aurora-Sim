@@ -3140,10 +3140,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         #region Material/Contact setting/getting
 
-        public override void SetMaterial (int pMaterial)
+        public override void SetMaterial (int pMaterial, bool forceMaterialSettings)
         {
+            Material oldMaterial = (Material)m_material;
             m_material = pMaterial;
             Material m = (Material)pMaterial;
+            if (!forceMaterialSettings || oldMaterial == m)
+                return;
             //Fix restitution and friction values as well
             switch (m)
             {

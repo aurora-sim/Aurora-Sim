@@ -934,7 +934,7 @@ namespace OpenSim.Framework
 
         public abstract void CrossingFailure();
 
-        public virtual void SetMaterial(int material) { }
+        public virtual void SetMaterial(int material, bool forceMaterialSettings) { }
 
         public virtual int VehicleType { get { return 0; } set { return; } }
         public virtual void VehicleFloatParam(int param, float value) { }

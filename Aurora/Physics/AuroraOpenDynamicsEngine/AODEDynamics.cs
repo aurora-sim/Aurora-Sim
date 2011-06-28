@@ -611,7 +611,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return;
             m_enabled = true;
             m_previousMaterial = (Material)parent.m_material;
-            parent.SetMaterial((int)Material.Glass); //This seems to happen in SL... and its needed for here
+            parent.SetMaterial((int)Material.Glass, false); //This seems to happen in SL... and its needed for here
             parent.ThrottleUpdates = false;
             m_body = pBody;
             if (pBody == IntPtr.Zero || m_type == Vehicle.TYPE_NONE)
@@ -630,7 +630,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return;
             m_enabled = false;
 
-            parent.SetMaterial((int)m_previousMaterial); //Revert to the original
+            parent.SetMaterial((int)m_previousMaterial, false); //Revert to the original
 
             parent.ThrottleUpdates = true;
             //d.BodyDisable(Body);

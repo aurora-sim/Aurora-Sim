@@ -1543,7 +1543,7 @@ namespace OpenSim.Region.Framework.Scenes
                     else
                         part.PhysActor.Selected = part.IsSelected;
 
-                    part.PhysActor.SetMaterial (part.Material);
+                    part.PhysActor.SetMaterial (part.Material, false);
                     //Add collision updates
                     //part.PhysActor.OnCollisionUpdate += part.PhysicsCollision;
                     part.PhysActor.OnRequestTerseUpdate += part.PhysicsRequestingTerseUpdate;
