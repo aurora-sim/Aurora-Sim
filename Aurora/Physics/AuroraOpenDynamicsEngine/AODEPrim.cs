@@ -174,7 +174,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float OuterRadius;
         public Vector3 IntCMOffset;
 
-        public int m_eventsubscription;
+        public bool m_eventsubscription;
         private CollisionEventUpdate CollisionEventsThisFrame;
 
         public volatile bool childPrim;
@@ -2878,14 +2878,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override void SubscribeEvents (int ms)
         {
-            m_eventsubscription = ms;
+            m_eventsubscription = true;
             _parent_scene.addCollisionEventReporting (this);
         }
 
         public override void UnSubscribeEvents ()
         {
             _parent_scene.remCollisionEventReporting (this);
-            m_eventsubscription = 0;
+            m_eventsubscription = false;
         }
 
         public void AddCollisionEvent (uint CollidedWith, ContactPoint contact)
@@ -2898,24 +2898,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public void SendCollisions ()
+        public override void SendCollisions ()
         {
-            if (CollisionEventsThisFrame == null)
+            if (CollisionEventsThisFrame == null || m_frozen)//No collisions or frozen, don't mess with it
                 return;
-
             base.SendCollisionUpdate (CollisionEventsThisFrame);
-
-            if (CollisionEventsThisFrame.m_objCollisionList.Count == 0)
-                CollisionEventsThisFrame = null;
-            else
-                CollisionEventsThisFrame = new CollisionEventUpdate ();
+            CollisionEventsThisFrame = null;
         }
 
         public override bool SubscribedEvents ()
         {
-            if (m_eventsubscription > 0)
-                return true;
-            return false;
+            return m_eventsubscription;
         }
 
 

@@ -565,7 +565,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             CollisionEventsThisFrame.addCollider(collideWith, contact);
         }
 
-        public void SendCollisions()
+        public override void SendCollisions()
         {
             if (m_eventsubscription >= m_requestedUpdateFrequency)
             {

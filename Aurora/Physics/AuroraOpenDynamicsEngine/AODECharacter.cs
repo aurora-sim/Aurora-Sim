@@ -90,7 +90,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         int m_colliderfilter = 0;
 
         private bool m_alwaysRun = false;
-        private int m_requestedUpdateFrequency = 0;
         private Vector3 m_taintPosition = Vector3.Zero;
         private Quaternion m_taintRotation = Quaternion.Identity;
         public uint m_localID = 0;
@@ -133,7 +132,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public IntPtr Amotor = IntPtr.Zero;
         public d.Mass ShellMass;
 
-        public int m_eventsubscription = 0;
         private CollisionEventUpdate CollisionEventsThisFrame = new CollisionEventUpdate();
 
         // unique UUID of this character object
@@ -1482,43 +1480,33 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override void SubscribeEvents(int ms)
         {
-            m_requestedUpdateFrequency = ms;
-            m_eventsubscription = ms;
             _parent_scene.addCollisionEventReporting(this);
         }
 
         public override void UnSubscribeEvents()
         {
             _parent_scene.remCollisionEventReporting(this);
-            m_requestedUpdateFrequency = 0;
-            m_eventsubscription = 0;
         }
 
         public void AddCollisionEvent(uint CollidedWith, ContactPoint contact)
         {
-            if (m_eventsubscription > 0)
-            {
-                CollisionEventsThisFrame.addCollider(CollidedWith, contact);
-            }
+            CollisionEventsThisFrame.addCollider(CollidedWith, contact);
         }
 
-        public void SendCollisions()
+        public override void SendCollisions ()
         {
-            if (m_eventsubscription > m_requestedUpdateFrequency)
-            {
-                if (CollisionEventsThisFrame != null)
-                    base.SendCollisionUpdate(CollisionEventsThisFrame);
+            if (!IsPhysical)
+                return;//Not physical, its not supposed to be here
 
-                CollisionEventsThisFrame = new CollisionEventUpdate();
-                m_eventsubscription = 0;
-            }
+            if (CollisionEventsThisFrame != null)
+                base.SendCollisionUpdate (CollisionEventsThisFrame);
+
+            CollisionEventsThisFrame = new CollisionEventUpdate ();
         }
 
         public override bool SubscribedEvents()
         {
-            if (m_eventsubscription > 0)
-                return true;
-            return false;
+            return true;
         }
 
         public void ProcessTaints(float timestep)
@@ -1628,14 +1616,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 q.Z = m_taintRotation.Z;
                 d.BodySetQuaternion (Body, ref q); // just keep in sync with rest of simutator
             }
-        }
-
-        internal void AddCollisionFrameTime(int p)
-        {
-            // protect it from overflow crashing
-            if (m_eventsubscription + p >= int.MaxValue)
-                m_eventsubscription = 0;
-            m_eventsubscription += p;
         }
 
         #endregion

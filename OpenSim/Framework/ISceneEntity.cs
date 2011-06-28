@@ -1054,6 +1054,8 @@ namespace OpenSim.Framework
         public abstract void SubscribeEvents (int ms);
         public abstract void UnSubscribeEvents ();
         public abstract bool SubscribedEvents ();
+
+        public abstract void SendCollisions ();
     }
 
     public enum ScriptControlled : uint

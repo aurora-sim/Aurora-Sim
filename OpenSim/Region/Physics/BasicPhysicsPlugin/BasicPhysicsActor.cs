@@ -189,6 +189,10 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
             return false;
         }
+
+        public override void SendCollisions ()
+        {
+        }
     }
 
     public class BasicObjectActor : PhysicsObject
@@ -351,6 +355,10 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override bool SubscribedEvents()
         {
             return false;
+        }
+
+        public override void SendCollisions ()
+        {
         }
     }
 }

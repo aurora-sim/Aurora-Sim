@@ -240,6 +240,10 @@ namespace OpenSim.Framework
         {
             return false;
         }
+
+        public override void SendCollisions ()
+        {
+        }
     }
 
     public class NullCharacterPhysicsActor : PhysicsCharacter
@@ -382,6 +386,10 @@ namespace OpenSim.Framework
         public override bool SubscribedEvents()
         {
             return false;
+        }
+
+        public override void SendCollisions ()
+        {
         }
     }
 }

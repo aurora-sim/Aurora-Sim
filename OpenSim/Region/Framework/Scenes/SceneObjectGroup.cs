@@ -1549,7 +1549,6 @@ namespace OpenSim.Region.Framework.Scenes
                     part.PhysActor.OnRequestTerseUpdate += part.PhysicsRequestingTerseUpdate;
                     part.PhysActor.OnSignificantMovement += part.ParentGroup.CheckForSignificantMovement;
                     part.PhysActor.OnOutOfBounds += part.PhysicsOutOfBounds;
-                    part.PhysActor.SubscribeEvents (1000);
 
                     part.FireOnAddedPhysics ();
                 }

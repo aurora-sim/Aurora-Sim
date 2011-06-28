@@ -2304,22 +2304,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                     if (obj == null)
                                         continue;
 
-                                    switch ((ActorTypes)obj.PhysicsActorType)
-                                    {
-                                        case ActorTypes.Agent:
-                                            AuroraODECharacter cobj = (AuroraODECharacter)obj;
-                                            if (!cobj.IsPhysical)
-                                                break;
-                                            cobj.AddCollisionFrameTime(100);
-                                            cobj.SendCollisions();
-                                            break;
-                                        case ActorTypes.Prim:
-                                            AuroraODEPrim pobj = (AuroraODEPrim)obj;
-                                            if (pobj.m_frozen)
-                                                break;
-                                            pobj.SendCollisions();
-                                            break;
-                                    }
+                                    obj.SendCollisions();
                                 }
                             }
                         }
