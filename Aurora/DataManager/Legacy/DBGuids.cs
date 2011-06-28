@@ -58,7 +58,7 @@ namespace Aurora.DataManager
                     return new UUID ((byte[])id, 0);
                 else
                 {
-                    string sid = Utils.BytesToString (((byte[])id);
+                    string sid = Utils.BytesToString (((byte[])id));
                     string[] split = sid.Split (';');
                     return new UUID (split[0]);//Old HyperGrid object
                 }
