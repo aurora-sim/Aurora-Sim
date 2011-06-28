@@ -81,9 +81,10 @@ namespace OpenSim.Services.Interfaces
         /// Gets the user folder for the given folder-type
         /// </summary>
         /// <param name="userID"></param>
+        /// <param name="invType"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        InventoryFolderBase GetFolderForType(UUID userID, AssetType type);
+        InventoryFolderBase GetFolderForType(UUID userID, InventoryType invType, AssetType type);
 
         /// <summary>
         /// Gets everything (folders and items) inside a folder

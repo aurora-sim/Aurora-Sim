@@ -1558,7 +1558,7 @@ namespace OpenSim.CoreApplicationPlugins
             IInventoryService inventoryService = manager.CurrentOrFirstScene.InventoryService;
 
             // Get Clothing folder of receiver
-            InventoryFolderBase destinationFolder = inventoryService.GetFolderForType(destination, AssetType.Clothing);
+            InventoryFolderBase destinationFolder = inventoryService.GetFolderForType (destination, InventoryType.Wearable, AssetType.Clothing);
 
             if (destinationFolder == null)
                 throw new Exception("Cannot locate folder(s)");
@@ -1693,8 +1693,8 @@ namespace OpenSim.CoreApplicationPlugins
         {
             IInventoryService inventoryService = manager.CurrentOrFirstScene.InventoryService;
 
-            InventoryFolderBase sourceFolder = inventoryService.GetFolderForType(source, assetType);
-            InventoryFolderBase destinationFolder = inventoryService.GetFolderForType(destination, assetType);
+            InventoryFolderBase sourceFolder = inventoryService.GetFolderForType(source, InventoryType.Unknown, assetType);
+            InventoryFolderBase destinationFolder = inventoryService.GetFolderForType (destination, InventoryType.Unknown, assetType);
 
             if (sourceFolder == null || destinationFolder == null)
                 throw new Exception("Cannot locate folder(s)");
@@ -1939,7 +1939,7 @@ namespace OpenSim.CoreApplicationPlugins
                                 // m_log.DebugFormat("[RADMIN] {0} folders, {1} items in inventory",
                                 //   uic.folders.Count, uic.items.Count);
 
-                                InventoryFolderBase clothingFolder = inventoryService.GetFolderForType(ID, AssetType.Clothing);
+                                InventoryFolderBase clothingFolder = inventoryService.GetFolderForType (ID, InventoryType.Wearable, AssetType.Clothing);
 
                                 // This should *never* be the case
                                 if (clothingFolder == null || clothingFolder.Type != (short)AssetType.Clothing)

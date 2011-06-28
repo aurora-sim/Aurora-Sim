@@ -426,7 +426,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             if (ccmodule != null)
             {
                 UserAccount account = ((Scene)client.Scene).UserAccountService.GetUserAccount(UUID.Zero, friendID);
-                UUID folderID = ((Scene)client.Scene).InventoryService.GetFolderForType(agentID, AssetType.CallingCard).ID;
+                UUID folderID = ((Scene)client.Scene).InventoryService.GetFolderForType(agentID, InventoryType.Unknown, AssetType.CallingCard).ID;
                 ccmodule.CreateCallingCard(client, friendID, folderID, account.Name);
             }
                 
@@ -558,7 +558,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 if (ccmodule != null)
                 {
                     UserAccount account = ((Scene)friendClient.Scene).UserAccountService.GetUserAccount(UUID.Zero, userID);
-                    UUID folderID = ((Scene)friendClient.Scene).InventoryService.GetFolderForType(friendID, AssetType.CallingCard).ID;
+                    UUID folderID = ((Scene)friendClient.Scene).InventoryService.GetFolderForType(friendID, InventoryType.Unknown, AssetType.CallingCard).ID;
                     ccmodule.CreateCallingCard(friendClient, userID, folderID, account.Name);
                 }
                 // we're done

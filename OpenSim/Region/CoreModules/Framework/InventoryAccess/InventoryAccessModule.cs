@@ -388,11 +388,11 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         objectGroups[0].OwnerID != agentId)
                     {
 
-                        folder = m_scene.InventoryService.GetFolderForType(userID, AssetType.LostAndFoundFolder);
+                        folder = m_scene.InventoryService.GetFolderForType(userID, InventoryType.Unknown, AssetType.LostAndFoundFolder);
                     }
                     else
                     {
-                         folder = m_scene.InventoryService.GetFolderForType(userID, AssetType.TrashFolder);
+                        folder = m_scene.InventoryService.GetFolderForType (userID, InventoryType.Unknown, AssetType.TrashFolder);
                     }
                 }
                 else if (action == DeRezAction.Return)
@@ -400,7 +400,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
                     // Dump to lost + found unconditionally
                     //
-                    folder = m_scene.InventoryService.GetFolderForType(userID, AssetType.LostAndFoundFolder);
+                    folder = m_scene.InventoryService.GetFolderForType (userID, InventoryType.Unknown, AssetType.LostAndFoundFolder);
                 }
 
                 if (folderID == UUID.Zero && folder == null)
@@ -409,7 +409,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     {
                         // Deletes go to trash by default
                         //
-                        folder = m_scene.InventoryService.GetFolderForType(userID, AssetType.TrashFolder);
+                        folder = m_scene.InventoryService.GetFolderForType (userID, InventoryType.Unknown, AssetType.TrashFolder);
                     }
                     else
                     {
@@ -417,11 +417,11 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                             objectGroups[0].OwnerID != agentId)
                         {
 
-                            folder = m_scene.InventoryService.GetFolderForType(userID, AssetType.LostAndFoundFolder);
+                            folder = m_scene.InventoryService.GetFolderForType (userID, InventoryType.Unknown, AssetType.LostAndFoundFolder);
                         }
                         else
                         {
-                            folder = m_scene.InventoryService.GetFolderForType(userID, AssetType.TrashFolder);
+                            folder = m_scene.InventoryService.GetFolderForType(userID, InventoryType.Unknown, AssetType.TrashFolder);
                         }
                     }
                 }
@@ -438,7 +438,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     }
                     else
                     {
-                        folder = m_scene.InventoryService.GetFolderForType(userID, AssetType.Object);
+                        folder = m_scene.InventoryService.GetFolderForType (userID, InventoryType.Unknown, AssetType.Object);
                     }
                 }
 

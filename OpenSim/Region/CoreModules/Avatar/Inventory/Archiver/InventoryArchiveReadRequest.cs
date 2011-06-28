@@ -418,7 +418,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         {
             if (UUID.Zero == item.Folder)
             {
-                InventoryFolderBase f = m_registry.RequestModuleInterface<IInventoryService>().GetFolderForType(item.Owner, (AssetType)item.AssetType);
+                InventoryFolderBase f = m_registry.RequestModuleInterface<IInventoryService>().GetFolderForType(item.Owner, (InventoryType)item.InvType, (AssetType)item.AssetType);
                 if (f != null)
                 {
                     //                    m_log.DebugFormat(

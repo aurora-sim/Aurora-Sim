@@ -150,7 +150,7 @@ namespace Aurora.Modules
 
             List<InventoryItemBase> items = new List<InventoryItemBase>();
 
-            InventoryFolderBase AppearanceFolder = InventoryService.GetFolderForType(account.PrincipalID, AssetType.Clothing);
+            InventoryFolderBase AppearanceFolder = InventoryService.GetFolderForType (account.PrincipalID, InventoryType.Wearable, AssetType.Clothing);
 
             InventoryFolderBase folderForAppearance
                 = new InventoryFolderBase(
@@ -209,7 +209,7 @@ namespace Aurora.Modules
 
             if (parentFolder == null)
             {
-                InventoryFolderBase folder = InventoryService.GetFolderForType(recipient, (AssetType)itemCopy.AssetType);
+                InventoryFolderBase folder = InventoryService.GetFolderForType (recipient, InventoryType.Unknown, (AssetType)itemCopy.AssetType);
 
                 if (folder != null)
                     itemCopy.Folder = folder.ID;

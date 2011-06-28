@@ -280,32 +280,25 @@ namespace OpenSim.Services.CapsService
         {
             OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
             string asset_type = map["asset_type"].AsString();
-            m_log.Info("[CAPS]: NewAgentInventoryRequest Request is: " + map.ToString());
+            //m_log.Info("[CAPS]: NewAgentInventoryRequest Request is: " + map.ToString());
             //m_log.Debug("asset upload request via CAPS" + llsdRequest.inventory_type + " , " + llsdRequest.asset_type);
 
             if (asset_type == "texture" ||
                 asset_type == "animation" ||
                 asset_type == "sound")
             {
-                /* Disabled until we have a money module that can hook up to this
-                 * IMoneyModule mm = .RequestModuleInterface<IMoneyModule>();
+                IMoneyModule mm = m_service.Registry.RequestModuleInterface<IMoneyModule> ();
 
-                    if (mm != null)
+                /*if (mm != null)
+                {
+                    if (!mm.Charge (client.AgentID, mm.UploadCharge))
                     {
-                        if (!mm.UploadCovered(client, mm.UploadCharge))
-                        {
-                            if (client != null)
-                                client.SendAgentAlertMessage("Unable to upload asset. Insufficient funds.", false);
-
-                            map = new OSDMap();
-                            map["uploader"] = "";
-                            map["state"] = "error";
-                            return OSDParser.SerializeLLSDXmlString(map);
-                        }
-                        else
-                            mm.ApplyUploadCharge(client.AgentId, mm.UploadCharge, "Upload asset.");
+                        map = new OSDMap ();
+                        map["uploader"] = "";
+                        map["state"] = "error";
+                        return OSDParser.SerializeLLSDXmlString (map);
                     }
-                 */
+                }*/
             }
 
 

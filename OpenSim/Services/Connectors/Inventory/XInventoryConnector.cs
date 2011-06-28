@@ -83,12 +83,13 @@ namespace OpenSim.Services.Connectors
             return BuildFolder((Dictionary<string, object>)ret["folder"]);
         }
 
-        public virtual InventoryFolderBase GetFolderForType(UUID principalID, AssetType type)
+        public virtual InventoryFolderBase GetFolderForType(UUID principalID, InventoryType invType, AssetType type)
         {
             Dictionary<string,object> ret = MakeRequest("GETFOLDERFORTYPE",
                     new Dictionary<string,object> {
                         { "PRINCIPAL", principalID.ToString() },
-                        { "TYPE", ((int)type).ToString() }
+                        { "TYPE", ((int)type).ToString() },
+                        { "INVTYPE", ((int)invType).ToString() }
                     });
 
             if (ret == null)

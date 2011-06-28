@@ -1305,7 +1305,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (UUID.Zero == item.Folder)
             {
-                InventoryFolderBase f = m_scene.InventoryService.GetFolderForType(item.Owner, (AssetType)item.AssetType);
+                InventoryFolderBase f = m_scene.InventoryService.GetFolderForType(item.Owner, (InventoryType)item.InvType, (AssetType)item.AssetType);
                 if (f != null)
                 {
                     item.Folder = f.ID;
@@ -1507,7 +1507,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (itemCopy.Folder == UUID.Zero)
                 {
-                    InventoryFolderBase folder = m_scene.InventoryService.GetFolderForType(recipient, (AssetType)itemCopy.AssetType);
+                    InventoryFolderBase folder = m_scene.InventoryService.GetFolderForType (recipient, (InventoryType)itemCopy.InvType, (AssetType)itemCopy.AssetType);
 
                     if (folder != null)
                     {

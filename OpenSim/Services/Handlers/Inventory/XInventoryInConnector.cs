@@ -292,10 +292,12 @@ namespace OpenSim.Services
         {
             Dictionary<string,object> result = new Dictionary<string,object>();
             UUID principal = UUID.Zero;
-            UUID.TryParse(request["PRINCIPAL"].ToString(), out principal);
+            UUID.TryParse (request["PRINCIPAL"].ToString (), out principal);
             int type = 0;
-            Int32.TryParse(request["TYPE"].ToString(), out type);
-            InventoryFolderBase folder = m_InventoryService.GetFolderForType(principal, (AssetType)type);
+            Int32.TryParse (request["TYPE"].ToString (), out type);
+            int invtype = 0;
+            Int32.TryParse (request["INVTYPE"].ToString (), out invtype);
+            InventoryFolderBase folder = m_InventoryService.GetFolderForType (principal, (InventoryType)invtype, (AssetType)type);
             if (folder != null)
                 result["folder"] = EncodeFolder(folder);
 

@@ -205,11 +205,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         public IntPtr world;
-        private uint obj2LocalID = 0;
-        private AuroraODECharacter cc1;
-        private AuroraODEPrim cp1;
-        private AuroraODECharacter cc2;
-        private AuroraODEPrim cp2;
 
         public IntPtr space;
 
@@ -1140,7 +1135,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private void collision_accounting_events(PhysicsActor p1, PhysicsActor p2, ContactPoint contact)
         {
-            obj2LocalID = 0;
             if (!p2.SubscribedEvents() && !p1.SubscribedEvents())
                 return;
             FireCollisionEvent (p1, p2, contact);

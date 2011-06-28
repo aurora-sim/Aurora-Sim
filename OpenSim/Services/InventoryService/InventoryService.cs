@@ -274,8 +274,8 @@ namespace OpenSim.Services.InventoryService
 
             if (createDefaultItems && m_LibraryService != null)
             {
-                InventoryFolderBase bodypartFolder = GetFolderForType(principalID, AssetType.Bodypart);
-                InventoryFolderBase clothingFolder = GetFolderForType(principalID, AssetType.Clothing);
+                InventoryFolderBase bodypartFolder = GetFolderForType (principalID, InventoryType.Unknown, AssetType.Bodypart);
+                InventoryFolderBase clothingFolder = GetFolderForType (principalID, InventoryType.Unknown, AssetType.Clothing);
 
                 // Default items
                 InventoryItemBase defaultShape = new InventoryItemBase();
@@ -498,9 +498,11 @@ namespace OpenSim.Services.InventoryService
             return root;
         }
 
-        public virtual InventoryFolderBase GetFolderForType(UUID principalID, AssetType type)
+        public virtual InventoryFolderBase GetFolderForType(UUID principalID, InventoryType invType, AssetType type)
         {
 //            m_log.DebugFormat("[XINVENTORY SERVICE]: Getting folder type {0} for user {1}", type, principalID);
+            if (invType == InventoryType.Snapshot)
+                type = AssetType.SnapshotFolder;//Fix for snapshots, as they get the texture asset type, but need to get checked as snapshotfolder types
 
             List<InventoryFolderBase> folders = m_Database.GetFolders(
                     new string[] { "agentID", "type"},

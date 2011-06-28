@@ -1321,7 +1321,7 @@ namespace AvatarArchives
 
             List<InventoryItemBase> items = new List<InventoryItemBase>();
 
-            InventoryFolderBase AppearanceFolder = InventoryService.GetFolderForType(account.PrincipalID, AssetType.Clothing);
+            InventoryFolderBase AppearanceFolder = InventoryService.GetFolderForType (account.PrincipalID, InventoryType.Unknown, AssetType.Clothing);
 
             InventoryFolderBase folderForAppearance
                 = new InventoryFolderBase(
@@ -1369,7 +1369,7 @@ namespace AvatarArchives
 
             if (parentFolder == null)
             {
-                InventoryFolderBase folder = InventoryService.GetFolderForType(recipient, (AssetType)itemCopy.AssetType);
+                InventoryFolderBase folder = InventoryService.GetFolderForType (recipient, (InventoryType)itemCopy.InvType, (AssetType)itemCopy.AssetType);
 
                 if (folder != null)
                     itemCopy.Folder = folder.ID;
