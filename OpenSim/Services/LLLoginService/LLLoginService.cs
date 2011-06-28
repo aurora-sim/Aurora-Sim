@@ -352,7 +352,7 @@ namespace OpenSim.Services.LLLoginService
                 }
                 bool AcceptedNewTOS = false;
                 //This gets if the viewer has accepted the new TOS
-                if (tosExists)
+                if (!agent.AcceptTOS && tosExists)
                 {
                     if (tosAccepted == "0")
                         AcceptedNewTOS = false;

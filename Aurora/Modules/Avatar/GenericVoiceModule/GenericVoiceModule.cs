@@ -76,10 +76,6 @@ namespace Aurora.Modules
                 {
                     return OnRegisterCaps(scene, agentID, server);
                 };
-                //Add this to the OpenRegionSettings module so we can inform the client about it
-                IOpenRegionSettingsModule ORSM = scene.RequestModuleInterface<IOpenRegionSettingsModule>();
-                if (ORSM != null)
-                    ORSM.RegisterGenericValue("Voice", "Mumble");
             }
         }
 
