@@ -696,6 +696,7 @@ textures 1
                             asset.Data = Utils.StringToBytes (m_defaultUnderPants);
                             m_scene.AssetService.Store (asset);
                         }
+                        item.CreatorId = UUID.Zero.ToString ();
                         item.AssetID = m_underPantsUUID;
                         m_scene.InventoryService.AddItem (item);
                         wear.ItemID = item.ID;
@@ -722,6 +723,7 @@ textures 1
                             asset.Data = Utils.StringToBytes (m_defaultUnderShirt);
                             m_scene.AssetService.Store (asset);
                         }
+                        item.CreatorId = UUID.Zero.ToString ();
                         item.AssetID = m_underShirtUUID;
                         m_scene.InventoryService.AddItem (item);
                         wear.ItemID = item.ID;
