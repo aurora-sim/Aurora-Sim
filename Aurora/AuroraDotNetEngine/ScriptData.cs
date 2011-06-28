@@ -340,8 +340,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             if (State != state)
             {
-                m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue (this, false);
-                m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew (this, false); // accept new events
+                //Technically, we should do this,
+                //but we would need to remove timer/listen/sensor events as well to keep compat with SL style lsl
+                //m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue (this, false);
+                //m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew (this, false); // accept new events
                 //Fire state_exist after we switch over all the removing of events so that it gets the new versionID
                 m_ScriptEngine.MaintenanceThread.AddEventSchQueue (this, "state_exit",
                     new DetectParams[0], EventPriority.FirstStart, new object[0] { });
@@ -354,9 +356,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 RemoveCollisionEvents = true;
                 RemoveTouchEvents = true;
 
-                //Wipe out old events
-                //                VersionID++;
-
                 //Tell the SOP about the change.
                 Part.SetScriptEvents (ItemID, Script.GetStateEventFlags (state));
                 ScriptEngine.ScriptProtection.AddNewScript (this);
@@ -365,7 +364,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     new DetectParams[0], EventPriority.FirstStart, new object[0] { });
                 //Save a state save after a state change, its a large change in the script's function
                 m_ScriptEngine.StateSave.SaveStateTo (this, true);
-                Script.NeedsStateSaved = true;
             }
         }
 
