@@ -935,7 +935,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 _perloopContact.Add(curContact);
 
                             //Add restitution and friction changes
-                            d.Contact contact = ((AuroraODEPrim)p2).GetContactPoint ();
+                            d.Contact contact = ((AuroraODEPrim)p2).GetContactPoint (ActorTypes.Ground);
                             contact.geom = curContact;
 
                             if (m_global_contactcount < m_currentmaxContactsbeforedeath)
@@ -984,7 +984,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 _perloopContact.Add(curContact);
 
                             //Add restitution and friction changes
-                            d.Contact contact = ((AuroraODEPrim)p2).GetContactPoint ();
+                            d.Contact contact = ((AuroraODEPrim)p2).GetContactPoint (ActorTypes.Prim);
                             contact.geom = curContact;
 
                             if (m_global_contactcount < m_currentmaxContactsbeforedeath)
@@ -2393,9 +2393,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override void SetTerrain (short[] heightMap)
         {
+            bool needToCreateHeightmapinODE = false;
             short[] _heightmap;
-            if(!ODETerrainHeightFieldHeights.TryGetValue(RegionTerrain, out _heightmap))
+            if (!ODETerrainHeightFieldHeights.TryGetValue (RegionTerrain, out _heightmap))
+            {
+                needToCreateHeightmapinODE = true;//We don't have any terrain yet, we need to generate one
                 _heightmap = new short[((m_region.RegionSizeX + 3) * (m_region.RegionSizeY + 3))];
+            }
 
             int heightmapWidth = m_region.RegionSizeX + 2;
             int heightmapHeight = m_region.RegionSizeY + 2;
@@ -2432,7 +2436,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     hfmax = (val > hfmax) ? val : hfmax;
                 }
             }
-
+            if(!needToCreateHeightmapinODE)
+                return;//If we have already done this once, we don't need to do it again
             lock (OdeLock)
             {
                 if (RegionTerrain != IntPtr.Zero)
@@ -2452,6 +2457,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 const int wrap = 0;
 
                 IntPtr HeightmapData = d.GeomHeightfieldDataCreate ();
+                GC.AddMemoryPressure (_heightmap.Length);//Add the memory pressure properly (note: should we be doing this since we have it in managed memory?)
+                //Do NOT copy it! Otherwise, it'll copy the terrain into unmanaged memory where we can't release it each time
                 d.GeomHeightfieldDataBuildShort (HeightmapData, _heightmap, 0, heightmapHeight, heightmapWidth,
                                                  heightmapHeightSamples, heightmapWidthSamples, scale,
                                                  offset, thickness, wrap);

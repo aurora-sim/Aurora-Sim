@@ -3181,7 +3181,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public d.Contact GetContactPoint ()
+        public d.Contact GetContactPoint (ActorTypes actorType)
         {
             d.Contact contact = new d.Contact ();
             //Defaults
