@@ -1173,9 +1173,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return new LSL_String("");
         }
 
-        public void osWindParamSet(string plugin, string param, float value)
+        public void osSetWindParam (string plugin, string param, LSL_Float value)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osWindParamSet", m_host, "OSSL");
+            ScriptProtection.CheckThreatLevel (ThreatLevel.VeryLow, "osSetWindParam", m_host, "OSSL");
             
 
             IWindModule module = World.RequestModuleInterface<IWindModule>();
@@ -1183,17 +1183,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 try
                 {
-                    module.WindParamSet(plugin, param, value);
+                    module.WindParamSet(plugin, param, (float)value.value);
                 }
                 catch (Exception) { }
             }
         }
 
-        public float osWindParamGet(string plugin, string param)
+        public LSL_Float osGetWindParam (string plugin, string param)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osWindParamGet", m_host, "OSSL");
             
-
             IWindModule module = World.RequestModuleInterface<IWindModule>();
             if (module != null)
             {
