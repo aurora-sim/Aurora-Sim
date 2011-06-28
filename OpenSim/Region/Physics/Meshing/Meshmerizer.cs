@@ -496,7 +496,13 @@ namespace OpenSim.Region.Physics.Meshing
                 float profileEnd = 1.0f - (float)primShape.ProfileEnd * 2.0e-5f;
                 float profileHollow = (float)primShape.ProfileHollow * 2.0e-5f;
                 if (profileHollow > 0.95f)
-                    profileHollow = 0.95f;
+                {
+                    if (profileHollow > 0.99f)
+                        profileHollow = 0.99f;
+                    float sizeX = primShape.Scale.X - (primShape.Scale.X * profileHollow);
+                    if (sizeX < 0.1f)//If its > 0.1, its fine to mesh at the small hollow
+                        profileHollow  = 0.95f + (sizeX / 2);//Scale the rest by how large the size of the prim is
+                }
 
                 int sides = 4;
                 if ((primShape.ProfileCurve & 0x07) == (byte)ProfileShape.EquilateralTriangle)
@@ -549,7 +555,10 @@ namespace OpenSim.Region.Physics.Meshing
 #endif
                     try
                     {
-                        primMesh.ExtrudeLinear();
+                        if(primShape.PathCurve == (byte)Extrusion.Straight)
+                            primMesh.Extrude(PathType.Linear);
+                        else
+                            primMesh.Extrude (PathType.Flexible);
                     }
                     catch (Exception ex)
                     {
@@ -580,7 +589,7 @@ namespace OpenSim.Region.Physics.Meshing
 #endif
                     try
                     {
-                        primMesh.ExtrudeCircular();
+                        primMesh.Extrude (PathType.Circular);
                     }
                     catch (Exception ex)
                     {
