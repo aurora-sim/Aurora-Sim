@@ -462,6 +462,12 @@ namespace OpenSim.Framework
 
         Vector3 AngularVelocity { get; set; }
 
+        Vector3 OmegaAxis { get; set; }
+
+        double OmegaSpinRate { get; set; }
+
+        double OmegaGain { get; set; }
+
         void SetParentLocalId (uint p);
 
         void SetParent (ISceneEntity grp);

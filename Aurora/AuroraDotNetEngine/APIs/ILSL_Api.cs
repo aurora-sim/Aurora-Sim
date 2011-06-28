@@ -380,8 +380,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
               void llTakeCamera(string avatar);
               void llTakeControls(int controls, int accept, int pass_on);
          LSL_Float llTan(double f);
-       LSL_Integer llTarget(LSL_Vector position, double range);
-              void llTargetOmega(LSL_Vector axis, double spinrate, double gain);
+       LSL_Integer llTarget (LSL_Vector position, LSL_Float range);
+              void llTargetOmega (LSL_Vector axis, LSL_Float spinrate, LSL_Float gain);
               void llTargetRemove(int number);
           DateTime llTeleportAgentHome(LSL_Key agent);
           DateTime llTextBox(string avatar, string message, int chat_channel);

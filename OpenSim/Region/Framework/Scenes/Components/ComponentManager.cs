@@ -166,7 +166,13 @@ namespace OpenSim.Region.Framework.Scenes.Components
             RegisterComponent (com);
             com = new DefaultComponents ("Restitution", 0);
             RegisterComponent (com);
-            com = new DefaultComponents ("ScriptState", 0);
+            com = new DefaultComponents ("ScriptState", "");
+            RegisterComponent (com);
+            com = new DefaultComponents ("OmegaAxis", Vector3.Zero);
+            RegisterComponent (com);
+            com = new DefaultComponents ("OmegaSpinRate", 0);
+            RegisterComponent (com);
+            com = new DefaultComponents ("OmegaGain", 0);
             RegisterComponent (com);
         }
 

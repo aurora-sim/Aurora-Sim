@@ -1796,6 +1796,56 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public Vector3 OmegaAxis
+        {
+            get
+            {
+                return GetComponentState ("OmegaAxis").AsVector3 ();
+            }
+
+            set
+            {
+                Vector3 oldOmegaAxis = OmegaAxis;
+                if (value.X == oldOmegaAxis.X &&
+                    value.Y == oldOmegaAxis.Y &&
+                    value.Z == oldOmegaAxis.Z)
+                    return;
+                SetComponentState ("OmegaAxis", value);
+            }
+        }
+
+        public double OmegaSpinRate
+        {
+            get
+            {
+                return GetComponentState ("OmegaSpinRate").AsReal ();
+            }
+
+            set
+            {
+                double oldOmegaSpinRate = OmegaSpinRate;
+                if (value == oldOmegaSpinRate)
+                    return;
+                SetComponentState ("OmegaSpinRate", value);
+            }
+        }
+
+        public double OmegaGain
+        {
+            get
+            {
+                return GetComponentState ("OmegaGain").AsReal ();
+            }
+
+            set
+            {
+                double oldOmegaGain = OmegaGain;
+                if (value == oldOmegaGain)
+                    return;
+                SetComponentState ("OmegaGain", value);
+            }
+        }
+
         public bool Stopped
         {
             get {
