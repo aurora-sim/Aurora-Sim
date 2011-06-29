@@ -1003,14 +1003,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_angularMotorVelocity.X *= 1 - m_bankingEfficiency;
                     if (Math.Abs(m_lastAngularVelocity.Z) > m_bankingMix)
                     {
-                        if (m_lastAngularVelocity.Z > 0)
-                        {
-                            m_angularMotorVelocity.X = (m_lastAngularVelocity.Z - (m_bankingMix));
-                        }
-                        else
-                        {
-                            m_angularMotorVelocity.X = (m_lastAngularVelocity.Z + m_bankingMix);
-                        }
+                        Vector3 bankingRot = new Vector3 (m_lastAngularVelocity.Z * (m_bankingEfficiency * 10 * (m_bankingMix * (-1))), 0, 0);
+                        bankingRot *= rotq;
+                        banking += bankingRot;
+                        //m_angularMotorDirection.Y = m_lastAngularVelocity.Z * (m_bankingEfficiency);
+                        //m_linearMotorDirectionLASTSET.Y = m_lastAngularVelocity.Z * (m_bankingEfficiency * 100);
                     }
                 }
             }
