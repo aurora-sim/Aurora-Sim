@@ -1274,17 +1274,17 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
             if (!m_scene.RegionInfo.RegionSettings.UsePaintableTerrain)
             {
-                args.terrainBase0 = m_scene.RegionInfo.RegionSettings.TerrainTexture1;
-                args.terrainBase1 = m_scene.RegionInfo.RegionSettings.TerrainTexture2;
-                args.terrainBase2 = m_scene.RegionInfo.RegionSettings.TerrainTexture3;
-                args.terrainBase3 = m_scene.RegionInfo.RegionSettings.TerrainTexture4;
+                args.terrainDetail0 = m_scene.RegionInfo.RegionSettings.TerrainTexture1;
+                args.terrainDetail1 = m_scene.RegionInfo.RegionSettings.TerrainTexture2;
+                args.terrainDetail2 = m_scene.RegionInfo.RegionSettings.TerrainTexture3;
+                args.terrainDetail3 = m_scene.RegionInfo.RegionSettings.TerrainTexture4;
             }
             else
             {
-                args.terrainBase0 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
-                args.terrainBase1 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
-                args.terrainBase2 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
-                args.terrainBase3 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
+                args.terrainDetail0 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
+                args.terrainDetail1 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
+                args.terrainDetail2 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
+                args.terrainDetail3 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
 
                 AssetBase paintAsset = m_scene.AssetService.Get(m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture.ToString());
                 if (paintAsset == null)
