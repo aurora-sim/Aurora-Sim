@@ -998,9 +998,20 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     Vector3 dir = Vector3.One * rotq;
                     float mult = /*dir.X > 0 ?*/ -1f /*: 1*/;
                     mult *= m_bankingMix;//Changes which way it banks in and out of turns
-                    
-                    banking.Z += (m_bankingEfficiency * (mult)) * angularMotorVelocity.X;
-                    m_angularMotorVelocity.X *= 0.6f;
+
+                    banking.Z += (m_bankingEfficiency * (mult)) * (angularMotorVelocity.X);
+                    m_angularMotorVelocity.X *= 1 - m_bankingEfficiency;
+                    if (Math.Abs(m_lastAngularVelocity.Z) > m_bankingMix)
+                    {
+                        if (m_lastAngularVelocity.Z > 0)
+                        {
+                            m_angularMotorVelocity.X = (m_lastAngularVelocity.Z - (m_bankingMix));
+                        }
+                        else
+                        {
+                            m_angularMotorVelocity.X = (m_lastAngularVelocity.Z + m_bankingMix);
+                        }
+                    }
                 }
             }
 
