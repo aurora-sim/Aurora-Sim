@@ -84,8 +84,11 @@ namespace OpenSim.Region.CoreModules
             if (m_presenceUpdateTimer == null)
             {
                 m_presenceUpdateTimer = new Timer ();
-                m_presenceUpdateTimer.Interval = 1000 * 60 * 58; //Bit less than an hour so that we have 2 minute to send all the updates and lag
+                m_presenceUpdateTimer.Interval = 1000 * 60 * 28;
+                //As agents move around, they could get to regions that won't update them in time, so we cut 
+                // the time in half, and then a bit less so that they are updated consistantly
                 m_presenceUpdateTimer.Elapsed += m_presenceUpdateTimer_Elapsed;
+                m_presenceUpdateTimer.Start ();
             }
         }
 
