@@ -709,6 +709,19 @@ namespace Aurora.Services.DataService
                 new string[1] { "inventoryID" }, new object[1] { id });
         }
 
+        public void IncrementFolder (UUID folderID)
+        {
+            GD.Update (m_foldersrealm, new object[1] { folderID.ToString() }, new string[1] { "folderID" },
+                new string[1] { "version" }, new object[1] { "version + 1" });
+        }
+
+        public void IncrementFolderByItem (UUID itemID)
+        {
+            List<string> values = GD.Query ("inventoryID", itemID, m_itemsrealm, "parentFolderID");
+            if (values.Count > 0)
+                IncrementFolder(UUID.Parse (values[0]));
+        }
+
         public InventoryItemBase[] GetActiveGestures (UUID principalID)
         {
             string query = String.Format ("where {0} = '{1}' and {2} = '{3}'", "avatarID", principalID, "assetType", (int)AssetType.Gesture);

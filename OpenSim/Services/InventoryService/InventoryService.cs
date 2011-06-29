@@ -602,6 +602,7 @@ namespace OpenSim.Services.InventoryService
                     return false;
                 check.Version = (ushort)folder.Version;
                 check.Type = folder.Type;
+                check.Version++;
                 return m_Database.StoreFolder (check);
             }
 
@@ -609,6 +610,7 @@ namespace OpenSim.Services.InventoryService
                 folder.Version = check.Version;
             folder.ID = check.ID;
 
+            folder.Version++;
             return m_Database.StoreFolder (folder);
         }
 
@@ -704,7 +706,8 @@ namespace OpenSim.Services.InventoryService
         {
 //            m_log.DebugFormat(
 //                "[XINVENTORY SERVICE]: Adding item {0} to folder {1} for {2}", item.ID, item.Folder, item.Owner);
-            
+
+            m_Database.IncrementFolder (item.Folder);
             return m_Database.StoreItem(item);
         }
 
@@ -713,6 +716,7 @@ namespace OpenSim.Services.InventoryService
             if (!m_AllowDelete) //Initial item MUST be created as a link or link folder
                 if (item.AssetType == (sbyte)AssetType.Link || item.AssetType == (sbyte)AssetType.LinkFolder)
                     return false;
+            m_Database.IncrementFolder (item.Folder);
             return m_Database.StoreItem(item);
         }
 
@@ -722,6 +726,8 @@ namespace OpenSim.Services.InventoryService
             //
             foreach (InventoryItemBase i in items)
             {
+                m_Database.IncrementFolder (i.Folder);//Increment the new folder
+                m_Database.IncrementFolderByItem (i.ID);//And the old folder too (have to use this one because we don't know the old folder)
                 m_Database.MoveItem(i.ID.ToString(), i.Folder.ToString());
             }
 
@@ -736,17 +742,21 @@ namespace OpenSim.Services.InventoryService
                 {
                     InventoryItemBase item = new InventoryItemBase (id);
                     item = GetItem (item);
+                    m_Database.IncrementFolder (item.Folder);
                     if (!ParentIsLinkFolder (item.Folder))
                         continue;
                     m_Database.DeleteItems ("inventoryID", id.ToString ());
                 }
-                return false;
+                return true;
             }
 
             // Just use the ID... *facepalms*
             //
             foreach (UUID id in itemIDs)
-                m_Database.DeleteItems("inventoryID", id.ToString());
+            {
+                m_Database.IncrementFolderByItem (id);
+                m_Database.DeleteItems ("inventoryID", id.ToString ());
+            }
 
             return true;
         }
