@@ -2196,11 +2196,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 {
                                     foreach (AuroraODECharacter defect in defects)
                                     {
-                                        RemoveCharacter(defect);
-                                        AddAvatar(defect.Name, new Vector3(m_region.RegionSizeX / 2,
+                                        defect.Destroy();
+                                        RemoveCharacter (defect);
+                                        AddAvatar (defect.Name, new Vector3 (m_region.RegionSizeX / 2,
                                             m_region.RegionSizeY / 2,
                                             m_region.RegionSizeZ / 2), defect.Orientation, defect.Size, true, defect.LocalID, defect.UUID);
-                                        defect.Destroy();
                                     }
                                 }
                             }

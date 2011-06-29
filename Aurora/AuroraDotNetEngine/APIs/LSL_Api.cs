@@ -3488,12 +3488,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (group == null)
                         return null;
 
-                    group.IsDeleted = false;
-                    group.m_isLoaded = true;
-                    foreach (SceneObjectPart part in group.ChildrenList)
-                    {
-                        part.IsLoading = false;
-                    }
                     string reason;
                     if (!World.Permissions.CanRezObject(group.ChildrenList.Count, ownerID, pos, out reason))
                     {
@@ -3501,11 +3495,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         return null;
                     }
 
-                    World.SceneGraph.AddPrimToScene(group);
-                    
-                    SceneObjectPart rootPart = (SceneObjectPart)group.GetChildPart(group.UUID);
-                    List<SceneObjectPart> partList = new List<SceneObjectPart>(group.ChildrenList);
-
+                    List<SceneObjectPart> partList = new List<SceneObjectPart> (group.ChildrenList);
                     // we set it's position in world.
                     // llRezObject sets the whole group at the position, while llRezAtRoot rezzes the group based on the root prim's position
                     // See: http://lslwiki.net/lslwiki/wakka.php?wakka=llRezAtRoot
@@ -3529,6 +3519,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         offset += pos;
                         group.AbsolutePosition = offset;
                     }
+
+                    World.SceneGraph.AddPrimToScene(group);
+                    
+                    SceneObjectPart rootPart = (SceneObjectPart)group.GetChildPart(group.UUID);
 
                     // Since renaming the item in the inventory does not affect the name stored
                     // in the serialization, transfer the correct name from the inventory to the

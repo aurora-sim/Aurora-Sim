@@ -4418,8 +4418,8 @@ namespace OpenSim.Region.Framework.Scenes
                     // oldparts = m_scriptEvents[scriptid];
 
                     // remove values from aggregated script events
-                    if (m_scriptEvents[scriptid] == (scriptEvents) events)
-                        return;
+                    //if (m_scriptEvents[scriptid] == (scriptEvents) events)
+                    //    return;
                     m_scriptEvents[scriptid] = (scriptEvents) events;
                 }
                 else
@@ -5230,7 +5230,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-                if (IsVD != VolumeDetectActive)
+                if (!IsVD)
                 {
                     // Remove VolumeDetect in any case. Note, it's safe to call SetVolumeDetect as often as you like
                     // (mumbles, well, at least if you have infinte CPU powers :-))
@@ -5460,11 +5460,20 @@ namespace OpenSim.Region.Framework.Scenes
                 ((AggregateScriptEvents & scriptEvents.land_collision_start) != 0)
                 ) && PhysActor != null)
             {
-                PhysActor.OnCollisionUpdate += PhysicsCollision;
-                PhysActor.SubscribeEvents (1000);
+                if (!PhysActor.SubscribedEvents())
+                {
+                    PhysActor.OnCollisionUpdate += PhysicsCollision;
+                    PhysActor.SubscribeEvents (1000);
+                }
             }
-            else if(PhysActor != null)
-                PhysActor.OnCollisionUpdate -= PhysicsCollision;
+            else if (PhysActor != null)
+            {
+                if (PhysActor.SubscribedEvents ())
+                {
+                    PhysActor.OnCollisionUpdate -= PhysicsCollision;
+                    PhysActor.UnSubscribeEvents ();
+                }
+            }
 
             if (m_parentGroup == null)
             {

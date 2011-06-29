@@ -1491,7 +1491,7 @@ namespace OpenSim.Region.Framework.Scenes
                         vehicleParams.Add(part, part.PhysActor.VehicleType);
                         part.PhysActor.RotationalVelocity = Vector3.Zero;
                         part.PhysActor.UnSubscribeEvents ();
-                        //part.PhysActor.OnCollisionUpdate -= part.PhysicsCollision;
+                        part.PhysActor.OnCollisionUpdate -= part.PhysicsCollision;
                         part.PhysActor.OnRequestTerseUpdate -= part.PhysicsRequestingTerseUpdate;
                         part.PhysActor.OnSignificantMovement -= part.ParentGroup.CheckForSignificantMovement;
                         part.PhysActor.OnOutOfBounds -= part.PhysicsOutOfBounds;
