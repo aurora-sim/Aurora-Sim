@@ -538,11 +538,11 @@ namespace OpenSim.Region.Framework.Scenes
 
             //The heartbeat sleep time if time dilation is 1
             int normalHeartBeatSleepTime = (int)m_updatetimespan;
-            if (avgHeartBeat > normalHeartBeatSleepTime)
+            if (avgHeartBeat + (m_physicstimespan / m_updatetimespan) > normalHeartBeatSleepTime)//Fudge a bit
                 return 0;//It doesn't get any sleep
             int newAvgSleepTime = normalHeartBeatSleepTime - avgHeartBeat;
             //Console.WriteLine (newAvgSleepTime);
-            return newAvgSleepTime;
+            return newAvgSleepTime - (int)(m_physicstimespan / m_updatetimespan);//Fudge a bit
         }
 
         #endregion
