@@ -874,7 +874,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Jump code
 
-            if (IsJumping && (IsColliding && m_preJumpCounter > _parent_scene.m_preJumpTime + 10) || m_preJumpCounter > 50)
+            if (IsJumping && (IsColliding) && m_preJumpCounter > _parent_scene.m_preJumpTime || m_preJumpCounter > 150)
             {
                 m_isJumping = false;
                 m_preJumpCounter = 0;
@@ -902,7 +902,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 TriggerMovementUpdate();
                 return;
             }
-            if (m_isJumping && _target_velocity.Z < 1 && !Flying)
+            if (m_iscolliding && m_isJumping && _target_velocity.Z < 1 && !Flying)
                 _target_velocity.Z = m_preJumpForce.Z * _parent_scene.m_preJumpForceMultiplier;
 
             #endregion
