@@ -119,9 +119,12 @@ namespace OpenSim.Services.CapsService
                 new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLib2", ""),
                                                       method));
 
-            service.AddStreamHandler("NewFileAgentInventory",
-                new RestStreamHandler("POST", service.CreateCAPS("NewFileAgentInventory", m_newInventory),
+            service.AddStreamHandler ("NewFileAgentInventory",
+                new RestStreamHandler ("POST", service.CreateCAPS ("NewFileAgentInventory", m_newInventory),
                                                       NewAgentInventoryRequest));
+            service.AddStreamHandler ("NewFileAgentInventoryVariablePrice",
+                new RestStreamHandler ("POST", service.CreateCAPS ("NewFileAgentInventoryVariablePrice", ""),
+                                                      NewAgentInventoryRequestVariablePrice));
 
             /*method = delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -271,18 +274,15 @@ namespace OpenSim.Services.CapsService
         #region Inventory upload
 
         /// <summary>
-        ///
+        /// This handles the uploading of some inventory types
         /// </summary>
         /// <param name="llsdRequest"></param>
         /// <returns></returns>
         public string NewAgentInventoryRequest(string request, string path, string param,
                                              OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
-            string asset_type = map["asset_type"].AsString();
-            //m_log.Info("[CAPS]: NewAgentInventoryRequest Request is: " + map.ToString());
-            //m_log.Debug("asset upload request via CAPS" + llsdRequest.inventory_type + " , " + llsdRequest.asset_type);
-
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml (request);
+            string asset_type = map["asset_type"].AsString ();
             if (asset_type == "texture" ||
                 asset_type == "animation" ||
                 asset_type == "sound")
@@ -300,7 +300,44 @@ namespace OpenSim.Services.CapsService
                     }
                 }*/
             }
+            return OSDParser.SerializeLLSDXmlString (InternalNewAgentInventoryRequest (map, path, param, httpRequest, httpResponse));
+        }
+        public string NewAgentInventoryRequestVariablePrice (string request, string path, string param,
+                                             OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        {
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml (request);
+            string asset_type = map["asset_type"].AsString ();
+            if (asset_type == "texture" ||
+                asset_type == "animation" ||
+                asset_type == "sound")
+            {
+                IMoneyModule mm = m_service.Registry.RequestModuleInterface<IMoneyModule> ();
 
+                /*if (mm != null)
+                {
+                    if (!mm.Charge (client.AgentID, mm.UploadCharge))
+                    {
+                        map = new OSDMap ();
+                        map["uploader"] = "";
+                        map["state"] = "error";
+                        return OSDParser.SerializeLLSDXmlString (map);
+                    }
+                }*/
+            }
+            OSDMap resp = InternalNewAgentInventoryRequest (map, path, param, httpRequest, httpResponse);
+
+            resp["resource_cost"] = 0;
+            resp["upload_price"] = 0;//Set me if you want to use variable cost stuff
+
+            return OSDParser.SerializeLLSDXmlString (map);
+        }
+
+        private OSDMap InternalNewAgentInventoryRequest (OSDMap map, string path, string param,
+                                             OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        {
+            string asset_type = map["asset_type"].AsString();
+            //m_log.Info("[CAPS]: NewAgentInventoryRequest Request is: " + map.ToString());
+            //m_log.Debug("asset upload request via CAPS" + llsdRequest.inventory_type + " , " + llsdRequest.asset_type);
 
             string assetName = map["name"].AsString();
             string assetDes = map["description"].AsString();
@@ -322,7 +359,7 @@ namespace OpenSim.Services.CapsService
             map = new OSDMap();
             map["uploader"] = uploaderURL;
             map["state"] = "upload";
-            return OSDParser.SerializeLLSDXmlString(map);
+            return map;
         }
 
         public string HandleInventoryItemCreate(string request, UUID AgentID)

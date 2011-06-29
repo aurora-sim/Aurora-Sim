@@ -91,9 +91,15 @@ namespace OpenSim.Services.CapsService
             service.AddStreamHandler("GetTexture", 
                 new StreamHandler("GET", service.CreateCAPS("GetTexture", ""),
                                                         ProcessGetTexture));
-            service.AddStreamHandler("UploadBakedTexture", 
-                new RestStreamHandler("POST", service.CreateCAPS("UploadBakedTexture", m_uploadBakedTexturePath),
+            service.AddStreamHandler ("UploadBakedTexture",
+                new RestStreamHandler ("POST", service.CreateCAPS ("UploadBakedTexture", m_uploadBakedTexturePath),
                                                         UploadBakedTexture));
+            service.AddStreamHandler ("GetMesh",
+                new RestHTTPHandler("GET", service.CreateCAPS ("GetMesh", ""),
+                                                       delegate(Hashtable m_dhttpMethod)
+                                                       {
+                                                           return ProcessGetMesh(m_dhttpMethod);
+                                                       }));
         }
 
         public void EnteringRegion()
@@ -501,6 +507,91 @@ namespace OpenSim.Services.CapsService
             asset.Local = false;
 
             m_assetService.Store(asset);
+        }
+
+        public Hashtable ProcessGetMesh (Hashtable request)
+        {
+
+            Hashtable responsedata = new Hashtable ();
+            responsedata["int_response_code"] = 400; //501; //410; //404;
+            responsedata["content_type"] = "text/plain";
+            responsedata["keepalive"] = false;
+            responsedata["str_response_string"] = "Request wasn't what was expected";
+
+            string meshStr = string.Empty;
+
+            if (request.ContainsKey ("mesh_id"))
+                meshStr = request["mesh_id"].ToString ();
+
+
+            UUID meshID = UUID.Zero;
+            if (!String.IsNullOrEmpty (meshStr) && UUID.TryParse (meshStr, out meshID))
+            {
+                if (m_assetService == null)
+                {
+                    responsedata["int_response_code"] = 404; //501; //410; //404;
+                    responsedata["content_type"] = "text/plain";
+                    responsedata["keepalive"] = false;
+                    responsedata["str_response_string"] = "The asset service is unavailable.  So is your mesh.";
+                    return responsedata;
+                }
+
+                AssetBase mesh;
+                // Only try to fetch locally cached textures. Misses are redirected
+                mesh = m_assetService.GetCached (meshID.ToString ());
+                if (mesh != null)
+                {
+                    if (mesh.Type == (SByte)AssetType.Mesh)
+                    {
+                        responsedata["str_response_string"] = Convert.ToBase64String (mesh.Data);
+                        responsedata["content_type"] = "application/vnd.ll.mesh";
+                        responsedata["int_response_code"] = 200;
+                    }
+                    // Optionally add additional mesh types here
+                    else
+                    {
+                        responsedata["int_response_code"] = 404; //501; //410; //404;
+                        responsedata["content_type"] = "text/plain";
+                        responsedata["keepalive"] = false;
+                        responsedata["str_response_string"] = "Unfortunately, this asset isn't a mesh.";
+                        return responsedata;
+                    }
+                }
+                else
+                {
+                    mesh = m_assetService.Get (meshID.ToString ());
+                    if (mesh != null)
+                    {
+                        if (mesh.Type == (SByte)AssetType.Mesh)
+                        {
+                            responsedata["str_response_string"] = Convert.ToBase64String (mesh.Data);
+                            responsedata["content_type"] = "application/vnd.ll.mesh";
+                            responsedata["int_response_code"] = 200;
+                        }
+                        // Optionally add additional mesh types here
+                        else
+                        {
+                            responsedata["int_response_code"] = 404; //501; //410; //404;
+                            responsedata["content_type"] = "text/plain";
+                            responsedata["keepalive"] = false;
+                            responsedata["str_response_string"] = "Unfortunately, this asset isn't a mesh.";
+                            return responsedata;
+                        }
+                    }
+
+                    else
+                    {
+                        responsedata["int_response_code"] = 404; //501; //410; //404;
+                        responsedata["content_type"] = "text/plain";
+                        responsedata["keepalive"] = false;
+                        responsedata["str_response_string"] = "Your Mesh wasn't found.  Sorry!";
+                        return responsedata;
+                    }
+                }
+
+            }
+
+            return responsedata;
         }
 
         #endregion
