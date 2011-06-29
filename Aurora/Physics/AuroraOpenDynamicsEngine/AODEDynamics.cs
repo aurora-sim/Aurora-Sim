@@ -680,7 +680,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_lastLinearVelocityVector.Z = m_linearMotorDirectionLASTSET.Z;
 
                 // decay applied velocity
-                Vector3 decayfraction = ((Vector3.One / (m_linearMotorDecayTimescale / (pTimestep * pTimestep))));
+                Vector3 decayfraction = ((Vector3.One / (m_linearMotorDecayTimescale / (pTimestep))));
+                decayfraction.Z = ((1 / (m_linearMotorDecayTimescale / (pTimestep * pTimestep))));
                 //Console.WriteLine("decay: " + decayfraction);
                 Vector3 decayAmt = (m_linearMotorDirection * decayfraction);
                 m_linearMotorDirection -= decayAmt;
@@ -714,6 +715,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.Vector3 vel_now = d.BodyGetLinearVel (Body);
             if(m_lastLinearVelocityVector.Z == 0 && m_verticalAttractionTimescale == 0)
                 m_dir.Z = vel_now.Z;        // Preserve the accumulated falling velocity
+            else if(Type != Vehicle.TYPE_AIRPLANE && Type != Vehicle.TYPE_BALLOON)
+                m_dir.Z += vel_now.Z;
 
             d.Vector3 pos = d.BodyGetPosition (Body);
             //            Vector3 accel = new Vector3(-(m_dir.X - m_lastLinearVelocityVector.X / 0.1f), -(m_dir.Y - m_lastLinearVelocityVector.Y / 0.1f), m_dir.Z - m_lastLinearVelocityVector.Z / 0.1f);
@@ -918,7 +921,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_angularMotorVelocity.Z = angularVelocity.Z; */
 
                 // and decay the velocity
-                m_angularMotorVelocity -= m_angularMotorVelocity / (m_angularMotorDecayTimescale / pTimestep);
+                m_angularMotorVelocity -= m_angularMotorVelocity / (m_angularMotorDecayTimescale / (pTimestep * pTimestep));
             } // end motor section
 
             // Vertical attractor section
@@ -999,11 +1002,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     float mult = /*dir.X > 0 ?*/ -1f /*: 1*/;
                     mult *= m_bankingMix;//Changes which way it banks in and out of turns
 
-                    banking.Z += (m_bankingEfficiency * (mult)) * (angularMotorVelocity.X);
+                    //Use the square of the efficiency, as it looks much more how SL banking works
+                    float effSquared = (m_bankingEfficiency * m_bankingEfficiency);
+                    if (m_bankingEfficiency < 0)
+                        effSquared *= -1;//Keep the negative!
+
+                    banking.Z += (effSquared * (mult)) * (angularMotorVelocity.X);
                     m_angularMotorVelocity.X *= 1 - m_bankingEfficiency;
                     if (Math.Abs(m_lastAngularVelocity.Z) > m_bankingMix)
                     {
-                        Vector3 bankingRot = new Vector3 (m_lastAngularVelocity.Z * (m_bankingEfficiency * 10 * (m_bankingMix * (-1))), 0, 0);
+                        Vector3 bankingRot = new Vector3 (m_lastAngularVelocity.Z * (effSquared * 10 * (m_bankingMix * (-1))), 0, 0);
                         bankingRot *= rotq;
                         banking += bankingRot;
                         //m_angularMotorDirection.Y = m_lastAngularVelocity.Z * (m_bankingEfficiency);
