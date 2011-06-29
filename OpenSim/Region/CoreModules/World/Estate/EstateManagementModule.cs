@@ -312,10 +312,6 @@ namespace OpenSim.Region.CoreModules.World.Estate
                     m_scene.RegionInfo.RegionSettings.TerrainTexture4 = texture;
                     break;
             }
-            m_scene.RegionInfo.RegionSettings.Save();
-            TriggerRegionInfoChange();
-            sendRegionHandshakeToAll();
-            sendRegionInfoPacketToAll();
         }
 
         public void setEstateTerrainTextureHeights(IClientAPI client, int corner, float lowValue, float highValue)
@@ -341,10 +337,6 @@ namespace OpenSim.Region.CoreModules.World.Estate
                         m_scene.RegionInfo.RegionSettings.Elevation2NE = highValue;
                         break;
                 }
-                m_scene.RegionInfo.RegionSettings.Save();
-                TriggerRegionInfoChange();
-                sendRegionHandshakeToAll();
-                sendRegionInfoPacketToAll();
             }
             else
             {
@@ -353,7 +345,10 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
         private void handleCommitEstateTerrainTextureRequest(IClientAPI remoteClient)
         {
-            //sendRegionHandshakeToAll();
+            m_scene.RegionInfo.RegionSettings.Save ();
+            TriggerRegionInfoChange ();
+            sendRegionHandshakeToAll ();
+            //sendRegionInfoPacketToAll ();
         }
 
         public void setRegionTerrainSettings(UUID AgentID, float WaterHeight,
@@ -1279,17 +1274,17 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
             if (!m_scene.RegionInfo.RegionSettings.UsePaintableTerrain)
             {
-                args.terrainDetail0 = m_scene.RegionInfo.RegionSettings.TerrainTexture1;
-                args.terrainDetail1 = m_scene.RegionInfo.RegionSettings.TerrainTexture2;
-                args.terrainDetail2 = m_scene.RegionInfo.RegionSettings.TerrainTexture3;
-                args.terrainDetail3 = m_scene.RegionInfo.RegionSettings.TerrainTexture4;
+                args.terrainBase0 = m_scene.RegionInfo.RegionSettings.TerrainTexture1;
+                args.terrainBase1 = m_scene.RegionInfo.RegionSettings.TerrainTexture2;
+                args.terrainBase2 = m_scene.RegionInfo.RegionSettings.TerrainTexture3;
+                args.terrainBase3 = m_scene.RegionInfo.RegionSettings.TerrainTexture4;
             }
             else
             {
-                args.terrainDetail0 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
-                args.terrainDetail1 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
-                args.terrainDetail2 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
-                args.terrainDetail3 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
+                args.terrainBase0 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
+                args.terrainBase1 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
+                args.terrainBase2 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
+                args.terrainBase3 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
 
                 AssetBase paintAsset = m_scene.AssetService.Get(m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture.ToString());
                 if (paintAsset == null)
