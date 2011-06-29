@@ -1888,9 +1888,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (forceSimplePrimMeshing)
                 return true;
             // let simple spheres use ode sphere object
-            if(pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte)Extrusion.Curve1
-                    && pbs.Scale.X == pbs.Scale.Y && pbs.Scale.X == pbs.Scale.Z && pbs.ProfileHollow == 0)
-                return false;
+            //if(pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte)Extrusion.Curve1
+            //        && pbs.Scale.X == pbs.Scale.Y && pbs.Scale.X == pbs.Scale.Z && pbs.ProfileHollow == 0)
+            //    return false;
 
             if (pbs.SculptEntry && !meshSculptedPrim)
             {
@@ -1906,8 +1906,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (!forceSimplePrimMeshing)
             {
                 if ((pbs.ProfileShape == ProfileShape.Square && pbs.PathCurve == (byte)Extrusion.Straight)
-                    || (pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte)Extrusion.Curve1
-                    && pbs.Scale.X == pbs.Scale.Y && pbs.Scale.Y == pbs.Scale.Z))
+                    /*|| (pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte)Extrusion.Curve1
+                    && pbs.Scale.X == pbs.Scale.Y && pbs.Scale.Y == pbs.Scale.Z)*/)
                 {
 
                     if (pbs.ProfileBegin == 0 && pbs.ProfileEnd == 0

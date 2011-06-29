@@ -1335,8 +1335,48 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 if (prim_geom != IntPtr.Zero)
                 {
-
                     CalculatePrimMass ();
+                    /*if (!childPrim)
+                    {
+                        if (m_isphysical == true)
+                        {
+                            if (Body == IntPtr.Zero)
+                            {
+                                if (_pbs.SculptEntry && _parent_scene.meshSculptedPrim)
+                                {
+                                    changeshape ((object)_pbs);
+                                }
+                                else
+                                {
+                                    MakeBody ();
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (Body != IntPtr.Zero)
+                            {
+                                UpdateChildsfromgeom ();
+                                if (_pbs.SculptEntry && _parent_scene.meshSculptedPrim)
+                                {
+                                    changeshape ((object)_pbs);
+                                }
+                                else
+                                    DestroyBody ();
+                            }
+                            else
+                            {
+                                if (_pbs.SculptEntry && _parent_scene.meshSculptedPrim)
+                                {
+                                    changeshape ((object)_pbs);
+                                }
+                                else
+                                {
+                                    MakeBody ();
+                                }
+                            }
+                        }
+                    }*/
                     /*
                                         if (m_isphysical)
                                             MakeBody();
