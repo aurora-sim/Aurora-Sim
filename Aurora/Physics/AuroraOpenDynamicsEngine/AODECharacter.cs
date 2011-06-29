@@ -874,7 +874,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Jump code
 
-            if (IsJumping && (IsColliding && m_preJumpCounter > _parent_scene.m_preJumpTime + 10) || m_preJumpCounter > 50)
+            if (IsJumping && (IsColliding) && m_preJumpCounter > _parent_scene.m_preJumpTime || m_preJumpCounter > 150)
             {
                 m_isJumping = false;
                 m_preJumpCounter = 0;
@@ -885,13 +885,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (m_ispreJumping && m_preJumpCounter == _parent_scene.m_preJumpTime)
             {
                 m_ispreJumping = false;
-                if (m_iscolliding)//Ground collision, as we cleared it out before calling this, and the ground allows normal jumps
-                    _target_velocity += m_preJumpForce * _parent_scene.m_preJumpForceMultiplier;
-                else
+                //if (!m_iscolliding)
+                //    vel.Z = -0.6f;
+                if (!m_iscolliding)//not Ground collision, as we cleared it out before calling this, and the ground allows normal jumps
                 {
-                    _target_velocity = m_preJumpForce * _parent_scene.m_preJumpForceMultiplier;
-                    vel.Z = -0.6f;
+                    _target_velocity.X += m_preJumpForce.X * _parent_scene.m_preJumpForceMultiplier * 7;
+                    _target_velocity.Y += m_preJumpForce.Y * _parent_scene.m_preJumpForceMultiplier * 7;
                 }
+                _target_velocity.Z += m_preJumpForce.Z * _parent_scene.m_preJumpForceMultiplier;
                 
                 m_preJumpCounter = 0;
                 m_isJumping = true;
@@ -902,7 +903,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 TriggerMovementUpdate();
                 return;
             }
-            if (m_isJumping && _target_velocity.Z < 1 && !Flying)
+            //This is for jumping on prims, since otherwise, you don't get off the ground sometimes
+            if (m_iscolliding && m_isJumping && _target_velocity.Z < 1 && !Flying)
                 _target_velocity.Z = m_preJumpForce.Z * _parent_scene.m_preJumpForceMultiplier;
 
             #endregion
