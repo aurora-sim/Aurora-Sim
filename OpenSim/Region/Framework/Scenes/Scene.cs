@@ -528,30 +528,13 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        private List<int> timeToBeat = new List<int> (50);
-        private int timeToBeatLastSet = 0;
-        private bool haveFilledBeatList = false;
+        private AveragingClass m_heartbeatList = new AveragingClass (50);
         private int GetHeartbeatSleepTime (int timeBeatTook)
         {
             //Add it to the list of the last 50 heartbeats
-            //if (timeBeatTook != 0)//Don't include 0 beats...
-            {
-                if (haveFilledBeatList)
-                    timeToBeat[timeToBeatLastSet] = timeBeatTook;
-                else
-                    timeToBeat.Add (timeBeatTook);
-                timeToBeatLastSet++;
-                if (timeToBeatLastSet >= 50)
-                {
-                    timeToBeatLastSet = 0;
-                    haveFilledBeatList = true;
-                }
-            }
-            //else
-            {
-            }
 
-            int avgHeartBeat = GetAverage (timeToBeat);
+            m_heartbeatList.Add (timeBeatTook);
+            int avgHeartBeat = (int)m_heartbeatList.GetAverage ();
 
             //The heartbeat sleep time if time dilation is 1
             int normalHeartBeatSleepTime = (int)m_updatetimespan;
@@ -560,15 +543,6 @@ namespace OpenSim.Region.Framework.Scenes
             int newAvgSleepTime = normalHeartBeatSleepTime - avgHeartBeat;
             //Console.WriteLine (newAvgSleepTime);
             return newAvgSleepTime;
-        }
-
-        private int GetAverage (List<int> timeToBeat)
-        {
-            int avg = 0;
-            foreach (int a in timeToBeat)
-                avg += a;
-            avg /= timeToBeat.Count;
-            return avg;
         }
 
         #endregion

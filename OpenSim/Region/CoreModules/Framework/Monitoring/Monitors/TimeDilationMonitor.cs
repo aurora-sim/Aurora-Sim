@@ -25,21 +25,22 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
+using Aurora.Framework;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
     class TimeDilationMonitor : ITimeDilationMonitor
     {
         private readonly Scene m_scene;
-        private float lastReportedPhysicsFPS;
-        private float basePhysicsFPS = 45;
+        private AveragingClass m_average = new AveragingClass (5);
 
         public TimeDilationMonitor(Scene scene)
         {
             m_scene = scene;
-            basePhysicsFPS = scene.BaseSimPhysFPS;
         }
 
         #region Implementation of IMonitor
@@ -61,12 +62,12 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public void SetPhysicsFPS(float value)
         {
-            lastReportedPhysicsFPS = value;
+            m_average.Add (value);
             //Now fix time dilation
-            m_scene.TimeDilation = lastReportedPhysicsFPS / basePhysicsFPS;
-            if (m_scene.TimeDilation < 0.01)
-                m_scene.TimeDilation = 0.01f;
-            else if (m_scene.TimeDilation > 1.0)
+            m_scene.TimeDilation = m_average.GetAverage() / m_scene.BaseSimPhysFPS;
+            if (m_scene.TimeDilation < 0.1)//Limit so that the client (and physics engine) don't go crazy
+                m_scene.TimeDilation = 0.1f;
+            else if (m_scene.TimeDilation > 1.0)//No going over!
                 m_scene.TimeDilation = 1.0f;
         }
 
