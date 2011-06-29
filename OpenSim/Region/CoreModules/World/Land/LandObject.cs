@@ -118,7 +118,8 @@ namespace OpenSim.Region.CoreModules.World.Land
         private void findPointInParcel(ILandObject land, ref uint refX, ref uint refY)
         {
             // the point we started with already is in the parcel
-            if (land.ContainsPoint((int)refX, (int)refY)) return;
+            if (land.ContainsPoint((int)refX, (int)refY) && refX != 0 && refY != 0) 
+                return;
 
             // ... otherwise, we have to search for a point within the parcel
             uint startX = (uint)land.LandData.AABBMin.X;

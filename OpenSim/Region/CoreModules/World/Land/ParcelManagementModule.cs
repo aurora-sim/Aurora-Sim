@@ -108,7 +108,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         private bool m_UpdateDirectoryOnUpdate = false;
         private bool m_UpdateDirectoryOnTimer = true;
-        private List<ILandObject> m_TaintedLandData = new List<ILandObject> ();
+        private List<LandData> m_TaintedLandData = new List<LandData> ();
         private int m_minutesBeforeTimer = 60;
         private System.Timers.Timer m_UpdateDirectoryTimer = new System.Timers.Timer();
         private int m_update_land = 10; //Check whether we need to rebuild the parcel prim count and other land related functions
@@ -386,16 +386,11 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 //lock (m_TaintedLandData)
                 //{
-                foreach (ILandObject parcel in m_TaintedLandData)
+                foreach (LandData parcel in m_TaintedLandData)
                 {
-                    LandData p = parcel.LandData.Copy();
-                    if (p.UserLocation == Vector3.Zero)
-                    {
-                        //Set it to a position inside the parcel at the ground if it doesn't have one
-                        p.UserLocation = GetParcelCenterAtGround(parcel);
-                    }
-                    DSC.AddLandObject(p);
+                    DSC.AddLandObject (parcel);
                 }
+                m_TaintedLandData.Clear ();
                 //}
             }
         }
@@ -706,26 +701,24 @@ namespace OpenSim.Region.CoreModules.World.Land
             IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             if (DSC != null)
             {
-                Vector3 OldUserLocation = parcel.LandData.UserLocation;
-                if (parcel.LandData.UserLocation == Vector3.Zero)
+                LandData p = parcel.LandData.Copy ();
+                if (p.UserLocation == Vector3.Zero)
                 {
                     //Set it to a position inside the parcel at the ground if it doesn't have one
-                    parcel.LandData.UserLocation = GetParcelCenterAtGround(GetLandObject(parcel.LandData.LocalID));
+                    p.UserLocation = GetParcelCenterAtGround(parcel);
                 }
                 if (m_UpdateDirectoryOnUpdate)
                     //Update search database
-                    DSC.AddLandObject(parcel.LandData);
+                    DSC.AddLandObject(p);
                 else if (m_UpdateDirectoryOnTimer)
                 {
                     //lock (m_TaintedLandData)
                     //{
                     //Tell the timer about it
-                    if (!m_TaintedLandData.Contains(parcel))
-                        m_TaintedLandData.Add(parcel);
+                    if (!m_TaintedLandData.Contains(p))
+                        m_TaintedLandData.Add(p);
                     //}
                 }
-                //Reset the position 
-                parcel.LandData.UserLocation = OldUserLocation;
             }
         }
 
@@ -734,8 +727,8 @@ namespace OpenSim.Region.CoreModules.World.Land
              IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
              if (DSC != null)
              {
-                 if (m_TaintedLandData.Contains (iLandObject))
-                     m_TaintedLandData.Remove (iLandObject);
+                 if (m_TaintedLandData.Contains (iLandObject.LandData))
+                     m_TaintedLandData.Remove (iLandObject.LandData);
 
                  DSC.RemoveLandObject (iLandObject.RegionUUID, iLandObject.LandData);
              }
@@ -1771,9 +1764,10 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             ILandObject new_land = new LandObject(data.OwnerID, data.IsGroupOwned, m_scene);
             new_land.LandData = data;
-            new_land.SetInfoID();
             if (!new_land.SetLandBitmapFromByteArray())
                 return false;
+            new_land.ForceUpdateLandInfo ();
+            new_land.SetInfoID ();
             AddLandObject(new_land, true);
             return true;
         }

@@ -152,7 +152,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         {
             UUID toAgentID = im.toAgentID;
 
-            // Try root avatar only first - incorrect now, see below
+            //Look locally first
             foreach (Scene scene in m_Scenes)
             {
                 IScenePresence user;
@@ -517,18 +517,12 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 if (responseData.ContainsKey("success"))
                 {
                     if ((string)responseData["success"] == "TRUE")
-                    {
                         return true;
-                    }
                     else
-                    {
                         return false;
-                    }
                 }
                 else
-                {
                     return false;
-                }
             }
             catch (WebException e)
             {

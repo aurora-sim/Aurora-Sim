@@ -1169,8 +1169,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 else
                 {
                     byte[] bucket = new byte[19];
-                    bucket[0] = 0; //dunno
-                    bucket[1] = 0; //dunno
+                    bucket[0] = 0; //Attachment enabled == false so 0
+                    bucket[1] = 0; //No attachment, so no asset type
                     info.GroupID.ToBytes(bucket, 2);
                     bucket[18] = 0; //dunno
                     msg.binaryBucket = bucket;
