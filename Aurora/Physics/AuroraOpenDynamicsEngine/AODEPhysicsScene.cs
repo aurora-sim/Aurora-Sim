@@ -99,7 +99,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float gravityy = 0f;
         public float gravityz = -9.8f;
         public bool m_hasSetUpPrims = false;
-        private const int maxContactsbeforedeath = 4000;
+        private const int maxContactsbeforedeath = 10000;
         private int m_currentmaxContactsbeforedeath = maxContactsbeforedeath;
 
         private float contactsurfacelayer = 0.001f;
@@ -1167,7 +1167,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (Math.Abs((m_timeDilation * contactsPerCollision - contacts.Length)) > 10)
                 {
-                    m_currentmaxContactsbeforedeath = Math.Max(100, (int)(maxContactsbeforedeath * TimeDilation));
+                    //This'll cause weird physics inworld
+                    //m_currentmaxContactsbeforedeath = Math.Max(100, (int)(maxContactsbeforedeath * TimeDilation));
                     contacts = new d.ContactGeom[Math.Max(5, (int)(m_timeDilation * contactsPerCollision))];
                     m_log.WarnFormat("[ODE]: AutoConfig: changing contact amount to {0}, {1}%", contacts.Length, (m_timeDilation * contactsPerCollision) / contactsPerCollision * 100);
                 }
@@ -2243,7 +2244,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_StatSendCollisionsTime = Util.EnvironmentTickCountSubtract(SendCollisionsTime);
 
                         m_global_contactcount = 0;
-                        d.WorldQuickStep(world, ODE_STEPSIZE);
+                        d.WorldQuickStep (world, ODE_STEPSIZE);
                         d.JointGroupEmpty(contactgroup);
                         //ode.dunlock(world);
                     }
@@ -2435,21 +2436,20 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     hfmax = (val > hfmax) ? val : hfmax;
                 }
             }
-            if(!needToCreateHeightmapinODE)
+
+            TerrainHeightFieldHeights.Add (RegionTerrain, heightMap);
+            if (!needToCreateHeightmapinODE)
+            {
+                TerrainHeightFieldHeights.Remove (RegionTerrain);
+                TerrainHeightFieldlimits.Remove (RegionTerrain);
+                float[] heighlimits = new float[2];
+                heighlimits[0] = hfmin;
+                heighlimits[1] = hfmax;
+                TerrainHeightFieldlimits.Add (RegionTerrain, heighlimits);
                 return;//If we have already done this once, we don't need to do it again
+            }
             lock (OdeLock)
             {
-                if (RegionTerrain != IntPtr.Zero)
-                {
-                    d.SpaceRemove (space, RegionTerrain);
-                    d.GeomDestroy (RegionTerrain);
-                }
-                TerrainHeightFieldHeights.Remove (RegionTerrain);
-                ODETerrainHeightFieldHeights.Remove (RegionTerrain);
-                TerrainHeightFieldlimits.Remove (RegionTerrain);
-
-                actor_name_map.Remove (RegionTerrain);
-
                 const float scale = (1f / (float)Constants.TerrainCompression);
                 const float offset = 0.0f;
                 float thickness = (float)hfmin;
