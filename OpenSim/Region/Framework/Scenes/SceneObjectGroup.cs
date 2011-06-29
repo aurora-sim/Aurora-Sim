@@ -1475,7 +1475,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void RebuildPhysicalRepresentation (bool keepSelectedStatuses)
         {
-            Dictionary<SceneObjectPart, int> vehicleParams = new Dictionary<SceneObjectPart, int> ();
             lock (m_partsLock)
             {
                 foreach (SceneObjectPart part in m_partsList)
@@ -1488,7 +1487,6 @@ namespace OpenSim.Region.Framework.Scenes
                     part.AngularVelocity = Vector3.Zero;
                     if (part.PhysActor != null)
                     {
-                        vehicleParams.Add(part, part.PhysActor.VehicleType);
                         part.PhysActor.RotationalVelocity = Vector3.Zero;
                         part.PhysActor.UnSubscribeEvents ();
                         part.PhysActor.OnCollisionUpdate -= part.PhysicsCollision;
@@ -1534,8 +1532,7 @@ namespace OpenSim.Region.Framework.Scenes
                     part.PhysActor.UUID = part.UUID;
                     part.PhysActor.VolumeDetect = part.VolumeDetectActive;
 
-                    if(vehicleParams.ContainsKey(part))
-                        part.PhysActor.VehicleType = vehicleParams[part];
+                    FixVehicleParams (part);
 
                     //Force deselection here so that it isn't stuck forever
                     if (!keepSelectedStatuses)
@@ -1568,6 +1565,35 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             part.PhysActor.link (RootPart.PhysActor);
                         }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Fix all the vehicle params after rebuilding the representation
+        /// </summary>
+        /// <param name="part"></param>
+        private void FixVehicleParams (SceneObjectPart part)
+        {
+            part.PhysActor.VehicleType = part.VehicleType;
+
+            OpenMetaverse.StructuredData.OSD o = part.GetComponentState ("VehicleParameters");
+            foreach (OpenMetaverse.StructuredData.OSD param in part.VehicleFlags)
+            {
+                part.PhysActor.VehicleFlags (param.AsInteger(), false);
+            }
+
+            foreach (KeyValuePair<string, OpenMetaverse.StructuredData.OSD> param in part.VehicleParameters)
+            {
+                if (param.Value.Type == OpenMetaverse.StructuredData.OSDType.Real)
+                    part.PhysActor.VehicleFloatParam (int.Parse (param.Key), (float)param.Value.AsReal ());
+                else if (param.Value.Type == OpenMetaverse.StructuredData.OSDType.Array)
+                {
+                    OpenMetaverse.StructuredData.OSDArray a = (OpenMetaverse.StructuredData.OSDArray)param.Value;
+                    if (a.Count == 3)
+                        part.PhysActor.VehicleVectorParam (int.Parse (param.Key), param.Value.AsVector3 ());
+                    else
+                        part.PhysActor.VehicleRotationParam (int.Parse (param.Key), param.Value.AsQuaternion ());
                 }
             }
         }

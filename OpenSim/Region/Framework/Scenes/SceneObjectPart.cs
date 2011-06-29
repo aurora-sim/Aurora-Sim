@@ -4133,36 +4133,101 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        #region Vehicle Params
+
+        public int VehicleType
+        {
+            get
+            {
+                return GetComponentState ("VehicleType").AsInteger ();
+            }
+            set
+            {
+                SetComponentState ("VehicleType", value);
+            }
+        }
+
+        private OSDArray m_VehicleFlags = null;
+        public OSDArray VehicleFlags
+        {
+            get
+            {
+                if (m_VehicleFlags == null)
+                {
+                    m_VehicleFlags = GetComponentState ("VehicleFlags") as OSDArray;
+                    if (m_VehicleFlags == null)
+                        m_VehicleFlags = new OSDArray ();
+                }
+                return m_VehicleFlags;
+            }
+            set
+            {
+                m_VehicleFlags = value;
+            }
+        }
+
+        private OSDMap m_VehicleParams = null;
+        public OSDMap VehicleParameters
+        {
+            get
+            {
+                if(m_VehicleParams == null)
+                {
+                    m_VehicleParams = GetComponentState ("VehicleParameters") as OSDMap;
+                    if (m_VehicleParams == null)
+                        m_VehicleParams = new OSDMap ();
+                }
+                return m_VehicleParams;
+            }
+            set
+            {
+                m_VehicleParams = value;
+            }
+        }
+
+        #endregion
+
+        public void SetVehicleFlags (int param, bool remove)
+        {
+            if (remove)
+                VehicleFlags.Remove (param);
+            else
+                VehicleFlags.Add (param);
+
+            SetComponentState ("VehicleFlags", VehicleFlags);
+            if (PhysActor != null)
+                PhysActor.VehicleFlags (param, remove);
+        }
+
         public void SetVehicleType(int type)
         {
+            VehicleType = type;
             if (PhysActor != null)
-            {
                 PhysActor.VehicleType = type;
-            }
         }
 
         public void SetVehicleFloatParam(int param, float value)
         {
+            VehicleParameters[param.ToString ()] = value;
+            SetComponentState ("VehicleParameters", VehicleParameters);
             if (PhysActor != null)
-            {
                 PhysActor.VehicleFloatParam(param, value);
-            }
         }
 
         public void SetVehicleVectorParam(int param, Vector3 value)
         {
+            VehicleParameters[param.ToString ()] = value;
+            SetComponentState ("VehicleParameters", VehicleParameters);
             if (PhysActor != null)
-            {
                 PhysActor.VehicleVectorParam(param, value);
-            }
         }
 
-        public void SetVehicleRotationParam(int param, Quaternion rotation)
+        public void SetVehicleRotationParam (int param, Quaternion value)
         {
+            VehicleParameters[param.ToString ()] = value;
+            SetComponentState ("VehicleParameters", VehicleParameters);
             if (PhysActor != null)
-            {
-                PhysActor.VehicleRotationParam(param, rotation);
-            }
+                PhysActor.VehicleRotationParam (param, value);
         }
 
         public void SetPhysActorCameraPos(Quaternion CameraRotation)
@@ -4362,14 +4427,6 @@ namespace OpenSim.Region.Framework.Scenes
             hasHollow = shape.ProfileHollow > 0;
             hasDimple = (shape.ProfileBegin > 0) || (shape.ProfileEnd > 0); // taken from llSetPrimitiveParms
             hasProfileCut = hasDimple; // is it the same thing?
-        }
-        
-        public void SetVehicleFlags(int param, bool remove)
-        {
-            if (PhysActor != null)
-            {
-                PhysActor.VehicleFlags(param, remove);
-            }
         }
 
         public void SetGroup(UUID groupID, IClientAPI client)

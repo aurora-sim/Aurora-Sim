@@ -174,6 +174,12 @@ namespace OpenSim.Region.Framework.Scenes.Components
             RegisterComponent (com);
             com = new DefaultComponents ("OmegaGain", 0);
             RegisterComponent (com);
+            com = new DefaultComponents ("VehicleType", 0);
+            RegisterComponent (com);
+            com = new DefaultComponents ("VehicleParameters", 0);
+            RegisterComponent (com);
+            com = new DefaultComponents ("VehicleFlags", 0);
+            RegisterComponent (com);
         }
 
         public void RemoveRegion(Scene scene)
