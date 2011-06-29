@@ -2501,8 +2501,6 @@ namespace OpenSim.Region.Framework.Scenes
             CollisionEventUpdate collisionData = (CollisionEventUpdate)e;
             Dictionary<uint, ContactPoint> coldata = collisionData.m_objCollisionList;
 
-            CollisionPlane = Vector4.UnitW;
-
             if (coldata.Keys.Count > 0)
             {
                 //Fire events for attachments
@@ -2587,13 +2585,13 @@ namespace OpenSim.Region.Framework.Scenes
                             if (lowest.Position != new Vector3(float.MaxValue, float.MaxValue, float.MaxValue))
                             {
                                 Vector4 newPlane = new Vector4(-lowest.SurfaceNormal, -Vector3.Dot(lowest.Position, lowest.SurfaceNormal));
-                                if (lowest.SurfaceNormal != Vector3.Zero)
+                                //if (lowest.SurfaceNormal != Vector3.Zero)//Generates a 0,0,0,0, which is bad for the client
+                                if (CollisionPlane != newPlane)
+                                {
                                     CollisionPlane = newPlane;
+                                    SendTerseUpdateToAllClients ();
+                                }
                             }
-
-                            //No Zero vectors, as it causes bent knee in the client! Replace with <0, 0, 0, 1>
-                            if (CollisionPlane == new Vector4(0, 0, 0, 0))
-                                CollisionPlane = new Vector4(0, 0, 0, 1);
                         }
                         break;
                 }

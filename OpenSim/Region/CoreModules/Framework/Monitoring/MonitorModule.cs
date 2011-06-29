@@ -168,7 +168,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     //Set the correct update time
                     SetUpdateMS(2000);
                     //Start the stats heartbeat
-                    m_report.AutoReset = true;
+                    m_report.AutoReset = false;
                     m_report.Interval = statsUpdatesEveryMS;
                     m_report.Elapsed += new ElapsedEventHandler(statsHeartBeat);
                     m_report.Enabled = true;

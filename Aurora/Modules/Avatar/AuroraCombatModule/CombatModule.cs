@@ -436,6 +436,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                         m_health += m_combatModule.RegenerateHealthSpeed;
                         m_SP.ControllingClient.SendHealth (Health);
                     }
+                    else if (Health != m_combatModule.MaximumHealth)
+                    {
+                        m_health += m_combatModule.MaximumHealth;
+                        m_SP.ControllingClient.SendHealth (Health);
+                    }
                 }
             }
 

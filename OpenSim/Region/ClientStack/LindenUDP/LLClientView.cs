@@ -4755,7 +4755,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             byte[] objectData = new byte[76];
 
-            //Vector4.Zero causes bended knee
+            //No Zero vectors, as it causes bent knee in the client! Replace with <0, 0, 0, 1>
             if (data.CollisionPlane == Vector4.Zero)
                 data.CollisionPlane = Vector4.UnitW;
             //m_log.DebugFormat("CollisionPlane: {0}", data.CollisionPlane);
