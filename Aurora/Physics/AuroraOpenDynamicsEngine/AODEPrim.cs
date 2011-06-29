@@ -1929,7 +1929,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.Vector3 rotvel = d.BodyGetAngularVel (Body);
 
                     #region Crossing failures
-
+                    
                     if (cpos.X > ((int)_parent_scene.WorldExtents.X - 0.05f) ||
                         cpos.X < 0f ||
                         cpos.Y > ((int)_parent_scene.WorldExtents.Y - 0.05f) ||
@@ -3241,6 +3241,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             contact.surface.mu = 800;
             if(actorType == ActorTypes.Prim)
                 contact.surface.mu *= _parent_entity.Friction;
+            if (m_vehicle.Type != Vehicle.TYPE_NONE)
+                contact.surface.mu *= 0;
             contact.surface.mu2 = contact.surface.mu;
 
             return contact;
