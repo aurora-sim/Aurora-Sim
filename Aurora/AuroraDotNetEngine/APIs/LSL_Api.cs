@@ -442,8 +442,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         protected UUID InventoryKey(string name, int type)
         {
-            
-
             lock (m_host.TaskInventory)
             {
                 foreach (KeyValuePair<UUID, TaskInventoryItem> inv in m_host.TaskInventory)
@@ -461,10 +459,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return UUID.Zero;
         }
 
-        protected UUID InventoryKey(string name)
+        protected UUID InventoryKey (string name, bool throwExceptionIfDoesNotExist)
         {
-            
-
             lock (m_host.TaskInventory)
             {
                 foreach (KeyValuePair<UUID, TaskInventoryItem> inv in m_host.TaskInventory)
@@ -474,6 +470,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         return inv.Value.AssetID;
                     }
                 }
+            }
+
+            if (throwExceptionIfDoesNotExist)
+            {
+                IChatModule chatModule = World.RequestModuleInterface<IChatModule> ();
+                if (chatModule != null)
+                    chatModule.SimChat ("Could not find sound '" + name + "'.",
+                        ChatTypeEnum.DebugChannel, 2147483647, m_host.AbsolutePosition,
+                        m_host.Name, m_host.UUID, false, World);
             }
 
             return UUID.Zero;
@@ -487,7 +492,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// </summary>
         /// <param name="k"></param>
         /// <returns></returns>
-        protected UUID KeyOrName(string k)
+        protected UUID KeyOrName(string k, bool throwExceptionIfDoesNotExist)
         {
             UUID key = UUID.Zero;
 
@@ -500,7 +505,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // not found returns UUID.Zero which will translate to the default particle texture
             else
             {
-                return InventoryKey(k);
+                return InventoryKey(k, throwExceptionIfDoesNotExist);
             }
         }
 
@@ -2640,7 +2645,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
 
             // send the sound, once, to all clients in range
-            m_host.SendSound(KeyOrName(sound).ToString(), volume, false, 0, 0, false, false);
+            m_host.SendSound (KeyOrName (sound, true).ToString (), volume, false, 0, 0, false, false);
         }
 
         // Xantor 20080528 we should do this differently.
@@ -2655,13 +2660,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
-            if (m_host.Sound == KeyOrName (sound))
+            if (m_host.Sound == KeyOrName (sound, true))
                 return;
 
             if (m_host.Sound != UUID.Zero)
                 llStopSound();
 
-            m_host.Sound = KeyOrName(sound);
+            m_host.Sound = KeyOrName (sound, true);
             m_host.SoundGain = volume;
             m_host.SoundFlags = (byte)SoundFlags.Loop;      // looping
             m_host.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
@@ -2681,7 +2686,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (prim.Sound != UUID.Zero)
                         llStopSound();
 
-                    prim.Sound = KeyOrName(sound);
+                    prim.Sound = KeyOrName (sound, true);
                     prim.SoundGain = volume;
                     prim.SoundFlags = (byte)SoundFlags.Loop;      // looping
                     prim.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
@@ -2692,7 +2697,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (m_host.Sound != UUID.Zero)
                 llStopSound();
 
-            m_host.Sound = KeyOrName(sound);
+            m_host.Sound = KeyOrName(sound, true);
             m_host.SoundGain = volume;
             m_host.SoundFlags = (byte)SoundFlags.Loop;      // looping
             m_host.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
@@ -2716,7 +2721,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
 
             // send the sound, once, to all clients in range
-            m_host.SendSound(KeyOrName(sound).ToString(), volume, false, 0, 0, true, false);
+            m_host.SendSound (KeyOrName (sound, true).ToString (), volume, false, 0, 0, true, false);
         }
 
         public void llTriggerSound(string sound, double volume)
@@ -2724,7 +2729,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
             // send the sound, once, to all clients in range
-            m_host.SendSound(KeyOrName(sound).ToString(), volume, true, 0, 0, false, false);
+            m_host.SendSound (KeyOrName (sound, true).ToString (), volume, true, 0, 0, false, false);
         }
 
         // Xantor 20080528: Clear prim data of sound instead
@@ -4145,7 +4150,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 if (!UUID.TryParse(anim, out animID))
                 {
-                    animID=InventoryKey(anim);
+                    animID = InventoryKey(anim, false);
                 }
 
                 IScenePresence presence = World.GetScenePresence(item.PermsGranter);
@@ -6686,7 +6691,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             float radius1 = (float)llVecDist(llGetPos(), top_north_east);
             float radius2 = (float)llVecDist(llGetPos(), bottom_south_west);
             float radius = Math.Abs(radius1 - radius2);
-            m_host.SendSound(KeyOrName(sound).ToString(), volume, true, 0, radius, false, false);
+            m_host.SendSound (KeyOrName (sound, true).ToString (), volume, true, 0, radius, false, false);
         }
 
         public DateTime llEjectFromLand(string pest)
@@ -7197,7 +7202,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     else if (rule == (int)ScriptBaseClass.PSYS_SRC_TEXTURE)
                     {
-                        prules.Texture = KeyOrName(rules.GetLSLStringItem(i + 1));
+                        prules.Texture = KeyOrName(rules.GetLSLStringItem(i + 1), false);
                     }
 
                     else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_RATE)
