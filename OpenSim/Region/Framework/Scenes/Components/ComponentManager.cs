@@ -180,6 +180,8 @@ namespace OpenSim.Region.Framework.Scenes.Components
             RegisterComponent (com);
             com = new DefaultComponents ("VehicleFlags", 0);
             RegisterComponent (com);
+            com = new DefaultComponents ("PIDHoverActive", 0);
+            RegisterComponent (com);
         }
 
         public void RemoveRegion(Scene scene)
@@ -286,6 +288,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             }
             else
             {
+                m_log.Warn ("PUT THIS IN THE AURORA-SIM IRC CHANNEL IF POSSIBLE: " + Name);
                 DefaultComponents com = new DefaultComponents (Name, 0);
                 RegisterComponent (com);
                 return m_components[Name].GetState (obj.UUID);

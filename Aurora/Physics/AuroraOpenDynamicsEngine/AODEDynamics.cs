@@ -75,7 +75,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         // Vehicle properties
         private Vehicle m_type = Vehicle.TYPE_NONE;                     // If a 'VEHICLE', and what kind
         private Quaternion m_referenceFrame = Quaternion.Identity;   // Axis modifier
-        private VehicleFlag m_flags = (VehicleFlag)0;                  // Boolean settings:
         // HOVER_TERRAIN_ONLY
         // HOVER_GLOBAL_HEIGHT
         // NO_DEFLECTION_UP
@@ -83,7 +82,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         // HOVER_UP_ONLY
         // LIMIT_MOTOR_UP
         // LIMIT_ROLL_ONLY
-        private VehicleFlag m_Hoverflags = (VehicleFlag)0;
+        private VehicleFlag m_flags = (VehicleFlag)0;                  // Boolean settings:
         private Vector3 m_BlockingEndPoint = Vector3.Zero;
         private Quaternion m_RollreferenceFrame = Quaternion.Identity;
         // Linear properties
@@ -285,158 +284,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         internal void ProcessVehicleFlags(int pParam, bool remove)
         {
+            VehicleFlag param = (VehicleFlag)pParam;
             if (remove)
             {
                 if (pParam == -1)
-                {
                     m_flags = (VehicleFlag)0;
-                    m_Hoverflags = (VehicleFlag)0;
-                    return;
-                }
-                else if ((pParam & (int)VehicleFlag.HOVER_GLOBAL_HEIGHT) == (int)VehicleFlag.HOVER_GLOBAL_HEIGHT)
-                {
-                    if ((m_Hoverflags & VehicleFlag.HOVER_GLOBAL_HEIGHT) != (VehicleFlag)0)
-                        m_Hoverflags &= ~(VehicleFlag.HOVER_GLOBAL_HEIGHT);
-                }
-                else if ((pParam & (int)VehicleFlag.HOVER_TERRAIN_ONLY) == (int)VehicleFlag.HOVER_TERRAIN_ONLY)
-                {
-                    if ((m_Hoverflags & VehicleFlag.HOVER_TERRAIN_ONLY) != (VehicleFlag)0)
-                        m_Hoverflags &= ~(VehicleFlag.HOVER_TERRAIN_ONLY);
-                }
-                else if ((pParam & (int)VehicleFlag.HOVER_UP_ONLY) == (int)VehicleFlag.HOVER_UP_ONLY)
-                {
-                    if ((m_Hoverflags & VehicleFlag.HOVER_UP_ONLY) != (VehicleFlag)0)
-                        m_Hoverflags &= ~(VehicleFlag.HOVER_UP_ONLY);
-                }
-                else if ((pParam & (int)VehicleFlag.HOVER_WATER_ONLY) == (int)VehicleFlag.HOVER_WATER_ONLY)
-                {
-                    if ((m_Hoverflags & VehicleFlag.HOVER_WATER_ONLY) != (VehicleFlag)0)
-                        m_Hoverflags &= ~(VehicleFlag.HOVER_WATER_ONLY);
-                }
-                else if ((pParam & (int)VehicleFlag.LOCK_HOVER_HEIGHT) == (int)VehicleFlag.LOCK_HOVER_HEIGHT)
-                {
-                    if ((m_Hoverflags & VehicleFlag.LOCK_HOVER_HEIGHT) != (VehicleFlag)0)
-                        m_Hoverflags &= ~(VehicleFlag.LOCK_HOVER_HEIGHT);
-                }
-                else if ((pParam & (int)VehicleFlag.LIMIT_MOTOR_UP) == (int)VehicleFlag.LIMIT_MOTOR_UP)
-                {
-                    if ((m_flags & VehicleFlag.LIMIT_MOTOR_UP) != (VehicleFlag)0)
-                        m_flags &= ~(VehicleFlag.LIMIT_MOTOR_UP);
-                }
-                else if ((pParam & (int)VehicleFlag.LIMIT_ROLL_ONLY) == (int)VehicleFlag.LIMIT_ROLL_ONLY)
-                {
-                    if ((m_flags & VehicleFlag.LIMIT_ROLL_ONLY) != (VehicleFlag)0)
-                        m_flags &= ~(VehicleFlag.LIMIT_ROLL_ONLY);
-                }
-                else if ((pParam & (int)VehicleFlag.MOUSELOOK_BANK) == (int)VehicleFlag.MOUSELOOK_BANK)
-                {
-                    if ((m_flags & VehicleFlag.MOUSELOOK_BANK) != (VehicleFlag)0)
-                        m_flags &= ~(VehicleFlag.MOUSELOOK_BANK);
-                }
-                else if ((pParam & (int)VehicleFlag.MOUSELOOK_STEER) == (int)VehicleFlag.MOUSELOOK_STEER)
-                {
-                    if ((m_flags & VehicleFlag.MOUSELOOK_STEER) != (VehicleFlag)0)
-                        m_flags &= ~(VehicleFlag.MOUSELOOK_STEER);
-                }
-                else if ((pParam & (int)VehicleFlag.NO_DEFLECTION_UP) == (int)VehicleFlag.NO_DEFLECTION_UP)
-                {
-                    if ((m_flags & VehicleFlag.NO_DEFLECTION_UP) != (VehicleFlag)0)
-                        m_flags &= ~(VehicleFlag.NO_DEFLECTION_UP);
-                }
-                else if ((pParam & (int)VehicleFlag.CAMERA_DECOUPLED) == (int)VehicleFlag.CAMERA_DECOUPLED)
-                {
-                    if ((m_flags & VehicleFlag.CAMERA_DECOUPLED) != (VehicleFlag)0)
-                        m_flags &= ~(VehicleFlag.CAMERA_DECOUPLED);
-                }
-                else if ((pParam & (int)VehicleFlag.NO_X) == (int)VehicleFlag.NO_X)
-                {
-                    if ((m_flags & VehicleFlag.NO_X) != (VehicleFlag)0)
-                        m_flags &= ~(VehicleFlag.NO_X);
-                }
-                else if ((pParam & (int)VehicleFlag.NO_Y) == (int)VehicleFlag.NO_Y)
-                {
-                    if ((m_flags & VehicleFlag.NO_Y) != (VehicleFlag)0)
-                        m_flags &= ~(VehicleFlag.NO_Y);
-                }
-                else if ((pParam & (int)VehicleFlag.NO_Z) == (int)VehicleFlag.NO_Z)
-                {
-                    if ((m_flags & VehicleFlag.NO_Z) != (VehicleFlag)0)
-                        m_flags &= ~(VehicleFlag.NO_Z);
-                }
-                else if ((pParam & (int)VehicleFlag.NO_DEFLECTION) == (int)VehicleFlag.NO_DEFLECTION)
-                {
-                    if ((m_flags & VehicleFlag.NO_DEFLECTION) != (VehicleFlag)0)
-                        m_flags &= ~(VehicleFlag.NO_DEFLECTION);
-                }
-                else if ((pParam & (int)VehicleFlag.LOCK_ROTATION) == (int)VehicleFlag.LOCK_ROTATION)
-                {
-                    if ((m_flags & VehicleFlag.LOCK_ROTATION) != (VehicleFlag)0)
-                        m_flags &= ~(VehicleFlag.LOCK_ROTATION);
-                }
+                else
+                    m_flags &= ~param;
             }
             else
-            {
-                if ((pParam & (int)VehicleFlag.HOVER_GLOBAL_HEIGHT) == (int)VehicleFlag.HOVER_GLOBAL_HEIGHT)
-                {
-                    m_Hoverflags |= (VehicleFlag.HOVER_GLOBAL_HEIGHT | m_flags);
-                }
-                else if ((pParam & (int)VehicleFlag.HOVER_TERRAIN_ONLY) == (int)VehicleFlag.HOVER_TERRAIN_ONLY)
-                {
-                    m_Hoverflags |= (VehicleFlag.HOVER_TERRAIN_ONLY | m_flags);
-                }
-                else if ((pParam & (int)VehicleFlag.HOVER_UP_ONLY) == (int)VehicleFlag.HOVER_UP_ONLY)
-                {
-                    m_Hoverflags |= (VehicleFlag.HOVER_UP_ONLY | m_flags);
-                }
-                else if ((pParam & (int)VehicleFlag.HOVER_WATER_ONLY) == (int)VehicleFlag.HOVER_WATER_ONLY)
-                {
-                    m_Hoverflags |= (VehicleFlag.HOVER_WATER_ONLY | m_flags);
-                }
-                else if ((pParam & (int)VehicleFlag.LOCK_HOVER_HEIGHT) == (int)VehicleFlag.LOCK_HOVER_HEIGHT)
-                {
-                    m_Hoverflags |= (VehicleFlag.LOCK_HOVER_HEIGHT);
-                }
-                else if ((pParam & (int)VehicleFlag.LIMIT_MOTOR_UP) == (int)VehicleFlag.LIMIT_MOTOR_UP)
-                {
-                    m_flags |= (VehicleFlag.LIMIT_MOTOR_UP | m_flags);
-                }
-                else if ((pParam & (int)VehicleFlag.MOUSELOOK_BANK) == (int)VehicleFlag.MOUSELOOK_BANK)
-                {
-                    m_flags |= (VehicleFlag.MOUSELOOK_BANK | m_flags);
-                }
-                else if ((pParam & (int)VehicleFlag.MOUSELOOK_STEER) == (int)VehicleFlag.MOUSELOOK_STEER)
-                {
-                    m_flags |= (VehicleFlag.MOUSELOOK_STEER | m_flags);
-                }
-                if ((pParam & (int)VehicleFlag.NO_DEFLECTION_UP) == (int)VehicleFlag.NO_DEFLECTION_UP)
-                {
-                    m_flags |= (VehicleFlag.NO_DEFLECTION_UP | m_flags);
-                }
-                else if ((pParam & (int)VehicleFlag.CAMERA_DECOUPLED) == (int)VehicleFlag.CAMERA_DECOUPLED)
-                {
-                    m_flags |= (VehicleFlag.CAMERA_DECOUPLED | m_flags);
-                }
-                else if ((pParam & (int)VehicleFlag.NO_X) == (int)VehicleFlag.NO_X)
-                {
-                    m_flags |= (VehicleFlag.NO_X);
-                }
-                else if ((pParam & (int)VehicleFlag.NO_Y) == (int)VehicleFlag.NO_Y)
-                {
-                    m_flags |= (VehicleFlag.NO_Y);
-                }
-                else if ((pParam & (int)VehicleFlag.NO_Z) == (int)VehicleFlag.NO_Z)
-                {
-                    m_flags |= (VehicleFlag.NO_Z);
-                }
-                else if ((pParam & (int)VehicleFlag.NO_DEFLECTION) == (int)VehicleFlag.NO_DEFLECTION)
-                {
-                    m_flags |= (VehicleFlag.NO_DEFLECTION);
-                }
-                else if ((pParam & (int)VehicleFlag.LOCK_ROTATION) == (int)VehicleFlag.LOCK_ROTATION)
-                {
-                    m_flags |= (VehicleFlag.LOCK_ROTATION);
-                }
-            }
+                m_flags |= param;
         }//end ProcessVehicleFlags
 
         internal void ProcessTypeChange(Vehicle pType)
@@ -482,7 +339,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_bankingMix = 1;
                     m_bankingTimescale = 10;
                     m_referenceFrame = Quaternion.Identity;
-                    m_Hoverflags &=
+                    m_flags &=
                          ~(VehicleFlag.HOVER_WATER_ONLY | VehicleFlag.HOVER_TERRAIN_ONLY |
                            VehicleFlag.HOVER_GLOBAL_HEIGHT | VehicleFlag.HOVER_UP_ONLY);
                     m_flags |= (VehicleFlag.NO_DEFLECTION_UP | VehicleFlag.LIMIT_ROLL_ONLY | VehicleFlag.LIMIT_MOTOR_UP);
@@ -510,10 +367,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_bankingMix = 1;
                     m_bankingTimescale = 1;
                     m_referenceFrame = Quaternion.Identity;
-                    m_Hoverflags &= ~(VehicleFlag.HOVER_WATER_ONLY | VehicleFlag.HOVER_TERRAIN_ONLY | VehicleFlag.HOVER_GLOBAL_HEIGHT);
+                    m_flags &= ~(VehicleFlag.HOVER_WATER_ONLY | VehicleFlag.HOVER_TERRAIN_ONLY | VehicleFlag.HOVER_GLOBAL_HEIGHT);
                     m_flags |= (VehicleFlag.NO_DEFLECTION_UP | VehicleFlag.LIMIT_ROLL_ONLY |
-                                VehicleFlag.LIMIT_MOTOR_UP);
-                    m_Hoverflags |= (VehicleFlag.HOVER_UP_ONLY);
+                                VehicleFlag.LIMIT_MOTOR_UP | VehicleFlag.HOVER_UP_ONLY);
                     break;
                 case Vehicle.TYPE_BOAT:
                     m_linearFrictionTimescale = new Vector3(10, 3, 2);
@@ -538,12 +394,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_bankingMix = 0.8f;
                     m_bankingTimescale = 1;
                     m_referenceFrame = Quaternion.Identity;
-                    m_Hoverflags &= ~(VehicleFlag.HOVER_TERRAIN_ONLY |
+                    m_flags &= ~(VehicleFlag.LIMIT_ROLL_ONLY | VehicleFlag.HOVER_TERRAIN_ONLY |
                             VehicleFlag.HOVER_GLOBAL_HEIGHT | VehicleFlag.HOVER_UP_ONLY);
-                    m_flags &= ~(VehicleFlag.LIMIT_ROLL_ONLY);
                     m_flags |= (VehicleFlag.NO_DEFLECTION_UP |
-                                VehicleFlag.LIMIT_MOTOR_UP);
-                    m_Hoverflags |= (VehicleFlag.HOVER_WATER_ONLY);
+                                VehicleFlag.LIMIT_MOTOR_UP |
+                                VehicleFlag.HOVER_WATER_ONLY);
                     break;
                 case Vehicle.TYPE_AIRPLANE:
                     m_linearFrictionTimescale = new Vector3(200, 10, 5);
@@ -568,9 +423,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_bankingMix = 0.7f;
                     m_bankingTimescale = 2;
                     m_referenceFrame = Quaternion.Identity;
-                    m_Hoverflags &= ~(VehicleFlag.HOVER_WATER_ONLY | VehicleFlag.HOVER_TERRAIN_ONLY |
+                    m_flags &= ~(VehicleFlag.NO_DEFLECTION_UP | VehicleFlag.LIMIT_MOTOR_UP |
+                        VehicleFlag.HOVER_WATER_ONLY | VehicleFlag.HOVER_TERRAIN_ONLY |
                         VehicleFlag.HOVER_GLOBAL_HEIGHT | VehicleFlag.HOVER_UP_ONLY);
-                    m_flags &= ~(VehicleFlag.NO_DEFLECTION_UP | VehicleFlag.LIMIT_MOTOR_UP);
                     m_flags |= (VehicleFlag.LIMIT_ROLL_ONLY);
                     break;
                 case Vehicle.TYPE_BALLOON:
@@ -596,11 +451,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_bankingMix = 0.7f;
                     m_bankingTimescale = 5;
                     m_referenceFrame = Quaternion.Identity;
-                    m_Hoverflags &= ~(VehicleFlag.HOVER_WATER_ONLY | VehicleFlag.HOVER_TERRAIN_ONLY |
+                    m_flags &= ~(VehicleFlag.NO_DEFLECTION_UP | VehicleFlag.LIMIT_MOTOR_UP | 
+                        VehicleFlag.HOVER_WATER_ONLY | VehicleFlag.HOVER_TERRAIN_ONLY |
                         VehicleFlag.HOVER_UP_ONLY);
-                    m_flags &= ~(VehicleFlag.NO_DEFLECTION_UP | VehicleFlag.LIMIT_MOTOR_UP);
-                    m_flags |= (VehicleFlag.LIMIT_ROLL_ONLY);
-                    m_Hoverflags |= (VehicleFlag.HOVER_GLOBAL_HEIGHT);
+                    m_flags |= (VehicleFlag.LIMIT_ROLL_ONLY | VehicleFlag.HOVER_GLOBAL_HEIGHT);
                     break;
             }
         }//end SetDefaultsForType
@@ -707,10 +561,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             Vector3 grav = Vector3.Zero;
             // There is some gravity, make a gravity force vector
             // that is applied after object velocity.
-            d.Mass objMass;
-            d.BodyGetMass (Body, out objMass);
             // m_VehicleBuoyancy: -1=2g; 0=1g; 1=0g;
-            grav.Z = _pParentScene.gravityz * objMass.mass * parent.ParentEntity.GravityMultiplier * (1f - m_VehicleBuoyancy);
+            grav.Z = _pParentScene.gravityz * Mass * parent.ParentEntity.GravityMultiplier * (1f - m_VehicleBuoyancy);
             // Preserve the current Z velocity
             d.Vector3 vel_now = d.BodyGetLinearVel (Body);
             if(m_lastLinearVelocityVector.Z == 0 && m_verticalAttractionTimescale == 0)
@@ -760,29 +612,29 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
             // Check if hovering
-            if ((m_Hoverflags & (VehicleFlag.HOVER_WATER_ONLY | VehicleFlag.HOVER_TERRAIN_ONLY | VehicleFlag.HOVER_GLOBAL_HEIGHT)) != 0)
+            if ((m_flags & (VehicleFlag.HOVER_WATER_ONLY | VehicleFlag.HOVER_TERRAIN_ONLY | VehicleFlag.HOVER_GLOBAL_HEIGHT)) != 0)
             {
                 // We should hover, get the target height
-                if ((m_Hoverflags & VehicleFlag.HOVER_WATER_ONLY) != 0)
+                if ((m_flags & VehicleFlag.HOVER_WATER_ONLY) != 0)
                 {
                     m_VhoverTargetHeight = (float)_pParentScene.GetWaterLevel (pos.X, pos.Y) + m_VhoverHeight;
                 }
-                if ((m_Hoverflags & VehicleFlag.HOVER_TERRAIN_ONLY) != 0)
+                if ((m_flags & VehicleFlag.HOVER_TERRAIN_ONLY) != 0)
                 {
                     m_VhoverTargetHeight = _pParentScene.GetTerrainHeightAtXY (pos.X, pos.Y) + m_VhoverHeight;
                 }
-                if ((m_Hoverflags & VehicleFlag.HOVER_GLOBAL_HEIGHT) != 0)
+                if ((m_flags & VehicleFlag.HOVER_GLOBAL_HEIGHT) != 0)
                 {
                     m_VhoverTargetHeight = m_VhoverHeight;
                 }
 
-                if ((m_Hoverflags & VehicleFlag.HOVER_UP_ONLY) != 0)
+                if ((m_flags & VehicleFlag.HOVER_UP_ONLY) != 0)
                 {
                     // If body is aready heigher, use its height as target height
                     if (pos.Z > m_VhoverTargetHeight)
                         m_VhoverTargetHeight = pos.Z;
                 }
-                if ((m_Hoverflags & VehicleFlag.LOCK_HOVER_HEIGHT) != 0)
+                if ((m_flags & VehicleFlag.LOCK_HOVER_HEIGHT) != 0)
                 {
                     if ((pos.Z - m_VhoverTargetHeight) > .2 || (pos.Z - m_VhoverTargetHeight) < -.2)
                     {

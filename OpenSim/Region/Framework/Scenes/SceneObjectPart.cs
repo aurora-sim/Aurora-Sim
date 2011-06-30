@@ -5241,7 +5241,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             if (UsePhysics)
-                AddFlag(PrimFlags.Physics);
+                AddFlag (PrimFlags.Physics);
             else
                 RemFlag(PrimFlags.Physics);
             if (PhysActor != null)
@@ -5253,6 +5253,7 @@ namespace OpenSim.Region.Framework.Scenes
                     Velocity = Vector3.Zero;
                     Acceleration = Vector3.Zero;
                     AngularVelocity = Vector3.Zero;
+                    PhysActor.RotationalVelocity = Vector3.Zero;
                 }
             }
 
