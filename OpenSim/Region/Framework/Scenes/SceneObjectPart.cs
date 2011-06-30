@@ -5474,6 +5474,7 @@ namespace OpenSim.Region.Framework.Scenes
             ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }
 
+        private bool m_hasSubscribedToCollisionEvent = false;
         public void aggregateScriptEvents()
         {
             AggregateScriptEvents = 0;
@@ -5518,16 +5519,18 @@ namespace OpenSim.Region.Framework.Scenes
                 ((AggregateScriptEvents & scriptEvents.land_collision_start) != 0)
                 ) && PhysActor != null)
             {
-                if (!PhysActor.SubscribedEvents())
+                if (!m_hasSubscribedToCollisionEvent)
                 {
+                    m_hasSubscribedToCollisionEvent = true;
                     PhysActor.OnCollisionUpdate += PhysicsCollision;
                     PhysActor.SubscribeEvents (1000);
                 }
             }
             else if (PhysActor != null)
             {
-                if (PhysActor.SubscribedEvents ())
+                if (m_hasSubscribedToCollisionEvent)
                 {
+                    m_hasSubscribedToCollisionEvent = false;
                     PhysActor.OnCollisionUpdate -= PhysicsCollision;
                     PhysActor.UnSubscribeEvents ();
                 }
