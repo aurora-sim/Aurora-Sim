@@ -357,7 +357,11 @@ namespace Aurora.Framework
                     //Ask what is my ip for it
                     externalIp = utf8.GetString (webClient.DownloadData ("http://automation.whatismyip.com/n09230945.asp"));
                 }
-                catch (Exception) { }
+                catch (Exception ex)
+                {
+                    m_log.Error("FAILED TO GET EXTERNAL HOST NAME: " + ex.ToString() + ", setting to internal...");
+                    externalIp = "127.0.0.1";
+                }
                 CachedExternalIP = externalIp;
                 return externalIp;
             }

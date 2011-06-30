@@ -169,6 +169,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger VEHICLE_RANGE_BLOCK = 45;
         public static readonly LSLInteger VEHICLE_ROLL_FRAME = 46;
         public static readonly LSLInteger VEHICLE_FLAG_NO_DEFLECTION_UP = 1;
+        public static readonly LSLInteger VEHICLE_FLAG_NO_FLY_UP = 1;//Old name for NO_DEFLECTION_UP
         public static readonly LSLInteger VEHICLE_FLAG_LIMIT_ROLL_ONLY = 2;
         public static readonly LSLInteger VEHICLE_FLAG_HOVER_WATER_ONLY = 4;
         public static readonly LSLInteger VEHICLE_FLAG_HOVER_TERRAIN_ONLY = 8;
