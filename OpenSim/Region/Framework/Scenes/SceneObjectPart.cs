@@ -3246,7 +3246,7 @@ namespace OpenSim.Region.Framework.Scenes
                             else
                             {
                                 IScenePresence av = ParentGroup.Scene.GetScenePresence (localId);
-                                if (av != null && av.LocalId == localId)
+                                if (av != null)
                                 {
                                     if (m_parentGroup.RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || m_parentGroup.RootPart.CollisionFilter.ContainsValue(av.Name))
                                     {
@@ -5474,7 +5474,7 @@ namespace OpenSim.Region.Framework.Scenes
             ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }
 
-        private bool m_hasSubscribedToCollisionEvent = false;
+        internal bool m_hasSubscribedToCollisionEvent = false;
         public void aggregateScriptEvents()
         {
             AggregateScriptEvents = 0;

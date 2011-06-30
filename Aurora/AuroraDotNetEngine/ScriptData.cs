@@ -120,6 +120,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public StateSource stateSource;
         public AppDomain AppDomain;
         public Dictionary<string, IScriptApi> Apis = new Dictionary<string, IScriptApi>();
+        public object ScriptEventLock = new object ();
         public bool TimerQueued = false;
         public bool CollisionInQueue = false;
         public bool TouchInQueue = false;

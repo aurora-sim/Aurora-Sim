@@ -1489,6 +1489,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         part.PhysActor.RotationalVelocity = Vector3.Zero;
                         part.PhysActor.UnSubscribeEvents ();
+                        part.m_hasSubscribedToCollisionEvent = false;
                         part.PhysActor.OnCollisionUpdate -= part.PhysicsCollision;
                         part.PhysActor.OnRequestTerseUpdate -= part.PhysicsRequestingTerseUpdate;
                         part.PhysActor.OnSignificantMovement -= part.ParentGroup.CheckForSignificantMovement;
@@ -1548,6 +1549,7 @@ namespace OpenSim.Region.Framework.Scenes
                     part.PhysActor.OnOutOfBounds += part.PhysicsOutOfBounds;
 
                     part.FireOnAddedPhysics ();
+                    part.aggregateScriptEvents ();
                 }
                 Scene.AuroraEventManager.FireGenericEventHandler ("ObjectChangedPhysicalStatus", this);
             }

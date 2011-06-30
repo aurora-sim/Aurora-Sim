@@ -439,10 +439,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void AddEventSchQIS(QueueItemStruct QIS)
         {
             if (QIS.ID == null || QIS.ID.Script == null || QIS.ID.IgnoreNew)
+            {
+                EventManager.EventComplete (QIS);
                 return;
+            }
 
-            if (!QIS.ID.SetEventParams(QIS.functionName, QIS.llDetectParams)) // check events delay rules
+            if (!QIS.ID.SetEventParams (QIS.functionName, QIS.llDetectParams)) // check events delay rules
+            {
+                EventManager.EventComplete (QIS);
                 return;
+            }
 
             QIS.CurrentlyAt = null;
             
