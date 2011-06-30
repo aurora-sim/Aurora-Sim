@@ -243,7 +243,8 @@ namespace OpenSim.Services.GridService
                 {
                     foreach (IGridRegistrationUrlModule module in m_modules.Values)
                     {
-                        module.AddExistingUrlForClient (url.SessionID.ToString (), url.URLS[module.UrlName], url.Ports[module.UrlName]);
+                        if(url.URLS.ContainsKey(module.UrlName))//Make sure it exists
+                            module.AddExistingUrlForClient (url.SessionID.ToString (), url.URLS[module.UrlName], url.Ports[module.UrlName]);
                     }
                     if (m_useSessionTime && url.Expiration.AddHours(m_timeBeforeTimeout / 8) < DateTime.Now) //Check to see whether the expiration is soon before updating
                     {
@@ -265,10 +266,13 @@ namespace OpenSim.Services.GridService
             OSDMap retVal = new OSDMap();
             if (urls != null)
             {
-                if(urls.HostNames == null || urls.Ports == null || urls.URLS == null || urls.SessionID != SessionID)
+                if(urls.HostNames == null || urls.Ports == null ||
+                    urls.URLS == null || urls.SessionID != SessionID ||
+                    !CheckModuleNames(urls))
                 {
                     m_log.Warn ("[GridRegService]: Null stuff in GetUrls, HostNames " + (urls.HostNames == null) + ", Ports " +
-                        (urls.Ports == null) + ", URLS " + (urls.URLS == null) + ", SessionID 1 " + SessionID + ", SessionID 2 " + urls.SessionID);
+                        (urls.Ports == null) + ", URLS " + (urls.URLS == null) + ", SessionID 1 " + SessionID + ", SessionID 2 " + urls.SessionID +
+                        ", checkModuleNames: " + CheckModuleNames (urls));
                     RemoveUrlsForClient(urls.SessionID);
                 }
                 else
@@ -316,6 +320,25 @@ namespace OpenSim.Services.GridService
             m_genericsConnector.AddGeneric (UUID.Zero, "GridRegistrationUrls", SessionID.ToString (), urls.ToOSD ());
 
             return retVal;
+        }
+
+        private bool CheckModuleNames (GridRegistrationURLs urls)
+        {
+            foreach (string urlName in m_modules.Keys)
+            {
+                bool found = false;
+                foreach (string o in urls.URLS.Keys)
+                {
+                    if (o == urlName)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                    return false;
+            }
+            return true;
         }
 
         public void RemoveUrlsForClient(string SessionID)
