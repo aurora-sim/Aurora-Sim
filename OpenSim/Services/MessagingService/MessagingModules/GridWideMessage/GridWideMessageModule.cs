@@ -71,13 +71,12 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 MainConsole.Instance.Commands.AddCommand ("grid kick user",
                     "grid kick user <first> <last> <message>", "Kicks a user from the grid", KickUserMessage);
             }
-
-            //Also look for incoming messages to display
-            registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
         }
 
         public void FinishedStartup()
         {
+            //Also look for incoming messages to display
+            m_registry.RequestModuleInterface<IAsyncMessageRecievedService> ().OnMessageReceived += OnMessageReceived;
         }
 
         #endregion

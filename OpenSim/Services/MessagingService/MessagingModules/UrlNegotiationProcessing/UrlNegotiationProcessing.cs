@@ -59,13 +59,12 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             m_registry = registry;
             //MainConsole.Instance.Commands.AddCommand("UrlNegotiationProcessing", true, "switch servers",
             //    "switch servers", "Moves all regions to use a new URL base", NegotiateUrls);
-
-            //Also look for incoming messages to display
-            registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
         }
 
         public void FinishedStartup()
         {
+            //Also look for incoming messages to display
+            m_registry.RequestModuleInterface<IAsyncMessageRecievedService> ().OnMessageReceived += OnMessageReceived;
         }
 
         #endregion

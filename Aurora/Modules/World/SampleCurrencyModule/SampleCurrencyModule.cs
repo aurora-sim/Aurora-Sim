@@ -55,7 +55,7 @@ namespace Aurora.OptionalModules
     /// </summary>
     public class CurrencyModule : IMoneyModule, ISharedRegionModule
     {
-        private bool m_enabled = true;
+        private bool m_enabled = false;
 
         #region IMoneyModule Members
 
