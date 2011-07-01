@@ -2669,7 +2669,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_host.Sound = KeyOrName (sound, true);
             m_host.SoundGain = volume;
             m_host.SoundFlags = (byte)SoundFlags.Loop;      // looping
-            m_host.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
+            if (m_host.SoundRadius == 0)
+                m_host.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
             m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
         }
@@ -2689,7 +2690,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     prim.Sound = KeyOrName (sound, true);
                     prim.SoundGain = volume;
                     prim.SoundFlags = (byte)SoundFlags.Loop;      // looping
-                    prim.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
+                    if (prim.SoundRadius == 0)
+                        prim.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
                     prim.ScheduleUpdate(PrimUpdateFlags.FindBest);
                 }
@@ -2700,7 +2702,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_host.Sound = KeyOrName(sound, true);
             m_host.SoundGain = volume;
             m_host.SoundFlags = (byte)SoundFlags.Loop;      // looping
-            m_host.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
+            if(m_host.SoundRadius == 0)
+                m_host.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
             m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
         }
@@ -2746,7 +2749,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         part.Sound = UUID.Zero;
                         part.SoundGain = 0;
                         part.SoundFlags = (byte)SoundFlags.None;
-                        part.SoundRadius = 0;
                         part.ScheduleUpdate(PrimUpdateFlags.FindBest);
                     }
                     m_host.ParentEntity.LoopSoundMasterPrim = null;
@@ -2757,7 +2759,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     m_host.Sound = UUID.Zero;
                     m_host.SoundGain = 0;
                     m_host.SoundFlags = (byte)SoundFlags.None;
-                    m_host.SoundRadius = 0;
                     m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
                 }
             }
@@ -2766,7 +2767,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 m_host.Sound = UUID.Zero;
                 m_host.SoundGain = 0;
                 m_host.SoundFlags = (byte)SoundFlags.None;
-                m_host.SoundRadius = 0;
                 m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
             }
         }
