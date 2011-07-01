@@ -150,8 +150,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             CombatPresence m = (CombatPresence)presence.RequestModuleInterface<ICombatPresence> ();
             if (m != null)
             {
-                m.Close ();
                 presence.UnregisterModuleInterface<ICombatPresence> (m);
+                m.Close ();
             }
         }
 
@@ -276,12 +276,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 
             public void Close ()
             {
-                m_combatModule = null;
                 m_healthtimer.Stop ();
                 m_healthtimer.Close ();
                 m_SP.OnAddPhysics -= SP_OnAddPhysics;
                 m_SP.OnRemovePhysics -= SP_OnRemovePhysics;
                 SP_OnRemovePhysics ();
+                m_combatModule = null;
                 m_SP = null;
             }
 

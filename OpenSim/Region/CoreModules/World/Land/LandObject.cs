@@ -230,7 +230,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                     if (args.AuthBuyerID != newData.AuthBuyerID || args.SalePrice != newData.SalePrice)
                     {
-                        if (m_scene.Permissions.CanSellParcel(remote_client.AgentId, this) &&
+                        if (m_scene.Permissions.CanSellParcel (remote_client.AgentId, this) &&
                             m_scene.RegionInfo.RegionSettings.AllowLandResell)
                         {
                             newData.AuthBuyerID = args.AuthBuyerID;
@@ -238,7 +238,11 @@ namespace OpenSim.Region.CoreModules.World.Land
                             snap_selection = true;
                         }
                         else
-                            remote_client.SendAlertMessage("Permissions: You cannot set this parcel for sale");
+                        {
+                            remote_client.SendAlertMessage ("Permissions: You cannot set this parcel for sale");
+                            newData.Flags &= ~(uint)ParcelFlags.ForSale;
+                            newData.Flags &= ~(uint)ParcelFlags.ForSaleObjects;
+                        }
                     }
 
                     if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this, GroupPowers.LandSetSale))
