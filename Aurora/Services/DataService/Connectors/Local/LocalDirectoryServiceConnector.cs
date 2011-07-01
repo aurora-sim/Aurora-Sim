@@ -302,7 +302,7 @@ namespace Aurora.Services.DataService
                 dwell = " ORDER BY Dwell DESC";
 
             string whereClause = categoryString + " Description LIKE '%" + queryText + "%' OR Name LIKE '%" + queryText + "%' and ShowInSearch = '1'"  + dwell + " LIMIT " + StartQuery.ToString() + ",50 ";
-            List<string> retVal = GD.Query(whereClause, "searchparcel", "InfoUUID,Name,ForSale,Auction,Dwell,Maturity");
+            List<string> retVal = GD.Query(whereClause, "searchparcel", "InfoUUID,Name,ForSale,Auction,Dwell,Flags");
             if (retVal.Count == 0)
                 return Data.ToArray();
 
@@ -317,12 +317,12 @@ namespace Aurora.Services.DataService
                 replyData.dwell = float.Parse(retVal[i + 4]);
 
                 //Check to make sure we are sending the requested maturity levels
-                if (int.Parse(retVal[i + 5]) <= 0 && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludePG)) == (uint)DirectoryManager.DirFindFlags.IncludePG)
-                    Data.Add(replyData);
-                else if (int.Parse(retVal[i + 5]) <= 1 && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludeMature)) == (uint)DirectoryManager.DirFindFlags.IncludeMature)
-                    Data.Add(replyData);
-                else if (int.Parse(retVal[i + 5]) <= 2 && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludeAdult)) == (uint)DirectoryManager.DirFindFlags.IncludeAdult)
-                    Data.Add(replyData);
+                if ((int.Parse (retVal[i + 5]) & (int)ParcelFlags.MaturePublish) == (int)ParcelFlags.MaturePublish &&
+                    ((Flags & (uint)DirectoryManager.DirFindFlags.IncludeMature)) == 0)
+                {
+                }
+                else
+                    Data.Add (replyData);
                 replyData = new DirPlacesReplyData();
             }
 
@@ -372,7 +372,7 @@ namespace Aurora.Services.DataService
             forsalestring += " ForSale = '1'";
 
             string whereClause = pricestring + areastring + forsalestring + " LIMIT " + StartQuery.ToString() + ",50 " + dwell;
-            List<string> retVal = GD.Query(whereClause, "searchparcel", "InfoUUID,Name,Auction,SalePrice,Area,Maturity");
+            List<string> retVal = GD.Query(whereClause, "searchparcel", "InfoUUID,Name,Auction,SalePrice,Area,Flags");
 
             //if there are none, return
             if (retVal.Count == 0)
@@ -396,12 +396,12 @@ namespace Aurora.Services.DataService
                 if (Flags == 0)
                     Data.Add(replyData);
                 //Check maturity levels depending on what flags the user has set
-                if (int.Parse(retVal[i + 5]) == 0 && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludePG)) == (uint)DirectoryManager.DirFindFlags.IncludePG)
-                    Data.Add(replyData);
-                else if (int.Parse(retVal[i + 5]) == 1 && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludeMature)) == (uint)DirectoryManager.DirFindFlags.IncludeMature)
-                    Data.Add(replyData);
-                else if (int.Parse(retVal[i + 5]) == 2 && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludeAdult)) == (uint)DirectoryManager.DirFindFlags.IncludeAdult)
-                    Data.Add(replyData);
+                if ((int.Parse (retVal[i + 5]) & (int)ParcelFlags.MaturePublish) == (int)ParcelFlags.MaturePublish &&
+                    ((Flags & (uint)DirectoryManager.DirFindFlags.IncludeMature)) == 0)
+                {
+                }
+                else
+                    Data.Add (replyData);
             }
 
             return Data.ToArray();
