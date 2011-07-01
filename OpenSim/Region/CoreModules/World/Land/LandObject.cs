@@ -1081,9 +1081,8 @@ namespace OpenSim.Region.CoreModules.World.Land
             else if (type == 1)
             {
                 List<UUID> Tasks = new List<UUID>(tasks);
-                foreach (SceneObjectPart child in primCounts.Objects)
+                foreach (ISceneEntity obj in primCounts.Objects)
                 {
-                    ISceneEntity obj = child.ParentGroup;
                     if (Tasks.Contains(obj.UUID))
                     {
                         if (!returns.ContainsKey(obj.OwnerID))

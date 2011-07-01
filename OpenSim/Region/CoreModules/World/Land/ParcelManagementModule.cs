@@ -1782,7 +1782,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                 selectedParcel.ReturnLandObjects(returnType, agentIDs, taskIDs, remoteClient);
             }
-            else
+            else//Region
             {
                 foreach (ILandObject selectedParcel in AllParcels())
                 {
