@@ -1527,6 +1527,7 @@ namespace OpenSim.Region.Framework.Scenes
                     
                     //Now readd the physics actor to the physics scene
                     part.PhysActor = m_scene.PhysicsScene.AddPrimShape (part);
+                    part.PhysActor.BuildingRepresentation = true;
 
                     //Fix the localID!
                     part.PhysActor.LocalID = part.LocalId;
@@ -1567,6 +1568,8 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             part.PhysActor.link (RootPart.PhysActor);
                         }
+                        if(part.PhysActor != null)
+                            part.PhysActor.BuildingRepresentation = false;
                 }
             }
         }

@@ -175,6 +175,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public Vector3 IntCMOffset;
 
         public bool m_eventsubscription;
+        internal bool m_buildingRepresentation = false;
+        public override bool BuildingRepresentation
+        {
+            get { return m_buildingRepresentation; }
+            set
+            {
+                if (value)
+                    m_buildingRepresentation = value;
+                else
+                    AddChange (changes.buildingrepresentation, null);
+            }
+        }
         private CollisionEventUpdate CollisionEventsThisFrame;
 
         public volatile bool childPrim;
@@ -1499,10 +1511,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private Vector3 m_PreviousForce = Vector3.Zero;
         private const int previousForceSameMax = 100;
-        private int m_previousForceIsSame = 0;
+        internal int m_previousForceIsSame = 0;
         public void Move (float timestep, ref List<AuroraODEPrim> defects)
         {
-            if (m_frozen)
+            if (m_frozen || AChangeLoading > 0 || 
+                BuildingRepresentation || (_parent != null && _parent.BuildingRepresentation) ||
+                (_parent != null && ((AuroraODEPrim)_parent).AChangeLoading > 0))
                 return;
 
             float fx = 0;
@@ -3063,8 +3077,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
         }
 
+        private int AChangeLoading = 0;
         public bool DoAChange (changes what, object arg)
         {
+            AChangeLoading--;
+
             if (m_frozen && what != changes.Add && what != changes.Remove)
                 return false;
 
@@ -3174,6 +3191,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     changedisable ();
                     break;
 
+                case changes.buildingrepresentation:
+                    m_buildingRepresentation = false;
+                    break;
+
                 case changes.Null:
                     donullchange ();
                     break;
@@ -3187,6 +3208,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void AddChange (changes what, object arg)
         {
+            AChangeLoading++;
+
             _parent_scene.AddChange (this, what, arg);
         }
 

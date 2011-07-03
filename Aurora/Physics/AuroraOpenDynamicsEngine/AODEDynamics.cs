@@ -735,9 +735,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_lastPositionVector = d.BodyGetPosition (Body);
             #region limitations
 
-            if (Math.Abs (m_dir.X) > 100 ||
-                Math.Abs (m_dir.Y) > 100 ||
-                Math.Abs (m_dir.Z) > 100)
+            if (Math.Abs (m_dir.X) > 1000 ||
+                Math.Abs (m_dir.Y) > 1000 ||
+                Math.Abs (m_dir.Z) > 1000)
             {
                 //This vehicle is f***ed
                 parent.RaiseOutOfBounds (parent.Position);

@@ -950,6 +950,7 @@ namespace OpenSim.Framework
         public virtual void VehicleRotationParam(int param, Quaternion rotation) { }
         public virtual void VehicleFlags(int param, bool remove) { }
         public virtual void SetCameraPos(Quaternion CameraRotation) { }
+        public virtual bool BuildingRepresentation { get; set; }
 
         public virtual bool VolumeDetect
         {
