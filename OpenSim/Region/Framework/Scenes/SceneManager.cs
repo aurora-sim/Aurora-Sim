@@ -45,7 +45,8 @@ using Aurora.Framework;
 
 namespace OpenSim.Region.Framework.Scenes
 {
-    public delegate void NewScene(Scene scene);
+    public delegate void NewScene (Scene scene);
+    public delegate void NoParam ();
     /// <summary>
     /// Manager for adding, closing, reseting, and restarting scenes.
     /// </summary>
@@ -57,6 +58,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public event NewScene OnAddedScene;
         public event NewScene OnCloseScene;
+        public event NoParam OnFinishedStartup;
 
         private List<Scene> m_localScenes;
         private Scene m_currentScene = null;

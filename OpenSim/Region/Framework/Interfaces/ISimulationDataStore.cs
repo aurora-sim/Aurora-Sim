@@ -91,6 +91,11 @@ namespace OpenSim.Region.Framework.Interfaces
         string Name { get; }
 
         /// <summary>
+        /// Whether we should save backups currently or not
+        /// </summary>
+        bool SaveBackups { get; set;}
+
+        /// <summary>
         /// Make a copy of the given data store
         /// </summary>
         ISimulationDataStore Copy ();

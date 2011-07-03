@@ -71,7 +71,11 @@ namespace Aurora.Modules
         public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             if (MainConsole.Instance != null)
-                MainConsole.Instance.Commands.AddCommand ("backup", "backup [all]", "Persist objects to the database now, if [all], will force the persistence of all prims", RunCommand);
+            {
+                MainConsole.Instance.Commands.AddCommand ("backup", "backup", "Persist objects to the database now, if [all], will force the persistence of all prims", RunCommand);
+                MainConsole.Instance.Commands.AddCommand ("disable backup", "disable backup", "Disables persistance until reenabled", DisableBackup);
+                MainConsole.Instance.Commands.AddCommand ("enable backup", "disable backup", "Enables persistance after 'disable persistance' has been run", EnableBackup);
+            }
             //Set up the backup for the scene
             m_backup[scene] = new InternalSceneBackup(scene);
 
@@ -102,6 +106,7 @@ namespace Aurora.Modules
 
         public void StartupComplete()
         {
+            EnableBackup (null);
         }
 
         public void Close(Scene scene)
@@ -116,12 +121,31 @@ namespace Aurora.Modules
         /// Runs commands issued by the server console from the operator
         /// </summary>
         /// <param name="cmdparams">Additional arguments passed to the command</param>
-        public void RunCommand(string[] cmdparams)
+        public void RunCommand (string[] cmdparams)
         {
-            m_manager.ForEachCurrentScene(delegate(Scene scene)
-                    {
-                        scene.AuroraEventManager.FireGenericEventHandler ("Backup", null);
-                    });
+            m_manager.ForEachCurrentScene (delegate (Scene scene)
+            {
+                scene.AuroraEventManager.FireGenericEventHandler ("Backup", null);
+            });
+        }
+
+        public void DisableBackup (string[] cmdparams)
+        {
+            m_manager.ForEachCurrentScene (delegate (Scene scene)
+            {
+                scene.SimulationDataService.SaveBackups = false;
+            });
+            m_log.Warn ("Disabled backup");
+        }
+
+        public void EnableBackup (string[] cmdparams)
+        {
+            m_manager.ForEachCurrentScene (delegate (Scene scene)
+            {
+                scene.SimulationDataService.SaveBackups = true;
+            });
+            if(cmdparams != null)//so that it doesn't show on startup
+                m_log.Warn ("Enabled backup");
         }
 
         #endregion

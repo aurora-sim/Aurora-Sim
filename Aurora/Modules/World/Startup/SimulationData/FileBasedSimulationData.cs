@@ -81,12 +81,25 @@ namespace Aurora.Modules.FileBasedSimulationData
         protected string m_loadDirectory = "";
         protected bool m_requiresSave = true;
         protected bool m_hasShownFileBasedWarning = false;
+        protected bool m_saveBackups = false;
 
         public virtual string Name
         {
             get
             {
                 return "FileBasedDatabase";
+            }
+        }
+
+        public bool SaveBackups
+        {
+            get
+            {
+                return m_saveBackups;
+            }
+            set
+            {
+                m_saveBackups = value;
             }
         }
 
@@ -192,7 +205,7 @@ namespace Aurora.Modules.FileBasedSimulationData
         /// <param name="appendedFilePath">The file path where the backup will be saved</param>
         protected virtual void SaveBackup (string appendedFilePath)
         {
-            if (!m_saveChanges)
+            if (!m_saveChanges || !m_saveBackups)
                 return;
             if (appendedFilePath == "/")
                 appendedFilePath = "";
