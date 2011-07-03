@@ -1888,20 +1888,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 d.BodyEnable (Body);
                             if (fx != 0 || fy != 0 || fz != 0)
                             {
-                                if ((m_PreviousForce.X != fx ||
-                                    m_PreviousForce.Y != fy ||
-                                    m_PreviousForce.Z != fz) ||
-                                    m_isSelected ||
-                                    forceUpdate)
+                                if (Math.Abs(m_PreviousForce.X - fx) > 0.01f ||
+                                    Math.Abs(m_PreviousForce.Y - fy) > 0.01f ||
+                                    Math.Abs(m_PreviousForce.Z - fz) > 0.01f ||
+                                    m_isSelected)
                                     m_previousForceIsSame = 0;
                                 else if (!m_isSelected)
                                     m_previousForceIsSame++;
 
-                                if (m_previousForceIsSame < previousForceSameMax)
-                                {
+                                if (forceUpdate || m_previousForceIsSame < previousForceSameMax)
                                     m_PreviousForce = new Vector3 (fx, fy, fz);
-                                    d.BodyAddForce (Body, fx, fy, fz);
-                                }
+                                d.BodyAddForce (Body, fx, fy, fz);
                             }
 
                             if(newtorque.X != 0 || newtorque.Y != 0 || newtorque.Z != 0)
@@ -2023,7 +2020,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     _orientation.Z = (float)ori.Z;
                     _orientation.W = (float)ori.W;
 
-                    if (
+                    if (!_zeroFlag &&
                         //                        (Math.Abs(m_lastposition.X - lpos.X) < 0.001)
                         //                        && (Math.Abs(m_lastposition.Y - lpos.Y) < 0.001)
                         //                        && (Math.Abs(m_lastposition.Z - lpos.Z) < 0.001)
@@ -2031,18 +2028,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         //                        && (Math.Abs(m_lastorientation.Y - ori.Y) < 0.001)
                         //                        && (Math.Abs(m_lastorientation.Z - ori.Z) < 0.001)
                         //                        &&
-                        ((Math.Abs (vel.X) < 0.01)
+                        (((Math.Abs (vel.X) < 0.01)
                         && (Math.Abs (vel.Y) < 0.01)
                         && (Math.Abs (vel.Z) < 0.01)
                         && (Math.Abs (rotvel.X) < 0.001)
                         && (Math.Abs (rotvel.Y) < 0.001)
-                        && (Math.Abs (rotvel.Z) < 0.001) ||
+                        && (Math.Abs (rotvel.Z) < 0.001)) ||
                         m_previousForceIsSame > previousForceSameMax)
                         && m_vehicle.Type == Vehicle.TYPE_NONE)
                     {
                         _zeroFlag = true;
                     }
-                    else
+                    else if(!_zeroFlag)
                     {
                         _zeroFlag = false;
                         m_lastUpdateSent = 2;
@@ -2110,21 +2107,23 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_UpdateTimecntr = 0;
 
                     if (!_zeroFlag && !needupdate && (
-                         (Math.Abs (m_lastposition.X - _position.X) > 0.001)
-                        || (Math.Abs (m_lastposition.Y - _position.Y) > 0.001)
-                        || (Math.Abs (m_lastposition.Z - _position.Z) > 0.001)
-                        || (Math.Abs (m_lastorientation.X - _orientation.X) > 0.0001)
-                        || (Math.Abs (m_lastorientation.Y - _orientation.Y) > 0.0001)
-                        || (Math.Abs (m_lastorientation.Z - _orientation.Z) > 0.0001)
-                        || (Math.Abs (_acceleration.X) > 0.005)
-                        || (Math.Abs (_acceleration.Y) > 0.005)
-                        || (Math.Abs (_acceleration.Z) > 0.005)
+                         (Math.Abs (m_lastposition.X - _position.X) > 0.01)
+                        || (Math.Abs (m_lastposition.Y - _position.Y) > 0.01)
+                        || (Math.Abs (m_lastposition.Z - _position.Z) > 0.01)
+                        || (Math.Abs (m_lastorientation.X - _orientation.X) > 0.001)
+                        || (Math.Abs (m_lastorientation.Y - _orientation.Y) > 0.001)
+                        || (Math.Abs (m_lastorientation.Z - _orientation.Z) > 0.001)
+                        || (Math.Abs (m_lastVelocity.X - _velocity.X) > 0.01)
+                        || (Math.Abs (m_lastVelocity.Y - _velocity.Y) > 0.01)
+                        || (Math.Abs (m_lastVelocity.Z - _velocity.Z) > 0.01)
                         ))
                     {
-                        //if (!m_throttleUpdates || throttleCounter > _parent_scene.geomUpdatesPerThrottledUpdate)
-                        needupdate = true;
+                        //Limit it to 0.5 so that we don't get the throttle completely messed up later
+                        float td = _parent_scene.TimeDilation > 0.5f ? _parent_scene.TimeDilation : 0.5f;
+                        //if (!m_throttleUpdates || throttleCounter > (_parent_scene.geomUpdatesPerThrottledUpdate * td))
+                            needupdate = true;
                         //else
-                        throttleCounter += 7;
+                            throttleCounter += 1;
                     }
 
 

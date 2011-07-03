@@ -644,6 +644,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // Figure out how many contact points we have
             int count = 0;
+            PhysicsActor p1;
+            PhysicsActor p2;
+
+            if (!actor_name_map.TryGetValue (g1, out p1))
+                p1 = PANull;
+
+            if (!actor_name_map.TryGetValue (g2, out p2))
+                p2 = PANull;
+            if (p1 is AuroraODEPrim && (p1 as AuroraODEPrim)._zeroFlag)
+                if (p2 is AuroraODEPrim && (p2 as AuroraODEPrim)._zeroFlag)
+                    return;//If its frozen, don't collide it against other objects, let them collide against it
+                else
+                    (p1 as AuroraODEPrim)._zeroFlag = false;
             try
             {
                 // Colliding Geom To Geom
@@ -675,19 +688,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return;
 
             m_StatFindContactsTime = Util.EnvironmentTickCountSubtract(FindContactsTime);
-
-            PhysicsActor p1;
-            PhysicsActor p2;
-
-            if (!actor_name_map.TryGetValue(g1, out p1))
-            {
-                p1 = PANull;
-            }
-
-            if (!actor_name_map.TryGetValue(g2, out p2))
-            {
-                p2 = PANull;
-            }
 
             ContactPoint maxDepthContact = new ContactPoint();
             if (!DisableCollisions)
@@ -1214,7 +1214,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 foreach (AuroraODEPrim chr in _activeprims)
                 {
                     if (chr.Body != IntPtr.Zero && d.BodyIsEnabled(chr.Body) &&
-                        (!chr.m_disabled) && (!chr.m_frozen))
+                        (!chr.m_disabled) && (!chr.m_frozen) && !(chr._zeroFlag))
                     {
                         //Fix colliding atributes!
                         chr.IsColliding = false;
@@ -2286,20 +2286,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
             m_StatUnlockedArea = Util.EnvironmentTickCountSubtract(UnlockedArea);
-
-            if (m_timeDilation < 0.5f)
-            {
-                //Slow it down a bit
-                geomContactPointsStartthrottle++;
-                if (geomContactPointsStartthrottle > 5)
-                    geomContactPointsStartthrottle = 5;
-            }
-            else
-            {
-                geomContactPointsStartthrottle--;
-                if (geomContactPointsStartthrottle < 3)
-                    geomContactPointsStartthrottle = 3;
-            }
 
             return fps;
         }
