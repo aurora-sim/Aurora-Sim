@@ -1810,12 +1810,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     //Keep us out of terrain if possible
                     float terrainHeight = _parent_scene.GetTerrainHeightAtXY (Position.X, Position.Y);
-                    float ourBasePos = (Position.Z - (Size.Z / 2));
+                    float ourBasePos = (dcpos.Z - (Size.Z / 2));
                     if (!_parent_entity.VolumeDetectActive && terrainHeight > ourBasePos)
                     {
                         //Scale it by surface - pos so that the object doesn't fly out of the terrain like a rocket
-                        fz += gravZ * -2.5f * (terrainHeight - ourBasePos);//Get us up, but don't shoot us up
+                        fz += gravZ * -2.5f * (terrainHeight - (ourBasePos - (Size.Z / 2)));//Get us up, but don't shoot us up
                         forceUpdate = true;
+                        if(m_previousForceIsSame != 0)
+                            m_previousForceIsSame = 0;
                     }
 
                     #region Check for underground
