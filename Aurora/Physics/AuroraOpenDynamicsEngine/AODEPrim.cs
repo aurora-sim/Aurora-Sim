@@ -129,7 +129,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private IMesh _mesh;
         private PrimitiveBaseShape _pbs;
         private AuroraODEPhysicsScene _parent_scene;
-        private ISceneChildEntity _parent_entity;
+        internal ISceneChildEntity _parent_entity;
         public ISceneChildEntity ParentEntity
         {
             get { return _parent_entity; }
@@ -141,7 +141,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private PhysicsObject _parent;
 
-        private List<AuroraODEPrim> childrenPrim = new List<AuroraODEPrim> ();
+        internal List<AuroraODEPrim> childrenPrim = new List<AuroraODEPrim> ();
 
         private bool iscolliding;
         private bool m_isphysical;
@@ -1500,7 +1500,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Vector3 m_PreviousForce = Vector3.Zero;
         private const int previousForceSameMax = 100;
         private int m_previousForceIsSame = 0;
-        public void Move (float timestep)
+        public void Move (float timestep, ref List<AuroraODEPrim> defects)
         {
             if (m_frozen)
                 return;
@@ -1515,37 +1515,47 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     // 'VEHICLES' are dealt with in ODEDynamics.cs
                     m_vehicle.Step (Body, timestep, _parent_scene, this);
-                    d.Vector3 vel = d.BodyGetLinearVel (Body);
-                    m_lastVelocity = _velocity;
-                    _velocity = new Vector3 ((float)vel.X, (float)vel.Y, (float)vel.Z);
-                    d.Vector3 pos = d.GeomGetPosition (prim_geom);
-                    m_lastposition = _position;
-                    _position = new Vector3 ((float)pos.X, (float)pos.Y, (float)pos.Z);
-                    d.Quaternion ori;
-                    foreach (AuroraODEPrim child in childrenPrim)
+                    if (m_disabled || m_frozen)
                     {
-                        pos = d.GeomGetPosition (child.prim_geom);
-                        child.m_lastposition = child._position;
-                        child._position = new Vector3 ((float)pos.X, (float)pos.Y, (float)pos.Z);
-                        d.GeomCopyQuaternion (child.prim_geom, out ori);
-                        child._orientation.X = ori.X;
-                        child._orientation.Y = ori.Y;
-                        child._orientation.Z = ori.Z;
-                        child._orientation.W = ori.W;
+                        d.BodySetForce (Body, 0, 0, 0);
+                        d.BodySetLinearVel (Body, 0, 0, 0);
+                        d.BodySetAngularVel (Body, 0, 0, 0);
+                        defects.Add (this.childPrim ? (AuroraODEPrim)_parent : this);
                     }
-                    _zeroFlag = false;
+                    else
+                    {
+                        d.Vector3 vel = d.BodyGetLinearVel (Body);
+                        m_lastVelocity = _velocity;
+                        _velocity = new Vector3 ((float)vel.X, (float)vel.Y, (float)vel.Z);
+                        d.Vector3 pos = d.GeomGetPosition (prim_geom);
+                        m_lastposition = _position;
+                        _position = new Vector3 ((float)pos.X, (float)pos.Y, (float)pos.Z);
+                        d.Quaternion ori;
+                        foreach (AuroraODEPrim child in childrenPrim)
+                        {
+                            pos = d.GeomGetPosition (child.prim_geom);
+                            child.m_lastposition = child._position;
+                            child._position = new Vector3 ((float)pos.X, (float)pos.Y, (float)pos.Z);
+                            d.GeomCopyQuaternion (child.prim_geom, out ori);
+                            child._orientation.X = ori.X;
+                            child._orientation.Y = ori.Y;
+                            child._orientation.Z = ori.Z;
+                            child._orientation.W = ori.W;
+                        }
+                        _zeroFlag = false;
 
-                    _acceleration = ((_velocity - m_lastVelocity) / timestep);
-                    //m_log.Info ("[PHYSICS]: P1: " + _position + " V2: " + m_lastposition + " Acceleration: " + _acceleration.ToString ());
-                    d.GeomCopyQuaternion (prim_geom, out ori);
-                    _orientation.X = ori.X;
-                    _orientation.Y = ori.Y;
-                    _orientation.Z = ori.Z;
-                    _orientation.W = ori.W;
-                    d.Vector3 rotvel = d.BodyGetAngularVel (Body);
-                    m_rotationalVelocity.X = (float)rotvel.X;
-                    m_rotationalVelocity.Y = (float)rotvel.Y;
-                    m_rotationalVelocity.Z = (float)rotvel.Z;
+                        _acceleration = ((_velocity - m_lastVelocity) / timestep);
+                        //m_log.Info ("[PHYSICS]: P1: " + _position + " V2: " + m_lastposition + " Acceleration: " + _acceleration.ToString ());
+                        d.GeomCopyQuaternion (prim_geom, out ori);
+                        _orientation.X = ori.X;
+                        _orientation.Y = ori.Y;
+                        _orientation.Z = ori.Z;
+                        _orientation.W = ori.W;
+                        d.Vector3 rotvel = d.BodyGetAngularVel (Body);
+                        m_rotationalVelocity.X = (float)rotvel.X;
+                        m_rotationalVelocity.Y = (float)rotvel.Y;
+                        m_rotationalVelocity.Z = (float)rotvel.Z;
+                    }
                 }
                 else
                 {
@@ -1950,6 +1960,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                         else
                         {
+                            m_disabled = true;
                             m_frozen = true;
 
                             Vector3 l_position;

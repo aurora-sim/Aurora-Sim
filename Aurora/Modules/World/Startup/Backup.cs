@@ -490,6 +490,7 @@ namespace Aurora.Modules
                         group.RootPart.SitTargetAvatar.CopyTo(ids);
                         foreach (UUID avID in ids)
                         {
+                            //Don't screw up avatar's that are sitting on us!
                             IScenePresence SP = m_scene.GetScenePresence(avID);
                             if (SP != null)
                                 SP.StandUp();
@@ -508,8 +509,10 @@ namespace Aurora.Modules
                 {
                     if (part.PhysActor != null)
                     {
+                        //Remove us from the physics sim
                         m_scene.PhysicsScene.RemovePrim(part.PhysActor);
-                        part.PhysActor = null;
+                        //We MUST leave this to the PhysicsScene or it will hate us forever!
+                        //part.PhysActor = null;
                     }
                 }
 

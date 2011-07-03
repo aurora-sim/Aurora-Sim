@@ -154,6 +154,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public d.TriCallback triCallback;
         private readonly HashSet<AuroraODECharacter> _characters = new HashSet<AuroraODECharacter>();
         private readonly HashSet<AuroraODEPrim> _prims = new HashSet<AuroraODEPrim>();
+        private readonly object _activeprimsLock = new object ();
         private readonly HashSet<AuroraODEPrim> _activeprims = new HashSet<AuroraODEPrim>();
         private readonly HashSet<AuroraODECharacter> _taintedActors = new HashSet<AuroraODECharacter>();
         public struct AODEchangeitem
@@ -1208,7 +1209,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
 
-            lock (_activeprims)
+            lock (_activeprimsLock)
             {
                 List<AuroraODEPrim> removeprims = null;
                 foreach (AuroraODEPrim chr in _activeprims)
@@ -1473,7 +1474,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public void addActivePrim(AuroraODEPrim activatePrim)
         {
             // adds active prim..   (ones that should be iterated over in collisions_optimized
-            lock (_activeprims)
+            lock (_activeprimsLock)
             {
                 if (!_activeprims.Contains(activatePrim))
                     _activeprims.Add(activatePrim);
@@ -1490,7 +1491,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void remActivePrim(AuroraODEPrim deactivatePrim)
         {
-            lock (_activeprims)
+            lock (_activeprimsLock)
             {
                 _activeprims.Remove(deactivatePrim);
             }
@@ -1559,9 +1560,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         {
                             m_log.Info("[PHYSICS]: Couldn't remove prim from physics scene, it was already be removed.");
                         }
-                        lock (_prims)
-                            _prims.Remove(prim);
                     }
+                    lock (_prims)
+                        _prims.Remove (prim);
                 }
             }
         }
@@ -1998,7 +1999,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // Process 10 frames if the sim is running normal..
             // process 5 frames if the sim is running slow
-            if (m_EnableAutoConfig && TimeDilation < 0.75f && m_physicsiterations > 5)
+            /*if (m_EnableAutoConfig && TimeDilation < 0.75f && m_physicsiterations > 5)
             {
                 //m_log.Warn("[ODE]: Sim is lagging, changing to half resolution");
                 // Instead of trying to catch up, it'll do 5 physics frames only
@@ -2033,7 +2034,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
             if (m_physicsiterations != 10 && TimeDilation > 0.75f)
-                m_timeBetweenRevertingAutoConfigIterations--; //Subtract for the next time
+                m_timeBetweenRevertingAutoConfigIterations--; //Subtract for the next time*/
 
             IsLocked = true;
             lock (OdeLock)
@@ -2045,8 +2046,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 if (step_time > 0.5f)
                     step_time = 0.5f; //Don't get ODE stuck in an eternal processing loop with huge step times
-                
-                while (step_time > 0.0f)
+
+                while (step_time > 0.0f && nodesteps < 10)
                 {
                     try
                     {
@@ -2093,6 +2094,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             m_hasSetUpPrims = true;
                             mesher.FinishedMeshing ();
                         }
+                        else if (!m_hasSetUpPrims)
+                            return fps;//Don't do physics until the sim is completely set up
 
                         m_StatPhysicsTaintTime = Util.EnvironmentTickCountSubtract(PhysicsTaintTime);
 
@@ -2123,12 +2126,30 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             }
 
                             // Move other active objects
-                            lock (_activeprims)
+                            lock (_activeprimsLock)
                             {
+                                List<AuroraODEPrim> defects = new List<AuroraODEPrim> ();
                                 foreach (AuroraODEPrim prim in _activeprims)
                                 {
                                     prim.m_collisionscore = 0;
-                                    prim.Move(ODE_STEPSIZE);
+                                    prim.Move(ODE_STEPSIZE, ref defects);
+                                }
+                                if (defects.Count > 0)
+                                {
+                                    foreach (AuroraODEPrim defect in defects)
+                                    {
+                                        foreach (ISceneChildEntity child in defect.ParentEntity.ParentEntity.ChildrenEntities ())
+                                        {
+                                            if (child.PhysActor != null)
+                                            {
+                                                RemovePrimThreadLocked ((AuroraODEPrim)child.PhysActor);
+                                                child.PhysActor = null;//Delete it
+                                            }
+                                        }
+                                        //Destroy it
+                                        RemovePrimThreadLocked (defect);
+                                        defect.ParentEntity.PhysActor = null;//Delete it
+                                    }
                                 }
                             }
                         }
@@ -2166,8 +2187,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     catch (Exception e)
                     {
-                        m_log.ErrorFormat("[PHYSICS]: {0}, {1}, {2}", e.ToString(), e.TargetSite, e);
-                        ode.dunlock(world);
+                        m_log.ErrorFormat ("[PHYSICS]: {0}, {1}, {2}", e.ToString (), e.TargetSite, e);
+                        ode.dunlock (world);
                     }
 
                     step_time -= ODE_STEPSIZE;
@@ -2209,7 +2230,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 if (!DisableCollisions)
                 {
-                    lock (_activeprims)
+                    lock (_activeprimsLock)
                     {
                         foreach (AuroraODEPrim actor in _activeprims)
                         {
@@ -2239,11 +2260,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     d.WorldExportDIF(world, fname, physics_logging_append_existing_logfile, prefix);
                 }
+                IsLocked = false;
             }
 
             int UnlockedArea = Util.EnvironmentTickCount();
 
-            IsLocked = false;
             if (RemoveQueue.Count > 0)
             {
                 while (RemoveQueue.Count != 0)

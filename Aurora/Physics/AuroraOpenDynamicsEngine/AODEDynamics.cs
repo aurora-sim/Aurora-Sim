@@ -470,12 +470,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_body = pBody;
             if (pBody == IntPtr.Zero || m_type == Vehicle.TYPE_NONE)
                 return;
-
-            d.Mass mass;
-            d.BodyGetMass(pBody, out mass);
-
-            Mass = mass.mass;
-            Mass *= 2;
+            GetMass (pBody);
         }
 
         internal void Disable(AuroraODEPrim parent)
@@ -493,11 +488,24 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_angularMotorDirection = Vector3.Zero;
         }
 
+        internal void GetMass (IntPtr pBody)
+        {
+            d.Mass mass;
+            d.BodyGetMass (pBody, out mass);
+
+            Mass = mass.mass;
+            Mass *= 2;
+        }
+
         internal void Step(IntPtr pBody, float pTimestep, AuroraODEPhysicsScene pParentScene, AuroraODEPrim parent)
         {
             m_body = pBody;
             if (pBody == IntPtr.Zero || m_type == Vehicle.TYPE_NONE)
                 return;
+            if(Mass == 0)
+                GetMass (pBody);
+            if (Mass == 0)
+                return;//No noMass vehicles...
             if (!d.BodyIsEnabled(Body))
                 d.BodyEnable(Body);
 
@@ -562,7 +570,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // There is some gravity, make a gravity force vector
             // that is applied after object velocity.
             // m_VehicleBuoyancy: -1=2g; 0=1g; 1=0g;
-            grav.Z = _pParentScene.gravityz * Mass * parent.ParentEntity.GravityMultiplier * (1f - m_VehicleBuoyancy);
+            grav.Z = _pParentScene.gravityz * Mass * (float)parent.ParentEntity.GravityMultiplier * (1f - m_VehicleBuoyancy);
             // Preserve the current Z velocity
             d.Vector3 vel_now = d.BodyGetLinearVel (Body);
             if(m_lastLinearVelocityVector.Z == 0 && m_verticalAttractionTimescale == 0)
@@ -725,6 +733,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             #endregion
 
             m_lastPositionVector = d.BodyGetPosition (Body);
+            #region limitations
+
+            if (Math.Abs (m_dir.X) > 100 ||
+                Math.Abs (m_dir.Y) > 100 ||
+                Math.Abs (m_dir.Z) > 100)
+            {
+                //This vehicle is f***ed
+                parent.RaiseOutOfBounds (parent.Position);
+                parent._zeroFlag = true;
+                parent.m_disabled = true;
+                parent.m_frozen = true;
+                return;
+            }
+
+            #endregion
+
             // Apply velocity
             d.BodySetLinearVel (Body, m_dir.X, m_dir.Y, m_dir.Z);
             // apply gravity force
