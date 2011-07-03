@@ -478,7 +478,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             get { return m_name; }
         }
 
-        public OSD GetState(UUID obj)
+        public virtual OSD GetState(UUID obj)
         {
             if (m_states.ContainsKey (obj))
             {
@@ -491,12 +491,12 @@ namespace OpenSim.Region.Framework.Scenes.Components
             return new OSD();
         }
 
-        public void SetState(UUID obj, OSD osd)
+        public virtual void SetState (UUID obj, OSD osd)
         {
             m_states[obj] = osd;
         }
 
-        public void RemoveState (UUID obj)
+        public virtual void RemoveState (UUID obj)
         {
             m_states.Remove (obj);
         }
