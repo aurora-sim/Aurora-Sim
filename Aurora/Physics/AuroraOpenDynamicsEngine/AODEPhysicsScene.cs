@@ -2071,7 +2071,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             }
                         }
 
-                        int tlimit = 50;
+                        int tlimit = 5000;
                         AODEchangeitem item;
                         while (GetNextChange(out item))
                         {

@@ -1514,10 +1514,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         internal int m_previousForceIsSame = 0;
         public void Move (float timestep, ref List<AuroraODEPrim> defects)
         {
+            AuroraODEPrim parentPrim = (_parent != null ? (AuroraODEPrim)_parent : this);
             if (m_frozen || AChangeLoading > 0 || 
                 BuildingRepresentation || (_parent != null && _parent.BuildingRepresentation) ||
                 (_parent != null && ((AuroraODEPrim)_parent).AChangeLoading > 0))
                 return;
+            foreach(AuroraODEPrim child in parentPrim.childrenPrim)
+                if(child.AChangeLoading > 0 || child.BuildingRepresentation)
+                    return;
 
             float fx = 0;
             float fy = 0;
