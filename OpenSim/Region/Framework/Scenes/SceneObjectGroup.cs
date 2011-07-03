@@ -1484,7 +1484,6 @@ namespace OpenSim.Region.Framework.Scenes
                     //Reset any old data that we have
                     part.Velocity = Vector3.Zero;
                     part.Acceleration = Vector3.Zero;
-                    part.AngularVelocity = Vector3.Zero;
                     if (part.PhysActor != null)
                     {
                         part.PhysActor.RotationalVelocity = Vector3.Zero;
@@ -1504,6 +1503,7 @@ namespace OpenSim.Region.Framework.Scenes
                         part.FireOnRemovedPhysics ();
                     }
                     part.AngularVelocity = Vector3.Zero;
+                    part.GenerateRotationalVelocityFromOmega ();
                 }
             }
             //Check for meshes and stuff
@@ -2216,7 +2216,6 @@ namespace OpenSim.Region.Framework.Scenes
                             grabforce = grabforce * m_rootPart.PhysActor.Mass;
                             grabforce /= 10;
                             m_rootPart.PhysActor.AddForce(grabforce, true);
-                            m_rootPart.AngularVelocity = Vector3.Zero;
                             m_scene.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
                             // This is outside the above permissions condition
                             // so that if the object is locked the client moving the object

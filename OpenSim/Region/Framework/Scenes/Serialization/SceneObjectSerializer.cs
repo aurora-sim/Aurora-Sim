@@ -60,12 +60,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
             // for tempOnRez objects, we have to fix the Expire date.
             if ((part.Flags & PrimFlags.TemporaryOnRez) != 0) part.ResetExpire();
-            if (part.OmegaGain == 0.0f)//Disable spin
-                part.AngularVelocity = Vector3.Zero;
-            else
-                part.AngularVelocity = new Vector3 ((float)(part.OmegaAxis.X * part.OmegaSpinRate),
-                    (float)(part.OmegaAxis.Y * part.OmegaSpinRate),
-                    (float)(part.OmegaAxis.Z * part.OmegaSpinRate));
+            part.GenerateRotationalVelocityFromOmega ();//Fix the rotational velocity
             return part;
         }
 

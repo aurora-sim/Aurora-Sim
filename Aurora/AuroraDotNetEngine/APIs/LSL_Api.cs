@@ -4196,10 +4196,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_host.OmegaGain = gain;
             m_host.OmegaSpinRate = spinrate;
 
-            if (gain == 0.0f)//Disable spin
-                m_host.AngularVelocity = Vector3.Zero;
-            else
-                m_host.AngularVelocity = new Vector3 ((float)(axis.x * spinrate), (float)(axis.y * spinrate), (float)(axis.z * spinrate));
+            m_host.GenerateRotationalVelocityFromOmega ();
             ScriptData script = ScriptProtection.GetScript(this.m_itemID);
             if (script != null)
                 script.TargetOmegaWasSet = true;

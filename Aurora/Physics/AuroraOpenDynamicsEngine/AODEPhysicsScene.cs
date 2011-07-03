@@ -2042,6 +2042,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 // Figure out the Frames Per Second we're going at.
                 fps = (step_time / ODE_STEPSIZE) * 1000;
+
+                if (step_time > 0.5f)
+                    step_time = 0.5f; //Don't get ODE stuck in an eternal processing loop with huge step times
                 
                 while (step_time > 0.0f)
                 {

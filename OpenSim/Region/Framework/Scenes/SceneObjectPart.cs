@@ -1422,6 +1422,16 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public void GenerateRotationalVelocityFromOmega ()
+        {
+            if (OmegaGain == 0.0f)//Disable spin
+                AngularVelocity = Vector3.Zero;
+            else
+                AngularVelocity = new Vector3 ((float)(OmegaAxis.X * OmegaSpinRate),
+                    (float)(OmegaAxis.Y * OmegaSpinRate),
+                    (float)(OmegaAxis.Z * OmegaSpinRate));
+        }
+
         /// <summary></summary>
         public Vector3 Acceleration
         {
@@ -2694,6 +2704,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             dupe.m_scriptEvents = new Dictionary<UUID,scriptEvents>();
             dupe.Shape.SculptData = this.Shape.SculptData;
+            dupe.GenerateRotationalVelocityFromOmega ();
 
             return dupe;
         }
@@ -5275,6 +5286,7 @@ namespace OpenSim.Region.Framework.Scenes
                     Acceleration = Vector3.Zero;
                     AngularVelocity = Vector3.Zero;
                     PhysActor.RotationalVelocity = Vector3.Zero;
+                    GenerateRotationalVelocityFromOmega ();
                 }
             }
 

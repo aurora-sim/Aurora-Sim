@@ -745,6 +745,8 @@ namespace OpenSim.Framework
             get;
             set;
         }
+
+        void GenerateRotationalVelocityFromOmega ();
     }
 
     public interface ISceneGraph
