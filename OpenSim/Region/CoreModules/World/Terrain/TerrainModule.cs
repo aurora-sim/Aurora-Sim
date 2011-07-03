@@ -158,7 +158,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 LoadWorldHeightmap();
                 LoadWorldWaterMap();
-                scene.PhysicsScene.SetTerrain(m_channel.GetSerialised(scene));
+                scene.PhysicsScene.SetTerrain (m_channel, m_channel.GetSerialised (scene));
                 UpdateWaterHeight(scene.RegionInfo.RegionSettings.WaterHeight);
             }
 
@@ -221,7 +221,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             if (m_queueNextSave > 0 && m_queueNextSave < now)
             {
                 m_queueNextSave = 0;
-                m_scene.PhysicsScene.SetTerrain (m_channel.GetSerialised (m_scene));
+                m_scene.PhysicsScene.SetTerrain (m_channel, m_channel.GetSerialised (m_scene));
 
                 if (m_queueNextSave == 0)
                     m_queueTimer.Stop ();
@@ -1578,7 +1578,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
             foreach (TerrainModule tmodule in m)
             {
-                tmodule.m_scene.PhysicsScene.SetTerrain(tmodule.m_channel.GetSerialised(tmodule.m_scene));
+                tmodule.m_scene.PhysicsScene.SetTerrain (tmodule.m_channel, tmodule.m_channel.GetSerialised (tmodule.m_scene));
             }
         }
 

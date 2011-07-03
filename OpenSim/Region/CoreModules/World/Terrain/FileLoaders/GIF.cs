@@ -29,6 +29,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
 {

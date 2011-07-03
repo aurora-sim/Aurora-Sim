@@ -314,12 +314,17 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        private bool m_pidActive = false;
+        private bool m_notpidActive = false;
         [XmlIgnore]
         public bool PIDActive
         {
             get
             {
-                return GetComponentState("PIDActive").AsBoolean();
+                if(!m_notpidActive)
+                    m_pidActive = GetComponentState("PIDActive").AsBoolean();
+                m_notpidActive = true;
+                return m_pidActive;
             }
             set
             {
@@ -331,6 +336,8 @@ namespace OpenSim.Region.Framework.Scenes
                     else
                         s.EventManager.OnFrame -= UpdateLookAt;
                 }
+                m_notpidActive = true;
+                m_pidActive = value;
                 SetComponentState("PIDActive", value);
             }
         }
@@ -372,14 +379,21 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        private bool m_pidhoverActive = false;
+        private bool m_nothoverpidActive = false;
         public bool PIDHoverActive
         {
             get
             {
-                return GetComponentState ("PIDHoverActive").AsBoolean ();
+                if (!m_nothoverpidActive)
+                    m_pidhoverActive = GetComponentState ("PIDHoverActive").AsBoolean ();
+                m_nothoverpidActive = true;
+                return m_pidhoverActive;
             }
             set
             {
+                m_nothoverpidActive = true;
+                m_pidhoverActive = value;
                 SetComponentState ("PIDHoverActive", value);
             }
         }
@@ -551,15 +565,22 @@ namespace OpenSim.Region.Framework.Scenes
         [XmlIgnore]
         public Vector3 RotationAxis = Vector3.One;
 
+        private bool m_volumeDetectActive = false;
+        private bool m_hasVolumeDetectActive = false;
         [XmlIgnore]
         public bool VolumeDetectActive
         {
             get
             {
-                return GetComponentState("VolumeDetectActive").AsBoolean();
+                if(!m_hasVolumeDetectActive)
+                    m_volumeDetectActive = GetComponentState ("VolumeDetectActive").AsBoolean ();
+                m_hasVolumeDetectActive = true;
+                return m_volumeDetectActive;
             }
             set
             {
+                m_hasVolumeDetectActive = true;
+                m_volumeDetectActive = value;
                 SetComponentState("VolumeDetectActive", value);
             }
         }

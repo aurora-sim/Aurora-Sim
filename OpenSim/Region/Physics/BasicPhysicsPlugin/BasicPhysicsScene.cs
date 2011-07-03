@@ -168,7 +168,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             return returncolliders;
         }
 
-        public override void SetTerrain(short[] heightMap)
+        public override void SetTerrain (ITerrainChannel channel, short[] heightMap)
         {
             _heightMap = heightMap;
         }

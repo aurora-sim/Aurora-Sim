@@ -91,7 +91,7 @@ namespace OpenSim.Framework
 
         public virtual void GetResults() { }
 
-        public abstract void SetTerrain(short[] heightMap);
+        public abstract void SetTerrain (ITerrainChannel channel, short[] heightMap);
 
         public abstract void SetWaterLevel(short[] map);
 
@@ -264,7 +264,7 @@ namespace OpenSim.Framework
             return 0f;
         }
 
-        public override void SetTerrain (short[] heightMap)
+        public override void SetTerrain (ITerrainChannel channel, short[] heightMap)
         {
             m_log.InfoFormat ("[PHYSICS]: NullPhysicsScene : SetTerrain({0} items)", heightMap.Length);
         }

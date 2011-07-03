@@ -504,7 +504,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             }
         }
 
-        public override void SetTerrain(short[] shortheightMap)
+        public override void SetTerrain (ITerrainChannel channel, short[] shortheightMap)
         {
             if (m_terrainShape != null)
                 DeleteTerrain();

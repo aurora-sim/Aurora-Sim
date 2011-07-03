@@ -175,6 +175,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public IntPtr RegionTerrain;
         private readonly Dictionary<IntPtr, short[]> TerrainHeightFieldHeights = new Dictionary<IntPtr, short[]> ();
         private readonly Dictionary<IntPtr, short[]> ODETerrainHeightFieldHeights = new Dictionary<IntPtr, short[]> ();
+        private ITerrainChannel m_channel = null;
         private readonly Dictionary<IntPtr, float[]> TerrainHeightFieldlimits = new Dictionary<IntPtr, float[]>();
         private short[] WaterHeightFieldHeight;
         public bool m_EnableAutoConfig = true;
@@ -1357,95 +1358,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         // Recovered for use by fly height. Kitto Flora
         public float GetTerrainHeightAtXY (float x, float y)
         {
-            int offsetX = ((int)(x / m_region.RegionSizeX)) * m_region.RegionSizeX;
-            int offsetY = ((int)(y / m_region.RegionSizeY)) * m_region.RegionSizeY;
-
-            if (RegionTerrain != IntPtr.Zero)
-            {
-                if (TerrainHeightFieldHeights.ContainsKey (RegionTerrain))
-                {
-
-
-                    //int index;
-                    x = x - offsetX;
-                    y = y - offsetY;
-
-                    // warning this code assumes terrain grid as 1m size
-
-                    if (x < 0)
-                        x = 0;
-                    if (y < 0)
-                        y = 0;
-
-                    int ix;
-                    int iy;
-                    float dx;
-                    float dy;
-
-                    if (x < m_region.RegionSizeX - 1)
-                    {
-                        ix = (int)x;
-                        dx = x - (float)ix;
-                    }
-                    else
-                    {
-                        ix = (int)m_region.RegionSizeX - 1;
-                        dx = 0;
-                    }
-                    if (y < m_region.RegionSizeY - 1)
-                    {
-                        iy = (int)y;
-                        dy = y - (float)iy;
-                    }
-                    else
-                    {
-                        iy = (int)m_region.RegionSizeY - 1;
-                        dy = 0;
-                    }
-
-                    float h0;
-                    float h1;
-                    float h2;
-
-                    float invterrainscale = 1.0f / Constants.TerrainCompression;
-
-                    iy *= m_region.RegionSizeX;
-
-                    if ((dx + dy) <= 1.0f)
-                    {
-                        h0 = ((float)TerrainHeightFieldHeights[RegionTerrain][iy + ix]) * invterrainscale;
-
-                        if (dx > 0)
-                            h1 = (((float)TerrainHeightFieldHeights[RegionTerrain][iy + ix + 1]) * invterrainscale - h0) * dx;
-                        else
-                            h1 = 0;
-
-                        if (dy > 0)
-                            h2 = (((float)TerrainHeightFieldHeights[RegionTerrain][iy + m_region.RegionSizeX + ix]) * invterrainscale - h0) * dy;
-                        else
-                            h2 = 0;
-
-                        return h0 + h1 + h2;
-                    }
-                    else
-                    {
-                        h0 = ((float)TerrainHeightFieldHeights[RegionTerrain][iy + m_region.RegionSizeX + ix + 1]) * invterrainscale;
-
-                        if (dx > 0)
-                            h1 = (((float)TerrainHeightFieldHeights[RegionTerrain][iy + ix + 1]) * invterrainscale - h0) * (1 - dy);
-                        else
-                            h1 = 0;
-
-                        if (dy > 0)
-                            h2 = (((float)TerrainHeightFieldHeights[RegionTerrain][iy + m_region.RegionSizeX + ix]) * invterrainscale - h0) * (1 - dx);
-                        else
-                            h2 = 0;
-
-                        return h0 + h1 + h2;
-                    }
-                }
-            }
-            return float.MinValue;
+            return m_channel[(int)x, (int)y];
         }
         // End recovered. Kitto Flora
 
@@ -2391,8 +2304,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return fps;
         }
 
-        public override void SetTerrain (short[] heightMap)
+        public override void SetTerrain (ITerrainChannel channel, short[] heightMap)
         {
+            m_channel = channel;
             bool needToCreateHeightmapinODE = false;
             short[] _heightmap;
             if (!ODETerrainHeightFieldHeights.TryGetValue (RegionTerrain, out _heightmap))
