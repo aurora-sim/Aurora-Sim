@@ -196,6 +196,7 @@ namespace Aurora.Modules
                 // Needed for proper state management for stored group
                 // invitations
                 //
+                IM.offline = 1;
                 Scene s = FindScene(client.AgentId);
                 if (s != null)
                     s.EventManager.TriggerIncomingInstantMessage(IM);

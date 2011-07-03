@@ -143,8 +143,8 @@ namespace OpenSim.Region.Framework.Scenes
                 else
                 {
                     //Get the nearest one so that things don't get screwed up near borders
-                    int betterX = x < 0 ? 0 : x > m_Width ? m_Width - 1 : x;
-                    int betterY = y < 0 ? 0 : y > m_Width ? m_Width - 1 : y;
+                    int betterX = x < 0 ? 0 : x >= m_Width ? m_Width - 1 : x;
+                    int betterY = y < 0 ? 0 : y >= m_Width ? m_Width - 1 : y;
                     return ((float)m_map[betterY * m_Width + betterX]) / Constants.TerrainCompression;
                 }
             }

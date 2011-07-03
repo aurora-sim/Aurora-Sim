@@ -122,7 +122,7 @@ namespace Aurora.Modules
             {
                 for (int i = 0; i < userIDs.Length; i++)
                 {
-                    if(info[i] == "NotOnline")
+                    if (info[i] == "NotOnline" && info2.Length < i)
                         info[i] = info2[i];
                 }
             }
