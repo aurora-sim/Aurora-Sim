@@ -1168,12 +1168,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (m_EnableAutoConfig)
             {
-                if (Math.Abs((m_timeDilation * contactsPerCollision - contacts.Length)) > 10)
+                if (Math.Abs ((m_timeDilation * contactsPerCollision - contacts.Length)) > 10)
                 {
                     //This'll cause weird physics inworld
                     //m_currentmaxContactsbeforedeath = Math.Max(100, (int)(maxContactsbeforedeath * TimeDilation));
-                    contacts = new d.ContactGeom[Math.Max(5, (int)(m_timeDilation * contactsPerCollision))];
-                    m_log.WarnFormat("[ODE]: AutoConfig: changing contact amount to {0}, {1}%", contacts.Length, (m_timeDilation * contactsPerCollision) / contactsPerCollision * 100);
+                    contacts = new d.ContactGeom[Math.Max (5, (int)(m_timeDilation * contactsPerCollision))];
+                    m_log.DebugFormat ("[ODE]: AutoConfig: changing contact amount to {0}, {1}%", contacts.Length, (m_timeDilation * contactsPerCollision) / contactsPerCollision * 100);
+                }
+                else if(contactsPerCollision - contacts.Length < 10 &&
+                    contacts.Length != contactsPerCollision)
+                {
+                    contacts = new d.ContactGeom[contactsPerCollision];
                 }
             }
 

@@ -58,7 +58,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public event NewScene OnAddedScene;
         public event NewScene OnCloseScene;
-        public event NoParam OnFinishedStartup;
 
         private List<Scene> m_localScenes;
         private Scene m_currentScene = null;

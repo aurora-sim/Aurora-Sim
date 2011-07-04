@@ -5287,6 +5287,8 @@ namespace OpenSim.Region.Framework.Scenes
                     AngularVelocity = Vector3.Zero;
                     PhysActor.RotationalVelocity = Vector3.Zero;
                     GenerateRotationalVelocityFromOmega ();
+                    if(wasUsingPhysics)
+                        ScheduleTerseUpdate ();//Force it out of the client too
                 }
             }
 
