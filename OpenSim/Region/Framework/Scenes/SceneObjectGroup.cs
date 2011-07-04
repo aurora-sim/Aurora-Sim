@@ -2834,6 +2834,7 @@ namespace OpenSim.Region.Framework.Scenes
                     IScenePresence SP;
                     if (m_scene.TryGetScenePresence(clientID, out SP))
                     {
+                        SP.ParentPosition = this.AbsolutePosition;
                         SP.SendTerseUpdateToAllClients();
                     }
                 }

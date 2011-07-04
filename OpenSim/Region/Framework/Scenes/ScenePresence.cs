@@ -1753,32 +1753,20 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_nextSitAnimation = "SIT";
             
-            //SceneObjectPart part = m_scene.GetSceneObjectPart(targetID);
             ISceneChildEntity part = FindNextAvailableSitTarget (targetID);
 
             if (part != null)
             {
                 if (!String.IsNullOrEmpty(part.SitAnimation))
-                {
                     m_nextSitAnimation = part.SitAnimation;
-                }
+
                 m_sitting = true;
                 m_requestedSitTargetUUID = targetID;
                 
-                //m_log.DebugFormat("[SIT]: Client requested Sit Position: {0}", offset);
-                
-                //if (m_scene.PhysicsScene.SupportsRayCast())
-                //{
-                    //m_scene.PhysicsScene.RaycastWorld(Vector3.Zero,Vector3.Zero, 0.01f, SitRayCastAvatarPositionResponse);
-                    //SitRayCastAvatarPosition(part);
-                    //return;
-                //}
                 SendSitResponse(remoteClient, targetID, offset, Quaternion.Identity);
             }
             else
-            {
                 m_log.Warn("Sit requested on unknown object: " + targetID.ToString());
-            }
         }
         
         public void HandleAgentRequestSit(IClientAPI remoteClient, UUID agentID, UUID targetID, Vector3 offset, string sitAnimation)
@@ -1817,25 +1805,17 @@ namespace OpenSim.Region.Framework.Scenes
         public void HandleAgentSit(IClientAPI remoteClient, UUID agentID)
         {
             if (!String.IsNullOrEmpty(m_nextSitAnimation))
-            {
                 HandleAgentSit(remoteClient, agentID, m_nextSitAnimation, false);
-            }
             else
-            {
                 HandleAgentSit(remoteClient, agentID, "SIT", false);
-            }
         }
 
         public void HandleAgentSit(IClientAPI remoteClient, UUID agentID, bool UseSitTarget)
         {
             if (!String.IsNullOrEmpty(m_nextSitAnimation))
-            {
                 HandleAgentSit(remoteClient, agentID, m_nextSitAnimation, UseSitTarget);
-            }
             else
-            {
                 HandleAgentSit(remoteClient, agentID, "SIT", UseSitTarget);
-            }
         }
         
         public void HandleAgentSit(IClientAPI remoteClient, UUID agentID, string sitAnimation, bool UseSitTarget)
@@ -1843,6 +1823,16 @@ namespace OpenSim.Region.Framework.Scenes
             ISceneChildEntity part = m_scene.GetSceneObjectPart (m_requestedSitTargetUUID);
             if (part != null)
             {
+                //This MUST be done first so that we don't get any position updates from the PhysActor once we sit
+                try
+                {
+                    RemoveFromPhysicalScene ();
+                }
+                catch (Exception ex)
+                {
+                    m_log.Warn (ex);
+                }
+
                 if (m_sitAtAutoTarget || !m_autopilotMoving)
                 {
                     if (UseSitTarget)
@@ -1864,14 +1854,6 @@ namespace OpenSim.Region.Framework.Scenes
                 m_parentID = m_requestedSitTargetUUID;
 
                 Velocity = Vector3.Zero;
-                try
-                {
-                    RemoveFromPhysicalScene();
-                }
-                catch (Exception ex)
-                {
-                    m_log.Warn(ex);
-                }
 
                 Animator.TrySetMovementAnimation(sitAnimation);
                 IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
@@ -1880,7 +1862,7 @@ namespace OpenSim.Region.Framework.Scenes
                 // This may seem stupid, but Our Full updates don't send avatar rotation :P
                 // So we're also sending a terse update (which has avatar rotation)
                 // [Update] We do now.
-                //SendTerseUpdateToAllClients();
+                SendTerseUpdateToAllClients();
             }
         }
 
