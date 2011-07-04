@@ -219,7 +219,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             private IScenePresence m_SP;
             private AuroraCombatModule m_combatModule;
             private float m_health = 100f; 
-            private string m_Team;
+            private string m_Team = "No Team";
             private Dictionary<UUID, float> TeamHits = new Dictionary<UUID, float> ();
             private System.Timers.Timer m_healthtimer = new System.Timers.Timer ();
             //private Dictionary<string, float> GenericStats = new Dictionary<string, float>();

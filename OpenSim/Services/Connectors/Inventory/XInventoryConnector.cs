@@ -488,7 +488,8 @@ namespace OpenSim.Services.Connectors
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                     m_ServerURI,
                     WebUtils.BuildQueryString(sendData));
-
+                if (reply == "")
+                    continue;
                 Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(
                         reply);
 

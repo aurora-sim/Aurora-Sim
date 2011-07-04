@@ -304,7 +304,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 Members = module.GetTeammates(team);
             }
-            LSL_List members = new LSL_Types.list(Members.ToArray());
+            LSL_List members = new LSL_Types.list();
+            foreach(UUID member in Members)
+                members.Add(new LSL_Key(member.ToString()));
             return members;
         }
 
