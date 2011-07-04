@@ -164,7 +164,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 //UUID Requester = message["Requester"].AsUUID();
                 UUID ExFriend = message["ExFriend"].AsUUID();
                 GridInstantMessage im = new GridInstantMessage();
-                im.FromOSD((OSDMap)message["IM"]);
+                im.FromOSD((OSDMap)message["Message"]);
                 LocalFriendshipOffered(ExFriend, im);
             }
             else if (message["Method"] == "FriendshipDenied")
