@@ -158,11 +158,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
             ts.ID = objectID;
             ts.itemID = itemID;
-            ts.interval = (long)save["Interval"].AsReal();
+            ts.interval = save["Interval"].AsLong ();
             if (ts.interval == 0) // Disabling timer
                 return;
 
-            ts.next = Environment.TickCount + (long)save["Next"].AsReal ();
+            ts.next = Environment.TickCount + save["Next"].AsLong ();
 
             lock (TimerListLock)
             {

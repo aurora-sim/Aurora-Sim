@@ -587,7 +587,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 ts.objectID = objectID;
                 ts.itemID = itemID;
 
-                ts.interval = (long)map["Interval"].AsInteger();
+                ts.interval = map["Interval"].AsLong();
                 ts.name = map["Name"].AsString();
                 ts.keyID = map["ID"].AsUUID();
                 ts.type = map["Type"].AsInteger();

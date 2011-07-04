@@ -479,6 +479,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool Start(bool reupload)
         {
             DateTime StartTime = DateTime.Now.ToUniversalTime();
+            Running = true;
+            Suspended = false;
 
             //Clear out the removing of events for this script.
             IgnoreNew = false;
@@ -711,11 +713,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (LastStateSave != null)
             {
                 m_ScriptEngine.StateSave.Deserialize(this, LastStateSave);
-
+                if (this.State == "")
+                {
+                    m_log.Warn ("BROKEN STATE SAVE!!! - " + this.Part.Name + " @ " + this.Part.AbsolutePosition);
+                    this.State = DefaultState;
+                }
                 // we get new rez events on sim restart, too
                 // but if there is state, then we fire the change
                 // event
-                StartedFromSavedState = true;
+               StartedFromSavedState = true;
             }
             else
             {

@@ -826,6 +826,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             id.Running = true;
+            id.Suspended = false;//Set this too, it gets stuck sometimes...
             id.Part.SetScriptEvents(itemID, id.Script.GetStateEventFlags(id.State));
             id.Part.ScheduleUpdate(PrimUpdateFlags.FindBest);
         }
@@ -1293,9 +1294,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 IScriptPlugin plugin = GetScriptPlugin (kvp.Key);
                 if (plugin != null)
-                {
                     plugin.CreateFromData (itemID, hostID, kvp.Value);
-                }
             }
         }
 
