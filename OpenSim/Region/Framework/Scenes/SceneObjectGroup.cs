@@ -1533,9 +1533,7 @@ namespace OpenSim.Region.Framework.Scenes
                     part.PhysActor.LocalID = part.LocalId;
                     part.PhysActor.UUID = part.UUID;
                     part.PhysActor.VolumeDetect = part.VolumeDetectActive;
-
-                    FixVehicleParams (part);
-
+                    
                     //Force deselection here so that it isn't stuck forever
                     if (!keepSelectedStatuses)
                         part.PhysActor.Selected = false;
@@ -1565,11 +1563,21 @@ namespace OpenSim.Region.Framework.Scenes
                         ((RootPart.Flags & PrimFlags.Phantom) == PrimFlags.Phantom &&
                         !RootPart.VolumeDetectActive)))
                         if (!part.IsRoot) //Link the prim then
-                        {
                             part.PhysActor.link (RootPart.PhysActor);
-                        }
-                        if(part.PhysActor != null)
+                }
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                    if (!(RootPart.PhysicsType == (byte)PhysicsShapeType.None ||
+                        part.PhysicsType == (byte)PhysicsShapeType.None ||
+                        ((part.Flags & PrimFlags.Phantom) == PrimFlags.Phantom &&
+                        !part.VolumeDetectActive) ||
+                        ((RootPart.Flags & PrimFlags.Phantom) == PrimFlags.Phantom &&
+                        !RootPart.VolumeDetectActive)))
+                    {
+                        if (part.PhysActor != null)
                             part.PhysActor.BuildingRepresentation = false;
+                        FixVehicleParams (part);
+                    }
                 }
             }
         }
