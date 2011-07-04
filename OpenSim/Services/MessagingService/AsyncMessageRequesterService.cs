@@ -119,16 +119,12 @@ namespace OpenSim.Services.MessagingService
             List<string> serverURIs = m_scenes[0].RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
             foreach (string host in serverURIs)
             {
-                OSDMap retval = WebUtils.PostToService (host, message, true, false);
-                //Clean it up
-                retval = CreateWebResponse(retval);
-                OSD response = retval["Response"];
+                OSDMap response = WebUtils.PostToService (host, message, true, false, true);
                 if (response is OSDMap)
                 {
-                    retval = (OSDMap)response;
-                    if (retval["Messages"].Type == OSDType.Map)
+                    if (response["Messages"].Type == OSDType.Map)
                     {
-                        OSDMap messages = (OSDMap)retval["Messages"];
+                        OSDMap messages = (OSDMap)response["Messages"];
                         foreach (KeyValuePair<string, OSD> kvp in messages)
                         {
                             OSDArray array = (OSDArray)kvp.Value;

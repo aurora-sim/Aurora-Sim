@@ -632,8 +632,8 @@ namespace Aurora.Modules
                 {
                     try
                     {
-                        if (entity.IsAttachment && !((entity.RootChild.Flags & PrimFlags.Temporary) == PrimFlags.Temporary)
-                             && !((entity.RootChild.Flags & PrimFlags.TemporaryOnRez) == PrimFlags.TemporaryOnRez))
+                        if (entity.IsAttachment || ((entity.RootChild.Flags & PrimFlags.Temporary) == PrimFlags.Temporary)
+                             || ((entity.RootChild.Flags & PrimFlags.TemporaryOnRez) == PrimFlags.TemporaryOnRez))
                             continue;
                         //Write all entities
                         byte[] xml = ((ISceneObject)entity).ToBinaryXml2 ();
