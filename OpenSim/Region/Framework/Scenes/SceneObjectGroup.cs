@@ -2879,6 +2879,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
             Vector3 newPos = new Vector3(pos.X, pos.Y, pos.Z);
             Vector3 oldPos =
+                IsAttachment ?
+                new Vector3 (m_rootPart.OffsetPosition.X, m_rootPart.OffsetPosition.Y, m_rootPart.OffsetPosition.Z)
+                :
                 new Vector3(AbsolutePosition.X + m_rootPart.OffsetPosition.X,
                               AbsolutePosition.Y + m_rootPart.OffsetPosition.Y,
                               AbsolutePosition.Z + m_rootPart.OffsetPosition.Z);
