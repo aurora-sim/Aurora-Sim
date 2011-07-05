@@ -413,7 +413,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             /// <param name="e"></param>
             protected void statsHeartBeat(object sender, EventArgs e)
             {
-                m_report.Stop ();
+                lock(m_report)
+                    m_report.Stop ();
                 SimStatsPacket.RegionBlock rb = new SimStatsPacket.RegionBlock();
 
                 // Know what's not thread safe in Mono... modifying timers.
@@ -617,7 +618,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     //Now fix any values that require reseting
                     ResetValues();
                 }
-                m_report.Start ();
+                lock (m_report)
+                    m_report.Start ();
             }
 
             /// <summary>

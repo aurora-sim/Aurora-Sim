@@ -46,8 +46,9 @@ namespace OpenSim.Framework
     public interface IScenePresence : IEntity, IRegistryCore
     {
         event AddPhysics OnAddPhysics;
-
         event RemovePhysics OnRemovePhysics;
+        event AddPhysics OnSignificantClientMovement;
+
         IScene Scene { get; set; }
 
         string CallbackURI { get; set; }
@@ -179,6 +180,20 @@ namespace OpenSim.Framework
         void ClearSavedVelocity ();
 
         void HandleAgentRequestSit (IClientAPI remoteClient, UUID targetID, Vector3 offset);
+
+        bool IsTainted
+        {
+            get;
+            set;
+        }
+
+        PresenceTaint Taints
+        {
+            get;
+            set;
+        }
+
+        Vector3 GetAbsolutePosition ();
     }
 
     public interface IAvatarAppearanceModule
@@ -778,6 +793,16 @@ namespace OpenSim.Framework
 
         List<EntityIntersection> GetIntersectingPrims(Ray hray, float length, int count, bool frontFacesOnly, bool faceCenters, bool getAvatars, bool getLand, bool getPrims);
         void RegisterEntityCreatorModule (IEntityCreator entityCreator);
+
+        void TaintPresenceForUpdate (IScenePresence sp, PresenceTaint taint);
+    }
+
+    public enum PresenceTaint
+    {
+        Movement = 0,
+        TerseUpdate = 1,
+        SignificantMovement = 2,
+        Other = 4
     }
 
     /// <summary>
@@ -1169,7 +1194,7 @@ namespace OpenSim.Framework
         public delegate void AvatarEnteringNewParcel (IScenePresence avatar, int localLandID, UUID regionID);
         public event AvatarEnteringNewParcel OnAvatarEnteringNewParcel;
 
-        public delegate void SignificantClientMovement (IClientAPI remote_client);
+        public delegate void SignificantClientMovement (IScenePresence sp);
         public event SignificantClientMovement OnSignificantClientMovement;
 
         public delegate void SignificantObjectMovement (ISceneEntity group);
@@ -2210,7 +2235,7 @@ namespace OpenSim.Framework
             }
         }
 
-        public void TriggerSignificantClientMovement (IClientAPI client)
+        public void TriggerSignificantClientMovement (IScenePresence presence)
         {
             SignificantClientMovement handlerSignificantClientMovement = OnSignificantClientMovement;
             if (handlerSignificantClientMovement != null)
@@ -2219,7 +2244,7 @@ namespace OpenSim.Framework
                 {
                     try
                     {
-                        d (client);
+                        d (presence);
                     }
                     catch (Exception e)
                     {

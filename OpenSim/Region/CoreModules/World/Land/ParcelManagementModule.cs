@@ -938,28 +938,35 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
-        public void SendOutNearestBanLine(IClientAPI client)
+        private void SendOutNearestBanLine (IScenePresence sp, ILandObject ourLandObject)
         {
-            IScenePresence sp = m_scene.GetScenePresence (client.AgentId);
-            if (sp == null || sp.IsChildAgent)
-                return;
-
-            List<ILandObject> checkLandParcels = ParcelsNearPoint(sp.AbsolutePosition);
             int multiple = 0;
             int result = 0;
-            foreach (ILandObject checkBan in checkLandParcels)
+            Vector3 spAbs = sp.AbsolutePosition;
+            foreach (ILandObject parcel in AllParcels())
             {
-                if (checkBan.IsBannedFromLand(client.AgentId))
+                Vector3 aamax = parcel.LandData.AABBMax;
+                Vector3 aamin = parcel.LandData.AABBMax;
+                if (Math.Abs (aamax.X - spAbs.X) < 4 ||
+                    Math.Abs (aamax.Y - spAbs.Y) < 4 ||
+                    Math.Abs (aamin.X - spAbs.X) < 4 ||
+                    Math.Abs (aamin.Y - spAbs.Y) < 4)
                 {
-                    multiple++;
-                    result |= (int)ParcelPropertiesStatus.CollisionBanned;
-                    break; //Only send one
-                }
-                if (checkBan.IsRestrictedFromLand(client.AgentId))
-                {
-                    multiple++;
-                    result |= (int)ParcelPropertiesStatus.CollisionNotOnAccessList;
-                    break; //Only send one
+                    //Do the & since we don't need to check again if we have already set the ban flag
+                    if ((result & (int)ParcelPropertiesStatus.CollisionBanned) != (int)ParcelPropertiesStatus.CollisionBanned &&
+                        parcel.IsBannedFromLand (sp.UUID))
+                    {
+                        multiple++;
+                        result |= (int)ParcelPropertiesStatus.CollisionBanned;
+                        continue; //Only send one
+                    }
+                    else if ((result & (int)ParcelPropertiesStatus.CollisionNotOnAccessList) != (int)ParcelPropertiesStatus.CollisionNotOnAccessList && 
+                        parcel.IsRestrictedFromLand (sp.UUID))
+                    {
+                        multiple++;
+                        result |= (int)ParcelPropertiesStatus.CollisionNotOnAccessList;
+                        continue; //Only send one
+                    }
                 }
             }
             ParcelResult dataResult = ParcelResult.NoData;
@@ -970,61 +977,60 @@ namespace OpenSim.Region.CoreModules.World.Land
             else //If there is no result, don't send anything
                 return;
 
-            ILandObject ourLandObject = GetLandObject((int)sp.AbsolutePosition.X, (int)sp.AbsolutePosition.Y);
-            if(ourLandObject != null)
-                ourLandObject.SendLandProperties(result, false, (int)dataResult, client);
+            ourLandObject.SendLandProperties(result, false, (int)dataResult, sp.ControllingClient);
         }
 
-        public void CheckEnteringNewParcel (IScenePresence avatar, bool force)
+        private void CheckEnteringNewParcel (IScenePresence avatar)
         {
             ILandObject over = GetLandObject((int)avatar.AbsolutePosition.X,
                                              (int)avatar.AbsolutePosition.Y);
 
+            CheckEnteringNewParcel (avatar, over);
+        }
+
+        private void CheckEnteringNewParcel (IScenePresence avatar, ILandObject over)
+        {
             if (over != null)
             {
-                if (force || avatar.CurrentParcelUUID != over.LandData.GlobalID)
+                if (avatar.CurrentParcelUUID != over.LandData.GlobalID)
                 {
                     if (!avatar.IsChildAgent)
                     {
                         avatar.CurrentParcelUUID = over.LandData.GlobalID;
-                        m_scene.EventManager.TriggerAvatarEnteringNewParcel(avatar, over.LandData.LocalID,
+                        m_scene.EventManager.TriggerAvatarEnteringNewParcel (avatar, over.LandData.LocalID,
                                                                             m_scene.RegionInfo.RegionID);
                     }
                 }
             }
         }
 
-        private void CheckEnteringNewParcel (IScenePresence avatar)
+        public void EventManagerOnSignificantClientMovement (IScenePresence sp)
         {
-            CheckEnteringNewParcel(avatar, false);
-        }
-
-        public void EventManagerOnSignificantClientMovement(IClientAPI remote_client)
-        {
-            Util.FireAndForget (delegate (object o)
+            IScenePresence clientAvatar = m_scene.GetScenePresence (sp.UUID);
+            if (clientAvatar != null)
             {
-                IScenePresence clientAvatar = m_scene.GetScenePresence (remote_client.AgentId);
-                if (clientAvatar != null)
+                ILandObject over = GetLandObject ((int)clientAvatar.AbsolutePosition.X, (int)clientAvatar.AbsolutePosition.Y);
+                if (over != null)
                 {
-                    ILandObject over = GetLandObject ((int)clientAvatar.AbsolutePosition.X, (int)clientAvatar.AbsolutePosition.Y);
-                    if (over != null)
+                    if (!over.IsRestrictedFromLand (clientAvatar.UUID) && 
+                        (!over.IsBannedFromLand (clientAvatar.UUID) || 
+                        clientAvatar.AbsolutePosition.Z >= ParcelManagementModule.BAN_LINE_SAFETY_HEIGHT))//Allow for the flying over of ban lines
                     {
-                        if (!over.IsRestrictedFromLand (clientAvatar.UUID) && (!over.IsBannedFromLand (clientAvatar.UUID) || clientAvatar.AbsolutePosition.Z >= ParcelManagementModule.BAN_LINE_SAFETY_HEIGHT))
-                        {
-                            clientAvatar.LastKnownAllowedPosition =
-                                new Vector3 (clientAvatar.AbsolutePosition.X, clientAvatar.AbsolutePosition.Y, clientAvatar.AbsolutePosition.Z);
-                        }
-                        else
-                        {
-                            //Kick them out
-                            Vector3 pos = GetNearestAllowedPosition (clientAvatar);
-                            clientAvatar.Teleport (pos);
-                        }
-                        CheckEnteringNewParcel (clientAvatar, false);
-                        SendOutNearestBanLine (remote_client);
+                        clientAvatar.LastKnownAllowedPosition =
+                            new Vector3 (clientAvatar.AbsolutePosition.X, clientAvatar.AbsolutePosition.Y, clientAvatar.AbsolutePosition.Z);
                     }
+                    else
+                    {
+                        //Kick them out
+                        Vector3 pos = clientAvatar.LastKnownAllowedPosition == Vector3.Zero ? 
+                            GetNearestAllowedPosition (clientAvatar) :
+                             clientAvatar.LastKnownAllowedPosition;
+                        clientAvatar.Teleport (pos);
+                    }
+                    CheckEnteringNewParcel (clientAvatar, over);
+                    SendOutNearestBanLine (clientAvatar, over);
                 }
-            });
+            }
         }
 
         //Like handleEventManagerOnSignificantClientMovement, but for objects for parcel incoming object permissions
@@ -1448,7 +1454,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     {
                         byte tempByte = 0; //This represents the byte for the current 4x4
 
-                        ILandObject currentParcelBlock = GetLandObject(x * 4, y * 4);
+                        ILandObject currentParcelBlock = GetLandObject (x * ParcelManagementModule.LAND_OVERLAY_CHUNKS, y * ParcelManagementModule.LAND_OVERLAY_CHUNKS);
 
                         if (currentParcelBlock != null)
                         {

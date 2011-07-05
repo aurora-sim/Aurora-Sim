@@ -51,6 +51,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public event AddPhysics OnAddPhysics;
         public event RemovePhysics OnRemovePhysics;
+        public event AddPhysics OnSignificantClientMovement;
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -168,6 +169,7 @@ namespace OpenSim.Region.Framework.Scenes
         private volatile bool m_creatingPhysicalRepresentation = false;
 
         private const float SIGNIFICANT_MOVEMENT = 2.0f;
+        private const float TERSE_UPDATE_MOVEMENT = 0.5f;
 
         private Quaternion m_bodyRot= Quaternion.Identity;
 
@@ -257,6 +259,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Position at which a significant movement was made
         /// </summary>
         private Vector3 posLastSignificantMove;
+        private Vector3 posLastTerseUpdate;
 
         private UUID CollisionSoundID = UUID.Zero;
 
@@ -387,9 +390,24 @@ namespace OpenSim.Region.Framework.Scenes
                         //Send an update to all child agents if we are a root agent
                         m_enqueueSendChildAgentUpdate = true;
                         m_enqueueSendChildAgentUpdateTime = DateTime.Now.AddSeconds(5);
+                        Scene.SceneGraph.TaintPresenceForUpdate (this, PresenceTaint.Other);
                     }
                 }
             }
+        }
+
+        private bool m_IsTainted = false;
+        public bool IsTainted
+        {
+            get { return m_IsTainted; }
+            set { m_IsTainted = value; }
+        }
+
+        private PresenceTaint m_Taints = 0;
+        public PresenceTaint Taints
+        {
+            get { return m_Taints; }
+            set { m_Taints = value; }
         }
 
         protected bool m_allowMovement = true;
@@ -481,37 +499,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                PhysicsActor actor = m_physicsActor;
-                if (actor != null)
-                    m_pos = actor.Position;
-                else
-                {
-                    //return m_pos; 
-                    // OpenSim Mantis #4063. Obtain the correct position of a seated avatar. In addition
-                    // to providing the correct position while the avatar is seated, this value will also
-                    // be used as the location to unsit to.
-                    //
-                    // If m_parentID is not 0, assume we are a seated avatar and we should return the
-                    // position based on the sittarget offset and rotation of the prim we are seated on.
-                    //
-                    // Generally, m_pos will contain the position of the avator in the sim unless the avatar
-                    // is on a sit target. While on a sit target, m_pos will contain the desired offset
-                    // without the parent rotation applied.
-                    if (m_parentID != UUID.Zero)
-                    {
-                        ISceneChildEntity part = m_scene.GetSceneObjectPart (m_parentID);
-                        if (part != null)
-                        {
-                            return m_parentPosition + (m_pos * part.GetWorldRotation());
-                        }
-                        else
-                        {
-                            return m_parentPosition + m_pos;
-                        }
-                    }
-                }
-
-                return m_pos;  
+                return GetAbsolutePosition ();
             }
             set
             {
@@ -537,6 +525,41 @@ namespace OpenSim.Region.Framework.Scenes
                 m_pos = value;
                 m_parentPosition = Vector3.Zero;
             }
+        }
+
+        public Vector3 GetAbsolutePosition ()
+        {
+            PhysicsActor actor = m_physicsActor;
+            if (actor != null)
+                m_pos = actor.Position;
+            else
+            {
+                //return m_pos; 
+                // OpenSim Mantis #4063. Obtain the correct position of a seated avatar. In addition
+                // to providing the correct position while the avatar is seated, this value will also
+                // be used as the location to unsit to.
+                //
+                // If m_parentID is not 0, assume we are a seated avatar and we should return the
+                // position based on the sittarget offset and rotation of the prim we are seated on.
+                //
+                // Generally, m_pos will contain the position of the avator in the sim unless the avatar
+                // is on a sit target. While on a sit target, m_pos will contain the desired offset
+                // without the parent rotation applied.
+                if (m_parentID != UUID.Zero)
+                {
+                    ISceneChildEntity part = m_scene.GetSceneObjectPart (m_parentID);
+                    if (part != null)
+                    {
+                        return m_parentPosition + (m_pos * part.GetWorldRotation ());
+                    }
+                    else
+                    {
+                        return m_parentPosition + m_pos;
+                    }
+                }
+            }
+
+            return m_pos;
         }
 
         public Vector3 OffsetPosition
@@ -904,7 +927,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (m_physicsActor != null)
                         m_physicsActor.OnCollisionUpdate -= PhysicsCollisionUpdate;
                     if (m_physicsActor != null)
-                        m_physicsActor.OnRequestTerseUpdate -= SendTerseUpdateToAllClients;
+                        m_physicsActor.OnRequestTerseUpdate -= SendPhysicsTerseUpdateToAllClients;
                     if (m_physicsActor != null)
                         m_physicsActor.OnSignificantMovement -= CheckForSignificantMovement;
                     if (m_physicsActor != null)
@@ -1926,44 +1949,65 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void Update()
         {
-            if (!IsChildAgent)
+            if (!IsChildAgent && m_parentID != UUID.Zero)
             {
-                if (m_parentID != UUID.Zero)
+                SceneObjectPart part = (SceneObjectPart)Scene.GetSceneObjectPart (m_parentID);
+                if (part != null)
                 {
-                    SceneObjectPart part = (SceneObjectPart)Scene.GetSceneObjectPart (m_parentID);
-                    if (part != null)
-                    {
-                        if ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) == AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK)
-                            part.SetPhysActorCameraPos (CameraRotation);
-                        else
-                            part.SetPhysActorCameraPos (Quaternion.Identity);
-                    }
+                    if ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) == AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK)
+                        part.SetPhysActorCameraPos (CameraRotation);
+                    else
+                        part.SetPhysActorCameraPos (Quaternion.Identity);
                 }
             }
-            if (m_enqueueSendChildAgentUpdate &&
-                m_enqueueSendChildAgentUpdateTime != new DateTime () &&
-                DateTime.Now > m_enqueueSendChildAgentUpdateTime)
+            if((Taints & PresenceTaint.SignificantMovement) == PresenceTaint.SignificantMovement)
             {
-                //Reset it now
-                m_enqueueSendChildAgentUpdateTime = new DateTime ();
-                m_enqueueSendChildAgentUpdate = false;
+                Taints &= ~PresenceTaint.SignificantMovement;
+                //Trigger the movement now
+                if(OnSignificantClientMovement != null)
+                    OnSignificantClientMovement ();
+                m_scene.EventManager.TriggerSignificantClientMovement(this);
+            }
+            /*if ((Taints & PresenceTaint.TerseUpdate) == PresenceTaint.TerseUpdate)
+            {
+                Taints &= ~PresenceTaint.TerseUpdate;
+                //Send the terse update
+                //SendTerseUpdateToAllClients ();
+            }*/
+            if ((Taints & PresenceTaint.Movement) == PresenceTaint.Movement)
+            {
+                Taints &= ~PresenceTaint.Movement;
+                //Finish out the event
+                UpdatePosAndVelocity ();
+            }
+            if (m_enqueueSendChildAgentUpdate &&
+                m_enqueueSendChildAgentUpdateTime != new DateTime ())
+            {
+                if (DateTime.Now > m_enqueueSendChildAgentUpdateTime)
+                {
+                    //Reset it now
+                    m_enqueueSendChildAgentUpdateTime = new DateTime ();
+                    m_enqueueSendChildAgentUpdate = false;
 
-                AgentPosition agentpos = new AgentPosition ();
-                agentpos.AgentID = UUID;
-                agentpos.AtAxis = CameraAtAxis;
-                agentpos.Center = m_lastChildAgentUpdateCamPosition;
-                agentpos.Far = DrawDistance;
-                agentpos.LeftAxis = CameraLeftAxis;
-                agentpos.Position = m_lastChildAgentUpdatePosition;
-                agentpos.RegionHandle = Scene.RegionInfo.RegionHandle;
-                agentpos.Size = PhysicsActor != null ? PhysicsActor.Size : new Vector3 (0, 0, m_avHeight);
-                agentpos.UpAxis = CameraUpAxis;
-                agentpos.Velocity = Velocity;
+                    AgentPosition agentpos = new AgentPosition ();
+                    agentpos.AgentID = UUID;
+                    agentpos.AtAxis = CameraAtAxis;
+                    agentpos.Center = m_lastChildAgentUpdateCamPosition;
+                    agentpos.Far = DrawDistance;
+                    agentpos.LeftAxis = CameraLeftAxis;
+                    agentpos.Position = m_lastChildAgentUpdatePosition;
+                    agentpos.RegionHandle = Scene.RegionInfo.RegionHandle;
+                    agentpos.Size = PhysicsActor != null ? PhysicsActor.Size : new Vector3 (0, 0, m_avHeight);
+                    agentpos.UpAxis = CameraUpAxis;
+                    agentpos.Velocity = Velocity;
 
-                //Send the child agent data update
-                ISyncMessagePosterService syncPoster = Scene.RequestModuleInterface<ISyncMessagePosterService> ();
-                if (syncPoster != null)
-                    syncPoster.Post (SyncMessageHelper.SendChildAgentUpdate (agentpos, m_scene.RegionInfo.RegionHandle), m_scene.RegionInfo.RegionHandle);
+                    //Send the child agent data update
+                    ISyncMessagePosterService syncPoster = Scene.RequestModuleInterface<ISyncMessagePosterService> ();
+                    if (syncPoster != null)
+                        syncPoster.Post (SyncMessageHelper.SendChildAgentUpdate (agentpos, m_scene.RegionInfo.RegionHandle), m_scene.RegionInfo.RegionHandle);
+                }
+                else
+                    IsTainted = true;//We havn't sent the update yet, keep tainting
             }
         }
 
@@ -1984,9 +2028,17 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
+        /// Send a location/velocity/accelleration update to all agents in scene (from the physics engine)
+        /// </summary>
+        public void SendPhysicsTerseUpdateToAllClients()
+        {
+            Scene.SceneGraph.TaintPresenceForUpdate (this, PresenceTaint.TerseUpdate);
+        }
+
+        /// <summary>
         /// Send a location/velocity/accelleration update to all agents in scene
         /// </summary>
-        public void SendTerseUpdateToAllClients()
+        public void SendTerseUpdateToAllClients ()
         {
             m_perfMonMS = Util.EnvironmentTickCount();
 
@@ -2031,19 +2083,21 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// This checks for a significant movement and sends a courselocationchange update
         /// </summary>
-        protected void CheckForSignificantMovement()
+        protected void CheckForSignificantMovement ()
         {
             // Movement updates for agents in neighboring regions are sent directly to clients.
             // This value only affects how often agent positions are sent to neighbor regions
             // for things such as distance-based update prioritization
-
-        //            if (Util.GetDistanceTo(AbsolutePosition, posLastSignificantMove) > SIGNIFICANT_MOVEMENT)
             if (Vector3.DistanceSquared(AbsolutePosition, posLastSignificantMove) > SIGNIFICANT_MOVEMENT * SIGNIFICANT_MOVEMENT)
             {
                 posLastSignificantMove = AbsolutePosition;
-                m_scene.EventManager.TriggerSignificantClientMovement(m_controllingClient);
+                Scene.SceneGraph.TaintPresenceForUpdate (this, PresenceTaint.SignificantMovement);
             }
-
+            if (Vector3.DistanceSquared (AbsolutePosition, posLastTerseUpdate) > TERSE_UPDATE_MOVEMENT * TERSE_UPDATE_MOVEMENT)
+            {
+                posLastTerseUpdate = AbsolutePosition;
+                Scene.SceneGraph.TaintPresenceForUpdate (this, PresenceTaint.Movement);
+            }
             if (m_sceneViewer == null || m_sceneViewer.Prioritizer == null)
                 return;
 
@@ -2058,21 +2112,9 @@ namespace OpenSim.Region.Framework.Scenes
                 m_lastChildAgentUpdatePosition = AbsolutePosition;
                 m_lastChildAgentUpdateCamPosition = CameraPosition;
 
-                AgentPosition agentpos = new AgentPosition();
-                agentpos.AgentID = UUID;
-                agentpos.AtAxis = CameraAtAxis;
-                agentpos.Center = m_lastChildAgentUpdateCamPosition;
-                agentpos.Far = DrawDistance;
-                agentpos.LeftAxis = CameraLeftAxis;
-                agentpos.Position = m_lastChildAgentUpdatePosition;
-                agentpos.RegionHandle = Scene.RegionInfo.RegionHandle;
-                agentpos.Size = PhysicsActor != null ? PhysicsActor.Size : new Vector3(0, 0, m_avHeight);
-                agentpos.UpAxis = CameraUpAxis;
-                agentpos.Velocity = Velocity;
-
-                ISyncMessagePosterService syncPoster = Scene.RequestModuleInterface<ISyncMessagePosterService>();
-                if (syncPoster != null)
-                    syncPoster.Post(SyncMessageHelper.SendChildAgentUpdate(agentpos, m_scene.RegionInfo.RegionHandle), m_scene.RegionInfo.RegionHandle);
+                Scene.SceneGraph.TaintPresenceForUpdate (this, PresenceTaint.Other);
+                m_enqueueSendChildAgentUpdate = true;
+                m_enqueueSendChildAgentUpdateTime = DateTime.Now;
             }
 
             // Disabled for now until we can make sure that we only send one of these per simulation loop,
@@ -2264,7 +2306,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_avHeight = cAgentData.Size.Z;
 
-            m_scene.EventManager.TriggerSignificantClientMovement(m_controllingClient);
+            m_scene.EventManager.TriggerSignificantClientMovement(this);
 
             m_savedVelocity = cAgentData.Velocity;
         }
@@ -2422,7 +2464,7 @@ namespace OpenSim.Region.Framework.Scenes
                                                  new Vector3 (0f, 0f, m_avHeight), isFlying, LocalId, UUID);
 
             scene.AddPhysicsActorTaint(m_physicsActor);
-            m_physicsActor.OnRequestTerseUpdate += SendTerseUpdateToAllClients;
+            m_physicsActor.OnRequestTerseUpdate += SendPhysicsTerseUpdateToAllClients;
             m_physicsActor.OnSignificantMovement += CheckForSignificantMovement;
             m_physicsActor.OnCollisionUpdate += PhysicsCollisionUpdate;
             m_physicsActor.OnPositionAndVelocityUpdate += PhysicsUpdatePosAndVelocity;
@@ -2470,8 +2512,14 @@ namespace OpenSim.Region.Framework.Scenes
         private void PhysicsUpdatePosAndVelocity()
         {
             //Whenever the physics engine updates its positions, we get this update and make sure the animator has the newest info
+            //Scene.SceneGraph.TaintPresenceForUpdate (this, PresenceTaint.Movement);
+        }
+
+        private void UpdatePosAndVelocity ()
+        {
+            //Whenever the physics engine updates its positions, we get this update and make sure the animator has the newest info
             if (Animator != null && m_parentID == UUID.Zero)
-                Animator.UpdateMovementAnimations();
+                Animator.UpdateMovementAnimations ();
         }
 
         // Event called by the physics plugin to tell the avatar about a collision.

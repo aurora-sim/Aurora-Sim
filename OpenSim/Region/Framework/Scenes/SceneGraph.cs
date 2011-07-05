@@ -129,17 +129,33 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        private object m_taintedPresencesLock = new object ();
+        private List<IScenePresence> m_taintedPresences = new List<IScenePresence> ();
+        public void TaintPresenceForUpdate(IScenePresence presence, PresenceTaint taint)
+        {
+            lock (m_taintedPresencesLock)
+            {
+                if (!presence.IsTainted)//We ONLY set the IsTainted under this lock, so we can trust it
+                    m_taintedPresences.Add (presence);
+                presence.Taints |= taint;
+            }
+        }
+
         protected internal void UpdateEntities()
         {
-            ForEachScenePresence (delegate (IScenePresence presence)
+            lock (m_taintedPresencesLock)
             {
-                presence.Update();
-            });
-            //Not used
-            /*ForEachSOG(delegate(SceneObjectGroup grp)
-            {
-                grp.Update();
-            });*/
+                foreach (IScenePresence presence in m_taintedPresences)
+                {
+                    presence.IsTainted = false;//We set this first so that it is cleared out, but also so that the method can re-taint us
+                    presence.Update ();
+                }
+                //Clear out all the finished ones
+                m_taintedPresences.RemoveAll (delegate (IScenePresence sp)
+                {
+                    return !sp.IsTainted;
+                });
+            }
         }
 
         protected internal float UpdatePhysics(double elapsed)

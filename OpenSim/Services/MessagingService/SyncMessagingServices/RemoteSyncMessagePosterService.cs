@@ -71,13 +71,16 @@ namespace OpenSim.Services.MessagingService
 
         public void Post(OSDMap request, ulong RegionHandle)
         {
-            OSDMap message = CreateWebRequest(request);
-            string postInfo = OSDParser.SerializeJsonString(message);
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(RegionHandle.ToString(), "MessagingServerURI");
-            foreach (string host in serverURIs)
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (RegionHandle.ToString (), "MessagingServerURI");
+            if (serverURIs.Count > 0)
             {
-                //Send it async
-                AsynchronousRestObjectRequester.MakeRequest("POST", host, postInfo);
+                OSDMap message = CreateWebRequest (request);
+                string postInfo = OSDParser.SerializeJsonString (message);
+                foreach (string host in serverURIs)
+                {
+                    //Send it async
+                    AsynchronousRestObjectRequester.MakeRequest ("POST", host, postInfo);
+                }
             }
         }
 

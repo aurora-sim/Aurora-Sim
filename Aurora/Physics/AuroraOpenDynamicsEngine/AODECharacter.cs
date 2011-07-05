@@ -1266,8 +1266,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             m_UpdateTimecntr = 0;
 
-            const float VELOCITY_TOLERANCE = 0.01f;
-            const float POSITION_TOLERANCE = 0.05f;
+            const float VELOCITY_TOLERANCE = 0.1f;
+            const float POSITION_TOLERANCE = 0.25f;
             bool needSendUpdate = false;
 
             //Check to see whether we need to trigger the significant movement method in the presence

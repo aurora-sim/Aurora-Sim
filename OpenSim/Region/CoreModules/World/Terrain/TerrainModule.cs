@@ -275,7 +275,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     if (agent != null && agent.IsChildAgent)
                     {
                         //If the avatar is a child agent, we need to send the terrain data initially
-                        EventManager_OnSignificantClientMovement(client);
+                        EventManager_OnSignificantClientMovement(agent);
                     }
                 }
             }
@@ -326,11 +326,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             return null;
         }
 
-        void EventManager_OnSignificantClientMovement(IClientAPI remote_client)
+        void EventManager_OnSignificantClientMovement (IScenePresence presence)
         {
-            IScenePresence presence = m_scene.GetScenePresence (remote_client.AgentId);
-            if (presence == null)
-                return;
             if (Vector3.DistanceSquared (presence.AbsolutePosition, m_previousCheckedPosition) > 16 * 16)
             {
                 m_previousCheckedPosition = presence.AbsolutePosition;

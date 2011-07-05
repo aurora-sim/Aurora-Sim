@@ -191,7 +191,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private d.Contact AvatarMovementprimContact;
 
         private int m_physicsiterations = 10;
-        private int m_timeBetweenRevertingAutoConfigIterations = 50;
+        //private int m_timeBetweenRevertingAutoConfigIterations = 50;
         private const float m_SkipFramesAtms = 0.150f; // Drop frames gracefully at a 150 ms lag
         private readonly PhysicsActor PANull = new NullObjectPhysicsActor();
         private float step_time = 0.0f;

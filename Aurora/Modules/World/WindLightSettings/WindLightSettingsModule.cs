@@ -89,7 +89,7 @@ namespace Aurora.Modules
 
             scene.EventManager.OnClientClosed += EventManager_OnClientClosed;
             scene.EventManager.OnRegisterCaps += OnRegisterCaps;
-            scene.EventManager.OnMakeRootAgent += SendProfileToClient;
+            scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
             scene.EventManager.OnSignificantClientMovement += OnSignificantClientMovement;
             scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringNewParcel;
         }
@@ -106,7 +106,7 @@ namespace Aurora.Modules
             
             scene.EventManager.OnClientClosed -= new EventManager.ClientClosed(EventManager_OnClientClosed);
             scene.EventManager.OnRegisterCaps -= OnRegisterCaps;
-            scene.EventManager.OnMakeRootAgent -= SendProfileToClient;
+            scene.EventManager.OnMakeRootAgent -= OnMakeRootAgent;
             scene.EventManager.OnSignificantClientMovement -= OnSignificantClientMovement;
             scene.EventManager.OnAvatarEnteringNewParcel -= AvatarEnteringNewParcel;
         }
@@ -150,7 +150,7 @@ namespace Aurora.Modules
             {
                 RegionInfoConnector.StoreRegionWindlightSettings(wl.regionID, oldUUID, wl);
             }
-            m_scene.ForEachScenePresence(SendProfileToClient);
+            m_scene.ForEachScenePresence (OnMakeRootAgent);
         }
 
         #endregion
@@ -335,7 +335,7 @@ namespace Aurora.Modules
 
                         land.LandData.AddGenericData("WindLight", innerMap);
                         //Update the client
-                        SendProfileToClient(SP);
+                        SendProfileToClient(SP, false);
                     }
                 }
             }
@@ -461,70 +461,86 @@ namespace Aurora.Modules
         private void AvatarEnteringNewParcel (IScenePresence SP, int localLandID, UUID regionID)
         {
             //Send on new parcel
-            SendProfileToClient(SP);
+            IOpenRegionSettingsModule ORSM = SP.Scene.RequestModuleInterface<IOpenRegionSettingsModule> ();
+            if (ORSM != null && ORSM.AllowParcelWindLight)
+                SendProfileToClient(SP, false);
         }
 
-        void OnSignificantClientMovement(IClientAPI remote_client)
+        private void OnMakeRootAgent (IScenePresence sp)
+        {
+            //Look for full, so send true
+            SendProfileToClient (sp, true);
+        }
+
+        void OnSignificantClientMovement(IScenePresence sp)
         {
             //Send on movement as this checks for altitude
-            SendProfileToClient(m_scene.GetScenePresence(remote_client.AgentId));
+            SendProfileToClient(sp, true);
         }
 
         //Find the correct WL settings to send to the client
-        public void SendProfileToClient (IScenePresence presence)
+        public void SendProfileToClient (IScenePresence presence, bool checkAltitudesOnly)
         {
             if (presence == null)
                 return;
             ILandObject land = null;
-            IParcelManagementModule parcelManagement = presence.Scene.RequestModuleInterface<IParcelManagementModule>();
-            if (parcelManagement != null)
+            if (!checkAltitudesOnly)
             {
-                land = parcelManagement.GetLandObject(presence.AbsolutePosition.X, presence.AbsolutePosition.Y);
-            }
-            OSDMap map = land != null ? land.LandData.GenericDataMap : new OSDMap();
-            if (map.ContainsKey("WindLight"))
-            {
-                IOpenRegionSettingsModule ORSM = presence.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
-                if (ORSM != null && ORSM.AllowParcelWindLight)
+                IParcelManagementModule parcelManagement = presence.Scene.RequestModuleInterface<IParcelManagementModule> ();
+                if (parcelManagement != null)
                 {
-                    if (CheckOverRideParcels(presence))
+                    land = parcelManagement.GetLandObject (presence.AbsolutePosition.X, presence.AbsolutePosition.Y);
+                }
+                OSDMap map = land != null ? land.LandData.GenericDataMap : new OSDMap ();
+                if (map.ContainsKey ("WindLight"))
+                {
+                    IOpenRegionSettingsModule ORSM = presence.Scene.RequestModuleInterface<IOpenRegionSettingsModule> ();
+                    if (ORSM != null && ORSM.AllowParcelWindLight)
                     {
-                        //Overrides all
-                        SendProfileToClient(presence, FindRegionWindLight(presence));
+                        if (CheckOverRideParcels (presence))
+                        {
+                            //Overrides all
+                            SendProfileToClient (presence, FindRegionWindLight (presence));
+                        }
+                        else
+                        {
+                            OSDMap innerMap = (OSDMap)map["WindLight"];
+                            foreach (KeyValuePair<string, OSD> kvp in innerMap)
+                            {
+                                int minEffectiveAltitude = int.Parse (kvp.Key);
+                                if (presence.AbsolutePosition.Z > minEffectiveAltitude)
+                                {
+                                    OSDMap lsdMap = (OSDMap)kvp.Value;
+                                    RegionLightShareData parcelLSD = new RegionLightShareData ();
+                                    parcelLSD.FromOSD (lsdMap);
+                                    if (presence.AbsolutePosition.Z < parcelLSD.maxEffectiveAltitude)
+                                    {
+                                        //They are between both altitudes
+                                        SendProfileToClient (presence, parcelLSD);
+                                        return; //End it
+                                    }
+                                }
+                            }
+                            //Send region since no parcel claimed the user
+                            SendProfileToClient (presence, FindRegionWindLight (presence));
+                        }
                     }
                     else
                     {
-                        OSDMap innerMap = (OSDMap)map["WindLight"];
-                        foreach (KeyValuePair<string, OSD> kvp in innerMap)
-                        {
-                            int minEffectiveAltitude = int.Parse(kvp.Key);
-                            if (presence.AbsolutePosition.Z > minEffectiveAltitude)
-                            {
-                                OSDMap lsdMap = (OSDMap)kvp.Value;
-                                RegionLightShareData parcelLSD = new RegionLightShareData();
-                                parcelLSD.FromOSD(lsdMap);
-                                if (presence.AbsolutePosition.Z < parcelLSD.maxEffectiveAltitude)
-                                {
-                                    //They are between both altitudes
-                                    SendProfileToClient(presence, parcelLSD);
-                                    return; //End it
-                                }
-                            }
-                        }
-                        //Send region since no parcel claimed the user
-                        SendProfileToClient(presence, FindRegionWindLight(presence));
+                        //Only region allowed 
+                        SendProfileToClient (presence, FindRegionWindLight (presence));
                     }
                 }
                 else
                 {
-                    //Only region allowed 
-                    SendProfileToClient(presence, FindRegionWindLight(presence));
+                    //Send the region by default to override any previous settings
+                    SendProfileToClient (presence, FindRegionWindLight (presence));
                 }
             }
             else
             {
                 //Send the region by default to override any previous settings
-                SendProfileToClient(presence, FindRegionWindLight(presence));
+                SendProfileToClient (presence, FindRegionWindLight (presence));
             }
         }
 

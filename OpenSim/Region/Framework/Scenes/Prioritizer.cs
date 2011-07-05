@@ -115,7 +115,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (DD > scene.RegionInfo.RegionSizeX && 
                 DD > scene.RegionInfo.RegionSizeY)
                 return true; //Its larger than the region, no culling check even necessary
-            Vector3 posToCheckFrom = client.AbsolutePosition;
+            Vector3 posToCheckFrom = client.GetAbsolutePosition();
             if (client.IsChildAgent)
             {
                 if (m_cachedXOffset == 0 && m_cachedYOffset == 0) //Not found yet
@@ -154,7 +154,7 @@ namespace OpenSim.Region.Framework.Scenes
                 ISceneEntity sEntity = (ISceneEntity)entity;
                 if (sEntity.RootChild.IsAttachment)
                 {
-                    IScenePresence attachedAvatar = sEntity.Scene.GetScenePresence (sEntity.RootChild.AttachedAvatar);
+                    IScenePresence attachedAvatar = scene.GetScenePresence (sEntity.RootChild.AttachedAvatar);
                     if (attachedAvatar != null)
                         entityPosToCheckFrom = attachedAvatar.AbsolutePosition;
                 }
@@ -168,12 +168,12 @@ namespace OpenSim.Region.Framework.Scenes
                 IScenePresence pEntity = (IScenePresence)entity;
                 if (pEntity.Sitting)
                 {
-                    ISceneChildEntity sittingEntity = pEntity.Scene.GetSceneObjectPart (pEntity.SittingOnUUID);
+                    ISceneChildEntity sittingEntity = scene.GetSceneObjectPart (pEntity.SittingOnUUID);
                     if (sittingEntity != null)
-                        entityPosToCheckFrom = sittingEntity.AbsolutePosition;
+                        entityPosToCheckFrom = sittingEntity.GetGroupPosition ();
                 }
                 else
-                    entityPosToCheckFrom = pEntity.AbsolutePosition;
+                    entityPosToCheckFrom = pEntity.GetAbsolutePosition();
             }
             //If the distance is greater than the clients draw distance, its out of range
             if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom) >

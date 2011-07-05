@@ -448,8 +448,12 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         /// </summary>
         public void UpdateMovementAnimations()
         {
+            string oldanimation = m_movementAnimation;
             m_movementAnimation = GetMovementAnimation();
-            TrySetMovementAnimation(m_movementAnimation);
+            if (oldanimation != m_movementAnimation)
+                TrySetMovementAnimation (m_movementAnimation);
+            else
+                m_scenePresence.SendTerseUpdateToAllClients ();//Send the terse update alone then
         }
 
         public UUID[] GetAnimationArray()
