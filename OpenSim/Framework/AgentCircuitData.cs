@@ -109,6 +109,9 @@ namespace OpenSim.Framework
         /// </summary>
         public Vector3 startpos;
 
+        //HG info...
+        public Dictionary<string, object> ServiceURLs;
+
         public AgentCircuitData()
         {
         }
@@ -141,6 +144,17 @@ namespace OpenSim.Framework
                 args["packed_appearance"] = appmap;
             }
 
+            if (ServiceURLs != null && ServiceURLs.Count > 0)
+            {
+                OSDMap urls = new OSDMap ();
+                foreach (KeyValuePair<string, object> kvp in ServiceURLs)
+                {
+                    //System.Console.WriteLine("XXX " + kvp.Key + "=" + kvp.Value);
+                    urls[kvp.Key] = OSD.FromString ((kvp.Value == null) ? string.Empty : kvp.Value.ToString ());
+                }
+                args["serviceurls"] = urls;
+            }
+
             return args;
         }
 
@@ -159,6 +173,7 @@ namespace OpenSim.Framework
             Copy.startpos = startpos;
             Copy.teleportFlags = teleportFlags;
             Copy.OtherInformation = OtherInformation;
+            Copy.ServiceURLs = ServiceURLs;
 
             return Copy;
         }
@@ -226,6 +241,19 @@ namespace OpenSim.Framework
 
             if (args.ContainsKey("otherInfo"))
                 OtherInformation = (OSDMap)OSDParser.DeserializeLLSDXml(args["otherInfo"].AsString());
+
+            ServiceURLs = new Dictionary<string, object> ();
+            // Try parse the new way, OSDMap
+            if (args.ContainsKey ("serviceurls") && args["serviceurls"] != null && (args["serviceurls"]).Type == OSDType.Map)
+            {
+                OSDMap urls = (OSDMap)(args["serviceurls"]);
+                foreach (KeyValuePair<String, OSD> kvp in urls)
+                {
+                    ServiceURLs[kvp.Key] = kvp.Value.AsString ();
+                    //System.Console.WriteLine("XXX " + kvp.Key + "=" + ServiceURLs[kvp.Key]);
+
+                }
+            }
         }
     }
 }
