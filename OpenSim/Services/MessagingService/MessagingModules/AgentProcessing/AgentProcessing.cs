@@ -49,44 +49,47 @@ namespace OpenSim.Services.MessagingService
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        protected static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected IRegistryCore m_registry;
         protected bool m_useCallbacks = true;
         protected bool VariableRegionSight = false;
         protected int MaxVariableRegionSight = 512;
+        protected bool m_enabled = true;
 
         #endregion
 
         #region IService Members
 
-        public void Initialize(IConfigSource config, IRegistryCore registry)
+        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
             m_registry = registry;
             m_registry.RegisterModuleInterface<IAgentProcessing>(this);
             IConfig agentConfig = config.Configs["AgentProcessing"];
             if (agentConfig != null)
             {
+                m_enabled = agentConfig.GetString ("Module", "AgentProcessing") == "AgentProcessing";
                 m_useCallbacks = agentConfig.GetBoolean ("UseCallbacks", m_useCallbacks);
                 VariableRegionSight = agentConfig.GetBoolean ("UseVariableRegionSightDistance", VariableRegionSight);
                 MaxVariableRegionSight = agentConfig.GetInt ("MaxDistanceVariableRegionSightDistance", MaxVariableRegionSight);
             }
         }
 
-        public void Start(IConfigSource config, IRegistryCore registry)
+        public virtual void Start (IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void FinishedStartup()
+        public virtual void FinishedStartup ()
         {
             //Also look for incoming messages to display
-            m_registry.RequestModuleInterface<IAsyncMessageRecievedService> ().OnMessageReceived += OnMessageReceived;
+            if(!m_enabled)
+                m_registry.RequestModuleInterface<IAsyncMessageRecievedService> ().OnMessageReceived += OnMessageReceived;
         }
 
         #endregion
 
         #region Message Received
 
-        protected OSDMap OnMessageReceived(OSDMap message)
+        protected virtual OSDMap OnMessageReceived (OSDMap message)
         {
             if (!message.ContainsKey("Method"))
                 return null;
@@ -269,7 +272,7 @@ namespace OpenSim.Services.MessagingService
             return null;
         }
 
-        public void LogoutAgent(IRegionClientCapsService regionCaps)
+        public virtual void LogoutAgent (IRegionClientCapsService regionCaps)
         {
             //Close all neighbor agents as well, the root is closing itself, so don't call them
             ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
@@ -299,7 +302,7 @@ namespace OpenSim.Services.MessagingService
                 capsService.RemoveCAPS(regionCaps.AgentID);
         }
 
-        public void LogOutAllAgentsForRegion(ulong requestingRegion)
+        public virtual void LogOutAllAgentsForRegion (ulong requestingRegion)
         {
             IRegionCapsService fullregionCaps = m_registry.RequestModuleInterface<ICapsService>().GetCapsForRegion(requestingRegion);
             if (fullregionCaps != null)
@@ -313,7 +316,7 @@ namespace OpenSim.Services.MessagingService
 
         #region EnableChildAgents
 
-        public bool EnableChildAgentsForRegion(GridRegion requestingRegion)
+        public virtual bool EnableChildAgentsForRegion (GridRegion requestingRegion)
         {
             int count = 0;
             bool informed = true;
@@ -346,7 +349,7 @@ namespace OpenSim.Services.MessagingService
             return informed;
         }
 
-        public bool EnableChildAgents (UUID AgentID, ulong requestingRegion, int DrawDistance, AgentCircuitData circuit)
+        public virtual bool EnableChildAgents (UUID AgentID, ulong requestingRegion, int DrawDistance, AgentCircuitData circuit)
         {
             int count = 0;
             bool informed = true;
@@ -388,7 +391,7 @@ namespace OpenSim.Services.MessagingService
         /// <param name="a"></param>
         /// <param name="regionHandle"></param>
         /// <param name="endPoint"></param>
-        private bool InformClientOfNeighbor(UUID AgentID, ulong requestingRegion, AgentCircuitData circuitData, GridRegion neighbor,
+        public virtual bool InformClientOfNeighbor (UUID AgentID, ulong requestingRegion, AgentCircuitData circuitData, GridRegion neighbor,
             uint TeleportFlags, AgentData agentData, out string reason)
         {
             if (neighbor == null)
@@ -515,7 +518,7 @@ namespace OpenSim.Services.MessagingService
 
         #region Teleporting
 
-        public bool TeleportAgent(GridRegion destination, uint TeleportFlags, int DrawDistance,
+        public virtual bool TeleportAgent (GridRegion destination, uint TeleportFlags, int DrawDistance,
             AgentCircuitData circuit, AgentData agentData, UUID AgentID, ulong requestingRegion,
             out string reason)
         {
@@ -629,7 +632,7 @@ namespace OpenSim.Services.MessagingService
         }
 
         private int CloseNeighborCall = 0;
-        private void CloseNeighborAgents(GridRegion oldRegion, GridRegion destination, UUID AgentID)
+        public virtual void CloseNeighborAgents (GridRegion oldRegion, GridRegion destination, UUID AgentID)
         {
             if (!m_useCallbacks)
                 return;
@@ -683,7 +686,7 @@ namespace OpenSim.Services.MessagingService
             });
         }
 
-        protected void SendCloseChildAgent(UUID agentID, IEnumerable<GridRegion> regionsToClose)
+        public virtual void SendCloseChildAgent (UUID agentID, IEnumerable<GridRegion> regionsToClose)
         {
             IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(agentID);
             //Close all agents that we've been given regions for
@@ -783,7 +786,7 @@ namespace OpenSim.Services.MessagingService
         /// <param name="y">old Y pos (in meters)</param>
         /// <param name="newRegionY">new Y pos (in meters)</param>
         /// <returns></returns>
-        public bool IsOutsideView (int oldRegionX, int newRegionX, int oldRegionSizeX, int newRegionSizeX, int oldRegionY, int newRegionY, int oldRegionSizeY, int newRegionSizeY)
+        public virtual bool IsOutsideView (int oldRegionX, int newRegionX, int oldRegionSizeX, int newRegionSizeX, int oldRegionY, int newRegionY, int oldRegionSizeY, int newRegionSizeY)
         {
             if (!CheckViewSize (oldRegionX, newRegionX, oldRegionSizeX, newRegionSizeX))
                 return true;
@@ -808,7 +811,7 @@ namespace OpenSim.Services.MessagingService
             return true;
         }
 
-        public List<GridRegion> GetNeighbors (GridRegion region, int userDrawDistance)
+        public virtual List<GridRegion> GetNeighbors (GridRegion region, int userDrawDistance)
         {
             List<GridRegion> neighbors = new List<GridRegion> ();
             if (VariableRegionSight && userDrawDistance != 0)
@@ -837,7 +840,7 @@ namespace OpenSim.Services.MessagingService
 
         #region Crossing
 
-        public bool CrossAgent(GridRegion crossingRegion, Vector3 pos,
+        public virtual bool CrossAgent (GridRegion crossingRegion, Vector3 pos,
             Vector3 velocity, AgentCircuitData circuit, AgentData cAgent, UUID AgentID, ulong requestingRegion, out string reason)
         {
             try
@@ -928,7 +931,7 @@ namespace OpenSim.Services.MessagingService
 
         #region Agent Update
 
-        public void SendChildAgentUpdate(AgentPosition agentpos, IRegionClientCapsService regionCaps)
+        public virtual void SendChildAgentUpdate (AgentPosition agentpos, IRegionClientCapsService regionCaps)
         {
             Util.FireAndForget(delegate(object o)
             {
@@ -936,7 +939,7 @@ namespace OpenSim.Services.MessagingService
             });
         }
 
-        protected void SendChildAgentUpdateAsync(AgentPosition agentpos, IRegionClientCapsService regionCaps)
+        public virtual void SendChildAgentUpdateAsync (AgentPosition agentpos, IRegionClientCapsService regionCaps)
         {
             //We need to send this update out to all the child agents this region has
             IGridService service = m_registry.RequestModuleInterface<IGridService> ();
