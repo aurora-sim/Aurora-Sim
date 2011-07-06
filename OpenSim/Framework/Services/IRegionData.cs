@@ -38,10 +38,11 @@ namespace Aurora.Framework
     /// </summary>
     public interface IRegionData : IAuroraDataPlugin
     {
-        GridRegion Get(UUID regionID, UUID ScopeID);
-        List<GridRegion> Get(string regionName, UUID ScopeID);
-        GridRegion Get(int x, int y, UUID ScopeID);
-        List<GridRegion> Get(int xStart, int yStart, int xEnd, int yEnd, UUID ScopeID);
+        GridRegion Get (UUID regionID, UUID ScopeID);
+        List<GridRegion> Get (string regionName, UUID ScopeID);
+        GridRegion Get (int x, int y, UUID ScopeID);
+        List<GridRegion> Get (RegionFlags regionFlags);
+        List<GridRegion> Get (int xStart, int yStart, int xEnd, int yEnd, UUID ScopeID);
 
         bool Store(GridRegion data);
 

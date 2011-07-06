@@ -132,7 +132,7 @@ namespace OpenSim.Region.CoreModules
             {
                 DeleteLoopInUse = true;
                 //m_log.Debug("[SCENE]: Starting delete loop");
-                Util.FireAndForget(DoDeleteObject, new Object[] { 0 });
+                Util.FireAndForget(DoDeleteObject);
             }
         }
 
@@ -155,7 +155,7 @@ namespace OpenSim.Region.CoreModules
             if (DeleteObject())
             {
                 //Requeue us if there is some left
-                Util.FireAndForget(DoDeleteObject, new Object[] { 0 });
+                Util.FireAndForget(DoDeleteObject);
             }
             else
             {

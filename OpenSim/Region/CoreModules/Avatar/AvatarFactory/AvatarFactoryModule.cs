@@ -794,6 +794,11 @@ textures 1
 
                     if (baseItem != null)
                     {
+                        if (baseItem.AssetType == (int)AssetType.Link)
+                        {
+                            baseItem = new InventoryItemBase (baseItem.AssetID, userID);
+                            baseItem = invService.GetItem (baseItem);
+                        }
                         appearance.Wearables[i].Add (appearance.Wearables[i][j].ItemID, baseItem.AssetID);
                     }
                     else
@@ -851,12 +856,15 @@ textures 1
 
             //Force send!
             IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
+            appearance.Appearance.Serial++;
             sp.ControllingClient.SendWearables (appearance.Appearance.Wearables, appearance.Appearance.Serial);
+            Thread.Sleep (100);
             appearance.SendAvatarDataToAllAgents ();
-
+            Thread.Sleep (100);
             appearance.SendAppearanceToAgent (sp);
-
+            Thread.Sleep (100);
             appearance.SendAppearanceToAllOtherAgents ();
+            m_log.Info ("Resent appearance");
         }
 
         #endregion

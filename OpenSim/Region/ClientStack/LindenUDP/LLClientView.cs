@@ -10645,7 +10645,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (m_GroupsModule != null)
             {
                 m_GroupsModule.ActivateGroup(this, activateGroupPacket.AgentData.GroupID);
-                m_GroupsModule.SendAgentGroupDataUpdate(this);
             }
             return true;
 

@@ -138,7 +138,17 @@ namespace OpenSim.Region.Framework.Scenes
             else if (FunctionName == "SignficantCameraMovement")
             {
                 //Camera chagned, do a cull check
-                SignificantClientMovement();
+                m_forceCullCheck = true;
+                //Don't do this immediately as the viewer may keep changing the camera quickly
+                lock (m_drawDistanceTimerLock)
+                {
+                    if (m_drawDistanceChangedTimer != null)
+                        m_drawDistanceChangedTimer.Stop (); //Stop any old timers
+                    m_drawDistanceChangedTimer = new Timer (); //Fire this again in 3 seconds so that we do send prims to children agents
+                    m_drawDistanceChangedTimer.Interval = 3000;
+                    m_drawDistanceChangedTimer.Elapsed += m_drawDistanceChangedTimer_Elapsed;
+                    m_drawDistanceChangedTimer.Start ();
+                }
             }
             return null;
         }

@@ -1517,7 +1517,7 @@ namespace OpenSim.Framework
                     break;
                 case FireAndForgetMethod.SmartThreadPool:
                     if (m_ThreadPool == null)
-                        m_ThreadPool = new SmartThreadPool(2000, 15, 2);
+                        m_ThreadPool = new SmartThreadPool(5000, 15, 1);
                     if(m_threadPoolRunning)//Check if the thread pool should be running
                         m_ThreadPool.QueueWorkItem(SmartThreadPoolCallback, new object[] { callback, obj });
                     break;

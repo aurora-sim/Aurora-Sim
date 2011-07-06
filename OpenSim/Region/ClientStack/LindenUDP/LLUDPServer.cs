@@ -900,7 +900,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 if (m_inQueueCircuitCodes.ContainsKey (agentID))
                 {
                     m_inQueueCircuitCodes[agentID] = useCircuitCode.Header.Sequence;
-                    return true;
+                    return false;
                 }
 
                 m_inQueueCircuitCodes[agentID] = useCircuitCode.Header.Sequence;

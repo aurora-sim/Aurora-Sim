@@ -85,6 +85,13 @@ namespace Aurora.Services.DataService
             return ParseQuery(query);
         }
 
+        public List<GridRegion> Get (RegionFlags flags)
+        {
+            List<string> query;
+            query = GD.Query ("Flags & '" + ((int)flags).ToString() + "'", m_realm, "*");
+            return ParseQuery (query);
+        }
+
         public GridRegion Get(int posX, int posY, UUID scopeID)
         {
             List<string> query;
