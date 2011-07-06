@@ -190,6 +190,37 @@ namespace OpenSim.Services.InventoryService
                     m_Database.StoreFolder (f);
                     m_log.WarnFormat ("Fixing folder {0}", f.Name);
                 }
+                else if (f.Type == (short)AssetType.CurrentOutfitFolder)
+                {
+                    List<InventoryItemBase> items = GetFolderItems (account.PrincipalID, f.ID);
+                    //Check the links!
+                    List<UUID> brokenLinks = new List<UUID>();
+                    foreach (InventoryItemBase item in items)
+                    {
+                        InventoryItemBase linkedItem = null;
+                        if ((linkedItem = GetItem (new InventoryItemBase (item.AssetID))) == null)
+                        {
+                            //Broken link...
+                            brokenLinks.Add(item.ID);
+                        }
+                        else if (linkedItem.ID == AvatarWearable.DEFAULT_EYES_ITEM ||
+                            linkedItem.ID == AvatarWearable.DEFAULT_BODY_ITEM ||
+                            linkedItem.ID == AvatarWearable.DEFAULT_HAIR_ITEM ||
+                            linkedItem.ID == AvatarWearable.DEFAULT_PANTS_ITEM ||
+                            linkedItem.ID == AvatarWearable.DEFAULT_SHIRT_ITEM ||
+                            linkedItem.ID == AvatarWearable.DEFAULT_SKIN_ITEM)
+                        {
+                            //Default item link, needs removed
+                            brokenLinks.Add (item.ID);
+                        }
+                    }
+                    if(brokenLinks.Count != 0)
+                        DeleteItems (account.PrincipalID, brokenLinks);
+                }
+                else if (f.Type == (short)AssetType.Mesh)
+                {
+                    ForcePurgeFolder (f);
+                }
             }
             //Make sure that all default folders exist
             CreateUserInventory (account.PrincipalID, false);
@@ -692,7 +723,7 @@ namespace OpenSim.Services.InventoryService
 
             foreach (InventoryFolderBase x in subFolders)
             {
-                PurgeFolder (x);
+                ForcePurgeFolder (x);
                 m_Database.DeleteFolders ("folderID", x.ID.ToString ());
             }
 

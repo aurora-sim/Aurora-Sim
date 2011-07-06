@@ -258,9 +258,11 @@ namespace Aurora.Services.DataService
                 contents["folder_id"] = folder_id;
 
                 contents.WriteKey("items"); //Start array items
-                contents.WriteStartArray("items"); 
+                contents.WriteStartArray("items");
+                List<UUID> moreLinkedItems = new List<UUID> ();
                 int count = 0;
                 string query = String.Format("where {0} = '{1}' and {2} = '{3}'", "parentFolderID", folder_id, "avatarID", AgentID);
+            redoQuery:
                 using (IDataReader retVal = GD.QueryData (query, m_itemsrealm, "*"))
                 {
                     try
@@ -268,7 +270,8 @@ namespace Aurora.Services.DataService
                         while (retVal.Read ())
                         {
                             contents.WriteStartMap ("item"); //Start item kvp
-                            contents["asset_id"] = UUID.Parse (retVal["assetID"].ToString ());
+                            UUID assetID = UUID.Parse (retVal["assetID"].ToString ());
+                            contents["asset_id"] = assetID;
                             contents["name"] = retVal["inventoryName"].ToString ();
                             contents["desc"] = retVal["inventoryDescription"].ToString ();
 
@@ -319,7 +322,10 @@ namespace Aurora.Services.DataService
                             contents["parent_id"] = UUID.Parse (retVal["parentFolderID"].ToString ());
                             contents["agent_id"] = UUID.Parse (retVal["avatarID"].ToString ());
 
-                            contents["type"] = Utils.AssetTypeToString ((AssetType)int.Parse (retVal["assetType"].ToString ()));
+                            AssetType assetType = (AssetType)int.Parse (retVal["assetType"].ToString ());
+                            if(assetType == AssetType.Link)
+                                moreLinkedItems.Add(assetID);
+                            contents["type"] = Utils.AssetTypeToString (assetType);
                             contents["inv_type"] = Utils.InventoryTypeToString ((InventoryType)int.Parse (retVal["invType"].ToString ()));
 
                             count++;
@@ -342,6 +348,16 @@ namespace Aurora.Services.DataService
                         catch { }
                         GD.CloseDatabase ();
                     }
+                }
+                if(moreLinkedItems.Count > 0)
+                {
+                    query = String.Format("where {0} = '{1}' and (", "avatarID", AgentID);
+                    for(int i = 0; i < moreLinkedItems.Count; i++)
+                        query += String.Format("{0} = '{1}' or ", "inventoryID", moreLinkedItems[i]);
+                    query = query.Remove (query.Length - 4, 4);
+                    query += ")";
+                    moreLinkedItems.Clear ();
+                    goto redoQuery;
                 }
                 contents.WriteEndArray(/*"items"*/); //end array items
 
