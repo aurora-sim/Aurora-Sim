@@ -2367,15 +2367,26 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
 
-            TerrainHeightFieldHeights.Add (RegionTerrain, heightMap);
+            needToCreateHeightmapinODE = true;//ODE seems to have issues with not rebuilding :(
+            TerrainHeightFieldHeights.Remove (RegionTerrain);
+            TerrainHeightFieldlimits.Remove (RegionTerrain);
+            ODETerrainHeightFieldHeights.Remove (RegionTerrain);
+            if (RegionTerrain != IntPtr.Zero)
+            {
+                d.SpaceRemove (space, RegionTerrain);
+                d.GeomDestroy (RegionTerrain);
+            }
             if (!needToCreateHeightmapinODE)
             {
                 TerrainHeightFieldHeights.Remove (RegionTerrain);
                 TerrainHeightFieldlimits.Remove (RegionTerrain);
+                ODETerrainHeightFieldHeights.Remove (RegionTerrain);
                 float[] heighlimits = new float[2];
                 heighlimits[0] = hfmin;
                 heighlimits[1] = hfmax;
+                TerrainHeightFieldHeights.Add (RegionTerrain, heightMap);
                 TerrainHeightFieldlimits.Add (RegionTerrain, heighlimits);
+                ODETerrainHeightFieldHeights.Add (RegionTerrain, _heightmap);
                 return;//If we have already done this once, we don't need to do it again
             }
             lock (OdeLock)
