@@ -3859,17 +3859,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
                 if (attachmentsModule != null)
-                    Util.FireAndForget(DetachWrapper, m_host);
+                    Util.FireAndForget(DetachWrapper);
             }
         }
 
         private void DetachWrapper(object o)
         {
-            ISceneChildEntity host = (ISceneChildEntity)o;
-
-            ISceneEntity grp = host.ParentEntity;
-            UUID itemID = grp.RootChild.FromUserInventoryItemID;
-            IScenePresence presence = World.GetScenePresence (host.OwnerID);
+            UUID itemID = m_host.ParentEntity.RootChild.FromUserInventoryItemID;
+            IScenePresence presence = World.GetScenePresence (m_host.OwnerID);
 
             IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
             if (attachmentsModule != null)
@@ -5030,10 +5027,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (item.Type == 3 && item.Name == name)
                 {
+                    UUID rq = UUID.Random ();
                     DataserverPlugin dataserverPlugin = (DataserverPlugin)m_ScriptEngine.GetScriptPlugin("Dataserver");
 
                     UUID tid = dataserverPlugin.RegisterRequest(m_host.UUID,
-                                                     m_itemID, item.AssetID.ToString());
+                                                     m_itemID, rq.ToString ());
 
                     Vector3 region = new Vector3(
                         World.RegionInfo.RegionLocX,
@@ -5050,7 +5048,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             region = lm.Position + new Vector3(rx, ry, 0) - region;
 
                             string reply = region.ToString();
-                            dataserverPlugin.AddReply(item.AssetID.ToString(),
+                            dataserverPlugin.AddReply (rq.ToString (),
                                                              reply, 1000);
                         });
 
@@ -11821,13 +11819,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             // was: UUID tid = tid = m_ScriptEngine.
+            UUID rq = UUID.Random ();
             DataserverPlugin dataserverPlugin = (DataserverPlugin)m_ScriptEngine.GetScriptPlugin("Dataserver");
-            UUID tid = dataserverPlugin.RegisterRequest(m_host.UUID, m_itemID, assetID.ToString());
+            UUID tid = dataserverPlugin.RegisterRequest (m_host.UUID, m_itemID, rq.ToString ());
 
             if (NotecardCache.IsCached(assetID))
             {
-                dataserverPlugin.AddReply(assetID.ToString(),
-                NotecardCache.GetLines(assetID).ToString(), 100);
+                dataserverPlugin.AddReply (rq.ToString (),
+                    NotecardCache.GetLines(assetID).ToString(), 100);
                 ScriptSleep(100);
                 return (LSL_Key) tid.ToString();
             }
@@ -11846,7 +11845,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         string data = enc.GetString(a.Data);
                         //m_log.Debug(data);
                         NotecardCache.Cache(id, data);
-                        dataserverPlugin.AddReply(assetID.ToString(),
+                        dataserverPlugin.AddReply (rq.ToString (),
                                 NotecardCache.GetLines(id).ToString(), 100);
                         }
                 });
@@ -11947,12 +11946,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             // was: UUID tid = tid = m_ScriptEngine.
+            UUID rq = UUID.Random ();
             DataserverPlugin dataserverPlugin = (DataserverPlugin)m_ScriptEngine.GetScriptPlugin("Dataserver");
-            UUID tid = dataserverPlugin.RegisterRequest(m_host.UUID, m_itemID, assetID.ToString());
+            UUID tid = dataserverPlugin.RegisterRequest (m_host.UUID, m_itemID, rq.ToString ());
 
             if (NotecardCache.IsCached(assetID))
             {
-                dataserverPlugin.AddReply(assetID.ToString(),
+                dataserverPlugin.AddReply (rq.ToString (),
                                                                NotecardCache.GetLine(assetID, line, m_notecardLineReadCharsMax), 100);
                 ScriptSleep(100);
                 return (LSL_Key)tid.ToString();
@@ -11971,7 +11971,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                          string data = enc.GetString(a.Data);
                          //m_log.Debug(data);
                          NotecardCache.Cache(id, data);
-                         dataserverPlugin.AddReply(assetID.ToString(),
+                         dataserverPlugin.AddReply (rq.ToString (),
                             NotecardCache.GetLine(id, line, m_notecardLineReadCharsMax), 100);
                      }
                  });
