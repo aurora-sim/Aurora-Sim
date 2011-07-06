@@ -219,6 +219,15 @@ namespace OpenSim.Framework
                                     return cmd.Value.ExecuteCommand (commandPath);
                                 }
                             }
+                            if (commands.ContainsKey (cmdToExecute))
+                            {
+                                foreach (CommandDelegate fn in commands[cmdToExecute].fn)
+                                {
+                                    if (fn != null)
+                                        fn (command);
+                                }
+                                return new string[0];
+                            }
                         }
                     }
                 }
