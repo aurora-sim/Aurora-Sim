@@ -496,7 +496,8 @@ namespace OpenSim.Services.Interfaces
             map["serverIP"] = ExternalHostName; //ExternalEndPoint.Address.ToString();
             map["serverHttpPort"] = HttpPort;
             map["serverURI"] = ServerURI;
-            map["serverPort"] = InternalEndPoint.Port;
+            if(InternalEndPoint != null)
+                map["serverPort"] = InternalEndPoint.Port;
             map["regionMapTexture"] = TerrainImage;
             map["regionTerrainTexture"] = TerrainMapImage;
             map["access"] = (int)Access;

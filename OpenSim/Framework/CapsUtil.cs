@@ -51,12 +51,13 @@ namespace OpenSim.Framework.Capabilities
         /// <returns></returns>
         public static string GetCapsPathFromCapsSeed(string capsSeedPath)
         {
-            if (!capsSeedPath.StartsWith("/CAPS/"))
-                return "";
-            //Remove the /CAPS/
-            capsSeedPath = capsSeedPath.Remove(0, 6);
+            if (!capsSeedPath.StartsWith ("/CAPS/"))
+                capsSeedPath = capsSeedPath.Split (new string[1]{"/CAPS/"}, System.StringSplitOptions.RemoveEmptyEntries)[1];
+            else
+                //Remove the /CAPS/
+                capsSeedPath = capsSeedPath.Remove(0, 6);
             //Now remove the trailing /
-            capsSeedPath = capsSeedPath.Remove(capsSeedPath.Length - 1, 1);
+            capsSeedPath = capsSeedPath.Remove(capsSeedPath.Length - 5, 5);
 
             return capsSeedPath;
         }

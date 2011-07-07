@@ -112,6 +112,16 @@ namespace OpenSim.Framework
         //HG info...
         public Dictionary<string, object> ServiceURLs;
 
+        /// <summary>
+        /// Agent's account first name OPENSIM
+        /// </summary>
+        public string firstname;
+
+        /// <summary>
+        /// Agent's account last name OPENSIM
+        /// </summary>
+        public string lastname;
+
         public AgentCircuitData()
         {
         }
@@ -134,7 +144,9 @@ namespace OpenSim.Framework
             args["start_pos"] = OSD.FromString(startpos.ToString());
             args["client_ip"] = OSD.FromString(IPAddress);
             args["otherInfo"] = OSDParser.SerializeLLSDXmlString(OtherInformation);
-            args["teleport_flags"] = OSD.FromUInteger(teleportFlags);
+            args["teleport_flags"] = OSD.FromUInteger (teleportFlags);
+            args["first_name"] = OSD.FromString (firstname);
+            args["last_name"] = OSD.FromString (lastname);
             
             if (Appearance != null)
             {
@@ -174,6 +186,8 @@ namespace OpenSim.Framework
             Copy.teleportFlags = teleportFlags;
             Copy.OtherInformation = OtherInformation;
             Copy.ServiceURLs = ServiceURLs;
+            Copy.firstname = firstname;
+            Copy.lastname = lastname;
 
             return Copy;
         }
@@ -198,9 +212,13 @@ namespace OpenSim.Framework
             if (args["session_id"] != null)
                 SessionID = args["session_id"].AsUUID();
             if (args["service_session_id"] != null)
-                ServiceSessionID = args["service_session_id"].AsString();
+                ServiceSessionID = args["service_session_id"].AsString ();
             if (args["client_ip"] != null)
-                IPAddress = args["client_ip"].AsString();
+                IPAddress = args["client_ip"].AsString ();
+            if (args["first_name"] != null)
+                firstname = args["first_name"].AsString ();
+            if (args["last_name"] != null)
+                lastname = args["last_name"].AsString ();
 
             if (args["start_pos"] != null)
                 Vector3.TryParse(args["start_pos"].AsString(), out startpos);

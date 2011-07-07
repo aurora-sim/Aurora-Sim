@@ -63,7 +63,6 @@ namespace OpenSim.Services.MessagingService
         public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
             m_registry = registry;
-            m_registry.RegisterModuleInterface<IAgentProcessing>(this);
             IConfig agentConfig = config.Configs["AgentProcessing"];
             if (agentConfig != null)
             {
@@ -72,6 +71,8 @@ namespace OpenSim.Services.MessagingService
                 VariableRegionSight = agentConfig.GetBoolean ("UseVariableRegionSightDistance", VariableRegionSight);
                 MaxVariableRegionSight = agentConfig.GetInt ("MaxDistanceVariableRegionSightDistance", MaxVariableRegionSight);
             }
+            if (m_enabled)
+                m_registry.RegisterModuleInterface<IAgentProcessing> (this);
         }
 
         public virtual void Start (IConfigSource config, IRegistryCore registry)
@@ -81,7 +82,7 @@ namespace OpenSim.Services.MessagingService
         public virtual void FinishedStartup ()
         {
             //Also look for incoming messages to display
-            if(!m_enabled)
+            if(m_enabled)
                 m_registry.RequestModuleInterface<IAsyncMessageRecievedService> ().OnMessageReceived += OnMessageReceived;
         }
 
@@ -339,7 +340,7 @@ namespace OpenSim.Services.MessagingService
                     regionCircuitData.child = true; //Fix child agent status
                     string reason; //Tell the region about it
                     if (!InformClientOfNeighbor (regionClientCaps.AgentID, regionClientCaps.RegionHandle,
-                        regionCircuitData, requestingRegion, (uint)TeleportFlags.Default, null, out reason))
+                        regionCircuitData, ref requestingRegion, (uint)TeleportFlags.Default, null, out reason))
                         informed = false;
                     else
                         usersInformed.Add (regionClientCaps.AgentID);
@@ -371,8 +372,9 @@ namespace OpenSim.Services.MessagingService
                 {
                     string reason;
                     AgentCircuitData regionCircuitData = circuit.Copy ();
+                    GridRegion nCopy = neighbor;
                     regionCircuitData.child = true; //Fix child agent status
-                    if (!InformClientOfNeighbor (AgentID, requestingRegion, regionCircuitData, neighbor,
+                    if (!InformClientOfNeighbor (AgentID, requestingRegion, regionCircuitData, ref nCopy,
                         (uint)TeleportFlags.Default, null, out reason))
                         informed = false;
                 }
@@ -391,7 +393,7 @@ namespace OpenSim.Services.MessagingService
         /// <param name="a"></param>
         /// <param name="regionHandle"></param>
         /// <param name="endPoint"></param>
-        public virtual bool InformClientOfNeighbor (UUID AgentID, ulong requestingRegion, AgentCircuitData circuitData, GridRegion neighbor,
+        public virtual bool InformClientOfNeighbor (UUID AgentID, ulong requestingRegion, AgentCircuitData circuitData, ref GridRegion neighbor,
             uint TeleportFlags, AgentData agentData, out string reason)
         {
             if (neighbor == null)
@@ -446,6 +448,10 @@ namespace OpenSim.Services.MessagingService
                 if (commsService != null)
                     commsService.GetUrlsForUser (neighbor, circuitData.AgentID);//Make sure that we make userURLs if we need to
 
+                circuitData.CapsPath = CapsUtil.GetCapsPathFromCapsSeed (otherRegionService.CapsUrl);//For OpenSim
+                circuitData.firstname = clientCaps.AccountInfo.FirstName;
+                circuitData.lastname = clientCaps.AccountInfo.LastName;
+
                 bool regionAccepted = SimulationService.CreateAgent(neighbor, ref circuitData,
                         TeleportFlags, agentData, out reason);
                 if (regionAccepted)
@@ -461,7 +467,7 @@ namespace OpenSim.Services.MessagingService
                     }
                     else
                     {
-                        if (!m_useCallbacks)
+                        if (m_useCallbacks)
                         {
                             //We failed, give up
                             m_log.Error ("[AgentProcessing]: Failed to inform client about neighbor " + neighbor.RegionName + ", no response came back");
@@ -554,7 +560,7 @@ namespace OpenSim.Services.MessagingService
                         //Inform the client of the neighbor if needed
                         circuit.child = false; //Force child status to the correct type
 
-                        if (!InformClientOfNeighbor(AgentID, requestingRegion, circuit, destination, TeleportFlags,
+                        if (!InformClientOfNeighbor(AgentID, requestingRegion, circuit, ref destination, TeleportFlags,
                             agentData, out reason))
                         {
                             ResetFromTransit(AgentID);

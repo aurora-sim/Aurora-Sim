@@ -53,6 +53,7 @@ namespace OpenSim.Services.CapsService
         protected Dictionary<ulong, IRegionClientCapsService> m_RegionCapsServices = new Dictionary<ulong, IRegionClientCapsService>();
         protected ICapsService m_CapsService;
         protected UUID m_agentID;
+        protected UserAccount m_account;
         protected bool m_inTeleport = false;
         protected bool m_requestToCancelTeleport = false;
         protected bool m_callbackHasCome = false;
@@ -60,6 +61,11 @@ namespace OpenSim.Services.CapsService
         public UUID AgentID
         {
             get { return m_agentID; }
+        }
+
+        public UserAccount AccountInfo
+        {
+            get { return m_account; }
         }
 
         public bool InTeleport
@@ -99,6 +105,7 @@ namespace OpenSim.Services.CapsService
         {
             m_CapsService = server;
             m_agentID = agentID;
+            m_account = Registry.RequestModuleInterface<IUserAccountService> ().GetUserAccount (UUID.Zero, agentID);
         }
 
         /// <summary>

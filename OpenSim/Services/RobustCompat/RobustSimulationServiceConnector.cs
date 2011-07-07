@@ -44,74 +44,12 @@ using OpenSim.Services.Connectors.Simulation;
 
 namespace OpenSim.Services.RobustCompat
 {
-    public class RobustedAgentCircuitData : AgentCircuitData
-    {
-        /// <summary>
-        /// Agent's account first name
-        /// </summary>
-        public string firstname;
-
-        /// <summary>
-        /// Agent's account last name
-        /// </summary>
-        public string lastname;
-
-        public override AgentCircuitData Copy ()
-        {
-            RobustedAgentCircuitData copy = (RobustedAgentCircuitData)base.Copy ();
-            copy.firstname = firstname;
-            copy.lastname = lastname;
-            return copy;
-        }
-
-        public override OSDMap PackAgentCircuitData ()
-        {
-            OSDMap args = base.PackAgentCircuitData ();
-            #region OPENSIM ONLY
-
-            args["first_name"] = OSD.FromString (firstname);
-            args["last_name"] = OSD.FromString (lastname);
-
-            #endregion
-
-            return args;
-        }
-    }
-
     public class RobustSimulationServicesConnector : SimulationServiceConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
         private IRegistryCore m_registry;
-
-        public override bool CreateAgent (GridRegion destination, ref AgentCircuitData aCircuit, uint teleportFlags, AgentData data, out string reason)
-        {
-            aCircuit = FixAgentCircuitData (aCircuit);
-            return base.CreateAgent (destination, ref aCircuit, teleportFlags, data, out reason);
-        }
-
-        private AgentCircuitData FixAgentCircuitData (AgentCircuitData aCircuit)
-        {
-            IUserAccountService UAS = m_registry.RequestModuleInterface<IUserAccountService> ();
-            UserAccount account = UAS.GetUserAccount (UUID.Zero, aCircuit.AgentID);
-            RobustedAgentCircuitData newCircuit = new RobustedAgentCircuitData ();
-            newCircuit.AgentID = aCircuit.AgentID;
-            newCircuit.Appearance = aCircuit.Appearance;
-            newCircuit.CapsPath = CapsUtil.GetRandomCapsObjectPath ();
-            newCircuit.child = aCircuit.child;
-            newCircuit.circuitcode = aCircuit.circuitcode;
-            newCircuit.firstname = account.FirstName;
-            newCircuit.IPAddress = aCircuit.IPAddress;
-            newCircuit.lastname = account.LastName;
-            newCircuit.OtherInformation = aCircuit.OtherInformation;
-            newCircuit.SecureSessionID = aCircuit.SecureSessionID;
-            newCircuit.ServiceSessionID = aCircuit.ServiceSessionID;
-            newCircuit.SessionID = aCircuit.SessionID;
-            newCircuit.startpos = aCircuit.startpos;
-            newCircuit.teleportFlags = aCircuit.teleportFlags;
-            return newCircuit;
-        }
 
         #region IService Members
 

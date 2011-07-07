@@ -183,6 +183,11 @@ namespace OpenSim.Services.Interfaces
         String HostUri { get; }
 
         /// <summary>
+        /// The User's account info
+        /// </summary>
+        UserAccount AccountInfo { get; }
+
+        /// <summary>
         /// Start the caps service for this user
         /// </summary>
         /// <param name="server"></param>
