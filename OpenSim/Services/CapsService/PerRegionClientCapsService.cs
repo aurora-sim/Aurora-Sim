@@ -57,6 +57,7 @@ namespace OpenSim.Services.CapsService
         private List<ICapsServiceConnector> m_connectors = new List<ICapsServiceConnector>();
         private bool m_disabled = true;
         private AgentCircuitData m_circuitData;
+        private IHttpServer m_server;
         public AgentCircuitData CircuitData
         {
             get { return m_circuitData; }
@@ -141,7 +142,7 @@ namespace OpenSim.Services.CapsService
 
         public String HostUri
         {
-            get { return m_clientCapsService.HostUri; }
+            get { return Server.HostName + ":" + Server.Port; }
         }
 
         public IRegistryCore Registry
@@ -149,9 +150,18 @@ namespace OpenSim.Services.CapsService
             get { return m_clientCapsService.Registry; }
         }
 
-        protected IHttpServer Server
+        public IHttpServer Server
         {
-            get { return m_clientCapsService.Server; }
+            get 
+            {
+                if (m_server == null)
+                    m_server = m_clientCapsService.Server; 
+                return m_server;
+            }
+            set
+            {
+                m_server = value;
+            }
         }
 
         private string m_overrideCapsURL; // ONLY FOR OPENSIM

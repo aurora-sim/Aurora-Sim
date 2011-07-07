@@ -1572,6 +1572,8 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void ClientOnParcelPropertiesUpdateRequest(LandUpdateArgs args, int localID, IClientAPI remote_client)
         {
+            if (localID == -1)//Bad request
+                return;
             ILandObject land = GetLandObject(localID);
 
             if (m_scene.Permissions.CanEditParcel(remote_client.AgentId, land))

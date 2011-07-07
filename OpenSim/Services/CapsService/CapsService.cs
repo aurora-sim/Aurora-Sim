@@ -181,9 +181,14 @@ namespace OpenSim.Services.CapsService
         /// <returns></returns>
         public string CreateCAPS(UUID AgentID, string CAPSBase, ulong regionHandle, bool IsRootAgent, AgentCircuitData circuitData)
         {
+            return CreateCAPS (AgentID, CAPSBase, regionHandle, IsRootAgent, circuitData, 0);
+        }
+
+        public string CreateCAPS (UUID AgentID, string CAPSBase, ulong regionHandle, bool IsRootAgent, AgentCircuitData circuitData, uint port)
+        {
             //Now make sure we didn't use an old one or something
             IClientCapsService service = GetOrCreateClientCapsService(AgentID);
-            IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionHandle, CAPSBase, circuitData);
+            IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionHandle, CAPSBase, circuitData, port);
             
             //Fix the root agent status
             clientService.RootAgent = IsRootAgent;

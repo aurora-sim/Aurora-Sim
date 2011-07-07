@@ -427,7 +427,7 @@ namespace OpenSim.Services.MessagingService
 
                 bool newAgent = oldRegionService == null;
                 IRegionClientCapsService otherRegionService = clientCaps.GetOrCreateCapsService(neighbor.RegionHandle,
-                    CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath()), circuitData);
+                    CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath()), circuitData, 0);
 
                 if (!newAgent)
                 {

@@ -125,7 +125,7 @@ namespace OpenSim.Services.CapsService
         /// Add a new Caps Service for the given region if one does not already exist
         /// </summary>
         /// <param name="regionHandle"></param>
-        protected void AddCapsServiceForRegion(ulong regionHandle, string CAPSBase, AgentCircuitData circuitData)
+        protected void AddCapsServiceForRegion(ulong regionHandle, string CAPSBase, AgentCircuitData circuitData, uint port)
         {
             if (!m_RegionCapsServices.ContainsKey(regionHandle))
             {
@@ -136,6 +136,11 @@ namespace OpenSim.Services.CapsService
 
                 PerRegionClientCapsService regionClient = new PerRegionClientCapsService();
                 regionClient.Initialise(this, regionCaps, CAPSBase, circuitData);
+                if (port != 0)//Someone requested a non standard port, probably for OpenSim
+                {
+                    ISimulationBase simBase = Registry.RequestModuleInterface<ISimulationBase> ();
+                    regionClient.Server = simBase.GetHttpServer (port);
+                }
                 m_RegionCapsServices[regionHandle] = regionClient;
 
                 //Now get and add them
@@ -182,7 +187,7 @@ namespace OpenSim.Services.CapsService
         /// </summary>
         /// <param name="regionID"></param>
         /// <returns></returns>
-        public IRegionClientCapsService GetOrCreateCapsService(ulong regionID, string CAPSBase, AgentCircuitData circuitData)
+        public IRegionClientCapsService GetOrCreateCapsService(ulong regionID, string CAPSBase, AgentCircuitData circuitData, uint port)
         {
             //If one already exists, don't add a new one
             if (m_RegionCapsServices.ContainsKey(regionID))
@@ -191,7 +196,7 @@ namespace OpenSim.Services.CapsService
                 return m_RegionCapsServices[regionID];
             }
             //Create a new one, and then call Get to find it
-            AddCapsServiceForRegion(regionID, CAPSBase, circuitData);
+            AddCapsServiceForRegion(regionID, CAPSBase, circuitData, port);
             return GetCapsService(regionID);
         }
 

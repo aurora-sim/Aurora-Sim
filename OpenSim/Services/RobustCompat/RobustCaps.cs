@@ -147,7 +147,7 @@ namespace OpenSim.Services.RobustCompat
                     AgentCircuitData circuit = (AgentCircuitData)obj[1];
                     circuit.child = false;//ONLY USE ROOT AGENTS
                     service.CreateCAPS(circuit.AgentID, CapsUtil.GetCapsSeedPath(circuit.CapsPath),
-                        m_scene.RegionInfo.RegionHandle, true, circuit); //We ONLY use root agents because of OpenSim's inability to send the correct data
+                        m_scene.RegionInfo.RegionHandle, true, circuit, m_scene.RegionInfo.HttpPort); //We ONLY use root agents because of OpenSim's inability to send the correct data
                     IClientCapsService clientCaps = service.GetClientCapsService(circuit.AgentID);
                     if (clientCaps != null)
                     {
