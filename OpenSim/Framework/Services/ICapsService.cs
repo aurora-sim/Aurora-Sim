@@ -275,6 +275,11 @@ namespace OpenSim.Services.Interfaces
         GridRegion Region { get; }
 
         /// <summary>
+        /// The HTTP server for this caps instance
+        /// </summary>
+        IHttpServer Server { get; }
+
+        /// <summary>
         /// The last circuit data we were updated with
         /// </summary>
         AgentCircuitData CircuitData { get; }
@@ -328,11 +333,11 @@ namespace OpenSim.Services.Interfaces
         /// Sets up the region for the given client
         /// </summary>
         /// <param name="clientCapsService"></param>
-        /// <param name="regionHandle"></param>
+        /// <param name="regionCapsService"></param>
         /// <param name="capsBase"></param>
-        /// <param name="urlToInform"></param>
         /// <param name="circuitData"></param>
-        void Initialise(IClientCapsService clientCapsService, IRegionCapsService regionCapsService, string capsBase, AgentCircuitData circuitData);
+        /// <param name="port">port to start the CAPS service on (0 means default)</param>
+        void Initialise(IClientCapsService clientCapsService, IRegionCapsService regionCapsService, string capsBase, AgentCircuitData circuitData, uint port);
         
         /// <summary>
         /// Closes the region caps, removes all caps handlers and removes itself

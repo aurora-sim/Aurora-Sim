@@ -135,12 +135,7 @@ namespace OpenSim.Services.CapsService
                 IRegionCapsService regionCaps = m_CapsService.GetCapsForRegion(regionHandle);
 
                 PerRegionClientCapsService regionClient = new PerRegionClientCapsService();
-                regionClient.Initialise(this, regionCaps, CAPSBase, circuitData);
-                if (port != 0)//Someone requested a non standard port, probably for OpenSim
-                {
-                    ISimulationBase simBase = Registry.RequestModuleInterface<ISimulationBase> ();
-                    regionClient.Server = simBase.GetHttpServer (port);
-                }
+                regionClient.Initialise (this, regionCaps, CAPSBase, circuitData, port);
                 m_RegionCapsServices[regionHandle] = regionClient;
 
                 //Now get and add them
@@ -192,8 +187,13 @@ namespace OpenSim.Services.CapsService
             //If one already exists, don't add a new one
             if (m_RegionCapsServices.ContainsKey(regionID))
             {
-                m_RegionCapsServices[regionID].InformModulesOfRequest();
-                return m_RegionCapsServices[regionID];
+                if (port == 0 || m_RegionCapsServices[regionID].Server.Port == port)
+                {
+                    m_RegionCapsServices[regionID].InformModulesOfRequest ();
+                    return m_RegionCapsServices[regionID];
+                }
+                else
+                    RemoveCAPS (regionID);
             }
             //Create a new one, and then call Get to find it
             AddCapsServiceForRegion(regionID, CAPSBase, circuitData, port);

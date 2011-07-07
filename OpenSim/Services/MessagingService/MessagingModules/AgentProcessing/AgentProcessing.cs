@@ -284,7 +284,7 @@ namespace OpenSim.Services.MessagingService
                 {
                     foreach (IRegionClientCapsService regionClient in regionCaps.ClientCaps.GetCapsServices())
                     {
-                        if (regionClient.RegionHandle != regionCaps.RegionHandle)
+                        if (regionClient.RegionHandle != regionCaps.RegionHandle && regionClient.Region != null)
                         {
                             SimulationService.CloseAgent(regionClient.Region, regionCaps.AgentID);
                         }

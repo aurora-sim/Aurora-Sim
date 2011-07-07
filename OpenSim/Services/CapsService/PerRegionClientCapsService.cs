@@ -183,11 +183,16 @@ namespace OpenSim.Services.CapsService
 
         #region Initialize
 
-        public void Initialise(IClientCapsService clientCapsService, IRegionCapsService regionCapsService, string capsBase, AgentCircuitData circuitData)
+        public void Initialise(IClientCapsService clientCapsService, IRegionCapsService regionCapsService, string capsBase, AgentCircuitData circuitData, uint port)
         {
             m_clientCapsService = clientCapsService;
             m_regionCapsService = regionCapsService;
             m_circuitData = circuitData;
+            if (port != 0)//Someone requested a non standard port, probably for OpenSim
+            {
+                ISimulationBase simBase = Registry.RequestModuleInterface<ISimulationBase> ();
+                Server = simBase.GetHttpServer (port);
+            }
             AddSEEDCap(capsBase);
 
             AddCAPS();
