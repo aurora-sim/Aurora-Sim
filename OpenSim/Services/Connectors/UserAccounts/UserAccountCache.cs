@@ -42,6 +42,7 @@ namespace OpenSim.Services.Connectors
         private ExpiringCache<UUID, UserAccount> m_UUIDCache;
         private ExpiringCache<string, UUID> m_NameCache;
         private const bool m_allowNullCaching = true;
+        private Dictionary<UUID, int> m_nullCacheTimes = new Dictionary<UUID, int> ();
 
         public UserAccountCache()
         {
@@ -53,6 +54,17 @@ namespace OpenSim.Services.Connectors
         {
             if (!m_allowNullCaching && account == null)
                 return;
+            if (account == null)
+            {
+                if (!m_nullCacheTimes.ContainsKey (userID))
+                    m_nullCacheTimes[userID] = 0;
+                else
+                    m_nullCacheTimes[userID]++;
+                if (m_nullCacheTimes[userID] < 5)
+                    return;
+            }
+            else if (m_nullCacheTimes.ContainsKey (userID))
+                m_nullCacheTimes.Remove (userID);
             // Cache even null accounts
             m_UUIDCache.AddOrUpdate(userID, account, CACHE_EXPIRATION_SECONDS);
             if (account != null)
