@@ -678,7 +678,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 LSL_Float radius = value.GetLSLFloatItem (4);
                 LSL_Integer ident = value.GetLSLIntegerItem (5);
                 float[] grav = m_host.ParentEntity.Scene.PhysicsScene.GetGravityForce ();
-                m_host.ParentEntity.Scene.PhysicsScene.AddGravityPoint (false, new Vector3 ((float)pos.x, (float)pos.y, (float)pos.z),
+                m_host.ParentEntity.Scene.PhysicsScene.AddGravityPoint (true, new Vector3 ((float)pos.x, (float)pos.y, (float)pos.z),
                     (float)xForce, (float)yForce, (float)zForce, 0, (float)radius.value, ident.value);
             }
         }

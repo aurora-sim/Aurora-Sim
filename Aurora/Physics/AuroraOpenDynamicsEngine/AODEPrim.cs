@@ -1587,7 +1587,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // gravityz multiplier = 1 - m_buoyancy
                     float gravModifier = (1.0f - m_buoyancy) * _parent_entity.GravityMultiplier;
                     Vector3 gravForce = new Vector3();
-                    _parent_scene.CalculateGravity (Mass, dcpos, gravModifier, ref gravForce);
+                    _parent_scene.CalculateGravity (Mass, dcpos, true, gravModifier, ref gravForce);
                     fx += gravForce.X;
                     fy += gravForce.Y;
                     fz += gravForce.Z;

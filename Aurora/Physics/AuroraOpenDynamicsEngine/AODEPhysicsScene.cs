@@ -2603,19 +2603,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Dictionary<int, PointGravity> m_pointGravityPositions = new Dictionary<int, PointGravity> ();
 
 
-        public void CalculateGravity (float mass, d.Vector3 position, float gravityModifier, ref Vector3 forceVector)
+        public void CalculateGravity (float mass, d.Vector3 position, bool allowNormalGravity, float gravityModifier, ref Vector3 forceVector)
         {
-            //m_pointGravityPositions.Clear ();
-            //AddGravityPoint (false, new Vector3 (128, 128, 30), 0, 0, 0, 1f, 30, 1);
-            //AddGravityPoint (false, new Vector3 (138, 128, 30), 0, 0, 0, 1f, 25, 0);
-            if (normalGravityEnabled)
+            if (normalGravityEnabled && allowNormalGravity)
             {
                 //normal gravity, one axis, no center
                 forceVector.X += gravityx * mass * gravityModifier;
                 forceVector.Y += gravityy * mass * gravityModifier;
                 forceVector.Z += gravityz * mass * gravityModifier;
             }
-            else
+            //else
             {
                 Vector3 pos = new Vector3((float)position.X, (float)position.Y, (float)position.Z);
                 //Find the nearby centers of gravity
