@@ -357,38 +357,41 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             // otherwise, use the master avatar uuid instead
 
             // Reload serialized parcels
-            m_log.InfoFormat("[ARCHIVER]: Loading {0} parcels.  Please wait.", serialisedParcels.Count);
-            List<LandData> landData = new List<LandData>();
-            foreach (string serialisedParcel in serialisedParcels)
+            if (!m_merge)
             {
-                LandData parcel = LandDataSerializer.Deserialize(serialisedParcel);
-                if (!ResolveUserUuid(parcel.OwnerID))
-                    parcel.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
-                landData.Add(parcel);
-            }
-            IParcelManagementModule parcelManagementModule = m_scene.RequestModuleInterface<IParcelManagementModule> ();
-            if (parcelManagementModule != null)
-                parcelManagementModule.ClearAllParcels ();
-            if (landData.Count > 0)
-            {
-                m_scene.EventManager.TriggerIncomingLandDataFromStorage (landData);
-                //Update the database as well!
-                if (parcelManagementModule != null)
+                m_log.InfoFormat ("[ARCHIVER]: Loading {0} parcels.  Please wait.", serialisedParcels.Count);
+                List<LandData> landData = new List<LandData> ();
+                foreach (string serialisedParcel in serialisedParcels)
                 {
-                    foreach (LandData parcel in landData)
+                    LandData parcel = LandDataSerializer.Deserialize (serialisedParcel);
+                    if (!ResolveUserUuid (parcel.OwnerID))
+                        parcel.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+                    landData.Add (parcel);
+                }
+                IParcelManagementModule parcelManagementModule = m_scene.RequestModuleInterface<IParcelManagementModule> ();
+                if (parcelManagementModule != null)
+                    parcelManagementModule.ClearAllParcels ();
+                if (landData.Count > 0)
+                {
+                    m_scene.EventManager.TriggerIncomingLandDataFromStorage (landData);
+                    //Update the database as well!
+                    if (parcelManagementModule != null)
                     {
-                        parcelManagementModule.UpdateLandObject (parcel.LocalID, parcel);
+                        foreach (LandData parcel in landData)
+                        {
+                            parcelManagementModule.UpdateLandObject (parcel.LocalID, parcel);
+                        }
                     }
                 }
+                else if (parcelManagementModule != null)
+                    parcelManagementModule.ResetSimLandObjects ();
+
+                m_log.InfoFormat ("[ARCHIVER]: Restored {0} parcels.", landData.Count);
+
+                //Clean it out
+                landData.Clear ();
+                serialisedParcels.Clear ();
             }
-            else if (parcelManagementModule != null)
-                parcelManagementModule.ResetSimLandObjects ();
-
-            m_log.InfoFormat("[ARCHIVER]: Restored {0} parcels.", landData.Count);
-
-            //Clean it out
-            landData.Clear();
-            serialisedParcels.Clear();
 
             m_log.InfoFormat("[ARCHIVER]: Successfully loaded archive in " + (DateTime.Now - start).Minutes + ":" + (DateTime.Now - start).Seconds);
 
