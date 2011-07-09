@@ -246,7 +246,7 @@ namespace OpenSim.Services.GridService
                         if(url.URLS.ContainsKey(module.UrlName))//Make sure it exists
                             module.AddExistingUrlForClient (url.SessionID.ToString (), url.URLS[module.UrlName], url.Ports[module.UrlName]);
                     }
-                    if (m_useSessionTime && url.Expiration.AddHours(m_timeBeforeTimeout / 8) < DateTime.Now) //Check to see whether the expiration is soon before updating
+                    if (m_useSessionTime && (url.Expiration.AddMinutes((m_timeBeforeTimeout * 60) * 0.9)) < DateTime.UtcNow) //Check to see whether the expiration is soon before updating
                     {
                         //Fix the expiration time
                         InnerUpdateUrlsForClient(url);

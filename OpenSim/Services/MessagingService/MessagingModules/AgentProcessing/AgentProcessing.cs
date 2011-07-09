@@ -698,11 +698,13 @@ namespace OpenSim.Services.MessagingService
             //Close all agents that we've been given regions for
             foreach (GridRegion region in regionsToClose)
             {
-                m_log.Info("[AgentProcessing]: Closing child agent in " + region.RegionName);
-                m_registry.RequestModuleInterface<ISimulationService>().CloseAgent(region, agentID);
-                IRegionClientCapsService regionClientCaps = clientCaps.GetCapsService(region.RegionHandle);
+                m_log.Info ("[AgentProcessing]: Closing child agent in " + region.RegionName);
+                IRegionClientCapsService regionClientCaps = clientCaps.GetCapsService (region.RegionHandle);
                 if (regionClientCaps != null)
-                    clientCaps.RemoveCAPS(region.RegionHandle);
+                {
+                    m_registry.RequestModuleInterface<ISimulationService> ().CloseAgent (region, agentID);
+                    clientCaps.RemoveCAPS (region.RegionHandle);
+                }
             }
         }
 
