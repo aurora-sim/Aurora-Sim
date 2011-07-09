@@ -1517,6 +1517,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return new LSLString(d);
             }
 
+            public static explicit operator LSLString(int i)
+            {
+                return new LSLString(i);
+            }
+
             static public explicit operator LSLString(bool b)
             {
                 if (b)
