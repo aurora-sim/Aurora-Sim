@@ -173,7 +173,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         /// <summary>
         /// This method determines the proper movement related animation
         /// </summary>
-        private string GetMovementAnimation()
+        public string GetMovementAnimation()
         {
             const float STANDUP_TIME = 2f;
             const float BRUSH_TIME = 3.5f;
@@ -248,20 +248,20 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 m_useSplatAnimation)
             {
                 // Falling long enough to trigger the animation
-                m_scenePresence.AllowMovement = false;
+                m_scenePresence.FallenStandUp = true;
                 m_scenePresence.PhysicsActor.Velocity = Vector3.Zero;
                 return "STANDUP";
             }
             else if (standupElapsed < BRUSH_TIME &&
                 m_useSplatAnimation)
             {
-                m_scenePresence.AllowMovement = false;
+                m_scenePresence.FallenStandUp = true;
                 return "BRUSH";
             }
-            else if(m_animTickStandup != 0)
+            else if (m_animTickStandup != 0 || m_scenePresence.FallenStandUp)
             {
+                m_scenePresence.FallenStandUp = false;
                 m_animTickStandup = 0;
-                m_scenePresence.AllowMovement = true;
             }
 
             #endregion Standup

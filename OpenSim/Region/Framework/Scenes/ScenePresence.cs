@@ -418,6 +418,14 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_allowMovement = value; }
         }
 
+        protected bool m_FallenStandUp = true;
+
+        public bool FallenStandUp
+        {
+            get { return m_FallenStandUp; }
+            set { m_FallenStandUp = value; }
+        }
+
         protected bool m_Frozen = false;
 
         public bool Frozen
@@ -1190,6 +1198,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (AllowMovement && !SitGround && !Frozen)
             {
+                if (FallenStandUp)
+                {
+                    //Poke the animator a bit
+                    Animator.GetMovementAnimation ();
+                    return;
+                }
                 if (agentData.UseClientAgentPosition)
                 {
                     m_moveToPositionInProgress = (agentData.ClientAgentPosition - AbsolutePosition).Length() > 0.2f;

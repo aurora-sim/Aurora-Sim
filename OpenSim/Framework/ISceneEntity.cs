@@ -102,6 +102,11 @@ namespace OpenSim.Framework
         /// </summary>
         bool AllowMovement { get; set; }
 
+        /// <summary>
+        /// Has this entity just hit the ground and is playing the "STANDUP" animation which freezes the client while it is happening
+        /// </summary>
+        bool FallenStandUp { get; set; }
+
         bool FlyDisabled { get; set; }
 
         bool ForceFly { get; set; }
