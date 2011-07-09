@@ -1778,6 +1778,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     //This is for llSetForce and friends, we don't remove it... even if it seems weird
                     //m_force = Vector3.Zero;
 
+                    if (m_pushForce != Vector3.Zero)
+                    {
+                        forceUpdate = true;
+                        m_previousForceIsSame = 0;
+                    }
+
                     //However, this is for things that only happen once, remove it
                     m_pushForce = Vector3.Zero;
 
@@ -1876,6 +1882,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         )
                     {
                         forceUpdate = true;
+                        m_previousForceIsSame = 0;
                     }
 
                     //m_log.Info("[OBJPID]: X:" + fx.ToString() + " Y:" + fy.ToString() + " Z:" + fz.ToString());

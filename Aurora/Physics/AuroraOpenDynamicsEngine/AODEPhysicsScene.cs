@@ -2605,6 +2605,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void CalculateGravity (float mass, d.Vector3 position, float gravityModifier, ref Vector3 forceVector)
         {
+            //m_pointGravityPositions.Clear ();
+            //AddGravityPoint (false, new Vector3 (128, 128, 30), 0, 0, 0, 1f, 30, 1);
+            //AddGravityPoint (false, new Vector3 (138, 128, 30), 0, 0, 0, 1f, 10, 0);
             if (normalGravityEnabled)
             {
                 //normal gravity, one axis, no center
@@ -2618,10 +2621,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //Find the nearby centers of gravity
                 foreach (PointGravity pg in m_pointGravityPositions.Values)
                 {
-                    float distance = Vector3.Distance (pg.Position, pos);
-                    if (distance < pg.Radius)
+                    float distance = Vector3.DistanceSquared (pg.Position, pos);
+                    if (distance < pg.Radius * pg.Radius)
                     {
-                        float radiusScaling = distance / pg.Radius;
+                        float d = (distance / (pg.Radius * pg.Radius));
+                        float radiusScaling = 1 - d;
+                        radiusScaling *= radiusScaling;
                         if (pg.PointForce)
                         {
                             //Applies forces to the actor when in range
@@ -2635,6 +2640,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             forceVector.X += (pg.Position.X - pos.X) * pg.GravForce * radiusScaling * mass * gravityModifier;
                             forceVector.Y += (pg.Position.Y - pos.Y) * pg.GravForce * radiusScaling * mass * gravityModifier;
                             forceVector.Z += (pg.Position.Z - pos.Z) * pg.GravForce * radiusScaling * mass * gravityModifier;
+                            /*if (forceVector.Z < 50 && forceVector.Z > 0)
+                                forceVector.Z = 0;
+                            else if (forceVector.Z > -50 && forceVector.Z < 0)
+                                forceVector.Z = 0;*/
                         }
                     }
                 }
