@@ -6048,7 +6048,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
             }
 
-            result.Add(src.Substring(start,length).Trim());
+            result.Add (new LSL_String (src.Substring (start, length).Trim ()));
 
             return result;
         }
@@ -8668,7 +8668,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID[] anims;
             anims = av.Animator.GetAnimationArray();
             foreach (UUID foo in anims)
-                l.Add(foo.ToString());
+                l.Add (new LSL_Key (foo.ToString ()));
             return l;
         }
 
@@ -9280,7 +9280,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 else if (code == (int)ScriptBaseClass.PRIM_TEXT)
                 {
                     Color4 textColor = part.GetTextColor();
-                    res.Add(part.Text);
+                    res.Add(new LSL_String(part.Text));
                     res.Add(new LSL_Vector(textColor.R,
                                            textColor.G,
                                            textColor.B));
@@ -11358,8 +11358,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         IPrimCounts primCounts = primCountModule.GetPrimCounts(land.LandData.GlobalID);
                         foreach (KeyValuePair<UUID, int> detectedParams in primCounts.GetAllUserCounts())
                         {
-                            ret.Add(detectedParams.Key.ToString());
-                            ret.Add(detectedParams.Value);
+                            ret.Add(new LSL_String(detectedParams.Key.ToString()));
+                            ret.Add(new LSL_Integer(detectedParams.Value));
                         }
                     }
                 }
@@ -11415,27 +11415,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     switch (o.ToString())
                     {
                         case "0":
-                            ret = ret + new LSL_List(land.Name);
+                            ret.Add (new LSL_String (land.Name));
                             break;
                         case "1":
-                            ret = ret + new LSL_List(land.Description);
+                            ret.Add (new LSL_String (land.Description));
                             break;
                         case "2":
-                            ret = ret + new LSL_List(land.OwnerID.ToString());
+                            ret.Add (new LSL_Key (land.OwnerID.ToString ()));
                             break;
                         case "3":
-                            ret = ret + new LSL_List(land.GroupID.ToString());
+                            ret.Add (new LSL_Key (land.GroupID.ToString ()));
                             break;
                         case "4":
-                            ret = ret + new LSL_List(land.Area);
+                            ret.Add(new LSL_Integer(land.Area));
                             break;
                         case "5":
-                            ret = ret + new LSL_List(land.InfoUUID);
                             //Returning the InfoUUID so that we can use this for landmarks outside of this region
                             // http://wiki.secondlife.com/wiki/PARCEL_DETAILS_ID
+                            ret.Add (new LSL_Key (land.InfoUUID.ToString ()));
                             break;
                         default:
-                            ret = ret + new LSL_List(0);
+                            ret.Add (new LSL_Integer (0));
                             break;
                     }
                 }
@@ -11469,11 +11469,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     {
                         if ((LSL_Integer)o == ScriptBaseClass.OBJECT_NAME)
                         {
-                            ret.Add(av.Name);
+                            ret.Add(new LSL_String(av.Name));
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_DESC)
                         {
-                            ret.Add("");
+                            ret.Add(new LSL_String(""));
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_POS)
                         {
@@ -11540,11 +11540,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     {
                         if ((LSL_Integer)o == ScriptBaseClass.OBJECT_NAME)
                         {
-                            ret.Add(obj.Name);
+                            ret.Add(new LSL_String(obj.Name));
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_DESC)
                         {
-                            ret.Add(obj.Description);
+                            ret.Add(new LSL_String(obj.Description));
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_POS)
                         {
@@ -11563,15 +11563,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_OWNER)
                         {
-                            ret.Add(obj.OwnerID.ToString());
+                            ret.Add(new LSL_Key(obj.OwnerID.ToString()));
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_GROUP)
                         {
-                            ret.Add(obj.GroupID.ToString());
+                            ret.Add(new LSL_Key(obj.GroupID.ToString()));
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_CREATOR)
                         {
-                            ret.Add(obj.CreatorID.ToString());
+                            ret.Add(new LSL_Key(obj.CreatorID.ToString()));
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT)
                         {
@@ -11581,7 +11581,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             {
                                 activeScripts += module.GetActiveScripts(obj);
                             }
-                            ret.Add(activeScripts);
+                            ret.Add(new LSL_Integer(activeScripts));
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT)
                         {
@@ -11591,11 +11591,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             {
                                 totalScripts += module.GetTotalScripts(obj);
                             }
-                            ret.Add(totalScripts);
+                            ret.Add(new LSL_Integer(totalScripts));
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
                         {
-                            ret.Add(0);
+                            ret.Add (new LSL_Integer (0));
                         }
                         else
                         {

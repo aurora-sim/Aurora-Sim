@@ -633,6 +633,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
+        public void aaSetEnv (LSL_String name, LSL_String value)
+        {
+            if (name == "gravity")
+            {
+            }
+        }
+
         #region Helpers
 
         protected UUID InventorySelf()

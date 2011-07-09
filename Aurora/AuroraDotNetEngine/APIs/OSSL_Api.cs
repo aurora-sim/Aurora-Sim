@@ -786,7 +786,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             World.ForEachScenePresence(delegate(IScenePresence sp)
             {
                 if (!sp.IsChildAgent)
-                    result.Add(sp.Name);
+                    result.Add(new LSL_String(sp.Name));
             });
             return result;
         }
@@ -1966,8 +1966,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if (g.Success)
                     {
-                        result.Add(g.Value);
-                        result.Add(g.Index);
+                        result.Add (new LSL_Integer (g.Value));
+                        result.Add (new LSL_Integer (g.Index));
                     }
                 }
                 match = match.NextMatch ();
@@ -2205,9 +2205,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if (!avatar.IsChildAgent)
                     {
-                        result.Add(avatar.UUID);
-                        result.Add(avatar.AbsolutePosition);
-                        result.Add(avatar.Name);
+                        result.Add(new LSL_Key(avatar.UUID.ToString()));
+                        result.Add (new LSL_Vector (avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y, avatar.AbsolutePosition.Z));
+                        result.Add(new LSL_String(avatar.Name));
                     }
                 }
             });
