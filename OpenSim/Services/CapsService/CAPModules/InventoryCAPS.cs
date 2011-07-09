@@ -597,17 +597,7 @@ namespace OpenSim.Services.CapsService
                     int material = inner_instance_list["material"].AsInteger ();
                     int mesh = inner_instance_list["mesh"].AsInteger ();//?
 
-                    OSDMap permissions = (OSDMap)inner_instance_list["permissions"];
-                    int base_mask = permissions["base_mask"].AsInteger ();
-                    int everyone_mask = permissions["everyone_mask"].AsInteger ();
-                    UUID creator_id = permissions["creator_id"].AsUUID ();
-                    UUID group_id = permissions["group_id"].AsUUID ();
-                    int group_mask = permissions["group_mask"].AsInteger ();
-                    bool is_owner_group = permissions["is_owner_group"].AsBoolean ();
-                    UUID last_owner_id = permissions["last_owner_id"].AsUUID ();
-                    int next_owner_mask = permissions["next_owner_mask"].AsInteger ();
-                    UUID owner_id = permissions["owner_id"].AsUUID ();
-                    int owner_mask = permissions["owner_mask"].AsInteger ();
+                    UUID owner_id = m_service.AgentID;
 
                     IScene fakeScene = new Scene ();
                     fakeScene.AddModuleInterfaces (m_service.Registry.GetInterfaces ());
@@ -620,20 +610,20 @@ namespace OpenSim.Services.CapsService
                     rotations.Add (rotation);
                     positions.Add (position);
                     prim.UUID = UUID.Random ();
-                    prim.CreatorID = creator_id;
+                    prim.CreatorID = owner_id;
                     prim.OwnerID = owner_id;
-                    prim.GroupID = group_id;
+                    prim.GroupID = UUID.Zero;
                     prim.LastOwnerID = prim.OwnerID;
                     prim.CreationDate = Util.UnixTimeSinceEpoch ();
                     prim.Name = assetName;
                     prim.Description = "";
                     prim.PhysicsType = (byte)physicsShapeType;
 
-                    prim.BaseMask = (uint)base_mask;
-                    prim.EveryoneMask = (uint)everyone_mask;
-                    prim.GroupMask = (uint)group_mask;
-                    prim.NextOwnerMask = (uint)next_owner_mask;
-                    prim.OwnerMask = (uint)owner_mask;
+                    prim.BaseMask = (uint)PermissionMask.All;
+                    prim.EveryoneMask = (uint)PermissionMask.All;
+                    prim.GroupMask = (uint)PermissionMask.All;
+                    prim.NextOwnerMask = (uint)PermissionMask.All;
+                    prim.OwnerMask = (uint)PermissionMask.All;
 
                     if (grp == null)
                         grp = new SceneObjectGroup (prim, fakeScene);
