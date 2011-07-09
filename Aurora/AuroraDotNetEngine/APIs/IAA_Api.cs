@@ -96,6 +96,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 
         LSL_Types.Quaternion aaGetTextColor ();
 
-        void aaSetEnv (LSL_String name, LSL_String value);
+        void aaSetEnv (LSL_String name, LSL_List value);
     }
 }

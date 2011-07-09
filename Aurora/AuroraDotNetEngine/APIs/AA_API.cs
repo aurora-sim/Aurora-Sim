@@ -633,10 +633,53 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public void aaSetEnv (LSL_String name, LSL_String value)
+        public void aaSetEnv (LSL_String name, LSL_List value)
         {
-            if (name == "gravity")
+            if (name == ScriptBaseClass.ENABLE_GRAVITY)
             {
+                LSL_Integer enabled = value.GetLSLIntegerItem (0);
+                float[] grav = m_host.ParentEntity.Scene.PhysicsScene.GetGravityForce();
+                m_host.ParentEntity.Scene.PhysicsScene.SetGravityForce (enabled == 1, grav[0], grav[1], grav[2]);
+            }
+            else if (name == ScriptBaseClass.GRAVITY_FORCE_X)
+            {
+                LSL_Float f = value.GetLSLFloatItem(0);
+                float[] grav = m_host.ParentEntity.Scene.PhysicsScene.GetGravityForce ();
+                m_host.ParentEntity.Scene.PhysicsScene.SetGravityForce (true, (float)f.value, grav[1], grav[2]);
+            }
+            else if (name == ScriptBaseClass.GRAVITY_FORCE_Y)
+            {
+                LSL_Float f = value.GetLSLFloatItem (0);
+                float[] grav = m_host.ParentEntity.Scene.PhysicsScene.GetGravityForce ();
+                m_host.ParentEntity.Scene.PhysicsScene.SetGravityForce (true, grav[0], (float)f.value, grav[2]);
+            }
+            else if (name == ScriptBaseClass.GRAVITY_FORCE_Z)
+            {
+                LSL_Float f = value.GetLSLFloatItem (0);
+                float[] grav = m_host.ParentEntity.Scene.PhysicsScene.GetGravityForce ();
+                m_host.ParentEntity.Scene.PhysicsScene.SetGravityForce (true, grav[0], grav[1], (float)f.value);
+            }
+            else if (name == ScriptBaseClass.ADD_GRAVITY_POINT)
+            {
+                LSL_Vector pos = value.GetVector3Item (0);
+                LSL_Float gravForce = value.GetLSLFloatItem (1);
+                LSL_Float radius = value.GetLSLFloatItem (2);
+                LSL_Integer ident = value.GetLSLIntegerItem (3);
+                float[] grav = m_host.ParentEntity.Scene.PhysicsScene.GetGravityForce ();
+                m_host.ParentEntity.Scene.PhysicsScene.AddGravityPoint (false, new Vector3 ((float)pos.x, (float)pos.y, (float)pos.z),
+                    0, 0, 0, (float)gravForce.value, (float)radius.value, ident.value);
+            }
+            else if (name == ScriptBaseClass.ADD_GRAVITY_FORCE)
+            {
+                LSL_Vector pos = value.GetVector3Item (0);
+                LSL_Float xForce = value.GetLSLFloatItem (1);
+                LSL_Float yForce = value.GetLSLFloatItem (2);
+                LSL_Float zForce = value.GetLSLFloatItem (3);
+                LSL_Float radius = value.GetLSLFloatItem (4);
+                LSL_Integer ident = value.GetLSLIntegerItem (5);
+                float[] grav = m_host.ParentEntity.Scene.PhysicsScene.GetGravityForce ();
+                m_host.ParentEntity.Scene.PhysicsScene.AddGravityPoint (false, new Vector3 ((float)pos.x, (float)pos.y, (float)pos.z),
+                    (float)xForce, (float)yForce, (float)zForce, 0, (float)radius.value, ident.value);
             }
         }
 

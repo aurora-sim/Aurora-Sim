@@ -2607,7 +2607,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             //m_pointGravityPositions.Clear ();
             //AddGravityPoint (false, new Vector3 (128, 128, 30), 0, 0, 0, 1f, 30, 1);
-            //AddGravityPoint (false, new Vector3 (138, 128, 30), 0, 0, 0, 1f, 10, 0);
+            //AddGravityPoint (false, new Vector3 (138, 128, 30), 0, 0, 0, 1f, 25, 0);
             if (normalGravityEnabled)
             {
                 //normal gravity, one axis, no center
@@ -2667,6 +2667,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             //Fix the ODE gravity too
             d.WorldSetGravity (world, gravityx, gravityy, gravityz);
+        }
+
+        public override float[] GetGravityForce ()
+        {
+            return new float[3] { gravityx, gravityy, gravityz };
         }
 
         public override void AddGravityPoint (bool isApplyingForces, Vector3 position, float forceX, float forceY, float forceZ, float gravForce, float radius, int identifier)

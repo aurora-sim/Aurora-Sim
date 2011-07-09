@@ -200,6 +200,11 @@ namespace OpenSim.Framework
         {
         }
 
+        public virtual float[] GetGravityForce ()
+        {
+            return new float[3] { 0, 0, 0 };
+        }
+
         public virtual void AddGravityPoint (bool isApplyingForces, Vector3 position, float forceX, float forceY, float forceZ, float gravForce, float radius, int identifier)
         {
         }
