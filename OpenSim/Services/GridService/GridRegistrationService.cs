@@ -62,8 +62,8 @@ namespace OpenSim.Services.GridService
         /// <summary>
         /// Timeout before the handlers expire (in hours)
         /// </summary>
-        protected int m_timeBeforeTimeout = 24;
-        public int ExpiresTime 
+        protected float m_timeBeforeTimeout = 24;
+        public float ExpiresTime 
         { 
             get
             {
@@ -190,7 +190,7 @@ namespace OpenSim.Services.GridService
         protected void ReadConfiguration(IConfig config)
         {
             PermissionSet.ReadFunctions(config);
-            m_timeBeforeTimeout = config.GetInt("DefaultTimeout", m_timeBeforeTimeout);
+            m_timeBeforeTimeout = config.GetFloat("DefaultTimeout", m_timeBeforeTimeout);
             m_defaultRegionThreatLevel = (ThreatLevel)Enum.Parse(typeof(ThreatLevel), config.GetString("DefaultRegionThreatLevel", m_defaultRegionThreatLevel.ToString()));
         }
 
@@ -249,7 +249,7 @@ namespace OpenSim.Services.GridService
                     if (m_useSessionTime && (url.Expiration.AddMinutes((m_timeBeforeTimeout * 60) * 0.9)) < DateTime.UtcNow) //Check to see whether the expiration is soon before updating
                     {
                         //Fix the expiration time
-                        InnerUpdateUrlsForClient(url);
+                        InnerUpdateUrlsForClient (url);
                     }
                 }
             }
@@ -277,7 +277,7 @@ namespace OpenSim.Services.GridService
                 }
                 else
                 {
-                    urls.Expiration = DateTime.UtcNow.AddHours (m_timeBeforeTimeout);
+                    urls.Expiration = DateTime.UtcNow.AddMinutes (m_timeBeforeTimeout * 60);
                     urls.SessionID = SessionID;
                     InnerUpdateUrlsForClient (urls);
                     foreach (KeyValuePair<string, OSD> module in urls.URLS)
@@ -316,7 +316,7 @@ namespace OpenSim.Services.GridService
             urls.SessionID = SessionID;
             urls.Ports = ports;
             urls.HostNames = hostnames;
-            urls.Expiration = DateTime.UtcNow.AddHours (m_timeBeforeTimeout);
+            urls.Expiration = DateTime.UtcNow.AddMinutes (m_timeBeforeTimeout * 60);
             m_genericsConnector.AddGeneric (UUID.Zero, "GridRegistrationUrls", SessionID.ToString (), urls.ToOSD ());
 
             return retVal;
@@ -383,7 +383,7 @@ namespace OpenSim.Services.GridService
         {
             if (urls != null)
             {
-                urls.Expiration = DateTime.UtcNow.AddHours (m_timeBeforeTimeout);
+                urls.Expiration = DateTime.UtcNow.AddMinutes (m_timeBeforeTimeout * 60);
                 //Remove it first just to make sure it is replaced
                 m_genericsConnector.RemoveGeneric (UUID.Zero, "GridRegistrationUrls", urls.SessionID.ToString ());
                 m_genericsConnector.AddGeneric (UUID.Zero, "GridRegistrationUrls", urls.SessionID.ToString (), urls.ToOSD ());
@@ -457,6 +457,7 @@ namespace OpenSim.Services.GridService
                 URLS = (OSDMap)retVal["URLS"];
                 SessionID = retVal["SessionID"].AsString();
                 Expiration = retVal["Expiration"].AsDate ();
+                Expiration = Expiration.ToUniversalTime ();
                 HostNames = retVal["HostName"] as OSDMap;
                 Ports = retVal["Port"] as OSDMap;
             }

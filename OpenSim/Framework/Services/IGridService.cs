@@ -623,7 +623,7 @@ namespace OpenSim.Services.Interfaces
         /// <summary>
         /// Time before handlers will need to reregister (in hours)
         /// </summary>
-        int ExpiresTime { get; }
+        float ExpiresTime { get; }
         
         /// <summary>
         /// Gets a list of secure URLs for the given RegionHandle and SessionID
