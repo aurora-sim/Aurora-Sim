@@ -240,14 +240,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public bool AllowAvGravity = true;
         public int AvGravityHeight = 4096;
         public bool AllowAvsToEscapeGravity = true;
-        public bool UsePointGravity = false;
-        private Vector3 m_PointOfGravity = new Vector3(0, 0, 0);
-
-        public override Vector3 PointOfGravity
-        {
-            get { return m_PointOfGravity; }
-            set { m_PointOfGravity = value; }
-        }
 
         public float m_flightCeilingHeight = 2048.0f; // rex
         public bool m_useFlightCeilingHeight = false;
@@ -434,11 +426,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     AllowAvGravity = physicsconfig.GetBoolean("useAvGravity", true);
                     AvGravityHeight = physicsconfig.GetInt("avGravityHeight", 4096);
                     AllowAvsToEscapeGravity = physicsconfig.GetBoolean("aviesCanEscapeGravity", true);
-
-                    UsePointGravity = physicsconfig.GetBoolean("usePointGravity", false);
-                    m_PointOfGravity.X = physicsconfig.GetFloat("point_gravityx", 0);
-                    m_PointOfGravity.Y = physicsconfig.GetFloat("point_gravityy", 0);
-                    m_PointOfGravity.Z = physicsconfig.GetFloat("point_gravityz", 0);
 
                     m_AvFlySpeed = physicsconfig.GetFloat("AvFlySpeed", m_AvFlySpeed);
                     m_allowJump = physicsconfig.GetBoolean("AllowJump", m_allowJump);
@@ -2587,6 +2574,30 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return new List<ContactResult> ();
             return new List<ContactResult>(ourResults);
         }
+
+        #endregion
+
+        #region Gravity Calculation
+
+        public void CalculateGravity (float mass, d.Vector3 position, float gravityModifier, ref Vector3 forceVector)
+        {
+            //Add normal gravity
+            forceVector.X += gravityx * mass * gravityModifier;
+            forceVector.Y += gravityy * mass * gravityModifier;
+            forceVector.Z += gravityz * mass * gravityModifier;
+            /*else
+            {
+                Vector3 cog = _parent_scene.PointOfGravity;
+                if (cog.X != 0)
+                    vec.X += (cog.X - tempPos.X) * m_mass;
+                if (cog.Y != 0)
+                    vec.Y += (cog.Y - tempPos.Y) * m_mass;
+                if (cog.Z != 0)
+                    vec.Z += (cog.Z - tempPos.Z) * m_mass;
+            }*/
+        }
+
+        //public void AddGravity
 
         #endregion
 

@@ -50,12 +50,6 @@ namespace OpenSim.Framework
     {
         public static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public virtual Vector3 PointOfGravity
-        {
-            get { return Vector3.Zero; }
-            set { }
-        }
-
         public event OnCollisionEvent OnCollisionEvent;
         public void FireCollisionEvent (PhysicsActor actor, PhysicsActor collidedActor, ContactPoint contact)
         {

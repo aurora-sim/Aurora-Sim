@@ -90,8 +90,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 
         LSL_Types.LSLString aaAvatarFullName2Key (string username);
 
-        void aaSetCenterOfGravity(LSL_Types.Vector3 position);
-
         void aaRaiseError(string message);
 
         LSL_Types.LSLString aaGetText ();

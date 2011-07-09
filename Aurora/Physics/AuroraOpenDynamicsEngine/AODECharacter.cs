@@ -728,13 +728,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return;
 
             Vector3 vec = Vector3.Zero;
-            d.Vector3 vel = d.BodyGetLinearVel(Body);
+            d.Vector3 vel = d.BodyGetLinearVel (Body);
+            d.Vector3 tempPos = d.BodyGetPosition (Body);
 
             #region Flight Ceiling
 
             // rex, added height check
-
-            d.Vector3 tempPos = d.BodyGetPosition (Body);
 
             if (m_pidControllerActive == false)
             {
@@ -1056,26 +1055,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Gravity
 
-            if (!flying && _parent_scene.AllowAvGravity)
-            {
-                if (!_parent_scene.UsePointGravity)
-                {
-                    //Add normal gravity
-                    vec.X += _parent_scene.gravityx * m_mass;
-                    vec.Y += _parent_scene.gravityy * m_mass;
-                    vec.Z += _parent_scene.gravityz* m_mass;
-                }
-                else
-                {
-                    Vector3 cog = _parent_scene.PointOfGravity;
-                    if (cog.X != 0)
-                        vec.X += (cog.X - tempPos.X) * m_mass;
-                    if (cog.Y != 0)
-                        vec.Y += (cog.Y - tempPos.Y) * m_mass;
-                    if (cog.Z != 0)
-                        vec.Z += (cog.Z - tempPos.Z) * m_mass;
-                }
-            }
+            if (!flying)
+                _parent_scene.CalculateGravity (m_mass, tempPos, 1, ref vec);
 
             #endregion
 

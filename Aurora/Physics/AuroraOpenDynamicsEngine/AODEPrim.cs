@@ -1585,25 +1585,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // would come from SceneObjectPart.cs, public void SetBuoyancy(float fvalue) , PhysActor.Buoyancy = fvalue; ??
                     // m_buoyancy: (unlimited value) <0=Falls fast; 0=1g; 1=0g; >1 = floats up 
                     // gravityz multiplier = 1 - m_buoyancy
-                    float gravZ = _parent_scene.gravityz * (1.0f - m_buoyancy) * _parent_entity.GravityMultiplier;
-                    if (!_parent_scene.UsePointGravity)
-                    {
-                        fx = _parent_scene.gravityx * (1.0f - m_buoyancy) * _parent_entity.GravityMultiplier;
-                        fy = _parent_scene.gravityy * (1.0f - m_buoyancy) * _parent_entity.GravityMultiplier;
-                        fz = gravZ;
-                    }
-                    else
-                    {
-                        //Set up point gravity for this object
-                        Vector3 cog = _parent_scene.PointOfGravity;
-                        if (cog.X != 0)
-                            fx = (cog.X - dcpos.X);
-                        if (cog.Y != 0)
-                            fy = (cog.Y - dcpos.Y);
-                        if (cog.Z != 0)
-                            fz = (cog.Z - dcpos.Z);
-                    }
-
+                    float gravModifier = (1.0f - m_buoyancy) * _parent_entity.GravityMultiplier;
+                    Vector3 gravForce = new Vector3();
+                    _parent_scene.CalculateGravity (Mass, dcpos, gravModifier, ref gravForce);
+                    fx += gravForce.X;
+                    fy += gravForce.Y;
+                    fz += gravForce.Z;
 
                     #region PID
                     if (_parent_entity.PIDActive)
@@ -1842,7 +1829,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (!_parent_entity.VolumeDetectActive && terrainHeight > ourBasePos)
                     {
                         //Scale it by surface - pos so that the object doesn't fly out of the terrain like a rocket
-                        fz += gravZ * -2.5f * (terrainHeight - (ourBasePos - (Size.Z / 2)));//Get us up, but don't shoot us up
+                        fz += gravForce.Z * -2.5f * (terrainHeight - (ourBasePos - (Size.Z / 2)));//Get us up, but don't shoot us up
                         forceUpdate = true;
                         if(m_previousForceIsSame != 0)
                             m_previousForceIsSame = 0;

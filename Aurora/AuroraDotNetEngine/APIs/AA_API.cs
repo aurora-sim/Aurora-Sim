@@ -633,13 +633,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public void aaSetCenterOfGravity(LSL_Types.Vector3 position)
-        {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "AASetCenterOfGravity", m_host, "AA");
-            if (m_host.ParentEntity.Scene.Permissions.CanIssueEstateCommand (m_host.OwnerID, true))
-                m_host.ParentEntity.Scene.PhysicsScene.PointOfGravity = new Vector3 ((float)position.x, (float)position.y, (float)position.z);
-        }
-
         #region Helpers
 
         protected UUID InventorySelf()
