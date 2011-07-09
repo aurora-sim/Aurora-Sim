@@ -211,9 +211,14 @@ namespace Aurora.Modules
             return reply;
         }
 
-        public void SetRegionUnsafe(UUID RegionID)
+        public void SetRegionUnsafe (UUID RegionID)
         {
-            m_localService.SetRegionUnsafe(RegionID);
+            m_localService.SetRegionUnsafe (RegionID);
+        }
+
+        public void SetRegionSafe (UUID RegionID)
+        {
+            m_localService.SetRegionUnsafe (RegionID);
         }
 
         private void UpdateGridRegionsForIWC(ref List<GridRegion> rs)

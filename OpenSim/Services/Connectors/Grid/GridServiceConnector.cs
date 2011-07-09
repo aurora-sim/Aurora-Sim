@@ -779,7 +779,11 @@ namespace OpenSim.Services.Connectors
             return r.SessionID == SessionID;
         }
 
-        public virtual void SetRegionUnsafe(UUID regionID)
+        public virtual void SetRegionUnsafe (UUID regionID)
+        {
+        }
+
+        public virtual void SetRegionSafe (UUID regionID)
         {
         }
 

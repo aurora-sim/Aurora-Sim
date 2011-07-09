@@ -170,13 +170,19 @@ namespace OpenSim.Services.Interfaces
         /// <param name="regionHandle"></param>
         /// <param name="gridItemType"></param>
         /// <returns></returns>
-        multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType);
+        multipleMapItemReply GetMapItems (ulong regionHandle, GridItemType gridItemType);
 
         /// <summary>
         /// The region (RegionID) has been determined to be unsafe, don't let agents log into it if no other region is found
         /// </summary>
         /// <param name="RegionID"></param>
-        void SetRegionUnsafe(UUID RegionID);
+        void SetRegionUnsafe (UUID RegionID);
+
+        /// <summary>
+        /// The region (RegionID) has been determined to be safe, allow agents to log into it again
+        /// </summary>
+        /// <param name="RegionID"></param>
+        void SetRegionSafe (UUID RegionID);
 
         /// <summary>
         /// Verify the given SessionID for the given region

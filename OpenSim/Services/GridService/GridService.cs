@@ -670,16 +670,34 @@ namespace OpenSim.Services.GridService
         /// Only called by LLLoginService
         /// </summary>
         /// <param name="r"></param>
-        public void SetRegionUnsafe(UUID ID)
+        public void SetRegionUnsafe (UUID ID)
         {
-            GridRegion data = m_Database.Get(ID, UUID.Zero);
+            GridRegion data = m_Database.Get (ID, UUID.Zero);
             if (data == null)
                 return;
-            if ((data.Flags & (int)RegionFlags.Safe) != (int)RegionFlags.Safe)
-                data.Flags &= (int)RegionFlags.Safe; //Remove the safe var
-            if ((data.Flags & (int)RegionFlags.RegionOnline) != (int)RegionFlags.RegionOnline)
-                data.Flags &= (int)RegionFlags.RegionOnline; //Remove online too
-            m_Database.Store(data);
+            if ((data.Flags & (int)RegionFlags.Safe) == (int)RegionFlags.Safe)
+                data.Flags &= ~(int)RegionFlags.Safe; //Remove only the safe var the first time
+            else if ((data.Flags & (int)RegionFlags.RegionOnline) == (int)RegionFlags.RegionOnline)
+                data.Flags &= ~(int)RegionFlags.RegionOnline; //Remove online the second time it fails
+            m_Database.Store (data);
+        }
+
+        /// <summary>
+        /// Tells the grid server that this region is able to be connected to.
+        /// This updates the down flag in the map and allows it to become a 'safe' region fallback
+        /// Only called by LLLoginService
+        /// </summary>
+        /// <param name="r"></param>
+        public void SetRegionSafe (UUID ID)
+        {
+            GridRegion data = m_Database.Get (ID, UUID.Zero);
+            if (data == null)
+                return;
+            if ((data.Flags & (int)RegionFlags.Safe) == 0)
+                data.Flags |= (int)RegionFlags.Safe; 
+            else if ((data.Flags & (int)RegionFlags.RegionOnline) == 0)
+                data.Flags |= (int)RegionFlags.RegionOnline; 
+            m_Database.Store (data);
         }
 
         public List<GridRegion> GetFallbackRegions(UUID scopeID, int x, int y)

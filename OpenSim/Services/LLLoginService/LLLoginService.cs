@@ -1070,7 +1070,11 @@ namespace OpenSim.Services.LLLoginService
             #endregion
 
             if (success)
+            {
+                //Set the region to safe since we got there
+                m_GridService.SetRegionSafe (destination.RegionID);
                 return aCircuit;
+            }
             else
                 return null;
         }

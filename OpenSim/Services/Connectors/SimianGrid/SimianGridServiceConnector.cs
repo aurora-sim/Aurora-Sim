@@ -539,6 +539,10 @@ namespace OpenSim.Services.Connectors.SimianGrid
         {
         }
 
+        public void SetRegionSafe (UUID regionID)
+        {
+        }
+
         public bool VerifyRegionSessionID(GridRegion r, UUID SessionID)
         {
             return r.SessionID == SessionID;
