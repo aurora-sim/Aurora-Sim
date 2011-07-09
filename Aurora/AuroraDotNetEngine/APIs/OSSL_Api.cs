@@ -1960,7 +1960,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // Find matches beginning at start position
             Regex matcher = new Regex(pattern);
             Match match = matcher.Match(src, start);
-            if (match.Success)
+            while (match.Success)
             {
                 foreach (System.Text.RegularExpressions.Group g in match.Groups)
                 {
@@ -1970,6 +1970,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         result.Add(g.Index);
                     }
                 }
+                match = match.NextMatch ();
             }
 
             return result;
