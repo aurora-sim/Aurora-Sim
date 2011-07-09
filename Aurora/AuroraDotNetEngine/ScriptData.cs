@@ -713,7 +713,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (LastStateSave != null)
             {
                 m_ScriptEngine.StateSave.Deserialize(this, LastStateSave);
-                if (this.State == "")
+                if (this.State == "" && DefaultState != this.State)//Sometimes, "" is a valid state
                 {
                     m_log.Warn ("BROKEN STATE SAVE!!! - " + this.Part.Name + " @ " + this.Part.AbsolutePosition);
                     this.State = DefaultState;
