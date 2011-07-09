@@ -2320,7 +2320,8 @@ namespace OpenSim.Region.Framework.Scenes
             cAgent.Velocity = Velocity;
             cAgent.Center = m_CameraCenter;
             // Don't copy the size; it is inferred from appearance parameters
-            //cAgent.Size = new Vector3(0, 0, m_avHeight);
+            //But it seems we should use it since it doesn't get set right on child tps sometimes
+            cAgent.Size = new Vector3(0, 0, m_avHeight);
             cAgent.AtAxis = m_CameraAtAxis;
             cAgent.LeftAxis = m_CameraLeftAxis;
             cAgent.UpAxis = m_CameraUpAxis;
@@ -2488,7 +2489,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void SetHeight (float height)
         {
             //If the av exists, set their new size, if not, add them to the region
-            if (PhysicsActor != null && !IsChildAgent)
+            if (height != 0 && PhysicsActor != null && !IsChildAgent)
             {
                 if (height != m_avHeight)
                 {

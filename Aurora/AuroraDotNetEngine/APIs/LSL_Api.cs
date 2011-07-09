@@ -2766,7 +2766,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 m_host.Sound = UUID.Zero;
                 m_host.SoundGain = 0;
-                m_host.SoundFlags = (byte)SoundFlags.None;
+                m_host.SoundFlags = (byte)SoundFlags.Stop | (byte)SoundFlags.None;
                 m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
             }
         }
