@@ -66,12 +66,16 @@ namespace Aurora.Framework
             FastBitmap bmp = new FastBitmap(bitmap);
             bmp.LockBitmap();
 
-            ProfilerValueManager statManager = GetStat(StatName);
-            double MaxVal = statManager.GetMaxValue();
+            ProfilerValueManager statManager = GetStat (StatName);
+            double MaxVal = 0;
+            if (statManager != null)
+                MaxVal = statManager.GetMaxValue ();
 
             double ScaleFactor = 1 / (MaxVal / 200); //We multiply by this so that the graph uses the full space
 
-            double[] Stats = statManager.GetInfos();
+            double[] Stats = new double[0];
+            if (statManager != null)
+                Stats = statManager.GetInfos ();
 
             for (int i = 0; i < Stats.Length; i++)
             {
@@ -111,7 +115,9 @@ namespace Aurora.Framework
 
             double ScaleFactor = 1 / (MaxVal / 200); //We multiply by this so that the graph uses the full space
 
-            double[] Stats = statManager.GetInfos();
+            double[] Stats = new double[0];
+            if (statManager != null)
+                Stats = statManager.GetInfos ();
 
             for (int x = 200; x > 0; x--)
             {
@@ -192,7 +198,7 @@ namespace Aurora.Framework
                 {
                     copy[i] = infos[ii];
                     ii++;
-                    if (ii > lastSet)
+                    if (ii == lastSet)
                         ii = 0;
                 }
                 return copy;

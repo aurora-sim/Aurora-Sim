@@ -72,8 +72,8 @@ namespace Aurora.Modules
         protected Dictionary<UUID, PhysicsStats> m_currentPhysicsStats = new Dictionary<UUID, PhysicsStats>();
         protected Timer m_physicsStatTimer;
         protected List<Scene> m_scenes = new List<Scene>();
-        protected bool m_collectingStats = false;
-        protected bool m_waitingForCollectionOfStats = true;
+        public bool m_collectingStats = false;
+        protected int m_waitingForCollectionOfStats = 0;
 
         #endregion
 
@@ -111,7 +111,7 @@ namespace Aurora.Modules
         {
             m_scenes.Add (scene);
             scene.RegisterModuleInterface<IPhysicsMonitor> (this);
-            if (MainConsole.Instance != null)
+            if (MainConsole.Instance != null && m_scenes.Count == 1)
             {
                 MainConsole.Instance.Commands.AddCommand (
                     "physics stats", "physics stats", "physics stats <region>", PhysicsStatsCommand);
@@ -152,15 +152,14 @@ namespace Aurora.Modules
 
             //Set all the bools to true
             m_collectingStats = true;
-            m_waitingForCollectionOfStats = true;
+            m_waitingForCollectionOfStats = m_scenes.Count;
             //Start the timer as well
             m_physicsStatTimer.Start();
             m_log.Info("Collecting Stats Now... Please wait...");
-            while(m_waitingForCollectionOfStats)
+            while(m_waitingForCollectionOfStats > 0)
             {
                 Thread.Sleep(50);
             }
-            m_collectingStats = false;
 
             foreach (Scene scene in scenesToRun)
             {
@@ -191,15 +190,14 @@ namespace Aurora.Modules
 
             //Set all the bools to true
             m_collectingStats = true;
-            m_waitingForCollectionOfStats = true;
+            m_waitingForCollectionOfStats = m_scenes.Count;
             //Start the timer as well
             m_physicsStatTimer.Start();
             m_log.Info("Collecting Stats Now... Please wait...");
-            while(m_waitingForCollectionOfStats)
+            while(m_waitingForCollectionOfStats > 0)
             {
                 Thread.Sleep(50);
             }
-            m_collectingStats = false;
 
             Thread thread = new Thread(StartThread);
             thread.Start(scenesToRun);
@@ -211,7 +209,7 @@ namespace Aurora.Modules
             try
             {
                 List<Scene> scenesToRun = (List<Scene>)scenes;
-                System.Windows.Forms.Application.Run(new PhysicsProfilerForm(scenesToRun));
+                System.Windows.Forms.Application.Run(new PhysicsProfilerForm(this, scenesToRun));
             }
             catch(Exception ex)
             {
@@ -237,15 +235,14 @@ namespace Aurora.Modules
 
             //Set all the bools to true
             m_collectingStats = true;
-            m_waitingForCollectionOfStats = true;
+            m_waitingForCollectionOfStats = m_scenes.Count;
             //Start the timer as well
             m_physicsStatTimer.Start();
             m_log.Info("Collecting Stats Now... Please wait...");
-            while(m_waitingForCollectionOfStats)
+            while(m_waitingForCollectionOfStats > 0)
             {
                 Thread.Sleep(50);
             }
-            m_collectingStats = false;
 
             foreach (Scene scene in scenesToRun)
             {
@@ -278,7 +275,7 @@ namespace Aurora.Modules
 
         protected virtual void PhysicsStatsHeartbeat(object sender, ElapsedEventArgs e)
         {
-            if(!m_collectingStats)
+            if (!m_collectingStats || m_currentPhysicsStats.Count == 0)
                 return;
             lock (m_currentPhysicsStats)
             {
@@ -324,7 +321,7 @@ namespace Aurora.Modules
             }
             m_lastUpdated = DateTime.Now;
             //If there are stats waiting, we just pulled them
-            m_waitingForCollectionOfStats = false;
+            m_waitingForCollectionOfStats--;
         }
 
         public virtual void AddPhysicsStats(UUID RegionID, PhysicsScene scene)

@@ -47,9 +47,12 @@ namespace Aurora.Modules
         private int MaxVal = 200;
         private bool m_useInstantUpdating = false;
         private int TimeToUpdate = 500;
+        private object m_statsLock = new object ();
+        private PhysicsMonitor m_monitor;
 
-        public PhysicsProfilerForm(List<Scene> scenes)
+        public PhysicsProfilerForm(PhysicsMonitor monitor, List<Scene> scenes)
         {
+            m_monitor = monitor;
             m_scenes = scenes;
             SceneSelected = scenes[0].RegionInfo.RegionID;
             InitializeComponent();
@@ -77,7 +80,11 @@ namespace Aurora.Modules
 
         void m_updateStats_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
+            lock (m_statsLock)
+                m_updateStats.Stop ();
             UpdateStatsBars();
+            lock (m_statsLock)
+                m_updateStats.Start ();
         }
 
         private void RegionNameSelector_SelectedIndexChanged(object sender, EventArgs e)
@@ -184,6 +191,7 @@ namespace Aurora.Modules
         private void PhysicsProfilerForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             m_updateStats.Stop();
+            m_monitor.m_collectingStats = false;//Turn it off!
         }
     }
 }
