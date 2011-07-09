@@ -356,6 +356,12 @@ namespace OpenSim.Region.Physics.Meshing
                                 {
                                     OSDMap subMeshMap = (OSDMap)subMeshOsd;
 
+                                    // As per http://wiki.secondlife.com/wiki/Mesh/Mesh_Asset_Format, some Mesh Level
+                                    // of Detail Blocks (maps) contain just a NoGeometry key to signal there is no
+                                    // geometry for this submesh.
+                                    if (subMeshMap.ContainsKey("NoGeometry") && ((OSDBoolean)subMeshMap["NoGeometry"]))
+                                        continue;
+
                                     OpenMetaverse.Vector3 posMax = ((OSDMap)subMeshMap["PositionDomain"])["Max"].AsVector3();
                                     OpenMetaverse.Vector3 posMin = ((OSDMap)subMeshMap["PositionDomain"])["Min"].AsVector3();
                                     ushort faceIndexOffset = (ushort)coords.Count;
