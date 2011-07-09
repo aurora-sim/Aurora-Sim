@@ -108,6 +108,9 @@ namespace OpenSim.Services.CapsService
 
         public void DeregisterCaps()
         {
+            m_service.RemoveStreamHandler ("GetTexture", "GET");
+            m_service.RemoveStreamHandler ("UploadBakedTexture", "POST");
+            m_service.RemoveStreamHandler ("GetMesh", "GET");
         }
 
         #region Get Texture

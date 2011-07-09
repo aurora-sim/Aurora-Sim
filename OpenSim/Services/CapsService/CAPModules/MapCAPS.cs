@@ -82,6 +82,7 @@ namespace OpenSim.Services.CapsService
 
         public void DeregisterCaps()
         {
+            m_service.RemoveStreamHandler ("MapLayer", "POST");
             m_mapLayer.Clear();
         }
 

@@ -382,6 +382,14 @@ namespace OpenSim.Services.Interfaces
         /// <param name="method"></param>
         /// <param name="httpMethod"></param>
         /// <param name="path"></param>
+        void RemoveStreamHandler (string method, string httpMethod);
+
+        /// <summary>
+        /// Remove an old handler for a CAPS message
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="httpMethod"></param>
+        /// <param name="path"></param>
         void RemoveStreamHandler(string method, string httpMethod, string path);
 
         /// <summary>

@@ -243,10 +243,24 @@ namespace OpenSim.Services.CapsService
             AddCAPS(method, handler.Path);
         }
 
-        public void RemoveStreamHandler(string method, string httpMethod, string path)
+        public void RemoveStreamHandler (string method, string httpMethod, string path)
         {
-            Server.RemoveStreamHandler(httpMethod, path);
-            RemoveCaps(method);
+            Server.RemoveStreamHandler (httpMethod, path);
+            RemoveCaps (method);
+        }
+
+        public void RemoveStreamHandler (string method, string httpMethod)
+        {
+            string path = registeredCAPS[method].AsString ();
+            if (path != "")//If it doesn't exist...
+            {
+                path = path.Remove (0, this.HostUri.Length);
+                Server.RemoveStreamHandler (httpMethod, path);
+                RemoveCaps (method);
+            }
+            else
+            {
+            }
         }
 
         #endregion

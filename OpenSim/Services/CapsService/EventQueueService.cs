@@ -368,9 +368,10 @@ namespace OpenSim.Services.CapsService
                             OSDMap map = (OSDMap)ev;
                             if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
                             {
-                                m_log.Warn ("[EQService]: Sim Request to Disable Simulator " + m_service.RegionHandle);
+                                m_log.Debug ("[EQService]: Sim Request to Disable Simulator " + m_service.RegionHandle);
                                 removeAt = array.IndexOf(ev);
                                 //This will be the last bunch of EQMs that go through, so we can safely die now
+                                //Except that we can't do this, the client will freak if we do this
                                 //m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
                             }
                         }

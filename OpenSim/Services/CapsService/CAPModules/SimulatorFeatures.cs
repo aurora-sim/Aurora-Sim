@@ -92,6 +92,7 @@ namespace OpenSim.Services.CapsService
 
         public void DeregisterCaps ()
         {
+            m_service.RemoveStreamHandler ("SimulatorFeatures", "GET");
         }
 
         public void EnteringRegion ()

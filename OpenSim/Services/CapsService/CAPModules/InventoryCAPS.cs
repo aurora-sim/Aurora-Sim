@@ -142,6 +142,18 @@ namespace OpenSim.Services.CapsService
 
         public void DeregisterCaps()
         {
+            m_service.RemoveStreamHandler ("WebFetchInventoryDescendents", "POST");
+            m_service.RemoveStreamHandler ("FetchInventoryDescendents", "POST");
+            m_service.RemoveStreamHandler ("FetchInventoryDescendents2", "POST");
+            m_service.RemoveStreamHandler ("FetchLibDescendents", "POST");
+            m_service.RemoveStreamHandler ("FetchLibDescendents2", "POST");
+            m_service.RemoveStreamHandler ("FetchInventory", "POST");
+            m_service.RemoveStreamHandler ("FetchInventory2", "POST");
+            m_service.RemoveStreamHandler ("FetchLib", "POST");
+            m_service.RemoveStreamHandler ("FetchLib2", "POST");
+            m_service.RemoveStreamHandler ("NewFileAgentInventory", "POST");
+            m_service.RemoveStreamHandler ("NewFileAgentInventoryVariablePrice", "POST");
+            m_service.RemoveStreamHandler ("InventoryItemCreate", "POST");
         }
 
         #endregion

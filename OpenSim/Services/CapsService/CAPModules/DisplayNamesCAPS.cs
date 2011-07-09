@@ -116,6 +116,8 @@ namespace OpenSim.Services.CapsService
 
         public void DeregisterCaps()
         {
+            m_service.RemoveStreamHandler ("SetDisplayName", "POST");
+            m_service.RemoveStreamHandler ("GetDisplayNames", "GET");
         }
 
         #endregion

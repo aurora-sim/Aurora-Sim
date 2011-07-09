@@ -115,6 +115,10 @@ namespace OpenSim.Services.CapsService
 
         public void DeregisterCaps()
         {
+            m_service.RemoveStreamHandler ("UpdateAgentLanguage", "POST");
+            m_service.RemoveStreamHandler ("UpdateAgentInformation", "POST");
+            m_service.RemoveStreamHandler ("AvatarPickerSearch", "GET");
+            m_service.RemoveStreamHandler ("HomeLocation", "POST");
         }
 
         #region Other CAPS
