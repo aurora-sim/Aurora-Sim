@@ -91,7 +91,7 @@ namespace Aurora.Services.DataService
             object[] values = new object[13];
             values[0] = info.UserID;
             values[1] = info.CurrentRegionID;
-            values[2] = Util.ToUnixTime (DateTime.Now); //Convert to binary so that it can be converted easily
+            values[2] = Util.ToUnixTime (DateTime.Now.ToUniversalTime ()); //Convert to binary so that it can be converted easily
             values[3] = info.IsOnline ? 1 : 0;
             values[4] = Util.ToUnixTime (info.LastLogin);
             values[5] = Util.ToUnixTime (info.LastLogout);
@@ -123,7 +123,7 @@ namespace Aurora.Services.DataService
             values[0] = regionID;
             values[1] = lastPosition;
             values[2] = lastLookAt;
-            values[3] = Util.ToUnixTime (DateTime.Now); //Convert to binary so that it can be converted easily
+            values[3] = Util.ToUnixTime (DateTime.Now.ToUniversalTime ()); //Convert to binary so that it can be converted easily
             values[4] = 1;
             GD.Update (m_realm, values, keys, new string[1] { "UserID" }, new object[1] { userID });
         }
@@ -137,7 +137,7 @@ namespace Aurora.Services.DataService
             keys[3] = "HomeLookat";
             object[] values = new object[4];
             values[0] = regionID;
-            values[1] = Util.ToUnixTime (DateTime.Now); //Convert to binary so that it can be converted easily
+            values[1] = Util.ToUnixTime (DateTime.Now.ToUniversalTime()); //Convert to binary so that it can be converted easily
             values[2] = Position;
             values[3] = LookAt;
             GD.Update(m_realm, values, keys, new string[1] { "UserID" }, new object[1] { userID });
