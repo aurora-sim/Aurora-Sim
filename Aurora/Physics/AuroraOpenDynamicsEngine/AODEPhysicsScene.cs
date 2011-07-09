@@ -2579,25 +2579,100 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         #region Gravity Calculation
 
-        public void CalculateGravity (float mass, d.Vector3 position, float gravityModifier, ref Vector3 forceVector)
+        #region Structs
+
+        private struct PointGravity
         {
-            //Add normal gravity
-            forceVector.X += gravityx * mass * gravityModifier;
-            forceVector.Y += gravityy * mass * gravityModifier;
-            forceVector.Z += gravityz * mass * gravityModifier;
-            /*else
-            {
-                Vector3 cog = _parent_scene.PointOfGravity;
-                if (cog.X != 0)
-                    vec.X += (cog.X - tempPos.X) * m_mass;
-                if (cog.Y != 0)
-                    vec.Y += (cog.Y - tempPos.Y) * m_mass;
-                if (cog.Z != 0)
-                    vec.Z += (cog.Z - tempPos.Z) * m_mass;
-            }*/
+            public Vector3 Position;
+            public float ForceX;
+            public float ForceY;
+            public float ForceZ;
+            public float GravForce;
+            public float Radius;
+            /// <summary>
+            /// If this is true, the actor will have the forces applied to them 
+            ///   once they enter the area, rather than having gravity act like it does 
+            ///   in real life (pulling toward the center)
+            /// </summary>
+            public bool PointForce;
         }
 
-        //public void AddGravity
+        #endregion
+
+        private bool normalGravityEnabled = true;
+        private Dictionary<int, PointGravity> m_pointGravityPositions = new Dictionary<int, PointGravity> ();
+
+
+        public void CalculateGravity (float mass, d.Vector3 position, float gravityModifier, ref Vector3 forceVector)
+        {
+            if (normalGravityEnabled)
+            {
+                //normal gravity, one axis, no center
+                forceVector.X += gravityx * mass * gravityModifier;
+                forceVector.Y += gravityy * mass * gravityModifier;
+                forceVector.Z += gravityz * mass * gravityModifier;
+            }
+            else
+            {
+                Vector3 pos = new Vector3((float)position.X, (float)position.Y, (float)position.Z);
+                //Find the nearby centers of gravity
+                foreach (PointGravity pg in m_pointGravityPositions.Values)
+                {
+                    float distance = Vector3.Distance (pg.Position, pos);
+                    if (distance < pg.Radius)
+                    {
+                        float radiusScaling = distance / pg.Radius;
+                        if (pg.PointForce)
+                        {
+                            //Applies forces to the actor when in range
+                            forceVector.X += pg.ForceX * radiusScaling * mass * gravityModifier;
+                            forceVector.Y += pg.ForceY * radiusScaling * mass * gravityModifier;
+                            forceVector.Z += pg.ForceZ * radiusScaling * mass * gravityModifier;
+                        }
+                        else
+                        {
+                            //Pulls the actor toward the point
+                            forceVector.X += (pg.Position.X - pos.X) * pg.GravForce * radiusScaling * mass * gravityModifier;
+                            forceVector.Y += (pg.Position.Y - pos.Y) * pg.GravForce * radiusScaling * mass * gravityModifier;
+                            forceVector.Z += (pg.Position.Z - pos.Z) * pg.GravForce * radiusScaling * mass * gravityModifier;
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets gravity parameters in the single axis, if you want a point, use the gravity point pieces
+        /// </summary>
+        /// <param name="enabled">Enable one axis gravity (disables point gravity)</param>
+        /// <param name="forceX"></param>
+        /// <param name="forceY"></param>
+        /// <param name="forceZ"></param>
+        public override void SetGravityForce (bool enabled, float forceX, float forceY, float forceZ)
+        {
+            normalGravityEnabled = enabled;
+            gravityx = forceX;
+            gravityy = forceY;
+            gravityz = forceZ;
+
+
+            //Fix the ODE gravity too
+            d.WorldSetGravity (world, gravityx, gravityy, gravityz);
+        }
+
+        public override void AddGravityPoint (bool isApplyingForces, Vector3 position, float forceX, float forceY, float forceZ, float gravForce, float radius, int identifier)
+        {
+            PointGravity pointGrav = new PointGravity ();
+            pointGrav.ForceX = forceX;
+            pointGrav.ForceY = forceY;
+            pointGrav.ForceZ = forceZ;
+            pointGrav.GravForce = gravForce;
+            pointGrav.Radius = radius;
+            pointGrav.Position = position;
+            pointGrav.PointForce = isApplyingForces;
+
+            m_pointGravityPositions[identifier] = pointGrav;
+        }
 
         #endregion
 

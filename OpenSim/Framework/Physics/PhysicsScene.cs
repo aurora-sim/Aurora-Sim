@@ -195,6 +195,14 @@ namespace OpenSim.Framework
         {
             return new List<ContactResult>();
         }
+
+        public virtual void SetGravityForce (bool enabled, float forceX, float forceY, float forceZ)
+        {
+        }
+
+        public virtual void AddGravityPoint (bool isApplyingForces, Vector3 position, float forceX, float forceY, float forceZ, float gravForce, float radius, int identifier)
+        {
+        }
     }
 
     public class NullPhysicsScene : PhysicsScene
