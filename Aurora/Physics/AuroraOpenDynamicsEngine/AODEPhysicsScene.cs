@@ -50,23 +50,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
     public sealed class AuroraODEPhysicsScene : PhysicsScene
     {
+        #region Declares
+
+        #region Enums
+
         /// <summary>
         /// this are prim change comands replace old taints
         /// but for now use a single comand per call since argument passing still doesn't support multiple comands
         /// </summary>
         public enum changes : int
-            {
+        {
             Add = 0,                // arg null. finishs the prim creation. should be used internally only ( to remove later ?)
             Remove,
             Link,               // arg AuroraODEPrim new parent prim or null to delink. Makes the prim part of a object with prim parent as root
-                                //  or removes from a object if arg is null
+            //  or removes from a object if arg is null
             DeLink,
             Position,           // arg Vector3 new position in world coords. Changes prim position. Prim must know if it is root or child
             Orientation,        // arg Quaternion new orientation in world coords. Changes prim position. Prim must know it it is root or child
             PosOffset,          // not in use
-                                // arg Vector3 new position in local coords. Changes prim position in object
+            // arg Vector3 new position in local coords. Changes prim position in object
             OriOffset,          // not in use
-                                // arg Vector3 new position in local coords. Changes prim position in object
+            // arg Vector3 new position in local coords. Changes prim position in object
             Velocity,
             AngVelocity,
             Acceleration,
@@ -89,7 +93,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             buildingrepresentation,
 
             Null             //keep this last used do dim the methods array. does nothing but pulsing the prim
-}
+        }
+
+        #endregion
+
 
         private CollisionLocker ode;
 
@@ -333,8 +340,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             get { return m_StatCollisionAccountingTime; }
         }
-        
+
         #endregion
+
+        #endregion
+
+        #region Constructor/Initialization
 
         /// <summary>
         /// Initiailizes the scene
@@ -572,21 +583,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        internal void waitForSpaceUnlock(IntPtr space)
-        {
-            //if (space != IntPtr.Zero)
-            //while (d.SpaceLockQuery(space)) { } // Wait and do nothing
-        }
-
-        /// <summary>
-        /// Debug space message for printing the space that a prim/avatar is in.
-        /// </summary>
-        /// <param name="pos"></param>
-        /// <returns>Returns which split up space the given position is in.</returns>
-        public string whichspaceamIin(Vector3 pos)
-        {
-            return calculateSpaceForGeom(pos).ToString();
-        }
+        #endregion
 
         #region Collision Detection
 
@@ -1268,11 +1265,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 _perloopContact.Clear();
         }
 
-        #endregion
+        public bool CheckTerrainColisionAABB (IntPtr geom)
+        {
 
-        public bool CheckTerrainColisionAABB(IntPtr geom)
-            {
-         
             // assumes 1m terrain resolution
 
             if (geom == IntPtr.Zero || TerrainHeightFieldHeights.Count == 0)
@@ -1280,10 +1275,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             d.Vector3 pos;
 
-            pos = d.GeomGetPosition(geom);
+            pos = d.GeomGetPosition (geom);
 
 
-// megas thing
+            // megas thing
             int offsetX = ((int)(pos.X / m_region.RegionSizeX)) * m_region.RegionSizeX;
             int offsetY = ((int)(pos.Y / m_region.RegionSizeY)) * m_region.RegionSizeY;
             if (RegionTerrain == IntPtr.Zero)
@@ -1299,7 +1294,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             d.AABB aabb;
 
-            d.GeomGetAABB(geom,out aabb);
+            d.GeomGetAABB (geom, out aabb);
 
             int minx, maxx, miny, maxy;
 
@@ -1312,12 +1307,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             miny = (int)(aabb.MinY - offsetY);
             maxx = (int)(aabb.MaxX - offsetX);
             maxy = (int)(aabb.MaxY - offsetY);
-           
-            if (minx < 0) minx = 0;
-            if (miny < 0) miny = 0;
 
-            if (maxx > m_region.RegionSizeX) maxx = (int)m_region.RegionSizeX;
-            if (maxy > m_region.RegionSizeY) maxy = (int)m_region.RegionSizeY;
+            if (minx < 0)
+                minx = 0;
+            if (miny < 0)
+                miny = 0;
+
+            if (maxx > m_region.RegionSizeX)
+                maxx = (int)m_region.RegionSizeX;
+            if (maxy > m_region.RegionSizeY)
+                maxy = (int)m_region.RegionSizeY;
 
             int i;
             int j;
@@ -1332,35 +1331,34 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // start near center of aabb
             for (j = centery; j < maxy; j += Region.RegionSizeX)
+            {
+                for (i = centerx; i < maxx; i++)
                 {
-                for (i = centerx; i < maxx; i++ )
-                    {
-                        if (TerrainHeightFieldHeights[RegionTerrain][j + i] >= minh)
+                    if (TerrainHeightFieldHeights[RegionTerrain][j + i] >= minh)
                         return true;
-                    }
+                }
                 i = minx;
-                while(i < centerx) 
-                    {
-                        if (TerrainHeightFieldHeights[RegionTerrain][j + i] >= minh)
+                while (i < centerx)
+                {
+                    if (TerrainHeightFieldHeights[RegionTerrain][j + i] >= minh)
                         return true;
                     i++;
-                    }
                 }
-
-            j = miny * Region.RegionSizeX;
-            while(j < centery)
-                {
-                for (i = minx; i < maxx; i++ )
-                    {
-                        if (TerrainHeightFieldHeights[RegionTerrain][j + i] >= minh)
-                        return true;
-                    }
-                j += Region.RegionSizeX;
-                }
-
-            return false;
             }
 
+            j = miny * Region.RegionSizeX;
+            while (j < centery)
+            {
+                for (i = minx; i < maxx; i++)
+                {
+                    if (TerrainHeightFieldHeights[RegionTerrain][j + i] >= minh)
+                        return true;
+                }
+                j += Region.RegionSizeX;
+            }
+
+            return false;
+        }
 
         // Recovered for use by fly height. Kitto Flora
         public float GetTerrainHeightAtXY (float x, float y)
@@ -1403,6 +1401,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
         }
+
+        #endregion
 
         #region Add/Remove Entities
 
@@ -1787,7 +1787,25 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return returnint;
         }
 
+        internal void waitForSpaceUnlock (IntPtr space)
+        {
+            //if (space != IntPtr.Zero)
+            //while (d.SpaceLockQuery(space)) { } // Wait and do nothing
+        }
+
+        /// <summary>
+        /// Debug space message for printing the space that a prim/avatar is in.
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <returns>Returns which split up space the given position is in.</returns>
+        public string whichspaceamIin (Vector3 pos)
+        {
+            return calculateSpaceForGeom (pos).ToString ();
+        }
+
         #endregion
+
+        #region Meshing
 
         /// <summary>
         /// Routine to figure out if we need to mesh this prim with our mesher
@@ -1910,11 +1928,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return true;
         }
 
+        #endregion
+
+        #region Changes/Tainting
+
         /// <summary>
         /// Called to queue a change to a prim
         /// to use in place of old taint mechanism so changes do have a time sequence
         /// </summary>
-        
         public void AddChange(AuroraODEPrim prim,changes what,Object arg)
             {
             AODEchangeitem item = new AODEchangeitem();
@@ -1943,7 +1964,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name="prim"></param>
         public override void AddPhysicsActorTaint(PhysicsActor prim)
         {
-
             if (prim is AuroraODEPrim)
             {
 /* ignore taints for prims
@@ -1974,6 +1994,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
         }
+
+        #endregion
+
+        #region Simulation Loop
 
         /// <summary>
         /// This is our main simulate loop
@@ -2320,6 +2344,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return fps;
         }
 
+        #endregion
+
+        #region Get/Set Terrain and water
+
         public override void SetTerrain (ITerrainChannel channel, short[] heightMap)
         {
             m_channel = channel;
@@ -2447,15 +2475,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return WaterHeightFieldHeight[(int)y * Region.RegionSizeX + (int)x];
         }
 
-        public override bool SupportsCombining()
-        {
-            return true;
-        }
-
         public override void SetWaterLevel(short[] map)
         {
             WaterHeightFieldHeight = map;
         }
+
+        #endregion
+
+        #region Dispose
 
         public override void Dispose()
         {
@@ -2479,6 +2506,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_rayCastManager.Dispose();
             m_rayCastManager = null;
         }
+
+        #endregion
+
+        #region Top colliders
 
         public override Dictionary<uint, float> GetTopColliders()
         {
@@ -2511,6 +2542,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             return returncolliders;
         }
+
+        #endregion
+
+        #region Raycasting
 
         public override bool SupportsRayCast()
         {
@@ -2552,6 +2587,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return new List<ContactResult> ();
             return new List<ContactResult>(ourResults);
         }
+
+        #endregion
+
+        #region Drawstuff
 
 #if USE_DRAWSTUFF
         // Keyboard callback
@@ -2681,5 +2720,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             ds.SetViewpoint(ref xyz, ref hpr);
         }
 #endif
+
+        #endregion
     }
 }

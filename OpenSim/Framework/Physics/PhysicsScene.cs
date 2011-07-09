@@ -166,11 +166,6 @@ namespace OpenSim.Framework
             return false;
         }
 
-        public virtual bool SupportsCombining()
-        {
-            return false;
-        }
-
         /// <summary>
         /// Queue a raycast against the physics scene.
         /// The provided callback method will be called when the raycast is complete
