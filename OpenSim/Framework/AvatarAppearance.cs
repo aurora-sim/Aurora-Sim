@@ -205,7 +205,6 @@ namespace OpenSim.Framework
                 {
                     UUID itemID = m_wearables[i][j].ItemID;
                     UUID assetID = app.Wearables[i].GetAsset(itemID);
-
                     if (assetID != UUID.Zero)
                         m_wearables[i].Add(itemID, assetID);
                 }

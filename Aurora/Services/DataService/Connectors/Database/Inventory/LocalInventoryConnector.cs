@@ -261,6 +261,7 @@ namespace Aurora.Services.DataService
                 contents.WriteStartArray("items");
                 List<UUID> moreLinkedItems = new List<UUID> ();
                 int count = 0;
+                bool addToCount = true;
                 string query = String.Format("where {0} = '{1}' and {2} = '{3}'", "parentFolderID", folder_id, "avatarID", AgentID);
             redoQuery:
                 using (IDataReader retVal = GD.QueryData (query, m_itemsrealm, "*"))
@@ -326,9 +327,11 @@ namespace Aurora.Services.DataService
                             if(assetType == AssetType.Link)
                                 moreLinkedItems.Add(assetID);
                             contents["type"] = Utils.AssetTypeToString (assetType);
-                            contents["inv_type"] = Utils.InventoryTypeToString ((InventoryType)int.Parse (retVal["invType"].ToString ()));
+                            InventoryType invType = (InventoryType)int.Parse (retVal["invType"].ToString ());
+                            contents["inv_type"] = Utils.InventoryTypeToString (invType);
 
-                            count++;
+                            if(addToCount)
+                                count++;
                             contents.WriteEndMap (/*"item"*/); //end array items
                         }
                     }
@@ -351,6 +354,7 @@ namespace Aurora.Services.DataService
                 }
                 if(moreLinkedItems.Count > 0)
                 {
+                    addToCount = false;
                     query = String.Format("where {0} = '{1}' and (", "avatarID", AgentID);
                     for(int i = 0; i < moreLinkedItems.Count; i++)
                         query += String.Format("{0} = '{1}' or ", "inventoryID", moreLinkedItems[i]);
@@ -368,7 +372,9 @@ namespace Aurora.Services.DataService
                 if (versionRetVal.Count > 0)
                 {
                     version = int.Parse (versionRetVal[0]);
-                    if(int.Parse(versionRetVal[1]) == (int)AssetType.TrashFolder)
+                    if(int.Parse(versionRetVal[1]) == (int)AssetType.TrashFolder ||
+                        int.Parse (versionRetVal[1]) == (int)AssetType.CurrentOutfitFolder ||
+                        int.Parse (versionRetVal[1]) == (int)AssetType.LinkFolder)
                     {
                         //If it is the trash folder, we need to send its descendents, because the viewer wants it
                         query = String.Format ("where {0} = '{1}' and {2} = '{3}'", "parentFolderID", folder_id, "agentID", AgentID);
@@ -382,8 +388,9 @@ namespace Aurora.Services.DataService
                                     contents["folder_id"] = UUID.Parse (retVal["folderID"].ToString ());
                                     contents["parent_id"] = UUID.Parse (retVal["parentFolderID"].ToString ());
                                     contents["name"] = retVal["folderName"].ToString ();
-                                    contents["type"] = int.Parse(retVal["type"].ToString ());
-                                    contents["preferred_type"] = -1;
+                                    int type = int.Parse(retVal["type"].ToString ());
+                                    contents["type"] = type;
+                                    contents["preferred_type"] = type;
                                     
                                     count++;
                                     contents.WriteEndMap (/*"folder"*/); //end array items

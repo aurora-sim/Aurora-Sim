@@ -506,9 +506,11 @@ namespace OpenSim.Region.Framework.Scenes
             item.GroupPermissions = groupMask;
             item.BasePermissions = baseMask;
             item.CreationDate = creationDate;
-
             if (AddInventoryItem(item))
             {
+                IAvatarFactory avFactory = m_scene.RequestModuleInterface<IAvatarFactory> ();
+                if (avFactory != null)
+                    avFactory.NewAppearanceLink (item);
                 remoteClient.SendInventoryItemCreateUpdate(item, callbackID);
             }
             else

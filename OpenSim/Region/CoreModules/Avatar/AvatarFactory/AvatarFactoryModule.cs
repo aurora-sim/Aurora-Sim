@@ -734,11 +734,17 @@ textures 1
             foreach (AvatarWearingArgs.Wearable wear in e.NowWearing)
             {
                 if (wear.Type < AvatarWearable.MAX_WEARABLES)
-                    avatAppearance.Wearables[wear.Type].Add(wear.ItemID, UUID.Zero);
+                {
+                    /*if (incomingLinks.ContainsKey (wear.ItemID))
+                    {
+                        wear.ItemID = incomingLinks[wear.ItemID];
+                    }*/
+                    avatAppearance.Wearables[wear.Type].Add (wear.ItemID, UUID.Zero);
+                }
             }
 
             avatAppearance.GetAssetsFrom (appearance.Appearance);
-
+            
             // This could take awhile since it needs to pull inventory
             SetAppearanceAssets(sp.UUID, ref avatAppearance);
 
@@ -764,6 +770,15 @@ textures 1
             //sp.ControllingClient.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
             //Do not save or send the appearance! The client loops back and sends a bunch of SetAppearance
             //  (handled above) and that takes care of it
+        }
+
+        private Dictionary<UUID, UUID> incomingLinks = new Dictionary<UUID, UUID> ();
+        public void NewAppearanceLink (InventoryItemBase item)
+        {
+            /*if (item.InvType == (int)InventoryType.Wearable)
+            {
+                incomingLinks[item.AssetID] = item.ID;
+            }*/
         }
 
         private void SetAppearanceAssets(UUID userID, ref AvatarAppearance appearance)
@@ -799,7 +814,7 @@ textures 1
                             baseItem = new InventoryItemBase (baseItem.AssetID, userID);
                             baseItem = invService.GetItem (baseItem);
                         }
-                        appearance.Wearables[i].Add (appearance.Wearables[i][j].ItemID, baseItem.AssetID);
+                        appearance.Wearables[i].Add (baseItem.ID, baseItem.AssetID);
                     }
                     else
                     {

@@ -62,5 +62,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="agentid"></param>
         void ForceSendAvatarAppearance(UUID agentid);
+
+        void NewAppearanceLink (InventoryItemBase item);
     }
 }
