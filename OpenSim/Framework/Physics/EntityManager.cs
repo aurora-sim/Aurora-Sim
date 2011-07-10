@@ -53,7 +53,10 @@ namespace OpenSim.Framework
         public bool Add (IEntity entity)
         {
             if (entity.LocalId == 0)
+            {
+                m_log.Warn ("Entity with 0 localID!");
                 return false;
+            }
 
             try
             {

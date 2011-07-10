@@ -299,9 +299,6 @@ namespace Aurora.Modules
                             continue;
                         }
                         m_scene.SceneGraph.RestorePrimToScene(group);
-                        ISceneChildEntity rootPart = group.GetChildPart(group.UUID);
-                        rootPart.Flags &= ~PrimFlags.Scripted;
-                        rootPart.TrimPermissions();
                     }
                     catch(Exception ex)
                     {

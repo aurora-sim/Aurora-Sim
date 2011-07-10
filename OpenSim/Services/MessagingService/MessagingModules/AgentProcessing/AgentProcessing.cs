@@ -401,12 +401,12 @@ namespace OpenSim.Services.MessagingService
                 reason = "Could not find neighbor to inform";
                 return false;
             }
-            if ((neighbor.Flags & (int)Aurora.Framework.RegionFlags.RegionOnline) == 0 &&
+            /*if ((neighbor.Flags & (int)Aurora.Framework.RegionFlags.RegionOnline) == 0 &&
                 (neighbor.Flags & (int)(Aurora.Framework.RegionFlags.Foreign | Aurora.Framework.RegionFlags.Hyperlink)) == 0)
             {
                 reason = "The region you are attempting to teleport to is offline";
                 return false;
-            }
+            }*/
             m_log.Info("[AgentProcessing]: Starting to inform client about neighbor " + neighbor.RegionName);
 
             //Notes on this method

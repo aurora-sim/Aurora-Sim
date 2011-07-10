@@ -3774,9 +3774,6 @@ namespace OpenSim.Region.Framework.Scenes
             //Fix the rezzed attribute
             Rezzed = DateTime.UtcNow;
             //TODO: Check to make sure the physics engine is fully updated here
-
-            //Don't reset this for now
-            //CRC = 0;
         }
 
         /// <summary>

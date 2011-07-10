@@ -395,8 +395,16 @@ namespace OpenSim.Region.CoreModules
                     // HoursToRadians    = (SunCycle/24)*VWTimeRatio;
 
                     //Get the old sun data
-                    m_SunFixed = m_scene.RegionInfo.RegionSettings.FixedSun;
-                    m_SunFixedHour = (float)m_scene.RegionInfo.RegionSettings.SunPosition;
+                    if (m_scene.RegionInfo.RegionSettings.UseEstateSun)
+                    {
+                        m_SunFixedHour = (float)m_scene.RegionInfo.EstateSettings.SunPosition;
+                        m_SunFixed = m_scene.RegionInfo.EstateSettings.FixedSun;
+                    }
+                    else
+                    {
+                        m_SunFixedHour = (float)m_scene.RegionInfo.RegionSettings.SunPosition;
+                        m_SunFixed = m_scene.RegionInfo.RegionSettings.FixedSun;
+                    }
 
                     //  Insert our event handling hooks
 

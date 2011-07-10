@@ -2120,13 +2120,15 @@ namespace OpenSim.Region.Framework.Scenes
 
             foreach (ISceneChildEntity child in children)
             {
+                if (child.LocalId == 0)
+                    child.LocalId = AllocateLocalId ();
                 if (((SceneObjectPart)child).PhysActor != null)
                 {
                     ((SceneObjectPart)child).PhysActor.LocalID = child.LocalId;
                     ((SceneObjectPart)child).PhysActor.UUID = child.UUID;
                 }
-                if (child.LocalId == 0)
-                    child.LocalId = AllocateLocalId();
+                child.Flags &= ~PrimFlags.Scripted;
+                child.TrimPermissions ();
                 entity.AddChild(child, child.LinkNum);
             }
             //Tell the entity that they are being added to a scene
