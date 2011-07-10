@@ -765,9 +765,9 @@ namespace Aurora.BotManager
                 {
                 }
             }
-            if (FollowSP == null)
+            if (FollowSP == null || FollowSP.IsChildAgent)
             {
-                m_log.Warn ("Could not find avatar");
+                m_log.Warn ("Could not find avatar " + avatarName + " for bot " + Name + " to follow");
                 return;
             }
             FollowSP.PhysicsActor.OnRequestTerseUpdate += EventManager_OnClientMovement;
