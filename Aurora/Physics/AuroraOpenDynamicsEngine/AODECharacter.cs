@@ -1056,9 +1056,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             #region Gravity
 
             if (!flying)
-                _parent_scene.CalculateGravity (m_mass, tempPos, false, 1, ref vec);
+                _parent_scene.CalculateGravity (m_mass, tempPos, true, 1, ref vec);
             else
-                _parent_scene.CalculateGravity (m_mass, tempPos, true, 0.75f, ref vec);//Allow point gravity and repulsors affect us a bit
+                _parent_scene.CalculateGravity (m_mass, tempPos, false, 0.75f, ref vec);//Allow point gravity and repulsors affect us a bit
 
             #endregion
 
