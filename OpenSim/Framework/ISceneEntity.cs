@@ -296,6 +296,8 @@ namespace OpenSim.Framework
 
         #endregion
 
+        List<UUID> SitTargetAvatar { get; }
+
         void ClearUndoState ();
 
         void AttachToScene (IScene m_parentScene);

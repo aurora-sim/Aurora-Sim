@@ -3672,7 +3672,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                 ent.OwnerID != AgentId)
                             continue;
                     }
-                    if (ent.ParentEntity.RootChild.SitTargetAvatar.Count > 0)
+                    if (ent.ParentEntity.SitTargetAvatar.Count > 0)
                     {
                         isTerse = false;
                         updateFlags = PrimUpdateFlags.ForcedFullUpdate;

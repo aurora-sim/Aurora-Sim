@@ -482,12 +482,12 @@ namespace Aurora.Modules
             {
                 //m_log.DebugFormat("[Backup]: Deleting scene object {0} {1}", group.Name, group.UUID);
 
-                lock (group.RootPart.SitTargetAvatar)
+                lock (group.SitTargetAvatar)
                 {
-                    if (group.RootPart.SitTargetAvatar.Count != 0)
+                    if (group.SitTargetAvatar.Count != 0)
                     {
-                        UUID[] ids = new UUID[group.RootPart.SitTargetAvatar.Count];
-                        group.RootPart.SitTargetAvatar.CopyTo(ids);
+                        UUID[] ids = new UUID[group.SitTargetAvatar.Count];
+                        group.SitTargetAvatar.CopyTo(ids);
                         foreach (UUID avID in ids)
                         {
                             //Don't screw up avatar's that are sitting on us!

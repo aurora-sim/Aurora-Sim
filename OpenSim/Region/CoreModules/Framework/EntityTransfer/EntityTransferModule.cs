@@ -734,11 +734,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             grp.RootPart.ClearUpdateScheduleOnce();
             if (destination != null)
             {
-                if (grp.RootPart.SitTargetAvatar.Count != 0)
+                if (grp.SitTargetAvatar.Count != 0)
                 {
-                    lock (grp.RootPart.SitTargetAvatar)
+                    lock (grp.SitTargetAvatar)
                     {
-                        foreach (UUID avID in grp.RootPart.SitTargetAvatar)
+                        foreach (UUID avID in grp.SitTargetAvatar)
                         {
                             IScenePresence SP = grp.Scene.GetScenePresence(avID);
                             CrossAgentToNewRegionAsync(SP, grp.AbsolutePosition, destination, false);
@@ -857,11 +857,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             newObject.RootPart.ParentGroup.CreateScriptInstances(0, false, 1, UUID.Zero);
             newObject.RootPart.ParentGroup.ResumeScripts();
 
-            if (newObject.RootPart.SitTargetAvatar.Count != 0)
+            if (newObject.SitTargetAvatar.Count != 0)
             {
-                lock (newObject.RootPart.SitTargetAvatar)
+                lock (newObject.SitTargetAvatar)
                 {
-                    foreach (UUID avID in newObject.RootPart.SitTargetAvatar)
+                    foreach (UUID avID in newObject.SitTargetAvatar)
                     {
                         IScenePresence SP = scene.GetScenePresence(avID);
                         while (SP == null)

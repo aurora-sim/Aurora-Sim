@@ -361,6 +361,19 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public List<UUID> SitTargetAvatar
+        {
+            get
+            {
+                List<UUID> allSittingAvatars = new List<UUID> ();
+                foreach (ISceneChildEntity entity in ChildrenEntities ())
+                {
+                    allSittingAvatars.AddRange (entity.SitTargetAvatar);
+                }
+                return allSittingAvatars;
+            }
+        }
+
         /// <value>
         /// The root part of this scene object
         /// </value>
@@ -1939,10 +1952,10 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
             //Check sitting avatars
-            lock (RootPart.SitTargetAvatar)
+            lock (SitTargetAvatar)
             {
                 int count = m_parts.Count + 1;
-                foreach (UUID agentID in RootPart.SitTargetAvatar)
+                foreach (UUID agentID in SitTargetAvatar)
                 {
                     if (count == linknum)
                     {
@@ -2834,9 +2847,9 @@ namespace OpenSim.Region.Framework.Scenes
             //we need to do a terse update even if the move wasn't allowed
             // so that the position is reset in the client (the object snaps back)
             ScheduleGroupTerseUpdate();
-            if (this.RootPart.SitTargetAvatar.Count != 0)
+            if (SitTargetAvatar.Count != 0)
             {
-                foreach (UUID clientID in this.RootPart.SitTargetAvatar)
+                foreach (UUID clientID in SitTargetAvatar)
                 {
                     //Send full updates to the avatar as well so that they move as well
                     IScenePresence SP;

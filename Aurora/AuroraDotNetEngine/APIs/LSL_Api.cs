@@ -4326,7 +4326,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     return;
                 }
             }
-            else if (m_host.SitTargetAvatar.Contains(agentID)) // Sitting avatar
+            else if (m_host.ParentEntity.SitTargetAvatar.Contains(agentID)) // Sitting avatar
             {
                 // When agent is sitting, certain permissions are implicit if requested from sitting agent
                 int implicitPerms = ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION |
@@ -6825,7 +6825,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 if (av != null)
                 {
-                    if (m_host.SitTargetAvatar.Contains(key))
+                    if (m_host.ParentEntity.SitTargetAvatar.Contains (key))
                     {
                         // if the avatar is sitting on this object, then
                         // we can unsit them.  We don't want random scripts unsitting random people
@@ -8762,15 +8762,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetNumberOfPrims()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            int avatarCount = m_host.SitTargetAvatar.Count;
-            
-            /*World.ForEachScenePresence(delegate(ScenePresence presence)
-            {
-                if (!presence.IsChildAgent && presence.ParentID != UUID.Zero && m_host.ParentGroup.HasChildPrim(presence.ParentID))
-                        avatarCount++;
-            });*/
 
+            int avatarCount = m_host.ParentEntity.SitTargetAvatar.Count;
+            
             return m_host.ParentEntity.PrimCount + avatarCount;
         }
 

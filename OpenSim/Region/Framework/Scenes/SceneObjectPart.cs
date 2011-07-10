@@ -2686,7 +2686,6 @@ namespace OpenSim.Region.Framework.Scenes
             dupe.AngularVelocity = new Vector3(0, 0, 0);
             dupe.Flags = Flags;
             dupe.LinkNum = LinkNum;
-            dupe.SitTargetAvatar = ParentGroup.RootPart.SitTargetAvatar;
 
             dupe._ownershipCost = _ownershipCost;
             dupe._objectSaleType = _objectSaleType;
