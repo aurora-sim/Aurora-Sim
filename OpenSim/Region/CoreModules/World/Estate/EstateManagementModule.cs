@@ -1773,7 +1773,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             else
             {
                 // Use the Sun Position from the Region Settings
-                sun = (float)m_scene.RegionInfo.RegionSettings.SunPosition - 6.0f;
+                sun = (float)m_scene.RegionInfo.RegionSettings.SunPosition/* - 6.0f*/;
 
                 m_scene.EventManager.TriggerEstateToolsSunUpdate(
                         m_scene.RegionInfo.RegionHandle,

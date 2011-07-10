@@ -91,7 +91,7 @@ namespace OpenSim.Region.CoreModules
         // private double m_latitude       = 0;
         // Configurable defaults                     Defaults close to SL
         private string d_mode           = "SL";
-        private int    d_frame_mod      = 100;    // Every 10 seconds (actually less)
+        private int    d_frame_mod      = 25;    // Every 2 seconds (actually less)
         private double d_day_length     = 4;      // A VW day is 4 RW hours long
         private int    d_year_length    = 60;     // There are 60 VW days in a VW year
         private double d_day_night      = 0.5;   // axis offset: Default Hoizon shift to try and closely match the sun model in LL Viewer
@@ -203,7 +203,6 @@ namespace OpenSim.Region.CoreModules
                         PosTime += (ulong)(((CurDayPercentage - 0.5) / .5) * NightSeconds);
                     }
                 }
-
             }
 
             TotalDistanceTravelled = SunSpeed * PosTime;  // distance measured in radians
@@ -395,6 +394,10 @@ namespace OpenSim.Region.CoreModules
                     HorizonShift = m_HorizonShift; // Z axis translation
                     // HoursToRadians    = (SunCycle/24)*VWTimeRatio;
 
+                    //Get the old sun data
+                    m_SunFixed = m_scene.RegionInfo.RegionSettings.FixedSun;
+                    m_SunFixedHour = (float)m_scene.RegionInfo.RegionSettings.SunPosition;
+
                     //  Insert our event handling hooks
 
                     scene.EventManager.OnFrame += SunUpdate;
@@ -475,7 +478,7 @@ namespace OpenSim.Region.CoreModules
 
         public void SunUpdate()
         {
-            if (((m_frame++ % m_UpdateInterval) != 0) || !ready || m_SunFixed || !receivedEstateToolsSunUpdate)
+            if (((m_frame++ % m_UpdateInterval) != 0) || !ready || m_SunFixed/* || !receivedEstateToolsSunUpdate*/)
             {
                 return;
             }
