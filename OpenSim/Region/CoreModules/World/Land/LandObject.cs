@@ -389,7 +389,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (m_scene.Permissions.IsAdministrator(avatar))
                 return false;
 
-            if ((LandData.Flags & (uint) ParcelFlags.UseBanList) > 0)
+            if (LandData.ParcelAccessList.Count > 0)
             {
                 ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
                 entry.AgentID = avatar;
@@ -416,7 +416,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (m_scene.Permissions.GenericParcelPermission(avatar, this, (ulong)GroupPowers.LandManageAllowed))
                 return false;
 
-            if ((LandData.Flags & (uint) ParcelFlags.UseAccessList) > 0)
+            if (LandData.ParcelAccessList.Count > 0)
             {
                 ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
                 bool found = false;

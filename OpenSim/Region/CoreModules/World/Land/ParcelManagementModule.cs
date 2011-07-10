@@ -460,9 +460,21 @@ namespace OpenSim.Region.CoreModules.World.Land
                 UseDwell = !ES.BlockDwell;
 
             m_hasSentParcelOverLay.Remove(client.AgentId);
-            IEntity presenceEntity;
-            if (m_scene.Entities.TryGetValue (client.AgentId, out presenceEntity) && presenceEntity is IScenePresence)
-                SendParcelOverlay(client);
+            IScenePresence presenceEntity;
+            if (m_scene.TryGetScenePresence (client.AgentId, out presenceEntity) && !presenceEntity.IsChildAgent)
+            {
+                if (presenceEntity.PhysicsActor != null)
+                {
+                    presenceEntity.PhysicsActor.OnPositionAndVelocityUpdate += delegate ()
+                    {
+                        if (m_lastResults.ContainsKey (presenceEntity.UUID) && m_lastResults[presenceEntity.UUID] != 0)
+                        {
+                            m_lastLandObject[presenceEntity.UUID].SendLandProperties (m_lastResults[presenceEntity.UUID], false, (int)m_lastDataResults[presenceEntity.UUID], presenceEntity.ControllingClient);
+                        }
+                    };
+                }
+                SendParcelOverlay (client);
+            }
         }
 
         private void OnClosingClient(IClientAPI client)
@@ -938,6 +950,10 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
+        private Dictionary<UUID, int> m_lastResults = new Dictionary<UUID, int> ();
+        private Dictionary<UUID, ParcelResult> m_lastDataResults = new Dictionary<UUID,ParcelResult>();
+        private Dictionary<UUID, ILandObject> m_lastLandObject = new Dictionary<UUID, ILandObject> ();
+
         private void SendOutNearestBanLine (IScenePresence sp, ILandObject ourLandObject)
         {
             int multiple = 0;
@@ -946,7 +962,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             foreach (ILandObject parcel in AllParcels())
             {
                 Vector3 aamax = parcel.LandData.AABBMax;
-                Vector3 aamin = parcel.LandData.AABBMax;
+                Vector3 aamin = parcel.LandData.AABBMin;
                 if (Math.Abs (aamax.X - spAbs.X) < 4 ||
                     Math.Abs (aamax.Y - spAbs.Y) < 4 ||
                     Math.Abs (aamin.X - spAbs.X) < 4 ||
@@ -974,9 +990,13 @@ namespace OpenSim.Region.CoreModules.World.Land
                 dataResult = ParcelResult.Multiple;
             else if (multiple == 1)
                 dataResult = ParcelResult.Single;
-            else //If there is no result, don't send anything
-                return;
 
+            m_lastDataResults[sp.UUID] = dataResult;
+            m_lastResults[sp.UUID] = result;
+            m_lastLandObject[sp.UUID] = ourLandObject;
+
+            if(multiple == 0) //If there is no result, don't send anything
+                return;
             ourLandObject.SendLandProperties(result, false, (int)dataResult, sp.ControllingClient);
         }
 
