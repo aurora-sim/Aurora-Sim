@@ -929,7 +929,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 rotDiff.Normalize ();
             }
-            _target_velocity *= rotDiff;
+            //_target_velocity *= rotDiff;
 
                 
             //  if velocity is zero, use position control; otherwise, velocity control
