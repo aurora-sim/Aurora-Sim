@@ -316,16 +316,17 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             {
                 archive.Close();
                 m_loadStream.Close();
-                m_loadStream.Dispose();
+                m_loadStream.Dispose ();
+
+                //Reeanble now that we are done
+                foreach (IScriptModule module in modules)
+                {
+                    module.Disabled = false;
+                }
+                //Reset backup too
+                if (backup != null)
+                    backup.LoadingPrims = false;
             }
-            //Reeanble now that we are done
-            foreach (IScriptModule module in modules)
-            {
-                module.Disabled = false;
-            }
-            //Reset backup too
-            if (backup != null)
-                backup.LoadingPrims = false;
 
             //Now back up the prims
             foreach (SceneObjectGroup grp in groupsToBackup)

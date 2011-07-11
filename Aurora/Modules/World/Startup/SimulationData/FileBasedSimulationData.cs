@@ -211,7 +211,10 @@ namespace Aurora.Modules.FileBasedSimulationData
                 appendedFilePath = "";
             IBackupModule backupModule = m_scene.RequestModuleInterface<IBackupModule> ();
             if (backupModule != null && backupModule.LoadingPrims) //Something is changing lots of prims
+            {
+                m_log.Info ("[Backup]: Not saving backup because the backup module is loading prims");
                 return;
+            }
 
             //Save any script state saves that might be around
             IScriptModule[] engines = m_scene.RequestModuleInterfaces<IScriptModule> ();

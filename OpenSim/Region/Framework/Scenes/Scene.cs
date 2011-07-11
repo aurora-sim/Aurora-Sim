@@ -361,7 +361,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void Close()
         {
-            m_log.InfoFormat("[Scene]: Closing down the single simulator: {0}", RegionInfo.RegionName);
+            m_log.InfoFormat ("[Scene]: Closing down the single simulator: {0}", RegionInfo.RegionName);
+
+            SimulationDataService.Shutdown ();
 
             // Kick all ROOT agents with the message, 'The simulator is going down'
             ForEachScenePresence (delegate (IScenePresence avatar)
@@ -384,8 +386,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (m_sceneGraph.PhysicsScene != null)
                 m_sceneGraph.PhysicsScene.Dispose ();
-
-            SimulationDataService.Shutdown ();
 
             // Stop updating the scene objects and agents.
             shuttingdown = true;
