@@ -397,6 +397,7 @@ namespace OpenSim.Region.CoreModules
                     //  Insert our event handling hooks
 
                     scene.EventManager.OnFrame += SunUpdate;
+                    m_scene.EventManager.OnStartupComplete += EventManager_OnStartupComplete;
                     scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringParcel;
                     scene.EventManager.OnEstateToolsSunUpdate += EstateToolsSunUpdate;
 
@@ -421,17 +422,6 @@ namespace OpenSim.Region.CoreModules
 
         public void RegionLoaded(Scene scene)
         {
-            //Get the old sun data
-            if (m_scene.RegionInfo.RegionSettings.UseEstateSun)
-            {
-                m_SunFixedHour = (float)m_scene.RegionInfo.EstateSettings.SunPosition;
-                m_SunFixed = m_scene.RegionInfo.EstateSettings.FixedSun;
-            }
-            else
-            {
-                m_SunFixedHour = (float)m_scene.RegionInfo.RegionSettings.SunPosition;
-                m_SunFixed = m_scene.RegionInfo.RegionSettings.FixedSun;
-            }
         }
 
         public Type ReplaceableInterface
@@ -444,9 +434,25 @@ namespace OpenSim.Region.CoreModules
             ready = false;
             
             // Remove our hooks
+            m_scene.EventManager.OnStartupComplete -= EventManager_OnStartupComplete;
             m_scene.EventManager.OnFrame     -= SunUpdate;
             m_scene.EventManager.OnAvatarEnteringNewParcel -= AvatarEnteringParcel;
             m_scene.EventManager.OnEstateToolsSunUpdate -= EstateToolsSunUpdate;
+        }
+
+        void EventManager_OnStartupComplete (IScene scene, List<string> data)
+        {
+            //Get the old sun data
+            if (m_scene.RegionInfo.RegionSettings.UseEstateSun)
+            {
+                m_SunFixedHour = (float)m_scene.RegionInfo.EstateSettings.SunPosition;
+                m_SunFixed = m_scene.RegionInfo.EstateSettings.FixedSun;
+            }
+            else
+            {
+                m_SunFixedHour = (float)m_scene.RegionInfo.RegionSettings.SunPosition;
+                m_SunFixed = m_scene.RegionInfo.RegionSettings.FixedSun;
+            }
         }
 
         public string Name
