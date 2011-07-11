@@ -394,18 +394,6 @@ namespace OpenSim.Region.CoreModules
                     HorizonShift = m_HorizonShift; // Z axis translation
                     // HoursToRadians    = (SunCycle/24)*VWTimeRatio;
 
-                    //Get the old sun data
-                    if (m_scene.RegionInfo.RegionSettings.UseEstateSun)
-                    {
-                        m_SunFixedHour = (float)m_scene.RegionInfo.EstateSettings.SunPosition;
-                        m_SunFixed = m_scene.RegionInfo.EstateSettings.FixedSun;
-                    }
-                    else
-                    {
-                        m_SunFixedHour = (float)m_scene.RegionInfo.RegionSettings.SunPosition;
-                        m_SunFixed = m_scene.RegionInfo.RegionSettings.FixedSun;
-                    }
-
                     //  Insert our event handling hooks
 
                     scene.EventManager.OnFrame += SunUpdate;
@@ -433,7 +421,17 @@ namespace OpenSim.Region.CoreModules
 
         public void RegionLoaded(Scene scene)
         {
-
+            //Get the old sun data
+            if (m_scene.RegionInfo.RegionSettings.UseEstateSun)
+            {
+                m_SunFixedHour = (float)m_scene.RegionInfo.EstateSettings.SunPosition;
+                m_SunFixed = m_scene.RegionInfo.EstateSettings.FixedSun;
+            }
+            else
+            {
+                m_SunFixedHour = (float)m_scene.RegionInfo.RegionSettings.SunPosition;
+                m_SunFixed = m_scene.RegionInfo.RegionSettings.FixedSun;
+            }
         }
 
         public Type ReplaceableInterface
