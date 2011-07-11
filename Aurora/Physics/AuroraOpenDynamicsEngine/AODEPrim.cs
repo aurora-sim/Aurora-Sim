@@ -1274,6 +1274,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             resetCollisionAccounting ();
             m_isSelected = newsel;
+            if (!m_isSelected)
+            {
+                _zeroFlag = false;
+                m_previousForceIsSame = 0;
+            }
         }//end changeSelectedStatus
 
         public void CreateGeom (IntPtr m_targetSpace, IMesh _mesh)
