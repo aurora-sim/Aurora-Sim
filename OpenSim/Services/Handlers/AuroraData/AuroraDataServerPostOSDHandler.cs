@@ -242,6 +242,7 @@ namespace OpenSim.Services
             UUID principalID = request["PrincipalID"].AsUUID ();
 
             IUserProfileInfo UserProfile = ProfileConnector.GetUserProfile(principalID);
+			if (UserProfile != null) UserProfile.PrincipalID = principalID;
             OSDMap result = UserProfile != null ? UserProfile.ToOSD () : new OSDMap ();
 
             string xmlString = OSDParser.SerializeJsonString (result);
