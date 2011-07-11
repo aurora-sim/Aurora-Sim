@@ -624,7 +624,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // (with -0..0 motor stops) falls into the terrain for reasons yet
                 // to be comprehended in their entirety.
                 #endregion
-                AlignAvatarTiltWithCurrentDirectionOfMovement (Vector3.Zero);
+                AlignAvatarTiltWithCurrentDirectionOfMovement (Vector3.Zero, new Vector3(0,0,-1));
                 d.JointSetAMotorParam (Amotor, (int)dParam.LowStop, 0.08f);
                 d.JointSetAMotorParam (Amotor, (int)dParam.LoStop3, -0f);
                 d.JointSetAMotorParam (Amotor, (int)dParam.LoStop2, 0.08f);
@@ -644,17 +644,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         #region Move
 
-        private void AlignAvatarTiltWithCurrentDirectionOfMovement (Vector3 movementVector)
+        private void AlignAvatarTiltWithCurrentDirectionOfMovement (Vector3 movementVector, Vector3 gravity)
         {
             movementVector.Z = 0f;
             float magnitude = (float)Math.Sqrt ((double)(movementVector.X * movementVector.X + movementVector.Y * movementVector.Y));
             if (magnitude < 0.1f)
                 return;
 
+            gravity.Normalize ();
+            Quaternion rot = Vector3.RotationBetween (new Vector3 (0, 0, -1), gravity);
             // normalize the velocity vector
             float invMagnitude = 1.0f / magnitude;
             movementVector.X *= invMagnitude;
             movementVector.Y *= invMagnitude;
+
+            movementVector *= rot;
 
             // if we change the capsule heading too often, the capsule can fall down
             // therefore we snap movement vector to just 1 of 4 predefined directions (ne, nw, se, sw),
@@ -699,14 +703,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // the "-" sign is to force the tilt to be OPPOSITE the direction of movement.
             float xTiltComponent = -movementVector.X * 0.1131371f;
             float yTiltComponent = -movementVector.Y * 0.1131371f;
+            float zTiltComponent = -movementVector.Z * 0.1131371f;
 
             //m_log.Debug("[PHYSICS] changing avatar tilt");
             d.JointSetAMotorParam (Amotor, (int)dParam.LowStop, xTiltComponent);
             d.JointSetAMotorParam (Amotor, (int)dParam.HiStop, xTiltComponent); // must be same as lowstop, else a different, spurious tilt is introduced
             d.JointSetAMotorParam (Amotor, (int)dParam.LoStop2, yTiltComponent);
             d.JointSetAMotorParam (Amotor, (int)dParam.HiStop2, yTiltComponent); // same as lowstop
-            d.JointSetAMotorParam (Amotor, (int)dParam.LoStop3, 0);
-            d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, 0); // same as lowstop
+            d.JointSetAMotorParam (Amotor, (int)dParam.LoStop3, zTiltComponent);
+            d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, zTiltComponent); // same as lowstop
         }
       
         /// <summary>
@@ -908,6 +913,25 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #endregion
 
+            Vector3 gravForce = new Vector3 ();
+
+            #region Gravity
+
+            if (!flying)
+                _parent_scene.CalculateGravity (m_mass, tempPos, true, 1, ref gravForce);
+            else
+                _parent_scene.CalculateGravity (m_mass, tempPos, false, 0.75f, ref gravForce);//Allow point gravity and repulsors affect us a bit
+
+            Vector3 gravCopy = gravForce;
+            gravCopy.Normalize ();
+            Quaternion rotDiff = Vector3.RotationBetween (new Vector3 (0, 0, -1), gravCopy);
+            if (rotDiff != Quaternion.Identity)
+            {
+                rotDiff.Normalize ();
+            }
+            _target_velocity *= rotDiff;
+
+                
             //  if velocity is zero, use position control; otherwise, velocity control
             if (_target_velocity == Vector3.Zero &&
                 Math.Abs (vel.X) < 0.05 && Math.Abs (vel.Y) < 0.05 && Math.Abs (vel.Z) < 0.05 && (this.m_iscolliding || this.flying))
@@ -972,6 +996,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         vec.Y = (_target_velocity.Y - vel.Y) * PID_D * 0.85f;
                     }
                 }
+
+                vec += gravForce;
+
+                #endregion
+
                 if (flying)
                 {
                     #region Av gravity
@@ -1053,15 +1082,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 #endregion
             }
 
-            #region Gravity
-
-            if (!flying)
-                _parent_scene.CalculateGravity (m_mass, tempPos, true, 1, ref vec);
-            else
-                _parent_scene.CalculateGravity (m_mass, tempPos, false, 0.75f, ref vec);//Allow point gravity and repulsors affect us a bit
-
-            #endregion
-
             #region Under water physics
 
             if (_parent_scene.AllowUnderwaterPhysics && (float)tempPos.X < _parent_scene.Region.RegionSizeX &&
@@ -1127,7 +1147,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         doForce (vec);
                      
                     if (!_zeroFlag)
-                        AlignAvatarTiltWithCurrentDirectionOfMovement (vec);
+                        AlignAvatarTiltWithCurrentDirectionOfMovement (vec, gravForce);
 
                     //When falling, we keep going faster and faster, and eventually, the client blue screens (blue is all you see).
                     // The speed that does this is slightly higher than -30, so we cap it here so we never do that during falling.
