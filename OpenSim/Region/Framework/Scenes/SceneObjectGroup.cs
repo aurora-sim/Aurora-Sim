@@ -1456,11 +1456,14 @@ namespace OpenSim.Region.Framework.Scenes
 
             dupe.m_rootPart.TrimPermissions();
 
-            List<SceneObjectPart> partList;
+            List<SceneObjectPart> partList = new List<SceneObjectPart>();
 
             lock (m_partsLock)
             {
-                partList = new List<SceneObjectPart> (m_partsList);
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                    partList.Add (part);
+                }
             }
 
             //Sort the list by link number so that we get them in the right order

@@ -1958,7 +1958,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             IComponentManager manager = m_parentScene.RequestModuleInterface<IComponentManager> ();
             if (manager != null)
-                manager.RemoveComponents (copiedEntity.UUID);
+            {
+                foreach(ISceneChildEntity childEntity in copiedEntity.ChildrenEntities())
+                {
+                    manager.RemoveComponents (childEntity.UUID);
+                }
+            }
 
             //Force the prim to backup now that it has been added
             copiedEntity.ForcePersistence ();
@@ -2211,6 +2216,13 @@ namespace OpenSim.Region.Framework.Scenes
                 entity.AddChild (child, child.LinkNum);
                 if (manager != null)
                     manager.ResetComponentIDsToNewObject (oldID, child);
+            }
+            foreach (ISceneChildEntity child in children)
+            {
+                if(!child.IsRoot)
+                {
+                    child.SetParentLocalId (entity.RootChild.LocalId);
+                }
             }
         }
         
