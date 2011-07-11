@@ -374,6 +374,8 @@ namespace OpenSim.Framework
         /// Prepares the object to be serialized
         /// </summary>
         void BackupPreparation();
+
+        void ClearXMLRepresentation ();
     }
 
     public interface IEntity

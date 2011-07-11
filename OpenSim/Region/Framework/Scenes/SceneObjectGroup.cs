@@ -3427,6 +3427,11 @@ namespace OpenSim.Region.Framework.Scenes
             return SceneObjectSerializer.ToXml2Format(this);
         }
 
+        public virtual void ClearXMLRepresentation ()
+        {
+            XMLRepresentation = null;
+        }
+
         public virtual byte[] ToBinaryXml2 ()
         {
             if (XMLRepresentation == null)
