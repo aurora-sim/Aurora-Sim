@@ -1554,6 +1554,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             m_log.Info("[PHYSICS]: Couldn't remove prim from physics scene, it was already be removed.");
                         }
                     }
+                    if (!prim.childPrim)
+                    {
+                        lock (prim.childrenPrim)
+                        {
+                            foreach (AuroraODEPrim prm in prim.childrenPrim)
+                            {
+                                RemovePrimThreadLocked (prm);
+                            }
+                        }
+                    }
                     lock (_prims)
                         _prims.Remove (prim);
                 }

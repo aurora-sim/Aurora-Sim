@@ -175,6 +175,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public Vector3 IntCMOffset;
 
         public bool m_eventsubscription;
+        public bool m_primIsRemoved = false;
         internal bool m_buildingRepresentation = false;
         public override bool BuildingRepresentation
         {
@@ -1051,9 +1052,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 lock (childrenPrim)
                 {
+                    foreach (AuroraODEPrim prm in prim.childrenPrim)
+                    {
+                        if (!childrenPrim.Contains (prm)) // must allow full reconstruction
+                            childrenPrim.Add (prm);
+                    }
                     if (!childrenPrim.Contains (prim)) // must allow full reconstruction
                         childrenPrim.Add (prim);
                 }
+                //Remove old children
+                prim.childrenPrim.Clear ();
                 prim.childPrim = true;
                 prim._parent = this;
 
@@ -2461,6 +2469,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void setPrimForRemoval ()
         {
+            if (m_primIsRemoved)
+                return;//Already being removed
+
+            m_primIsRemoved = true;
+            lock (childrenPrim)
+            {
+                foreach (AuroraODEPrim prm in childrenPrim)
+                {
+                    prm.m_primIsRemoved = true;
+                }
+            }
+
             AddChange (changes.Remove, null);
         }
 
@@ -3101,13 +3121,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     changeadd ();
                     break;
                 case changes.Remove:
-                    if (_parent != null)
+                    //If its being removed, we don't want to rebuild the physical rep at all, so ignore this stuff...
+                    //When we return true, it destroys all of the prims in the linkset anyway
+                    /*if (_parent != null)
                     {
                         AuroraODEPrim parent = (AuroraODEPrim)_parent;
                         parent.ChildRemove (this);
                     }
                     else
-                        ChildRemove (this);
+                        ChildRemove (this);*/
                     return true;
 
                 case changes.Link:

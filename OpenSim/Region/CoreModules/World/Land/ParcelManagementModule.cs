@@ -463,7 +463,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             IScenePresence presenceEntity;
             if (m_scene.TryGetScenePresence (client.AgentId, out presenceEntity) && !presenceEntity.IsChildAgent)
             {
-                if (presenceEntity.PhysicsActor != null)
+                /*if (presenceEntity.PhysicsActor != null)
                 {
                     presenceEntity.PhysicsActor.OnPositionAndVelocityUpdate += delegate ()
                     {
@@ -472,7 +472,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                             m_lastLandObject[presenceEntity.UUID].SendLandProperties (m_lastResults[presenceEntity.UUID], false, (int)m_lastDataResults[presenceEntity.UUID], presenceEntity.ControllingClient);
                         }
                     };
-                }
+                }*/
                 SendParcelOverlay (client);
             }
         }
