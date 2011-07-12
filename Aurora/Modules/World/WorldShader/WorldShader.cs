@@ -30,7 +30,10 @@ namespace Aurora.Modules.World.WorldShader
         public void RegionLoaded (Scene scene)
         {
             if (MainConsole.Instance != null && !initialized)
+            {
+                MainConsole.Instance.Commands.AddCommand ("revert shade world", "revert shade world", "Reverts the shading of the world", RevertShadeWorld);
                 MainConsole.Instance.Commands.AddCommand ("shade world", "shade world", "Shades the world with a color", ShadeWorld);
+            }
             initialized = true;
         }
 
@@ -55,7 +58,34 @@ namespace Aurora.Modules.World.WorldShader
             get { return null; }
         }
 
+        public void RevertShadeWorld (string[] cmd)
+        {
+            if (MainConsole.Instance.ConsoleScene == null)
+            {
+                MainConsole.Instance.Output ("Select a scene first");
+                return;
+            }
+            ISceneEntity[] entities = MainConsole.Instance.ConsoleScene.Entities.GetEntities ();
+            foreach (ISceneEntity entity in entities)
+            {
+                foreach (ISceneChildEntity child in entity.ChildrenEntities ())
+                {
+                    UUID[] textures = GetTextures (child.Shape.Textures);
+                    foreach (UUID t in textures)
+                    {
+                        UUID oldID = t;
+                        while (m_revertConverted.ContainsKey (oldID))
+                        {
+                            child.Shape.Textures = SetTexture (child.Shape, m_revertConverted[oldID], oldID);
+                            oldID = m_revertConverted[oldID];
+                        }
+                    }
+                }
+            }
+        }
+
         private Dictionary<UUID, UUID> m_previouslyConverted = new Dictionary<UUID, UUID> ();
+        private Dictionary<UUID, UUID> m_revertConverted = new Dictionary<UUID, UUID> ();
         public void ShadeWorld (string[] cmd)
         {
             if (MainConsole.Instance.ConsoleScene == null)
@@ -67,11 +97,12 @@ namespace Aurora.Modules.World.WorldShader
             int G = int.Parse (MainConsole.Instance.CmdPrompt ("G color (0 - 255)"));
             int B = int.Parse (MainConsole.Instance.CmdPrompt ("B color (0 - 255)"));
             float percent = float.Parse (MainConsole.Instance.CmdPrompt ("Percent to merge in the shade (0 - 100)"));
+            if(percent > 1)
+            percent /= 100;
             Color shader = Color.FromArgb (R, G, B);
 
             IJ2KDecoder j2kDecoder = MainConsole.Instance.ConsoleScene.RequestModuleInterface<IJ2KDecoder>();
             ISceneEntity[] entities = MainConsole.Instance.ConsoleScene.Entities.GetEntities ();
-            m_previouslyConverted.Clear ();
             foreach (ISceneEntity entity in entities)
             {
                 foreach (ISceneChildEntity child in entity.ChildrenEntities ())
@@ -98,7 +129,7 @@ namespace Aurora.Modules.World.WorldShader
                                 MainConsole.Instance.ConsoleScene.AssetService.Store (a);
                                 child.Shape.Textures = SetTexture (child.Shape, a.FullID, t);
                                 m_previouslyConverted.Add (t, a.FullID);
-                                m_previouslyConverted.Add (a.FullID, a.FullID);
+                                m_revertConverted.Add (a.FullID, t);
                             }
                         }
                     }
