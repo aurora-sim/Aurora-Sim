@@ -646,6 +646,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private void AlignAvatarTiltWithCurrentDirectionOfMovement (Vector3 movementVector, Vector3 gravity)
         {
+            if (gravity == Vector3.Zero)
+                gravity = new Vector3 (0, 0, -1f);
             movementVector.Z = 0f;
             float magnitude = (float)Math.Sqrt ((double)(movementVector.X * movementVector.X + movementVector.Y * movementVector.Y));
             if (magnitude < 0.1f)
@@ -917,7 +919,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Gravity
 
-            if (!flying)
+            /*if (!flying)
                 _parent_scene.CalculateGravity (m_mass, tempPos, true, 1, ref gravForce);
             else
                 _parent_scene.CalculateGravity (m_mass, tempPos, false, 0.75f, ref gravForce);//Allow point gravity and repulsors affect us a bit
@@ -929,9 +931,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 rotDiff.Normalize ();
             }
-            //_target_velocity *= rotDiff;
+            //_target_velocity *= rotDiff;*/
 
-                
+            #endregion
+
             //  if velocity is zero, use position control; otherwise, velocity control
             if (_target_velocity == Vector3.Zero &&
                 Math.Abs (vel.X) < 0.05 && Math.Abs (vel.Y) < 0.05 && Math.Abs (vel.Z) < 0.05 && (this.m_iscolliding || this.flying))
@@ -996,6 +999,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         vec.Y = (_target_velocity.Y - vel.Y) * PID_D * 0.85f;
                     }
                 }
+
+                #region Gravity
+
+                if (!flying && !m_iscolliding)//No ground collisions! Otherwise, we bounce on terrain
+                    _parent_scene.CalculateGravity (m_mass, tempPos, true, 1.025f, ref gravForce);
+                else if(!m_iscolliding)
+                    _parent_scene.CalculateGravity (m_mass, tempPos, false, 0.75f, ref gravForce);//Allow point gravity and repulsors affect us a bit
 
                 vec += gravForce;
 
