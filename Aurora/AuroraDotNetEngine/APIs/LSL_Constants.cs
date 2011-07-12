@@ -559,6 +559,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger PARCEL_DETAILS_GROUP = 3;
         public static readonly LSLInteger PARCEL_DETAILS_AREA = 4;
         public static readonly LSLInteger PARCEL_DETAILS_ID = 5;
+        public static readonly LSLInteger PARCEL_DETAILS_PRIVACY = 6;
 
         // constants for llSetClickAction
         public static readonly LSLInteger CLICK_ACTION_NONE = 0;
