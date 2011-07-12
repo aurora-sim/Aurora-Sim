@@ -92,8 +92,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         private bool m_groupsEnabled = false;
         private bool m_groupNoticesEnabled = true;
         private bool m_debugEnabled = true;
-        private Dictionary<UUID, UUID> GroupAttachmentCache = new Dictionary<UUID, UUID> ();
-        private Dictionary<UUID, UUID> GroupSessionIDCache = new Dictionary<UUID, UUID> (); //For offline messages
+        //private Dictionary<UUID, UUID> GroupAttachmentCache = new Dictionary<UUID, UUID> ();
+        //private Dictionary<UUID, UUID> GroupSessionIDCache = new Dictionary<UUID, UUID> (); //For offline messages
         private bool m_findOnlineStatus = false;
 
         #region IRegionModuleBase Members
@@ -662,19 +662,19 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
             if ((im.dialog == (byte)InstantMessageDialog.GroupNoticeInventoryDeclined) || (im.dialog == (byte)InstantMessageDialog.GroupNoticeInventoryDeclined))
             {
-                GroupAttachmentCache.Remove(im.imSessionID);
+                //GroupAttachmentCache.Remove(im.imSessionID);
             }
             if ((im.dialog == (byte)InstantMessageDialog.GroupNoticeInventoryAccepted) || (im.dialog == (byte)InstantMessageDialog.GroupNoticeInventoryAccepted))
             {
                 UUID FolderID = new UUID(im.binaryBucket, 0);
                 InventoryItemBase item = null;
                 ILLClientInventory inventoryModule = remoteClient.Scene.RequestModuleInterface<ILLClientInventory>();
-                if (inventoryModule != null)
-                    item = inventoryModule.GiveInventoryItem (remoteClient.AgentId, GroupAttachmentCache[im.imSessionID], GroupAttachmentCache[im.imSessionID], FolderID);
+                if (inventoryModule != null)//The imSessionID stores the itemID
+                    item = inventoryModule.GiveInventoryItem (remoteClient.AgentId, im.imSessionID, im.imSessionID, FolderID, false);
 
                 if (item != null)
                     remoteClient.SendBulkUpdateInventory(item);
-                GroupAttachmentCache.Remove(im.imSessionID);
+                //GroupAttachmentCache.Remove(im.imSessionID);
             }
             
             if ((im.dialog == 210))
@@ -713,7 +713,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     im.binaryBucket = CreateBitBucketForGroupAttachment(GND.noticeData, GND.GroupID);
                     //Save the sessionID for the callback by the client (reject or accept)
                     //Only save if has attachment
-                    GroupAttachmentCache[im.imSessionID] = GND.noticeData.ItemID;
+                    im.imSessionID = GND.noticeData.ItemID;
+                    //GroupAttachmentCache[im.imSessionID] = GND.noticeData.ItemID;
                 }
                 else
                 {
@@ -1116,7 +1117,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 msg.binaryBucket = CreateBitBucketForGroupAttachment(data.noticeData, data.GroupID);
                 //Save the sessionID for the callback by the client (reject or accept)
                 //Only save if has attachment
-                GroupAttachmentCache[msg.imSessionID] = data.noticeData.ItemID;
+                msg.imSessionID = data.noticeData.ItemID;
+                //GroupAttachmentCache[msg.imSessionID] = data.noticeData.ItemID;
             }
             else
             {
@@ -1173,7 +1175,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     msg.binaryBucket = CreateBitBucketForGroupAttachment(info.noticeData, info.GroupID);
                     //Save the sessionID for the callback by the client (reject or accept)
                     //Only save if has attachment
-                    GroupAttachmentCache[msg.imSessionID] = info.noticeData.ItemID;
+                    msg.imSessionID = info.noticeData.ItemID;
+                    //GroupAttachmentCache[msg.imSessionID] = info.noticeData.ItemID;
                 }
                 else
                 {
@@ -1184,8 +1187,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     bucket[18] = 0; //dunno
                     msg.binaryBucket = bucket;
                 }
-
-                GroupSessionIDCache[msg.imSessionID] = info.noticeData.NoticeID;
 
             }
             else
@@ -1724,9 +1725,10 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         public GridInstantMessage BuildOfflineGroupNotice(GridInstantMessage msg)
         {
             msg.dialog = 211; //We set this so that it isn't taken the wrong way later
-            UUID NoticeID = GroupSessionIDCache[msg.imSessionID];
-            GroupSessionIDCache.Remove(msg.imSessionID);
-            msg.imSessionID = NoticeID;
+            //Unknown what this did...
+            //UUID NoticeID = GroupSessionIDCache[msg.imSessionID];
+            //GroupSessionIDCache.Remove(msg.imSessionID);
+            //msg.imSessionID = NoticeID;
             return msg;
         }
     }

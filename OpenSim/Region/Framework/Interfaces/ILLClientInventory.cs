@@ -58,7 +58,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="remoteClient">The remote client controlling the avatar</param>
         /// <param name="item">The item.  This structure contains all the item metadata, including the folder
         /// in which the item is to be placed.</param>
-        void AddInventoryItem(IClientAPI remoteClient, InventoryItemBase item);
+        void AddInventoryItem (IClientAPI remoteClient, InventoryItemBase item);
 
         /// <summary>
         /// Give an inventory item from one user to another
@@ -73,8 +73,24 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <returns>
         /// The inventory item copy given, null if the give was unsuccessful
         /// </returns>
-        InventoryItemBase GiveInventoryItem(
+        InventoryItemBase GiveInventoryItem (
             UUID recipient, UUID senderId, UUID itemId, UUID recipientFolderId);
+
+        /// <summary>
+        /// Give an inventory item from one user to another
+        /// </summary>
+        /// <param name="recipient"></param>
+        /// <param name="senderId">ID of the sender of the item</param>
+        /// <param name="itemId"></param>
+        /// <param name="recipientFolderId">
+        /// The id of the folder in which the copy item should go.  If UUID.Zero then the item is placed in the most
+        /// appropriate default folder.
+        /// </param>
+        /// <returns>
+        /// The inventory item copy given, null if the give was unsuccessful
+        /// </returns>
+        InventoryItemBase GiveInventoryItem (
+            UUID recipient, UUID senderId, UUID itemId, UUID recipientFolderId, bool doOwnerCheck);
 
         /// <summary>
         /// Give an entire inventory folder from one user to another.  The entire contents (including all descendent

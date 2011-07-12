@@ -1375,18 +1375,37 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>
         /// The inventory item copy given, null if the give was unsuccessful
         /// </returns>
-        public InventoryItemBase GiveInventoryItem(
+        public InventoryItemBase GiveInventoryItem (
             UUID recipient, UUID senderId, UUID itemId, UUID recipientFolderId)
         {
-            InventoryItemBase item = new InventoryItemBase(itemId, senderId);
-            item = m_scene.InventoryService.GetItem(item);
-            return InnerGiveInventoryItem (recipient, senderId, item, recipientFolderId);
+            return GiveInventoryItem (recipient, senderId, itemId, recipientFolderId, true);
+        }
+
+        /// <summary>
+        /// Give an inventory item from one user to another
+        /// </summary>
+        /// <param name="recipient"></param>
+        /// <param name="senderId">ID of the sender of the item</param>
+        /// <param name="itemId"></param>
+        /// <param name="recipientFolderId">
+        /// The id of the folder in which the copy item should go.  If UUID.Zero then the item is placed in the most
+        /// appropriate default folder.
+        /// </param>
+        /// <returns>
+        /// The inventory item copy given, null if the give was unsuccessful
+        /// </returns>
+        public InventoryItemBase GiveInventoryItem (
+            UUID recipient, UUID senderId, UUID itemId, UUID recipientFolderId, bool doOwnerCheck)
+        {
+            InventoryItemBase item = new InventoryItemBase (itemId, senderId);
+            item = m_scene.InventoryService.GetItem (item);
+            return InnerGiveInventoryItem (recipient, senderId, item, recipientFolderId, doOwnerCheck);
         }
 
         public InventoryItemBase InnerGiveInventoryItem (
-            UUID recipient, UUID senderId, InventoryItemBase item, UUID recipientFolderId)
+            UUID recipient, UUID senderId, InventoryItemBase item, UUID recipientFolderId, bool doOwnerCheck)
         {
-            if ((item != null) && (item.Owner == senderId))
+            if (!doOwnerCheck || ((item != null) && (item.Owner == senderId)))
             {
                 if (!m_scene.Permissions.BypassPermissions())
                 {
@@ -1616,7 +1635,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Give all the items
             foreach (InventoryItemBase item in contents.Items)
             {
-                InnerGiveInventoryItem (recipientId, senderId, item, newFolder.ID);
+                InnerGiveInventoryItem (recipientId, senderId, item, newFolder.ID, true);
             }
 
             return newFolder;
