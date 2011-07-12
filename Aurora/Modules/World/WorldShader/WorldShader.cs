@@ -95,10 +95,18 @@ namespace Aurora.Modules.World.WorldShader
                 MainConsole.Instance.Output ("Select a scene first");
                 return;
             }
-            int R = int.Parse (MainConsole.Instance.CmdPrompt ("R color (0 - 255)"));
-            int G = int.Parse (MainConsole.Instance.CmdPrompt ("G color (0 - 255)"));
-            int B = int.Parse (MainConsole.Instance.CmdPrompt ("B color (0 - 255)"));
-            float percent = float.Parse (MainConsole.Instance.CmdPrompt ("Percent to merge in the shade (0 - 100)"));
+            bool greyScale = MainConsole.Instance.CmdPrompt ("Greyscale (yes or no)?").ToLower () == "yes";
+            int R = 0;
+            int G = 0;
+            int B = 0;
+            float percent = 0;
+            if (!greyScale)
+            {
+                R = int.Parse (MainConsole.Instance.CmdPrompt ("R color (0 - 255)"));
+                G = int.Parse (MainConsole.Instance.CmdPrompt ("G color (0 - 255)"));
+                B = int.Parse (MainConsole.Instance.CmdPrompt ("B color (0 - 255)"));
+                percent = float.Parse (MainConsole.Instance.CmdPrompt ("Percent to merge in the shade (0 - 100)"));
+            }
             if(percent > 1)
                 percent /= 100;
             Color shader = Color.FromArgb (R, G, B);
@@ -125,7 +133,7 @@ namespace Aurora.Modules.World.WorldShader
                                 if (texture == null)
                                     continue;
                                 a.FullID = UUID.Random ();
-                                texture = Shade (texture, shader, percent);
+                                texture = Shade (texture, shader, percent, greyScale);
                                 a.Data = OpenMetaverse.Imaging.OpenJPEG.EncodeFromImage (texture, false);
                                 texture.Dispose ();
                                 MainConsole.Instance.ConsoleScene.AssetService.Store (a);
@@ -147,8 +155,7 @@ namespace Aurora.Modules.World.WorldShader
                 newShape = Copy (shape.Textures, newID);
             else
                 newShape = Copy (shape.Textures, shape.Textures.DefaultTexture.TextureID);
-                
-
+            
             int i = 0;
             foreach (Primitive.TextureEntryFace face in shape.Textures.FaceTextures)
             {
@@ -205,7 +212,7 @@ namespace Aurora.Modules.World.WorldShader
             return textures.ToArray ();
         }
 
-        public Bitmap Shade (Bitmap source, Color shade, float percent)
+        public Bitmap Shade (Bitmap source, Color shade, float percent, bool greyScale)
         {
             BitmapProcessing.FastBitmap b = new BitmapProcessing.FastBitmap (source);
             b.LockBitmap ();
@@ -214,12 +221,19 @@ namespace Aurora.Modules.World.WorldShader
                 for (int x = 0; x < source.Width; x++)
                 {
                     Color c = b.GetPixel (x, y);
-                    int luma = (int)(c.R * 0.3 + c.G * 0.59 + c.B * 0.11);
-                    float amtFrom = 1 - percent;
-                    int lumaR = (int)(c.R * amtFrom + 190 * percent);
-                    int lumaG = (int)(c.G * amtFrom + 200 * percent);
-                    int lumaB = (int)(c.B * amtFrom + 175 * percent);
-                    b.SetPixel (x, y, Color.FromArgb (c.A, lumaR, lumaG, lumaB));
+                    if (greyScale)
+                    {
+                        int luma = (int)(c.R * 0.3 + c.G * 0.59 + c.B * 0.11);
+                        b.SetPixel (x, y, Color.FromArgb (c.A, luma, luma, luma));
+                    }
+                    else
+                    {
+                        float amtFrom = 1 - percent;
+                        int lumaR = (int)(c.R * amtFrom + shade.R * percent);
+                        int lumaG = (int)(c.G * amtFrom + shade.G * percent);
+                        int lumaB = (int)(c.B * amtFrom + shade.B * percent);
+                        b.SetPixel (x, y, Color.FromArgb (c.A, lumaR, lumaG, lumaB));
+                    }
                 }
             }
             b.UnlockBitmap ();
