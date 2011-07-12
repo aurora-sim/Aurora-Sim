@@ -1107,7 +1107,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if ((tempPos.Z + (CAPSULE_LENGTH / 3) - .25f) < _parent_scene.GetWaterLevel ((float)tempPos.X, (float)tempPos.Y))
                 {
                     if (StartingUnderWater)
-                        ShouldBeWalking = Flying == false;
+                        ShouldBeWalking = Flying = false;
                     StartingUnderWater = false;
                     WasUnderWater = true;
                     Flying = true;
