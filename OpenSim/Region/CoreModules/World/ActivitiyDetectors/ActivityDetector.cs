@@ -101,8 +101,8 @@ namespace OpenSim.Region.CoreModules
             {
                 foreach (IScenePresence sp in scene.GetScenePresences ())
                 {
-                    //Setting the last position updates the 1 hour presence timer, so send this ~ every hour so that the agent does not get logged out
-                    service.SetLastPosition (sp.UUID.ToString (), scene.RegionInfo.RegionID, sp.AbsolutePosition, sp.Lookat);
+                    //This causes the last pos to be updated in the database, along with the last seen time
+                    sp.AddChildAgentUpdateTaint ();
                 }
             }
         }

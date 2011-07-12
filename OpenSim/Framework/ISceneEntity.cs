@@ -199,6 +199,8 @@ namespace OpenSim.Framework
         }
 
         Vector3 GetAbsolutePosition ();
+
+        void AddChildAgentUpdateTaint ();
     }
 
     public interface IAvatarAppearanceModule

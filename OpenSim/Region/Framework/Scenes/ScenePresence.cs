@@ -2126,9 +2126,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_lastChildAgentUpdatePosition = AbsolutePosition;
                 m_lastChildAgentUpdateCamPosition = CameraPosition;
 
-                Scene.SceneGraph.TaintPresenceForUpdate (this, PresenceTaint.Other);
-                m_enqueueSendChildAgentUpdate = true;
-                m_enqueueSendChildAgentUpdateTime = DateTime.Now;
+                AddChildAgentUpdateTaint ();
             }
 
             // Disabled for now until we can make sure that we only send one of these per simulation loop,
@@ -2141,6 +2139,13 @@ namespace OpenSim.Region.Framework.Scenes
             //    module.TriggerSound(CollisionSoundID, UUID, UUID, UUID.Zero, 1, AbsolutePosition, Scene.RegionInfo.RegionHandle, 100);
             //    CollisionSoundID = UUID.Zero;
             //}
+        }
+
+        public void AddChildAgentUpdateTaint ()
+        {
+            Scene.SceneGraph.TaintPresenceForUpdate (this, PresenceTaint.Other);
+            m_enqueueSendChildAgentUpdate = true;
+            m_enqueueSendChildAgentUpdateTime = DateTime.Now.AddSeconds(1);
         }
 
         #endregion
