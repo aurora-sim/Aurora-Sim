@@ -167,6 +167,13 @@ namespace Aurora.Modules.World.WorldShader
                         f.TextureID = newID;
                         newShape.FaceTextures[i] = f;
                     }
+                    else
+                    {
+                        Primitive.TextureEntryFace f = newShape.CreateFace ((uint)i);
+                        CopyFace (oldShape.FaceTextures[i], f);
+                        f.TextureID = oldShape.FaceTextures[i].TextureID;
+                        newShape.FaceTextures[i] = f;
+                    }
                 i++;
             }
             return newShape;
