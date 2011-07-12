@@ -5729,12 +5729,16 @@ namespace OpenSim.Region.Framework.Scenes
 
         internal void TriggerScriptMovingStartEvent()
         {
+            if ((AggregateScriptEvents & scriptEvents.moving_start) == 0)
+                return;
             if (m_parentGroup != null && m_parentGroup.Scene != null && m_parentGroup.Scene.EventManager != null)
                 m_parentGroup.Scene.EventManager.TriggerOnScriptMovingStartEvent(this);
         }
 
         internal void TriggerScriptMovingEndEvent()
         {
+            if ((AggregateScriptEvents & scriptEvents.moving_end) == 0)
+                return;
             if (m_parentGroup != null && m_parentGroup.Scene != null && m_parentGroup.Scene.EventManager != null)
                 m_parentGroup.Scene.EventManager.TriggerOnScriptMovingEndEvent(this);
         }
