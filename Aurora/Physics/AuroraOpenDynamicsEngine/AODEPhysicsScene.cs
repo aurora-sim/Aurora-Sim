@@ -691,6 +691,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Contact Loop
 
+            IntPtr joint = IntPtr.Zero;
             for (int i = 0; i < count; i++)
             {
                 d.ContactGeom curContact = contacts[i];
@@ -712,7 +713,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
 
                 //m_log.Warn("[CCOUNT]: " + count);
-                IntPtr joint;
                 // If we're colliding with terrain, use 'TerrainContact' instead of contact.
                 // allows us to have different settings
 
@@ -909,8 +909,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     checkDupe (curContact, p2.PhysicsActorType))
                     skipThisContact = true;
 
-                joint = IntPtr.Zero;
-
                 if (!skipThisContact)
                 {
                     // If we're colliding against terrain
@@ -919,7 +917,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         if (p2.PhysicsActorType == (int)ActorTypes.Prim)
                         {
                             if (m_filterCollisions)
-                                _perloopContact.Add(curContact);
+                                _perloopContact.Add (curContact);
 
                             //Add restitution and friction changes
                             d.Contact contact = ((AuroraODEPrim)p2).GetContactPoint (ActorTypes.Ground);
@@ -968,7 +966,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         else if (p2.PhysicsActorType == (int)ActorTypes.Prim)
                         {
                             if (m_filterCollisions)
-                                _perloopContact.Add(curContact);
+                                _perloopContact.Add (curContact);
 
                             //Add restitution and friction changes
                             d.Contact contact = ((AuroraODEPrim)p2).GetContactPoint (ActorTypes.Prim);
@@ -984,7 +982,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     if (m_global_contactcount < m_currentmaxContactsbeforedeath && joint != IntPtr.Zero) // stack collide!
                     {
-                        d.JointAttach(joint, b1, b2);
+                        d.JointAttach (joint, b1, b2);
                         m_global_contactcount++;
                     }
                 }
