@@ -55,6 +55,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         //private Vector3 m_lastRotationalVelocity;
 
         private bool _zeroFlag = false;
+        private bool _wasZeroFlagFlying = false;
         private bool m_ZeroUpdateSent = false;
 
         float m_UpdateTimecntr = 0;
@@ -841,6 +842,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Check for underground
 
+            bool groundCollision = false;
             if (!(Position.X < 0.25f || Position.Y < 0.25f ||
                 Position.X > _parent_scene.Region.RegionSizeX - .25f ||
                 Position.Y > _parent_scene.Region.RegionSizeY - .25f))
@@ -855,7 +857,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         //if (_target_velocity.Z < 0)
                         _target_velocity.Z = 0;
-                        vec.Z = -vel.Z * PID_D * 2f + ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P * 100.0f);
+                        vec.Z = -vel.Z * PID_D * 1.5f + ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P * 100.0f);
                     }
                     else
                         vec.Z = ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P);
@@ -863,6 +865,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (tempPos.Z - AvatarHalfsize - groundHeight < 0.12f)
                 {
                     m_iscolliding = true;
+                    groundCollision = true;
                     flying = false; // ground the avatar
                     ContactPoint point = new ContactPoint ();
                     point.PenetrationDepth = vel.Z;
@@ -937,7 +940,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             //  if velocity is zero, use position control; otherwise, velocity control
             if (_target_velocity == Vector3.Zero &&
-                Math.Abs (vel.X) < 0.05 && Math.Abs (vel.Y) < 0.05 && Math.Abs (vel.Z) < 0.05 && (this.m_iscolliding || this.flying))
+                Math.Abs (vel.X) < 0.05 && Math.Abs (vel.Y) < 0.05 && Math.Abs (vel.Z) < 0.05 && (this.m_iscolliding || this.flying || (this._zeroFlag && _wasZeroFlagFlying == flying)))
             //This is so that if we get moved by something else, it will update us in the client
             {
                 m_isJumping = false;
@@ -945,6 +948,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (!_zeroFlag)
                 {
                     _zeroFlag = true;
+                    _wasZeroFlagFlying = flying;
                     _zeroPosition = tempPos;
                 }
 
@@ -1002,9 +1006,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 #region Gravity
 
-                if (!flying && !m_iscolliding)//No ground collisions! Otherwise, we bounce on terrain
-                    _parent_scene.CalculateGravity (m_mass, tempPos, true, 1.025f, ref gravForce);
-                else if(!m_iscolliding)
+                if (!flying && groundCollision)//No ground collisions! Otherwise, we bounce on terrain
+                    _parent_scene.CalculateGravity (m_mass, tempPos, true, 0.45f, ref gravForce);
+                else if (!flying)
+                    _parent_scene.CalculateGravity (m_mass, tempPos, true, 1, ref gravForce);
+                else
                     _parent_scene.CalculateGravity (m_mass, tempPos, false, 0.75f, ref gravForce);//Allow point gravity and repulsors affect us a bit
 
                 vec += gravForce;
