@@ -93,6 +93,7 @@ namespace OpenSim.Framework
         private bool _obscureMusic = false;
         private bool _obscureMedia = false;
         private int _dwell = 0;
+        private bool _private = false;
 
         /// <summary>
         /// Whether to obscure parcel media URL
@@ -691,6 +692,18 @@ namespace OpenSim.Framework
             }
         }
 
+        public bool Private
+        {
+            get
+            {
+                return _private;
+            }
+            set
+            {
+                _private = value;
+            }
+        }
+
         public LandData()
         {
             _globalID = UUID.Random();
@@ -747,6 +760,7 @@ namespace OpenSim.Framework
             landData._regionHandle = _regionHandle;
             landData._infoUUID = _infoUUID;
             landData._Maturity = _Maturity;
+            landData._private = _private;
 
             landData._parcelAccessList.Clear();
             foreach (ParcelManager.ParcelAccessEntry entry in _parcelAccessList)
@@ -807,8 +821,9 @@ namespace OpenSim.Framework
             map["PassPrice"] = OSD.FromInteger(PassPrice);
             map["UserLookAt"] = OSD.FromVector3(UserLookAt);
             map["AuthBuyerID"] = OSD.FromUUID(AuthBuyerID);
-            map["OtherCleanTime"] = OSD.FromInteger(OtherCleanTime);
-            map["RegionHandle"] = OSD.FromULong(RegionHandle);
+            map["OtherCleanTime"] = OSD.FromInteger (OtherCleanTime);
+            map["RegionHandle"] = OSD.FromULong (RegionHandle);
+            map["Private"] = OSD.FromBoolean (Private);
             map["GenericData"] = OSD.FromString(GenericData);
             return map;
         }
@@ -852,8 +867,9 @@ namespace OpenSim.Framework
             PassPrice = map["PassPrice"].AsInteger();
             UserLookAt = map["UserLookAt"].AsVector3();
             AuthBuyerID = map["AuthBuyerID"].AsUUID();
-            OtherCleanTime = map["OtherCleanTime"].AsInteger();
-            RegionHandle = map["RegionHandle"].AsULong();
+            OtherCleanTime = map["OtherCleanTime"].AsInteger ();
+            RegionHandle = map["RegionHandle"].AsULong ();
+            Private = map["Private"].AsBoolean ();
             GenericData = map["GenericData"].AsString();
 
             if (GroupID != UUID.Zero)

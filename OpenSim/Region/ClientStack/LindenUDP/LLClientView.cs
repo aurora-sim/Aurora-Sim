@@ -4471,6 +4471,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             updateMessage.PassHours = landData.PassHours;
             updateMessage.PassPrice = landData.PassPrice;
             updateMessage.PublicCount = 0; //TODO: Unimplemented
+            updateMessage.Privacy = landData.Private;
 
             updateMessage.RegionPushOverride = (regionFlags & (uint)RegionFlags.RestrictPushObject) > 0;
             updateMessage.RegionDenyAnonymous = (regionFlags & (uint)RegionFlags.DenyAnonymous) > 0;

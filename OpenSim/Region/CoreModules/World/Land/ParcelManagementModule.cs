@@ -55,9 +55,6 @@ namespace OpenSim.Region.CoreModules.World.Land
         //Land types set with flags in ParcelOverlay.
         //Only one of these can be used.
         public const float BAN_LINE_SAFETY_HEIGHT = 100;
-        public const byte LAND_FLAG_PROPERTY_BORDER_SOUTH = 128; //Equals 10000000
-        public const byte LAND_FLAG_PROPERTY_BORDER_WEST = 64; //Equals 01000000
-
         public const int LAND_RESULT_NO_DATA = -1; // The request they made had no data
         public const int LAND_RESULT_SINGLE = 0; // The request they made contained only a single piece of land
         public const int LAND_RESULT_MULTIPLE = 1; // The request they made contained more than a single peice of land
@@ -1464,7 +1461,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             Util.FireAndForget(delegate(object o)
             {
                 const int LAND_BLOCKS_PER_PACKET = 1024;
-
                 byte[] byteArray = new byte[LAND_BLOCKS_PER_PACKET];
                 int byteArrayCount = 0;
                 int sequenceID = 0;
@@ -1481,28 +1477,34 @@ namespace OpenSim.Region.CoreModules.World.Land
                             if (currentParcelBlock.LandData.OwnerID == remote_client.AgentId)
                             {
                                 //Owner Flag
-                                tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_TYPE_OWNED_BY_REQUESTER);
+                                tempByte = Convert.ToByte (tempByte | (byte)ParcelOverlayType.OwnedBySelf);
                             }
                             else if (currentParcelBlock.LandData.SalePrice > 0 &&
                                      (currentParcelBlock.LandData.AuthBuyerID == UUID.Zero ||
                                       currentParcelBlock.LandData.AuthBuyerID == remote_client.AgentId))
                             {
                                 //Sale Flag
-                                tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_TYPE_IS_FOR_SALE);
+                                tempByte = Convert.ToByte (tempByte | (byte)ParcelOverlayType.ForSale);
                             }
                             else if (currentParcelBlock.LandData.OwnerID == UUID.Zero)
                             {
                                 //Public Flag
-                                tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_TYPE_PUBLIC);
+                                tempByte = Convert.ToByte (tempByte | (byte)ParcelOverlayType.Public);
                             }
-                            else if (currentParcelBlock.LandData.GroupID != UUID.Zero)
+                            else if (currentParcelBlock.LandData.GroupID != UUID.Zero &&
+                                m_scene.Permissions.IsInGroup (remote_client.AgentId, currentParcelBlock.LandData.GroupID))
                             {
-                                tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_TYPE_OWNED_BY_GROUP);
+                                tempByte = Convert.ToByte (tempByte | (byte)ParcelOverlayType.OwnedByGroup);
                             }
                             else
                             {
                                 //Other Flag
-                                tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_TYPE_OWNED_BY_OTHER);
+                                tempByte = Convert.ToByte (tempByte | (byte)ParcelOverlayType.OwnedByOther);
+                            }
+                            if (currentParcelBlock.LandData.Private)
+                            {
+                                //Public Flag
+                                tempByte = Convert.ToByte (tempByte | (byte)ParcelOverlayType.Private);
                             }
 
                             //Now for border control
@@ -1520,20 +1522,20 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                             if (x == 0)
                             {
-                                tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_FLAG_PROPERTY_BORDER_WEST);
+                                tempByte = Convert.ToByte (tempByte | (byte)ParcelOverlayType.BorderWest);
                             }
                             else if (westParcel != null && westParcel != currentParcelBlock)
                             {
-                                tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_FLAG_PROPERTY_BORDER_WEST);
+                                tempByte = Convert.ToByte (tempByte | (byte)ParcelOverlayType.BorderWest);
                             }
 
                             if (y == 0)
                             {
-                                tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_FLAG_PROPERTY_BORDER_SOUTH);
+                                tempByte = Convert.ToByte (tempByte | (byte)ParcelOverlayType.BorderSouth);
                             }
                             else if (southParcel != null && southParcel != currentParcelBlock)
                             {
-                                tempByte = Convert.ToByte(tempByte | ParcelManagementModule.LAND_FLAG_PROPERTY_BORDER_SOUTH);
+                                tempByte = Convert.ToByte (tempByte | (byte)ParcelOverlayType.BorderSouth);
                             }
 
                             byteArray[byteArrayCount] = tempByte;
@@ -1921,6 +1923,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             land_update.ParcelFlags = (uint)properties.ParcelFlags;
             land_update.PassHours = (int)properties.PassHours;
             land_update.PassPrice = (int)properties.PassPrice;
+            land_update.Privacy = properties.Privacy;
             land_update.SalePrice = (int)properties.SalePrice;
             land_update.SnapshotID = properties.SnapshotID;
             land_update.UserLocation = properties.UserLocation;

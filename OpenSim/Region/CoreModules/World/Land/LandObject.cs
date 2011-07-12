@@ -305,6 +305,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                         newData.Description = args.Desc;
                         newData.Name = args.Name;
                         newData.SnapshotID = args.SnapshotID;
+                        newData.Private = args.Privacy;
                     }
 
                     if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this, GroupPowers.LandManagePasses))

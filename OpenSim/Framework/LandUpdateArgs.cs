@@ -45,6 +45,7 @@ namespace OpenSim.Framework
         public uint ParcelFlags;
         public float PassHours;
         public int PassPrice;
+        public bool Privacy;
         public int SalePrice;
         public UUID SnapshotID;
         public Vector3 UserLocation;

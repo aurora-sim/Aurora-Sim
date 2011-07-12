@@ -187,6 +187,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             m_scene.Permissions.OnDeedParcel += CanDeedParcel;
             m_scene.Permissions.OnDeedObject += CanDeedObject;
             m_scene.Permissions.OnIsGod += IsGod;
+            m_scene.Permissions.OnIsInGroup += IsInGroup;
             m_scene.Permissions.OnIsAdministrator += IsAdministrator;
             m_scene.Permissions.OnDuplicateObject += CanDuplicateObject;
             m_scene.Permissions.OnDeleteObject += CanDeleteObject;
@@ -448,6 +449,11 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         {
             if (m_debugPermissions)
                 m_log.Debug("[PERMISSIONS]: " + permissionCalled + " was called from " + m_scene.RegionInfo.RegionName);
+        }
+
+        public bool IsInGroup (UUID user, UUID groupID)
+        {
+            return IsGroupMember (groupID, user, 0);
         }
     
         // Checks if the given group is active and if the user is a group member

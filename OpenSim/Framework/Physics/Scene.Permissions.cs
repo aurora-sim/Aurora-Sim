@@ -143,6 +143,7 @@ namespace OpenSim.Framework
         public event BuyLandHandler OnBuyLand;
         public event LinkObjectHandler OnLinkObject;
         public event DelinkObjectHandler OnDelinkObject;
+        public event DelinkObjectHandler OnIsInGroup;
         public event CreateObjectInventoryHandler OnCreateObjectInventory;
         public event CopyObjectInventoryHandler OnCopyObjectInventory;
         public event DeleteObjectInventoryHandler OnDeleteObjectInventory;
@@ -848,15 +849,30 @@ namespace OpenSim.Framework
             return true;
         }
 
-        public bool CanDelinkObject(UUID user, UUID objectID)
+        public bool CanDelinkObject (UUID user, UUID objectID)
         {
             DelinkObjectHandler handler = OnDelinkObject;
             if (handler != null)
             {
-                Delegate[] list = handler.GetInvocationList();
+                Delegate[] list = handler.GetInvocationList ();
                 foreach (DelinkObjectHandler h in list)
                 {
-                    if (h(user, objectID) == false)
+                    if (h (user, objectID) == false)
+                        return false;
+                }
+            }
+            return true;
+        }
+
+        public bool IsInGroup (UUID user, UUID groupID)
+        {
+            DelinkObjectHandler handler = OnIsInGroup;
+            if (handler != null)
+            {
+                Delegate[] list = handler.GetInvocationList ();
+                foreach (DelinkObjectHandler h in list)
+                {
+                    if (h (user, groupID) == false)
                         return false;
                 }
             }
