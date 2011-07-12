@@ -1456,7 +1456,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (!WSModule.AllowPhysicalPrims)
                     physical = false;*/
             AuroraODEPrim newPrim;
-            newPrim = new AuroraODEPrim (entity, this, physical, ode);
+            newPrim = new AuroraODEPrim (entity, this, false, ode);
+
+            if(physical)
+                newPrim.IsPhysical = physical;
 
             lock (_prims)
                 _prims.Add(newPrim);
@@ -1824,9 +1827,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (forceSimplePrimMeshing)
                 return true;
             // let simple spheres use ode sphere object
-            //if(pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte)Extrusion.Curve1
-            //        && pbs.Scale.X == pbs.Scale.Y && pbs.Scale.X == pbs.Scale.Z && pbs.ProfileHollow == 0)
-            //    return false;
+            if(pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte)Extrusion.Curve1
+                    && pbs.Scale.X == pbs.Scale.Y && pbs.Scale.X == pbs.Scale.Z && pbs.ProfileHollow == 0)
+                return false;
 
             if (pbs.SculptEntry && !meshSculptedPrim)
             {
