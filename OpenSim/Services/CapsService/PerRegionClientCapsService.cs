@@ -254,8 +254,11 @@ namespace OpenSim.Services.CapsService
             string path = registeredCAPS[method].AsString ();
             if (path != "")//If it doesn't exist...
             {
-                path = path.Remove (0, this.HostUri.Length);
-                Server.RemoveStreamHandler (httpMethod, path);
+                if (path.StartsWith (this.HostUri))//Only try to remove local ones
+                {
+                    path = path.Remove (0, this.HostUri.Length);
+                    Server.RemoveStreamHandler (httpMethod, path);
+                }
                 RemoveCaps (method);
             }
             else
