@@ -45,6 +45,12 @@ namespace OpenSim.Framework
         ICuller Culler { get; }
 
         /// <summary>
+        /// Sends all the information about the client to this avatar
+        /// </summary>
+        /// <param name="presence"></param>
+        void QueuePresenceForFullUpdate (IScenePresence presence);
+
+        /// <summary>
         /// Send a presence terse update to all clients
         /// </summary>
         /// <param name="presence"></param>

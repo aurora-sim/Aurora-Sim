@@ -132,8 +132,9 @@ namespace OpenSim.Framework
         void Teleport (Vector3 Pos);
 
         Vector3 LastKnownAllowedPosition { get; set; }
-
+        
         UUID CurrentParcelUUID { get; set; }
+        ILandObject CurrentParcel { get; set; }
 
         bool Invulnerable { get; set; }
 

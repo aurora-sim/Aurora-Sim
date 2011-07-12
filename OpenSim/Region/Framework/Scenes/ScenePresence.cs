@@ -69,6 +69,7 @@ namespace OpenSim.Region.Framework.Scenes
         private static readonly Vector3 SIT_TARGET_ADJUSTMENT = new Vector3(0.1f, 0.0f, 0.3f);
 
         private UUID m_currentParcelUUID = UUID.Zero;
+        private ILandObject m_currentParcel = null;
 
         public UUID CurrentParcelUUID
         {
@@ -79,6 +80,18 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 m_currentParcelUUID = value;
+            }
+        }
+
+        public ILandObject CurrentParcel
+        {
+            get
+            {
+                return m_currentParcel;
+            }
+            set
+            {
+                m_currentParcel = value;
             }
         }
 
@@ -2279,6 +2292,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //Reset the parcel UUID for the user
             CurrentParcelUUID = UUID.Zero;
+            CurrentParcel = null;
             // Put the child agent back at the center
             AbsolutePosition
                 = new Vector3(Scene.RegionInfo.RegionSizeX * 0.5f, Scene.RegionInfo.RegionSizeY * 0.5f, 70);

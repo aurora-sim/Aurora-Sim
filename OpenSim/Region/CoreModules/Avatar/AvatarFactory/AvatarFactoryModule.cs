@@ -1006,8 +1006,7 @@ textures 1
             public void SendAvatarDataToAgent (IScenePresence avatar)
             {
                 //m_log.WarnFormat("[SP] Send avatar data from {0} to {1}",m_uuid,avatar.ControllingClient.AgentId);
-                avatar.ControllingClient.SendAvatarDataImmediate (m_sp);
-                m_sp.Animator.SendAnimPackToClient (avatar.ControllingClient);
+                avatar.SceneViewer.QueuePresenceForFullUpdate (m_sp);
             }
 
             /// <summary>

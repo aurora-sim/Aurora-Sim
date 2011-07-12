@@ -919,24 +919,37 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             if (m_scene.RegionInfo.RegionID == regionID)
             {
-                ILandObject parcelAvatarIsEntering = GetLandObject(localLandID);
-
-                if (parcelAvatarIsEntering != null)
+                if (avatar.CurrentParcel != null)
                 {
                     //Tell the clint about it
-                    parcelAvatarIsEntering.SendLandUpdateToClient(avatar.ControllingClient);
+                    avatar.CurrentParcel.SendLandUpdateToClient (avatar.ControllingClient);
+
+                    if (avatar.CurrentParcel.LandData.Private)
+                    {
+                        //Gotta kill all avatars outside the parcel
+                        foreach (IScenePresence sp in avatar.Scene.Entities.GetPresences ())
+                        {
+                            if (sp.UUID == avatar.UUID)
+                                continue;
+                            if (sp.CurrentParcelUUID == avatar.CurrentParcelUUID)//Send full updates for those in the sim
+                                sp.SceneViewer.QueuePresenceForFullUpdate (avatar);
+                            else//Kill those outside the parcel
+                                sp.ControllingClient.SendKillObject (sp.Scene.RegionInfo.RegionHandle, 
+                                    new IEntity[1] { avatar });
+                        }
+                    }
                     
                     if (UseDwell)
-                        parcelAvatarIsEntering.LandData.Dwell += 1;
+                        avatar.CurrentParcel.LandData.Dwell += 1;
                     if (avatar.AbsolutePosition.Z < ParcelManagementModule.BAN_LINE_SAFETY_HEIGHT)
                     {
-                        if (parcelAvatarIsEntering.IsBannedFromLand(avatar.UUID))
+                        if (avatar.CurrentParcel.IsBannedFromLand (avatar.UUID))
                         {
                             SendYouAreBannedNotice(avatar);
                             Vector3 pos = GetNearestAllowedPosition(avatar);
                             avatar.Teleport(pos);
                         }
-                        else if (parcelAvatarIsEntering.IsRestrictedFromLand(avatar.UUID))
+                        else if (avatar.CurrentParcel.IsRestrictedFromLand (avatar.UUID))
                         {
                             SendYouAreRestrictedNotice(avatar);
                             Vector3 pos = GetNearestAllowedPosition(avatar);
@@ -1014,6 +1027,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     if (!avatar.IsChildAgent)
                     {
                         avatar.CurrentParcelUUID = over.LandData.GlobalID;
+                        avatar.CurrentParcel = over;
                         m_scene.EventManager.TriggerAvatarEnteringNewParcel (avatar, over.LandData.LocalID,
                                                                             m_scene.RegionInfo.RegionID);
                     }

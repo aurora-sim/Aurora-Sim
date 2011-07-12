@@ -177,6 +177,18 @@ namespace OpenSim.Region.Framework.Scenes
             QueuePresenceForUpdateInternal (presence, flags);
         }
 
+        public void QueuePresenceForFullUpdate (IScenePresence presence)
+        {
+            if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, presence))
+            {
+                //They are out of view and they changed, we need to update them when they do come in view
+                lastPresencesInView.Remove (presence);
+                lastPresencesDInView.Remove (presence.UUID);
+                return; // if 2 far ignore
+            }
+            SendFullUpdateForPresence (presence);
+        }
+
         private void QueuePresenceForUpdateInternal (IScenePresence presence, PrimUpdateFlags flags)
         {
             if (m_presence.DrawDistance != 0 &&

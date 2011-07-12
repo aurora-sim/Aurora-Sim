@@ -102,7 +102,26 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_useDistanceCulling && !DistanceCulling (client, entity))
                 return false;
 
+            if (!ParcelPrivateCulling (client, entity))
+                return false;
+
             //No more, guess its fine
+            return true;
+        }
+
+        private bool ParcelPrivateCulling (IScenePresence client, IEntity entity)
+        {
+            if (entity is IScenePresence)
+            {
+                if (client.CurrentParcel.LandData.Private)
+                {
+                    //We need to check whether this presence is sitting on anything, so that we can check from the object's
+                    // position, rather than the offset position of the object that the avatar is sitting on
+                    IScenePresence pEntity = (IScenePresence)entity;
+                    if (pEntity.CurrentParcelUUID != client.CurrentParcelUUID)
+                        return false;//Can't see avatar's outside the parcel
+                }
+            }
             return true;
         }
 
