@@ -82,6 +82,8 @@ namespace Aurora.Modules.World.WorldShader
                     }
                 }
             }
+            m_revertConverted.Clear ();
+            m_previouslyConverted.Clear ();
         }
 
         private Dictionary<UUID, UUID> m_previouslyConverted = new Dictionary<UUID, UUID> ();
@@ -98,7 +100,7 @@ namespace Aurora.Modules.World.WorldShader
             int B = int.Parse (MainConsole.Instance.CmdPrompt ("B color (0 - 255)"));
             float percent = float.Parse (MainConsole.Instance.CmdPrompt ("Percent to merge in the shade (0 - 100)"));
             if(percent > 1)
-            percent /= 100;
+                percent /= 100;
             Color shader = Color.FromArgb (R, G, B);
 
             IJ2KDecoder j2kDecoder = MainConsole.Instance.ConsoleScene.RequestModuleInterface<IJ2KDecoder>();
