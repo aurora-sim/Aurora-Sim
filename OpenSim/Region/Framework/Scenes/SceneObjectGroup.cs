@@ -1572,26 +1572,14 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 foreach (SceneObjectPart part in m_partsList)
                 {
-                    if (!(RootPart.PhysicsType == (byte)PhysicsShapeType.None ||
-                        part.PhysicsType == (byte)PhysicsShapeType.None ||
-                        ((part.Flags & PrimFlags.Phantom) == PrimFlags.Phantom &&
-                        !part.VolumeDetectActive) ||
-                        ((RootPart.Flags & PrimFlags.Phantom) == PrimFlags.Phantom &&
-                        !RootPart.VolumeDetectActive)))
-                        if (!part.IsRoot) //Link the prim then
-                            part.PhysActor.link (RootPart.PhysActor);
+                    if (!part.IsRoot && RootPart.PhysActor != null && part.PhysActor != null)//Link the prim then
+                        part.PhysActor.link (RootPart.PhysActor);
                 }
                 foreach (SceneObjectPart part in m_partsList)
                 {
-                    if (!(RootPart.PhysicsType == (byte)PhysicsShapeType.None ||
-                        part.PhysicsType == (byte)PhysicsShapeType.None ||
-                        ((part.Flags & PrimFlags.Phantom) == PrimFlags.Phantom &&
-                        !part.VolumeDetectActive) ||
-                        ((RootPart.Flags & PrimFlags.Phantom) == PrimFlags.Phantom &&
-                        !RootPart.VolumeDetectActive)))
+                    if (part.PhysActor != null)
                     {
-                        if (part.PhysActor != null)
-                            part.PhysActor.BuildingRepresentation = false;
+                        part.PhysActor.BuildingRepresentation = false;
                         FixVehicleParams (part);
                     }
                 }
