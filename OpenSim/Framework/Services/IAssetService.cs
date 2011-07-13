@@ -33,6 +33,20 @@ namespace OpenSim.Services.Interfaces
 {
     public delegate void AssetRetrieved(string id, Object sender, AssetBase asset);
 
+    /// <summary>
+    /// Interface for getting a module that can access assets (only) outside of this grid
+    /// </summary>
+    public interface IAssetServiceConnector : IAssetService
+    {
+    }
+
+    /// <summary>
+    /// Interface for getting a module that can access assets inside and outside of this grid
+    /// </summary>
+    public interface IExternalAssetService : IAssetService
+    {
+    }
+
     public interface IAssetService
     {
         /// <summary>

@@ -39,7 +39,7 @@ using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Connectors
 {
-    public class AssetServicesConnector : IAssetService, IService
+    public class AssetServicesConnector : IAssetServiceConnector, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -377,6 +377,8 @@ namespace OpenSim.Services.Connectors
         public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
             m_registry = registry;
+            registry.RegisterModuleInterface<IAssetServiceConnector> (this);
+
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AssetHandler", "") != Name)
                 return;
@@ -391,11 +393,7 @@ namespace OpenSim.Services.Connectors
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AssetHandler", "") != Name)
-                return;
-
-            SetCache(registry.RequestModuleInterface<IImprovedAssetCache>());
+            SetCache (registry.RequestModuleInterface<IImprovedAssetCache> ());
         }
 
         public void FinishedStartup()

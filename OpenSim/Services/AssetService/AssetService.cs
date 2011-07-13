@@ -61,7 +61,8 @@ namespace OpenSim.Services.AssetService
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AssetHandler", "") != Name)
                 return;
-            Configure(config, registry);
+            Configure (config, registry);
+            registry.RegisterModuleInterface<IAssetService> (this);
         }
 
         public virtual void Configure (IConfigSource config, IRegistryCore registry)
@@ -104,8 +105,6 @@ namespace OpenSim.Services.AssetService
 
             m_Database.Initialise(connString);
 
-            registry.RegisterModuleInterface<IAssetService>(this);
-
             if (MainConsole.Instance != null)
             {
                 MainConsole.Instance.Commands.AddCommand ("show digest",
@@ -130,6 +129,13 @@ namespace OpenSim.Services.AssetService
 
         public virtual AssetBase Get (string id)
         {
+            string url = string.Empty, assetID = string.Empty;
+            if (StringToUrlAndAssetID (id, out url, out assetID))
+            {
+                IAssetService connector = GetConnector (url);
+                return connector.Get (assetID);
+            }
+
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache> ();
             if (cache != null)
             {
@@ -143,6 +149,53 @@ namespace OpenSim.Services.AssetService
             return asset;
         }
 
+        #region Foreign assets
+
+        private bool StringToUrlAndAssetID (string id, out string url, out string assetID)
+        {
+            url = String.Empty;
+            assetID = String.Empty;
+
+            Uri assetUri;
+
+            if (Uri.TryCreate (id, UriKind.Absolute, out assetUri) &&
+                    assetUri.Scheme == Uri.UriSchemeHttp)
+            {
+                url = "http://" + assetUri.Authority;
+                assetID = assetUri.LocalPath.Trim (new char[] { '/' });
+                return true;
+            }
+
+            return false;
+        }
+
+        private Dictionary<string, IAssetService> m_connectors = new Dictionary<string, IAssetService> ();
+
+        private IAssetService GetConnector (string url)
+        {
+            IAssetService connector = null;
+            lock (m_connectors)
+            {
+                if (m_connectors.ContainsKey (url))
+                {
+                    connector = m_connectors[url];
+                }
+                else
+                {
+                    string connectorType = m_registry.RequestModuleInterface<IHeloServiceConnector> ().Helo (url);
+                    if (connectorType == "opensim-simian")
+                        connector = new OpenSim.Services.Connectors.SimianGrid.SimianAssetServiceConnector (url);
+                    else
+                        connector = new OpenSim.Services.Connectors.AssetServicesConnector (url);
+
+                    m_connectors.Add (url, connector);
+                }
+            }
+            return connector;
+        }
+
+        #endregion
+
         public virtual AssetBase GetCached (string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache> ();
@@ -153,6 +206,13 @@ namespace OpenSim.Services.AssetService
 
         public virtual AssetMetadata GetMetadata (string id)
         {
+            string url = string.Empty, assetID = string.Empty;
+            if (StringToUrlAndAssetID (id, out url, out assetID))
+            {
+                IAssetService connector = GetConnector (url);
+                return connector.GetMetadata (assetID);
+            }
+
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache> ();
             if (cache != null)
             {
@@ -171,6 +231,13 @@ namespace OpenSim.Services.AssetService
 
         public virtual byte[] GetData (string id)
         {
+            string url = string.Empty, assetID = string.Empty;
+            if (StringToUrlAndAssetID (id, out url, out assetID))
+            {
+                IAssetService connector = GetConnector (url);
+                return connector.Get (assetID).Data;
+            }
+
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache> ();
             if (cache != null)
             {
@@ -186,14 +253,29 @@ namespace OpenSim.Services.AssetService
 
         public virtual bool GetExists (string id)
         {
+            string url = string.Empty, assetID = string.Empty;
+            if (StringToUrlAndAssetID (id, out url, out assetID))
+            {
+                IAssetService connector = GetConnector (url);
+                return connector.GetExists (assetID);
+            }
             return m_Database.ExistsAsset (id);
         }
 
         public virtual bool Get (string id, Object sender, AssetRetrieved handler)
         {
             //m_log.DebugFormat("[AssetService]: Get asset async {0}", id);
+            AssetBase asset = null;
+            string url = string.Empty, assetID = string.Empty;
+            if (StringToUrlAndAssetID (id, out url, out assetID))
+            {
+                IAssetService connector = GetConnector (url);
+                asset = connector.Get (assetID);
+                handler (id, sender, asset);
+                return true;
+            }
 
-            AssetBase asset = m_Database.GetAsset (id);
+            asset = m_Database.GetAsset (id);
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache> ();
             if (cache != null && asset != null)
                 cache.Cache (asset);
@@ -207,6 +289,15 @@ namespace OpenSim.Services.AssetService
 
         public virtual string Store (AssetBase asset)
         {
+            string url = string.Empty, assetID = string.Empty;
+            if (StringToUrlAndAssetID (asset.ID, out url, out assetID))
+            {
+                IAssetService connector = GetConnector (url);
+                // Restore the assetID to a simple UUID
+                asset.ID = assetID;
+                return connector.Store (asset);
+            }
+
             //m_log.DebugFormat("[ASSET SERVICE]: Store asset {0} {1}", asset.Name, asset.ID);
             m_Database.StoreAsset (asset);
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache> ();
