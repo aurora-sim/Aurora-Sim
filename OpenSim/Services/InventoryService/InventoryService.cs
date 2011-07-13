@@ -153,8 +153,11 @@ namespace OpenSim.Services.InventoryService
                 //No duplicate folders!
                 foreach (InventoryFolderBase f in rootFolders)
                 {
-                    if(!badFolders.Contains(f.ID) && f.ID != rootFolder.ID)
+                    if (!badFolders.Contains (f.ID) && f.ID != rootFolder.ID)
+                    {
+                        m_log.Warn ("Removing duplicate root folder " + f.Name);
                         badFolders.Add (f.ID);
+                    }
                 }
             }
             //Fix any root folders that shouldn't be root folders
@@ -220,6 +223,10 @@ namespace OpenSim.Services.InventoryService
                 {
                     ForcePurgeFolder (f);
                 }
+            }
+            foreach (UUID id in badFolders)
+            {
+                m_Database.DeleteFolders ("folderID", id.ToString ());
             }
             //Make sure that all default folders exist
             CreateUserInventory (account.PrincipalID, false);
