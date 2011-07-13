@@ -537,6 +537,7 @@ namespace OpenSim.Framework
             return GetHostFromDNS(url.Split(new char[] {'/', ':'})[3]);
         }
 
+        private static ExpiringCache<string, IPAddress> m_dnsCache = new ExpiringCache<string, IPAddress> ();
         /// <summary>
         /// Returns a IP address from a specified DNS, favouring IPv4 addresses.
         /// </summary>
@@ -544,14 +545,22 @@ namespace OpenSim.Framework
         /// <returns>An IP address, or null</returns>
         public static IPAddress GetHostFromDNS(string dnsAddress)
         {
-            // Is it already a valid IP? No need to look it up.
             IPAddress ipa;
-            if (IPAddress.TryParse(dnsAddress, out ipa))
+            if (m_dnsCache.TryGetValue (dnsAddress, out ipa))
                 return ipa;
+            // Is it already a valid IP? No need to look it up.
+            if (IPAddress.TryParse (dnsAddress, out ipa))
+            {
+                m_dnsCache.Add (dnsAddress, ipa, 30 * 60/*30mins*/);
+                return ipa;
+            }
             try
             {
                 if (IPAddress.TryParse(dnsAddress.Split(':')[0], out ipa))
+                {
+                    m_dnsCache.Add (dnsAddress, ipa, 30 * 60/*30mins*/);
                     return ipa;
+                }
             }
             catch { }
             IPAddress[] hosts = null;
@@ -573,12 +582,16 @@ namespace OpenSim.Framework
             {
                 if (host.AddressFamily == AddressFamily.InterNetwork)
                 {
+                    m_dnsCache.Add (dnsAddress, host, 30 * 60/*30mins*/);
                     return host;
                 }
             }
 
             if (hosts.Length > 0)
+            {
+                m_dnsCache.Add (dnsAddress, hosts[0], 30 * 60/*30mins*/);
                 return hosts[0];
+            }
 
             return null;
         }

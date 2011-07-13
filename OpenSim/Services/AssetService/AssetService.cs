@@ -35,6 +35,8 @@ using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.Simulation.Base;
+using System.Net;
+using OpenSim.Framework.Servers.HttpServer;
 
 namespace OpenSim.Services.AssetService
 {
@@ -45,6 +47,7 @@ namespace OpenSim.Services.AssetService
                 MethodBase.GetCurrentMethod ().DeclaringType);
         protected IRegistryCore m_registry = null;
         protected IAssetDataPlugin m_Database = null;
+        protected IPAddress m_externalIP;
 
         public virtual string Name
         {
@@ -116,6 +119,11 @@ namespace OpenSim.Services.AssetService
                         "Delete asset from database", HandleDeleteAsset);
             }
 
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (0);
+            string ExternalName = server.HostName + ":" + server.Port + "/";
+            Uri m_Uri = new Uri (ExternalName);
+            m_externalIP = Util.GetHostFromDNS (m_Uri.Host);
+
             m_log.Debug("[ASSET SERVICE]: Local asset service enabled");
         }
 
@@ -129,11 +137,13 @@ namespace OpenSim.Services.AssetService
 
         public virtual AssetBase Get (string id)
         {
-            string url = string.Empty, assetID = string.Empty;
-            if (StringToUrlAndAssetID (id, out url, out assetID))
+            string url = string.Empty;
+            if (StringToUrlAndAssetID (id, out url, out id))
             {
                 IAssetService connector = GetConnector (url);
-                return connector.Get (assetID);
+                AssetBase casset = connector.Get (id);
+                FixAssetID (ref casset);
+                return casset;
             }
 
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache> ();
@@ -141,11 +151,15 @@ namespace OpenSim.Services.AssetService
             {
                 AssetBase cachedAsset = cache.Get (id);
                 if (cachedAsset != null)
+                {
+                    FixAssetID (ref cachedAsset);
                     return cachedAsset;
+                }
             }
             AssetBase asset = m_Database.GetAsset (id);
             if (cache != null && asset != null)
                 cache.Cache (asset);
+            FixAssetID (ref asset);
             return asset;
         }
 
@@ -154,15 +168,18 @@ namespace OpenSim.Services.AssetService
         private bool StringToUrlAndAssetID (string id, out string url, out string assetID)
         {
             url = String.Empty;
-            assetID = String.Empty;
+            assetID = id;
 
             Uri assetUri;
 
             if (Uri.TryCreate (id, UriKind.Absolute, out assetUri) &&
                     assetUri.Scheme == Uri.UriSchemeHttp)
             {
+                System.Net.IPAddress ip = Util.GetHostFromDNS (assetUri.Host);
                 url = "http://" + assetUri.Authority;
                 assetID = assetUri.LocalPath.Trim (new char[] { '/' });
+                if (m_externalIP == ip)
+                    return false;//Its not external, don't call!
                 return true;
             }
 
@@ -200,7 +217,11 @@ namespace OpenSim.Services.AssetService
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache> ();
             if (cache != null)
-                return cache.Get (id);
+            {
+                AssetBase asset = cache.Get (id);
+                FixAssetID (ref asset);
+                return asset;
+            }
             return null;
         }
 
@@ -271,6 +292,7 @@ namespace OpenSim.Services.AssetService
             {
                 IAssetService connector = GetConnector (url);
                 asset = connector.Get (assetID);
+                FixAssetID (ref asset);
                 handler (id, sender, asset);
                 return true;
             }
@@ -281,7 +303,8 @@ namespace OpenSim.Services.AssetService
                 cache.Cache (asset);
 
             //m_log.DebugFormat("[AssetService]: Got asset {0}", asset);
-            
+
+            FixAssetID (ref asset);
             handler(id, sender, asset);
 
             return true;
@@ -308,6 +331,10 @@ namespace OpenSim.Services.AssetService
             }
 
             return asset.ID;
+        }
+
+        protected virtual void FixAssetID (ref AssetBase asset)
+        {
         }
 
         public virtual bool UpdateContent (string id, byte[] data)
